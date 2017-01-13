@@ -1,0 +1,136 @@
+/*
+ * Copyright 2011 Google Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+@def allBorderWidth 1px;
+.dataGridWidget {
+  
+}
+
+.dataGridFirstColumn {
+  
+}
+
+.dataGridLastColumn {
+  padding: 2px 16px 2px 5px !important;
+}
+
+.dataGridFooter {
+  border-top: 2px solid #6f7277;
+  padding: 3px 15px;
+  text-align: left;
+  color: #4b4a4a;
+  text-shadow: #ddf 1px 1px 0;
+  overflow: hidden;
+  white-space: normal !important;
+}
+
+.dataGridHeader {
+  border: allBorderWidth solid #6f7277;
+  padding: 3px 5px;
+  text-align: left;
+  color: #4b4a4a;
+  background: #d5d5d5;
+  text-shadow: #ddf 1px 1px 0;
+  overflow: hidden;
+  white-space: normal !important;
+}
+
+.dataGridCell {
+  padding: 2px 5px;
+  overflow: hidden;
+}
+
+.dataGridFirstColumnFooter {
+  
+}
+
+.dataGridFirstColumnHeader {
+  
+}
+
+.dataGridLastColumnFooter {
+  
+}
+
+.dataGridLastColumnHeader {
+  
+}
+
+.dataGridSortableHeader {
+  cursor: pointer;
+  cursor: hand;
+}
+
+.dataGridSortableHeader:hover {
+  color: #600d28;
+}
+
+.dataGridSortedHeaderAscending {
+  
+}
+
+.dataGridSortedHeaderDescending {
+  
+}
+
+.dataGridEvenRow {
+  background: #ffffff;
+}
+
+.dataGridEvenRowCell {
+  border: allBorderWidth solid #6f7277;
+}
+
+.dataGridOddRow {
+  background: #f3f7fb;
+}
+
+.dataGridOddRowCell {
+  border: allBorderWidth solid #6f7277;
+}
+
+.dataGridHoveredRow {
+  background: #fffb7f;  /* #eee */
+}
+
+.dataGridHoveredRowCell {
+  border: allBorderWidth solid #6f7277;
+}
+
+.dataGridKeyboardSelectedRow {
+  background: #77dd77; /*#ffc;*/
+}
+
+.dataGridKeyboardSelectedRowCell {
+  border: allBorderWidth solid #6f7277;
+}
+
+.dataGridSelectedRow {
+  background: #628cd5;
+  color: white;
+  height: auto;
+  overflow: auto;
+}
+
+.dataGridSelectedRowCell {
+  border: allBorderWidth solid #6f7277;
+}
+
+/**
+ * The keyboard selected cell is visible over selection.
+ */
+.dataGridKeyboardSelectedCell {
+  border: allBorderWidth solid #6f7277;
+}

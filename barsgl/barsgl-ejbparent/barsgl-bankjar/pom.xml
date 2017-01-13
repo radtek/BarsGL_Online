@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+
+    <groupId>ru.rbt</groupId>
+    <artifactId>barsgl-bankjar</artifactId>
+    <packaging>ejb</packaging>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>barsgl-ejbparent</artifactId>
+        <groupId>ru.rbt</groupId>
+        <version>2.2.31-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-web-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-ejb-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-ejb-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

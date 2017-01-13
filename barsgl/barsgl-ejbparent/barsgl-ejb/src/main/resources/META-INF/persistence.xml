@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+    <persistence-unit name="GLAS400DataSource" transaction-type="JTA">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
+        <jta-data-source>/jdbc/As400GL</jta-data-source>
+
+        <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
+        <class>ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob</class>
+        <class>ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob</class>
+        <class>ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob</class>
+
+        <class>ru.rbt.barsgl.ejb.common.mapping.od.Operday</class>
+        <class>ru.rbt.barsgl.ejb.common.mapping.od.Operday</class>
+        <class>ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId</class>
+        <class>ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay</class>
+
+        <class>ru.rbt.barsgl.ejbcore.conf.map.ConfigNode</class>
+        <class>ru.rbt.barsgl.ejbcore.conf.map.AbstractConfigProperty</class>
+        <class>ru.rbt.barsgl.ejbcore.conf.map.DecimalProperty</class>
+        <class>ru.rbt.barsgl.ejbcore.conf.map.StringProperty</class>
+        <class>ru.rbt.barsgl.ejbcore.conf.map.NumberProperty</class>
+
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+
+        <properties>
+            <property name="eclipselink.ddl-generation" value="none"/>
+            <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
+            <property name="eclipselink.target-database" value="DB2"/>
+            <property name="eclipselink.target-server" value="WebLogic"/>
+            <property name="eclipselink.logging.logger" value="ServerLogger"/>
+            <property name="eclipselink.logging.session" value="true"/>
+            <property name="eclipselink.logging.level" value="FINE"/>
+            <property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>
+        </properties>
+    </persistence-unit>
+	<persistence-unit name="RepAS400DataSource" transaction-type="JTA">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
+        <jta-data-source>/jdbc/As400Rep</jta-data-source>
+
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+
+        <properties>
+            <property name="eclipselink.ddl-generation" value="none"/>
+            <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
+            <property name="eclipselink.target-database" value="DB2"/>
+            <property name="eclipselink.target-server" value="WebLogic"/>
+            <property name="eclipselink.logging.logger" value="ServerLogger"/>
+            <property name="eclipselink.logging.session" value="true"/>
+            <property name="eclipselink.logging.level" value="FINE"/>
+            <property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>
+        </properties>
+    </persistence-unit>
+</persistence>

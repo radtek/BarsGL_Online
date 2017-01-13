@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.6.0//EN"
+        "http://google-web-toolkit.googlecode.com/svn/tags/2.6.0/distro-source/core/src/gwt-module.dtd">
+<module rename-to='barsgl'>
+    <inherits name="com.google.gwt.user.User" />
+    <inherits name="com.google.gwt.user.theme.standard.Standard" />
+    <inherits name="com.google.gwt.xml.XML" />
+    <inherits name="com.google.gwt.resources.Resources" />
+    <inherits name="ru.rbt.barsgl.BarsGLShared" />
+    <inherits name="ru.rbt.barsgl.gwt.BarsGLServer" />
+    <inherits name="ru.rbt.barsgl.gwt.BarsGLCore" />
+    <source path="client" />
+    <entry-point class="ru.rbt.barsgl.gwt.client.BarsGLEntryPoint"/>
+    <extend-property name="locale" values="ru"/>
+</module>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <docpath>c:\dev\projects\apidocs\</docpath>
+    <docname>javadocTest</docname>
+    <configure>
+        <showfsd>true</showfsd>
+    </configure>
+    <excel>
+        <enabled>true</enabled>
+    </excel>
+    <word>
+        <enabled>true</enabled>
+        <template></template>
+    </word>
+</document>

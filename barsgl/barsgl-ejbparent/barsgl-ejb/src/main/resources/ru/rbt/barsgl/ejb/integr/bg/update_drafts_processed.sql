@@ -1,0 +1,1 @@
+update GL_NDSPST set processed = 'Y' where id_pst between ? and ?

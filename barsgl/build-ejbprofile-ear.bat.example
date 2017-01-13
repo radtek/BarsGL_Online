@@ -1,0 +1,3 @@
+set JAVA_HOME="C:\Development\jdk\1.8.0_25"
+
+mvn clean install -DskipTests -pl barsgl-shared,barsgl-ejbparent/barsgl-ejb-core,barsgl-ejbparent/barsgl-ejb-common,barsgl-ejbparent/barsgl-bankjar,barsgl-ejbparent/barsgl-ejb,barsgl-ejbparent/barsgl-ejb-testing,barsgl-gwt/barsgl-gwt-servlet,barsgl-gwt/barsgl-gwt-serverutil,barsgl-ear -Pejb-ear

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejb-jar xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                            http://java.sun.com/xml/ns/javaee/ejb-jar_3_1.xsd"
+         version="3.1">
+    <description>Enterprise JavaBeans 3.1</description>
+    <display-name>Enterprise JavaBeans 3.1</display-name>
+
+    <!--
+        <session>
+            <ejb-name>WorkerBean</ejb-name>
+            <business-local>com.sample.ejb3.slsb.simple2.WorkerBusinessLocal</business-local>
+            <business-remote>com.sample.ejb3.slsb.simple2.WorkerBusinessRemote</business-remote>
+            <ejb-class>com.sample.ejb3.slsb.simple2.WorkerBase</ejb-class>
+            <session-type>Stateless</session-type>
+            <init-on-startup>true</init-on-startup>
+            <transaction-type>Container</transaction-type>
+            <env-entry>
+                <env-entry-name>FILTER</env-entry-name>
+                <env-entry-type>java.lang.Long</env-entry-type>
+                <env-entry-value>11011</env-entry-value>
+            </env-entry>
+        </session>
+    -->
+    <enterprise-beans>
+        <session>
+            <display-name>AuthorizationServiceSupport</display-name>
+            <ejb-name>AuthorizationServiceSupport</ejb-name>
+            <local-bean/>
+            <ejb-class>ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport</ejb-class>
+            <session-type>Stateless</session-type>
+        </session>
+    </enterprise-beans>
+</ejb-jar>

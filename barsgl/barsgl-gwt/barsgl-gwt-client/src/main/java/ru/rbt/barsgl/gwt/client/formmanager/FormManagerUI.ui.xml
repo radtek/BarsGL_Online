@@ -1,0 +1,52 @@
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:g="urn:import:com.google.gwt.user.client.ui">
+    <ui:style>
+        .basePanel {
+
+        }
+        .menuBar {
+
+        }
+        .dataPanel {
+
+        }
+
+        .statusBar {
+        background-color: #D5D5D5;
+        border-top: 1px solid grey;
+        }
+
+        .statusBarTitle {
+        font-family: Verdana, sans-serif;
+        font-weight: bold;
+        text-align: left;
+        vertical-align: middle;
+        padding: 5px 0 5px 5px;
+        }
+    </ui:style>
+
+    <g:DockLayoutPanel ui:field="basePanel" addStyleNames="{style.basePanel}" unit="MM">
+
+        <g:north size="7">
+            <g:LayoutPanel>
+                <g:layer width = "80%">
+                    <g:MenuBar ui:field="menuBar" vertical="false" addStyleNames="{style.menuBar}"></g:MenuBar>
+                </g:layer>
+                <g:layer right = "0px" width = "250px" >
+                    <g:HorizontalPanel ui:field="operdayPanel"/>
+                </g:layer>
+            </g:LayoutPanel>
+        </g:north>
+        <g:south size="6">
+            <g:SimplePanel ui:field="statusBar" addStyleNames="{style.statusBar}">
+                <g:Label ui:field="statusBarTitle" addStyleNames="{style.statusBarTitle}"/>
+            </g:SimplePanel>
+        </g:south>
+        <g:center>
+            <g:DockLayoutPanel ui:field="dataPanel" addStyleNames="{style.dataPanel}">
+
+            </g:DockLayoutPanel>
+        </g:center>
+    </g:DockLayoutPanel>
+
+</ui:UiBinder>

@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<jdbc-data-source xmlns="http://xmlns.oracle.com/weblogic/jdbc-data-source"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://xmlns.oracle.com/weblogic/jdbc-data-source http://xmlns.oracle.com/weblogic/jdbc-data-source/1.0/jdbc-data-source.xsd">
+    <name>AS400DataSource</name>
+    <jdbc-driver-params>
+        <driver-name>com.ibm.as400.access.AS400JDBCDriver</driver-name>
+        <url>jdbc:as400://tmb01/dwh;naming=sql;errors=full;thread used=false</url>
+        <properties>
+            <property>
+                <name>user</name>
+                <value>GCPUSER</value>
+            </property>
+            <property>
+                <name>transaction isolation</name>
+                <value>read committed</value>
+            </property>
+            <property>
+                <name>cursor hold</name>
+                <value>false</value>
+            </property>
+            <property>
+                <name>prompt</name>
+                <value>false</value>
+            </property>
+        </properties>
+        <password-encrypted>{AES}MKVJwht5Lhx8x7to7P+QvJ54rgoixpyf15c4ycvUy0k=</password-encrypted>
+    </jdbc-driver-params>
+    <jdbc-connection-pool-params>
+        <max-capacity>50</max-capacity>
+        <shrink-frequency-seconds>300</shrink-frequency-seconds>
+        <connection-creation-retry-frequency-seconds>120</connection-creation-retry-frequency-seconds>
+        <connection-reserve-timeout-seconds>800</connection-reserve-timeout-seconds>
+        <test-connections-on-reserve>true</test-connections-on-reserve>
+        <inactive-connection-timeout-seconds>30</inactive-connection-timeout-seconds>
+        <test-table-name>GL_USER</test-table-name>
+        <count-of-refresh-failures-till-disable>100</count-of-refresh-failures-till-disable>
+    </jdbc-connection-pool-params>
+    <jdbc-data-source-params>
+        <jndi-name>jdbc/AS400DataSource</jndi-name>
+        <global-transactions-protocol>EmulateTwoPhaseCommit</global-transactions-protocol>
+        <scope>Application</scope>
+    </jdbc-data-source-params>
+</jdbc-data-source>

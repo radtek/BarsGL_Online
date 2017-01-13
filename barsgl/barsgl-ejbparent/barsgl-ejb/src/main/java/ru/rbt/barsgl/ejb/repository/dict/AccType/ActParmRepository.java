@@ -1,0 +1,122 @@
+package ru.rbt.barsgl.ejb.repository.dict.AccType;
+
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
+import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParmId;
+import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
+import ru.rbt.barsgl.ejb.entity.dict.Acod;
+import ru.rbt.barsgl.ejb.repository.dict.AcodRepository;
+import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.shared.dict.ActParmWrapper;
+
+import javax.inject.Inject;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.List;
+
+import static java.lang.String.format;
+
+
+/**
+ * Created by akichigi on 24.08.16.
+ */
+public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, ActParmId> {
+    @Inject
+    private DateUtils dateUtils;
+
+    @Inject
+    private AcodRepository acodRepository;
+
+    public  boolean isAccTypeExists(String accType) {
+        return null != selectFirst(ActParm.class, "from ActParm T where T.id.accType = ?1", accType);
+    }
+
+    public boolean isActParmExists(ActParmWrapper wrapper) throws ParseException {
+        return  null != selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
+        "T.id.term =?3 and T.id.acc2 =?4 and T.id.dtb =?5", wrapper.getAccType(), wrapper.getCusType(),
+                wrapper.getTerm(), wrapper.getAcc2(), dateUtils.onlyDateParse(wrapper.getDtb()));
+    }
+
+    public boolean isParmDateClosed(ActParmWrapper wrapper) throws ParseException{
+         return  null == selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
+                        "T.id.term =?3 and T.id.acc2 =?4 and T.dte is null", wrapper.getAccType(), wrapper.getCusType(),
+                wrapper.getTerm(), wrapper.getAcc2());
+
+    }
+
+    public boolean isAcc2Exists(String acc2){
+        try {
+            return null != selectFirst("select 1 from BSS where ACC2=?", acc2);
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean isAcodeExists(String acod){
+        try {
+            return null != selectFirst("select 1 from GL_ACOD where ACOD=?", acod);
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean allowUseAcodMT1000(String acod){
+          Acod res = acodRepository.getNotUsedAcod(acod);
+          return ((res == null) || (Long.parseLong(acod) < 1000));
+    }
+
+    public boolean isPlCodeExists(ActParmWrapper wrapper){
+        try{
+            String sql = "select 1 from gl_plcode where plcode=? and dat <= date('" + wrapper.getDtb() +
+                         "') and value(datto, date('2029-01-01')) >= date('" + wrapper.getDtb() + "')";
+            return null != selectFirst(sql, wrapper.getPlcode());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public String getPsav(String acc2){
+        try{
+            DataRecord rec = selectFirst("select psav from BSS where acc2 =?", acc2);
+
+            return rec == null ? null : rec.getString("psav");
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean isActParmInAcc(ActParmWrapper wrapper){
+       String sql = "select id\n" +
+                    "from gl_acc \n" +
+                    "where ACCTYPE = ? and acc2 = ? and \n" +
+                    "((VALUE(CBCUSTTYPE, 0) = CAST(? as Decimal(3,0))) or (VALUE(CBCUSTTYPE, 0) = 0) or (CAST(? as Decimal(3,0)) = 0)) and  \n" +
+                    "((VALUE(TERM, 0) = CAST(? as Decimal(2,0))) or ((VALUE(TERM,0) = 0) or (CAST(? as Decimal(2,0)) = 0)))";
+       try {
+            return null != selectFirst(sql, wrapper.getAccType(), wrapper.getAcc2(), wrapper.getCusType(), wrapper.getCusType(),
+                    wrapper.getTerm(), wrapper.getTerm());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * поиск технического acctype
+     * @param accountingType
+     * @return
+     */
+    public ActParm findTechnicalActparm (AccountingType accountingType) {
+        List<ActParm> actParms = findNative(ActParm.class, "select * from gl_actparm p where p.acctype = ?", 10, accountingType.getId());
+        if (actParms.isEmpty()) {
+            return null;
+        } else if (1 < actParms.size()) {
+            throw new DefaultApplicationException(format("Более одной записи в gl_actparm по acctype '%s'", accountingType.getId()));
+        } else {
+            return actParms.get(0);
+        }
+    }
+
+
+}

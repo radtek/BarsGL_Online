@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>barsgl-gwt</artifactId>
+    <packaging>pom</packaging>
+    <name>${artifactId}:${packaging}:${project.version}</name>
+
+    <parent>
+        <groupId>ru.rbt</groupId>
+        <artifactId>barsgl</artifactId>
+        <version>2.2.31-SNAPSHOT</version>
+    </parent>
+
+    <modules>
+        <module>barsgl-gwt-core</module>
+        <module>barsgl-gwt-serverutil</module>
+        <module>barsgl-gwt-server</module>
+        <module>barsgl-gwt-client</module>
+        <module>barsgl-gwt-servlet</module>
+        <module>barsgl-gwt-war</module>
+    </modules>
+
+</project>

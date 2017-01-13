@@ -1,0 +1,16 @@
+rem xcopy build.properties                %1\build.properties
+
+xcopy %1\build.bat.example                       %1\build.bat
+xcopy %1\build-ejb-ear.bat.example               %1\build-ejb-ear.bat
+xcopy %1\build-ejb-gwtserver-ear.bat.example     %1\build-ejb-gwtserver-ear.bat
+xcopy %1\build-ejbprofile-ear.bat.example        %1\build-ejbprofile-ear.bat
+xcopy %1\build-gwt-war.bat.example               %1\build-gwt-war.bat
+xcopy %1\build-prod.bat.example                  %1\build-prod.bat
+xcopy %1\realese-clean.bat.example               %1\realese-clean.bat
+xcopy %1\release.bat.example                     %1\release.bat
+xcopy %1\set-new-version.bat.example             %1\set-new-version.bat
+
+xcopy %1\barsgl-ejbparent\barsgl-ejbtest\src\test\resources\jndi.properties.example %1\barsgl-ejbparent\barsgl-ejbtest\src\test\resources\jndi.properties
+
+xcopy %1\barsgl-gwt\barsgl-gwt-war\src\main\resources\application.properties.example %1\barsgl-gwt\barsgl-gwt-war\src\main\resources\application.properties
+

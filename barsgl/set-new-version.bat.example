@@ -1,0 +1,1 @@
+mvn org.codehaus.mojo:versions-maven-plugin:1.0:set -DnewVersion=1.0.30.1

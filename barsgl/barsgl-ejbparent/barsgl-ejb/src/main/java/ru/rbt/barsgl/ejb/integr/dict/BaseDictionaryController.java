@@ -1,0 +1,114 @@
+/*
+ * ООО "Артком Системы" & "3G Banking Technologies" 2015
+ * BARS GL
+ */
+package ru.rbt.barsgl.ejb.integr.dict;
+
+import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+
+import javax.ejb.EJB;
+import java.io.Serializable;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.User;
+import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+
+/**
+ *
+ * @author Andrew Samsonov
+ */
+public abstract class BaseDictionaryController<T extends Serializable, K extends Serializable, E extends BaseEntity<K>, U extends AbstractBaseEntityRepository<E, K>> implements DictionaryController<T> {
+
+  @EJB
+  protected AuditController auditController;
+
+  public RpcRes_Base<T> create(T wrapper, U repository, Class<E> clazz, K primaryKey,
+          String checkMessage,
+          String infoMessage,
+          String auditErrorMessage,
+          Supplier<E> supplier) {
+    E entity;
+    // проверка уникальности имени в таблице
+    if (null != primaryKey) {
+      entity = repository.findById(clazz, primaryKey);
+      if (entity != null) {
+        return new RpcRes_Base<>(wrapper, true, checkMessage);
+      }
+    }
+
+    try {
+      entity = supplier.get();
+      beforeCreate(entity);
+      repository.save(entity);
+      afterCreate(entity);
+      return auditInfo(wrapper, infoMessage);
+    } catch (Exception ex) {
+      return auditError(wrapper, auditErrorMessage, ex);
+    }
+  }
+  
+  protected RpcRes_Base<T> update(T wrapper, U repository, Class<E> clazz, K primaryKey,
+          String checkMessage,
+          String infoMessage,
+          String auditErrorMessage,
+          Consumer<E> consumer) {
+    E entity = repository.findById(clazz, primaryKey);
+    if (entity == null) {
+      return new RpcRes_Base<>(wrapper, true, checkMessage);
+    }
+
+    try {
+      beforeUpdate(entity);
+      consumer.accept(entity);
+
+      repository.update(entity);
+      afterUpdate(entity);
+
+      return auditInfo(wrapper, infoMessage);
+    } catch (Exception ex) {
+      return auditError(wrapper, auditErrorMessage, ex);
+    }
+  }
+
+  public RpcRes_Base<T> delete(T wrapper, U repository, Class<E> clazz, K primaryKey,
+          String checkMessage,
+          String infoMessage,
+          String auditErrorMessage) {
+    E entity = repository.findById(clazz, primaryKey);
+    if (entity == null) {
+      return new RpcRes_Base<>(wrapper, true, checkMessage);
+    }
+
+    try {
+      beforeDelete(entity);
+      repository.remove(entity);
+
+      return auditInfo(wrapper, infoMessage);
+    } catch (Exception ex) {
+      return auditError(wrapper, auditErrorMessage, ex);
+    }
+  }
+
+  protected RpcRes_Base<T> auditInfo(T wrapper, String infoMessage) {
+    auditController.info(User, infoMessage);
+    return new RpcRes_Base<>(wrapper, false, infoMessage);
+  }
+
+  protected RpcRes_Base<T> auditError(T wrapper, String auditErrorMessage, Exception ex) {
+    auditController.error(User, auditErrorMessage, null, ex);
+    return new RpcRes_Base<>(wrapper, true, getErrorMessage(ex));
+  }
+
+  public void beforeCreate(E entity){}
+  public void afterCreate(E entity){}
+
+  public void beforeUpdate(E entity){}
+  public void afterUpdate(E entity){}
+
+  public void beforeDelete(E entity){}
+
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>barsgl</artifactId>
+        <groupId>ru.rbt</groupId>
+        <version>2.2.31-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>barsgl-ejbparent</artifactId>
+    <packaging>pom</packaging>
+    <name>${artifactId}:${packaging}:${project.version}</name>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>barsgl-ejb-core</module>
+                <module>barsgl-ejb-common</module>
+                <module>barsgl-bankjar</module>
+                <module>barsgl-ejb</module>
+                <module>barsgl-ejb-testing</module>
+            </modules>
+        </profile>
+    <profile>
+        <id>with-remote-tests</id>
+        <activation>
+            <activeByDefault>false</activeByDefault>
+        </activation>
+        <modules>
+            <module>barsgl-ejb-core</module>
+            <module>barsgl-ejb-common</module>
+            <module>barsgl-bankjar</module>
+            <module>barsgl-ejb</module>
+            <module>barsgl-ejb-testing</module>
+            <module>barsgl-ejbtest</module>
+        </modules>
+    </profile>
+</profiles>
+
+</project>
