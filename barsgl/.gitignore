@@ -1,2 +1,14 @@
 .idea
 *.iml
+/build.bat
+/build.properties
+/build-ejb-ear.bat
+/build-ejb-gwtserver-ear.bat
+/build-ejbprofile-ear.bat
+/build-gwt-war.bat
+/build-prod.bat
+/copy_example.bat
+/realese-clean.bat
+/release.bat
+/set-new-version.bat
+/testjavadoc.bat
