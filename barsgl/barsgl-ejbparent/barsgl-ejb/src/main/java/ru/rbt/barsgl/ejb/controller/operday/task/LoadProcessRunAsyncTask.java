@@ -32,7 +32,7 @@ public class LoadProcessRunAsyncTask implements ParamsAwareRunnable {
         try {
             List objectsList = new ArrayList();
             properties.stringPropertyNames().stream().forEach(key -> objectsList.add(properties.get(key)));
-            runner.callAsync("/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", objectsList.toArray());
+            runner.callAsyncGl("/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", objectsList.toArray());
 //            runner.callAsync("/GCP/async.jar", "ru.rb.test.Example", objectsList.toArray());
 //            runner.callSynhro("/GCP","/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", objectsList.toArray());
         } catch (Exception e) {

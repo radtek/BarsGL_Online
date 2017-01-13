@@ -40,7 +40,7 @@ public class PlCloseTask extends AbstractJobHistoryAwareTask {
                 s = (String)properties.get("Create707");
                 if (s != null && !s.isEmpty()) type707 = Integer.valueOf(s);
                 auditController.info(PlClose707Create, "Запуск создания счетов 707, тип "+type707+", дата "+d);
-                as400ProcedureRunner.callAsync("/GCP/bank.jar", "lv.gcpartners.bank.plclose.PlCloseSet707",
+                as400ProcedureRunner.callAsyncGl("/GCP/bank.jar", "lv.gcpartners.bank.plclose.PlCloseSet707",
                         new Object[]{DateUtils.dbDateString(d),type707});
                 auditController.info(PlClose707Create, "Завершение создания счетов 707");
             }else if(task.equals("Del")){
@@ -50,7 +50,7 @@ public class PlCloseTask extends AbstractJobHistoryAwareTask {
                 s = (String)properties.get("Del707");
                 if (s != null && !s.isEmpty()) type707 = Integer.valueOf(s);
                 auditController.info(PlClose707Del, "Запуск удаления счетов 707, тип "+type707+", дата "+d);
-                as400ProcedureRunner.callAsync("/GCP/bank.jar", "lv.gcpartners.bank.plclose.PlCloseDel707",
+                as400ProcedureRunner.callAsyncGl("/GCP/bank.jar", "lv.gcpartners.bank.plclose.PlCloseDel707",
                         new Object[]{DateUtils.dbDateString(d),type707});
                 auditController.info(PlClose707Del, "Завершение удаления счетов 707");
             }else{

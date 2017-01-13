@@ -125,7 +125,7 @@ public class LoaderManagementTask implements ParamsAwareRunnable {
 
         String datStr = new SimpleDateFormat("yyyy-MM-dd").format(loadManagement.getDat());
 
-        as400Runner.callAsync("bank.jar", procedure, new Object [] {datStr});
+        as400Runner.callAsyncGl("bank.jar", procedure, new Object [] {datStr});
     }
 
 }
