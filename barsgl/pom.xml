@@ -75,7 +75,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.4.2</version>
+                <version>2.5.3</version>
                 <!--<configuration>
                     <tagBase>http://vs278/svn/SVN_DWH/DWH/BARS/tags/BarsGLOnline</tagBase>
                     <connectionUrl>scm:svn:http://vs278/svn/SVN_DWH/DWH/BARS/trunk/BarsGLOnline</connectionUrl>
