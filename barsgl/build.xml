@@ -7,6 +7,8 @@
     <!--<property name="env.JAVA_HOME" value="${JAVA_HOME}"/>-->
     <!--my changes branch 3.0.5 -->
 
+    <!--changes in master 16.03-->
+
     <target name="start-weblogic">
         <exec executable="cmd" dir=".">
             <arg line="/A /C ${DOMAIN_HOME}/startWebLogic"/>
