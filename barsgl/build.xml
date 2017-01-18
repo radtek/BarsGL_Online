@@ -5,7 +5,7 @@
 
     <property environment="env"/>
     <!--<property name="env.JAVA_HOME" value="${JAVA_HOME}"/>-->
-    <!--my changes branch 3.0.5 -->
+    <!--my changes branch 3.0.5 second changes -->
 
     <target name="start-weblogic">
         <exec executable="cmd" dir=".">
