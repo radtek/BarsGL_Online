@@ -5,8 +5,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.*;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
@@ -17,36 +15,33 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.PRE_COB;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
-import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.FULL_POSTING;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.findBsaacid;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.findGlAccount;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.getPds;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamType.B;
@@ -441,7 +436,7 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
 
         List<DataRecord> accs = baseEntityRepository
                 .select("select * from gl_acc ac where ac.dto <= ? and value(ac.dtc, ?) >= ? fetch first 2 rows only"
-                , operdate, operdate, operdate);
+                        , operdate, operdate, operdate);
 
         Assert.assertEquals(2, accs.size());
 
@@ -466,6 +461,74 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         Assert.assertEquals(header.getLong(0), header2.getLong(0));
     }
 
+    /**
+     * выгрузка в СТАМТ технических проводок по исправлению красного сальдо
+     */
+    @Test public void testTechover() throws Exception {
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_stmparm");
+        baseEntityRepository.executeNativeUpdate("delete from gl_pdjover");
+        baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstma");
+
+        // регистр проводки для выгрузки
+        Date operdate = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
+        Date lwdate = DateUtils.addDays(operdate, -1);
+        setOperday(operdate, lwdate, ONLINE, OPEN);
+
+        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid fetch first 2 rows only");
+        Assert.assertEquals(2, pds.size());
+
+        String bsaacid1 = pds.get(0).getString("bsaacid");
+        String bsaacid2 = pds.get(0).getString("bsaacid");
+
+        registerForStamtUnliad(bsaacid1);
+        registerForStamtUnliad(bsaacid2);
+
+        long pcid = remoteAccess.invoke(PdRepository.class, "getNextId");
+
+        // два раза чтоб отработал триггер по старому значению PCID
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid, pds.get(1).getLong("id"));
+
+        DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo fetch first 1 rows only");
+        Assert.assertNotNull(pcidMo);
+
+        baseEntityRepository.executeNativeUpdate("update pcid_mo set pcid = ? where pcid = ?", pcid, pcidMo.getLong("pcid"));
+
+        checkCreateStep("MI4GL", lwdate, "O");
+
+        SingleActionJob job = SingleActionJobBuilder.create().withClass(StamtUnloadTechoverTask.class).build();
+        jobService.executeJob(job);
+        DataRecord header = getLastUnloadHeader(UnloadStamtParams.BALANCE_TECHOVER);
+        Assert.assertNotNull(header);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
+
+        header = getLastUnloadHeader(UnloadStamtParams.POSTING_TECHOVER);
+        Assert.assertNotNull(header);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
+
+        List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd");
+        Assert.assertEquals(1, records.size());
+        Assert.assertEquals(bsaacid1, records.get(0).getString("dcbaccount"));
+        Assert.assertEquals(bsaacid2, records.get(0).getString("ccbaccount"));
+        jobService.executeJob(job);
+        DataRecord header2 = getLastUnloadHeader(UnloadStamtParams.POSTING_TECHOVER);
+        Assert.assertEquals(header.getLong("id"), header2.getLong("id"));
+    }
+
+    private void registerForStamtUnliad(String bsaacid) {
+        try {
+            baseEntityRepository.executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype,INCLUDEBLN) values (?, '1', 'B','1')"
+                    , bsaacid.substring(0,5));
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "ошибка вставки в параметры", e);
+        }
+    }
+
     private void initFlexPd(Date operday, String accDt, String accCt) throws SQLException {
         log.info("accDt=" + accDt);
         log.info("accCt=" + accCt);
@@ -473,12 +536,7 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         GLOperation operation = getOneOper(operday);
         List<Pd> pds = Utl4Tests.getPds(baseEntityRepository, operation);
         for (Pd pd : pds) {
-            try {
-                baseEntityRepository.executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype,INCLUDEBLN) values (?, '1', 'B','1')"
-                        , pd.getBsaAcid().substring(0,5));
-            } catch (Exception e) {
-                log.log(Level.SEVERE, "ошибка вставки в параметры", e);
-            }
+            registerForStamtUnliad(pd.getBsaAcid());
 
         }
         try {
@@ -504,7 +562,7 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
     private DataRecord getLastUnloadHeader(UnloadStamtParams params) throws SQLException {
         return Optional.ofNullable(baseEntityRepository
                 .selectFirst("select * from gl_etlstms where parname = ? and pardesc = ? order by id desc"
-                , params.getParamName(), params.getParamDesc())).orElse(null);
+                        , params.getParamName(), params.getParamDesc())).orElse(null);
     }
 
     /**
@@ -516,11 +574,11 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
     private GLOperation getOneOper(Date operday) throws SQLException {
         List<DataRecord> records = baseEntityRepository.selectMaxRows(
                 "select o.* from gl_oper o where exists (select 1 from gl_posting ps, pd pd " +
-                " where ps.pcid = pd.pcid and pd.invisible <> '1' and o.gloid = ps.glo_ref) order by 1 desc", 1, new Object[]{});
+                        " where ps.pcid = pd.pcid and pd.invisible <> '1' and o.gloid = ps.glo_ref) order by 1 desc", 1, new Object[]{});
         GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, records.get(0).getLong("gloid"));
         Assert.assertNotNull(operation);
         baseEntityRepository.executeNativeUpdate("update gl_oper o set o.postDate = '"
-                + Utl4Tests.toString(operday, "yyyy-MM-dd") +"', o.procDate = '" + Utl4Tests.toString(operday, "yyyy-MM-dd") + "' where o.gloid = ?1"
+                        + Utl4Tests.toString(operday, "yyyy-MM-dd") +"', o.procDate = '" + Utl4Tests.toString(operday, "yyyy-MM-dd") + "' where o.gloid = ?1"
                 , operation.getId());
         return (GLOperation) baseEntityRepository.findById(GLOperation.class, operation.getId());
     }
@@ -534,7 +592,7 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
     private GLOperation getOneOperAcc(Date operday) throws SQLException {
         List<DataRecord> records = baseEntityRepository.selectMaxRows(
                 "select o.* from gl_oper o where exists (select 1 from gl_posting ps, pd pd " +
-                " where ps.pcid = pd.pcid and pd.invisible <> '1' and o.gloid = ps.glo_ref) order by 1 desc", 1, new Object[]{});
+                        " where ps.pcid = pd.pcid and pd.invisible <> '1' and o.gloid = ps.glo_ref) order by 1 desc", 1, new Object[]{});
         GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, records.get(0).getLong("gloid"));
         Assert.assertNotNull(operation);
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.procDate = ?1 where o.id = ?2", operday, operation.getId());
@@ -551,13 +609,13 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         GLOperation operation = createOperation();
         Assert.assertNotNull(operation);
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = '"
-                + Utl4Tests.toString(operday.getLastWorkingDay(), "yyyy-MM-dd") + "', o.procDate = '"
-                + Utl4Tests.toString(operday.getCurrentDate(), "yyyy-MM-dd") + "' where o.id = ?1"
+                        + Utl4Tests.toString(operday.getLastWorkingDay(), "yyyy-MM-dd") + "', o.procDate = '"
+                        + Utl4Tests.toString(operday.getCurrentDate(), "yyyy-MM-dd") + "' where o.id = ?1"
                 , operation.getId());
         baseEntityRepository.executeNativeUpdate(
                 "update pd d set d.pod = ?, d.vald = ? " +
                         "where d.pcid = (select pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and o.gloid = ?)"
-                    , operday.getLastWorkingDay(), operday.getCurrentDate(), operation.getId());
+                , operday.getLastWorkingDay(), operday.getCurrentDate(), operation.getId());
         return (GLOperation) baseEntityRepository.findById(GLOperation.class, operation.getId());
     }
 

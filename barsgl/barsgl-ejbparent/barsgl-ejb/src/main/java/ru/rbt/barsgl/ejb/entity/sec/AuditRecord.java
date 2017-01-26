@@ -76,6 +76,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , TechnicalPosting
         , Monitoring
         , StartLoaderTask
+        , TechoverTask
     }
 
     public enum LogLevel {

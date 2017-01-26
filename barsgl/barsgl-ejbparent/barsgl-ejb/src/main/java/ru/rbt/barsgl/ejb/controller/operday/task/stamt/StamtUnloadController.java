@@ -6,6 +6,8 @@ import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.etc.TextResourceController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.barsgl.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -13,8 +15,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.TASK_ERROR;
 
 /**
  * Created by Ivan Sevastyanov on 28.01.2016.
@@ -113,4 +120,21 @@ public class StamtUnloadController {
                     .getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/move_introday_backvalue2hist.sql"), maxcnt);
         });
     }
+
+    /**
+     * Проверяем закончена ли обработка данных по выгрузкам проводок в TDS
+     * @param executeDate
+     * @throws Exception
+     */
+    public void checkConsumed(Date executeDate) throws Exception {
+        List<DataRecord> unloads = repository.select(
+                "select *\n" +
+                        "  from gl_etlstms s\n" +
+                        " where s.pardesc like ? and s.operday = ? and parvalue in ('0','1','3')", "%GL_ETLSTMD%", executeDate);
+        Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(TASK_ERROR
+                , format("Найдены необработанные выгрузки: %s", unloads.stream()
+                .map(rec -> rec.getString("ID") + ":" + rec.getString("parname") + ":" + rec.getString("PARDESC")).collect(Collectors.joining(" ")))));
+    }
+
+
 }
