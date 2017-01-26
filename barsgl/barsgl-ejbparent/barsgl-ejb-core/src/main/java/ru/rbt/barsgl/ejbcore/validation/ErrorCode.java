@@ -164,6 +164,7 @@ public enum ErrorCode {
     , POSTINGS_CONTROLLABLE(4016, "%s.\nВ операции есть проводки по контролируемым счетам: '%s'")
 
     , BAD_DATE_FORMAT(10000, "Неверный формат поля '%s': %s")
+    , TEST_ERROR(5000, "Проверка")
     ;
 
     private final int errorCode;

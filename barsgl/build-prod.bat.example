@@ -1,6 +1,6 @@
 set JAVA_HOME="C:\Development\jdk\1.8.0_25"
 
-git commit -m 'Commiting current work'
+git commit -m 'Committing current work'
 
 git push
 
