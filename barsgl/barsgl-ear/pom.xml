@@ -227,7 +227,7 @@
                                 <phase>install</phase>
                                 <configuration>
                                     <target>
-                                        <property name="tagname" value="${artifactId}-${project.version}" />
+                                        <property name="tagname" value="${parent.artifactId}-${project.version}" />
                                         <property name="branch_name" value="branch_${tagname}" />
 
                                         <property name="current_dir" location="../.." />
