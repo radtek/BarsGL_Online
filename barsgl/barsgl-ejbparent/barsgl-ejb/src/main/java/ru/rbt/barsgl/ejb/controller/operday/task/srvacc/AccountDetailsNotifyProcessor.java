@@ -92,9 +92,9 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     private OperdayController operdayController;
 
     static String[] paramNamesOpen = {"AccountNo", "Branch", "CBAccountNo", "Ccy", "CcyDigital", "Description", "Status",
-        "CustomerNo", "Special", "OpenDate", "Positioning/HostABS"};
+            "CustomerNo", "Special", "OpenDate", "Positioning/HostABS"};
 
-    static String[] paramNamesClose = {"CBAccountNo", "Status", "CloseDate", "Positioning/HostABS"};
+    static String[] paramNamesClose = {"Branch", "CBAccountNo", "Status", "CloseDate", "Positioning/HostABS"};
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -114,6 +114,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
             return;
         }
 
+        String branch = xmlData.get("Branch");
         String bsaacid = xmlData.get("CBAccountNo");
         String status = xmlData.get("Status");
         String hostABS = xmlData.get("Positioning/HostABS");
@@ -143,6 +144,30 @@ public class AccountDetailsNotifyProcessor implements Serializable {
                 journalRepository.updateLogStatus(jId, ERROR, "Ошибка в данных bsaacid / hostABS / closeDate");
                 return;
             }
+        } else if (!isEmpty(branch)){
+            DataRecord recMidas = coreRepository.selectFirst("SELECT midas_branch FROM DWH.DH_BR_MAP where fcc_branch=?", branch);
+            DataRecord recGlacc = coreRepository.selectFirst("SELECT branch from gl_acc where bsaacid=?", bsaacid);
+
+            if (recMidas == null){
+                journalRepository.updateLogStatus(jId, ERROR, "Не найден DH_BR_MAP.fcc_branch = " + branch);
+                log.warn("Не найден DH_BR_MAP.fcc_branch = " + branch);
+                return;
+            }else if (recGlacc == null){
+                journalRepository.updateLogStatus(jId, ERROR, "Не найден gl_acc.bsaacid = " + bsaacid);
+                log.warn("Не найден gl_acc.bsaacid = " + bsaacid);
+                return;
+            }
+            String midasBranch = recMidas.getString(0);
+            String glaccBranch = recGlacc.getString(0);
+            if (midasBranch.equals(glaccBranch)){
+                journalRepository.updateLogStatus(jId, ERROR, "Branch не менялся");
+                auditController.info(AuditRecord.LogCode.AccountDetailsNotify, "Branch не менялся");
+            }else{
+                coreRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", midasBranch, bsaacid);
+                journalRepository.updateLogStatus(jId, PROCESSED, "На счете " + bsaacid + " branch "+glaccBranch+"("+branch+") заменен на "+midasBranch);
+                auditController.info(AuditRecord.LogCode.AccountDetailsNotify, "На счете " + bsaacid + " branch "+glaccBranch+"("+branch+") заменен на "+midasBranch);
+            }
+            return;
         } else{
             journalRepository.updateLogStatus(jId, ERROR, "Запрос не про закрытие счёта");
             return;
@@ -175,7 +200,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
 
         if (AcDNJournal.Sources.FCC.equals(source) && !"FCC".equals(xmlData.get("Positioning/HostABS"))) {
             journalRepository.updateLogStatus(jId, ERROR,
-                "Не обрабатываем сообщение из FCC c HostABS=" + xmlData.get("Positioning/HostABS"));
+                    "Не обрабатываем сообщение из FCC c HostABS=" + xmlData.get("Positioning/HostABS"));
             return;
         }
 
@@ -445,527 +470,527 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     }
 
     public static String messageFCCNoCustomer =
-        "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
-            "    <NS1:Header>\n" +
-            "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
-            "            <NS2:Audit>\n" +
-            "                <NS2:MessagePath>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T16:14:55.585+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T16:14:55.591+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T16:14:55.766+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T16:14:55.787+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment></NS2:Comment>\n" +
-            "                    </NS2:Step>\n" +
-            "                </NS2:MessagePath>\n" +
-            "            </NS2:Audit>\n" +
-            "        </NS2:UCBRUHeaders>\n" +
-            "    </NS1:Header>\n" +
-            "    <NS1:Body>\n" +
-            "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
-            "            <gbo:AccountDetails>\n" +
-            "                <gbo:AccountNo>02263713RURPRCA101</gbo:AccountNo>\n" +
-            "                <gbo:Branch>J01</gbo:Branch>\n" +
-            "                <gbo:CBAccountNo>40817810250300081806</gbo:CBAccountNo>\n" +
-            "                <gbo:Ccy>RUR</gbo:Ccy>\n" +
-            "                <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
-            "                <gbo:Description>PRCA1 02 KAA</gbo:Description>\n" +
-            "                <gbo:Status>O</gbo:Status>\n" +
-            "                <gbo:CustomerNo>02263713</gbo:CustomerNo>\n" +
-            "                <gbo:Special>PRCA1</gbo:Special>\n" +
-            "                <gbo:OpenDate>2016-06-24</gbo:OpenDate>\n" +
-            "                <gbo:AltAccountNo>02263713RURPRCA101</gbo:AltAccountNo>\n" +
-            "                <gbo:Type>S</gbo:Type>\n" +
-            "                <gbo:ATMAvailable>N</gbo:ATMAvailable>\n" +
-            "                <gbo:IsFrozen>N</gbo:IsFrozen>\n" +
-            "                <gbo:IsDormant>N</gbo:IsDormant>\n" +
-            "                <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
-            "                <gbo:DebitTransAllowed>Y</gbo:DebitTransAllowed>\n" +
-            "                <gbo:ClearingBank>042007709</gbo:ClearingBank>\n" +
-            "                <gbo:CorBank>042007709</gbo:CorBank>\n" +
-            "                <gbo:Positioning>\n" +
-            "                    <gbo:CBAccount>40817810250300081806</gbo:CBAccount>\n" +
-            "                    <gbo:IMBAccountNo>40817810250300081806</gbo:IMBAccountNo>\n" +
-            "                    <gbo:IMBBranch>J01</gbo:IMBBranch>\n" +
-            "                    <gbo:HostABSAccountNo>02263713RURPRCA101</gbo:HostABSAccountNo>\n" +
-            "                    <gbo:HostABSBranch>J01</gbo:HostABSBranch>\n" +
-            "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
-            "                </gbo:Positioning>\n" +
-            "                <gbo:MIS>\n" +
-            "                    <gbo:Group>R_P_MC</gbo:Group>\n" +
-            "                    <gbo:Pool>DFLTPOOL</gbo:Pool>\n" +
-            "                    <gbo:GroupComponent>R_P_MC</gbo:GroupComponent>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS1</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS2</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS3</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS4</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS5</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS6</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS7</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS8</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS9</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:TransactionClass>\n" +
-            "                        <gbo:Name>TXNMIS10</gbo:Name>\n" +
-            "                    </gbo:TransactionClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS1</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS2</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS3</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS4</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS5</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS6</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS7</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS8</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS9</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CompositeClass>\n" +
-            "                        <gbo:Name>COMPMIS10</gbo:Name>\n" +
-            "                    </gbo:CompositeClass>\n" +
-            "                    <gbo:CostCode>\n" +
-            "                        <gbo:Name>COSTCOD1</gbo:Name>\n" +
-            "                    </gbo:CostCode>\n" +
-            "                    <gbo:CostCode>\n" +
-            "                        <gbo:Name>COSTCOD2</gbo:Name>\n" +
-            "                    </gbo:CostCode>\n" +
-            "                    <gbo:CostCode>\n" +
-            "                        <gbo:Name>COSTCOD3</gbo:Name>\n" +
-            "                    </gbo:CostCode>\n" +
-            "                    <gbo:CostCode>\n" +
-            "                        <gbo:Name>COSTCOD4</gbo:Name>\n" +
-            "                    </gbo:CostCode>\n" +
-            "                    <gbo:CostCode>\n" +
-            "                        <gbo:Name>COSTCOD5</gbo:Name>\n" +
-            "                    </gbo:CostCode>\n" +
-            "                </gbo:MIS>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>GWSAccType</gbo:Name>\n" +
-            "                    <gbo:Value>CURR</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
-            "                    <gbo:Value>VIEW=1,DOMPAY=1,CUPADE=1,CUPACO=1,</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>ParentBranchName</gbo:Name>\n" +
-            "                    <gbo:Value>UCB, Voronezh Branch</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>CusSegment</gbo:Name>\n" +
-            "                    <gbo:Value>TIER_I</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "            </gbo:AccountDetails>\n" +
-            "        </gbo:AccountList>\n" +
-            "    </NS1:Body>\n" +
-            "</NS1:Envelope>";
+            "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+                    "    <NS1:Header>\n" +
+                    "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
+                    "            <NS2:Audit>\n" +
+                    "                <NS2:MessagePath>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T16:14:55.585+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T16:14:55.591+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T16:14:55.766+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T16:14:55.787+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment></NS2:Comment>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                </NS2:MessagePath>\n" +
+                    "            </NS2:Audit>\n" +
+                    "        </NS2:UCBRUHeaders>\n" +
+                    "    </NS1:Header>\n" +
+                    "    <NS1:Body>\n" +
+                    "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
+                    "            <gbo:AccountDetails>\n" +
+                    "                <gbo:AccountNo>02263713RURPRCA101</gbo:AccountNo>\n" +
+                    "                <gbo:Branch>J01</gbo:Branch>\n" +
+                    "                <gbo:CBAccountNo>40817810250300081806</gbo:CBAccountNo>\n" +
+                    "                <gbo:Ccy>RUR</gbo:Ccy>\n" +
+                    "                <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
+                    "                <gbo:Description>PRCA1 02 KAA</gbo:Description>\n" +
+                    "                <gbo:Status>O</gbo:Status>\n" +
+                    "                <gbo:CustomerNo>02263713</gbo:CustomerNo>\n" +
+                    "                <gbo:Special>PRCA1</gbo:Special>\n" +
+                    "                <gbo:OpenDate>2016-06-24</gbo:OpenDate>\n" +
+                    "                <gbo:AltAccountNo>02263713RURPRCA101</gbo:AltAccountNo>\n" +
+                    "                <gbo:Type>S</gbo:Type>\n" +
+                    "                <gbo:ATMAvailable>N</gbo:ATMAvailable>\n" +
+                    "                <gbo:IsFrozen>N</gbo:IsFrozen>\n" +
+                    "                <gbo:IsDormant>N</gbo:IsDormant>\n" +
+                    "                <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
+                    "                <gbo:DebitTransAllowed>Y</gbo:DebitTransAllowed>\n" +
+                    "                <gbo:ClearingBank>042007709</gbo:ClearingBank>\n" +
+                    "                <gbo:CorBank>042007709</gbo:CorBank>\n" +
+                    "                <gbo:Positioning>\n" +
+                    "                    <gbo:CBAccount>40817810250300081806</gbo:CBAccount>\n" +
+                    "                    <gbo:IMBAccountNo>40817810250300081806</gbo:IMBAccountNo>\n" +
+                    "                    <gbo:IMBBranch>J01</gbo:IMBBranch>\n" +
+                    "                    <gbo:HostABSAccountNo>02263713RURPRCA101</gbo:HostABSAccountNo>\n" +
+                    "                    <gbo:HostABSBranch>J01</gbo:HostABSBranch>\n" +
+                    "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
+                    "                </gbo:Positioning>\n" +
+                    "                <gbo:MIS>\n" +
+                    "                    <gbo:Group>R_P_MC</gbo:Group>\n" +
+                    "                    <gbo:Pool>DFLTPOOL</gbo:Pool>\n" +
+                    "                    <gbo:GroupComponent>R_P_MC</gbo:GroupComponent>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS1</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS2</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS3</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS4</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS5</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS6</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS7</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS8</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS9</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:TransactionClass>\n" +
+                    "                        <gbo:Name>TXNMIS10</gbo:Name>\n" +
+                    "                    </gbo:TransactionClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS1</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS2</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS3</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS4</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS5</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS6</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS7</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS8</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS9</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CompositeClass>\n" +
+                    "                        <gbo:Name>COMPMIS10</gbo:Name>\n" +
+                    "                    </gbo:CompositeClass>\n" +
+                    "                    <gbo:CostCode>\n" +
+                    "                        <gbo:Name>COSTCOD1</gbo:Name>\n" +
+                    "                    </gbo:CostCode>\n" +
+                    "                    <gbo:CostCode>\n" +
+                    "                        <gbo:Name>COSTCOD2</gbo:Name>\n" +
+                    "                    </gbo:CostCode>\n" +
+                    "                    <gbo:CostCode>\n" +
+                    "                        <gbo:Name>COSTCOD3</gbo:Name>\n" +
+                    "                    </gbo:CostCode>\n" +
+                    "                    <gbo:CostCode>\n" +
+                    "                        <gbo:Name>COSTCOD4</gbo:Name>\n" +
+                    "                    </gbo:CostCode>\n" +
+                    "                    <gbo:CostCode>\n" +
+                    "                        <gbo:Name>COSTCOD5</gbo:Name>\n" +
+                    "                    </gbo:CostCode>\n" +
+                    "                </gbo:MIS>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>GWSAccType</gbo:Name>\n" +
+                    "                    <gbo:Value>CURR</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
+                    "                    <gbo:Value>VIEW=1,DOMPAY=1,CUPADE=1,CUPACO=1,</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>ParentBranchName</gbo:Name>\n" +
+                    "                    <gbo:Value>UCB, Voronezh Branch</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>CusSegment</gbo:Name>\n" +
+                    "                    <gbo:Value>TIER_I</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "            </gbo:AccountDetails>\n" +
+                    "        </gbo:AccountList>\n" +
+                    "    </NS1:Body>\n" +
+                    "</NS1:Envelope>";
 
     public static String messageFCCShadow =
-        "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
-            "    <NS1:Header>\n" +
-            "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
-            "            <NS2:Audit>\n" +
-            "                <NS2:MessagePath>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T13:35:33.540+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T13:35:33.550+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T13:35:33.771+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-06-24T13:35:33.789+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment></NS2:Comment>\n" +
-            "                    </NS2:Step>\n" +
-            "                </NS2:MessagePath>\n" +
-            "            </NS2:Audit>\n" +
-            "        </NS2:UCBRUHeaders>\n" +
-            "    </NS1:Header>\n" +
-            "    <NS1:Body>\n" +
-            "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
-            "            <gbo:AccountDetails>\n" +
-            "                <gbo:AccountNo>770078RUR400902024</gbo:AccountNo>\n" +
-            "                <gbo:Branch>024</gbo:Branch>\n" +
-            "                <gbo:CBAccountNo>40802810900014879108</gbo:CBAccountNo>\n" +
-            "                <gbo:Ccy>RUR</gbo:Ccy>\n" +
-            "                <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
-            "                <gbo:Description>SANNIKOVA NATALYA</gbo:Description>\n" +
-            "                <gbo:Status>O</gbo:Status>\n" +
-            "                <gbo:CustomerNo>00770078</gbo:CustomerNo>\n" +
-            "                <gbo:Special>4009</gbo:Special>\n" +
-            "                <gbo:OpenDate>2016-06-24</gbo:OpenDate>\n" +
-            "                <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
-            "                <gbo:DebitTransAllowed>Y</gbo:DebitTransAllowed>\n" +
-            "                <gbo:CorBank>044525545</gbo:CorBank>\n" +
-            "                <gbo:CorINN>772446207507</gbo:CorINN>\n" +
-            "                <gbo:Positioning>\n" +
-            "                    <gbo:CBAccount>40802810900014879108</gbo:CBAccount>\n" +
-            "                    <gbo:IMBAccountNo>40802810900014879108</gbo:IMBAccountNo>\n" +
-            "                    <gbo:IMBBranch>024</gbo:IMBBranch>\n" +
-            "                    <gbo:HostABSAccountNo>770078RUR400902024</gbo:HostABSAccountNo>\n" +
-            "                    <gbo:HostABSBranch>024</gbo:HostABSBranch>\n" +
-            "                    <gbo:HostABS>MIDAS</gbo:HostABS>\n" +
-            "                </gbo:Positioning>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>GWSAccType</gbo:Name>\n" +
-            "                    <gbo:Value>CURR</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
-            "                    <gbo:Value>\n" +
-            "                        VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
-            "                    </gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>ParentBranchName</gbo:Name>\n" +
-            "                    <gbo:Value>UCB, Moscow</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>CusSegment</gbo:Name>\n" +
-            "                    <gbo:Value>TIER_I</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:ShadowAccounts>\n" +
-            "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
-            "                    <gbo:AccountNo>00770078RURENSA101</gbo:AccountNo>\n" +
-            "                    <gbo:Branch>A12</gbo:Branch>\n" +
-            "                </gbo:ShadowAccounts>\n" +
-            "            </gbo:AccountDetails>\n" +
-            "        </gbo:AccountList>\n" +
-            "    </NS1:Body>\n" +
-            "</NS1:Envelope>\n";
+            "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+                    "    <NS1:Header>\n" +
+                    "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
+                    "            <NS2:Audit>\n" +
+                    "                <NS2:MessagePath>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T13:35:33.540+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T13:35:33.550+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T13:35:33.771+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-06-24T13:35:33.789+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment></NS2:Comment>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                </NS2:MessagePath>\n" +
+                    "            </NS2:Audit>\n" +
+                    "        </NS2:UCBRUHeaders>\n" +
+                    "    </NS1:Header>\n" +
+                    "    <NS1:Body>\n" +
+                    "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
+                    "            <gbo:AccountDetails>\n" +
+                    "                <gbo:AccountNo>770078RUR400902024</gbo:AccountNo>\n" +
+                    "                <gbo:Branch>024</gbo:Branch>\n" +
+                    "                <gbo:CBAccountNo>40802810900014879108</gbo:CBAccountNo>\n" +
+                    "                <gbo:Ccy>RUR</gbo:Ccy>\n" +
+                    "                <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
+                    "                <gbo:Description>SANNIKOVA NATALYA</gbo:Description>\n" +
+                    "                <gbo:Status>O</gbo:Status>\n" +
+                    "                <gbo:CustomerNo>00770078</gbo:CustomerNo>\n" +
+                    "                <gbo:Special>4009</gbo:Special>\n" +
+                    "                <gbo:OpenDate>2016-06-24</gbo:OpenDate>\n" +
+                    "                <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
+                    "                <gbo:DebitTransAllowed>Y</gbo:DebitTransAllowed>\n" +
+                    "                <gbo:CorBank>044525545</gbo:CorBank>\n" +
+                    "                <gbo:CorINN>772446207507</gbo:CorINN>\n" +
+                    "                <gbo:Positioning>\n" +
+                    "                    <gbo:CBAccount>40802810900014879108</gbo:CBAccount>\n" +
+                    "                    <gbo:IMBAccountNo>40802810900014879108</gbo:IMBAccountNo>\n" +
+                    "                    <gbo:IMBBranch>024</gbo:IMBBranch>\n" +
+                    "                    <gbo:HostABSAccountNo>770078RUR400902024</gbo:HostABSAccountNo>\n" +
+                    "                    <gbo:HostABSBranch>024</gbo:HostABSBranch>\n" +
+                    "                    <gbo:HostABS>MIDAS</gbo:HostABS>\n" +
+                    "                </gbo:Positioning>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>GWSAccType</gbo:Name>\n" +
+                    "                    <gbo:Value>CURR</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
+                    "                    <gbo:Value>\n" +
+                    "                        VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
+                    "                    </gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>ParentBranchName</gbo:Name>\n" +
+                    "                    <gbo:Value>UCB, Moscow</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>CusSegment</gbo:Name>\n" +
+                    "                    <gbo:Value>TIER_I</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:ShadowAccounts>\n" +
+                    "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
+                    "                    <gbo:AccountNo>00770078RURENSA101</gbo:AccountNo>\n" +
+                    "                    <gbo:Branch>A12</gbo:Branch>\n" +
+                    "                </gbo:ShadowAccounts>\n" +
+                    "            </gbo:AccountDetails>\n" +
+                    "        </gbo:AccountList>\n" +
+                    "    </NS1:Body>\n" +
+                    "</NS1:Envelope>\n";
 
     public static String messageMidas =
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
-            "    <NS1:Header>\n" +
-            "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
-            "            <NS2:Audit>\n" +
-            "                <NS2:MessagePath>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.289+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.295+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.405+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.413+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment></NS2:Comment>\n" +
-            "                    </NS2:Step>\n" +
-            "                </NS2:MessagePath>\n" +
-            "            </NS2:Audit>\n" +
-            "        </NS2:UCBRUHeaders>\n" +
-            "    </NS1:Header>\n" +
-            "    <NS1:Body>\n" +
-            "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
-            "            <gbo:AccountDetails>\n" +
-            "                <gbo:AccountNo>695430RUR401102097</gbo:AccountNo>\n" +
-            "                <gbo:Branch>097</gbo:Branch>\n" +
-            "                <gbo:CBAccountNo>40702810400154748352</gbo:CBAccountNo>\n" +
-            "                <gbo:Ccy>RUR</gbo:Ccy>\n" +
-            "                <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
-            "                <gbo:Description>ROSTENERGORESURS</gbo:Description>\n" +
-            "                <gbo:Status>O</gbo:Status>\n" +
-            "                <gbo:CustomerNo>00695430</gbo:CustomerNo>\n" +
-            "                <gbo:Special>4011</gbo:Special>\n" +
-            "                <gbo:OpenDate>2014-12-22</gbo:OpenDate>\n" +
-            "                <gbo:CreditTransAllowed>N</gbo:CreditTransAllowed>\n" +
-            "                <gbo:DebitTransAllowed>N</gbo:DebitTransAllowed>\n" +
-            "                <gbo:CorBank>046027238</gbo:CorBank>\n" +
-            "                <gbo:CorINN>6166083860</gbo:CorINN>\n" +
-            "                <gbo:Positioning>\n" +
-            "                    <gbo:CBAccount>40702810400154748352</gbo:CBAccount>\n" +
-            "                    <gbo:IMBAccountNo>40702810400154748352</gbo:IMBAccountNo>\n" +
-            "                    <gbo:IMBBranch>097</gbo:IMBBranch>\n" +
-            "                    <gbo:HostABSAccountNo>695430RUR401102097</gbo:HostABSAccountNo>\n" +
-            "                    <gbo:HostABSBranch>097</gbo:HostABSBranch>\n" +
-            "                    <gbo:HostABS>MIDAS</gbo:HostABS>\n" +
-            "                </gbo:Positioning>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>GWSAccType</gbo:Name>\n" +
-            "                    <gbo:Value>CURR</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
-            "                    <gbo:Value>\n" +
-            "                        VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
-            "                    </gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>ParentBranchName</gbo:Name>\n" +
-            "                    <gbo:Value>UCB, Rostov Branch</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:UDF>\n" +
-            "                    <gbo:Name>CusSegment</gbo:Name>\n" +
-            "                    <gbo:Value>TIER_I</gbo:Value>\n" +
-            "                </gbo:UDF>\n" +
-            "                <gbo:ShadowAccounts>\n" +
-            "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
-            "                    <gbo:AccountNo>00695430RURCOSA101</gbo:AccountNo>\n" +
-            "                    <gbo:Branch>C04</gbo:Branch>\n" +
-            "                </gbo:ShadowAccounts>\n" +
-            "            </gbo:AccountDetails>\n" +
-            "        </gbo:AccountList>\n" +
-            "    </NS1:Body>\n" +
-            "</NS1:Envelope>";
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+                    "    <NS1:Header>\n" +
+                    "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
+                    "            <NS2:Audit>\n" +
+                    "                <NS2:MessagePath>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.289+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.295+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.405+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.413+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment></NS2:Comment>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                </NS2:MessagePath>\n" +
+                    "            </NS2:Audit>\n" +
+                    "        </NS2:UCBRUHeaders>\n" +
+                    "    </NS1:Header>\n" +
+                    "    <NS1:Body>\n" +
+                    "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
+                    "            <gbo:AccountDetails>\n" +
+                    "                <gbo:AccountNo>695430RUR401102097</gbo:AccountNo>\n" +
+                    "                <gbo:Branch>097</gbo:Branch>\n" +
+                    "                <gbo:CBAccountNo>40702810400154748352</gbo:CBAccountNo>\n" +
+                    "                <gbo:Ccy>RUR</gbo:Ccy>\n" +
+                    "                <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
+                    "                <gbo:Description>ROSTENERGORESURS</gbo:Description>\n" +
+                    "                <gbo:Status>O</gbo:Status>\n" +
+                    "                <gbo:CustomerNo>00695430</gbo:CustomerNo>\n" +
+                    "                <gbo:Special>4011</gbo:Special>\n" +
+                    "                <gbo:OpenDate>2014-12-22</gbo:OpenDate>\n" +
+                    "                <gbo:CreditTransAllowed>N</gbo:CreditTransAllowed>\n" +
+                    "                <gbo:DebitTransAllowed>N</gbo:DebitTransAllowed>\n" +
+                    "                <gbo:CorBank>046027238</gbo:CorBank>\n" +
+                    "                <gbo:CorINN>6166083860</gbo:CorINN>\n" +
+                    "                <gbo:Positioning>\n" +
+                    "                    <gbo:CBAccount>40702810400154748352</gbo:CBAccount>\n" +
+                    "                    <gbo:IMBAccountNo>40702810400154748352</gbo:IMBAccountNo>\n" +
+                    "                    <gbo:IMBBranch>097</gbo:IMBBranch>\n" +
+                    "                    <gbo:HostABSAccountNo>695430RUR401102097</gbo:HostABSAccountNo>\n" +
+                    "                    <gbo:HostABSBranch>097</gbo:HostABSBranch>\n" +
+                    "                    <gbo:HostABS>MIDAS</gbo:HostABS>\n" +
+                    "                </gbo:Positioning>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>GWSAccType</gbo:Name>\n" +
+                    "                    <gbo:Value>CURR</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
+                    "                    <gbo:Value>\n" +
+                    "                        VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
+                    "                    </gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>ParentBranchName</gbo:Name>\n" +
+                    "                    <gbo:Value>UCB, Rostov Branch</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:UDF>\n" +
+                    "                    <gbo:Name>CusSegment</gbo:Name>\n" +
+                    "                    <gbo:Value>TIER_I</gbo:Value>\n" +
+                    "                </gbo:UDF>\n" +
+                    "                <gbo:ShadowAccounts>\n" +
+                    "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
+                    "                    <gbo:AccountNo>00695430RURCOSA101</gbo:AccountNo>\n" +
+                    "                    <gbo:Branch>C04</gbo:Branch>\n" +
+                    "                </gbo:ShadowAccounts>\n" +
+                    "            </gbo:AccountDetails>\n" +
+                    "        </gbo:AccountList>\n" +
+                    "    </NS1:Body>\n" +
+                    "</NS1:Envelope>";
 
     public static String messageFCC =
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
-            "    <NS1:Header>\n" +
-            "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
-            "            <NS2:Audit>\n" +
-            "                <NS2:MessagePath>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.289+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.295+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.405+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment/>\n" +
-            "                    </NS2:Step>\n" +
-            "                    <NS2:Step>\n" +
-            "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
-            "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                        <NS2:TimeStamp>2016-03-29T17:50:54.413+03:00</NS2:TimeStamp>\n" +
-            "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                        <NS2:Comment></NS2:Comment>\n" +
-            "                    </NS2:Step>\n" +
-            "                </NS2:MessagePath>\n" +
-            "            </NS2:Audit>\n" +
-            "        </NS2:UCBRUHeaders>\n" +
-            "    </NS1:Header>\n" +
-            "    <NS1:Body>\n" +
-            "<gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
-            "    <gbo:AccountDetails>\n" +
-            "        <gbo:AccountNo>00516770RURPRDC101</gbo:AccountNo>\n" +
-            "        <gbo:Branch>A01</gbo:Branch>\n" +
-            "        <gbo:CBAccountNo>40817810000010696538</gbo:CBAccountNo>\n" +
-            "        <gbo:Ccy>RUR</gbo:Ccy>\n" +
-            "        <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
-            "        <gbo:Description>KOZHEMYAKO D.A.-VE</gbo:Description>\n" +
-            "        <gbo:Status>O</gbo:Status>\n" +
-            "        <gbo:CustomerNo>00516770</gbo:CustomerNo>\n" +
-            "        <gbo:Special>PRDC1</gbo:Special>\n" +
-            "        <gbo:OpenDate>2002-03-29</gbo:OpenDate>\n" +
-            "        <gbo:AltAccountNo>516770RUR405712001</gbo:AltAccountNo>\n" +
-            "        <gbo:Type>S</gbo:Type>\n" +
-            "        <gbo:ATMAvailable>N</gbo:ATMAvailable>\n" +
-            "        <gbo:IsFrozen>N</gbo:IsFrozen>\n" +
-            "        <gbo:IsDormant>N</gbo:IsDormant>\n" +
-            "        <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
-            "        <gbo:DebitTransAllowed>Y</gbo:DebitTransAllowed>\n" +
-            "        <gbo:ClearingBank>044525545</gbo:ClearingBank>\n" +
-            "        <gbo:CorBank>044525545</gbo:CorBank>\n" +
-            "        <gbo:Positioning>\n" +
-            "            <gbo:CBAccount>40817810000010696539</gbo:CBAccount>\n" +
-            "            <gbo:IMBAccountNo>40817810000010696539</gbo:IMBAccountNo>\n" +
-            "            <gbo:IMBBranch>001</gbo:IMBBranch>\n" +
-            "            <gbo:HostABSAccountNo>00516770RURPRDC101</gbo:HostABSAccountNo>\n" +
-            "            <gbo:HostABSBranch>A01</gbo:HostABSBranch>\n" +
-            "            <gbo:HostABS>FCC</gbo:HostABS>\n" +
-            "        </gbo:Positioning>\n" +
-            "        <gbo:MIS>\n" +
-            "            <gbo:Pool>DFLTPOOL</gbo:Pool>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS1</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS2</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS3</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS4</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS5</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS6</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS7</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS8</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS9</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:TransactionClass>\n" +
-            "                <gbo:Name>TXNMIS10</gbo:Name>\n" +
-            "            </gbo:TransactionClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS1</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS2</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS3</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS4</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS5</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS6</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS7</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS8</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS9</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CompositeClass>\n" +
-            "                <gbo:Name>COMPMIS10</gbo:Name>\n" +
-            "            </gbo:CompositeClass>\n" +
-            "            <gbo:CostCode>\n" +
-            "                <gbo:Name>COSTCOD1</gbo:Name>\n" +
-            "            </gbo:CostCode>\n" +
-            "            <gbo:CostCode>\n" +
-            "                <gbo:Name>COSTCOD2</gbo:Name>\n" +
-            "            </gbo:CostCode>\n" +
-            "            <gbo:CostCode>\n" +
-            "                <gbo:Name>COSTCOD3</gbo:Name>\n" +
-            "            </gbo:CostCode>\n" +
-            "            <gbo:CostCode>\n" +
-            "                <gbo:Name>COSTCOD4</gbo:Name>\n" +
-            "            </gbo:CostCode>\n" +
-            "            <gbo:CostCode>\n" +
-            "                <gbo:Name>COSTCOD5</gbo:Name>\n" +
-            "            </gbo:CostCode>\n" +
-            "        </gbo:MIS>\n" +
-            "        <gbo:UDF>\n" +
-            "            <gbo:Name>GWSAccType</gbo:Name>\n" +
-            "            <gbo:Value>CURR</gbo:Value>\n" +
-            "        </gbo:UDF>\n" +
-            "        <gbo:UDF>\n" +
-            "            <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
-            "            <gbo:Value>VIEW=0,DOMPAY=1,CUPADE=0,CUPACO=0,</gbo:Value>\n" +
-            "        </gbo:UDF>\n" +
-            "        <gbo:UDF>\n" +
-            "            <gbo:Name>ParentBranchName</gbo:Name>\n" +
-            "            <gbo:Value>UCB, Moscow</gbo:Value>\n" +
-            "        </gbo:UDF>\n" +
-            "        <gbo:UDF>\n" +
-            "            <gbo:Name>CusSegment</gbo:Name>\n" +
-            "            <gbo:Value>TIER_I</gbo:Value>\n" +
-            "        </gbo:UDF>\n" +
-            "                <gbo:ShadowAccounts>\n" +
-            "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
-            "                    <gbo:AccountNo>00695430RURCOSA101</gbo:AccountNo>\n" +
-            "                    <gbo:Branch>C04</gbo:Branch>\n" +
-            "                </gbo:ShadowAccounts>\n" +
-            "    </gbo:AccountDetails>\n" +
-            "</gbo:AccountList>\n" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+                    "    <NS1:Header>\n" +
+                    "        <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
+                    "            <NS2:Audit>\n" +
+                    "                <NS2:MessagePath>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v4</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.289+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.295+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.405+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment/>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                    <NS2:Step>\n" +
+                    "                        <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
+                    "                        <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                        <NS2:TimeStamp>2016-03-29T17:50:54.413+03:00</NS2:TimeStamp>\n" +
+                    "                        <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                        <NS2:Comment></NS2:Comment>\n" +
+                    "                    </NS2:Step>\n" +
+                    "                </NS2:MessagePath>\n" +
+                    "            </NS2:Audit>\n" +
+                    "        </NS2:UCBRUHeaders>\n" +
+                    "    </NS1:Header>\n" +
+                    "    <NS1:Body>\n" +
+                    "<gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
+                    "    <gbo:AccountDetails>\n" +
+                    "        <gbo:AccountNo>00516770RURPRDC101</gbo:AccountNo>\n" +
+                    "        <gbo:Branch>A01</gbo:Branch>\n" +
+                    "        <gbo:CBAccountNo>40817810000010696538</gbo:CBAccountNo>\n" +
+                    "        <gbo:Ccy>RUR</gbo:Ccy>\n" +
+                    "        <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
+                    "        <gbo:Description>KOZHEMYAKO D.A.-VE</gbo:Description>\n" +
+                    "        <gbo:Status>O</gbo:Status>\n" +
+                    "        <gbo:CustomerNo>00516770</gbo:CustomerNo>\n" +
+                    "        <gbo:Special>PRDC1</gbo:Special>\n" +
+                    "        <gbo:OpenDate>2002-03-29</gbo:OpenDate>\n" +
+                    "        <gbo:AltAccountNo>516770RUR405712001</gbo:AltAccountNo>\n" +
+                    "        <gbo:Type>S</gbo:Type>\n" +
+                    "        <gbo:ATMAvailable>N</gbo:ATMAvailable>\n" +
+                    "        <gbo:IsFrozen>N</gbo:IsFrozen>\n" +
+                    "        <gbo:IsDormant>N</gbo:IsDormant>\n" +
+                    "        <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
+                    "        <gbo:DebitTransAllowed>Y</gbo:DebitTransAllowed>\n" +
+                    "        <gbo:ClearingBank>044525545</gbo:ClearingBank>\n" +
+                    "        <gbo:CorBank>044525545</gbo:CorBank>\n" +
+                    "        <gbo:Positioning>\n" +
+                    "            <gbo:CBAccount>40817810000010696539</gbo:CBAccount>\n" +
+                    "            <gbo:IMBAccountNo>40817810000010696539</gbo:IMBAccountNo>\n" +
+                    "            <gbo:IMBBranch>001</gbo:IMBBranch>\n" +
+                    "            <gbo:HostABSAccountNo>00516770RURPRDC101</gbo:HostABSAccountNo>\n" +
+                    "            <gbo:HostABSBranch>A01</gbo:HostABSBranch>\n" +
+                    "            <gbo:HostABS>FCC</gbo:HostABS>\n" +
+                    "        </gbo:Positioning>\n" +
+                    "        <gbo:MIS>\n" +
+                    "            <gbo:Pool>DFLTPOOL</gbo:Pool>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS1</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS2</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS3</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS4</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS5</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS6</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS7</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS8</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS9</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:TransactionClass>\n" +
+                    "                <gbo:Name>TXNMIS10</gbo:Name>\n" +
+                    "            </gbo:TransactionClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS1</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS2</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS3</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS4</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS5</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS6</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS7</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS8</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS9</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CompositeClass>\n" +
+                    "                <gbo:Name>COMPMIS10</gbo:Name>\n" +
+                    "            </gbo:CompositeClass>\n" +
+                    "            <gbo:CostCode>\n" +
+                    "                <gbo:Name>COSTCOD1</gbo:Name>\n" +
+                    "            </gbo:CostCode>\n" +
+                    "            <gbo:CostCode>\n" +
+                    "                <gbo:Name>COSTCOD2</gbo:Name>\n" +
+                    "            </gbo:CostCode>\n" +
+                    "            <gbo:CostCode>\n" +
+                    "                <gbo:Name>COSTCOD3</gbo:Name>\n" +
+                    "            </gbo:CostCode>\n" +
+                    "            <gbo:CostCode>\n" +
+                    "                <gbo:Name>COSTCOD4</gbo:Name>\n" +
+                    "            </gbo:CostCode>\n" +
+                    "            <gbo:CostCode>\n" +
+                    "                <gbo:Name>COSTCOD5</gbo:Name>\n" +
+                    "            </gbo:CostCode>\n" +
+                    "        </gbo:MIS>\n" +
+                    "        <gbo:UDF>\n" +
+                    "            <gbo:Name>GWSAccType</gbo:Name>\n" +
+                    "            <gbo:Value>CURR</gbo:Value>\n" +
+                    "        </gbo:UDF>\n" +
+                    "        <gbo:UDF>\n" +
+                    "            <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
+                    "            <gbo:Value>VIEW=0,DOMPAY=1,CUPADE=0,CUPACO=0,</gbo:Value>\n" +
+                    "        </gbo:UDF>\n" +
+                    "        <gbo:UDF>\n" +
+                    "            <gbo:Name>ParentBranchName</gbo:Name>\n" +
+                    "            <gbo:Value>UCB, Moscow</gbo:Value>\n" +
+                    "        </gbo:UDF>\n" +
+                    "        <gbo:UDF>\n" +
+                    "            <gbo:Name>CusSegment</gbo:Name>\n" +
+                    "            <gbo:Value>TIER_I</gbo:Value>\n" +
+                    "        </gbo:UDF>\n" +
+                    "                <gbo:ShadowAccounts>\n" +
+                    "                    <gbo:HostABS>FCC</gbo:HostABS>\n" +
+                    "                    <gbo:AccountNo>00695430RURCOSA101</gbo:AccountNo>\n" +
+                    "                    <gbo:Branch>C04</gbo:Branch>\n" +
+                    "                </gbo:ShadowAccounts>\n" +
+                    "    </gbo:AccountDetails>\n" +
+                    "</gbo:AccountList>\n" +
             /*
             "        <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
             "            <gbo:AccountDetails>\n" +
@@ -1016,8 +1041,8 @@ public class AccountDetailsNotifyProcessor implements Serializable {
             "                </gbo:ShadowAccounts>\n" +
             "            </gbo:AccountDetails>\n" +
             "        </gbo:AccountList>\n" +*/
-            "    </NS1:Body>\n" +
-            "</NS1:Envelope>";
+                    "    </NS1:Body>\n" +
+                    "</NS1:Envelope>";
 
 //    public void processTest(String s) throws Exception {
 //        String topic = getBodyXML(fullTopicTest, 1L);
