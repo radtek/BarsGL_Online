@@ -65,37 +65,50 @@ select *
           , current_date createdate
           , current_timestamp timecreate
           , case
+              when b.dat is null then 0
               when b.dat = p.pdt then
                  cast(decimal(b.obac) / integer(power(10,cc.nbdp)) as decimal(22,2))
              else
                  cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22,2))
             end openblnca
-          , cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2)) closeblnca
+          , case
+              when b.dat is null then 0
+              else cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
+            end closeblnca
           , GL_GETOPERCNT(ac.bsaacid, p.pdt, '1') dbdocnt
           , case
+              when b.dat is null then 0
               when b.dat = p.pdt then
                  abs(cast(decimal(b.dtac) / integer(power(10,cc.nbdp)) as decimal(22, 2)))
               else 0
             end dbturnovra
           , GL_GETOPERCNT(ac.bsaacid, p.pdt, '0') crdocnt
           , case
+              when b.dat is null then 0
               when b.dat = p.pdt then
                  cast(decimal(b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
               else 0
             end crturnovra
           , case
+              when b.dat is null then 0
               when b.dat = p.pdt then
                  cast(b.obbc *0.01 as decimal(22, 2))
               else
                  cast((b.obbc + b.dtbc + b.ctbc) *0.01 as decimal(22, 2))
             end openblncn
-          , cast((b.obbc + b.dtbc + b.ctbc) *0.01 as decimal(22, 2)) closeblncn
           , case
+              when b.dat is null then 0
+              else
+                 cast((b.obbc + b.dtbc + b.ctbc) *0.01 as decimal(22, 2))
+          end closeblncn
+          , case
+              when b.dat is null then 0
                when b.dat = p.pdt then
                  abs(cast(b.dtbc *0.01 as decimal(22, 2)))
                else 0
              end dbturnovrn
           , case
+              when b.dat is null then 0
               when b.dat = p.pdt then
                 cast(b.ctbc *0.01 as decimal(22, 2))
               else 0
@@ -105,7 +118,6 @@ select *
           , cast(null as date) outbdate
           , s.bxrunm rcustname
           , s.bxtpid custinn
-          --, trim(s.bbcna1) || ' ' || trim(s.bbcna2) || ' ' || trim(s.bbcna3) || ' ' || trim(s.bbcna4) ecustname
           , trim(s.bbcna1) ecustname
           , cast(null as varchar(35)) cstaddrsw1
           , cast(null as varchar(35)) cstaddrsw2
@@ -119,7 +131,7 @@ select *
           , cast(null as varchar(35)) bcstcorrac
           , cast(null as varchar(12)) bcustswift
           , cast(null as varchar(14)) bcustinn
-          , preb.datl lstoperdat
+          , GL_STMDATL(ac.bsaacid, ac.acid, p.pdt) lstoperdat
           , p.pdt ed
           , ac.cbcc branch_id
           , ac.acid alt_ac_no
@@ -129,14 +141,12 @@ select *
           , p.pdt dateunload
   from gl_acc ac
    join (select curdate pdt from SESSION.GL_TMP_CURDATE) p on ac.dto <= p.pdt and value(ac.dtc, p.pdt) >= p.pdt
-   join baltur b on p.pdt between b.dat and b.datto and b.bsaacid = ac.bsaacid and b.acid = ac.acid
+   left join baltur b on p.pdt between b.dat and b.datto and b.bsaacid = ac.bsaacid and b.acid = ac.acid
    join currency cc on ac.ccy = cc.glccy
    join currates r on ac.ccy = r.ccy and r.dat = p.pdt
    join sdcustpd s on s.bbcust = ac.custno
    join imbcbcmp i on i.ccbbr = ac.cbccn
    join imbcbbrp rp on rp.a8brcd = ac.branch
-   left join baltur preb on preb.bsaacid = ac.bsaacid and preb.acid = ac.acid and p.pdt - 1 day between preb.dat and preb.datto
-
   ) ac0
  where
        (

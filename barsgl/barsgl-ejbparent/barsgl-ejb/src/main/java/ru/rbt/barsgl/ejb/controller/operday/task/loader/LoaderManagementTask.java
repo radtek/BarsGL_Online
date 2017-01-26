@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.loader;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.entity.loader.LoadManagement;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
@@ -13,10 +12,8 @@ import ru.rbt.barsgl.shared.enums.LoadManagementAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
 import ru.rbt.barsgl.shared.enums.Repository;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,7 +25,7 @@ import java.util.Properties;
  */
 public class LoaderManagementTask implements ParamsAwareRunnable {
 
-    private static final Logger log = Logger.getLogger(AccountDetailsNotifyTask.class);
+    private static final Logger log = Logger.getLogger(LoaderManagementTask.class);
     private static final String SCHEDULED_TASK_NAME = "LoadManagement";
 
     @Inject

@@ -7,11 +7,9 @@ import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
@@ -74,7 +72,13 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         long headerIdFull = -1;
-        Date executeDate = TaskUtils.getDateFromGLOD(properties, repository, operdayController.getOperday());
+        Date executeDate = null;
+        try {
+            executeDate = TaskUtils.getDateFromGLOD(properties, repository, operdayController.getOperday());
+        } catch (Throwable e) {
+            auditController.error(StamtUnload, "Ошибка определения даты опердня при выгрузке остатков в STAMT. Выгрузка отложена", null, e);
+            return;
+        }
         auditController.info(StamtUnload
                 , format("Начало выгрузки остатков для STAMT (шаг 1) за дату: '%s'", dateUtils.onlyDateString(executeDate)));
         try {
@@ -125,8 +129,8 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
 
             String select = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_select.sql");
             repository.executeNativeUpdate(
-                "declare global temporary table GL_TMP_STMTBAL as (\n" + select + "\n) with data \n" +
-                    "with replace  on commit preserve rows");
+                    "declare global temporary table GL_TMP_STMTBAL as (\n" + select + "\n) with data \n" +
+                            "with replace  on commit preserve rows");
             auditController.info(StamtUnloadBalDelta, format("Таблица с остатками создана. Кол-во счетов: %s"
                     , repository.selectFirst("select count(1) from session.GL_TMP_STMTBAL").getLong(0)));
 
@@ -184,7 +188,7 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
 
             Operday.OperdayPhase[] phases = new Operday.OperdayPhase[] {COB, ONLINE};
             Assert.isTrue(EnumUtils.contains(phases, operdayController.getOperday().getPhase())
-                , () -> new ValidationError(OPERDAY_STATE_INVALID, operdayController.getOperday().getPhase().name()
+                    , () -> new ValidationError(OPERDAY_STATE_INVALID, operdayController.getOperday().getPhase().name()
                             , Arrays.toString(phases)));
             return true;
         } catch (ValidationError e) {
