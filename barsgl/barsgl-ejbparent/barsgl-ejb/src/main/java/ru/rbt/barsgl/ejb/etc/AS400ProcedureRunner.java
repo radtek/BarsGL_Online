@@ -47,7 +47,7 @@ public class AS400ProcedureRunner {
                 }
 
                 cmd = "CALL DWH.QCMDEXC2 ('RUNJVA CLASS(" + className + ") " + getParamsAsStringDouble(params)
-                          + " CLASSPATH(''" + jarName + "'') OUTPUT(* *CONTINUE) ') ";
+                        + " CLASSPATH(''" + jarName + "'') OUTPUT(* *CONTINUE) ') ";
 //                auditController.info(AS400runner, "run cmd "+cmd );
                 stm.execute(cmd);
                 stm.close();
@@ -88,8 +88,8 @@ public class AS400ProcedureRunner {
     public void callAsync(Repository enumRepository, String jarName, String className, Object[] params) {
         try {
             String data = "RUNJVA CLASS(" + className + ") " + getParamsAsString(params)
-                              + " CLASSPATH('/GCP:/GCP/log4j-1.2.7.jar:/GCP/jt400.jar:"
-                              + jarName + "') PROP((log4j.configuration 'logger.properties')) OUTPUT(* *CONTINUE)";
+                    + " CLASSPATH('/GCP:/GCP/log4j-1.2.7.jar:/GCP/jt400.jar:"
+                    + jarName + "') PROP((log4j.configuration 'logger.properties')) OUTPUT(* *CONTINUE)";
 
             repository.executeNativeUpdate(repository.getPersistence(enumRepository), "DELETE FROM EXCHDATA");
             // Формируем и записываем полный текст команды в таблицу,
@@ -97,15 +97,16 @@ public class AS400ProcedureRunner {
             repository.executeNativeUpdate(repository.getPersistence(enumRepository), "INSERT INTO EXCHDATA(DATA) VALUES(?)",new Object[]{data});
 
             // Вызываемый скрипт производит переход в каталог /GCP
-            repository.executeInNonTransaction(connection -> {
+            Boolean result = (Boolean)repository.executeInNonTransaction(connection -> {
                 try(Statement stm = connection.createStatement();) {
-                    String cmd = "CALL DWH.QCMDEXC2 ('SBMJOB CMD(CALL PGM(DWH/GL_RUNSTEP)) JOBD(QGPL/BARSJOBD)')";
-                    boolean result = stm.execute(cmd);
-                    return result;
+//                    String cmd = "CALL DWH.QCMDEXC2 ('SBMJOB CMD(CALL PGM(DWH/GL_RUNSTEP)) JOBD(QGPL/BARSJOBD)')";
+                    String cmd = "CALL DWH.QCMDEXC2 ('SBMJOB CMD(CALL PGM(DWH/GL_RUNSTEP)) JOBD(DWH/BARSJOBD)')";
+//                    String cmd = "CALL DWH.QCMDEXC2 ('SBMJOB CMD(CALL PGM(DWH/GL_RUNSTEP)) JOBD(DWH/BARSJOBD) JOB(BARSLOAD)')";
+                    return stm.execute(cmd);
                 }
             }, enumRepository);
 
-            auditController.info(AS400runner, "В " + enumRepository.getParamDesc() + " запущено: " + data);
+            auditController.info(AS400runner, "В " + enumRepository.getParamDesc() +" запущено: " + data);
 
         } catch (Exception ex) {
             log.error("Ошибка при работе с " + enumRepository.getParamDesc(), ex);
