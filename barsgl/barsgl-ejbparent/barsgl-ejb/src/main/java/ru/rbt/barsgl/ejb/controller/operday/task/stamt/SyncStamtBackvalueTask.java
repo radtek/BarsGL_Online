@@ -32,13 +32,10 @@ import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BufferModeSyncBackvalue;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operday;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.E;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.O;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.TASK_ERROR;
 
@@ -72,6 +69,9 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
     @EJB
     private CoreRepository coreRepository;
 
+    @Inject
+    private StamtUnloadController unloadController;
+
     @Override
     protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
         final String jobName = jobHistory.getJobName();
@@ -97,7 +97,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
                 }
                 auditController.info(BufferModeSyncBackvalue, format("Установлен флаг O на workproc '%s'"
                         , coreRepository.executeInNewTransaction( pers -> workprocRepository.updateWorkproc(getStepName(jobName, properties), getWorkprocDate(operday)
-                        , O, format("Синхронизация по задаче %s выполнена", jobName)))));
+                                , O, format("Синхронизация по задаче %s выполнена", jobName)))));
 
                 auditController.info(BufferModeSyncBackvalue, format("Разрешеие обработки '%s'", allowAccess()));
 
@@ -121,9 +121,9 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
                     , "Ошибка при выполнении синхронизации/инкр.выгрузки проводок backvalue в STAMT", null, e);
             jobHistoryRepository.executeInNewTransaction(persistence ->
                     workprocRepository.updateWorkproc(getStepName(jobName, properties), getWorkprocDate(operday)
-                    , E, format("Ошибка при вып. задачи %s: %s"
-                            , jobName, StringUtils.substr(ExceptionUtils.getErrorMessage(e, ValidationError.class, DataTruncation.class
-                                    , SQLException.class, DefaultApplicationException.class), 500))));
+                            , E, format("Ошибка при вып. задачи %s: %s"
+                                    , jobName, StringUtils.substr(ExceptionUtils.getErrorMessage(e, ValidationError.class, DataTruncation.class
+                                            , SQLException.class, DefaultApplicationException.class), 500))));
             return false;
         } finally {
             allowAccess();
@@ -148,9 +148,10 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
         try {
             if (TaskUtils.getCheckRun(properties, true)) {
                 Assert.isTrue(workprocRepository.isWaitingStepPresent(getStepName(jobName, properties)
-                            , getWorkprocDate(operdayController.getOperday()))
-                    , () -> new ValidationError(ErrorCode.OPERDAY_LDR_STEP_ABSENT, getStepName(jobName, properties)
+                        , getWorkprocDate(operdayController.getOperday()))
+                        , () -> new ValidationError(ErrorCode.OPERDAY_LDR_STEP_ABSENT, getStepName(jobName, properties)
                                 , dateUtils.onlyDateString(operdayController.getOperday().getLastWorkingDay())));
+                unloadController.checkConsumed(getOperday(properties));
             }
             return true;
         } catch (ValidationError e) {

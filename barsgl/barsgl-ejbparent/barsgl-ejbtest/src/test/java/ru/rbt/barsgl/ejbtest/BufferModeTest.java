@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
@@ -25,12 +24,10 @@ import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -48,7 +45,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 public class BufferModeTest extends AbstractRemoteTest {
 
     private static final Logger log = Logger.getLogger(BufferModeTest.class.getName());
-    
+
     @Before
     public void before() {
         baseEntityRepository.executeNativeUpdate("delete from gl_baltur");
@@ -59,7 +56,7 @@ public class BufferModeTest extends AbstractRemoteTest {
      * проверка корректности работы в режиме BUFFER и правильности переноса в PD и BALTUR
      * @throws Exception
      */
-    @Test 
+    @Test
     public void test() throws Exception {
         Operday operday = getOperday();
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
@@ -226,6 +223,7 @@ public class BufferModeTest extends AbstractRemoteTest {
      */
     @Test
     public void testSyncIncrJob() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstms");
         initCorrectOperday();
         Operday operday = getOperday();
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
@@ -323,6 +321,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         updateOperday(COB, CLOSED);
         checkCreateStep(stepName, getOperday().getCurrentDate(), "");
         Assert.assertFalse(checkStepOk(stepName, getOperday().getCurrentDate()));
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4'");
         execSyncStamtBackvalue(stepName, jobName);
         Assert.assertTrue(checkStepOk(stepName, getOperday().getCurrentDate()));
     }
@@ -435,7 +434,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = 'STOPPED'");
         baseEntityRepository.executeNativeUpdate("delete from workproc where dat = ?", operday.getLastWorkingDay());
         baseEntityRepository.executeNativeUpdate("insert into workproc (dat,id,result,count,msg) values (?,?,?,?,?)"
-            , operday.getLastWorkingDay(), "IFLEX","O", "0", "MI5GL");
+                , operday.getLastWorkingDay(), "IFLEX","O", "0", "MI5GL");
 
         log.info("deleted " + baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName like ?1", PdSyncTask.class.getSimpleName() + "%"));
         JobHistory history = remoteAccess.invoke(JobHistoryRepository.class

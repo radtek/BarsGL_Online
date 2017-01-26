@@ -107,7 +107,7 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
             return cnt;
         });
         auditController.info(TechoverTask, format("Выгружено проводок по техническому овердрафту '%s' в операционном дне '%s'"
-            , cntTotal, dateUtils.onlyDateString(executeDate)));
+                , cntTotal, dateUtils.onlyDateString(executeDate)));
     }
 
     private void unloadBalanceDelta(Date executeDate) throws Exception {
@@ -123,12 +123,12 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
         try {
             Date executeDate = (Date) properties.get(TechoverContext.EXECUTE_DATE);
             Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(executeDate, POSTING_TECHOVER, SUCCEDED)
-                , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, POSTING_TECHOVER.getParamName() + " " + POSTING_TECHOVER.getParamDesc()
+                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, POSTING_TECHOVER.getParamName() + " " + POSTING_TECHOVER.getParamDesc()
                             , dateUtils.onlyDateString(executeDate)));
             final String stepName = Optional.ofNullable(
                     properties.getProperty("stepName")).orElse("MI4GL").trim();
             Assert.isTrue(workprocRepository.isStepOK(stepName, (Date) properties.get(TechoverContext.LWDATE))
-                , () -> new ValidationError(OPERDAY_LDR_STEP_ERR, stepName, dateUtils.onlyDateString((Date) properties.get(TechoverContext.LWDATE))));
+                    , () -> new ValidationError(OPERDAY_LDR_STEP_ERR, stepName, dateUtils.onlyDateString((Date) properties.get(TechoverContext.LWDATE))));
             unloadController.checkConsumed(executeDate);
             return true;
         } catch (ValidationError validationError) {
