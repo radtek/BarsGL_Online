@@ -1,3 +1,7 @@
 set JAVA_HOME="C:\Development\jdk\1.8.0_25"
 
+git commit -m 'Commiting current work'
+
+git push
+
 mvn clean install -DskipTests -e -Pear-prod
