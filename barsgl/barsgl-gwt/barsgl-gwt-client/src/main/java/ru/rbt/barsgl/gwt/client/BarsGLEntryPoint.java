@@ -11,8 +11,6 @@ import ru.rbt.barsgl.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
-import ru.rbt.barsgl.gwt.server.rpc.monitoring.MonitorService;
-import ru.rbt.barsgl.gwt.server.rpc.monitoring.MonitorServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.AuthorizationService;
 import ru.rbt.barsgl.gwt.server.rpc.AuthorizationServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.access.AccessService;
@@ -25,21 +23,23 @@ import ru.rbt.barsgl.gwt.server.rpc.job.TimerJobService;
 import ru.rbt.barsgl.gwt.server.rpc.job.TimerJobServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.loader.LoaderControlService;
 import ru.rbt.barsgl.gwt.server.rpc.loader.LoaderControlServiceAsync;
+import ru.rbt.barsgl.gwt.server.rpc.monitoring.MonitorService;
+import ru.rbt.barsgl.gwt.server.rpc.monitoring.MonitorServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.operation.ManualOperationService;
 import ru.rbt.barsgl.gwt.server.rpc.operation.ManualOperationServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.operday.OperDayService;
 import ru.rbt.barsgl.gwt.server.rpc.operday.OperDayServiceAsync;
+import ru.rbt.barsgl.gwt.server.rpc.properties.PropertiesService;
+import ru.rbt.barsgl.gwt.server.rpc.properties.PropertiesServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncService;
 import ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncServiceAsync;
 import ru.rbt.barsgl.shared.LoginResult;
 import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
-
-import java.util.ArrayList;
-import java.util.Date;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
+
+import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.shared.NotAuthorizedUserException.NOT_AUTHORIZED_MESSAGE;
@@ -57,6 +57,7 @@ public class BarsGLEntryPoint implements EntryPoint {
     public static ManualDictionaryServiceAsync dictionaryService;
     public static AccessServiceAsync accessService;
     public static PdSyncServiceAsync pdSyncService;
+    public static PropertiesServiceAsync propertiesService;
     public static LoaderControlServiceAsync loaderService;
     public static MonitorServiceAsync monitorService;
     private static String DATABASE_VERSION;
@@ -72,6 +73,7 @@ public class BarsGLEntryPoint implements EntryPoint {
         dictionaryService = GWT.create(ManualDictionaryService.class);
         accessService = GWT.create(AccessService.class);
         pdSyncService = GWT.create(PdSyncService.class);
+        propertiesService = GWT.create(PropertiesService.class);
         loaderService = GWT.create(LoaderControlService.class);
         monitorService = GWT.create(MonitorService.class);
 

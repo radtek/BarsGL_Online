@@ -60,6 +60,10 @@
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
+            <groupId>ru.rb.bars-utils</groupId>
+            <artifactId>bars-utils-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-ejb</artifactId>
             <version>${project.version}</version>
@@ -164,6 +168,27 @@
             <artifactId>jt400</artifactId>
             <version>8.6</version>
             <systemPath>${project.basedir}/lib/jt400-8.6.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+            <version>1.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/jms-1.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>com.ibm.mqjms</artifactId>
+            <version>7.5.0.5</version>
+            <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.mqjms.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>com.ibm.mq</artifactId>
+            <version>7.5.0.5</version>
+            <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.mq.jar</systemPath>
             <scope>system</scope>
         </dependency>
         <!--<dependency>

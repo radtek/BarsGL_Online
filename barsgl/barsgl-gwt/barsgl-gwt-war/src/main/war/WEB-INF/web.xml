@@ -51,6 +51,10 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
         <servlet-name>PdSyncServiceImpl</servlet-name>
         <servlet-class>ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncServiceImpl</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>PropertiesServiceImpl</servlet-name>
+        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.properties.PropertiesServiceImpl</servlet-class>
+    </servlet>
 	<servlet>
         <servlet-name>LoaderControlServiceImpl</servlet-name>
         <servlet-class>ru.rbt.barsgl.gwt.server.rpc.loader.LoaderControlServiceImpl</servlet-class>
@@ -104,7 +108,11 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
         <servlet-name>PdSyncServiceImpl</servlet-name>
         <url-pattern>/barsgl/service/PdSyncService</url-pattern>
     </servlet-mapping>
-	<servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PropertiesServiceImpl</servlet-name>
+        <url-pattern>/barsgl/service/PropertiesService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>LoaderControlServiceImpl</servlet-name>
         <url-pattern>/barsgl/service/LoaderControlService</url-pattern>
     </servlet-mapping>
@@ -116,5 +124,4 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     <session-config>
         <session-timeout>15</session-timeout>
     </session-config>
-
 </web-app>

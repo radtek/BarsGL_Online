@@ -4,6 +4,7 @@
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
         <jta-data-source>/jdbc/As400GL</jta-data-source>
+        <mapping-file>META-INF/fix-orm.xml</mapping-file>
 
         <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
         <class>ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob</class>

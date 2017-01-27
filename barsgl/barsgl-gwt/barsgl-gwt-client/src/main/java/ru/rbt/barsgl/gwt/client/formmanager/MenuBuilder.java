@@ -4,6 +4,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
@@ -19,10 +20,8 @@ import ru.rbt.barsgl.gwt.client.bal.OndemandBalanceUnloadForm;
 import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
-import ru.rbt.barsgl.gwt.client.info.SystemInfoForm;
 import ru.rbt.barsgl.gwt.client.load.LoadForm;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
-import ru.rbt.barsgl.gwt.client.loader.LoaderControlForm;
 import ru.rbt.barsgl.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateForm;
@@ -37,6 +36,7 @@ import ru.rbt.barsgl.gwt.client.tasks.TasksFormNew;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.UserMenuItemWrapper;
 import ru.rbt.barsgl.shared.access.UserMenuWrapper;
 import ru.rbt.barsgl.shared.enums.UserMenuCode;
@@ -133,7 +133,24 @@ public class MenuBuilder {
                 @Override
                 public void execute() {
                     //formLoad(new TasksForm());
-                    formLoad(new TasksFormNew());
+                    BarsGLEntryPoint.propertiesService.getEnvProperty("java:app/env/SchedTableName", new AsyncCallback<RpcRes_Base<String>>() {
+                          @Override
+                          public void onSuccess(RpcRes_Base<String> result) {
+                              final String schedTableName = result.getResult();
+                              formLoad(new TasksFormNew(){
+                                @Override
+                                protected String prepareSql() {
+                                  return "SELECT * FROM " + schedTableName;
+                                }
+
+                              });
+                          }
+
+                          @Override
+                          public void onFailure(Throwable caught) {
+                            throw new RuntimeException(caught);
+                          }
+                      });
                 }
             });
 

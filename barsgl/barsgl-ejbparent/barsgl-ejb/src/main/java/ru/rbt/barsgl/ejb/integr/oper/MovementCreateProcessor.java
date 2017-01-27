@@ -12,9 +12,7 @@ import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.controller.operday.task.SCASAMCResponseStorage;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
 
@@ -37,6 +35,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.MovementCreate;
@@ -49,6 +48,7 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 public class MovementCreateProcessor {
     private static final Logger log = Logger.getLogger(MovementCreateProcessor.class.getName());
     private static final String PROP_ATTEMPTS = "mvmt.attempts";
+    private static final String MC_QUEUES_PARAM = "mc.queues.param";
 
     @EJB
     private AuditController auditController;
@@ -100,9 +100,6 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
   'mq.password=Vugluskr6'
 );
      */
-
-    @EJB
-    private CoreRepository coreRepository;
 
     public void process(List<MovementCreateData> mcdList) {
 
@@ -181,13 +178,14 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 
     private QueueProperties queueProperties = null;
 
-    private void loadProperties() throws SQLException, IOException {
-        DataRecord dataRecord = coreRepository.selectFirst("SELECT STRING_VALUE FROM GL_PRPRP WHERE ID_PRP='mc.queues.param'");
-        if (dataRecord == null || isEmpty(dataRecord.getString("STRING_VALUE"))) {
-            throw new IllegalArgumentException("No data in table GL_PRPRP for ID_PRP='mc.queues.param'");
+    private void loadProperties() throws SQLException, IOException, ExecutionException {
+        String strProp = propertiesRepository.getString(MC_QUEUES_PARAM);
+        if(isEmpty(strProp)){
+          throw new IllegalArgumentException("No data in table GL_PRPRP for ID_PRP='mc.queues.param'");
         }
+
         Properties properties = new Properties();
-        properties.load(new ByteArrayInputStream(dataRecord.getString("STRING_VALUE").getBytes("UTF-8")));
+        properties.load(new ByteArrayInputStream(strProp.getBytes("UTF-8")));
 
         queueProperties = processQueueProperties(properties);
     }

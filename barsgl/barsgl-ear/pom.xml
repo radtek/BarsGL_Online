@@ -22,6 +22,7 @@
             <id>full-ear</id>
             <properties>
                 <datasource-file>as400-dev-jdbc.xml</datasource-file>
+                <schedtablename.ru.rbt>GL_SCHED</schedtablename.ru.rbt>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -75,6 +76,22 @@
                                     <excluded>true</excluded>
                                 </webModule>
                             </modules>
+
+                            <env-entries>
+                              <env-entry>
+                                  <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                              </env-entry>
+                            </env-entries>
+
+                            <ejbRefs>
+                              <ejb-ref>
+                                  <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                              </ejb-ref>
+                            </ejbRefs>
+
                         </configuration>
                     </plugin>
                 </plugins>
@@ -84,6 +101,7 @@
             <id>ear-prod</id>
             <properties>
                 <datasource-file>as400-prod-jdbc.xml</datasource-file>
+                <schedtablename.ru.rbt>GL_SCHED</schedtablename.ru.rbt>
             </properties>
             <build>
                 <finalName>barsgl-prod(please_rename_to_barsgl)</finalName>
@@ -141,6 +159,22 @@
                                     <excluded>true</excluded>
                                 </webModule>
                             </modules>
+
+                            <env-entries>
+                              <env-entry>
+                                  <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                              </env-entry>
+                            </env-entries>
+
+                            <ejbRefs>
+                              <ejb-ref>
+                                  <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                              </ejb-ref>
+                            </ejbRefs>
+
                         </configuration>
                     </plugin>
                 </plugins>
@@ -150,6 +184,7 @@
             <id>ejb-ear</id>
             <properties>
                 <datasource-file>as400-dev-jdbc.xml</datasource-file>
+                <schedtablename.ru.rbt>GL_SCHED</schedtablename.ru.rbt>
             </properties>
             <build>
                 <finalName>barsgl</finalName>
@@ -205,6 +240,22 @@
                                     <contextRoot>${project.build.finalName}/api</contextRoot>
                                 </webModule>
                             </modules>
+
+                            <env-entries>
+                              <env-entry>
+                                  <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                              </env-entry>
+                            </env-entries>
+
+                            <ejbRefs>
+                              <ejb-ref>
+                                  <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                              </ejb-ref>
+                            </ejbRefs>
+
                         </configuration>
                     </plugin>
                 </plugins>
@@ -242,6 +293,97 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--=================================-->
+        <profile>
+            <id>srv-ear-prod</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>barssrv</value>
+                </property>
+            </activation>
+            <properties>
+                <datasource-file>as400-dev-jdbc.xml</datasource-file>
+                <schedtablename.ru.rbt>GL_SCHED_S</schedtablename.ru.rbt>
+            </properties>
+            <build>
+                <finalName>barssrv</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-ear-plugin</artifactId>
+                        <version>2.10</version>
+                        <configuration>
+                            <version>6</version>
+                            <defaultLibBundleDir>lib</defaultLibBundleDir>
+                            <packagingExcludes>jdbc/*prod*.xml</packagingExcludes>
+                            <filtering>true</filtering>
+                            <modules>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-ejb-core</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-bankjar</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-bankjar.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-ejb-testing</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
+                                    <excluded>true</excluded>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-ejb-common</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
+                                </ejbModule>
+                                <webModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-gwt-war</artifactId>
+                                    <contextRoot>${project.build.finalName}</contextRoot>
+                                    <bundleFileName>barsgl-gwt.war</bundleFileName>
+                                </webModule>
+                                <webModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-gwt-servlet</artifactId>
+                                    <excluded>true</excluded>
+                                </webModule>
+                            </modules>
+
+                            <env-entries>
+                                <env-entry>
+                                    <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+                                    <env-entry-type>java.lang.String</env-entry-type>
+                                    <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                                </env-entry>
+                            </env-entries>
+
+                            <ejbRefs>
+                                <ejb-ref>
+                                    <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+                                    <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                </ejb-ref>
+                            </ejbRefs>
+
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

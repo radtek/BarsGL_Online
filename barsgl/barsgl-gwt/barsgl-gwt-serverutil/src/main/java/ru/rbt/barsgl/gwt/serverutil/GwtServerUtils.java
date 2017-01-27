@@ -130,7 +130,8 @@ public class GwtServerUtils {
         // устанавливаем контекст вызова только БЕЗ GWT DEBUG
         try (InputStream stream = GwtServerUtils.class.getClassLoader().getResourceAsStream("application.properties")){
             if (null == stream) {
-                RequestContextBean contextBean = findJndiReference("java:global.barsgl.lib.barsgl-ejbcore.ApplicationRequestContext");
+                //read env-ref in application.xml
+                RequestContextBean contextBean = findJndiReference("java:app/env/ejb/ApplicationRequestContext");
                 contextBean.setRequest(holder);
             }
         } catch (Throwable e) {

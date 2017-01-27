@@ -134,4 +134,54 @@
                 </dependency>-->
     </dependencies>
 
+  <profiles>
+    <profile>
+      <id>env-barsgl</id>
+
+      <activation>
+        <activeByDefault>true</activeByDefault>
+
+        <property>
+          <name>env</name>
+          <value>barsgl</value>
+        </property>
+      </activation>
+
+      <build>
+        <resources>
+          <resource>
+            <directory>src/main/resources</directory>
+          </resource>
+
+          <resource>
+            <directory>env/barsgl</directory>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+
+    <profile>
+      <id>env-barssrv</id>
+
+      <activation>
+        <property>
+          <name>env</name>
+          <value>barssrv</value>
+        </property>
+      </activation>
+
+      <build>
+        <resources>
+          <resource>
+            <directory>src/main/resources</directory>
+          </resource>
+
+          <resource>
+            <directory>env/barssrv</directory>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+
+  </profiles>
 </project>

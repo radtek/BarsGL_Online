@@ -53,14 +53,14 @@ public class CommonAccountQueryProcessor {
         XMLGregorianCalendar dateTime = df.newXMLGregorianCalendar(calendar);
 
         answerBody =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
-                "\t\t\t<asbo:Code>0200</asbo:Code>\n" +
-                "\t\t\t<asbo:Description>" + message + "</asbo:Description>\n" +
-                "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
-                "\t\t\t<asbo:Kind>ERROR</asbo:Kind>\n" +
-                "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" +
-                "\t\t</asbo:Error>\n";
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
+                        "\t\t\t<asbo:Code>0200</asbo:Code>\n" +
+                        "\t\t\t<asbo:Description>" + message + "</asbo:Description>\n" +
+                        "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
+                        "\t\t\t<asbo:Kind>ERROR</asbo:Kind>\n" +
+                        "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" +
+                        "\t\t</asbo:Error>\n";
         return answerBody;
     }
 
@@ -74,25 +74,6 @@ public class CommonAccountQueryProcessor {
         return toTag(tagName, tagValue, 0);
     }
 
-/*    public String getAccountNotFoundMessage() throws DatatypeConfigurationException {
-        String answerBody;
-        GregorianCalendar calendar = new GregorianCalendar();
-        calendar.setTime(new Date());
-        DatatypeFactory df = DatatypeFactory.newInstance();
-        XMLGregorianCalendar dateTime = df.newXMLGregorianCalendar(calendar);
-
-        answerBody =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
-                "\t\t\t<asbo:Code>2951</asbo:Code>\n" +
-                "\t\t\t<asbo:Description> Account not found </asbo:Description>\n" +
-                "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
-                "\t\t\t<asbo:Kind>SYSERR</asbo:Kind>\n" +
-                "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" + //2016-06-24T16:10:03.010925+03:00
-                "\t\t</asbo:Error>\n";
-        return answerBody;
-    }*/
-
     public String getEmptyBodyMessage() throws DatatypeConfigurationException {
         GregorianCalendar calendar = new GregorianCalendar();
         calendar.setTime(new Date());
@@ -100,28 +81,28 @@ public class CommonAccountQueryProcessor {
         XMLGregorianCalendar dateTime = df.newXMLGregorianCalendar(calendar);
 
         return
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
-                "\t\t\t<asbo:Status>9999</asbo:Code>\n" +
-                "\t\t\t<asbo:Description>Empty \"body\" section</asbo:Description>\n" +
-                "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
-                "\t\t\t<asbo:Kind>ERROR</asbo:Kind>\n" +
-                "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" + //2016-06-24T16:10:03.010925+03:00
-                "\t\t</asbo:Error>\n";
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
+                        "\t\t\t<asbo:Status>9999</asbo:Code>\n" +
+                        "\t\t\t<asbo:Description>Empty \"body\" section</asbo:Description>\n" +
+                        "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
+                        "\t\t\t<asbo:Kind>ERROR</asbo:Kind>\n" +
+                        "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" + //2016-06-24T16:10:03.010925+03:00
+                        "\t\t</asbo:Error>\n";
     }
 
 
     // Фрагменты ответного сообщения. Составляется из header и body, которые генерируются JAXB
     private static final String[] envelopTemplates = new String[]{
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
-            "    <SOAP-ENV:Header>\n" +
-            "        <gbo:UCBRUHeaders>",
-        "</gbo:UCBRUHeaders>\n" +
-            "    </SOAP-ENV:Header>\n" +
-            "    <SOAP-ENV:Body>",
-        "    </SOAP-ENV:Body>\n" +
-            "</SOAP-ENV:Envelope>"
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
+                    "    <SOAP-ENV:Header>\n" +
+                    "        <gbo:UCBRUHeaders>",
+            "</gbo:UCBRUHeaders>\n" +
+                    "    </SOAP-ENV:Header>\n" +
+                    "    <SOAP-ENV:Body>",
+            "    </SOAP-ENV:Body>\n" +
+                    "</SOAP-ENV:Envelope>"
     };
 
     public static Date lastDate;
