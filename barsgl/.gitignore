@@ -15,3 +15,4 @@
 barsgl/barsgl-ear/target/
 target
 rollback.bat
+/build-srv-prod.bat

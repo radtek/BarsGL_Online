@@ -32,7 +32,7 @@ public class AcDNJournal extends BaseEntity<Long> {
     private Status status;
 
     @Column(name = "STATUS_DATE")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date statusDate;
 
     @Column(name = "COMMENT")
@@ -91,12 +91,12 @@ public class AcDNJournal extends BaseEntity<Long> {
     @Override
     public String toString() {
         return "AcDNJournal{" +
-                   "id='" + id + '\'' +
-                   ", source=" + source +
-                   ", status=" + status +
-                   ", statusDate=" + statusDate +
-                   ", comment='" + comment + '\'' +
-                   ", message='" + message + '\'' +
-                   '}';
+                "id='" + id + '\'' +
+                ", source=" + source +
+                ", status=" + status +
+                ", statusDate=" + statusDate +
+                ", comment='" + comment + '\'' +
+                ", message='" + message + '\'' +
+                '}';
     }
 }

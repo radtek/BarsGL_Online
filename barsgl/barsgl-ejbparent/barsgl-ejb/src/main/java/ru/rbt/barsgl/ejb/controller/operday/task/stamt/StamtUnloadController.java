@@ -55,10 +55,18 @@ public class StamtUnloadController {
         });
     }
 
+    /**
+     * Значения 0, 1 - ставим мы при выгрузке. В этом случае считаем что не выгружать.
+     * Значения 3 - начало обработки, 4 - обработано TDS. Тоже не выгружаем
+     * @param executeDate
+     * @param params
+     * @return
+     * @throws SQLException
+     */
     public long getAlreadyHeaderCount(Date executeDate, UnloadStamtParams params) throws SQLException {
         return repository.selectFirst(
                 "select count(1) cnt from GL_ETLSTMS " +
-                        "where PARNAME = ? and PARVALUE in (0, 1) and PARDESC = ? and OPERDAY = ?"
+                        "where PARNAME = ? and PARVALUE in (0, 1, 3, 4) and PARDESC = ? and OPERDAY = ?"
                 , params.getParamName(), params.getParamDesc(), executeDate).getLong(0);
     }
 

@@ -18,7 +18,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.POSTING_TECHOVER;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.TechoverTask;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_LDR_STEP_ERR;
@@ -122,7 +121,7 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
     private boolean checkRun(Properties properties) throws Exception {
         try {
             Date executeDate = (Date) properties.get(TechoverContext.EXECUTE_DATE);
-            Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(executeDate, POSTING_TECHOVER, SUCCEDED)
+            Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(executeDate, POSTING_TECHOVER)
                     , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, POSTING_TECHOVER.getParamName() + " " + POSTING_TECHOVER.getParamDesc()
                             , dateUtils.onlyDateString(executeDate)));
             final String stepName = Optional.ofNullable(
