@@ -3,11 +3,14 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
-import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
@@ -19,7 +22,19 @@ import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
  * Created by akichigi on 07.06.16.
  */
 public class StepChoiceDlg extends DlgFrame {
-    public enum MessageType {ALL, COMPLETED, NOTCOMPLETED}
+    public enum MessageType implements HasLabel {
+        ALL("Все"), COMPLETED("Обработанные"), WORKING("В обработке"), NOTCOMPLETED ("Необработанные");
+        private String label;
+
+        MessageType(String label) {
+            this.label = label;
+        }
+        @Override
+        public String getLabel() {
+            return label;
+        }
+
+    }
 
     private ValuesBox _steps;
     private CheckBox _ownMessages;
@@ -56,6 +71,7 @@ public class StepChoiceDlg extends DlgFrame {
 
         panel.add(grid);
         panel.add(_ownMessages = new CheckBox("Только свои"));
+        _ownMessages.setValue(true);
 
         return panel;
     }
@@ -77,9 +93,9 @@ public class StepChoiceDlg extends DlgFrame {
     }
 
     private void initMessageType(){
-        _types.addItem(MessageType.ALL, "Все");
-        _types.addItem(MessageType.COMPLETED, "Обработанные");
-        _types.addItem(MessageType.NOTCOMPLETED, "Необработанные");
+        for (MessageType value: MessageType.values()){
+            _types.addItem(value, value.getLabel());
+        }
     }
 
     @Override

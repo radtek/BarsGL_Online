@@ -43,11 +43,10 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Package;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.TechnicalPosting;
-import static ru.rbt.barsgl.ejb.props.PropertyName.ETLPKG_PROCESS_COUNT;
-import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
+import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
+
 
 /**
  * Created by Ivan Sevastyanov
@@ -55,12 +54,13 @@ import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
 public class EtlStructureMonitorTask implements ParamsAwareRunnable {
 
     private static final Logger logger = Logger.getLogger(EtlStructureMonitorTask.class.getName());
+    private static final Integer MANUAL_COUNT = 200;
 
     @Inject
-    private EtlPackageRepository packageRepository;
+    private EtlPackageRepository etlPackageRepository;
 
     @EJB
-    private EtlPostingRepository postingRepository;
+    private EtlPostingRepository etlPostingRepository;
 
     @EJB
     private EtlPostingController etlPostingController;
@@ -95,43 +95,64 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     @EJB
     private EtlTechnicalPostingController technicalPostingController;
 
+    @Inject
+    private ProcessBatchOperationsTask processBatchOperationsTask;
+
     @Override
     public void run(String jobName, Properties properties) throws Exception {
-        executeWork(propertiesRepository.getNumber(ETLPKG_PROCESS_COUNT.getName()).intValue());
+        executeWork(
+                propertiesRepository.getNumber(ETLPKG_PROCESS_COUNT.getName()).intValue(),
+                propertiesRepository.getNumber(BATPKG_PROCESS_COUNT.getName()).intValue(),
+                propertiesRepository.getNumberDef(MANUAL_PROCESS_COUNT.getName(), MANUAL_COUNT.longValue() ).intValue(),
+                isBatchAllowed());
     }
 
     public void executeWork() throws Exception {
-        executeWork(5);
+        executeWork(5, 5, MANUAL_COUNT, true);
+    }
+
+    private boolean isBatchAllowed() {
+        return "Y".equals(propertiesRepository.getStringDef(BATCH_PROCESS_ALLOWED.getName(), "Y").toUpperCase());
     }
 
     /**
      * обработка
-     * @param packageCount кол-во пакетов обработываемых за один раз
+     * @param etlPackageCount кол-во пакетов обработываемых за один раз
      * @throws Exception
      */
-    public void executeWork(int packageCount) throws Exception {
+    public void executeWork(int etlPackageCount, int batPackageCount, int mnlPostingCount, boolean batchAllowed) throws Exception {
         if (checkOperdayState() && checkSetProcessingState()) {
+            if (batchAllowed) {
+                // обработка ручных и пакетных операций
+                processBatchOperationsTask.executeWork(batPackageCount, mnlPostingCount);
+            }
+            // обработка пакетов из АЕ
+            processEtlPackages(etlPackageCount);
+        }
+    }
+
+    public void processEtlPackages(int packageCount) throws Exception {
             beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
                 // T0: читаем пакеты в LOADED с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
                 Date from = addDays(truncate(operdayController.getSystemDateTime(), Calendar.DATE), -7);
                 Date to = addDays(truncate(operdayController.getSystemDateTime(), Calendar.DATE), 1);
 
-                List<DataRecord> loadedPackages = packageRepository.getPackagesForProcessing(packageCount, from, to
+            List<DataRecord> loadedPackages = etlPackageRepository.getPackagesForProcessing(packageCount, from, to
                         ,operdayController.getOperday().getCurrentDate());
                 int cnt = loadedPackages.size();
-                String msg = format("Предварительное кол-во пакетов для загрузки '%s' в режиме 'UR' с даты '%s' по '%s'"
+            String msg = format("Предварительное кол-во пакетов АЕ для загрузки '%s' в режиме 'UR' с даты '%s' по '%s'"
                         , cnt, dateUtils.onlyDateString(from), dateUtils.onlyDateString(to));
                 logger.info(msg);
                 if (cnt > 0) {
                     auditController.info(Package, msg);
-                    String statistics = packageRepository.getPackageStatistics(from, to);
+                String statistics = etlPackageRepository.getPackageStatistics(from, to);
                     logger.info("Необработанные пакеты:\n" + statistics);
                 }
                 // T0: теперь читаем пакет по ID и проверяем статус в режиме CS
                 for (DataRecord pkgRecord : loadedPackages) {
-                    EtlPackage loadedPackage = packageRepository.findById(EtlPackage.class, pkgRecord.getLong("ID_PKG"));
-                    if (LOADED == loadedPackage.getPackageState()) {
-                        processPackage(loadedPackage);
+                EtlPackage loadedPackage = etlPackageRepository.findById(EtlPackage.class, pkgRecord.getLong("ID_PKG"));
+                if (LOADED == loadedPackage.getPackageState()) {
+                    processEtlPackage(loadedPackage);
                     } else {
                         logger.info(format("Пакет '%s' в недопустимом статусе: '%s'", loadedPackage.getId(), loadedPackage.getPackageState()));
                     }
@@ -139,27 +160,26 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
                 return null;
             }), 60 * 60);
         }
-    }
 
-    public void processPackage(EtlPackage loadedPackage) {
-        logger.info(format("Обрабатывается пакет с ИД '%s' в транзакции: '%s'", loadedPackage.getId(), postingRepository.getTransactionKey()));
+    public void processEtlPackage(EtlPackage loadedPackage) {
+        logger.info(format("Обрабатывается пакет с ИД '%s' в транзакции: '%s'", loadedPackage.getId(), etlPostingRepository.getTransactionKey()));
         final long loadedPackageId = loadedPackage.getId();
         try {
 
             // T0: устанавливаем статус пакету WORKING
-            postingRepository.executeInNewTransaction(p -> {packageRepository.updatePackageInprogress(loadedPackageId); return null;});
+            etlPostingRepository.executeInNewTransaction(p -> {etlPackageRepository.updatePackageInprogress(loadedPackageId); return null;});
 
             // T0: читаем все провожки в пакете сортируем по ID
-            List<EtlPosting> postings = postingRepository.getPostingByPackage(loadedPackage, YesNo.N);
+            List<EtlPosting> postings = etlPostingRepository.getPostingByPackage(loadedPackage, YesNo.N);
             logger.info(format("Проводок (не сторно) '%s' в пакете '%s'", postings.size(), loadedPackage.getId()));
             asyncProcessPostings(postings);
 
-            postings = postingRepository.getPostingByPackage(loadedPackage, YesNo.Y);
+            postings = etlPostingRepository.getPostingByPackage(loadedPackage, YesNo.Y);
             logger.info(format("Проводок (сторно) '%s' в пакете '%s'", postings.size(), loadedPackage.getId()));
             asyncProcessPostings(postings);
 
             // устанавливаем статус на пакете по результатам обработки
-            postingRepository.executeInNewTransaction(p -> {setPackageState(loadedPackageId); return null;});
+            etlPostingRepository.executeInNewTransaction(p -> {setPackageState(loadedPackageId); return null;});
             logger.info(format("Обработка пакета с ИД '%s' завершена", loadedPackage.getId()));
 
             // переобработка ошибок по клиентским счетам
@@ -167,7 +187,7 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
         } catch (Exception e) {
             auditController.error(Package, "Ошибка при обработке входного пакета", loadedPackage, e);
             try {
-                postingRepository.executeInNewTransaction(p -> {updatePackageStateError(loadedPackageId); return null;});
+                etlPostingRepository.executeInNewTransaction(p -> {updatePackageStateError(loadedPackageId); return null;});
             } catch (Exception e1) {
                 auditController.error(Package, "Ошибка при установке флага ошибки при обработке входного пакета", loadedPackage, e);
             }
@@ -187,8 +207,8 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
                         return etlPostingController.processMessage(posting);
                     } catch (Throwable e) {
                         logger.log(Level.SEVERE, format("Error on async processing of posting '%s'", posting.getId()), e);
-                        postingRepository.executeInNewTransaction(persistence0 -> {
-                            postingRepository.updatePostingStateError(posting, getErrorMessage(e));
+                        etlPostingRepository.executeInNewTransaction(persistence0 -> {
+                            etlPostingRepository.updatePostingStateError(posting, getErrorMessage(e));
                             return null;
                         });
                         return null;
@@ -204,13 +224,13 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     }
 
     private void setPackageState(long etlPackageId) {
-        Long cntErrorPosting = packageRepository.selectOne(Long.class
+        Long cntErrorPosting = etlPackageRepository.selectOne(Long.class
                 , "select count(p) cnt from EtlPosting p where p.etlPackage.id = ?1 and p.errorCode <> '0'"
                 , etlPackageId);
         if (0 < cntErrorPosting) {
-            packageRepository.updatePackageStateProcessed(etlPackageId, ERROR, operdayController.getSystemDateTime());
+            etlPackageRepository.updatePackageStateProcessed(etlPackageId, ERROR, operdayController.getSystemDateTime());
         } else {
-            packageRepository.updatePackageStateProcessed(etlPackageId, PROCESSED, operdayController.getSystemDateTime());
+            etlPackageRepository.updatePackageStateProcessed(etlPackageId, PROCESSED, operdayController.getSystemDateTime());
         }
     }
 
@@ -234,7 +254,7 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     }
 
     private void updatePackageStateError(long etlPackageId) {
-        packageRepository.updatePackageStateProcessed(etlPackageId, ERROR, operdayController.getSystemDateTime());
+        etlPackageRepository.updatePackageStateProcessed(etlPackageId, ERROR, operdayController.getSystemDateTime());
     }
 
     /**
@@ -266,13 +286,13 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
         if (EnumUtils.contains(new ProcessingStatus[]{REQUIRED, STOPPED}, status)) {
             auditController.warning(Task, "Обработка проводок запрещена", null, "");
             if (REQUIRED == status) {
-                postingRepository.executeInNewTransaction(p -> {operdayController.setProcessingStatus(STOPPED); return null;});
+                etlPostingRepository.executeInNewTransaction(p -> {operdayController.setProcessingStatus(STOPPED); return null;});
                 auditController.warning(Task, "Запрошена остановка обработки проводок", null, "Обработка остановлена");
             }
             return false;
         } else {
             if (ALLOWED == status) {
-                postingRepository.executeInNewTransaction(p -> {operdayController.setProcessingStatus(STARTED); return null;});
+                etlPostingRepository.executeInNewTransaction(p -> {operdayController.setProcessingStatus(STARTED); return null;});
                 auditController.warning(Task, "Запрошен запуск обработки проводок", null, "Обработка запущена");
             }
             return true;

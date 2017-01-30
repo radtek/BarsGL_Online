@@ -113,6 +113,9 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"preview.png"})
     public abstract ImageResource preview();
 
+    @ClientBundle.Source({"statistics.png"})
+    public abstract ImageResource statistics();
+
     @ClientBundle.Source({"fromdict16.png"})
     public abstract ImageResource fromdict16();
 
@@ -127,4 +130,7 @@ public abstract interface ImageConstants extends ClientBundle{
 
     @ClientBundle.Source({"refresh_simple.png"})
     public abstract ImageResource refresh_simple();
+
+    @ClientBundle.Source({"coins.png"})
+    public abstract ImageResource coins();
 }

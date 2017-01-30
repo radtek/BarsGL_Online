@@ -5,8 +5,11 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
+import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
@@ -14,14 +17,19 @@ import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
+import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
@@ -31,6 +39,7 @@ import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
@@ -59,15 +68,20 @@ public class OperationDlg extends OperationDlgBase {
     private int asyncListCount = 7; /*count async lists:  mDtCurrency; mCrCurrency; mDtFilial; mCrFilial;
                                                           mDepartment; mProfitCenter; mDealSource*/
     private HandlerRegistration registration;
+    private Boolean isAsyncListsCached;
+    private Timer timer;
 
     public OperationDlg(String title, FormAction action, Columns columns) {
         super(title, action, columns);
+    }
 
-        /*Boolean isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+    @Override
+    public void beforeCreateContent(){
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);*/
+        LocalDataStorage.putParam("isAsyncListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -75,25 +89,7 @@ public class OperationDlg extends OperationDlgBase {
 
             @Override
             public void completeLoadData(String dataListBoxId) {
-                // repeat setting values on async lists
-                ManualOperationWrapper operation = (ManualOperationWrapper)params;
-
-                if (mDtCurrency.getId().equalsIgnoreCase(dataListBoxId)) {
-                    mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
-                } else if (mCrCurrency.getId().equalsIgnoreCase(dataListBoxId)) {
-                    mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
-                } else if (mDealSource.getId().equalsIgnoreCase(dataListBoxId)) {
-                    mDealSource.setSelectValue(operation.getDealSrc());
-                } else if (mDtFilial.getId().equalsIgnoreCase(dataListBoxId)) {
-                    mDtFilial.setSelectValue(operation.getFilialDebit());
-                } else if (mCrFilial.getId().equalsIgnoreCase(dataListBoxId)){
-                    mCrFilial.setSelectValue(operation.getFilialCredit());
-                } else if (mDepartment.getId().equalsIgnoreCase(dataListBoxId)){
-                    mDepartment.setSelectValue(operation.getDeptId());
-                } else if (mProfitCenter.getId().equalsIgnoreCase(dataListBoxId)){
-                    mProfitCenter.setSelectValue(operation.getProfitCenter());
-                }
-
+                //Вызывается после заполнения списка значениями
                 asyncListCount--;
 
                 if (asyncListCount == 0) {
@@ -103,10 +99,8 @@ public class OperationDlg extends OperationDlgBase {
         };
     }
 
-
     @Override
     public Widget createContent() {
-
         VerticalPanel mainVP = new VerticalPanel();
         mainVP.setSpacing(15);
 
@@ -124,7 +118,6 @@ public class OperationDlg extends OperationDlgBase {
         mainVP.add(createDepartments(false));
 
         mDateOperDay.setReadOnly(true);
-        getOperDay();
 
         setEnableSumRuHandler();
         setChangeHandlers();
@@ -134,7 +127,6 @@ public class OperationDlg extends OperationDlgBase {
 
     protected void setControlsEnabled(){
     }
-
 
     protected void getOperDay() {
         getOperday(new IDataConsumer<OperDayWrapper>() {
@@ -157,7 +149,6 @@ public class OperationDlg extends OperationDlgBase {
         grid.setWidget(2, 1, mDateValue = createDateBox());
 
         grid.setWidget(0, 2, createAlignWidget(createLabel("Источник сделки"), LABEL2_WIDTH));
-        //grid.setWidget(0, 3, mDealSource =  createDealSourceAuthListBox("", FIELD2_WIDTH));
         grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
         grid.setWidget(1, 2, createAlignWidget(createLabel("N сделки/ платежа"), LABEL2_WIDTH));
         grid.setWidget(1, 3, mDealId = createTxtBox(20, SUM_WIDTH));
@@ -168,12 +159,13 @@ public class OperationDlg extends OperationDlgBase {
     }
 
     protected Grid createSumRu() {
-        Grid grid = new Grid(2,4);
-        //g3.setWidget(0, 0, createLabel("", "40px"));
+        Grid grid = new Grid(2,3);
+
         grid.setWidget(0, 0, createLabel("Сумма в рублях", LABEL2_WIDTH));
         grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
-        grid.setWidget(0, 2, mCheckSumRu = new CheckBox("Без расчета курсовой разницы"));
-        grid.setWidget(1, 2, mCheckCorrection = new CheckBox("Исправительная проводка"));
+        grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без \"отвода\" курсовой разницы"));
+        grid.setWidget(1, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
+
         return grid;
     }
 
@@ -240,8 +232,7 @@ public class OperationDlg extends OperationDlgBase {
                 , "Основание ENG", "поле не заполнено", new CheckNotEmptyString()));
         operation.setRusNarrativeLong(check(mNarrativeRU.getValue()
                 , "Основание RUS", "поле не заполнено", new CheckNotEmptyString()));
-        operation.setDeptId(check((String) mDepartment.getValue()
-                , "Подразделение", "поле не заполнено", new CheckNotEmptyString()));
+        operation.setDeptId((String) mDepartment.getValue());
         operation.setProfitCenter((String) mProfitCenter.getValue());
         operation.setCorrection(mCheckCorrection.getValue());
         operation.setInputMethod(InputMethod.M);
@@ -252,44 +243,75 @@ public class OperationDlg extends OperationDlgBase {
         operation.setPostDateStr(ClientDateUtils.Date2String(mDateOperation.getValue()));
     }
 
-
-    @Override
-    protected void fillContent() {
+    protected void fillUp(){
         ManualOperationWrapper operation = (ManualOperationWrapper)params;
-
+        if (operation != null){
         id = operation.getId();
         mDealSource.setSelectValue(operation.getDealSrc());
         mDealId.setValue(operation.getDealId());
         mSubDealId.setValue(operation.getSubdealId());
 
-    	mDateOperation.setValue(ClientDateUtils.String2Date(operation.getPostDateStr()));
+        mDateOperation.setValue(ClientDateUtils.String2Date(operation.getPostDateStr()));
         mDateValue.setValue(ClientDateUtils.String2Date(operation.getValueDateStr()));
 
-    	mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
-    	mDtFilial.setSelectValue(operation.getFilialDebit());
-    	mDtAccount.setValue(operation.getAccountDebit());
-    	mDtSum.setValue(getSumma(operation.getAmountDebit()));
+        mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
+        mDtFilial.setSelectValue(operation.getFilialDebit());
+        mDtAccount.setValue(operation.getAccountDebit());
+        mDtSum.setValue(getSumma(operation.getAmountDebit()));
 
-    	mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
-    	mCrFilial.setSelectValue(operation.getFilialCredit());
-    	mCrAccount.setValue(operation.getAccountCredit());
-    	mCrSum.setValue(getSumma(operation.getAmountCredit()));
+        mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
+        mCrFilial.setSelectValue(operation.getFilialCredit());
+        mCrAccount.setValue(operation.getAccountCredit());
+        mCrSum.setValue(getSumma(operation.getAmountCredit()));
 
-    	BigDecimal amountRu = operation.getAmountRu();
-    	boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
-    			&& (null != amountRu);
-    	mCheckSumRu.setValue(withoutDiff);
-    	mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "");
+        BigDecimal amountRu = operation.getAmountRu();
+        boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
+                && (null != amountRu);
+        mCheckSumRu.setValue(withoutDiff);
+        mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "");
 
-    	mNarrativeEN.setValue(operation.getNarrative());
-    	mNarrativeEN.setValue(operation.getNarrative());
+        mNarrativeEN.setValue(operation.getNarrative());
+        mNarrativeEN.setValue(operation.getNarrative());
         mNarrativeRU.setValue(operation.getRusNarrativeLong());
-    	mDepartment.setSelectValue(operation.getDeptId());
+        mDepartment.setSelectValue(operation.getDeptId());
         mProfitCenter.setSelectValue(operation.getProfitCenter());
         mCheckCorrection.setValue(operation.isCorrection());
 
         _reasonOfDeny = operation.getReasonOfDeny();
+        }
+
+        getOperDay();
+
         setControlsEnabled();
+    }
+
+
+    @Override
+    protected void fillContent() {
+        if (isAsyncListsCached != null && isAsyncListsCached){
+            //если закэшировано
+            fillUp();
+            return;
+        }
+
+        if (asyncListCount == 0) {
+            //если закончена обработка списков
+            fillUp();
+        } else {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        fillUp();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
+        }
     }
 
     protected void setControlsDisabled(){
@@ -401,11 +423,12 @@ public class OperationDlg extends OperationDlgBase {
 			public void onChange(ChangeEvent event) {
 				if (isRurDebit) { 
 					if (new CheckNotZeroBigDecimal().check(mDtSum.getValue())) {
-						mSumRu.setValue((String)mDtSum.getValue());
+                        mSumRu.setValue(mDtSum.getValue());
 					} else {
 				        mCheckSumRu.setValue(false, true);
 					}
 				}
+                correctSum(mDtSum, mCrSum);
 			}
     	});
     	mCrSum.addChangeHandler(new ChangeHandler() {
@@ -418,6 +441,7 @@ public class OperationDlg extends OperationDlgBase {
 				        mCheckSumRu.setValue(false, true);
 					}
 				}
+                correctSum(mCrSum, mDtSum);
 			}
     	});
     }
@@ -436,4 +460,86 @@ public class OperationDlg extends OperationDlgBase {
         }
     }
 
+    @Override
+    protected void btnClick(Side side) {
+        exchange(side.equals(Side.DEBIT));
+    }
+
+    private void exchange(boolean isDebit){
+        if (mDateOperation.getValue() == null){
+            showInfo("Ошибка", "Не заполнено поле 'Дата проводки'");
+            return;
+        }
+
+        if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
+            showInfo("Ошибка", "Для конвертации валюта дебета не должна быть равна валюте кредита");
+            return;
+        }
+
+        if (!(((String)mDtCurrency.getValue()).equalsIgnoreCase("RUR") || ((String)mCrCurrency.getValue()).equalsIgnoreCase("RUR"))){
+            showInfo("Ошибка", "Валюта дебета или кредита должна быть RUR");
+            return;
+        }
+
+        String sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
+        CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
+
+        if (!checkBigDecimal.check(sum)) {
+            showInfo("Ошибка", Utils.Fmt("Сумма в валюте {0} должна быть заполнена и не равна нулю",
+                     isDebit ? "кредита" : "дебета"));
+            return;
+        }
+        calculateSum(createCurExchangeWrapper(isDebit), isDebit);
+    }
+
+
+    private CurExchangeWrapper createCurExchangeWrapper(boolean isDebit){
+        CurExchangeWrapper wrapper = new CurExchangeWrapper();
+        wrapper.setDate(DateTimeFormat.getFormat("dd.MM.yyyy").format(mDateOperation.getValue()));
+        wrapper.setSourceCurrency(isDebit ? (String) mCrCurrency.getValue() : (String) mDtCurrency.getValue());
+        wrapper.setSourceSum(new BigDecimal(isDebit ? mCrSum.getValue() : mDtSum.getValue()));
+        wrapper.setTargetCurrency(isDebit ? (String) mDtCurrency.getValue() : (String) mCrCurrency.getValue());
+
+        return wrapper;
+    }
+
+    private void calculateSum(CurExchangeWrapper wrapper, final boolean isDebit){
+        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+        BarsGLEntryPoint.operationService.exchangeCurrency(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<CurExchangeWrapper>>() {
+            @Override
+            public void onSuccess(RpcRes_Base<CurExchangeWrapper> res) {
+                if (res.isError()) {
+                    DialogManager.error("Ошибка", "Конвертация валюты не удалась.\nОшибка: " + res.getMessage());
+                } else {
+                    CurExchangeWrapper res_wrapper = res.getResult();
+                    setSum(res_wrapper, isDebit);
+                    showInfo(res.getMessage());
+                }
+                WaitingManager.hide();
+            }
+        });
+    }
+
+    private void setSum(CurExchangeWrapper wrapper, boolean isDebit){
+        if (isDebit){
+            mDtSum.setValue(wrapper.getTargetSum().toPlainString());
+        }else {
+            mCrSum.setValue(wrapper.getTargetSum().toPlainString());
+        }
+    }
+
+    private void correctSum(TxtBox boxA, TxtBox boxB){
+        CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
+
+        if (checkBigDecimal.check(boxA.getValue())){
+            if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
+                boxB.setValue(boxA.getValue());
+            }
+        }else{
+            if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue()) &&
+                    checkBigDecimal.check(boxB.getValue())){
+                boxA.setValue(boxB.getValue());
+            }
+        }
+    }
 }

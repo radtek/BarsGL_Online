@@ -2,7 +2,6 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
-import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
@@ -12,22 +11,21 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.EnumSet;
 
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.getWhereInClause;
+import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
  * Created by akichigi on 20.06.16.
  */
 public abstract class OperBase extends OperSuperBase {
     protected GridAction _stepChoiceAction;
+    protected GridAction _packageStatAction;
 
     protected BatchPostStep _step = BatchPostStep.NOHAND;
-    private Boolean _ownMessages;
-    private StepChoiceDlg.MessageType _type = StepChoiceDlg.MessageType.ALL;
     private String _select = "";
 
     private String _where_base = "where (PST.PROCDATE = (select CURDATE from GL_OD)) and PST.INP_METHOD = '{0}' " +
@@ -52,6 +50,7 @@ public abstract class OperBase extends OperSuperBase {
     protected void reconfigure() {
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addAction(createPreview());
+        abw.addAction(_packageStatAction = new PackageStatisticsAction(grid));
         abw.addAction(_stepChoiceAction = createStepChoice());
     }
 
@@ -127,15 +126,13 @@ public abstract class OperBase extends OperSuperBase {
 
         switch (step) {
             case HAND1:
-                statuses = EnumSet.of(BatchPostStatus.INPUT, BatchPostStatus.REFUSE);
+                statuses = EnumSet.of(INPUT, REFUSE);
                 break;
             case HAND2:
-                statuses = EnumSet.of(BatchPostStatus.CONTROL, BatchPostStatus.SIGNED, BatchPostStatus.SIGNEDVIEW, BatchPostStatus.REFUSEDATE,
-                        BatchPostStatus.ERRPROC, BatchPostStatus.ERRSRV, BatchPostStatus.REFUSESRV);
+                statuses = EnumSet.of(CONTROL, REFUSEDATE, ERRPROC, ERRSRV, REFUSESRV, TIMEOUTSRV);
                 break;
             case HAND3:
-                statuses = EnumSet.of(BatchPostStatus.WAITDATE, BatchPostStatus.SIGNEDDATE, BatchPostStatus.ERRPROCDATE
-                        /*,BatchPostStatus.ERRSRVDATE, BatchPostStatus.REFUSESRVDATE*/);
+                statuses = EnumSet.of(WAITDATE, ERRPROCDATE);
                 break;
             default:
                 statuses = null;
@@ -144,51 +141,12 @@ public abstract class OperBase extends OperSuperBase {
         return getWhereInClause(statuses, field);
     }
 
-    private String getOwnMessagesClause(Boolean ownMessages, BatchPostStep step){
-        if (!ownMessages) return "";
-
-        String field;
-        switch (step){
-            case HAND1:
-                field = "PST.USER_NAME";
-                break;
-            case HAND2:
-                field = "PST.USER_AU2";
-                break;
-            case HAND3:
-                field = "PST.USER_AU3";
-                break;
-            default:
-                field = "";
-                break;
-        }
-
-        AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
-        if (wrapper == null) return "";
-
-        return  field.isEmpty() ? " and " + "'" + wrapper.getUserName() + "' in (PST.USER_NAME, PST.USER_AU2, PST.USER_AU3, PST.USER_CHNG)"
-                : " and " + field + "=" + "'" + wrapper.getUserName() + "'";
-    }
-
     private void changeWhereOwnMessagesPart(){
-        _where_ownMessages = getOwnMessagesClause(_ownMessages, _step);
+        _where_ownMessages = getOwnMessagesClause(_ownMessages, _step, "PST");
     }
 
     private void changeWhereMessageTypePart(){
-        String predicate = "";
-
-        switch (_type){
-            case COMPLETED:
-                predicate = " and PST.STATE='" + BatchPostStatus.COMPLETED.name() + "'";
-                break;
-            case NOTCOMPLETED:
-                predicate = " and PST.STATE<>'" + BatchPostStatus.COMPLETED.name() + "'";
-                break;
-            default:
-                predicate = "";
-                break;
-        }
-        _where_message_type = predicate;
+        _where_message_type = getWhereMessageTypePart("PST");
     }
 
     private String initWhereAuthPart(){

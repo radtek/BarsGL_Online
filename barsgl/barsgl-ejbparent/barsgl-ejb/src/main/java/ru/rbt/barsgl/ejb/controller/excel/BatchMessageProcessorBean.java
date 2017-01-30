@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
+import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
@@ -19,6 +20,7 @@ import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
@@ -48,7 +50,7 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
     public static final Logger log = Logger.getLogger(BatchMessageProcessorBean.class);
 
     private static int START_ROW = 1;
-    private static int COLUMN_COUNT = 16;
+    private static int COLUMN_COUNT = 16;   // TODO 17
     private static String LIST_DELIMITER = "#";
 
     private List<Object> rowHeader = null;
@@ -69,13 +71,13 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
     private BatchPostingProcessor postingProcessor;
 
     @Inject
-    private ProcessExcelPackageTask excelPackageTask;
-
-    @Inject
     private RequestContextBean contextBean;
 
     @EJB
     private AuditController auditController;
+
+    @EJB
+    private BatchPackageController packageController;
 
     @Override
     public String processMessage(File file, Map<String, String> params) throws Exception {
@@ -93,7 +95,7 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         ) {
             Iterator<List<Object>> it = parser.parseSafe(0);
             batchPackage = postingRepository.executeInNewTransaction(persistence ->
-                    buildPackage(it, fileName, userId, sourcePosting, department, movementOff));
+                    buildPackage(it, fileName, parser.getRowCount(), userId, sourcePosting, department, movementOff));
         }
         if (null == batchPackage )
             return "Нет строк для загрузки!";
@@ -107,12 +109,11 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         return result;
     }
 
-    public BatchPackage buildPackage(Iterator<List<Object>> it, String fileName, Long userId, String source, String department, boolean movementOff) throws Exception {
-        if(!it.hasNext()) {
+    public BatchPackage buildPackage(Iterator<List<Object>> it, String fileName, int maxRowNum, Long userId, String source, String department, boolean movementOff) throws Exception {
+        if(!it.hasNext() || 0 == maxRowNum) {
             return null;
         }
 
-        final long stamp = System.currentTimeMillis();
         BatchPackage pkg = new BatchPackage();
 
         final UserRequestHolder requestHolder = contextBean.getRequest().orElse(UserRequestHolder.empty());
@@ -136,12 +137,20 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
             auditController.error(BatchOperation, "Ошибка при загрузке файла", null, msg);
             throw new ParamsParserException(msg);
         }
+
         int row = START_ROW;
+        int maxRows = START_ROW + packageController.getMaxRowsExcel();
+        if (maxRowNum > maxRows) {
+            errorList.add(format("Нельзя загрузить файл размером больше %d строк", maxRows));
+            throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
+        }
+
+        Date postDate0 = null;
         if(it.hasNext()) {
             BatchPosting posting0 = createPosting(it.next(), row, source, department, errorList);
             if (null == posting0)
                 return null;
-            Date postDate0 = posting0.getPostDate();
+            postDate0 = posting0.getPostDate();
             if (null != postDate0) {
                 checkBackvaluePermission(postDate0, userId);
                 checkFilialPermission(posting0.getFilialDebit(), posting0.getFilialCredit(), userId);
@@ -177,7 +186,9 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         pkg.setFileName(fileName);
         pkg.setDateLoad(new Date());
         pkg.setMovementOff(movementOff ? YesNo.Y : YesNo.N);
-        pkg.setPackageState(errorCount > 0 ? BatchPackage.PackageState.ERROR : BatchPackage.PackageState.LOADED);
+        pkg.setPostDate(postDate0);
+        pkg.setProcDate(curdate);
+        pkg.setPackageState(errorCount > 0 ? BatchPackageState.ERROR : BatchPackageState.LOADED);
         pkg = packageRepository.save(pkg);
 
         for (BatchPosting posting : postings) {
@@ -230,8 +241,7 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
             return null;
 
         BatchPosting posting = new BatchPosting();
-        posting.setValueDate(getValue(rowParams, row, 0, true, java.util.Date.class, errorList));
-        posting.setPostDate(posting.getValueDate());
+        posting.setPostDate(getValue(rowParams, row, 0, true, java.util.Date.class, errorList));
         posting.setDealId(getString(rowParams, row, 1, false, 20, errorList));
         posting.setSubDealId(getString(rowParams, row, 2, false, 20, errorList));
         posting.setPaymentRefernce(getString(rowParams, row, 3, false, 20, errorList));
@@ -249,6 +259,9 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         posting.setRusNarrativeShort(getString(rowParams, row, 13, false, 100, errorList));
         posting.setProfitCenter(getString(rowParams, row, 14, false, 4, errorList));
         posting.setIsCorrection(getYesNo(rowParams, row, 15, false, errorList));
+
+        Date valueDate = getValue(rowParams, row, 16, false, java.util.Date.class, errorList);
+        posting.setValueDate((null != valueDate) ? valueDate : posting.getPostDate());
 
         posting.setCreateTimestamp(new Date());
 

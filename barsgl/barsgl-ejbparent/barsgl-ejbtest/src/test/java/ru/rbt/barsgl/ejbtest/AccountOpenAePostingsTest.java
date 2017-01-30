@@ -21,11 +21,8 @@ import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
-import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
@@ -926,7 +923,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         pst2.setCurrencyDebit(pst2.getCurrencyCredit());
         pst2 = (EtlPosting) baseEntityRepository.save(pst2);
 
-        remoteAccess.invoke(EtlStructureMonitorTask.class, "processPackage", pkg);
+        remoteAccess.invoke(EtlStructureMonitorTask.class, "processEtlPackage", pkg);
 
         GLOperation oper1 = getOperation(pst1.getId());
         Assert.assertTrue(0 < oper1.getId());

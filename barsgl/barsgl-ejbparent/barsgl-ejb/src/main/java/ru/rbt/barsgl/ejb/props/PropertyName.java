@@ -7,7 +7,12 @@ public enum PropertyName {
 
     PD_CONCURENCY("pd.cuncurency")
     , ETLPKG_PROCESS_COUNT("etlpkg.process.count")
-    , AD_LDAP_URI("auth.ldapURI");
+    , BATPKG_PROCESS_COUNT("batpkg.process.count")
+    , MANUAL_PROCESS_COUNT("manual.process.count")
+    , BATCH_PROCESS_ALLOWED("manual.process.allowed")
+    , AD_LDAP_URI("auth.ldapURI")
+    , BATPKG_MAXROWS("batpkg.max.count")
+    , MOVEMENT_TIMEOUT("mvmt.timeout.sec");
 
     private String name;
 

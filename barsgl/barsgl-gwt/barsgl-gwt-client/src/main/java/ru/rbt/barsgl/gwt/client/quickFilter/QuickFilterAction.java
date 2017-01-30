@@ -35,6 +35,8 @@ public abstract class QuickFilterAction extends GridAction {
     abstract public IQuickFilterParams getFilterParams();
     abstract public Object[] getInitialFilterParams(Date operday, Date prevday);
 
+    public void beforeFireFilterEvent(IQuickFilterParams filterParams) {};
+
     @Override
     public void execute() {
         dlg = getFilterDialog();
@@ -59,6 +61,7 @@ public abstract class QuickFilterAction extends GridAction {
         filterParams = (IQuickFilterParams) prms;
         ArrayList<FilterItem> filterCriteria = filterParams.getFilter();
         dlg.hide();
+        beforeFireFilterEvent(filterParams);
         LocalEventBus.fireEvent(new GridEvents(grid.getId(), GridEvents.EventType.FILTER, filterCriteria));
 //                refreshAction.execute();
         WaitingManager.hide();

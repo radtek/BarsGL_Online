@@ -7,14 +7,12 @@ import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import ru.rbt.barsgl.shared.Assert;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
@@ -60,4 +58,7 @@ public class RateRepository extends AbstractBaseEntityRepository<CurrencyRate, C
         return majorAmount.multiply(rate).setScale(currency.getScale().intValue(), BigDecimal.ROUND_HALF_UP);
     }
 
+    public BigDecimal getValEquivalent(BankCurrency currency, BigDecimal rate, BigDecimal majorAmount) {
+        return majorAmount.divide(rate, currency.getScale().intValue(), BigDecimal.ROUND_HALF_UP);
+    }
 }

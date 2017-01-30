@@ -28,6 +28,11 @@ public class FilterItem implements Serializable {
         this(column, criteria, value, false);
     }
 
+    public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined, boolean readOnly) {
+        this(column.getName(), column.getType(), criteria, value, pined);
+        this.setReadOnly(readOnly);
+    }
+
     public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined) {
         this(column.getName(), column.getType(), criteria, value, pined);
     }

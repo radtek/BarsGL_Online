@@ -3,6 +3,7 @@ package ru.rbt.barsgl.gwt.client.dict;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.barsgl.gwt.client.dict.dlg.ActParmDlg;
 import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
@@ -11,7 +12,10 @@ import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.*;
+import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -24,6 +28,8 @@ import java.util.ArrayList;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
+import static ru.rbt.barsgl.shared.enums.YesNoType.No;
+import static ru.rbt.barsgl.shared.enums.YesNoType.Yes;
 
 /**
  * Created by akichigi on 24.08.16.
@@ -41,6 +47,7 @@ public class ActParm extends GridForm {
     public final static String FIELD_DTB = "Дата начала";
     public final static String FIELD_DTE = "Дата конца";
     public final static String FIELD_ACCNAME = "Наименование AccType";
+    public final static String FIELD_FL_CTRL = "Контролируемый";
 
     private String  initSection = null;
     private String  initProduct = null;
@@ -193,16 +200,21 @@ public class ActParm extends GridForm {
         result.addColumn(new Column("DTB", Column.Type.DATE, FIELD_DTB, 25));
         result.addColumn(new Column("DTE", Column.Type.DATE, FIELD_DTE, 25));
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, FIELD_ACCNAME, 240));
+        Column col;
+        result.addColumn(col = new Column("FL_CTRL", Column.Type.STRING, FIELD_FL_CTRL, 20, false, false));
+        col.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));
         return result;
     }
 
     @Override
     protected String prepareSql() {
-        return  "select * from ("+
-                "select PARM.ACCTYPE, PARM.CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME "
-                + "from GL_ACTPARM PARM join GL_ACTNAME NM on NM.ACCTYPE = PARM.ACCTYPE" +
-                " )v";
-
+        return "select * from ("+
+                        "select PARM.ACCTYPE, PARM.CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, " +
+                        "case when NM.FL_CTRL = 'N' then trim('" + No.getLabel() + "') " +
+                        "else trim('" + Yes.getLabel() + "') " +
+                        "end FL_CTRL " +
+                        "from GL_ACTPARM PARM join GL_ACTNAME NM on NM.ACCTYPE = PARM.ACCTYPE" +
+                        " )v";
     }
 
     @Override

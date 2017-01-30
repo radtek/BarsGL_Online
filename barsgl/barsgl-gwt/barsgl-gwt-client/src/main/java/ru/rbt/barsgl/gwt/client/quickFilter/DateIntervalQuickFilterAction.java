@@ -12,7 +12,7 @@ import java.util.Date;
  * Created by akichigi on 03.06.16.
  */
 public class DateIntervalQuickFilterAction extends QuickFilterAction {
-    private Column dateColumn;
+    protected Column dateColumn;
     public DateIntervalQuickFilterAction(GridWidget grid, Column dateColumn) {
         super(grid, null, "Интервал дат", new Image(ImageConstants.INSTANCE.quickfilter()), 10);
         this.dateColumn = dateColumn;
