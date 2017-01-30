@@ -4,12 +4,11 @@
  */
 package ru.rbt.barsgl.ejbtest;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.properties.PropertiesServiceSupport;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -17,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class PropertiesServiceSupportTest extends AbstractRemoteTest {
 
-  private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
+  private static final Logger logger = Logger.getLogger(PropertiesServiceSupportTest.class.getName());
 
   @Test
   public void getEnvProperty() throws Exception {
