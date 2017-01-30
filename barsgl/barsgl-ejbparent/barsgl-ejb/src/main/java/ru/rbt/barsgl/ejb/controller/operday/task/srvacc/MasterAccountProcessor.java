@@ -143,7 +143,7 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
 
     private StringBuilder batchCreateOutMessage(List<String> counts) {
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
-        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition);
+        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition, null);
 
         /* Сделали, а потом передумали, но решили оставить на всякий случай
         List<DataRecord> glAccRecordsRaw;

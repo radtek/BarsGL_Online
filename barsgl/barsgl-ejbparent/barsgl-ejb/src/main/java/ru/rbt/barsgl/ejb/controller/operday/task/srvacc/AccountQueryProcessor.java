@@ -81,7 +81,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         return answerBody;
     }
 
-    private Set<String> readFromXML(String bodyXML, Long jId) throws Exception {
+    private Map<String, Set<String>> readFromXML(String bodyXML, Long jId) throws Exception {
         org.w3c.dom.Document doc = null;
         try {
             DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -114,6 +114,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         }
 
         Set<String> accounts = new HashSet<>();
+        Map<String, Set<String>> accountsMap = new HashMap<>();
 //        XPath xPath = XPathFactory.newInstance().newXPath();
 //        NodeList queries = ((NodeList) xPath.evaluate("/AccountListQuery/AccountQuery", doc.getDocumentElement(), XPathConstants.NODESET));
         NodeList queries = ((NodeList) xPath.evaluate("./AccountQuery", nodes.item(0), XPathConstants.NODESET));
@@ -152,39 +153,45 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                     accounts.addAll(queryRepository.getCountsByAcctype(customerNo, accTypes));
                 }
 
-                if (specs.size() == 0 && accTypes.size() == 0) {
+                if (specs.isEmpty() && accTypes.isEmpty()) {
                     accounts.addAll(queryRepository.getCountsByCustomerNoOnly(customerNo));
                 }
             }
+            accountsMap.merge(customerNo, accounts, (t, u) -> { t.addAll(accounts);return t;});
         }
 
-        return accounts;
+        return accountsMap;
     }
 
     private String processAccountListQuery(String fullTopic, Long jId, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap, boolean showUnspents) throws Exception {
-        Set<String> countsToProcess = readFromXML(fullTopic, jId);
+        Map<String, Set<String>> countsToProcess = readFromXML(fullTopic, jId);
         String body = createOutMessage(countsToProcess, currencyMap, workday, currencyNBDPMap, showUnspents);
         return body;
     }
 
-    private String createOutMessage(Set<String> countsToProcess, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap, boolean showUnspents) {
-        List<String> stringList = countsToProcess==null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
+    private String createOutMessage(Map<String, Set<String>> countsToProcessMap, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap, boolean showUnspents) {
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                                      "<asbo:AccountList xmlns:asbo=\"urn:asbo:barsgl\">\n");
-        for (int i = 0; i < stringList.size(); i += batchSize) {
-            result.append(batchCreateOutMessage(
-                stringList.subList(i, Math.min(i + batchSize, stringList.size())), currencyMap, workday, showUnspents, currencyNBDPMap));
+        
+        for (String key : countsToProcessMap.keySet()) {
+            Set<String> countsToProcess = countsToProcessMap.get(key);
+            List<String> stringList = countsToProcess == null || countsToProcess.isEmpty() ? new ArrayList<>() : new ArrayList<>(countsToProcess);
+            
+            for (int i = 0; i < stringList.size(); i += batchSize) {
+                result.append(batchCreateOutMessage(
+                    key, stringList.subList(i, Math.min(i + batchSize, stringList.size())), currencyMap, workday, showUnspents, currencyNBDPMap));
+            }
         }
 
         return result.append("</asbo:AccountList>").toString();
     }
 
-    private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, boolean showUnspents, Map<String, Integer> currencyNBDPMap) {
+    private StringBuilder batchCreateOutMessage(String customerNo, List<String> counts, Map<String, String> currencyMap, Date workday, boolean showUnspents, Map<String, Integer> currencyNBDPMap) {
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
-        List<DataRecord> accrlnRecordsRaw = queryRepository.getAccrlnRecords(inCondition);
+        List<DataRecord> accrlnRecordsRaw = queryRepository.getAccrlnRecords(inCondition, customerNo);
 
-        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition);
+        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition, customerNo);
         Map<String, DataRecord> glAccRecordMap = new HashMap<>();
         for (DataRecord item : glAccRecordsRaw) {
             glAccRecordMap.put(item.getString("BSAACID"), item);

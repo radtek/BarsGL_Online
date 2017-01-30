@@ -147,7 +147,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     private String createOutMessage(Set<String> countsToProcess, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) {
         List<String> stringList = countsToProcess==null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<asbo:AccountBalanceList xmlns:asbo=\"urn:asbo:barsgl\">\n");
+                                                     "<asbo:AccountBalanceList xmlns:asbo=\"urn:asbo:barsgl\">\n");
         for (int i = 0; i < stringList.size(); i += batchSize) {
             result.append(batchCreateOutMessage(stringList.subList(i, Math.min(i + batchSize, stringList.size())), currencyMap, workday, currencyNBDPMap));
         }
@@ -159,9 +159,9 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         StringBuilder sb = new StringBuilder();
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
-        List<DataRecord> accrlnRecordsRaw = queryRepository.getAccrlnRecords(inCondition);
+        List<DataRecord> accrlnRecordsRaw = queryRepository.getAccrlnRecords(inCondition, null);
 
-        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition);
+        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition, null);
         Map<String, DataRecord> glAccRecordMap = new HashMap<>();
         for (DataRecord item : glAccRecordsRaw) {
             glAccRecordMap.put(item.getString("BSAACID"), item);
@@ -257,59 +257,59 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
 
     public static String fullTopicTestB =
 //        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
-                    " <S:Header>\n" +
-                    "  <UCBRUHeaders xmlns=\"urn:ucbru:gbo:v3\">\n" +
-                    "\t\t\t<gbo:Correlation>\t\t\t\t\n" +
-                    "\t\t\t\t\t<gbo:XRef>1234567847567488</gbo:XRef>\n" +
-                    "\t\t\t\t<gbo:Segmentation>\n" +
-                    "\t\t\t\t\t<gbo:CanSegmentResponse>true</gbo:CanSegmentResponse>\n" +
-                    "\t\t\t\t</gbo:Segmentation>\n" +
-                    "\t\t\t</gbo:Correlation>\n" +
-                    "\t\t</gbo:UCBRUHeaders>\n" +
-                    " </S:Header>\n" +
-                    " <S:Body>\n" +
-                    "  <AccountBalanceListQuery xmlns=\"urn:ucbru:gbo:v3\">\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807840000010003982</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807756200014415596</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807840300010155035</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807978700010392690</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807810000010524077</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807978400013048937</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807756400014504362</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40807810500010504018</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40701810100014429491</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40602810300454473963</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40603810400010656574</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40701810000010529123</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "   <AccountBalanceQuery>\n" +
-                    "    <CBAccountNo>40701810100013964999</CBAccountNo>\n" +
-                    "   </AccountBalanceQuery>\n" +
-                    "  </AccountBalanceListQuery>\n" +
-                    " </S:Body>\n" +
-                    "</S:Envelope>";
+        "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+            " <S:Header>\n" +
+            "  <UCBRUHeaders xmlns=\"urn:ucbru:gbo:v3\">\n" +
+            "\t\t\t<gbo:Correlation>\t\t\t\t\n" +
+            "\t\t\t\t\t<gbo:XRef>1234567847567488</gbo:XRef>\n" +
+            "\t\t\t\t<gbo:Segmentation>\n" +
+            "\t\t\t\t\t<gbo:CanSegmentResponse>true</gbo:CanSegmentResponse>\n" +
+            "\t\t\t\t</gbo:Segmentation>\n" +
+            "\t\t\t</gbo:Correlation>\n" +
+            "\t\t</gbo:UCBRUHeaders>\n" +
+            " </S:Header>\n" +
+            " <S:Body>\n" +
+            "  <AccountBalanceListQuery xmlns=\"urn:ucbru:gbo:v3\">\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807840000010003982</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807756200014415596</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807840300010155035</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807978700010392690</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807810000010524077</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807978400013048937</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807756400014504362</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40807810500010504018</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40701810100014429491</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40602810300454473963</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40603810400010656574</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40701810000010529123</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "   <AccountBalanceQuery>\n" +
+            "    <CBAccountNo>40701810100013964999</CBAccountNo>\n" +
+            "   </AccountBalanceQuery>\n" +
+            "  </AccountBalanceListQuery>\n" +
+            " </S:Body>\n" +
+            "</S:Envelope>";
 }
