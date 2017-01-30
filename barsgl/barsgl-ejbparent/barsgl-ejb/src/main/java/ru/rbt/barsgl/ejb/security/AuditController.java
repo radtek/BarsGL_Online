@@ -70,6 +70,10 @@ public class AuditController {
         logAuditRecordStat(AuditRecord.LogLevel.Info, operCode, message, longMessage, null);
     }
 
+    public void warning(AuditRecord.LogCode operCode, String message) {
+        logAuditRecord(AuditRecord.LogLevel.Warning, operCode, message, null, null, null);
+    }
+
     public void warning(AuditRecord.LogCode operCode, String message, BaseEntity entity, String errorMessage) {
         logAuditRecord(AuditRecord.LogLevel.Warning, operCode, message, errorMessage, entity, null);
     }

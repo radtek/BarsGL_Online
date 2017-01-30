@@ -5,6 +5,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.etc.TextResourceController;
+import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejb.security.AuditController;
@@ -37,9 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BufferModeSync;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BufferModeSyncBackvalue;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operday;
+import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
 
 /**
@@ -67,6 +66,9 @@ public class OperdaySynchronizationController {
 
     @EJB
     private MemorderRepository memorderRepository;
+
+    @EJB
+    private MemorderController memorderController;
 
     @EJB
     private AuditController auditController;
@@ -589,6 +591,7 @@ public class OperdaySynchronizationController {
             try {
                 return pdRepository.executeTransactionally(connection -> {
                     log.info(format("Starting copy PD by interval: from '%s' to '%s'", minId, maxId));
+                    auditController.warning(BufferModeSync, format("Скорректировано мемордеров '%s' в интервале с '%s' по '%s'", fixIntersectedMONO(minId, maxId), minId, maxId));
                     try (PreparedStatement statement = connection.prepareStatement("select id from gl_pd where id between ? and ? and pd_id is null")) {
                         statement.setLong(1, minId);
                         statement.setLong(2, maxId);
@@ -629,6 +632,28 @@ public class OperdaySynchronizationController {
             int result = minId.hashCode();
             result = 31 * result + maxId.hashCode();
             return result;
+        }
+
+        private int fixIntersectedMONO(long fromId, long toId) throws Exception {
+            return pdRepository.executeTransactionally(conn -> {
+                try (PreparedStatement select = conn.prepareStatement(textResourceController.getContent("ru/rbt/barsgl/ejb/controller/od/sync_existence_mo_no.sql"))
+                    ){
+                    select.setLong(1, fromId);
+                    select.setLong(2, toId);
+                    try (ResultSet selectRs = select.executeQuery()){
+                        int i = 0;
+                        while (selectRs.next()) {
+                            GLOperation operation = glOperationRepository.findById(GLOperation.class, selectRs.getLong("GLO_REF"));
+                            Assert.notNull(operation, "GLOperation is null");
+                            Assert.isTrue(1 == glPdRepository.executeNativeUpdate("update gl_pd p set p.mo_no = ? where p.id = ?"
+                                    , memorderController.nextMemorderNumber(new Date(selectRs.getDate("POD").getTime()), selectRs.getString("BSAACID"), operation.isCorrection()), selectRs.getLong("ID"))
+                                    , "gl_pd is not exists");
+                            i++;
+                        }
+                        return i;
+                    }
+                }
+            });
         }
     }
 
@@ -764,9 +789,9 @@ public class OperdaySynchronizationController {
         try {
             pdRepository.executeInNewTransaction(persistence1 -> {
                 lockPD();
+                auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PD установлена");
                 swithTriggersPD(off);
                 auditController.info(BufferModeSync, String.format("%s триггеров прошло успешно", off ? "Отключение" : "Включение"));
-                auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PD установлена");
                 return null;
             });
         } catch (Exception e) {

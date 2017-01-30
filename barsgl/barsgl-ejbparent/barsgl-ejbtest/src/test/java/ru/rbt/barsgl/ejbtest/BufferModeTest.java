@@ -104,6 +104,9 @@ public class BufferModeTest extends AbstractRemoteTest {
         Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
 
+        // тестируем устойчивость к пересечению MO_NO
+        createForPcidMo();
+
         remoteAccess.invoke(OperdaySynchronizationController.class, "syncPostings");
 
         List<GLPosting> postList1 = getPostings(operation);
@@ -505,6 +508,21 @@ public class BufferModeTest extends AbstractRemoteTest {
                 , operday, stepName);
         Assert.assertNotNull(workproc);
         return  "O".equals(workproc.getString("RESULT"));
+    }
+
+    /**
+     * генерируем пересечение номеров мемордеров с буфером
+     */
+    private void createForPcidMo() throws SQLException {
+
+        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd fetch first 1 rows only");
+        Assert.assertNotNull(glPd);
+        DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m where pod = ? and mo_no = ?", glPd.getDate("pod"), glPd.getString("mo_no"));
+        if (null == pcidMo) {
+            pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m fetch first 1 rows only");
+            Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pcid_mo set pod = ?, mo_no = ? where pcid = ?", glPd.getDate("pod"), glPd.getString("mo_no"), pcidMo.getLong("pcid")));
+        }
+
     }
 
 }
