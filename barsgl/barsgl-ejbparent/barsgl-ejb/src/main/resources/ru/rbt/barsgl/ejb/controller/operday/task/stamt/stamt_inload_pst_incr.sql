@@ -27,7 +27,10 @@ insert into GL_ETLSTMD (
     -decimal(d.amntbc)/integer(power(10,2)) damount_rur,  decimal(c.amntbc)/integer(power(10, 2)) camount_rur,     -- суммы в рублях
     m.bo_ind doc_type, m.mo_no doc_n,                                                             -- мемордер
     p.glo_ref,
-    GL_STMFANTYPE(d.bsaacid, c.bsaacid, o.ac_dr, o.ac_cr, p.post_type, o.fb_side) POST_TYPE,
+    GL_STMFANTYPE(d.bsaacid, c.bsaacid, o.ac_dr, o.ac_cr, p.post_type, o.fb_side
+        , abs(decimal(d.amnt)/integer(power(10, dc.nbdp)))
+        , abs(decimal(c.amnt)/integer(power(10, cc.nbdp)))
+        , o.pst_scheme, o.amt_dr, o.amt_cr) POST_TYPE,
     o.evtp,
     o.nrt
  from gl_posting p
