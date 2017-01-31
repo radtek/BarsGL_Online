@@ -385,7 +385,7 @@ public class BatchPackageController {
 //            String msg = format("Пакет ID = '%d': все запросы отправлены в сервис движений", pkg.getId());
             return new RpcRes_Base<>( pkgWrapper, false, msg);
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             updatePackageStatus(pkg, ERROR, pkg.getPackageState());
             throw new DefaultApplicationException(String.format("Ошибка при обращении к сервису движений для пакета ID = %s", pkg.getId()));
         }

@@ -770,7 +770,7 @@ public class ManualPostingController {
             // TODO анализ ошибки отправки ??
             return res;
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             throw new DefaultApplicationException(logPostingError(e,
                     String.format("Ошибка при обращении к сервису движений по запросу ID = %s", getWrapperId(wrapper)),
                     wrapper, ERRSRV, MovementErrorTypes.ERR_REQUEST.getCode()));

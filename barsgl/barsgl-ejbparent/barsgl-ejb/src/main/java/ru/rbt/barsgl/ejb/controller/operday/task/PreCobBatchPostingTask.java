@@ -219,18 +219,18 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @return
      */
     private int processPostingsUnknown(Operday operday) throws Exception {
+        final BatchPostStatus statusOld = WORKING;
         List<DataRecord> postingsList = postingRepository.select("select ID, STATE from GL_BATPST b " +
                 " where b.PROCDATE = ? and b.STATE = ? and b.INVISIBLE = ? and exists" +
                 " (select 1 from GL_OPER o join GL_POSTING p  on p.GLO_REF = o.GLOID where" +
                 " o.INP_METHOD in ('F', 'M') and o.PST_REF = b.ID and o.PROCDATE = ? and o.STATE = 'POST')",
-                operday.getCurrentDate(), WORKING.name(), InvisibleType.N.name(), operday.getCurrentDate());
+                operday.getCurrentDate(), statusOld.name(), InvisibleType.N.name(), operday.getCurrentDate());
         if (null == postingsList)
             return 0;
 
         int count = 0;
         for (DataRecord data : postingsList) {
             final Long id = data.getLong(0);
-            final BatchPostStatus statusOld = BatchPostStatus .valueOf(data.getString(0));
             count += postingRepository.executeInNewTransaction(persistence -> {
                 postingRepository.createPostingHistory(id, operdayController.getSystemDateTime(), null);
                 return postingRepository.updatePostingStatusDeny(id, operdayController.getSystemDateTime(),
@@ -239,7 +239,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
                 });
         }
         auditController.info(AuditRecord.LogCode.PreCob,
-                format("Изменен статус запросов на операцию '%s' на '%s': %d", WORKING.name(), COMPLETED.name(), count));
+                format("Изменен статус запросов на операцию '%s' на '%s': %d", statusOld.name(), COMPLETED.name(), count));
         return postingsList.size();
     }
 
