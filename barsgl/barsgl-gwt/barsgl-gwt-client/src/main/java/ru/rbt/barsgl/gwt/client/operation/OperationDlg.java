@@ -531,15 +531,9 @@ public class OperationDlg extends OperationDlgBase {
     private void correctSum(TxtBox boxA, TxtBox boxB){
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
 
-        if (checkBigDecimal.check(boxA.getValue())){
-            if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
-                boxB.setValue(boxA.getValue());
-            }
-        }else{
-            if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue()) &&
-                    checkBigDecimal.check(boxB.getValue())){
-                boxA.setValue(boxB.getValue());
-            }
+        if (checkBigDecimal.check(boxA.getValue()) && !checkBigDecimal.check(boxB.getValue()) &&
+           ((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
+            boxB.setValue(boxA.getValue());
         }
     }
 }
