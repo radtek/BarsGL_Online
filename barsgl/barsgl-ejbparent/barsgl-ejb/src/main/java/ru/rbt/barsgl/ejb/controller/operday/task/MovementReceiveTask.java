@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
@@ -89,7 +90,7 @@ public class MovementReceiveTask implements ParamsAwareRunnable {
     }
 
     public int getTimoutSec() {
-        return (int)(long)propertiesRepository.getNumberDef(PropertyName.MOVEMENT_TIMEOUT.getName(), SRV_TIMEOUT);
+        return (int)(long)propertiesRepository.getNumberDef(PropertyName.MC_TIMEOUT.getName(), SRV_TIMEOUT);
     }
 
     public int updatePostingsTimeout(Date operday, int timeout) throws Exception {
@@ -107,11 +108,18 @@ public class MovementReceiveTask implements ParamsAwareRunnable {
         List<Long> packageIds = packageRepository.getPackagesReceiveSrv(operday);
         for (Long packageId : packageIds) {
             BatchPackage pkg = packageRepository.findById(packageId);
-            BatchPosting posting = packageRepository.getOnePostingByPackage(pkg.getId());
-            BatchPostStatus postStatus = postingController.getOperationRqStatusSigned(posting.getSignerName(), pkg.getPostDate());
-            ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
-            wrapper.setAction(BatchPostAction.SIGN);
-            packageController.setPackageRqStatusSigned(wrapper, posting.getSignerName(), pkg, pkg.getPackageState(), postStatus, postStatus, SIGNEDVIEW, OKSRV);   // TODO userName
+            if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
+                packageController.updatePackageStateError(pkg, ERROR, ON_WAITSRV);
+            } else if (null == postingRepository.getOnePostingByPackageForSign(pkg.getId())) { // нет запросов для обработки
+                packageController.updatePackageState(pkg, PROCESSED, ON_WAITSRV);
+            } else {
+                BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
+                BatchPostStatus postStatus = postingController.getOperationRqStatusSigned(posting.getSignerName(), pkg.getPostDate());
+                ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
+                wrapper.setAction(BatchPostAction.SIGN);
+                packageController.setPackageRqStatusSigned(wrapper, posting.getSignerName(),
+                        pkg, pkg.getPackageState(), postStatus, postStatus, SIGNEDVIEW, OKSRV);   // TODO userName
+            }
         }
         return packageIds.size();
     }

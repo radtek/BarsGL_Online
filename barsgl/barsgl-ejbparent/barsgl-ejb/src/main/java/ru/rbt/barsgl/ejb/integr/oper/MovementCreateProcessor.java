@@ -7,6 +7,7 @@ import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.controller.operday.task.SCASAMCResponseStorage;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.jms.MessageContext;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
@@ -41,9 +42,8 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
  */
 public class MovementCreateProcessor {
     private static final Logger log = Logger.getLogger(MovementCreateProcessor.class.getName());
-    private static final String PROP_ATTEMPTS = "mvmt.attempts";
-    private static final String MC_QUEUES_PARAM = "mc.queues.param";
-    private static final String PROP_MVMTDEBUG = "mvmt.debug";
+    private static final String PROP_ATTEMPTS = "mc.attempts";
+    private static final String PROP_MVMTDEBUG = "mc.debug";
 
     @EJB
     private AuditController auditController;
@@ -224,8 +224,10 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
                 if (item.getState() == null || isEmpty(item.getState().toString())) {
                     item.setErrType(MovementErrorTypes.ERR_REQUEST);
                     item.setState(MovementCreateData.StateEnum.ERROR);
+                    item.setErrDescr(e.getMessage());
                 }
             }
+            throw new DefaultApplicationException(e);
         }
     }
 
@@ -437,7 +439,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
     }
 
     private void loadQueueProperties() throws SQLException, IOException, ExecutionException {
-        String strProp = propertiesRepository.getString(MC_QUEUES_PARAM);
+        String strProp = propertiesRepository.getString(PropertyName.MC_QUEUES_PARAM.getName());
         if(isEmpty(strProp)){
           throw new IllegalArgumentException("No data in table GL_PRPRP for ID_PRP='mc.queues.param'");
         }

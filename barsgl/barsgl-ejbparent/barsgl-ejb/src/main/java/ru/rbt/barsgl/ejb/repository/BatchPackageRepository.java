@@ -26,9 +26,12 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
     private final SimpleDateFormat dateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
+    public BatchPackage refresh(BatchPackage pkg) {
+        return (null == pkg) ? null : refresh(pkg, true);
+    }
+
     public BatchPackage findById(Long primaryKey) {
-        BatchPackage pkg = super.findById(BatchPackage.class, primaryKey);
-        return refresh(pkg, true);
+        return refresh(super.findById(BatchPackage.class, primaryKey));
     }
 
     public int updatePackageState(Long packageId, BatchPackageState stateNew, BatchPackageState stateOld) {
@@ -51,26 +54,9 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
                 packageId, InvisibleType.N);
     }
 
-    public List<BatchPosting> getPostingsByPackage(Long packageId, BatchPostStatus status) {
+    public List<BatchPosting> getPostingsByPackageWithStatus(Long packageId, BatchPostStatus status) {
         return select(BatchPosting.class, "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 and p.status = ?3 ORDER BY p.id",
                 packageId, InvisibleType.N, status);
-    }
-
-    public BatchPosting getOnePostingByPackage(Long packageId) {
-        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
-        return selectFirst(BatchPosting.class, sql, packageId, InvisibleType.N);
-    }
-
-    public BatchPosting getOnePostingByPackage(Long packageId, BatchPostStatus enabledStatus) {
-        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
-        return selectFirst(BatchPosting.class, sql + " and p.status = ?3",
-                    packageId, InvisibleType.N, enabledStatus);
-    }
-
-    public BatchPosting getOnePostingSigned(Long packageId) {
-        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
-        return selectFirst(BatchPosting.class, sql + " and p.status in (?3, ?4) ",
-                packageId, InvisibleType.N, BatchPostStatus.SIGNED, BatchPostStatus.SIGNEDDATE);
     }
 
     public void updatePostingsStatus(Long packageId, BatchPostStatus statusNew, String statusIn ) {

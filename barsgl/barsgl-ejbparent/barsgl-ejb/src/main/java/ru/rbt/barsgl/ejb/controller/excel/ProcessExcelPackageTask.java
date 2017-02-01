@@ -107,7 +107,7 @@ public class ProcessExcelPackageTask implements InmemoryTask {
 
             // T0: читаем все провожки в пакете сортируем по ID
             // TODO выбирать только необработанные not COMPLETED
-            List<BatchPosting> postings = packageRepository.getPostingsByPackage(idPackage, oldStatus);
+            List<BatchPosting> postings = packageRepository.getPostingsByPackageWithStatus(idPackage, oldStatus);
             logger.info(format("Проводок '%s' в пакете с ИД '%s' в статусе '%s'", postings.size(), idPackage, oldStatus.name()));
             result.setTotalCount(postings.size());
             asyncProcessPostings(postings, action, withCheck, result);

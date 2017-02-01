@@ -198,7 +198,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
         int errorCount = 0;
 
         for (Long packageId: packages) {
-            BatchPosting posting = packageRepository.getOnePostingSigned(packageId);
+            BatchPosting posting = postingRepository.getOnePostingByPackageSigned(packageId);
             if (null == posting)
                 continue;
             BatchPostStatus status = posting.getStatus();

@@ -187,7 +187,7 @@ public class BatchPackageController {
      */
     public RpcRes_Base<ManualOperationWrapper> forSignPackageRq(ManualOperationWrapper wrapper) throws Exception {
         BatchPackage pkg = getPackageWithCheck(wrapper, LOADED);
-        BatchPosting posting0 = packageRepository.getOnePostingByPackage(pkg.getId(), INPUT);
+        BatchPosting posting0 = postingRepository.getOnePostingByPackageWithStatus(pkg.getId(), INPUT);
         try {
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             postingProcessor.checkBackvaluePermission(posting0.getPostDate(), wrapper.getUserId());
@@ -293,7 +293,7 @@ public class BatchPackageController {
         try {
             BatchPackage pkg = getPackageWithCheck(wrapper, null);
             checkPostingsStatusNotIn(wrapper, COMPLETED, WORKING, SIGNED, SIGNEDDATE);
-            BatchPosting posting = packageRepository.getOnePostingByPackage(pkg.getId());
+            BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
             if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, wrapper.getAction())) {
                 packageRepository.setPackageInvisible(pkg.getId(), userContext.getTimestamp(), userContext.getUserName()); // сделать пакет невидимым
                 return packageRepository.findById(pkg.getId());
@@ -320,14 +320,14 @@ public class BatchPackageController {
 //            checkPostingsStatusNotError(wrapper.getPkgId()); //, CONTROL
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             BatchPostStatus oldStatus  = BatchPostStatus.CONTROL;
-            BatchPosting posting0 = packageRepository.getOnePostingByPackage(pkg.getId(), oldStatus);
+            BatchPosting posting0 = postingRepository.getOnePostingByPackageWithStatus(pkg.getId(), oldStatus);
             if (null == posting0) {
                 throw new ValidationError(PACKAGE_IS_PROCESSED, pkg.getId().toString(), oldStatus.name());
             }
             checkHand12Diff(posting0);
 
             // TODO переделать
-            updatePackageStatusNew(pkg, IS_SIGNEDVIEW);
+            updatePackageStateNew(pkg, IS_SIGNEDVIEW);
             createPackageHistory(pkg, oldStatus.getStep(), wrapper.getAction());
             BatchPostStatus newStatus = postingController.getOperationRqStatusSigned(wrapper.getUserId(), pkg.getPostDate());
             setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, SIGNEDVIEW, newStatus, oldStatus);
@@ -353,7 +353,7 @@ public class BatchPackageController {
     }
 
     public RpcRes_Base<ManualOperationWrapper> sendMovements(BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
-                                                             BatchPostStatus newStatus) throws Exception {
+                                                             BatchPostStatus nextStatus) throws Exception {
         try {
             auditController.info(BatchOperation, format("Пакет ID = '%d': запросов для отправки в сервис движений %d", pkg.getId(), postingsId.size()));
             if (postingsId.size() == 0) {
@@ -373,20 +373,32 @@ public class BatchPackageController {
                 ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
                 MovementCreateData data = postingController.createMovementData(posting, wrapper);
                 String movementId = data.getMessageUUID();
-                postingController.setOperationRqStatusSend(wrapper, movementId, newStatus);
+                postingController.setOperationRqStatusSend(wrapper, movementId, WAITSRV, nextStatus);
                 movementData.add(data);
             }
-            movementProcessor.sendRequests(movementData);
-            updatePackageStatus(pkg, ON_WAITSRV, IS_SIGNEDVIEW);
-            BatchProcessResult result = new BatchProcessResult(pkg.getId(), newStatus);
-            result.setProcessDate(SIGNEDDATE.equals(newStatus) ? BT_PAST : BT_EMPTY);
-            result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), false);
-            String msg = result.getPackageSendMessage();
-//            String msg = format("Пакет ID = '%d': все запросы отправлены в сервис движений", pkg.getId());
-            return new RpcRes_Base<>( pkgWrapper, false, msg);
+            updatePackageState(pkg, ON_WAITSRV, IS_SIGNEDVIEW);
+            BatchProcessResult result = new BatchProcessResult(pkg.getId(), nextStatus);
+            result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
+            try {
+                movementProcessor.sendRequests(movementData);
+                result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), false);
+                return new RpcRes_Base<>( pkgWrapper, false, result.getPackageSendMessage());
+            } catch (Throwable e) {     // ошибка отправки
+                for (MovementCreateData data : movementData) {
+                    if (MovementCreateData.StateEnum.ERROR == data.getState() )
+                        postingController.receiveMovement(data);
+                }
+                if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
+                    updatePackageState(pkg, ERROR, ON_WAITSRV);
+                }
+                result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), true);
+                result.setPackageState(IS_ERRSRV);
+                return new RpcRes_Base<>( pkgWrapper, false, result.getPackageProcessMessage());
+            }
         }
         catch (Throwable e) {
-            updatePackageStatus(pkg, ERROR, pkg.getPackageState());
+            pkg = packageRepository.findById(pkg.getId());
+            updatePackageState(pkg, ERROR, pkg.getPackageState());
             throw new DefaultApplicationException(String.format("Ошибка при обращении к сервису движений для пакета ID = %s", pkg.getId()));
         }
     }
@@ -401,13 +413,13 @@ public class BatchPackageController {
 //            checkPostingsStatusNotError(wrapper.getPkgId()); //, WAITDATE);
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             BatchPostStatus oldStatus = WAITDATE;
-            BatchPosting posting0 = packageRepository.getOnePostingByPackage(pkg0.getId(), oldStatus);
+            BatchPosting posting0 = postingRepository.getOnePostingByPackageWithStatus(pkg0.getId(), oldStatus);
             if (null == posting0) {
                 throw new ValidationError(PACKAGE_IS_PROCESSED, pkg0.getId().toString(), oldStatus.name());
             }
             checkHand12Diff(posting0);
 
-            updatePackageStatusNew(pkg0, IS_SIGNEDDATE);
+            updatePackageStateNew(pkg0, IS_SIGNEDDATE);
             createPackageHistory(pkg0, posting0.getStatus().getStep(), wrapper.getAction());
             if (CONFIRM_NOW.equals(wrapper.getAction())) {
                 postingRepository.executeInNewTransaction(persistence -> {
@@ -498,7 +510,7 @@ public class BatchPackageController {
     }
 
     private boolean createPackageHistory(BatchPackage pkg, BatchPostStep step, BatchPostAction action) throws Exception {
-        BatchPosting posting = packageRepository.getOnePostingByPackage(pkg.getId());
+        BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
         boolean needHistory = postingProcessor.needHistory(posting, step, action);
         if (needHistory) {
             postingRepository.executeInNewTransaction(persistence -> packageRepository.createPackageHistory(pkg));
@@ -521,13 +533,18 @@ public class BatchPackageController {
         }
     }
 
-    public void updatePackageStatus(BatchPackage pkg, BatchPackageState stateNew, BatchPackageState stateOld) throws Exception {
+    public void updatePackageState(BatchPackage pkg, BatchPackageState stateNew, BatchPackageState stateOld) throws Exception {
         int cnt = postingRepository.executeInNewTransaction(persistence -> packageRepository.updatePackageState(pkg.getId(), stateNew, stateOld));
         if (0 == cnt)
             throw  new ValidationError(PACKAGE_STATUS_WRONG, stateOld.name(), stateOld.getLabel());
     }
 
-    public void updatePackageStatusNew(BatchPackage pkg, BatchPackageState state) throws Exception {
+    public void updatePackageStateError(BatchPackage pkg, BatchPackageState stateNew, BatchPackageState stateOld) throws Exception {
+        updatePackageState(pkg, stateNew, stateOld);
+        auditController.warning(BatchOperation, format("Пакет ID = %s: перевелен в состояние ошибки", pkg.getId(), "Нет операций для обработки"));
+    }
+
+    public void updatePackageStateNew(BatchPackage pkg, BatchPackageState state) throws Exception {
         int cnt = postingRepository.executeInNewTransaction(persistence -> packageRepository.updatePackageStateNew(pkg.getId(), state));
         if (cnt != 1) {
             throw new ValidationError(ErrorCode.PACKAGE_IS_WORKING, pkg.getId().toString(), state.name());

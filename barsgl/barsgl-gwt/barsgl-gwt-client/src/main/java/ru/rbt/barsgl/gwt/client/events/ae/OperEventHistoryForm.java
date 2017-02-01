@@ -47,6 +47,7 @@ public class OperEventHistoryForm  extends OperSuperBase {
         abw.addAction(quickFilterAction = new DateHistoryQuickFilterAction(grid, colProcDate, colInvisible));;
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addAction(createPreview());
+        abw.addAction(new PackageStatisticsAction(grid));
         quickFilterAction.execute();
     }
 

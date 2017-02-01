@@ -50,6 +50,7 @@ public class PackageStatisticsAction extends GridAction {
                     showInfo("Информация", wrapper.getMessage());
                 }
                 WaitingManager.hide();
+                grid.refresh();
             }
         });
 

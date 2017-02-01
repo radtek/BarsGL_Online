@@ -12,7 +12,8 @@ public enum PropertyName {
     , BATCH_PROCESS_ALLOWED("manual.process.allowed")
     , AD_LDAP_URI("auth.ldapURI")
     , BATPKG_MAXROWS("batpkg.max.count")
-    , MOVEMENT_TIMEOUT("mvmt.timeout.sec");
+    , MC_QUEUES_PARAM("mc.queues.param")
+    , MC_TIMEOUT("mc.timeout.sec");
 
     private String name;
 

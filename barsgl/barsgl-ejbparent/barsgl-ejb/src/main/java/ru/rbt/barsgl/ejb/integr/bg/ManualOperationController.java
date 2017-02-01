@@ -152,7 +152,7 @@ public class ManualOperationController {
 
             // T0: читаем все провожки в пакете сортируем по ID
             // TODO выбирать только необработанные not COMPLETED
-            List<BatchPosting> postings = packageRepository.getPostingsByPackage(idPackage, oldStatus);
+            List<BatchPosting> postings = packageRepository.getPostingsByPackageWithStatus(idPackage, oldStatus);
             log.info(format("Проводок '%s' в пакете с ИД '%s' в статусе '%s'", postings.size(), idPackage, oldStatus.name()));
             result.setTotalCount(postings.size());
             int errCount = asyncProcessPostings(postings);

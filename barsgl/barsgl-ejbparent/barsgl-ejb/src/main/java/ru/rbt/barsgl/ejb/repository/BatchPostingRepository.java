@@ -34,12 +34,19 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
             "HEADBRANCH, USER_AU2, OTS_AU2, USER_AU3, OTS_AU3, USER_CHNG, OTS_CHNG, STATE, \n" +
             "GLOID_REF, DESCRDENY, POSTDATE, CBCC_DR, CBCC_CR, SRV_REF, SEND_SRV, OTS_SRV\n";
 
+    public BatchPosting refresh(BatchPosting posting) {
+        return (null == posting) ? null : refresh(posting, true);
+    }
+
     public BatchPosting findById(Long postingId) {
         BatchPosting posting = super.findById(BatchPosting.class, postingId);
-        posting = refresh(posting, true);
-        posting.setControllableDebit(isControlableAccount(posting.getAccountDebit()));
-        posting.setControllableCredit(isControlableAccount(posting.getAccountCredit()));
-        return posting;
+        if (null != posting) {
+            posting = refresh(posting, true);
+            posting.setControllableDebit(isControlableAccount(posting.getAccountDebit()));
+            posting.setControllableCredit(isControlableAccount(posting.getAccountCredit()));
+            return posting;
+        } else
+            return null;
     }
 
     public int updatePostingStatusSuccess(Long postingId, GLManualOperation operation) {
@@ -195,15 +202,44 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
                 BatchPostStatus.COMPLETED, postdate, InvisibleType.N);
     }
 
-    public List<BatchPosting> findPostingByMovementId(String movementId, Date postDate) {
-        return select(BatchPosting.class, "FROM BatchPosting p where p.movementId = ?1 and p.procDate = ?2 and p.invisible <> ?3",
-                movementId, postDate, InvisibleType.H);
-    }
-
     public List<BatchPosting> findPostingsByTimeout(Date sendTime, Date postDate) {
         return select(BatchPosting.class, "FROM BatchPosting p where p.status = ?1 and p.sendTimestamp < ?2 and p.receiveTimestamp is null " +
                 "and p.procDate = ?3 and p.invisible = ?4",
                 BatchPostStatus.WAITSRV, sendTime, postDate, InvisibleType.N);
+    }
+
+    public BatchPosting findPostingByMovementId(String movementId, Date postDate) {
+        return refresh(selectFirst(BatchPosting.class, "FROM BatchPosting p where p.movementId = ?1 and p.procDate = ?2 and p.invisible <> ?3",
+                movementId, postDate, InvisibleType.H));
+    }
+
+    public BatchPosting getOnePostingByPackage(Long packageId) {
+        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
+        return refresh(selectFirst(BatchPosting.class, sql, packageId, InvisibleType.N));
+    }
+
+    public BatchPosting getOnePostingByPackageWithStatus(Long packageId, BatchPostStatus enabledStatus) {
+        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
+        return refresh(selectFirst(BatchPosting.class, sql + " and p.status = ?3",
+                packageId, InvisibleType.N, enabledStatus));
+    }
+
+    public BatchPosting getOnePostingByPackageWithoutStatus(Long packageId, BatchPostStatus enabledStatus) {
+        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
+        return refresh(selectFirst(BatchPosting.class, sql + " and p.status <> ?3",
+                packageId, InvisibleType.N, enabledStatus));
+    }
+
+    public BatchPosting getOnePostingByPackageForSign(Long packageId) {
+        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
+        return refresh(selectFirst(BatchPosting.class, sql + " and p.status in (?3, ?4) ",
+                packageId, InvisibleType.N, BatchPostStatus.SIGNEDVIEW, BatchPostStatus.OKSRV));
+    }
+
+    public BatchPosting getOnePostingByPackageSigned(Long packageId) {
+        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
+        return refresh(selectFirst(BatchPosting.class, sql + " and p.status in (?3, ?4) ",
+                packageId, InvisibleType.N, BatchPostStatus.SIGNED, BatchPostStatus.SIGNEDDATE));
     }
 
     /**

@@ -36,7 +36,6 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -494,8 +493,8 @@ public class ManualPostingController {
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
-    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSend(ManualOperationWrapper wrapper, String movementId, BatchPostStatus newStatus) throws Exception {
-        BatchPostStatus srvStatus = WAITSRV;
+    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSend(ManualOperationWrapper wrapper, String movementId, BatchPostStatus srvStatus, BatchPostStatus nextStatus) throws Exception {
+//        BatchPostStatus srvStatus = WAITSRV;
         // устанавливаем статус = WAITSRV, movementId , SEND_SRV
         BatchPostStatus oldStatus = wrapper.getStatus();
         int count = operationRepository.executeInNewTransaction(persistence -> {
@@ -506,8 +505,8 @@ public class ManualPostingController {
         }
         wrapper.setStatus(srvStatus);
 //        String msg = "Запрос на операцию ID = " + wrapper.getId() + message;
-        BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
-        result.setProcessDate(SIGNEDDATE.equals(newStatus) ? BT_PAST : BT_EMPTY);
+        BatchProcessResult result = new BatchProcessResult(wrapper.getId(), nextStatus);
+        result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
         String msg = result.getPostSendMessage();
         wrapper.getErrorList().addErrorDescription("", "", msg, null);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
@@ -752,7 +751,7 @@ public class ManualPostingController {
      * @param wrapper
      * @return
      */
-    public RpcRes_Base<ManualOperationWrapper>  sendMovement(BatchPosting posting, ManualOperationWrapper wrapper, BatchPostStatus newStatus) {
+    public RpcRes_Base<ManualOperationWrapper> sendMovement(BatchPosting posting, ManualOperationWrapper wrapper, BatchPostStatus nextStatus) {
         if (null != posting.getReceiveTimestamp()) {
             String msg = String.format("По запоросу ID = '%s' уже было выполнено движение в MovementCreate: '%s', время: '%s'",
                     posting.getId().toString(), posting.getMovementId(), timeFormat.format(posting.getReceiveTimestamp()));
@@ -762,13 +761,17 @@ public class ManualPostingController {
         try {
             MovementCreateData data = createMovementData(posting, wrapper);
             String movementId = data.getMessageUUID();
-            RpcRes_Base<ManualOperationWrapper> res = setOperationRqStatusSend(wrapper, movementId, newStatus);
+            RpcRes_Base<ManualOperationWrapper> res = setOperationRqStatusSend(wrapper, movementId, WAITSRV, nextStatus);
             List<MovementCreateData> movementData = new ArrayList<>();
             movementData.add(data);
-            movementProcessor.sendRequests(movementData);
-
-            // TODO анализ ошибки отправки ??
-            return res;
+            try {
+                movementProcessor.sendRequests(movementData);
+                return res;
+            } catch (Throwable e) {     // ошибка отправки
+                MovementErrorTypes error = data.getErrType();
+                String msg = error.getMessage() + "\n" + data.getErrDescr();
+                return setOperationRqStatusReceive(wrapper, movementId, ERRSRV, error.getCode(), msg);
+            }
         }
         catch (Throwable e) {
             throw new DefaultApplicationException(logPostingError(e,
@@ -780,14 +783,11 @@ public class ManualPostingController {
     public void receiveMovement(MovementCreateData data) {
         String movementId = data.getMessageUUID();
         try {
-            List<BatchPosting> postings = postingRepository.findPostingByMovementId(movementId, operdayController.getOperday().getCurrentDate());
-            if (null == postings || postings.size() == 0) {     // posting not fount
+            BatchPosting posting = postingRepository.findPostingByMovementId(movementId, operdayController.getOperday().getCurrentDate());
+            if (null == posting) { // || postings.size() == 0) {     // posting not fount
                 throw new DefaultApplicationException(format("Не найдены запросы с movementId = '%s' в текущем опердне", movementId));
-            } else if (postings.size() > 1) {                   // too many postings
-                throw new DefaultApplicationException(format("Найдено %d запросов с movementId = '%s' в текущем опердне", postings.size(), movementId));
             }
 
-            BatchPosting posting = postings.get(0);
             log.error(format("Найден запрос с movementId = '%s' в текущем опердне: ID = %d", movementId, posting.getId()));
 /*
             if (BatchPostStatus.WAITSRV != posting.getStatus()) {   // invalid status
@@ -842,8 +842,7 @@ public class ManualPostingController {
         }
     }
 
-    public MovementCreateData createMovementData(BatchPosting posting, ManualOperationWrapper wrapper
-    ) throws Exception {
+    public MovementCreateData createMovementData(BatchPosting posting, ManualOperationWrapper wrapper) {
         String movementDr = null, movementCr = null;
         String oper = posting.getId().toString();
         String rand = getRundomUUID(6);
@@ -873,7 +872,7 @@ public class ManualPostingController {
     }
 
     private MovementCreateData fillMovementData(BatchPosting posting,
-                                                String movementDr, String movementCr, Date operday) throws ParseException {
+                                                String movementDr, String movementCr, Date operday) {
         MovementCreateData data = new MovementCreateData();
         if (!isEmpty(movementDr)) {
             data.setOperIdD(movementDr);
