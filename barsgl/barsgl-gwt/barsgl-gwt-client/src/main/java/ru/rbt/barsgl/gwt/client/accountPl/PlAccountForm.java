@@ -49,8 +49,8 @@ public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
     private void reconfigure() {
 
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
-        abw.addSecureAction(editAccount(), SecurityActionCode.AccChng);
-        abw.addSecureAction(createAccount(), SecurityActionCode.AccInp);
+        abw.addSecureAction(editAccount(), SecurityActionCode.AccOFRChng);
+        abw.addSecureAction(createAccount(), SecurityActionCode.AccOFRInp);
     }
 
     @Override

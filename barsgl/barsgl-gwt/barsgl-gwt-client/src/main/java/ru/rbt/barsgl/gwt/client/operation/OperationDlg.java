@@ -14,9 +14,7 @@ import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
-import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
-import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
@@ -240,8 +238,7 @@ public class OperationDlg extends OperationDlgBase {
                 , "Основание ENG", "поле не заполнено", new CheckNotEmptyString()));
         operation.setRusNarrativeLong(check(mNarrativeRU.getValue()
                 , "Основание RUS", "поле не заполнено", new CheckNotEmptyString()));
-        operation.setDeptId(check((String) mDepartment.getValue()
-                , "Подразделение", "поле не заполнено", new CheckNotEmptyString()));
+        operation.setDeptId((String) mDepartment.getValue());
         operation.setProfitCenter((String) mProfitCenter.getValue());
         operation.setCorrection(mCheckCorrection.getValue());
         operation.setInputMethod(InputMethod.M);
