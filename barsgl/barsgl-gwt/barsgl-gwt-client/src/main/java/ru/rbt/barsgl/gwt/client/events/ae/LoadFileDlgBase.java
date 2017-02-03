@@ -7,6 +7,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
@@ -45,8 +46,6 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
 
     private static final String UPLOAD_TYPE = "uploadtype";
 
-    private String caption;
-
     private FormPanel formPanel;
     private DataListBox mSource;
     private DataListBox mDepartment;
@@ -68,13 +67,13 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
     private RichAreaBox requestBox;
     private Long idPackage = null;
 
+    private int asyncListCount = 2; /*count async lists: mDepartment; mSource*/
     private HandlerRegistration registration;
+    private Timer timer;
 
-    public LoadFileDlgBase(String caption){
+
+    public LoadFileDlgBase(){
         super();
-        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, createDataListBoxEventHandler());
-        this.caption = caption;
-        setCaption(caption);
         ok.setText("Передать на подпись");
         ok.setEnabled(false);
         setAfterShowEvent(this);
@@ -92,8 +91,11 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
 
             @Override
             public void completeLoadData(String dataListBoxId) {
-                if (mDepartment.getId().equalsIgnoreCase(dataListBoxId)){
+                asyncListCount--;
+
+                if (asyncListCount == 0) {
                     registration.removeHandler();
+
                     AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
                     if (wrapper != null){
                         mDepartment.setValue(wrapper.getBranch());
@@ -101,6 +103,11 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
                 }
             }
         };
+    }
+
+    @Override
+    public void beforeCreateContent() {
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, createDataListBoxEventHandler());
     }
 
     @Override
@@ -261,7 +268,7 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
     }
 
     private Long parseLong(String stringWithNumber, String keyWord, String delim) {
-        int index = -1;
+        int index;
         if (!isEmpty(stringWithNumber) && (index = stringWithNumber.indexOf(delim)) >= 0) {
             try {
                 return Long.decode(stringWithNumber.substring(index+1).trim());
@@ -340,8 +347,6 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
                     if (e.getMessage() == null || !e.getMessage().equals("column")) {
                         throw e;
                     }
-                } finally {
-//                    switchControlsState(true);
                 }
             }
         });
@@ -349,7 +354,6 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
     }
 
     private void switchControlsState(Boolean state){
-//        fileUpload.setEnabled(state);
         uploadButton.setEnabled(state);
         mSource.setEnabled(state);
         excludeOper.setEnabled(state);
@@ -395,15 +399,28 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
         return btn;
     }
 
-
     @Override
     protected boolean onClickOK() throws Exception {
         params = idPackage;
         return idPackage != null;
     }
 
-    public String getCaption() {
-        return caption;
+    @Override
+    protected void fillContent(){
+        if (asyncListCount > 0) {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
+        }
     }
 
     @Override
@@ -415,5 +432,4 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
         ok.setEnabled(false);
         loadingResult.clear();
     }
-
 }

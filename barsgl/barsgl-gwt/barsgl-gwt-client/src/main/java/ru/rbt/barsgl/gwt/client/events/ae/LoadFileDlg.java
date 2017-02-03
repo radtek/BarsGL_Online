@@ -4,9 +4,10 @@ package ru.rbt.barsgl.gwt.client.events.ae;
  * Created by ER18837 on 24.09.16.
  */
 public class LoadFileDlg extends LoadFileDlgBase {
-
+    public static final String TITLE = "Загрузка операций из Excel файла";
     public LoadFileDlg(){
-        super("Загрузка операций из Excel файла");
+        super();
+        setCaption(TITLE);
     }
 
     @Override
