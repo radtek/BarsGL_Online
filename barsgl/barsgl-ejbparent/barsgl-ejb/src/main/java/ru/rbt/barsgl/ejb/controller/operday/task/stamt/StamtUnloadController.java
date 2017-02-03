@@ -14,10 +14,7 @@ import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -74,15 +71,16 @@ public class StamtUnloadController {
      * кол-во заголовков со статусом
      * @param executeDate дата ОД
      * @param params параметры выгрузки
-     * @param status ожидаемый статус
+     * @param statuses ожидаемый статус
      * @return кол-во заголовков
      * @throws SQLException
      */
-    public long getAlreadyHeaderCount(Date executeDate, UnloadStamtParams params, DwhUnloadStatus status) throws SQLException {
+    public long getAlreadyHeaderCount(Date executeDate, UnloadStamtParams params, DwhUnloadStatus ... statuses) throws SQLException {
+        String parvalueSql = Arrays.stream(statuses).map(s -> "'" + s.getFlag() + "'").collect(Collectors.joining(","));
         return repository.selectFirst(
                 "select count(1) cnt from GL_ETLSTMS " +
-                        "where PARNAME = ? and PARVALUE = ? and PARDESC = ? and OPERDAY = ?"
-                , params.getParamName(), status.getFlag(), params.getParamDesc(), executeDate).getLong(0);
+                        "where PARNAME = ? and PARVALUE in (" + parvalueSql +") and PARDESC = ? and OPERDAY = ?"
+                , params.getParamName(), params.getParamDesc(), executeDate).getLong(0);
     }
 
     public Date getExecuteDate(Properties properties) throws ParseException {
@@ -138,10 +136,12 @@ public class StamtUnloadController {
         List<DataRecord> unloads = repository.select(
                 "select *\n" +
                         "  from gl_etlstms s\n" +
-                        " where s.pardesc like ? and s.operday = ? and parvalue in ('0','1','3')", "%GL_ETLSTMD%", executeDate);
+                        " where s.operday = ? and parvalue in ('0','1','3')", executeDate);
         Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(TASK_ERROR
                 , format("Найдены необработанные выгрузки: %s", unloads.stream()
-                .map(rec -> rec.getString("ID") + ":" + rec.getString("parname") + ":" + rec.getString("PARDESC")).collect(Collectors.joining(" ")))));
+                .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
+                        + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
+                .collect(Collectors.joining(" ")))));
     }
 
 

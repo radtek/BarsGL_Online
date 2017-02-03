@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_TECHOVER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.POSTING_TECHOVER;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.TechoverTask;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_LDR_STEP_ERR;
@@ -120,15 +122,20 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
 
     private boolean checkRun(Properties properties) throws Exception {
         try {
-            Date executeDate = (Date) properties.get(TechoverContext.EXECUTE_DATE);
-            Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(executeDate, POSTING_TECHOVER)
-                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, POSTING_TECHOVER.getParamName() + " " + POSTING_TECHOVER.getParamDesc()
-                            , dateUtils.onlyDateString(executeDate)));
-            final String stepName = Optional.ofNullable(
-                    properties.getProperty("stepName")).orElse("MI4GL").trim();
-            Assert.isTrue(workprocRepository.isStepOK(stepName, (Date) properties.get(TechoverContext.LWDATE))
-                    , () -> new ValidationError(OPERDAY_LDR_STEP_ERR, stepName, dateUtils.onlyDateString((Date) properties.get(TechoverContext.LWDATE))));
-            unloadController.checkConsumed(executeDate);
+            if (TaskUtils.getCheckRun(properties, true)) {
+                Date executeDate = (Date) properties.get(TechoverContext.EXECUTE_DATE);
+                Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(executeDate, POSTING_TECHOVER)
+                        , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, POSTING_TECHOVER.getParamName() + " " + POSTING_TECHOVER.getParamDesc()
+                                , dateUtils.onlyDateString(executeDate)));
+                Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(executeDate, BALANCE_TECHOVER)
+                        , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, BALANCE_TECHOVER.getParamName() + " " + BALANCE_TECHOVER.getParamDesc()
+                                , dateUtils.onlyDateString(executeDate)));
+                final String stepName = Optional.ofNullable(
+                        properties.getProperty("stepName")).orElse("MI4GL").trim();
+                Assert.isTrue(workprocRepository.isStepOK(stepName, (Date) properties.get(TechoverContext.LWDATE))
+                        , () -> new ValidationError(OPERDAY_LDR_STEP_ERR, stepName, dateUtils.onlyDateString((Date) properties.get(TechoverContext.LWDATE))));
+                unloadController.checkConsumed(executeDate);
+            }
             return true;
         } catch (ValidationError validationError) {
             auditController.error(TechoverTask, "Невозможно выгрузить теховер в стамт", null, validationError);
