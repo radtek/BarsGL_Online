@@ -24,6 +24,7 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     private boolean isExtended;         // только для шаблона
     private boolean isSystem;           // только для шаблона
 
+    private boolean withCheck;          // с проверкой баланса
     private String dealSrc;             // 7    //    @Column(name = "PST_SRC")
     private String dealId;              // 20   //    @Column(name = "DEAL_ID")
     private String paymentRefernce;     // 20   //    @Column(name = "PMT_REF")
@@ -402,4 +403,11 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
         this.pkgId = pkgId;
     }
 
+    public boolean isWithCheck() {
+        return withCheck;
+    }
+
+    public void setWithCheck(boolean withCheck) {
+        this.withCheck = withCheck;
+    }
 }
