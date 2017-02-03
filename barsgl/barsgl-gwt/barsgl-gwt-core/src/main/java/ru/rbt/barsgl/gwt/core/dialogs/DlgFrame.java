@@ -39,6 +39,10 @@ public abstract class DlgFrame {
         dlg.setText(caption);
     }
 
+    public String getCaption() {
+        return caption;
+    }
+
     private Widget createFrame() {
         btnPanel = new HorizontalPanel();
         btnPanel.addStyleName("btn-panel");
