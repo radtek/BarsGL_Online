@@ -171,7 +171,7 @@
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/barsgl/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 
