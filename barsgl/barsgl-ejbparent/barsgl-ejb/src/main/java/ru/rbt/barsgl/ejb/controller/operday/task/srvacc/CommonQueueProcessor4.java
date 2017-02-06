@@ -277,7 +277,13 @@ public class CommonQueueProcessor4 {
                 try {
                     sendToQueue(outMessage, queueProperties, incMessage, queue);
                     long sendingAnswerTime = System.currentTimeMillis();
-                    journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" + (createAnswerTime - startProcessing) + "/" + (sendingAnswerTime - createAnswerTime));
+                    //journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" + (createAnswerTime - startProcessing) + "/" + (sendingAnswerTime - createAnswerTime));
+                    journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" 
+                            + (createAnswerTime - startProcessing) 
+                            + "/" 
+                            + (sendingAnswerTime - createAnswerTime) 
+                            + "/",
+                            "true".equals(queueProperties.writeOut) ? outMessage : null);
                 } catch (Exception e) {
                     log.error("Ошибка отправки ответа. ", e);
                     journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
