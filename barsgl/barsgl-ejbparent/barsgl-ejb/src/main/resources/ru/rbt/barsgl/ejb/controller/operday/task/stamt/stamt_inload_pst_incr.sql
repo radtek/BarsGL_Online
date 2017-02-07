@@ -43,7 +43,7 @@ insert into GL_ETLSTMD (
      join bsaacc da on d.bsaacid = da.id
      join bsaacc ca on c.bsaacid = ca.id
  where o.procdate = ? and o.postdate < o.procdate
-  and d.invisible = '0' and c.invisible <> '1' -- проводки актуальны
+  and d.invisible <> '1' and c.invisible <> '1' -- проводки актуальны
   and
    (
        (

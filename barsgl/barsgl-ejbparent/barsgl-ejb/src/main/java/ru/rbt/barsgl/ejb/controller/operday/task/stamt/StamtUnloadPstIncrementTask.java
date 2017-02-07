@@ -21,7 +21,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.*;
+import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.DELTA_POSTING_INCR;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.StamtIncrement;
@@ -96,10 +96,7 @@ public class StamtUnloadPstIncrementTask implements ParamsAwareRunnable {
             try {
                 Assert.isTrue(operdayController.getOperday().getPhase() == ONLINE
                         , () -> new ValidationError(STAMT_INCR_DELTA, format("Операционный день в фазе:  %s, ожидалось %s", operdayController.getOperday().getPhase(), ONLINE)));
-                Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(operday, DELTA_POSTING_INCR, STARTED, SUCCEDED, PROCESSING, CONSUMED)
-                        , () -> new ValidationError(STAMT_INCR_DELTA, format("Инкрементальная выгрузка проводок не закончена в '%s'", dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()))));
-                Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(operday, BALANCE_DELTA_INCR, STARTED, SUCCEDED, PROCESSING, CONSUMED)
-                        , () -> new ValidationError(STAMT_INCR_DELTA, format("Инкрементальная выгрузка остатков не закончена в '%s'", dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()))));
+                unloadController.checkConsumed(operday);
                 return true;
             } catch (Throwable e) {
                 auditController.error(StamtIncrement, "Задача инкр.выгрузки backvalue не отработала", null, e);
