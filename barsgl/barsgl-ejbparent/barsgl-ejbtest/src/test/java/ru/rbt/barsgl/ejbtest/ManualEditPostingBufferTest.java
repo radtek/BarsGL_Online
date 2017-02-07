@@ -5,12 +5,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
-import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
+import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -31,6 +32,7 @@ import java.util.Map;
  */
 public class ManualEditPostingBufferTest  extends AbstractTimerJobTest {
 
+    private final Long USER_ID = 2L;
 
     @Before
     public void beforeClass() {
@@ -60,12 +62,13 @@ public class ManualEditPostingBufferTest  extends AbstractTimerJobTest {
         wrapper.setProfitCenter(profit);
         wrapper.setInputMethod(InputMethod.M);
 
-        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualPostingController.class, "processMessageWrapper", wrapper);
-        Assert.assertFalse(res.isError());
-        wrapper = res.getResult();
-        Assert.assertTrue(0 < wrapper.getId());
+        BatchPosting posting = ManualOperationTest.createAuthorizedPosting(wrapper, USER_ID);
+        Assert.assertNotNull(posting);
 
-        GLManualOperation operation = (GLManualOperation) baseEntityRepository.findById(GLManualOperation.class, wrapper.getId());
+        GLManualOperation operation = remoteAccess.invoke(ManualOperationController.class, "processPosting", posting, false);
+        Assert.assertNotNull(operation);
+
+        operation = (GLManualOperation) baseEntityRepository.findById(GLManualOperation.class, operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
         List<AbstractPd> pdList = getGLPdList(operation);
         checkCommonParams(operation, pdList, dealId, subDealId, profit);
@@ -84,6 +87,7 @@ public class ManualEditPostingBufferTest  extends AbstractTimerJobTest {
         wrapper.setSubdealId(subDealId2);
         wrapper.setDealId(dealId2);
         wrapper.setProfitCenter(profit2);
+        wrapper.setId(operation.getId());
 
         RpcRes_Base<ManualOperationWrapper> res2 = remoteAccess.invoke(EditPostingController.class, "updatePostingsWrapper", wrapper);
         Assert.assertFalse(res2.isError());

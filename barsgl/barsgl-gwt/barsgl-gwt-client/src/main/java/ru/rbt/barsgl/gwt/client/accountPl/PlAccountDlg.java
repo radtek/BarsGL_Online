@@ -195,7 +195,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
                 , "Счет доходов/расходов", "обязательно для заполнения", new CheckNotEmptyString()));
 
         account.setCurrency("RUR");
-        account.setDealSource(DealSource.MNL.getLabel());
+        account.setDealSource(DealSource.Manual.getLabel());
 
         account.setDescription(check(mAccountDesc.getValue(),
                 "Наименование счета", "обязательно для заполнения, не более 255 символов \n(Для разблокировки нажмите на кнопку 'Accounting Type')",

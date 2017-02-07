@@ -406,7 +406,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDealSource.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                boolean srcKP = mDealSource.getText().equals(DealSource.KP.getLabel());
+                boolean srcKP = mDealSource.getText().equals(DealSource.KondorPlus.getLabel());
                 mSQ.setEnabled(!srcKP);
                 if (srcKP)
                     mSQ.clear();

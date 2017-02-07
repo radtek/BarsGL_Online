@@ -39,6 +39,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 public class ManualAccountTest extends AbstractRemoteTest {
 
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
+    private final Long USER_ID = 2L;
 
     @Before
     public void beforeClass() {
@@ -81,7 +82,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
         Assert.assertNotNull(data2);
         Short sq = data2.getShort("SQ");
 
-        // KP - SQ из параметров
+        // K+TP - SQ из параметров
         ManualAccountWrapper wrapper1 = createManualAccountSQ("007", ccy, custNo, accType, null, "K+TP", dealId, subdealId, term, null);
         GLAccount account1 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper1.getId());
         Assert.assertNotNull(account1);
@@ -204,7 +205,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
 
         Date dateClose = getOperday().getCurrentDate();
         wrapper.setDateCloseStr(new SimpleDateFormat(wrapper.dateFormat).format(dateClose));
-        wrapper.setUserId(2L);
+        wrapper.setUserId(USER_ID);
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "closeManualAccount", wrapper);
         Assert.assertFalse(res.isError());
         wrapper = res.getResult();
@@ -220,7 +221,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
     @Test
     public void testCloseManualAccountDateError() throws SQLException {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00699937", 351021001, getOperday().getCurrentDate());
-        wrapper.setUserId(2L);
+        wrapper.setUserId(USER_ID);
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
 
         Date curDate = getOperday().getCurrentDate();

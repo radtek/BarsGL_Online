@@ -21,6 +21,7 @@ import static java.lang.String.format;
 /**
  * Created by Ivan Sevastyanov
  */
+@Deprecated
 @Stateless
 public class InputMessageProcessorBean implements InputMessageProcessor <EtlPackage> {
 
