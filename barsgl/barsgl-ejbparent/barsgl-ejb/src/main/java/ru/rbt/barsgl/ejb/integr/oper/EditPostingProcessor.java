@@ -168,6 +168,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
             if (InputMethod.AE != wrapper.getInputMethod()) {       // M || F
                 pd.setDealId(wrapper.getDealId());
                 pd.setSubdealId(wrapper.getSubdealId());
+                pd.setPaymentRef(wrapper.getDealId());
                 pd.setPref(pdRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
                         GLOperation.srcPaymentHub.equals(wrapper.getDealSrc())));
                 pd.setPnar(pdRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));

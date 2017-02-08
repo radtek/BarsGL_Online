@@ -20,9 +20,7 @@ import ru.rbt.barsgl.gwt.client.dictionary.CustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
-import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
-import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
@@ -399,7 +397,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDealSource.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                boolean srcKP = mDealSource.getText().equals(DealSource.KP.getLabel());
+                boolean srcKP = mDealSource.getText().equals(DealSource.KondorPlus.getLabel());
                 mSQ.setEnabled(!srcKP);
                 if (srcKP)
                     mSQ.clear();

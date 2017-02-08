@@ -19,6 +19,7 @@ import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
@@ -129,13 +130,14 @@ public class ManualAccountTest extends AbstractRemoteTest {
         RpcRes_Base<ManualAccountWrapper> res = createManualAccountOnly("008", ccy, custNo, accType, null, "MZO", dealId3, subdealId3, term, sq5);
         Assert.assertTrue(res.isError());
     }
+
     /**
      * Тест создания счета из ручного ввода с ошибкой ввода (неверная валюта)
      * @throws SQLException
      */
     @Test
     public void testCreateManualAccountError() throws SQLException {
-        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 35102100);
+        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 351010101);
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
         Assert.assertTrue(res.isError());
         wrapper = res.getResult();
@@ -143,6 +145,25 @@ public class ManualAccountTest extends AbstractRemoteTest {
         Assert.assertFalse(isEmpty(res.getMessage()));
         System.out.println("Message: " + res.getMessage());
     }
+
+    /**
+     * Тест создания счета из ручного ввода с ошибкой ввода (задана субсделка, но не задана сделка)
+     * @throws SQLException
+     */
+    @Test
+    public void testCreateManualAccountNoDealId() throws SQLException {
+        final String subdealId = "SUB_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 2);
+
+        ManualAccountWrapper wrapper = newAccountWrapper("001", "RUR", "00601715", 351010101, DealSource.ARMPRO.getLabel(), null);
+        wrapper.setSubDealId(subdealId);
+        RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
+        Assert.assertTrue(res.isError());
+        wrapper = res.getResult();
+        Assert.assertNull(wrapper.getId());
+        Assert.assertFalse(isEmpty(res.getMessage()));
+        System.out.println("Message: " + res.getMessage());
+    }
+
 
     /**
      * Тест редактирования счета из ручного ввода

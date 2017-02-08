@@ -12,7 +12,6 @@ import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.dict.AccType.AccTypeRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -877,7 +876,7 @@ public class GLAccountController {
             } else {
                 throw new ValidationError(ACCOUNT2_NOT_CORRECT, acc2Wr, keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), acc2);
             }
-            if (null == plcodeWr || plcodeWr.equals(plcode)) {
+            if (isEmpty(plcodeWr) || plcodeWr.equals(plcode)) {
                 keys.setPlCode(plcode);
             } else {
                 throw new ValidationError(PLCODE_NOT_CORRECT, plcodeWr, keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), plcode);
