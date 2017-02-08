@@ -163,7 +163,7 @@ public class OperationDlg extends OperationDlgBase {
 
         grid.setWidget(0, 0, createLabel("Сумма в рублях", LABEL2_WIDTH));
         grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
-        grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без \"отвода\" курсовой разницы"));
+        grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без проводки по курсовой разнице"));
         grid.setWidget(1, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
 
         return grid;
