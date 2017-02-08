@@ -41,6 +41,7 @@ public class AccTypeProduct extends EditableDictionary<AccTypeProductWrapper> {
         super("");
         initSection = section;
         title.setText(Utils.Fmt(FORM_NAME, section));
+        exportToExcel.setFormTitle(title.getText());
         reconfigure();
     }
 

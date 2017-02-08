@@ -5,14 +5,16 @@ package ru.rbt.barsgl.gwt.core.dialogs;
  */
 
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class FilterItem implements Serializable {
-    private static final long serialVersionUID = -294322225561414413L;
-    public static final String DATE_FORMAT = "dd.MM.yyyy";
+public class FilterItem implements Serializable, IsSerializable {
+	private static final long serialVersionUID = -3960734068373764479L;
+
+	public static final String DATE_FORMAT = "dd.MM.yyyy";
 
     private String sqlName;
     private Serializable sqlValue;
@@ -21,6 +23,8 @@ public class FilterItem implements Serializable {
     private FilterCriteria criteria;
     private boolean pined;
     private boolean isReadOnly = false;
+    private String caption;
+    private String strValue;
 
     public FilterItem(){}
 
@@ -44,6 +48,7 @@ public class FilterItem implements Serializable {
         this.pined = pined;
         this.sqlName = name;
         this.sqlValue = value;
+
         if (null != value ) {
             // преобразуем дату в строку для передачи на сервер (из-за возможной ошибки на 1 день)
             switch (type) {
@@ -91,5 +96,21 @@ public class FilterItem implements Serializable {
 
     public void setReadOnly(boolean isReadOnly) {
         this.isReadOnly = isReadOnly;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public void setCaption(String caption){
+        this.caption = caption;
+    }
+
+    public String getStrValue() {
+        return strValue;
+    }
+
+    public void setStrValue(String strValue) {
+        this.strValue = strValue;
     }
 }

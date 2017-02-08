@@ -10,6 +10,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
 import ru.rbt.barsgl.shared.criteria.*;
@@ -64,7 +65,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     @Override
-    public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
+    public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
         List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
         for (int i = 0; i < columns.getColumnCount(); i++) {
             Column column = columns.getColumnByIndex(i);
@@ -73,7 +74,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         }
 
         String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, repository, xlsColumns,
-                filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria));
+                filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
 
         return fileName;
     }
@@ -180,7 +181,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     @Override
-    public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
+    public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
         List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
         for (int i = 0; i < columns.getColumnCount(); i++) {
             Column column = columns.getColumnByIndex(i);
@@ -189,7 +190,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         }
 
         String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, xlsColumns,
-                filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria));
+                filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
 
       return fileName;
     }

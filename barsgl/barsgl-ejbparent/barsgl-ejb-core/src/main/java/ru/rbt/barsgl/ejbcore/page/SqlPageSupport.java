@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbcore.page;
 
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
@@ -81,10 +82,11 @@ public interface SqlPageSupport {
      * @param pageSize размер страницы
      * @param startWith начиная с
      * @param orderBy сортировка
+     * @param head заголовок
      * @return имя файла Excel с выгрузкой
      * @throws Exception
      */
-    String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) throws Exception;
+    String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) throws Exception;
 
     /**
      *
@@ -94,9 +96,10 @@ public interface SqlPageSupport {
      * @param pageSize размер страницы
      * @param startWith начиная с
      * @param orderBy сортировка
+     * @param head заголовок
      * @return имя файла Excel с выгрузкой
      * @throws Exception
      */
-    String export2Excel(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) throws Exception;
+    String export2Excel(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) throws Exception;
 
 }
