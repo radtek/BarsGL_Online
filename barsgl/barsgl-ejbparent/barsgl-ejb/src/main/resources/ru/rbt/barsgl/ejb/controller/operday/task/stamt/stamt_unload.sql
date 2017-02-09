@@ -44,7 +44,7 @@ insert into $tablename$ (
      join bsaacc da on d.bsaacid = da.id
      join bsaacc ca on c.bsaacid = ca.id
  where $date_criteria$
-  and d.invisible = '0' and c.invisible <> '1' -- проводки актуальны
+  and d.invisible <> '1' and c.invisible <> '1' -- проводки актуальны
   and
    (
        (

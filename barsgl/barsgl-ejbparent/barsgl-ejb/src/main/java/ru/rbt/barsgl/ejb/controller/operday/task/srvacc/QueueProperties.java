@@ -28,6 +28,7 @@ public class QueueProperties {
     public String mqUser;
     public String mqPassword;
     public String unspents;
+    public String writeOut;
 
     @Override
     public String toString() {
@@ -40,6 +41,7 @@ public class QueueProperties {
                    ", mqBatchSize=" + mqBatchSize +
                    ", mqTopics='" + mqTopics + '\'' +
                    ", unspents='" + unspents + '\'' +
+                   ", writeOut='" + writeOut + '\'' +
                    '}';
     }
 
@@ -54,6 +56,7 @@ public class QueueProperties {
         this.mqBatchSize = Integer.parseInt(Optional.ofNullable(properties.getProperty("mq.batchSize ")).orElse("50"));
         this.mqTopics = Optional.ofNullable(properties.getProperty("mq.topics")).orElse("###");
         this.unspents = Optional.ofNullable(properties.getProperty("unspents")).orElse("hide");
+        this.writeOut = Optional.ofNullable(properties.getProperty("writeOut")).orElse("false");        
         this.mqUser = Optional.ofNullable(properties.getProperty("mq.user")).orElse("###");
         this.mqPassword = Optional.ofNullable(properties.getProperty("mq.password")).orElse("###");
         if ((this.toString()).contains("###")) {

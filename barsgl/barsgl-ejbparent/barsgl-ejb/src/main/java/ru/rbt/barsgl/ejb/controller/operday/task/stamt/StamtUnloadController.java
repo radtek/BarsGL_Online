@@ -134,9 +134,9 @@ public class StamtUnloadController {
      */
     public void checkConsumed(Date executeDate) throws Exception {
         List<DataRecord> unloads = repository.select(
-                "select *\n" +
-                        "  from gl_etlstms s\n" +
-                        " where s.operday = ? and parvalue in ('0','1','3')", executeDate);
+                        "select *\n" +
+                        "  from V_GL_STM_AWAIT s\n" +
+                        " where s.operday = ?", executeDate);
         Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(TASK_ERROR
                 , format("Найдены необработанные выгрузки: %s", unloads.stream()
                 .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
