@@ -19,6 +19,7 @@ import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
@@ -39,6 +40,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 public class ManualAccountTest extends AbstractRemoteTest {
 
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
+    private final Long USER_ID = 2L;
 
     @Before
     public void beforeClass() {
@@ -81,7 +83,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
         Assert.assertNotNull(data2);
         Short sq = data2.getShort("SQ");
 
-        // KP - SQ из параметров
+        // K+TP - SQ из параметров
         ManualAccountWrapper wrapper1 = createManualAccountSQ("007", ccy, custNo, accType, null, "K+TP", dealId, subdealId, term, null);
         GLAccount account1 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper1.getId());
         Assert.assertNotNull(account1);
@@ -128,13 +130,14 @@ public class ManualAccountTest extends AbstractRemoteTest {
         RpcRes_Base<ManualAccountWrapper> res = createManualAccountOnly("008", ccy, custNo, accType, null, "MZO", dealId3, subdealId3, term, sq5);
         Assert.assertTrue(res.isError());
     }
+
     /**
      * Тест создания счета из ручного ввода с ошибкой ввода (неверная валюта)
      * @throws SQLException
      */
     @Test
     public void testCreateManualAccountError() throws SQLException {
-        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 35102100);
+        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 351010101);
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
         Assert.assertTrue(res.isError());
         wrapper = res.getResult();
@@ -142,6 +145,25 @@ public class ManualAccountTest extends AbstractRemoteTest {
         Assert.assertFalse(isEmpty(res.getMessage()));
         System.out.println("Message: " + res.getMessage());
     }
+
+    /**
+     * Тест создания счета из ручного ввода с ошибкой ввода (задана субсделка, но не задана сделка)
+     * @throws SQLException
+     */
+    @Test
+    public void testCreateManualAccountNoDealId() throws SQLException {
+        final String subdealId = "SUB_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 2);
+
+        ManualAccountWrapper wrapper = newAccountWrapper("001", "RUR", "00601715", 351010101, DealSource.ARMPRO.getLabel(), null);
+        wrapper.setSubDealId(subdealId);
+        RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
+        Assert.assertTrue(res.isError());
+        wrapper = res.getResult();
+        Assert.assertNull(wrapper.getId());
+        Assert.assertFalse(isEmpty(res.getMessage()));
+        System.out.println("Message: " + res.getMessage());
+    }
+
 
     /**
      * Тест редактирования счета из ручного ввода
@@ -204,7 +226,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
 
         Date dateClose = getOperday().getCurrentDate();
         wrapper.setDateCloseStr(new SimpleDateFormat(wrapper.dateFormat).format(dateClose));
-        wrapper.setUserId(2L);
+        wrapper.setUserId(USER_ID);
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "closeManualAccount", wrapper);
         Assert.assertFalse(res.isError());
         wrapper = res.getResult();
@@ -220,7 +242,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
     @Test
     public void testCloseManualAccountDateError() throws SQLException {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00699937", 351021001, getOperday().getCurrentDate());
-        wrapper.setUserId(2L);
+        wrapper.setUserId(USER_ID);
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
 
         Date curDate = getOperday().getCurrentDate();
