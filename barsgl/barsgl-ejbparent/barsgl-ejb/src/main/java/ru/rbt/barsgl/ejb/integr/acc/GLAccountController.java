@@ -891,7 +891,7 @@ public class GLAccountController {
             } else {
                 throw new ValidationError(ACCOUNT2_NOT_CORRECT, acc2Wr, keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), acc2);
             }
-            if (null == plcodeWr || plcodeWr.equals(plcode)) {
+            if (isEmpty(plcodeWr) || plcodeWr.equals(plcode)) {
                 keys.setPlCode(plcode);
             } else {
                 throw new ValidationError(PLCODE_NOT_CORRECT, plcodeWr, keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), plcode);

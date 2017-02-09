@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
@@ -20,6 +21,7 @@ import java.util.logging.Logger;
 public class EtlMessXXTest extends AbstractTimerJobTest{
     public static final Logger log = Logger.getLogger(EtlMessXXTest.class.getName());
 
+    @Ignore
     @Test
     public void test3Case() throws ParseException {
         long stamp = System.currentTimeMillis();
@@ -60,6 +62,7 @@ public class EtlMessXXTest extends AbstractTimerJobTest{
         Assert.assertEquals(OperState.POST, operation.getState());
     }
 
+    @Ignore
     @Test
     public void test2Case() throws ParseException {
         long stamp = System.currentTimeMillis();
@@ -101,6 +104,7 @@ public class EtlMessXXTest extends AbstractTimerJobTest{
     }
 
 
+    @Ignore
     @Test
     public void test1Case() throws ParseException {
         long stamp = System.currentTimeMillis();
