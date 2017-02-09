@@ -119,7 +119,7 @@ public class BatchPackageController {
             if (!states.contains(pkg.getPackageState())) {
                 ValidationError error = new ValidationError(ErrorCode.PACKAGE_BAD_STATUS, id.toString(), pkg.getPackageState().name(),
                         ERROR.equals(pkg.getPackageState()) ? "\nПакет содержит операции с ошибкой, обработка невозможна" : "");
-                wrapper.getErrorList().addErrorDescription("", "", ValidationError.getErrorText(error.getMessage()), ValidationError.getErrorCode(error.getMessage()));
+                wrapper.getErrorList().addErrorDescription(ValidationError.getErrorText(error.getMessage()), ValidationError.getErrorCode(error.getMessage()));
                 throw new DefaultApplicationException(wrapper.getErrorMessage(), error);
             }
         }
@@ -234,7 +234,7 @@ public class BatchPackageController {
         wrapper.setStatus(newStatus);
         result.setStatistics(packageRepository.getPackageStatistics(pkg.getId()));
         String msg = result.getSignedMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
 
         auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
         return new RpcRes_Base<>(wrapper, false, msg);

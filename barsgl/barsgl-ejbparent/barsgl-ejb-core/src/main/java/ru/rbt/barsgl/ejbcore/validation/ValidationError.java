@@ -12,19 +12,22 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 public class ValidationError extends Error {
 
     private final ErrorCode code;
+    private String rowMessage;
     private String message;
     private final String source;
-    private String enityName;       // TODO добавиь в конструктор
-    private String fieldName;
 
     public ValidationError(ErrorCode code, String ... params) {
         this.code = code;
         this.source = initSource();
         try {
             if (null != params) {
-                this.message = format("Код ошибки '%s', сообщение '%s', источник %s\n"
-                        , getCode().getErrorCode(), String.format(code.getRawMessage(), params), getSource());
+                rowMessage = String.format(code.getRawMessage(), params);
+            } else {
+                rowMessage = code.getRawMessage();
             }
+            this.message = format("Код ошибки '%s', сообщение '%s', источник %s\n"
+                        , getCode().getErrorCode(), rowMessage, getSource());
+
         } catch (Throwable e) {
             message = format("!ERROR! Код ошибки '%s', шаблон '%s', параметры: '%s', источник %s\n"
                     , getCode().getErrorCode(), code.getRawMessage()
@@ -51,6 +54,10 @@ public class ValidationError extends Error {
         return code;
     }
 
+    public String getErrorCode() {
+        return Integer.toString(code.getErrorCode());
+    }
+
     public String getSource() {
         return source;
     }
@@ -59,13 +66,7 @@ public class ValidationError extends Error {
         return message;
     }
 
-    public String getEnityName() {
-        return enityName;
-    }
-
-    public String getFieldName() {
-        return fieldName;
-    }
+    public String getRowMessage() { return rowMessage; }
 
     public static String initSource() {
         return initSource(new Throwable());

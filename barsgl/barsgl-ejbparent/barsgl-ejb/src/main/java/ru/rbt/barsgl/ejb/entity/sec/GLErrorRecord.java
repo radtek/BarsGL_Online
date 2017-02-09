@@ -16,14 +16,14 @@ public class GLErrorRecord extends BaseEntity<Long> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ID_PST")
-    private String aePostingId;
-
     @Column(name = "PST_REF")
     private Long etlPostingRef;
 
     @Column(name = "GLO_REF")
     private Long glOperRef;
+
+    @Column(name = "ID_PST")
+    private String aePostingId;
 
     @Column(name = "SRC_PST")
     private String sourcePosting;
@@ -42,7 +42,7 @@ public class GLErrorRecord extends BaseEntity<Long> {
     private Date procDate;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "OTS_ERR")
+    @Column(name = "OTS_ERR", insertable = false, updatable = false)
     private Date errorTimestamp;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -177,4 +177,5 @@ public class GLErrorRecord extends BaseEntity<Long> {
     public void setCorrect(String correct) {
         this.correct = correct;
     }
+
 }

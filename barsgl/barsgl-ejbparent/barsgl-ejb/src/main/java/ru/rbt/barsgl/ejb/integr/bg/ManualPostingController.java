@@ -472,7 +472,7 @@ public class ManualPostingController {
         });
         wrapper.setStatus(dbStatus);
         String msg = "Запрос на операцию ID = " + wrapper.getId() + message;
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -561,13 +561,13 @@ public class ManualPostingController {
             String msg = String.format("Запрос на операцию ID = %s изменен, статус: '%s'." +
                     "\n Обновите информацию и выполните операцию повторно"
                     , posting.getId().toString(), posting.getStatus().name());
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
             String msg = String.format("Запрос на операцию ID = %s изменен, признак 'Удален': '%s'" +
                     "\n Обновите информацию", posting.getId().toString(), posting.getInvisible().name() );
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(msg);
         }
         if (enabledStatus.length == 0)
@@ -579,7 +579,7 @@ public class ManualPostingController {
         }
         String msg = String.format("Запрос на операцию ID = '%s' в недопустимом статусе: '%s'"
                 , posting.getId().toString(), posting.getStatus().name());
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         throw new DefaultApplicationException(msg);
     }
 
@@ -994,7 +994,7 @@ public class ManualPostingController {
             errCode = ValidationError.getErrorCode(errMessage);
             errMessage = ValidationError.getErrorText(errMessage);
             if (!errMessage.isEmpty()) {
-                errorList.addNewErrorDescription("", "", errMessage, errCode);
+                errorList.addNewErrorDescription(errMessage, errCode);
             }
         }
         return errMessage;

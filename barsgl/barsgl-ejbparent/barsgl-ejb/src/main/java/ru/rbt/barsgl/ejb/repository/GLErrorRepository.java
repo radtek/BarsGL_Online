@@ -5,7 +5,7 @@ import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import java.sql.Date;
+import java.util.Date;
 
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 
@@ -15,8 +15,8 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 @Stateless
 @LocalBean
 public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorRecord, Long> {
-    public GLErrorRecord createGLErrorRecord(
-             Long etlPostingRef, Long glOperRef, String aePostingId, String sourcePosting,
+    public GLErrorRecord createErrorRecord(
+            Long etlPostingRef, Long glOperRef, String aePostingId, String sourcePosting,
              String errorType, String errorCode, String errorMessage, Date procDate) {
         GLErrorRecord errorRecord = new GLErrorRecord();
         errorRecord.setEtlPostingRef(etlPostingRef);
