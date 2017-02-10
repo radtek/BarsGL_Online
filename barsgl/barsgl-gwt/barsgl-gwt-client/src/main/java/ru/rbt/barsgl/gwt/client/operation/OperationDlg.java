@@ -17,11 +17,13 @@ import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
+<<<<<<< HEAD
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
+=======
+>>>>>>> master
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
-import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
