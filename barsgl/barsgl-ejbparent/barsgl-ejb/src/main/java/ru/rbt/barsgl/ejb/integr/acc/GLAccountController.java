@@ -38,6 +38,8 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.E;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FIVE;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
@@ -562,6 +564,7 @@ public class GLAccountController {
      * @param keys
      */
     public AccountKeys fillAccountKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
+        boolean isGlSeqXX = !isEmpty(keys.getGlSequence()) && keys.getGlSequence().toUpperCase().startsWith("XX");
         /* не будем подменять пришедшие реальные данные, чтоб потом не думать, что сохранять
         if (isEmpty(keys.getCustomerType())) {
             keys.setCustomerType("00");
@@ -588,6 +591,16 @@ public class GLAccountController {
                 throw error;
             }
         }
+        if (isGlSeqXX && data.getString("PLCODE") != null){
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, defaultString(keys.getAccountType())
+                                                  , defaultString(keys.getCustomerNumber())
+                                                  , defaultString(keys.getAccountCode())
+                                                  , defaultString(keys.getAccSequence())
+                                                  , defaultString(keys.getDealId())
+                                                  , defaultString(keys.getPlCode())
+                                                  , defaultString(keys.getGlSequence()));
+        }
+
         if (isEmpty(keys.getPlCode())) {
             keys.setPlCode(ifEmpty(data.getString("PLCODE"), ""));
         }
@@ -609,7 +622,8 @@ public class GLAccountController {
             }
         }
         // подмена сиквенса Майдас для сделок FCC
-        keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
+        if (!isGlSeqXX)
+            keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
 
         int cnum = (int) glAccountProcessor.stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
         short iacod = (short) glAccountProcessor.stringToLong(side, "ACOD Midas", keys.getAccountCode(), AccountKeys.getiAccountCode());
@@ -877,7 +891,7 @@ public class GLAccountController {
             } else {
                 throw new ValidationError(ACCOUNT2_NOT_CORRECT, acc2Wr, keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), acc2);
             }
-            if (null == plcodeWr || plcodeWr.equals(plcode)) {
+            if (isEmpty(plcodeWr) || plcodeWr.equals(plcode)) {
                 keys.setPlCode(plcode);
             } else {
                 throw new ValidationError(PLCODE_NOT_CORRECT, plcodeWr, keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), plcode);

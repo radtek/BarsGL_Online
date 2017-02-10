@@ -125,7 +125,14 @@ public enum ErrorCode {
     , ACCOUNT_707_BAD_BRANCH(2042, "Счет '707...' можно открыть только в головном отделении!")
     , PLCODE_NOT_CORRECT(2043, "Символ доходов / расходов '%s' не соответсвует настройкам для:\nAccountType '%s', Тип собств '%s', Код срока '%s', должан быть '%s'")
     , ACCOUNT2_NOT_CORRECT(2044, "Балансовый счет 2-го порядка '%s' не соответсвует настройкам для:\nAccountType '%s', Тип собств '%s', Код срока '%s', должан быть '%s'")
-
+    , GL_SEQ_XX_KEY_WITH_DEAL(2045, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s задан ключом некорректно, DEALID д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_SUBDEAL(2046, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, SUBDEAL=%s задан ключом некорректно, SUBDEAL д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_PLCODE(2047, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, PLCODE д.б.пустым")
+    , GL_SEQ_XX_GL_ACC_NOT_FOUND(2048,"Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s не определяется однозначно, GL_ACC.ACID=%s")
+    , GL_SEQ_XX_ACCRLN_NOT_FOUND(2049, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s не определяется однозначно, ACCRLN.ACID=%s")
+    , GL_SEQ_XX_KEY_WITH_DB_PLCODE(2050, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_SQ_0(2051, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, SQ=0")
+    , GL_SEQ_XX_KEY_WITH_FL_CTRL(2052, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, GL_ACTNAME.FL_CTRL=Y")
     // Опердень и задачи
     , OPEN_OPERDAY_ERROR(3001, "%s")
     , CLOSE_OPERDAY_ERROR(3002, "%s")

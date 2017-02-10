@@ -138,8 +138,11 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
 
                 if (row.get(2) instanceof String)
                     card.setAmount(new BigDecimal(row.get(2).toString()));
-                else
-                    card.setAmount((BigDecimal) row.get(2));
+                else if (row.get(2) instanceof Double)
+                    card.setAmount(new BigDecimal((Double)row.get(2)));
+                else if (row.get(2) instanceof Integer)
+                    card.setAmount(new BigDecimal((Integer)row.get(2)));
+                else throw new IllegalArgumentException("Формат поля суммы может быть строковым или числовым");
 
                 card.setCnum(StringUtils.leftPad((String) row.get(3), 8, "0"));
                 card.setMdacc((String) row.get(4));

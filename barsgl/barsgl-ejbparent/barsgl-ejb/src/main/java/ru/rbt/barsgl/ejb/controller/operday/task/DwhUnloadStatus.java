@@ -17,6 +17,10 @@ public enum DwhUnloadStatus {
      */
     ERROR("2"),
     /**
+     * в процессе обработки
+     */
+    PROCESSING("3"),
+    /**
      * выгруженные данные обработаны
      */
     CONSUMED("4"),

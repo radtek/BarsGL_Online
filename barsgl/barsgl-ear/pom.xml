@@ -4,7 +4,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>3.0.4-SNAPSHOT</version>
+        <version>3.0.9-SNAPSHOT</version>
     </parent>
 
     <artifactId>barsgl-ear</artifactId>
@@ -171,7 +171,7 @@
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/barsgl/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 

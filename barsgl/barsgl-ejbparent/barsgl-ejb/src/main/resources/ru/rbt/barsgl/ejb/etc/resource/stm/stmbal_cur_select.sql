@@ -147,6 +147,7 @@ select *
    join sdcustpd s on s.bbcust = ac.custno
    join imbcbcmp i on i.ccbbr = ac.cbccn
    join imbcbbrp rp on rp.a8brcd = ac.branch
+  where ac.rlntype <> '1'
   ) ac0
  where
        (

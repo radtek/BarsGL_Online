@@ -308,6 +308,9 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         Assert.assertTrue(baseEntityRepository.select("select * from GL_BALSTMD").stream()
                 .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(operation.getAccountDebit())));
 
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '2'");
+
         // выгрузка в текущем открытом дне - одна проводка
         GLOperation operation2 = getOneOperBackdate(getOperday());
         long pcid2 = getPcid(operation2);;
@@ -328,6 +331,8 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         List<DataRecord> excl = baseEntityRepository.select("select * from gl_etlstma");
         Assert.assertTrue(1 <= excl.size());
         Assert.assertEquals(1, excl.stream().filter(r -> r.getLong("pcid") == pcid).count());
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '2'");
 
         // выгрузка в текущем открытом дне - одна проводка
         GLOperation operation3 = getOneOperBackdate(getOperday());
