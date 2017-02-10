@@ -566,6 +566,14 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public List<DataRecord> findByAcidRlntype04(String acid, Date ondate) throws SQLException{
+        return select("select * from gl_acc where acid=? and DTO <= ? and (DTC is null or DTC > ?) "+
+                      "and rlntype in ('0','4') "+
+                      "and (dealid is null or dealid ='' or dealid ='нет') "+
+                      "and (subdealid is null or subdealid ='' or subdealid ='нет')",
+               acid,  ondate, ondate);
+    }
+
     /**
      * "свои" счета доходов/расходов открытых в BARS GL вручную!
      */

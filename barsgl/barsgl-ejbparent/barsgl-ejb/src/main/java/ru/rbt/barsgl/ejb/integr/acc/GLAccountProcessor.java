@@ -158,6 +158,14 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
             }
         });
 
+        //если задан номер субсделки, должен быть номер сделки
+        context.addValidator(() -> {
+            String dealId = target.getDealId();
+            String subDealId = target.getSubDealId();
+            if (isEmpty(dealId) && !isEmpty(subDealId))
+                throw new ValidationError(SUBDEAL_ID_NOT_EMPTY, GLOperation.OperSide.N.getMsgName());
+        });
+
         // TODO дата открытия
     }
 
