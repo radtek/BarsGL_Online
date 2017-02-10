@@ -523,13 +523,13 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
 
     private void operationErrorMessage(Throwable e, String msg, GLOperation operation, OperState state, String source) throws Exception {
         auditController.error(Operation, msg, operation, e);
-        errorController.error(msg, operation, e);
         final String errorMessage = format("%s: \n%s Обнаружена: %s", msg, getErrorMessage(e), source);
         log.error(errorMessage, e);
         operationRepository.executeInNewTransaction(persistence -> {
             operationRepository.updateOperationStatusError(operation, state, errorMessage);
             return null;
         });
+        errorController.error(msg, operation, e);
     }
 
     private void operationErrorMessage(List<ValidationError> errors, String msg, GLOperation operation, OperState state, boolean isError) throws Exception {
@@ -539,13 +539,13 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         } else {
             auditController.warning(Operation, msg, operation, errorAudit);
         }
-        errorController.error(msg, operation, errors);
         final String errorMessage = msg + " \n" + errorAudit;
         log.error(errorMessage);
         operationRepository.executeInNewTransaction(persistence -> {
             operationRepository.updateOperationStatusError(operation, state, errorMessage);
             return null;
         });
+        errorController.error(msg, operation, errors);
     }
 
     private void postingErrorMessage (Throwable e, String msg, EtlPosting posting, String source) {

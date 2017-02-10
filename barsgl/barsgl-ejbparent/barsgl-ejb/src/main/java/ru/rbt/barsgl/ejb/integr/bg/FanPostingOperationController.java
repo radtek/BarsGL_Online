@@ -14,9 +14,7 @@ import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
 
-import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.EJBContext;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -86,7 +84,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
 
                     } catch (Throwable e) {
                         String msg = "Ошибка определения данных" + msgCommon;
-                        auditController.error(FanOperation, msg, null, e);
+//                        auditController.error(FanOperation, msg, null, e);
                         operationFanErrorMessage(e, msg, parentReference, storno, OperState.ERPROC, initSource());
                         return Collections.emptyList();
                     }
@@ -120,7 +118,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
                 operation = updateOperation(operationProcessor, operation);
             }catch(Throwable e){
                 String msg = "Ошибка заполнения данных" + msgCommon;
-                auditController.error(FanOperation, msg, operation, e);
+//                auditController.error(FanOperation, msg, operation, e);
                 operationErrorMessage(e, msg, operation, OperState.ERCHK, initSource(e));
                 return Collections.emptyList();
             }
@@ -129,7 +127,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
                 auditController.info(FanOperation, "Успешное завершение обработки" + msgCommon, operation);
             }catch(Throwable e){
                 String msg = "Ошибка обработки" + msgCommon;
-                auditController.error(FanOperation, msg, operation, e);
+//                auditController.error(FanOperation, msg, operation, e);
                 operationErrorMessage(e, msg, operation, OperState.ERCHK, initSource(e));
                 return Collections.emptyList();
             }
@@ -146,7 +144,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
             auditController.info(FanOperation, "Успешное завершение обработки" + msgCommon );
         } catch (Throwable e) {
             String msg = "Ошибка создания проводок по" + msgCommon;
-            auditController.error(FanOperation, msg, mainOperation, e);
+//            auditController.error(FanOperation, msg, mainOperation, e);
             operationFanErrorMessage(e, msg, parentReference, storno, OperState.ERPOST, initSource());
             return Collections.emptyList();
         }
