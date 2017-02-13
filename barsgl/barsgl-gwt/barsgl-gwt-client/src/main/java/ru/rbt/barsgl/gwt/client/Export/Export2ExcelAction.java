@@ -4,12 +4,11 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterUtils;
-import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
@@ -17,7 +16,6 @@ import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Utils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -75,7 +73,7 @@ public class Export2ExcelAction extends GridAction {
         List<SortItem> sortItems = grid.getSortCriteria();
         List<FilterItem> filterItems = FilterUtils.combineFilterCriteria(grid.getFilterCriteria(), linkDetailFilterCriteria);
 
-        BarsGLEntryPoint.asyncGridService.export2Excel(sql, grid.getTable().getColumns(), filterItems, sortItems,
+        CommonEntryPoint.asyncGridService.export2Excel(sql, grid.getTable().getColumns(), filterItems, sortItems,
                 new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));
     }
 

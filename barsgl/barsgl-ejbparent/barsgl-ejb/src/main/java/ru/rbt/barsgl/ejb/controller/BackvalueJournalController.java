@@ -4,7 +4,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.DataAccessCallback;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.*;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Task;
 
 /**
  * Created by Ivan Sevastyanov

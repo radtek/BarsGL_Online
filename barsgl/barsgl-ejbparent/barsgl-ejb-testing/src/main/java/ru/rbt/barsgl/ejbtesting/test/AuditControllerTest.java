@@ -1,16 +1,16 @@
 package ru.rbt.barsgl.ejbtesting.test;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Task;
 
 /**
  * Created by ER18837 on 10.06.15.

@@ -5,7 +5,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.FanNdsPostingController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FlexNdsFan;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.FlexNdsFan;
 
 /**
  * Created by Ivan Sevastyanov on 28.11.2016.

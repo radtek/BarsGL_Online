@@ -3,11 +3,11 @@ package ru.rbt.barsgl.ejb.integr.bg;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
+import ru.rbt.barsgl.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.fan.FanOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.fan.FanStornoOnedayOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FanOperation;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.FanOperation;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 

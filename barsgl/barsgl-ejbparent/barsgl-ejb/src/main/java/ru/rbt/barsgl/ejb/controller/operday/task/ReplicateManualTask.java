@@ -7,15 +7,15 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.entity.AuditRecord;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 
 import static org.apache.commons.lang3.time.DateUtils.truncate;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.ReplAfterHolidays;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.ReplAfterHolidays;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Task;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

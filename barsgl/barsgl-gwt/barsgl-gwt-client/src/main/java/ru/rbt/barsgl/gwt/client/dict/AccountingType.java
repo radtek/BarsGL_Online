@@ -5,7 +5,7 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.dlg.*;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;

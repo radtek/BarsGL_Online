@@ -6,7 +6,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
@@ -22,8 +22,8 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
 import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.ERROR;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.OverValueAcc2GlAcc;
 
 /**
  * Created by ER22317 on 01.11.2016.

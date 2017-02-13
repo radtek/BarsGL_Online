@@ -4,11 +4,11 @@ import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
+import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -38,7 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
 
 /**

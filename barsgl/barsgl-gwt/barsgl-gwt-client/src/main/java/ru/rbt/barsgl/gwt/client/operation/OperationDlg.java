@@ -10,8 +10,8 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -30,7 +30,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**

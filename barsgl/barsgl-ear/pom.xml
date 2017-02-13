@@ -42,6 +42,18 @@
                             <modules>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-audit</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
                                     <bundleDir>lib</bundleDir>
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
@@ -116,6 +128,18 @@
                             <packagingExcludes>jdbc/*dev*.xml</packagingExcludes>
                             <filtering>true</filtering>
                             <modules>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-audit</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
@@ -199,6 +223,18 @@
                             <packagingExcludes>jdbc/*prod*.xml</packagingExcludes>
                             <filtering>true</filtering>
                             <modules>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-audit</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
@@ -466,6 +502,18 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>barsgl-audit</artifactId>
+            <version>${project.version}</version>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-ejb</artifactId>
+            <version>${project.version}</version>
+            <type>ejb</type>
         </dependency>
     </dependencies>
 </project>

@@ -3,8 +3,8 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
@@ -24,7 +24,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.STARTED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.DELTA_POSTING_INCR;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.StamtIncrement;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtIncrement;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STAMT_INCR_DELTA;
 
 /**

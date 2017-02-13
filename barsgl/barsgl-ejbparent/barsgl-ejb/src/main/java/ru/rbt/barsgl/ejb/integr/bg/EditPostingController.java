@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
+import ru.rbt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
@@ -12,8 +12,8 @@ import ru.rbt.barsgl.ejb.integr.oper.EditPostingGLPdProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.EditPostingPdProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.EditPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
@@ -32,8 +32,8 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.ManualOperation;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ALL;

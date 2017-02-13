@@ -12,7 +12,7 @@ import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;

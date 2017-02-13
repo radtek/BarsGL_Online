@@ -9,7 +9,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.dictionary.BatchPostingFormDlg;
@@ -163,7 +163,7 @@ public class LoadForm extends BaseForm {
             if (isEmpty(responce))
             	return responce;
             if (responce.contains("NotAuthorizedUserException")) {
-                BarsGLEntryPoint.showLoginForm();
+                SecurityEntryPoint.showLoginForm();
             	return null;
             }
             if (responce.startsWith(LIST_DELIMITER)) {

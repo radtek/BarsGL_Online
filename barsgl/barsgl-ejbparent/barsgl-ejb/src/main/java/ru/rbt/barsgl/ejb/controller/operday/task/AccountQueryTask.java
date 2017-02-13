@@ -15,7 +15,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountQueryProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.MasterAccountProcessor;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
@@ -36,7 +36,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 
 
@@ -305,7 +305,8 @@ public class AccountQueryTask implements ParamsAwareRunnable {
                     MQQueueSender sender = (MQQueueSender) session.createSender(queueOut);
                     sender.send(message);
                     sender.close();
-                    journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "");
+                    //journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "");
+                    journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, outMessage);                    
                     jId = 0L;
                 }
             } catch (JMSException e) {

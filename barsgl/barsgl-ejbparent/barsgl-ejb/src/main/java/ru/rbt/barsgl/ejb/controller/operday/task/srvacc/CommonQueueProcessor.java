@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.controller.operday.task.KeyValueStorage;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
@@ -36,7 +36,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 

@@ -7,8 +7,8 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.client.ui.HTMLTable.CellFormatter;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
@@ -234,7 +234,7 @@ public class AuditFormDlg extends DlgFrame {
 
         String query = Utils.Fmt(sql, colName);
 
-        BarsGLEntryPoint.asyncGridService.selectOne(query, new Serializable[]{row.getField(0).getValue()}, new AuthCheckAsyncCallback<Row>() {
+        CommonEntryPoint.asyncGridService.selectOne(query, new Serializable[]{row.getField(0).getValue()}, new AuthCheckAsyncCallback<Row>() {
             @Override
             public void onFailureOthers(Throwable throwable) {
                 WaitingManager.hide();

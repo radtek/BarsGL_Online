@@ -6,8 +6,7 @@ package ru.rbt.barsgl.ejb.props;
 public enum PropertyName {
 
     PD_CONCURENCY("pd.cuncurency")
-    , ETLPKG_PROCESS_COUNT("etlpkg.process.count")
-    , AD_LDAP_URI("auth.ldapURI");
+    , ETLPKG_PROCESS_COUNT("etlpkg.process.count");
 
     private String name;
 

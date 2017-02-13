@@ -2,7 +2,7 @@ package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;

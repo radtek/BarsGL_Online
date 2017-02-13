@@ -4,9 +4,9 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountBalanceUnloadTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
+import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
@@ -32,7 +32,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.ERROR;
 import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.balsep.AccountBalanceRegisteredUnloadTask.CHECK_RUN_KEY;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AccountOvervaluedBalanceUnload;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountOvervaluedBalanceUnload;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
 
 /**

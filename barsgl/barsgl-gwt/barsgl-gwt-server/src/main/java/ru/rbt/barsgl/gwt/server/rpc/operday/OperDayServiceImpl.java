@@ -8,8 +8,8 @@ import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
-import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
+import ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
@@ -21,55 +21,7 @@ import java.text.SimpleDateFormat;
 /**
  * Created by akichigi on 23.03.15.
  */
-public class OperDayServiceImpl extends AbstractGwtService implements OperDayService{
-
-    @Override
-    public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
-        return new RpcResProcessor<OperDayWrapper>() {
-            @Override
-            protected RpcRes_Base<OperDayWrapper> buildResponse() throws Throwable {
-                // обновляем на тот случай, если изменили через БД
-                localInvoker.invoke(OperdayController.class, "refresh");
-                // получаем
-                Operday od = localInvoker.invoke(OperdayController.class, "getOperday");
-                if (od == null) throw new Throwable("Не найдена информация по операционному дню'.");
-
-                Operday.OperdayPhase phase = od.getPhase();
-                Operday.LastWorkdayStatus status = od.getLastWorkdayStatus();
-
-                OperDayWrapper wrapper = new OperDayWrapper();
-
-                wrapper.setCurrentODDate(od.getCurrentDate());
-                wrapper.setPreviosODDate(od.getLastWorkingDay());
-                wrapper.setCurrentOD(new SimpleDateFormat("dd.MM.yyyy").format(od.getCurrentDate()));
-                wrapper.setPhaseCurrentOD(phase.getLabel());
-                wrapper.setPreviousOD(new SimpleDateFormat("dd.MM.yyyy").format(od.getLastWorkingDay()));
-                wrapper.setPreviousODBalanceStatus(status.getLabel());
-                wrapper.setPdMode(od.getPdMode().name() + " (" + od.getPdMode().getLabel() + ")");
-
-                OperDayButtons buttonStatus = OperDayButtons.NONE;
-
-                switch (status){
-                    case OPEN:
-                        if (phase == Operday.OperdayPhase.ONLINE)  buttonStatus = OperDayButtons.CLOSE_BALANCE_PREVIOUS_OD;
-                        break;
-                    case CLOSED:
-                        switch (phase){
-                            case COB:
-                                buttonStatus = OperDayButtons.OPEN_OD;
-                                break;
-                            case ONLINE:
-                                buttonStatus = OperDayButtons.CHANGE_PHASE_TO_PRE_COB;
-                                break;
-                            default: buttonStatus = OperDayButtons.NONE;
-                        }
-                }
-                wrapper.setEnabledButton(buttonStatus);
-
-                return new RpcRes_Base<>(wrapper, false, "");
-            }
-        }.process();
-    }
+public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDayService{
 
     @Override
     public RpcRes_Base<ProcessingStatus> getProcessingStatus() throws Exception {

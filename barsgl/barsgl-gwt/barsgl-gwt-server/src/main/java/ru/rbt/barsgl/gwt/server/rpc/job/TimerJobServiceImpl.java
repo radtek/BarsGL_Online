@@ -5,7 +5,7 @@ import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CacheController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
 
 import java.util.List;

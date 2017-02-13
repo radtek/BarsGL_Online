@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.MidasPLReplication;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.MidasPLReplication;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 
 /**

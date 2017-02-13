@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;

@@ -109,6 +109,18 @@
                                             <version>${project.version}</version>
                                             <type>jar</type>
                                         </artifactItem>
+<!--                                        <artifactItem>
+                                            <groupId>${project.groupId}</groupId>
+                                            <artifactId>barsgl-audit</artifactId>
+                                            <version>${project.version}</version>
+                                            <type>jar</type>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>${project.groupId}</groupId>
+                                            <artifactId>security-ejb</artifactId>
+                                            <version>${project.version}</version>
+                                            <type>jar</type>
+                                        </artifactItem>-->
                                         <artifactItem>
                                             <groupId>${project.groupId}</groupId>
                                             <artifactId>barsgl-ejb</artifactId>
@@ -285,6 +297,16 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-gwt-serverutil</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+<!--        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-ejb</artifactId>
+            <version>${project.version}</version>
+        </dependency>-->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-gwt-server</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

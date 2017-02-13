@@ -4,7 +4,7 @@
  */
 package ru.rbt.barsgl.ejb.integr.dict;
 
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -14,7 +14,7 @@ import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.User;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.User;
 import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
 
 /**

@@ -8,8 +8,8 @@ import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlgBase;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
@@ -20,7 +20,7 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**

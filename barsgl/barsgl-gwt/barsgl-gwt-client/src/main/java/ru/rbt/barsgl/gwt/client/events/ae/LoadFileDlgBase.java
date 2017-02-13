@@ -10,7 +10,8 @@ import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.CheckFileExtention;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
@@ -232,7 +233,7 @@ abstract public class LoadFileDlgBase extends DlgFrame {
             if (isEmpty(responce))
                 return responce;
             if (responce.contains("NotAuthorizedUserException")) {
-                BarsGLEntryPoint.showLoginForm();
+                SecurityEntryPoint.showLoginForm();
                 return null;
             }
             if (responce.startsWith(LIST_DELIMITER)) {

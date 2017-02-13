@@ -6,16 +6,16 @@ import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
-import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+//import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+//import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+//import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
@@ -29,6 +29,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
+import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -36,8 +38,10 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOS
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.OpenOperday;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.OpenOperday;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPEN_OPERDAY_ERROR;
+import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 
 /**
  * Created by Ivan Sevastyanov

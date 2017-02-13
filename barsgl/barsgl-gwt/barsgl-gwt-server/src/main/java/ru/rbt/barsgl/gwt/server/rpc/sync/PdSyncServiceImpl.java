@@ -4,7 +4,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 

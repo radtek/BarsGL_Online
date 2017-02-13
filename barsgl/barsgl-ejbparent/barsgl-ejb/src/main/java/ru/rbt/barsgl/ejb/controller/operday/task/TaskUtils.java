@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;

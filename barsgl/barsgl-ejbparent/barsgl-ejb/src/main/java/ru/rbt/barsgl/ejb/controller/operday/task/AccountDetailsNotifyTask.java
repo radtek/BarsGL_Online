@@ -13,7 +13,7 @@ import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRequestRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
@@ -31,7 +31,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AccountDetailsNotify;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountDetailsNotify;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 

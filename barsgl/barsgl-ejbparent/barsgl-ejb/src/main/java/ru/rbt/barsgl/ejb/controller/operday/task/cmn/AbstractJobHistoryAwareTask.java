@@ -2,10 +2,10 @@ package ru.rbt.barsgl.ejb.controller.operday.task.cmn;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
+import ru.rbt.barsgl.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
@@ -23,7 +23,7 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.SKIPPED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY;
 import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
 

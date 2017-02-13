@@ -9,7 +9,7 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;

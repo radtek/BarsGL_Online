@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>ru.rbt</groupId>
+        <artifactId>barsgl</artifactId>
+        <version>3.0.4-SNAPSHOT</version>
+    </parent>
+    <artifactId>security</artifactId>
+    <name>${artifactId}:${packaging}:${project.version}</name>
+    <packaging>pom</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+  <modules>
+    <module>security-ejb</module>
+    <module>security-gwt-server</module>
+    <module>security-gwt-client</module>
+  </modules>
+</project>

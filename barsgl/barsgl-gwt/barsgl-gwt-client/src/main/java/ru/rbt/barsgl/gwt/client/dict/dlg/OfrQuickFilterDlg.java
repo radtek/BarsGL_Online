@@ -4,8 +4,8 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
@@ -16,7 +16,7 @@ import java.util.Date;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDateBox;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createLabel;
 import static ru.rbt.barsgl.gwt.client.dict.dlg.OfrQuickFilterParams.SymbolState.*;
-import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
 /**

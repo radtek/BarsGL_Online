@@ -5,9 +5,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.client.Export.Export2ExcelAction;
-import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.FilterAction;
 import ru.rbt.barsgl.gwt.core.actions.RefreshAction;
@@ -82,7 +82,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 		return new GridWidget(table, new GridDataProvider(delayLoad) {
 			@Override
 			protected void getServerCount(AsyncCallback<Integer> callback) {
-				BarsGLEntryPoint.asyncGridService.getAsyncCount(sql_select, getFilterCriteria(initialFilterParams), callback);
+				CommonEntryPoint.asyncGridService.getAsyncCount(sql_select, getFilterCriteria(initialFilterParams), callback);
 			}
 
 			@Override
@@ -90,7 +90,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 				List<SortItem> sortItems = getSortCriteria();
 				List<FilterItem> filterItems = getFilterCriteria(initialFilterParams);
 				refreshGridParams(filterItems, sortItems);
-				BarsGLEntryPoint.asyncGridService.getAsyncRows(sql_select, table.getColumns(), start, pageSize,
+				CommonEntryPoint.asyncGridService.getAsyncRows(sql_select, table.getColumns(), start, pageSize,
 						filterItems, sortItems, callback);
 			};
 		}, 30);

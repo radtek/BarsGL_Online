@@ -8,7 +8,6 @@ import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;

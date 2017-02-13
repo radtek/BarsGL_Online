@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.dict;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.dlg.AccTypeSubProductDlg;
-import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;

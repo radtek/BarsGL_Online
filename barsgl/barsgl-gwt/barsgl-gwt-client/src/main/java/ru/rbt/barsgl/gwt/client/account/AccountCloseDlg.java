@@ -7,7 +7,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
@@ -21,7 +21,7 @@ import ru.rbt.barsgl.shared.user.AppUserWrapper;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDateBox;
-import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
 /**

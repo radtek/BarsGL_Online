@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.repository;
 import org.apache.commons.lang3.StringUtils;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
 

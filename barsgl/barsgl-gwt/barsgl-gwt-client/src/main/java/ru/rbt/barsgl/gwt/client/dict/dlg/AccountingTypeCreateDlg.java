@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.dict.dlg;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.*;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.dict.*;

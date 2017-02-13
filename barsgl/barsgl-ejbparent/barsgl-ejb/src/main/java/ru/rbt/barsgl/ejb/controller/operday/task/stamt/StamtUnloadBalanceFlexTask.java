@@ -6,7 +6,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
@@ -25,8 +25,8 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_FLEX;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.StamtUnload;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.StamtUnloadBalStep3;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtUnload;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtUnloadBalStep3;
 
 /**
  * Created by Ivan Sevastyanov on 19.09.2016.

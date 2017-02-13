@@ -9,7 +9,7 @@ import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.dict.dlg.DlgFactory;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;

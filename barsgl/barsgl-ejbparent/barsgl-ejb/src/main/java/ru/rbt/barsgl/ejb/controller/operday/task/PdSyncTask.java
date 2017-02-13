@@ -11,7 +11,7 @@ import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
@@ -29,7 +29,7 @@ import java.util.*;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BufferModeSyncTask;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
 
 /**
  * Created by Ivan Sevastyanov on 25.03.2016.

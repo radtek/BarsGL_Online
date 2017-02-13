@@ -26,6 +26,12 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-audit</artifactId>
+            <version>3.0.4-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 
 

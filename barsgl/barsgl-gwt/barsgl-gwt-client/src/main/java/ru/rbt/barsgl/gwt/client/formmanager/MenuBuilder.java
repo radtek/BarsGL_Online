@@ -10,6 +10,9 @@ import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.security.AppUserForm;
+import ru.rbt.security.gwt.client.security.LoginFormHandler;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
@@ -22,15 +25,13 @@ import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
 import ru.rbt.barsgl.gwt.client.load.LoadForm;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
-import ru.rbt.barsgl.gwt.client.monitoring.Monitor;
+import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateForm;
 import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
 import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
-import ru.rbt.barsgl.gwt.client.security.AppUserForm;
-import ru.rbt.barsgl.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
 import ru.rbt.barsgl.gwt.client.tasks.TasksFormNew;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -116,7 +117,7 @@ public class MenuBuilder {
                 @Override
                 public void execute() {
                     AboutForm aboutForm = new AboutForm();
-                    aboutForm.show(BarsGLEntryPoint.getDatabaseVersion());
+                    aboutForm.show(SecurityEntryPoint.getDatabaseVersion());
                 }
             });
             //TODO This Item was hidden. Remove it

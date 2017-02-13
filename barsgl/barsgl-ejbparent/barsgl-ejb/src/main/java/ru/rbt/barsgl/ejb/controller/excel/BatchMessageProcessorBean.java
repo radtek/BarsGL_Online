@@ -10,7 +10,7 @@ import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
@@ -36,7 +36,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rb.ucb.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.BatchOperation;
 
 /**
  * Created by ER18837 on 29.02.16.

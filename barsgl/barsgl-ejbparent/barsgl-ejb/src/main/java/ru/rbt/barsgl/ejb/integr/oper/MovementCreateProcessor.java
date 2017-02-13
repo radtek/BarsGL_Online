@@ -11,7 +11,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.controller.operday.task.SCASAMCResponseStorage;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
@@ -38,7 +38,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.MovementCreate;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.MovementCreate;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 

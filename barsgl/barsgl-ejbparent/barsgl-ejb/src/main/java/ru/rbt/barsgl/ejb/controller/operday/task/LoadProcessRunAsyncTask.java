@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountQuery;
 
 
 /**

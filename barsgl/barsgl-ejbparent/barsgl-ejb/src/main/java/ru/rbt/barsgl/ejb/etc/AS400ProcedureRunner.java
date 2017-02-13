@@ -1,14 +1,14 @@
 package ru.rbt.barsgl.ejb.etc;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.shared.enums.Repository;
 
 import javax.ejb.EJB;
 import java.sql.Statement;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AS400runner;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AS400runner;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 
 /**

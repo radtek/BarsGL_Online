@@ -5,13 +5,13 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.flx.FanNdsPosting;
 import ru.rbt.barsgl.ejb.entity.flx.NdsPosting;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
+import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.flx.FanNdsPostingRepository;
 import ru.rbt.barsgl.ejb.repository.flx.NdsPostingRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
@@ -25,7 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Date;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FlexNdsFan;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.FlexNdsFan;
 
 /**
  * Created by Ivan Sevastyanov on 25.11.2016.

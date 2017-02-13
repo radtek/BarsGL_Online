@@ -3,7 +3,8 @@ package ru.rbt.barsgl.gwt.client.security;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.backvalue.BackValueDlg;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
@@ -25,8 +26,12 @@ import ru.rbt.barsgl.shared.enums.UserExternalType;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
+//import ru.rbt.barsgl.gwt.client.security.AccessRightsDlg;
+//import ru.rbt.barsgl.gwt.client.security.AccessRightsDlg;
+//import ru.rbt.barsgl.gwt.client.security.AppUserAddDlg;
+//import ru.rbt.barsgl.gwt.client.security.AppUserAddDlg;
 
-import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getFilialPart;
+//import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getFilialPart;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.shared.enums.YesNoType.No;
 import static ru.rbt.barsgl.shared.enums.YesNoType.Yes;
@@ -229,7 +234,7 @@ public class AppUserForm extends EditableDictionary<AppUserWrapper> {
 	@Override
 	protected void save(AppUserWrapper wrapper, FormAction action,
 			AsyncCallback<RpcRes_Base<AppUserWrapper>> asyncCallbackImpl) throws Exception {
-        BarsGLEntryPoint.authSrv.createUser(wrapper, action, asyncCallbackImpl);
+        SecurityEntryPoint.authSrv.createUser(wrapper, action, asyncCallbackImpl);
     }
 
     @Override

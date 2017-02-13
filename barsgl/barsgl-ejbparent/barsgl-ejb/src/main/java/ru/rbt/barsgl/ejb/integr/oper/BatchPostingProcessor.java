@@ -1,8 +1,8 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
-import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
+import ru.rbt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.entity.access.PrmValue;
+import ru.rbt.security.ejb.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
@@ -13,7 +13,7 @@ import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;

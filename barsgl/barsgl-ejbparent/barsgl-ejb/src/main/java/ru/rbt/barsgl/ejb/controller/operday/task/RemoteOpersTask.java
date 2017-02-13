@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
+import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.datarec.DefaultJdbcAdapter;
@@ -24,8 +24,8 @@ import java.util.Date;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.GLVD_BAL4;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.GLVD_PST_DU;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.GLVD_BAL4;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.GLVD_PST_DU;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.trim;
 
 /**

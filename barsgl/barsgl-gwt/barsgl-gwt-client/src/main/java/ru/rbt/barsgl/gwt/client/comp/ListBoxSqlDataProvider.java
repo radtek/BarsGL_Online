@@ -1,8 +1,8 @@
 package ru.rbt.barsgl.gwt.client.comp;
 
 import com.google.gwt.user.client.Window;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
@@ -52,7 +52,7 @@ public class ListBoxSqlDataProvider implements ListBoxDataProvider {
     @Override
     public void provide(final DataListBox listBox) {
         this.listBox = listBox;
-        BarsGLEntryPoint.asyncGridService.getAsyncRows(sql, columns, 0, 10000, filter, sort, new AuthCheckAsyncCallback<List<Row>>() {
+        CommonEntryPoint.asyncGridService.getAsyncRows(sql, columns, 0, 10000, filter, sort, new AuthCheckAsyncCallback<List<Row>>() {
             @Override
             public void onFailureOthers(Throwable caught) {
                 Window.alert("Ошибка получения данных для ListBox.\nОшибка: " + caught.getLocalizedMessage());

@@ -7,7 +7,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.AcodWrapper;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FreeAcod;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.FreeAcod;
 import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
 
 import javax.inject.Inject;

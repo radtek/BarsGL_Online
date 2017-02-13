@@ -41,6 +41,18 @@
             <artifactId>barsgl-shared</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-ejb-core</artifactId>
+            <version>3.0.4-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-gwt-serverutil</artifactId>
+            <version>3.0.4-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 
 </project>

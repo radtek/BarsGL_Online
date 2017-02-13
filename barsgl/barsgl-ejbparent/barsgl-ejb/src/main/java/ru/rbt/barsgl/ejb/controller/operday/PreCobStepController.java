@@ -10,7 +10,7 @@ import ru.rbt.barsgl.ejb.integr.bg.FanStornoBackvalueOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.FanStornoOnedayOperationController;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.JpaAccessCallback;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.Iterables.all;
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PreCob;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.PreCob;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 
 /**

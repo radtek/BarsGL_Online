@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
@@ -17,7 +17,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.RecalcBS2;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.RecalcBS2;
 
 /**
  * Created by Ivan Sevastyanov on 17.02.2016.

@@ -9,8 +9,8 @@ import javax.inject.Inject;
 import javax.xml.bind.ValidationException;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PlClose707Del;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PlClose707Create;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.PlClose707Del;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.PlClose707Create;
 
 import java.util.Date;
 import java.util.Properties;

@@ -10,10 +10,10 @@ import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRateId;
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
+import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
@@ -33,7 +33,7 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.HardCur
 import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.Operday;
 import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.OperdayToOpen;
 import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.RatesToLoad;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.LoadRatesTask;
+import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.LoadRatesTask;
 
 /**
  * Created by Ivan Sevastyanov
