@@ -67,7 +67,7 @@ public class FanStornoOnedayOperationController extends FanOperationController {
             } catch (Throwable e) {
                 String msg = "Ошибка определения данных" + msgCommon;
 //                auditController.error(FanOperation, msg, null, e);
-                operationFanErrorMessage(e, msg, parentReference, storno, OperState.ERPROC, initSource());
+                operationFanErrorMessage(e, msg, null, parentReference, storno, OperState.ERPROC, initSource());
                 return Collections.emptyList();
             }
 
@@ -119,7 +119,7 @@ public class FanStornoOnedayOperationController extends FanOperationController {
         } catch (Throwable e) {
             String msg = "Ошибка" + msgCommon;
 //            auditController.error(AuditRecord.LogCode.FanOperation, msg, null, e);
-            operationFanErrorMessage(e, msg, parentReference, YesNo.Y, OperState.ERPOST, initSource());
+            operationFanErrorMessage(e, msg, operList, parentReference, YesNo.Y, OperState.ERPOST, initSource());
             return Collections.emptyList();
         }
         return operList;

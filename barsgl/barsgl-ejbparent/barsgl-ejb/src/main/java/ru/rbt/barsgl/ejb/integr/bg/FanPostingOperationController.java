@@ -85,7 +85,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
                     } catch (Throwable e) {
                         String msg = "Ошибка определения данных" + msgCommon;
 //                        auditController.error(FanOperation, msg, null, e);
-                        operationFanErrorMessage(e, msg, parentReference, storno, OperState.ERPROC, initSource());
+                        operationFanErrorMessage(e, msg, null, parentReference, storno, OperState.ERPROC, initSource());
                         return Collections.emptyList();
                     }
                     return createPostings(operList, mainOperation, storno);
@@ -145,7 +145,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
         } catch (Throwable e) {
             String msg = "Ошибка создания проводок по" + msgCommon;
 //            auditController.error(FanOperation, msg, mainOperation, e);
-            operationFanErrorMessage(e, msg, parentReference, storno, OperState.ERPOST, initSource());
+            operationFanErrorMessage(e, msg, operList, parentReference, storno, OperState.ERPOST, initSource());
             return Collections.emptyList();
         }
         return operList;

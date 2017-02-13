@@ -150,17 +150,18 @@ public abstract class FanOperationController implements GLOperationController <S
         }
     }
 
-    protected void operationFanErrorMessage(Throwable e, String msg, String parentRef, YesNo storno, OperState state, String source) {
+    protected void operationFanErrorMessage(Throwable e, String msg, List<GLOperation> operList, String parentRef, YesNo storno, OperState state, String source) {
         try {
-            auditController.error(FanOperation, msg, null, e);   // TODO
+            final List<GLOperation> opList = (null != operList) ? operList :
+                    glOperationRepository.getFanOperationByRef(parentRef, storno);
+            auditController.error(FanOperation, msg, (null != opList) ? opList.get(0) : null, e);   // TODO
             glOperationRepository.executeInNewTransaction(persistence -> {
                 final String errorMessage = format("%s: \n%s Обнаружена: %s\n'", msg, getErrorMessage(e), source);
                 log.error(errorMessage, e);
                 glOperationRepository.updateOperationFanStatusError(parentRef, storno, state, substr(errorMessage, 4000));
                 return null;
             });
-            List<GLOperation> operList = glOperationRepository.getFanOperationByRef(parentRef, storno);
-            for (GLOperation operation : operList) {
+            for (GLOperation operation : opList) {
                 errorController.error(msg, operation, e);
             }
         } catch (Exception e1) {
