@@ -38,9 +38,11 @@ import ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncServiceAsync;
 //import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.Date;
+import ru.rbt.barsgl.gwt.client.formmanager.MenuBuilder;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.shared.NotAuthorizedUserException.NOT_AUTHORIZED_MESSAGE;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by ER21006 on 13.01.2015.
@@ -71,5 +73,6 @@ public class BarsGLEntryPoint implements EntryPoint {
         propertiesService = GWT.create(PropertiesService.class);
         loaderService = GWT.create(LoaderControlService.class);
 //        monitorService = GWT.create(MonitorService.class);
+        SecurityEntryPoint.MENU_BUILDER = new MenuBuilder();
     }
 }

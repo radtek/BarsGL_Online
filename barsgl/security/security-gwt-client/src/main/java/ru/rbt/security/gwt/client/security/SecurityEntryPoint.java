@@ -20,6 +20,7 @@ import static ru.rbt.barsgl.shared.NotAuthorizedUserException.NOT_AUTHORIZED_MES
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
 //import ru.rbt.security.gwt.formmanager.FormManagerUI;
 import ru.rbt.security.gwt.server.rpc.auth.AuthorizationService;
 import ru.rbt.security.gwt.server.rpc.auth.AuthorizationServiceAsync;
@@ -34,6 +35,8 @@ public class SecurityEntryPoint implements EntryPoint {
 
   private static String DATABASE_VERSION;
 
+  public static IMenuBuilder MENU_BUILDER;
+  
   @Override
   public void onModuleLoad() {
     authSrv = GWT.create(AuthorizationService.class);
@@ -90,8 +93,8 @@ public class SecurityEntryPoint implements EntryPoint {
       LocalDataStorage.putParam("current_user", result.getUser());
       FormManagerUI.setBrowserWindowTitle(Utils.Fmt("{0} - [{1}({2})]", TEXT_CONSTANTS.window_title(),
               result.getUser().getUserName(), result.getUser().getSurname()));
-
-      RootPanel.get().add(FormManagerUI.getFormManager(result.getUserMenu()), 0, 0);
+              
+      RootPanel.get().add(FormManagerUI.getFormManager(result.getUserMenu(), MENU_BUILDER), 0, 0);
     }
   }
 

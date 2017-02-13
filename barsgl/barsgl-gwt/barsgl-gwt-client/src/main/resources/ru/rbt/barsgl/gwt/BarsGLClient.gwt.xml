@@ -12,8 +12,8 @@
     <inherits name="ru.rbt.barsgl.gwt.BarsGLServer" />
     <inherits name="ru.rbt.barsgl.gwt.BarsGLCore" />
     <source path="client" />
+    <entry-point class="ru.rbt.barsgl.gwt.client.BarsGLEntryPoint"/>
     <entry-point class="ru.rbt.security.gwt.client.security.SecurityEntryPoint"/>
     <entry-point class="ru.rbt.security.gwt.client.CommonEntryPoint"/>
-    <entry-point class="ru.rbt.barsgl.gwt.client.BarsGLEntryPoint"/>
     <extend-property name="locale" values="ru"/>
 </module>

@@ -61,13 +61,13 @@ public class FormManagerUI extends Composite {
     private Label operdayLabel;
     private Label operdayDate;
     
-//@@@    private MenuBuilder menuBuilder;
+    private IMenuBuilder menuBuilder;
 
-    public static FormManagerUI getFormManager(final UserMenuWrapper menuWrapper){
-        return formManager == null ? new FormManagerUI(menuWrapper) : formManager;
+    public static FormManagerUI getFormManager(final UserMenuWrapper menuWrapper, IMenuBuilder menuBuilder){
+        return formManager == null ? new FormManagerUI(menuWrapper, menuBuilder) : formManager;
     }
 
-    protected FormManagerUI(final UserMenuWrapper menuWrapper) {
+    protected FormManagerUI(final UserMenuWrapper menuWrapper, IMenuBuilder menuBuilder) {
         initWidget(uiBinder.createAndBindUi(this));
 
         setWidgetToMaxWidthAndHeight();
@@ -75,7 +75,11 @@ public class FormManagerUI extends Composite {
         LocalEventBus.addHandler(StatusBarEvent.TYPE, createStatusBarEventHandler());
         LocalEventBus.addHandler(FormEvent.TYPE, createFormHandler());
         
-//@@@        menuBuilder = new MenuBuilder(menuWrapper, dataPanel).build(menuBar);
+        //menuBuilder = new MenuBuilder(menuWrapper, dataPanel).build(menuBar);
+        this.menuBuilder = menuBuilder;
+
+        menuBuilder.init(menuWrapper, dataPanel);
+        menuBuilder.build(menuBar);        
 
         createOperdayPanel();
 
@@ -86,7 +90,7 @@ public class FormManagerUI extends Composite {
         return new FormEventHandler() {
             @Override
             public void show(Widget form) {
-//@@@                menuBuilder.formLoad(form);
+                menuBuilder.formLoad(form);
             }
         };
     }
