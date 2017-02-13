@@ -22,7 +22,7 @@
             </env-entry>
         </session>
     -->
-    <enterprise-beans>
+<!--    <enterprise-beans>
         <session>
             <display-name>AuthorizationServiceSupport</display-name>
             <ejb-name>AuthorizationServiceSupport</ejb-name>
@@ -30,5 +30,5 @@
             <ejb-class>ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport</ejb-class>
             <session-type>Stateless</session-type>
         </session>
-    </enterprise-beans>
+    </enterprise-beans>-->
 </ejb-jar>
