@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejb-jar xmlns = "http://java.sun.com/xml/ns/javaee" 
+         version = "3.1"
+         xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation = "http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/ejb-jar_3_1.xsd">
+    <description>Enterprise JavaBeans 3.1</description>
+    <display-name>Enterprise JavaBeans 3.1</display-name>
+
+    <enterprise-beans>
+        <session>
+            <display-name>AuthorizationServiceSupport</display-name>
+            <ejb-name>AuthorizationServiceSupport</ejb-name>
+            <local-bean/>
+            <ejb-class>ru.rbt.security.AuthorizationServiceSupport</ejb-class>
+            <session-type>Stateless</session-type>
+        </session>
+    </enterprise-beans>
+</ejb-jar>
