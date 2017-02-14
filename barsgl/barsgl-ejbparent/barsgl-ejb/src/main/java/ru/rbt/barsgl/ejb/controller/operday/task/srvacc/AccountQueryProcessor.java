@@ -235,7 +235,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
 
                 if (showUnspents) {
                     sb.append("<asbo:OpenBalance>\n");
-                    BigDecimal[] amounts = queryRepository.getAccountAmountsIncoming(record.getString("BSAACID"), workday);
+                    BigDecimal[] amounts = queryRepository.getAccountBalance(record.getString("BSAACID"));
                     if (amounts != null) {
                         sb.append("<asbo:Amount>").append(amounts[0].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
                         sb.append("<asbo:AmountRub>").append(amounts[1].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
@@ -246,10 +246,9 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                     sb.append("</asbo:OpenBalance>\n");
 
                     sb.append("<asbo:CurrentBalance>\n");
-                    BigDecimal[] curamounts = queryRepository.getAccountAmountsCurrent(record.getString("BSAACID"), workday);
                     if (amounts != null) {
-                        sb.append("<asbo:Amount>").append(curamounts[0].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
-                        sb.append("<asbo:AmountRub>").append(curamounts[1].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
+                        sb.append("<asbo:Amount>").append(amounts[2].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
+                        sb.append("<asbo:AmountRub>").append(amounts[3].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
                     }
                     sb.append("<asbo:Date>").append(xmlGregorianCalendar.toString().substring(0, 10)).append("</asbo:Date>\n");
                     sb.append("<asbo:Time>").append(xmlGregorianCalendar.toString().substring(11, 19)).append("</asbo:Time>\n");

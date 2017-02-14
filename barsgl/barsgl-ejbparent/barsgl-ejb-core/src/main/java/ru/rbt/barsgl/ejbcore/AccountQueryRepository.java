@@ -51,8 +51,8 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             List<DataRecord> dataRecords = selectMaxRows(
                 "SELECT BSAACID FROM DWH.ACCRLN A WHERE A.CNUM=? AND VALUE(A.BSAACID,'')<>'' AND A.GLACOD IN (" + glacods + ") "+
                     "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
-                    "AND (CURRENT DATE - A.DRLNC) <= 1131 " + 
-                    "AND A.RLNTYPE <> 1"                        
+                    "AND (CURRENT DATE - A.DRLNC) <= 1131 " +
+                    "AND A.RLNTYPE <> 1"
                 , Integer.MAX_VALUE, new Object[]{customerNo});
 
             Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
@@ -204,37 +204,43 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         return "";
     }
 
-    public BigDecimal[] getAccountAmountsIncoming(String bsaacid, Date workday) {
+    /**
+     * входящие и исходящие остатки
+     * @param bsaacid
+     * @return <code>new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB"), record.getBigDecimal("OUTCO"), record.getBigDecimal("OUTRUB")}</code>
+     */
+    public BigDecimal[] getAccountBalance(String bsaacid) {
         try {
             DataRecord record = selectFirst(
-                "SELECT BA.BSAACID, BA.ORDERED, BA.RESULT+VALUE(GLBA.GL_RESULT,0) AS INCO, BA.RUBRESULT+VALUE(GLBA.GL_RUBRESULT,0) AS INCORUB FROM " +
-                    "  (SELECT OBAC AS RESULT,OBBC AS RUBRESULT,BSAACID, 1 AS ORDERED FROM BALTUR WHERE BSAACID=? AND DAT=? AND DATTO='2029-01-01' " +
-                    "  UNION " +
-                    "SELECT OBAC+CTAC+DTAC AS RESULT,OBBC+CTBC+DTBC AS RUBRESULT,BSAACID, 2 AS ORDERED FROM BALTUR WHERE BSAACID=? AND DATTO='2029-01-01') BA " +
-                    "LEFT OUTER JOIN ( " +
-                    "SELECT CTAC+DTAC AS GL_RESULT, CTBC+DTBC AS GL_RUBRESULT, BSAACID FROM GL_BALTUR WHERE BSAACID=? AND MOVED='N' AND DAT<?) GLBA " +
-                    "ON BA.BSAACID=GLBA.BSAACID ORDER BY BA.ORDERED",
-                bsaacid, workday, bsaacid, bsaacid, workday);
+                    "SELECT INCO + VALUE(INCTURN, 0) INCO, INCORUB + VALUE(INCTURNRUB, 0) INCORUB\n" +
+                    "       , OUTCO + VALUE (OUTTURN, 0) OUTCO, OUTRUB + VALUE (OUTTURNRUB,0) OUTRUB FROM (\n" +
+                    "    select case\n" +
+                    "               when b.dat < o.curdate then  OBAC+CTAC+DTAC\n" +
+                    "               else OBAC\n" +
+                    "           end INCO\n" +
+                    "           , case\n" +
+                    "               when b.dat < o.curdate then  OBBC+CTBC+DTBC\n" +
+                    "               else OBBC\n" +
+                    "           end INCORUB\n" +
+                    "           , OBAC+CTAC+DTAC OUTCO, OBBC+CTBC+DTBC OUTRUB, b.bsaacid\n" +
+                    "     from baltur b, gl_od o\n" +
+                    "    where b.DATTO='2029-01-01' and b.bsaacid = ? \n" +
+                    ") b \n" +
+                    "left join   (select sum(case\n" +
+                    "                    when b.dat < o.curdate then CTAC+DTAC\n" +
+                    "                    else 0\n" +
+                    "               end) incturn\n" +
+                    "               , sum(case\n" +
+                    "                    when b.dat < o.curdate then CTBC+DTBC\n" +
+                    "                    else 0\n" +
+                    "               end) incturnrub\n" +
+                    "               , sum(CTAC+DTAC) outturn, sum(CTBC+DTBC) outturnrub, b.bsaacid\n" +
+                    "            from gl_baltur b, gl_od o \n" +
+                    "            where b.bsaacid = ? and b.dat <= o.curdate and moved = 'N' \n" +
+                    "            group by b.bsaacid) j on b.bsaacid = j.bsaacid"
+                , bsaacid, bsaacid);
             if (record != null) {
-                return new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB")};
-            }
-        } catch (SQLException e) {
-            log.error("",e);
-        }
-        return new BigDecimal[]{new BigDecimal(0), new BigDecimal(0)};
-    }
-
-    public BigDecimal[] getAccountAmountsCurrent(String bsaacid, Date workday) {
-        try {
-            DataRecord record = selectFirst(
-                "SELECT BA.BSAACID, VALUE(BA.RESULT,0)+VALUE(GLBA.GL_RESULT,0) AS INCO, BA.RUBRESULT+VALUE(GLBA.GL_RUBRESULT,0) AS INCORUB FROM " +
-                    "  (SELECT CTAC+DTAC AS RESULT,CTBC+DTBC AS RUBRESULT,BSAACID FROM BALTUR WHERE BSAACID=? AND DAT=? AND DATTO='2029-01-01') BA " +
-                    "  FULL OUTER JOIN " +
-                    "  (SELECT CTAC+DTAC AS GL_RESULT, CTBC+DTBC AS GL_RUBRESULT, BSAACID FROM GL_BALTUR WHERE BSAACID=? AND MOVED='N' AND DAT=?) GLBA " +
-                    "    ON BA.BSAACID=GLBA.BSAACID",
-                bsaacid, workday, bsaacid, workday);
-            if (record != null) {
-                return new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB")};
+                return new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB"), record.getBigDecimal("OUTCO"), record.getBigDecimal("OUTRUB")};
             }
         } catch (SQLException e) {
             log.error("",e);
