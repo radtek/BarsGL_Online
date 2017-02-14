@@ -245,7 +245,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         } catch (SQLException e) {
             log.error("",e);
         }
-        return new BigDecimal[]{new BigDecimal(0), new BigDecimal(0)};
+        return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO};
     }
 
     public Set<String> getCountsByAB(String condition) {
