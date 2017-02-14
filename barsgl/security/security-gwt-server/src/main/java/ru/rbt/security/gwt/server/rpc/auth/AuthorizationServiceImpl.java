@@ -2,7 +2,6 @@ package ru.rbt.security.gwt.server.rpc.auth;
 
 
 import ru.rbt.security.AuthorizationServiceSupport;
-//import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.LoginParams;
 import ru.rbt.barsgl.shared.LoginResult;
@@ -17,13 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
-//import java.sql.SQLException;
-//import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
-//import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
 
-//import static java.lang.String.format;
-//import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
-//import static ru.rbt.barsgl.shared.LoginResult.LoginResultStatus.SUCCEEDED;
 import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_LOGIN_RESULT;
 import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_NAME;
 

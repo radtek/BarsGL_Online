@@ -76,10 +76,12 @@ public class FormManagerUI extends Composite {
         LocalEventBus.addHandler(FormEvent.TYPE, createFormHandler());
         
         //menuBuilder = new MenuBuilder(menuWrapper, dataPanel).build(menuBar);
-        this.menuBuilder = menuBuilder;
+        if(menuBuilder != null){
+            this.menuBuilder = menuBuilder;
 
-        menuBuilder.init(menuWrapper, dataPanel);
-        menuBuilder.build(menuBar);        
+            menuBuilder.init(menuWrapper, dataPanel);
+            menuBuilder.build(menuBar);        
+        }
 
         createOperdayPanel();
 

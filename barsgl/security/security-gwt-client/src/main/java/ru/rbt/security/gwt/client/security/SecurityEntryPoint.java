@@ -29,21 +29,21 @@ import ru.rbt.security.gwt.server.rpc.auth.AuthorizationServiceAsync;
  *
  * @author Andrew Samsonov
  */
-public class SecurityEntryPoint implements EntryPoint {
+public class SecurityEntryPoint {
 
   public static AuthorizationServiceAsync authSrv;
 
   private static String DATABASE_VERSION;
 
-  public static IMenuBuilder MENU_BUILDER;
+  private static IMenuBuilder MENU_BUILDER;
   
-  @Override
-  public void onModuleLoad() {
+  public static void init(IMenuBuilder menuBuilder) {
+    MENU_BUILDER = menuBuilder;
     authSrv = GWT.create(AuthorizationService.class);
 
-    checkSession();
+//    checkSession();
 
-    setDatabaseVersion();
+//    setDatabaseVersion();
 
     GWT.setUncaughtExceptionHandler(new DefaultAppUncaughtExceptionHandler());
   }
@@ -98,7 +98,7 @@ public class SecurityEntryPoint implements EntryPoint {
     }
   }
 
-  public class DefaultAppUncaughtExceptionHandler implements GWT.UncaughtExceptionHandler {
+  public static class DefaultAppUncaughtExceptionHandler implements GWT.UncaughtExceptionHandler {
 
     @Override
     public void onUncaughtException(Throwable throwable) {
@@ -117,7 +117,7 @@ public class SecurityEntryPoint implements EntryPoint {
             || throwable instanceof NotAuthorizedUserException;
   }
 
-  private static void setDatabaseVersion() {
+  public static void setDatabaseVersion() {
     authSrv.getDatabaseVersion(new AsyncCallback<RpcRes_Base<String>>() {
       @Override
       public void onFailure(Throwable caught) {

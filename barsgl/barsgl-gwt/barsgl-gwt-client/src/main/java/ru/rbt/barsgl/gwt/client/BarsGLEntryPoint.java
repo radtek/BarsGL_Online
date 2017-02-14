@@ -51,28 +51,26 @@ public class BarsGLEntryPoint implements EntryPoint {
 
     public static TimerJobServiceAsync timerJobService;
     public static OperDayServiceAsync operDayService;
-//    public static AsyncGridServiceAsync asyncGridService;
     public static ManualOperationServiceAsync operationService;
     public static ManualDictionaryServiceAsync dictionaryService;
     public static AccessServiceAsync accessService;
     public static PdSyncServiceAsync pdSyncService;
     public static PropertiesServiceAsync propertiesService;
     public static LoaderControlServiceAsync loaderService;
-//    public static MonitorServiceAsync monitorService;
-//    public static Date CURRENT_WORKDAY;
     
     @Override
     public void onModuleLoad() {
         timerJobService = GWT.create(TimerJobService.class);
         operDayService = GWT.create(OperDayService.class);
-//        asyncGridService = GWT.create(AsyncGridService.class);
         operationService = GWT.create(ManualOperationService.class);
         dictionaryService = GWT.create(ManualDictionaryService.class);
         accessService = GWT.create(AccessService.class);
         pdSyncService = GWT.create(PdSyncService.class);
         propertiesService = GWT.create(PropertiesService.class);
         loaderService = GWT.create(LoaderControlService.class);
-//        monitorService = GWT.create(MonitorService.class);
-        SecurityEntryPoint.MENU_BUILDER = new MenuBuilder();
+
+        SecurityEntryPoint.init(new MenuBuilder());
+        SecurityEntryPoint.checkSession();
+        SecurityEntryPoint.setDatabaseVersion();
     }
 }

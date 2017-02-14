@@ -22,6 +22,19 @@
         <class>ru.rbt.barsgl.ejbcore.conf.map.StringProperty</class>
         <class>ru.rbt.barsgl.ejbcore.conf.map.NumberProperty</class>
 
+        <class>ru.rbt.barsgl.audit.entity.AuditRecord</class>
+        
+        <class>ru.rbt.security.ejb.entity.AppUser</class>
+        <class>ru.rbt.security.ejb.entity.access.PrmValue</class>
+        <class>ru.rbt.security.ejb.entity.access.PrmValueHistory</class>
+        <class>ru.rbt.security.ejb.entity.access.Role</class>
+        <class>ru.rbt.security.ejb.entity.access.SecurityAction</class>
+        <class>ru.rbt.security.ejb.entity.access.SecurityActionGroup</class>
+        <class>ru.rbt.security.ejb.entity.access.SecurityRoleActionRln</class>
+        <class>ru.rbt.security.ejb.entity.access.UserMenuActionRln</class>
+        <class>ru.rbt.security.ejb.entity.access.UserMenuItem</class>
+        <class>ru.rbt.security.ejb.entity.access.UserRoleRln</class>
+        
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 
         <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
