@@ -90,7 +90,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
                     }
                     return createPostings(operList, mainOperation, storno);
 
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     auditController.error(FanOperation, "Ошибка при обработке" + msgCommon, null, e);
                     throw new DefaultApplicationException(e.getMessage(), e);
                 }

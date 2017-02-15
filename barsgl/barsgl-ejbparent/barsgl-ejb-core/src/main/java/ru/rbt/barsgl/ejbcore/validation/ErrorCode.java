@@ -62,7 +62,7 @@ public enum ErrorCode {
     , FAN_IS_ONLY_ONE(1009, "Найдена всего одна операция веера для PAR_RF = '%s'")
     , FAN_PARENT_NOT_EXISTS(1010, "Не найдена основная операция веера для PAR_RF = '%s'")
     , FAN_SIDE_NOT_DEFINED(1011, "Не удалось определить сторону веера для PAR_RF = '%s'")
-    , FAN_AMOUNT_NOT_DEFINED(1011, "Не удалось определить суммы веера для PAR_RF = '%s'")
+//    , FAN_AMOUNT_NOT_DEFINED(1011, "Не удалось определить суммы веера для PAR_RF = '%s'")
     , EXCH_ACCOUNT_NOT_FOUND(1012, "Не найден счет курсовой разницы '%s' для бранча: '%s'")
     , FILIAL_NOT_DEFINED(1013, "Не удалось определить филиал для счета %: '%s' (поле '%s')")
     , STORNO_POST_NOT_FOUND(1014, "Не найдена сторнируемая проводка по операции STRN_GLO = '%s', POST_TYPE = '%s'")

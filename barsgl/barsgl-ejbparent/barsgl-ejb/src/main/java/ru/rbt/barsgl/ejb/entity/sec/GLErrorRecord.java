@@ -58,7 +58,7 @@ public class GLErrorRecord extends BaseEntity<Long> {
     @Column(name = "ID_PST_NEW")
     private String aePostingIdNew;
 
-    @Column(name = "CORRECT")
+    @Column(name = "CORRECT", insertable = false)
     private String correct;
 
     @Override

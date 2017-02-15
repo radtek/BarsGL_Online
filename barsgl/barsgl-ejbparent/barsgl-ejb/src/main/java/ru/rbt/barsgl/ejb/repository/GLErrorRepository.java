@@ -30,4 +30,21 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         return errorRecord;
     }
 
+    public GLErrorRecord getRecordByPstRef(Long pstRef) {
+        return selectFirst(GLErrorRecord.class, "from GLErrorRecord g where g.etlPostingRef = ?1 order by g.id desc", pstRef);
+    }
+
+    public GLErrorRecord getRecordByGloRef(Long gloRef) {
+        return selectFirst(GLErrorRecord.class, "from GLErrorRecord g where g.glOperRef = ?1 order by g.id desc", gloRef);
+    }
+
+    public GLErrorRecord getRecordByRef(Long pstRef, Long gloRef) {
+        if (null != pstRef) {
+            return getRecordByPstRef(pstRef);
+        } else
+        if (null != gloRef) {
+            return getRecordByGloRef(gloRef);
+        } else
+            return null;
+    }
 }
