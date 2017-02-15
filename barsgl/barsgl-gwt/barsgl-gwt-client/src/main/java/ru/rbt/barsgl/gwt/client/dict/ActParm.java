@@ -65,6 +65,7 @@ public class ActParm extends GridForm {
         this.initModifier = initModifier;
         initAccType = initSection + initProduct + initSubProduct + initModifier;
         title.setText(Utils.Fmt(FORM_NAME, initAccType));
+        exportToExcel.setFormTitle(title.getText());
         reconfigure();
     }
 
