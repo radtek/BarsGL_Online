@@ -14,6 +14,7 @@ import ru.rbt.barsgl.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
@@ -74,7 +75,8 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
                 headerIdFull = unloadController.createHeader(executeDate, UnloadStamtParams.POSTING_TECHOVER);
                 auditController.info(TechoverTask, format("Исключаем в текущей выгрузке ранее выгруженные PCID '%s'", unloadController.moveIntrodayHistory()));
                 auditController.info(TechoverTask, format("Удалено старых данных '%s'", unloadDeltaTask.cleanOld()));
-                unloadDataPosings(executeDate);
+                auditController.info(TechoverTask, format("Выгружено проводок по техническому овердрафту '%s' в операционном дне '%s'"
+                        , unloadDataPosings(lwDate), dateUtils.onlyDateString(executeDate)));
                 unloadController.setHeaderStatus(headerIdFull, DwhUnloadStatus.SUCCEDED);
             } catch (Exception e) {
                 unloadController.setHeaderStatus(headerIdFull, DwhUnloadStatus.ERROR);
@@ -84,7 +86,8 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
             }
             try {
                 headerIdFull = unloadController.createHeader(executeDate, UnloadStamtParams.BALANCE_TECHOVER);
-                unloadBalanceDelta(executeDate);
+                auditController.info(TechoverTask, format("Выгружено счетов с проводками TECHOVER для STAMT за дату: '%s', '%s'"
+                                , dateUtils.onlyDateString(executeDate), unloadBalanceDelta(lwDate)));
                 unloadController.setHeaderStatus(headerIdFull, DwhUnloadStatus.SUCCEDED);
             } catch (Exception e) {
                 unloadController.setHeaderStatus(headerIdFull, DwhUnloadStatus.ERROR);
@@ -101,22 +104,18 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
         }
     }
 
-    private void unloadDataPosings(Date executeDate) throws Exception {
-        int cntTotal = (int) repository.executeInNewTransaction(persistence -> {
-            int cnt = repository.executeNativeUpdate(
-                    resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_unload_pst.sql").replaceAll("execdate", DateUtils.dbDateString(executeDate)));
-            return cnt;
-        });
-        auditController.info(TechoverTask, format("Выгружено проводок по техническому овердрафту '%s' в операционном дне '%s'"
-                , cntTotal, dateUtils.onlyDateString(executeDate)));
+    private int unloadDataPosings(Date lwdate) throws Exception {
+        return (int) repository.executeInNewTransaction(persistence -> repository.executeTransactionally(connection -> {
+            try (PreparedStatement st = connection.prepareStatement(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_unload_pst.sql"))){
+                st.setDate(1, new java.sql.Date(lwdate.getTime()));
+                return st.executeUpdate();
+            }
+        }));
     }
 
-    private void unloadBalanceDelta(Date executeDate) throws Exception {
-        repository.executeInNewTransaction(persistence -> {
-            auditController.info(TechoverTask
-                    , format("Выгружено счетов с проводками TECHOVER для STAMT за дату: '%s', '%s'"
-                            , dateUtils.onlyDateString(executeDate), fillBalanceDelta(executeDate)));
-            return null;
+    private int unloadBalanceDelta(Date lwdate) throws Exception {
+        return (int) repository.executeInNewTransaction(persistence -> {
+            return fillBalanceDelta(lwdate);
         });
     }
 
@@ -143,15 +142,21 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
         }
     }
 
-    private int fillBalanceDelta(Date executeDate) throws Exception {
-        repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_tmp.sql"));
-        repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_insacc.sql"), executeDate);
-        repository.executeNativeUpdate(resourceController
-                .getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_baldelta.sql"
-                ).replaceAll("execdate", dateUtils.dbDateString(executeDate)));
+    private int fillBalanceDelta(Date lwdate) throws Exception {
+        repository.executeTransactionally(connection -> {
+            repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_tmp.sql"));
+            try (PreparedStatement st = connection.prepareStatement(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_insacc.sql"))) {
+                st.setDate(1, new java.sql.Date(lwdate.getTime()));
+                st.executeUpdate();
+            }
+            try (PreparedStatement st = connection.prepareStatement(resourceController
+                    .getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_baldelta.sql").replaceAll("execdate", dateUtils.dbDateString(lwdate)))) {
+                st.executeUpdate();
+            }
+            return null;
+        });
         auditController.info(TechoverTask, format("Удалено счетов из GL_BALSTMD записей для обновления '%s'"
-                , repository.executeNativeUpdate(resourceController
-                        .getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/stamt_delete_exists.sql"))));
+                , repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/stamt_delete_exists.sql"))));
         return repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ins_res.sql"));
     }
 }
