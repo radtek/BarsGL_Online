@@ -61,7 +61,8 @@ public abstract class AccountTypeFormDlg extends GridFormDlgBase {
         @Override
         protected String prepareSql() {
             return "select ACCTYPE, CUSTYPE, TERM, ACC2, ACOD, SQ, DTB, DTE, ACCNAME, TERMNAME, CTYPENAME, CUSTNO, CUSTNAME, CTYPE, FL_CTRL" +
-                    " from V_GL_ACCUST where ACOD not in ('7920','7919','7903','7904','7907','7908')";
+                    " from V_GL_ACCUST where not ACC2 like '706%'" //ACOD not in ('7920','7919','7903','7904','7907','7908')
+                    ;
         }
 
         @Override

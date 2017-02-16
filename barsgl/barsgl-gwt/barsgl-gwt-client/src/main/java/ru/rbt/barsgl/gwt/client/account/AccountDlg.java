@@ -20,9 +20,7 @@ import ru.rbt.barsgl.gwt.client.dictionary.CustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
-import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
-import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
@@ -74,6 +72,8 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
 
     private Date operday;
     private Long accountId;
+    private String bsaAcid;
+    private String acc2;
 
     private int asyncListCount = 4; /*count async lists:  mBranch; mCurrency; mDealSource; mTerm*/
     private HandlerRegistration registration;
@@ -183,6 +183,8 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     protected void setFields(ManualAccountWrapper account) {
     	account.setId(accountId);
+        account.setBsaAcid(bsaAcid);
+        account.setBalanceAccount2(acc2);
         account.setBranch(check((String) mBranch.getValue()
                 , "Отделение", "обязательно для заполнения", new CheckNotEmptyString()));
         account.setCurrency(check((String) mCurrency.getValue()
@@ -216,6 +218,8 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     public void clearContent() {
         accountId = null;
+        bsaAcid = null;
+        acc2 = null;
         mBranch.setValue(null);
         mBranch.setEnabled(true);
         mCurrency.setValue("RUR");
@@ -243,6 +247,8 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
             row = (Row) params;
 
             accountId = getFieldValue("ID");
+            bsaAcid = getFieldValue("BSAACID");
+            acc2 = getFieldValue("ACC2");
             mBranch.setValue(getFieldValue("BRANCH"));
             mCurrency.setValue(getFieldValue("CCY"));
             mAccountType.setValue(getFieldText("ACCTYPE"));
@@ -346,6 +352,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
                             mAccountDesc.setEnabled(true);
                             mCustomerType.setValue(getCustomerTypeName(result));
                             mCustomerName.setValue((String)result.get("CUSTNAME"));
+                            acc2 = (String)result.get("ACC2");
                             return true;
                         }
                     };
