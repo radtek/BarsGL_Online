@@ -70,6 +70,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
 
     private Date operday;
     private Long accountId;
+    private String bsaAcid;
 
     private boolean fl707;
     private String trueAcc2 = "";
@@ -138,6 +139,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     protected void setFields(ManualAccountWrapper account) {
         account.setId(accountId);
+        account.setBsaAcid(bsaAcid);
         account.setBranch(check((String) mBranch.getValue()
                 , "Отделение", "обязательно для заполнения", new CheckNotEmptyString()));
         account.setCustomerNumber((String)mBranch.getParam("CNUM"));
@@ -183,6 +185,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     public void clearContent() {
         accountId = null;
+        bsaAcid = null;
         mBranch.setValue(null);
         mBranch.setEnabled(true);
         mAccountType.setValue(null);
@@ -204,6 +207,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
             row = (Row) params;
 
             accountId = getFieldValue("ID");
+            bsaAcid = getFieldValue("BSAACID");
             mBranch.setValue(getFieldValue("BRANCH"));
             mAccountType.setValue(getFieldText("ACCTYPE"));
             mCustomerType.setValue(getFieldText("CBCUSTTYPE"));

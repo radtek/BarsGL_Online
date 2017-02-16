@@ -13,11 +13,14 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.access.PrmValueRepository;
+import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
@@ -25,6 +28,8 @@ import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -42,7 +47,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -109,6 +113,12 @@ public class GLAccountService {
 
     @Inject
     private DateUtils dateUtils;
+
+    @Inject
+    private SecurityActionRepository actionRepository;
+
+    @Inject
+    private UserContext userContext;
 
     public String getAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) throws Exception {
         // проверяем по какой ветке идти - искать в Майдас или создать счет ...
@@ -350,6 +360,49 @@ public class GLAccountService {
 //        }
 //    }
 
+    private void checkAccountPermission(ManualAccountWrapper wrapper, FormAction action) {
+        String acc2 = wrapper.getBalanceAccount2();
+        if (isEmpty(acc2))
+            acc2 = wrapper.getBsaAcid();
+        Long userId = wrapper.getUserId();
+        if (null == userId)
+            userId = userContext.getUserId();
+        String acc1 = StringUtils.substr(acc2, 3);
+        if (FormAction.CREATE == action) {
+            switch (acc1) {
+                case "707":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.Acc707Inp))
+                        throw new ValidationError(ACCOUNT707_INP_NOT_ALLOWED);
+                    break;
+                case "706":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccOFRInp))
+                        throw new ValidationError(ACCOUNT706_INP_NOT_ALLOWED);
+                    break;
+                default:    // для остальных при открытии будет пусто
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccInp))
+                        throw new ValidationError(ACCOUNT_INP_NOT_ALLOWED);
+                    break;
+            }
+        } else if (FormAction.UPDATE == action) {
+            switch (acc1) {
+                case "707":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.Acc707Chng))
+                        throw new ValidationError(ACCOUNT707_CHNG_NOT_ALLOWED);
+                    break;
+                case "706":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccOFRChng))
+                        throw new ValidationError(ACCOUNT706_CHNG_NOT_ALLOWED);
+                    break;
+                default:
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccChng))
+                        throw new ValidationError(ACCOUNT_CHNG_NOT_ALLOWED);
+                    break;
+            }
+        }
+
+
+    }
+
     /**
      * Создание лицевого счета вручную
      * @param accountWrapper
@@ -358,6 +411,7 @@ public class GLAccountService {
      */
     public RpcRes_Base<ManualAccountWrapper> createManualAccount(ManualAccountWrapper accountWrapper) throws Exception {
         try {
+            checkAccountPermission(accountWrapper, FormAction.CREATE);
             Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
             AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
             // Такой счет уже есть
@@ -394,6 +448,7 @@ public class GLAccountService {
     public RpcRes_Base<ManualAccountWrapper> createManualPlAccount(ManualAccountWrapper accountWrapper) throws Exception {
         try {
             return glAccountRepository.executeInNewTransaction(persistence -> {
+                checkAccountPermission(accountWrapper, FormAction.CREATE);
                 Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
                 AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
                 // поиск в GL_ACC
@@ -484,6 +539,7 @@ public class GLAccountService {
             if (null == account) {      // Такого счета нет!
                 throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
             }
+            checkAccountPermission(accountWrapper, FormAction.UPDATE);
             String dateOpenStr = accountWrapper.getDateOpenStr();
             Date dateOpen = dateOpenStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateOpenStr);
             String dateCloseStr = accountWrapper.getDateCloseStr();
@@ -496,7 +552,7 @@ public class GLAccountService {
             glAccountController.fillWrapperFields(accountWrapper, glAccount);
             return new RpcRes_Base<>(
                     accountWrapper, false, format("%s счет ЦБ: '%s'", act, accountWrapper.getBsaAcid()));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
             auditController.error(Account, format("Ошибка при изменении счета по ручному вводу: '%s'",
                     accountWrapper.getBsaAcid()), null, e);
