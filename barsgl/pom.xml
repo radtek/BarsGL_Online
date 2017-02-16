@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.rbt</groupId>
     <artifactId>barsgl</artifactId>
-    <version>3.0.9-SNAPSHOT</version>
+    <version>3.0.10-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
