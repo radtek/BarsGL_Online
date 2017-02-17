@@ -271,7 +271,7 @@ public class ManualPostingController {
     }
 
     public RpcRes_Base<ManualOperationWrapper> refuseOperationRq(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
-        BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL, REFUSEDATE, ERRSRV, REFUSESRV, WAITDATE);
+        BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL, REFUSEDATE, ERRSRV, REFUSESRV, WAITDATE, ERRPROC, ERRPROCDATE);
         String msg;
         if (hasMovement(posting0)) {
             msg = "Нельзя вернуть запрос на операцию ID = " + wrapper.getId() + " на доработку,\nпо нему выполнен успешный запрос в сервис движений";

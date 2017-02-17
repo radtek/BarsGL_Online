@@ -190,6 +190,7 @@ public class ManualOperationController {
         List<JpaAccessCallback<GLOperation>> callbacks = postings.stream().map(
                 posting -> (JpaAccessCallback<GLOperation>) persistence ->
                         beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence1, connection) -> {
+                            BatchPostStep step = posting.getStatus().getStep();
                             try {
                                 return processPosting(posting, false);
                             } catch (Throwable e) {
@@ -197,7 +198,8 @@ public class ManualOperationController {
                                 String errMessage = getErrorMessage(e);
                                 errorCount[0]++;
                                 postingRepository.executeInNewTransaction(persistence0 ->
-                                        postingRepository.updatePostingStatusError(posting.getId(), errMessage, BatchPostStatus.ERRPROC, 1));
+                                        postingRepository.updatePostingStatusError(posting.getId(), errMessage,
+                                                step.isControlStep() ? BatchPostStatus.ERRPROC : BatchPostStatus.ERRPROCDATE, 1));
                                 return null;
                             }
                         })
@@ -391,23 +393,23 @@ public class ManualOperationController {
             return msg + "\n" + e.getMessage();
         }
         auditController.error(BatchOperation, msg, posting, e);
-        return msg;
+        return errMessage;
     }
 
     private String logOperationError(Throwable e, String msg, GLOperation operation, OperState state) {
         log.error(msg, e);
-        final String errorMessage = format("%s '%s': %s. Обнаружена: %s\n'", msg, operation.getId(), getErrorMessage(e), initSource());
-        log.error(errorMessage, e);
+        final String errMessage = format("%s '%s': %s. Обнаружена: %s\n'", msg, operation.getId(), getErrorMessage(e), initSource());
+        log.error(errMessage, e);
         try {
             operationRepository.executeInNewTransaction(persistence -> {
-                operationRepository.updateOperationStatusError(operation, state, substr(errorMessage, 4000));
+                operationRepository.updateOperationStatusError(operation, state, substr(errMessage, 4000));
                 return null;
             });
         } catch (Exception e1) {
-            return errorMessage + "\n" + e.getMessage();
+            return errMessage + "\n" + e.getMessage();
         }
         auditController.error(ManualOperation, msg, operation, e);
-        return msg;
+        return errMessage;
 
     }
 
