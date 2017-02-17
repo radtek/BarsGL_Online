@@ -40,7 +40,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 public class ManualAccountTest extends AbstractRemoteTest {
 
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
-    private final Long USER_ID = 2L;
+    private static final Long USER_ID = 2L;
 
     @Before
     public void beforeClass() {
@@ -137,7 +137,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
      */
     @Test
     public void testCreateManualAccountError() throws SQLException {
-        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 351010101);
+        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 351010101, USER_ID);
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
         Assert.assertTrue(res.isError());
         wrapper = res.getResult();
@@ -154,7 +154,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
     public void testCreateManualAccountNoDealId() throws SQLException {
         final String subdealId = "SUB_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 2);
 
-        ManualAccountWrapper wrapper = newAccountWrapper("001", "RUR", "00601715", 351010101, DealSource.ARMPRO.getLabel(), null);
+        ManualAccountWrapper wrapper = newAccountWrapper("001", "RUR", "00601715", 351010101, DealSource.ARMPRO.getLabel(), null, USER_ID);
         wrapper.setSubDealId(subdealId);
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
         Assert.assertTrue(res.isError());
@@ -351,7 +351,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
 
     public static ManualAccountWrapper createManualAccount(String branch, String currency, String customerNumber,
                                                            long accountType, Date dateOpen, String subdealId, String term) {
-        ManualAccountWrapper wrapper = newAccountWrapper(branch, currency, customerNumber, accountType);
+        ManualAccountWrapper wrapper = newAccountWrapper(branch, currency, customerNumber, accountType, USER_ID);
         wrapper.setSubDealId(subdealId);
         wrapper.setTerm(isEmpty(term) ? null : Short.parseShort(term));
         if (null != dateOpen) {
@@ -390,7 +390,7 @@ public class ManualAccountTest extends AbstractRemoteTest {
 
     public static RpcRes_Base<ManualAccountWrapper>  createManualAccountOnly(String branch, String currency, String customerNumber,
                                                                              long accountType, Date dateOpen, String src, String dealId, String subdealId, String term, Short sq) {
-        ManualAccountWrapper wrapper = newAccountWrapper(branch, currency, customerNumber, accountType, src, dealId);
+        ManualAccountWrapper wrapper = newAccountWrapper(branch, currency, customerNumber, accountType, src, dealId, USER_ID);
         wrapper.setSubDealId(subdealId);
         wrapper.setTerm(isEmpty(term) ? null : Short.parseShort(term));
         wrapper.setAccountSequence(sq);
@@ -410,15 +410,15 @@ public class ManualAccountTest extends AbstractRemoteTest {
     }
 
     public static ManualAccountWrapper newAccountWrapper(String branch, String currency, String customerNumber,
-                                                         long accountType) {
+                                                         long accountType, Long userId) {
         Long stamp = System.currentTimeMillis();
         String dealId = rsubstr(stamp.toString(), 6);
 
-        return newAccountWrapper(branch, currency, customerNumber, accountType, "K+TP", dealId);
+        return newAccountWrapper(branch, currency, customerNumber, accountType, "K+TP", dealId, userId);
     }
 
     public static ManualAccountWrapper newAccountWrapper(String branch, String currency, String customerNumber,
-                                                         long accountType, String src, String dealId) {
+                                                         long accountType, String src, String dealId, Long userId) {
         ManualAccountWrapper wrapper = new ManualAccountWrapper();
         wrapper.setBranch(branch);
         wrapper.setCurrency(currency);
@@ -427,6 +427,8 @@ public class ManualAccountTest extends AbstractRemoteTest {
         wrapper.setDealId(dealId);
         wrapper.setDealSource(src); // TODO что это за символ, гнать его из кода!
         wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(getOperday().getCurrentDate()));
+
+        wrapper.setUserId(userId);
 
         return wrapper;
     }

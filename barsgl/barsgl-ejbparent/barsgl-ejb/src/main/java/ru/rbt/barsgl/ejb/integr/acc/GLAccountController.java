@@ -12,7 +12,6 @@ import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.dict.AccType.AccTypeRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -622,7 +621,9 @@ public class GLAccountController {
             }
         }
         // подмена сиквенса Майдас для сделок FCC
-        if (!isGlSeqXX)
+        if (isGlSeqXX)
+            keys.setAccSequence(sq);
+        else
             keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
 
         int cnum = (int) glAccountProcessor.stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
