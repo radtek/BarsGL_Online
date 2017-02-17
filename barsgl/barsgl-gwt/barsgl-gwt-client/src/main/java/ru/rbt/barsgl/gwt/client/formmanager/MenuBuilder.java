@@ -20,7 +20,6 @@ import ru.rbt.barsgl.gwt.client.bal.OndemandBalanceUnloadForm;
 import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
-import ru.rbt.barsgl.gwt.client.load.LoadForm;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
 import ru.rbt.barsgl.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
@@ -119,16 +118,6 @@ public class MenuBuilder {
                     aboutForm.show(BarsGLEntryPoint.getDatabaseVersion());
                 }
             });
-            //TODO This Item was hidden. Remove it
-            case Upload: item = new MenuItem(LoadForm.FORM_NAME, false, new Command() {
-                @Override
-                public void execute() {
-                    formLoad(new LoadForm());
-                }
-            });
-                item.setVisible(false);
-                return item;
-
             case Task: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
