@@ -118,7 +118,7 @@ public class StamtUnloadBalanceStep2Task implements ParamsAwareRunnable {
                 Assert.isTrue(isStepOk, () -> new ValidationError(ErrorCode.STAMT_DELTA_ERR
                         , format("Выгрузка остатков по счетам (%s) для STAMT (шаг 2) в ОД '%s' невозможна. Не завершен шаг '%s'"
                             , params.getParamName(), dateUtils.onlyDateString(executeDate), stepName)));
-                unloadController.checkConsumed(executeDate);
+                unloadController.checkConsumed();
                 return true;
             } else {
                 return true;
