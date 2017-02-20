@@ -127,60 +127,60 @@ public class GLAccountService {
 //todo вход в GlSequence = XX
         if (!isEmpty(keys.getGlSequence())                                  // совместно используемые с Майдас счета
                 && keys.getGlSequence().toUpperCase().startsWith("XX")) {
-            glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
-            return findBsaAcid(keys.getAccountMidas(), keys);
+//            glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+//            return findBsaAcid(keys.getAccountMidas(), keys);
 
 //          проверки по fsd открытие счетов по ключам GL_SEQ=XX
-//            if (!isEmpty(keys.getDealId())){
-//                throw new ValidationError(GL_SEQ_XX_KEY_WITH_DEAL, defaultString(keys.getAccountType())
-//                                                                 , defaultString(keys.getCustomerNumber())
-//                                                                 , defaultString(keys.getAccountCode())
-//                                                                 , defaultString(keys.getAccSequence())
-//                                                                 , defaultString(keys.getDealId())
-//                                                                 , defaultString(keys.getPlCode()) );
-//            }else if  (!isEmpty(keys.getSubDealId())){
-//                throw new ValidationError(GL_SEQ_XX_KEY_WITH_SUBDEAL, defaultString(keys.getAccountType())
-//                                                                    , defaultString(keys.getCustomerNumber())
-//                                                                    , defaultString(keys.getAccountCode())
-//                                                                    , defaultString(keys.getAccSequence())
-//                                                                    , defaultString(keys.getDealId())
-//                                                                    , defaultString(keys.getPlCode())
-//                                                                    , defaultString(keys.getSubDealId()) );
-//            }else if  (!isEmpty(keys.getPlCode())){
-//                throw new ValidationError(GL_SEQ_XX_KEY_WITH_PLCODE, defaultString(keys.getAccountType())
-//                                                                   , defaultString(keys.getCustomerNumber())
-//                                                                   , defaultString(keys.getAccountCode())
-//                                                                   , defaultString(keys.getAccSequence())
-//                                                                   , defaultString(keys.getDealId())
-//                                                                   , defaultString(keys.getPlCode())
-//                                                                   , defaultString(keys.getGlSequence()));
-//            }
-//            // ищем счет Майдас
-//            glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
-//            String bsaacid = findBsaAcid_for_XX(keys.getAccountMidas(), keys);
-//            if (bsaacid != null) return bsaacid;
-//            else{//создание в accrln,accrlnext(триггер),bsaacc,gl_acc
-//                if (keys.getAccSequence().equals("00"))
-//                    throw new ValidationError(GL_SEQ_XX_KEY_WITH_SQ_0, defaultString(keys.getAccountType())
-//                            , defaultString(keys.getCustomerNumber())
-//                            , defaultString(keys.getAccountCode())
-//                            , defaultString(keys.getAccSequence())
-//                            , defaultString(keys.getDealId())
-//                            , defaultString(keys.getPlCode())
-//                            , defaultString(keys.getGlSequence()) );
-//                DataRecord res = glAccountRepository.getAccountTypeParams(keys.getAccountType());
-//                if (res.getString("FL_CTRL").equals("Y"))
-//                    throw new ValidationError(GL_SEQ_XX_KEY_WITH_FL_CTRL, defaultString(keys.getAccountType())
-//                            , defaultString(keys.getCustomerNumber())
-//                            , defaultString(keys.getAccountCode())
-//                            , defaultString(keys.getAccSequence())
-//                            , defaultString(keys.getDealId())
-//                            , defaultString(keys.getPlCode())
-//                            , defaultString(keys.getGlSequence()));
-//
-//                checkNotStorno(operation, operSide);
-//                return glAccountController.createGLAccountAE(operation, operSide, dateOpen, keys, null).getBsaAcid();
-//            }
+            if (!isEmpty(keys.getDealId())){
+                throw new ValidationError(GL_SEQ_XX_KEY_WITH_DEAL, defaultString(keys.getAccountType())
+                                                                 , defaultString(keys.getCustomerNumber())
+                                                                 , defaultString(keys.getAccountCode())
+                                                                 , defaultString(keys.getAccSequence())
+                                                                 , defaultString(keys.getDealId())
+                                                                 , defaultString(keys.getPlCode()) );
+            }else if  (!isEmpty(keys.getSubDealId())){
+                throw new ValidationError(GL_SEQ_XX_KEY_WITH_SUBDEAL, defaultString(keys.getAccountType())
+                                                                    , defaultString(keys.getCustomerNumber())
+                                                                    , defaultString(keys.getAccountCode())
+                                                                    , defaultString(keys.getAccSequence())
+                                                                    , defaultString(keys.getDealId())
+                                                                    , defaultString(keys.getPlCode())
+                                                                    , defaultString(keys.getSubDealId()) );
+            }else if  (!isEmpty(keys.getPlCode())){
+                throw new ValidationError(GL_SEQ_XX_KEY_WITH_PLCODE, defaultString(keys.getAccountType())
+                                                                   , defaultString(keys.getCustomerNumber())
+                                                                   , defaultString(keys.getAccountCode())
+                                                                   , defaultString(keys.getAccSequence())
+                                                                   , defaultString(keys.getDealId())
+                                                                   , defaultString(keys.getPlCode())
+                                                                   , defaultString(keys.getGlSequence()));
+            }
+            // ищем счет Майдас
+            glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            String bsaacid = findBsaAcid_for_XX(keys.getAccountMidas(), keys);
+            if (bsaacid != null) return bsaacid;
+            else{//создание в accrln,accrlnext(триггер),bsaacc,gl_acc
+                if (keys.getAccSequence().equals("00"))
+                    throw new ValidationError(GL_SEQ_XX_KEY_WITH_SQ_0, defaultString(keys.getAccountType())
+                            , defaultString(keys.getCustomerNumber())
+                            , defaultString(keys.getAccountCode())
+                            , defaultString(keys.getAccSequence())
+                            , defaultString(keys.getDealId())
+                            , defaultString(keys.getPlCode())
+                            , defaultString(keys.getGlSequence()) );
+                DataRecord res = glAccountRepository.getAccountTypeParams(keys.getAccountType());
+                if (res.getString("FL_CTRL").equals("Y"))
+                    throw new ValidationError(GL_SEQ_XX_KEY_WITH_FL_CTRL, defaultString(keys.getAccountType())
+                            , defaultString(keys.getCustomerNumber())
+                            , defaultString(keys.getAccountCode())
+                            , defaultString(keys.getAccSequence())
+                            , defaultString(keys.getDealId())
+                            , defaultString(keys.getPlCode())
+                            , defaultString(keys.getGlSequence()));
+
+                checkNotStorno(operation, operSide);
+                return glAccountController.createGLAccountAE(operation, operSide, dateOpen, keys, null).getBsaAcid();
+            }
         } else if (!isEmpty(keys.getGlSequence())                           // счета ОФР
                 && keys.getGlSequence().toUpperCase().startsWith("PL")) {
             return getAccountByPlcode(operation, operSide, keys, dateOpen);
@@ -342,26 +342,26 @@ public class GLAccountService {
         return null;
     }
 
-        private String findBsaAcid(String acid, AccountKeys keys) throws SQLException {
-        final Date operday = operdayController.getOperday().getCurrentDate();
-        final List<DataRecord> rlns = accRlnRepository.findByAcid(requiredNotEmpty(acid, "")
-                , requiredNotEmpty(keys.getAccount2(), ""), operday, !isEmpty(keys.getPlCode()));
-        if (1 == rlns.size()) {
-            return rlns.get(0).getString("BSAACID");
-        } else if (1 < rlns.size() && !isEmpty(keys.getCustomerType())) {
-            final List<DataRecord> filtered = rlns.stream().filter(
-                    r -> r.getString("CTYPE").equals(keys.getCustomerType())).collect(toList());
-            if (1 < filtered.size()) {
-                throw new ValidationError(TOO_MANY_ACCRLN_ENTRIES
-                        , filtered.stream().map(r -> r.getString("BSAACID"))
-                        .limit(10).collect(joining(",")), acid, keys.getCustomerType());
-            } else {
-                return filtered.isEmpty() ? null : filtered.get(0).getString("BSAACID");
-            }
-        } else {
-            return null;
-        }
-    }
+//        private String findBsaAcid(String acid, AccountKeys keys) throws SQLException {
+//        final Date operday = operdayController.getOperday().getCurrentDate();
+//        final List<DataRecord> rlns = accRlnRepository.findByAcid(requiredNotEmpty(acid, "")
+//                , requiredNotEmpty(keys.getAccount2(), ""), operday, !isEmpty(keys.getPlCode()));
+//        if (1 == rlns.size()) {
+//            return rlns.get(0).getString("BSAACID");
+//        } else if (1 < rlns.size() && !isEmpty(keys.getCustomerType())) {
+//            final List<DataRecord> filtered = rlns.stream().filter(
+//                    r -> r.getString("CTYPE").equals(keys.getCustomerType())).collect(toList());
+//            if (1 < filtered.size()) {
+//                throw new ValidationError(TOO_MANY_ACCRLN_ENTRIES
+//                        , filtered.stream().map(r -> r.getString("BSAACID"))
+//                        .limit(10).collect(joining(",")), acid, keys.getCustomerType());
+//            } else {
+//                return filtered.isEmpty() ? null : filtered.get(0).getString("BSAACID");
+//            }
+//        } else {
+//            return null;
+//        }
+//    }
 
     private void checkAccountPermission(ManualAccountWrapper wrapper, FormAction action) {
         String acc2 = wrapper.getBalanceAccount2();
