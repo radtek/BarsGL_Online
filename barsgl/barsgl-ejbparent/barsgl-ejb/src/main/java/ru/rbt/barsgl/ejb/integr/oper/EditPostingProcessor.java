@@ -6,7 +6,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
-import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
+import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
@@ -51,7 +51,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
     private GLOperationRepository operationRepository;
 
     @Inject
-    private GLAccountRepository accountRepository;
+    private BatchPostingRepository batchPostingRepository;
 
     @Inject
     BatchPostingProcessor postingProcessor;
@@ -168,6 +168,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
             if (InputMethod.AE != wrapper.getInputMethod()) {       // M || F
                 pd.setDealId(wrapper.getDealId());
                 pd.setSubdealId(wrapper.getSubdealId());
+                pd.setPaymentRef(wrapper.getDealId());
                 pd.setPref(pdRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
                         GLOperation.srcPaymentHub.equals(wrapper.getDealSrc())));
                 pd.setPnar(pdRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));
@@ -309,7 +310,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
     private void checkControllable(List<? extends AbstractPd> pdList, String message) {
         List<String> accounts = new ArrayList<String>();
         for (AbstractPd pd : pdList) {
-            if (accountRepository.isControlableAccount(pd.getBsaAcid())) {
+            if (batchPostingRepository.isControlableAccount(pd.getBsaAcid())) {
                 accounts.add(pd.getBsaAcid());
             }
         }

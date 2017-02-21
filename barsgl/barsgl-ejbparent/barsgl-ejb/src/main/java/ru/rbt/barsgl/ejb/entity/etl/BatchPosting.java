@@ -175,7 +175,17 @@ public class BatchPosting extends BaseEntity<Long> {
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "OTS_SRV")
-    private Date movementTimestamp;
+    private Date receiveTimestamp;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "SEND_SRV")
+    private Date sendTimestamp;
+
+    @Transient
+    private boolean controllableDebit;
+
+    @Transient
+    private boolean controllableCredit;
 
     @Override
     public Long getId() {
@@ -523,12 +533,20 @@ public class BatchPosting extends BaseEntity<Long> {
         this.movementId = movementId;
     }
 
-    public Date getMovementTimestamp() {
-        return movementTimestamp;
+    public Date getReceiveTimestamp() {
+        return receiveTimestamp;
     }
 
-    public void setMovementTimestamp(Date movementTimestamp) {
-        this.movementTimestamp = movementTimestamp;
+    public void setReceiveTimestamp(Date receiveTimestamp) {
+        this.receiveTimestamp = receiveTimestamp;
+    }
+
+    public Date getSendTimestamp() {
+        return sendTimestamp;
+    }
+
+    public void setSendTimestamp(Date sendTimestamp) {
+        this.sendTimestamp = sendTimestamp;
     }
 
     public Long getPackageId() {
@@ -538,4 +556,26 @@ public class BatchPosting extends BaseEntity<Long> {
     public void setPackageId(Long packageId) {
         this.packageId = packageId;
     }
+
+    public boolean isControllableDebit() {
+        return controllableDebit;
+    }
+
+    public boolean isControllableCredit() {
+        return controllableCredit;
+    }
+
+    public void setControllableDebit(boolean controllableDebit) {
+        this.controllableDebit = controllableDebit;
+    }
+
+    public void setControllableCredit(boolean controllableCredit) {
+        this.controllableCredit = controllableCredit;
+    }
+
+    public boolean isControllable() {
+        return controllableDebit || controllableCredit;
+    }
+
+
 }

@@ -40,6 +40,7 @@ public class AccTypeSubProduct extends EditableDictionary<AccTypeSubProductWrapp
         initSection = section;
         initProduct = product;
         title.setText(Utils.Fmt(FORM_NAME, section,  product));
+        exportToExcel.setFormTitle(title.getText());
         reconfigure();
     }
 

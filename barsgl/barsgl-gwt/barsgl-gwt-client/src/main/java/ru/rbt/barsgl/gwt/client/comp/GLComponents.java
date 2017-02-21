@@ -3,10 +3,7 @@ package ru.rbt.barsgl.gwt.client.comp;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.ColumnsBuilder;
@@ -547,5 +544,37 @@ public class GLComponents {
             //System.out.println("Get cached: " + name);
         }
         return cachedBox;
+    }
+
+    public static BtnTxtBox createBtnTextBoxForSumma(int length, String width, Image img, String hint, final ICallMethod cm)
+    {
+        BtnTxtBox box = new BtnTxtBox(){
+            @Override
+            public void onBntClick(){
+                if (cm != null) cm.method();
+            }
+        };
+        box.setMaxLength(length);
+        box.setVisibleLength(length);
+        box.setWidth(width);
+        box.setButtonImage(img);
+        box.setHint(hint);
+
+
+        box.addKeyPressHandler(new KeyPressHandler() {
+
+            public void onKeyPress(KeyPressEvent event) {
+                char charCode = event.getCharCode();
+                String val = ((TextBox) event.getSource()).getText();
+                int indPoint = val.indexOf(decimalPoint);
+                boolean digitOk = Character.isDigit(charCode) && (indPoint < 0 || val.length() - indPoint <= 2);
+                boolean pointOk = (decimalPoint == charCode) && (indPoint < 0);
+                if (!digitOk && !pointOk || val.length() >= ((TextBox) event.getSource()).getMaxLength()) {
+                    ((TextBox) event.getSource()).cancelKey();
+                }
+            }
+        });
+
+        return box;
     }
 }

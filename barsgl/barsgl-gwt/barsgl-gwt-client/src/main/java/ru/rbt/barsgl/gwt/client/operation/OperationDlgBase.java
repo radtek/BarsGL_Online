@@ -8,15 +8,16 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
-import ru.rbt.barsgl.gwt.client.comp.*;
+import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
+import ru.rbt.barsgl.gwt.client.comp.DataListBox;
+import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
+import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccCustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
-import ru.rbt.barsgl.gwt.core.ui.AreaBox;
-import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
-import ru.rbt.barsgl.gwt.core.ui.IBoxValue;
-import ru.rbt.barsgl.gwt.core.ui.TxtBox;
+import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.ui.*;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
@@ -32,10 +33,9 @@ import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
  * Created by ER18837 on 16.03.16.
  */
 public abstract class OperationDlgBase extends EditableDialog<ManualOperationWrapper> {
-    public static enum Side {DEBIT, CREDIT};
+    public enum Side {DEBIT, CREDIT};
 
     protected final String LABEL_WIDTH = "130px";
-    protected final String FIELD_WIDTH = "140px";
     protected final String LABEL2_WIDTH = "85px";
     protected final String FIELD2_WIDTH = "80px";
 
@@ -50,7 +50,6 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     protected HashMap<String, IBoxValue> mapParam;
 
     private static final DateBox.DefaultFormat DATE_FORMAT = new DateBox.DefaultFormat(DateTimeFormat.getFormat("dd.MM.yyyy"));
-    //(DateBox.DefaultFormat) GWT.create(DateBox.DefaultFormat.class);
 
     protected DataListBoxEx mDtCurrency;
     protected DataListBoxEx mDtFilial;
@@ -96,7 +95,8 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         DataListBoxEx mCurrency;
         DataListBoxEx mFilial;
         TxtBox mAccount;
-        TxtBox mSum = null;
+        //TxtBox mSum = null;
+        BtnTxtBox mSum = null;
         Button mButton;
 
         boolean isDebit = side.equals(Side.DEBIT);
@@ -105,10 +105,8 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         grid.setWidget(0, 0, createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
 
         grid.setWidget(1, 0, createLabel("Валюта"));
-        //grid.setWidget(1, 1, mCurrency = createCurrencyListBox("RUR", FIELD2_WIDTH));
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        //grid.setWidget(2, 1, mFilial = createFilialListBox("", FIELD2_WIDTH));
         grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
 
         grid.setWidget(3, 0, createLabel("Счет"));
@@ -123,7 +121,13 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
 
         if (withSum) {
             grid.setWidget(4, 0, createLabel("Сумма"));
-            grid.setWidget(4, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
+           // grid.setWidget(4, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
+            grid.setWidget(4, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
+                @Override
+                public void method() {
+                    btnClick(side);
+                }
+            }));
         }
 
         if (isDebit) {
@@ -142,9 +146,7 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         return grid;
     }
 
-   /* protected DataListBoxEx createFilialListBox(String filial, String width) {
-        return GLComponents.createFilialListBox(filial, width, false, true);
-    }*/
+    protected void btnClick(Side side){}
 
     protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
         return createCachedFilialListBox(name, filial, width, false, true);
@@ -215,10 +217,8 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     protected Grid createDepartments(boolean withCheck) {
         Grid grid = new Grid(2,4);
         grid.setWidget(0, 0, createLabel("Подразделение", LABEL_DEP_WIDTH));
-        //grid.setWidget(0, 1, mDepartment = createDepartmentListBox("", "250px", true));   // TODO для операции MSO
         grid.setWidget(0, 1, mDepartment = createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
         grid.setWidget(1, 0, createLabel("Профит центр"));
-        //grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createProfitCenterListBox("", "250px"), "260px"));
         grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createCachedProfitCenterListBox(CachedListEnum.ProfitCenter.name(), null, "250px"), "260px"));
         if (withCheck) 
         	grid.setWidget(1, 2, mCheckFields = new CheckBox("Основание проверено"));

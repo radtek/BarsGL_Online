@@ -2,120 +2,124 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
+import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
+import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
  * Created by ER18837 on 29.02.16.
  */
 public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPackage, Long> {
+    private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
+    private final SimpleDateFormat dateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
-    public int updatePackageStateProcessed(BatchPackage batchPackage, BatchPackage.PackageState state, Date processDate) {
-        return executeUpdate("update BatchPackage p set p.packageState = ?1, p.processDate = ?3 where p.id = ?2"
-                , state, batchPackage.getId(), processDate);
+    public BatchPackage refresh(BatchPackage pkg) {
+        return (null == pkg) ? null : refresh(pkg, true);
     }
 
-    public int updatePackageStateNew(BatchPackage batchPackage, BatchPackage.PackageState state) {
+    public BatchPackage findById(Long primaryKey) {
+        return refresh(super.findById(BatchPackage.class, primaryKey));
+    }
+
+    public int updatePackageState(Long packageId, BatchPackageState stateNew, BatchPackageState stateOld) {
+        return executeUpdate("update BatchPackage p set p.packageState = ?1 where p.id = ?2 and p.packageState = ?3"
+                , stateNew, packageId, stateOld);
+    }
+
+    public int updatePackageStateNew(Long packageId, BatchPackageState stateNew) {
         return executeUpdate("update BatchPackage p set p.packageState = ?1 where p.id = ?2 and p.packageState <> ?3 "
-                , state, batchPackage.getId(), state);
+                , stateNew, packageId, stateNew);
     }
 
-    public List<BatchPosting> getPostingsByPackage(Long idPackage) {
-        return select(BatchPosting.class, "FROM BatchPosting p WHERE p.packageId = ?1" +
-                " and p.invisible = ?2 ORDER BY p.id",
-                idPackage, InvisibleType.N);
+    public int updatePackageStateProcessed(Long packageId, BatchPackageState stateNew, Date processDate) {
+        return executeUpdate("update BatchPackage p set p.packageState = ?1, p.processDate = ?3 where p.id = ?2"
+                , stateNew, packageId, processDate);
     }
 
-    public List<BatchPosting> getPostingsByPackage(Long idPackage, BatchPostStatus status) {
-        return select(BatchPosting.class, "FROM BatchPosting p WHERE p.packageId = ?1" +
-                " and p.invisible = ?2 and p.status = ?3 ORDER BY p.id",
-                idPackage, InvisibleType.N, status);
+    public List<BatchPosting> getPostingsByPackage(Long packageId) {
+        return select(BatchPosting.class, "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ORDER BY p.id",
+                packageId, InvisibleType.N);
     }
 
-    public BatchPosting getOnePostingByPackage(Long idPackage) {
-        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
-            return selectFirst(BatchPosting.class, sql, idPackage, InvisibleType.N);
+    public List<BatchPosting> getPostingsByPackageWithStatus(Long packageId, BatchPostStatus status) {
+        return select(BatchPosting.class, "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 and p.status = ?3 ORDER BY p.id",
+                packageId, InvisibleType.N, status);
     }
 
-    public BatchPosting getOnePostingByPackage(Long idPackage, BatchPostStatus enabledStatus) {
-        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
-            return selectFirst(BatchPosting.class, sql + " and p.status = ?3",
-                    idPackage, InvisibleType.N, enabledStatus);
+    public void updatePostingsStatus(Long packageId, BatchPostStatus statusNew, String statusIn ) {
+        executeNativeUpdate("update GL_BATPST p set p.STATE = ?" +
+                " where p.ID_PKG = ? and p.INVISIBLE = ? and p.STATE in (" + statusIn + ")",
+                statusNew.name(), packageId, InvisibleType.N.name());
     }
 
-    public BatchPosting getOnePostingSigned(Long idPackage) {
-        String sql = "FROM BatchPosting p WHERE p.packageId = ?1 and p.invisible = ?2 ";
-        return selectFirst(BatchPosting.class, sql + " and p.status in (?3, ?4) ",
-                idPackage, InvisibleType.N, BatchPostStatus.SIGNED, BatchPostStatus.SIGNEDDATE);
+    public void updatePostingsStatusChange(Long packageId, Date timestamp, String userName, BatchPostStatus statusNew, String statusIn ) {
+        executeNativeUpdate("update GL_BATPST p set p.STATE = ?, p.OTS_CHNG = ?, p.USER_CHNG = ?" +
+                " where p.ID_PKG = ? and p.INVISIBLE = ? and p.STATE in (" + statusIn + ")",
+                statusNew.name(), timestamp, userName, packageId, InvisibleType.N.name());
     }
 
-    public int updatePostingsStatus(BatchPackage batchPackage, BatchPostStatus status) {
-        return executeUpdate("update BatchPosting p set p.status = ?1 where p.packageId = ?2 and p.invisible = ?3",
-                status, batchPackage.getId(), InvisibleType.N);
+    public int signedPostingsStatus(Long packageId, BatchPackageState pkgStateOld , Date timestamp, String userName, BatchPostStatus statusNew, String statusIn) {
+        executeNativeUpdate("update GL_BATPST p set p.STATE = ?, p.OTS_AU2 = ?, p.USER_AU2 = ?" +
+                " where p.ID_PKG = ? and p.INVISIBLE = ? and p.STATE in (" + statusIn + ")",
+                statusNew.name(), timestamp, userName, packageId, InvisibleType.N.name());
+        return updatePackageState(packageId, BatchPackageState.getStateByPostingStatus(statusNew), pkgStateOld);
     }
 
-    public int updatePostingsStatus(BatchPackage batchPackage, BatchPostStatus statusOld, BatchPostStatus statusNew) {
-        return executeUpdate("update BatchPosting p set p.status = ?1 where p.packageId = ?2 and p.invisible = ?3 and p.status = ?4",
-                statusNew, batchPackage.getId(), InvisibleType.N, statusOld);
+    public int confirmPostingsStatus (Long packageId, BatchPackageState pkgStateOld , Date timestamp, String userName, BatchPostStatus statusNew, String statusIn) {
+        executeNativeUpdate("update GL_BATPST p set p.STATE = ?, p.OTS_AU3 = ?, p.USER_AU3 = ?" +
+                " where p.ID_PKG = ? and p.INVISIBLE = ? and p.STATE in (" + statusIn + ")",
+                statusNew.name(), timestamp, userName, packageId, InvisibleType.N.name());
+        return updatePackageState(packageId, BatchPackageState.getStateByPostingStatus(statusNew), pkgStateOld);
     }
 
-    public void updatePostingsStatusChange(BatchPackage batchPackage, Date timestamp, String userName, BatchPostStatus status) {
-        executeUpdate("update BatchPosting p set p.status = ?1, p.changeTimestamp = ?2, p.changeName = ?3" +
-                " where p.packageId = ?4 and p.invisible = ?5",
-                status, timestamp, userName, batchPackage.getId(), InvisibleType.N);
+    public int signedConfirmPostingsStatus(Long packageId, BatchPackageState pkgStateOld , Date timestamp, String userName, BatchPostStatus statusNew, String statusIn) {
+        executeNativeUpdate("update GL_BATPST p set p.STATE = ?, p.OTS_AU2 = ?, p.USER_AU2 = ?, p.OTS_AU3 = ?, p.USER_AU3 = ?" +
+                        " where p.ID_PKG = ? and p.INVISIBLE = ? and p.STATE in (" + statusIn + ")",
+                statusNew.name(), timestamp, userName, timestamp, userName, packageId, InvisibleType.N.name());
+        return updatePackageState(packageId, BatchPackageState.getStateByPostingStatus(statusNew), pkgStateOld);
     }
 
-    public int signedPostingsStatus(BatchPackage batchPackage, Date timestamp, String userName, BatchPostStatus statusOld, BatchPostStatus statusNew) {
-        return executeUpdate("update BatchPosting p set p.signerTamestamp = ?1, p.signerName = ?2, p.status = ?3" +
-                        " where p.packageId = ?4 and p.invisible = ?5 and p.status = ?6",
-                timestamp, userName, statusNew, batchPackage.getId(), InvisibleType.N, statusOld);
+    public int refusePackageStatus (Long packageId, BatchPackageState pkgStateOld , Date timestamp, String userName, String reason, BatchPostStatus status) {
+        executeUpdate("update BatchPosting p set p.reasonOfDeny = ?1, p.status = ?2, p.changeTimestamp = ?3, p.changeName = ?4 " +
+                        " where p.packageId = ?5  and p.invisible = ?6",
+                reason, status, timestamp, userName, packageId, InvisibleType.N);
+        return updatePackageState(packageId, BatchPackageState.getStateByPostingStatus(status), pkgStateOld);
     }
 
-    public int confirmPostingsStatus (BatchPackage batchPackage, Date timestamp, String userName, BatchPostStatus statusOld, BatchPostStatus statusNew) {
-        return executeUpdate("update BatchPosting p set p.confirmTimestamp = ?1, p.confirmName = ?2, p.status = ?3" +
-                " where p.packageId = ?4 and p.invisible = ?5 and p.status = ?6",
-                timestamp, userName, statusNew, batchPackage.getId(), InvisibleType.N, statusOld);
-    }
-
-    public int signedConfirmPostingsStatus(BatchPackage batchPackage, Date timestamp, String userName, BatchPostStatus statusOld, BatchPostStatus statusNew) {
-        return executeUpdate("update BatchPosting p set p.signerTamestamp = ?1, p.signerName = ?2, " +
-                        "p.confirmTimestamp = ?3, p.confirmName = ?4, p.status = ?5" +
-                        " where p.packageId = ?6 and p.invisible = ?7 and p.status = ?8",
-                timestamp, userName, timestamp, userName, statusNew, batchPackage.getId(), InvisibleType.N, statusOld);
-    }
-
-    public void setPackageInvisible (BatchPackage pkg, Date timestamp, String userName) {
+    public void setPackageInvisible (Long packageId, Date timestamp, String userName) {
         executeUpdate("update BatchPosting p set p.invisible = ?1, p.changeTimestamp = ?2, p.changeName = ?3 " +
                 " where p.packageId = ?4 and p.invisible = ?5",
-                InvisibleType.U, timestamp, userName, pkg.getId(), InvisibleType.N);
+                InvisibleType.U, timestamp, userName, packageId, InvisibleType.N);
         executeUpdate("update BatchPackage p set p.packageState = ?1 where p.id = ?2",
-                BatchPackage.PackageState.DELETED, pkg.getId());
+                BatchPackageState.DELETED, packageId);
     }
 
     /**
      * Удаляет пакет запросов на операцию из таблицы
      */
-    public void deletePackage(BatchPackage pkg) {
-        executeUpdate("delete from BatchPosting p where p.packageId = ?1", pkg.getId());
-        executeUpdate("delete from BatchPackage p where p.id = ?1", pkg.getId());
-    }
-
-    public void refusePackageStatus (BatchPackage pkg, Date timestamp, String userName, String reason, BatchPostStatus status) {
-        executeUpdate("update BatchPosting p set p.reasonOfDeny = ?1, p.status = ?2, p.changeTimestamp = ?3, p.changeName = ?4 " +
-                " where p.packageId = ?5  and p.invisible = ?6",
-                reason, status, timestamp, userName, pkg.getId(), InvisibleType.N);
+    public void deletePackage(Long packageId) {
+        executeUpdate("delete from BatchPosting p where p.packageId = ?1", packageId);
+        executeUpdate("delete from BatchPackage p where p.id = ?1", packageId);
     }
 
     public void setPackagePostingDate(Long packageId, Date postDate) {
         executeUpdate("update BatchPosting p set p.postDate = ?1 where p.packageId = ?2  and p.invisible = ?3",
-                        postDate, packageId, InvisibleType.N);
+                postDate, packageId, InvisibleType.N);
+        executeUpdate("update BatchPackage p set p.postDate = ?1 where p.id = ?2",
+                postDate, packageId);
     }
 
     /**
@@ -124,15 +128,13 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
      * @throws SQLException
      */
     public BatchPackage createPackageHistory(BatchPackage pkg) throws SQLException {
-        //	ID_PKG , SRC_PST, DEAL_ID, PMT_REF, DEPT_ID, OTS, NRT, RNRTL, RNRTS, AC_DR, CCY_DR, AMT_DR, AC_CR, CCY_CR, AMT_CR, AMTRU, SUBDEALID, FCHNG, PRFCNTR, USER_NAME, NROW, ECODE, EMSG, VDATE, INP_METHOD, PROCDATE, INVISIBLE, HEADBRANCH, USER_AU2, OTS_AU2, USER_AU3, OTS_AU3, USER_CHNG, OTS_CHNG, STATE, GLOID_REF, ID_PAR, ID_PREV, DESCRDENY, POSTDATE, CBCC_DR, CBCC_CR
+        String fields = BatchPostingRepository.histfields;
         executeNativeUpdate("UPDATE GL_BATPST SET ID_PAR = ID WHERE ID_PKG = ? and INVISIBLE = ?", pkg.getId(), InvisibleType.N.name());
-        executeNativeUpdate(
-                "INSERT INTO GL_BATPST (ID_PKG, SRC_PST, DEAL_ID, PMT_REF, DEPT_ID, OTS, NRT, RNRTL, RNRTS, AC_DR, CCY_DR, AMT_DR, AC_CR, CCY_CR, AMT_CR, AMTRU, SUBDEALID, FCHNG, PRFCNTR, USER_NAME, NROW, ECODE, EMSG, VDATE, INP_METHOD, PROCDATE, INVISIBLE, HEADBRANCH, USER_AU2, OTS_AU2, USER_AU3, OTS_AU3, USER_CHNG, OTS_CHNG, STATE, GLOID_REF, ID_PAR, ID_PREV, DESCRDENY, POSTDATE, CBCC_DR, CBCC_CR)" +
-                " SELECT ID_PKG, SRC_PST, DEAL_ID, PMT_REF, DEPT_ID, OTS, NRT, RNRTL, RNRTS, AC_DR, CCY_DR, AMT_DR, AC_CR, CCY_CR, AMT_CR, AMTRU, SUBDEALID, FCHNG, PRFCNTR, USER_NAME, NROW, ECODE, EMSG, VDATE, INP_METHOD, PROCDATE, '" +
-                InvisibleType.H.name() + "', HEADBRANCH, USER_AU2, OTS_AU2, USER_AU3, OTS_AU3, USER_CHNG, OTS_CHNG, STATE, GLOID_REF, ID_PAR, ID_PREV, DESCRDENY, POSTDATE, CBCC_DR, CBCC_CR" +
-                " FROM GL_BATPST WHERE ID_PKG = ? and INVISIBLE = ?",
+        executeNativeUpdate("" +
+                "INSERT INTO GL_BATPST (INVISIBLE, ID_PAR, " + fields + ")" +
+                " SELECT 'H', ID_PAR, " + fields + " FROM GL_BATPST WHERE ID_PKG = ? and INVISIBLE = ?",
                 pkg.getId(), InvisibleType.N.name());
-        return pkg;
+        return findById(pkg.getId());
     }
 
     public boolean checkFilialPermission(Long packageId, Long userId) throws Exception {
@@ -150,9 +152,15 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
         return (null == data);
     }
 
+    public List<Long> getPostingsControllable(Long packegeId, int maxRows) throws SQLException {
+        List<DataRecord> res = selectMaxRows("select ID from V_GL_BATPST_CTRL where ID_PKG = ? and (CTRL_DR = 'Y' or CTRL_CR = 'Y' )" +
+                " and INVISIBLE = 'N' and STATE = 'SIGNEDVIEW'", maxRows, new Object[]{packegeId});
+        return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
+    }
+
     public List<Long> getPackagesWaitdate(Date operday) throws SQLException {
         List<DataRecord> res = select("select distinct ID_PKG from GL_BATPST where not ID_PKG is null and PROCDATE = ?" +
-                " and INVISIBLE = 'N' and STATE = 'WAITDATE'", operday);
+                " and INVISIBLE = 'N' and STATE = ?", operday, WAITDATE.name());
         return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
     }
 
@@ -162,22 +170,56 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
         return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
     }
 
-    public List<Integer> getPackageStatistics(long idPackage) throws SQLException {
-        List<DataRecord> res = select(
-            "with GL_BATP as (select ID_PKG, SRV_REF, STATE from GL_BATPST where ID_PKG = ? and INVISIBLE = ?) \n" +
-                "select count(1) from GL_BATP \n" +
-                "union all    select count(1) from GL_BATP where STATE = 'COMPLETED' \n" +
-                "union all    select count(1) from GL_BATP where STATE not in ('COMPLETED', 'CONTROL', 'WAITDATE', 'SIGNED', 'SIGNEDDATE') \n" +
-                "union all    select count(1) from GL_BATP where not SRV_REF is null \n" +
-                "union all    select count(1) from GL_BATP where not SRV_REF is null and STATE in ('ERRSRV', 'REFUSESRV')"
-            , idPackage, InvisibleType.N.name());
-        return res.stream().map(r -> r.getInteger(0)).collect(Collectors.toList());
+    public List<Long> getPackagesReceiveSrv(Date operday) throws SQLException {
+        List<DataRecord> res = select("select ID_PKG from GL_BATPKG g where PROCDATE = ? and STATE = ? and not exists" +
+                "(select 1 from GL_BATPST p where g.ID_PKG = p.ID_PKG and INVISIBLE = 'N' and p.STATE = ? )",
+                operday, ON_WAITSRV.name(), WAITSRV.name());
+        return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
+    }
+
+    public DataRecord getPackageStatistics(long packageId) throws SQLException {
+        DataRecord res = selectOne("select * from V_GL_BATPKG_STAT where ID_PKG = ?", packageId);
+        return res;
     }
 
     public int getMovementCount(Long packageId) throws SQLException {
-        DataRecord res = selectFirst("select count(1) from GL_BATPST where ID_PKG = ? and INVISIBLE = ? and not SRV_REF is null and not STATE in ('ERRSRV', 'REFUSESRV')",
-                packageId, InvisibleType.N.name());
+        DataRecord res = selectFirst("select count(1) from GL_BATPST " +
+                "where ID_PKG = ? and INVISIBLE = ? and ((not SRV_REF is null and not STATE in (?, ?)) or STATE = ?)",
+                packageId, InvisibleType.N.name(), REFUSESRV.name(), ERRSRV.name(), TIMEOUTSRV.name());
         return (null == res ? 0 : res.getInteger(0));
     }
+
+    /**
+     * загружаем в "грязном" режиме чтоб не висеть если процесс загрузки еще не завершил свою работу
+     * @return
+     */
+    public List<Long> getPackagesForProcessing(int packageCount, Date curdate) {
+        try {
+            List<DataRecord> res = selectMaxRows("SELECT * FROM GL_BATPKG WHERE STATE in (?, ?) AND PROCDATE = ?  " +
+                            "and ID_PKG not in (select ID_PKG from GL_BATPST where POSTDATE > ?) " +
+                            "ORDER BY ID_PKG WITH UR"
+                    , packageCount, new Object[]{ IS_SIGNED.name(), IS_SIGNEDDATE.name(), curdate, curdate});
+            return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public String getPackagesStatistics(Date curdate) {
+        try {
+            List<DataRecord> listRec = select("select ID_PKG, DT_LOAD, POSTDATE from GL_BATPKG " +
+                        "where STATE in (?, ?) and PROCDATE = ? order by ID_PKG with UR"
+                    , IS_SIGNED.name(), IS_SIGNEDDATE.name(), curdate);
+            StringBuilder builder = new StringBuilder();
+            for (DataRecord rec : listRec) {
+                builder.append(format("ID_PKG: '%s'; DT_LOAD: '%s'; POSTDATE: '%s'# \n",
+                        rec.getString(0), dateTime.format(rec.getDate(1)), onlyDate.format(rec.getDate(2))));
+            }
+            return builder.toString();
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
 
 }

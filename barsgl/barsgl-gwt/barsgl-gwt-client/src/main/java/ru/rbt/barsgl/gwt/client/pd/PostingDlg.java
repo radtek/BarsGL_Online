@@ -31,7 +31,6 @@ import static ru.rbt.barsgl.shared.enums.SecurityActionCode.*;
  * Created by ER18837 on 05.04.16.
  */
 public class PostingDlg extends OperationDlg {
-//	private String paymentRef;
     private PostingChoice postingChoice;
     private Long idParentOperation;
     private String inputMethod;
@@ -47,11 +46,6 @@ public class PostingDlg extends OperationDlg {
             ok.setVisible(false);
         }
     }
-
-   /*@Override
-    protected DataListBoxEx createFilialListBox(String filial, String width) {
-        return GLComponents.createFilialListBox(filial, width, true);
-    }*/
 
    @Override
     protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
@@ -71,11 +65,13 @@ public class PostingDlg extends OperationDlg {
     }
 
     @Override
-    protected void fillContent() {
+    protected void fillUp(){
     	if (null == params)
     		return;
         row = (Row) params;
         
+        getOperDay();
+
         mDealSource.setSelectValue(getFieldText("SRC_PST"));
         String dealId = getFieldText("DEAL_ID");
         String paymentRef = getFieldText("PMT_REF");
@@ -182,7 +178,6 @@ public class PostingDlg extends OperationDlg {
         mDealId.setEnabled(false);
         mSubDealId.setEnabled(false);
         mCheckCorrection.setEnabled(false);
-    	
     }
 
     @Override

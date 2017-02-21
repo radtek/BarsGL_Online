@@ -259,13 +259,14 @@ public class FilterFrame  extends Composite {
         for (int i=0 ; i < grid.getRowCount(); i++){
             String text = ((Label)grid.getWidget(i, 1)).getText();
             Column col = columns.getColumnByCaption(text);
-//            String colName = columns.getColumnByCaption(text).getName();
 
             FilterCriteria criteria = (FilterCriteria) ((IBoxValue<?>)grid.getWidget(i, 2)).getValue();
 
             Serializable value = (Serializable)((IBoxValue<?>)grid.getWidget(i, 3)).getValue();
 
             FilterItem item = new FilterItem(col, criteria, value, isConditionPined(i));
+            item.setCaption(col.getCaption());
+            item.setStrValue(((IBoxValue<?>)grid.getWidget(i, 3)).getText());
             item.setReadOnly(isConditionReadOnly(i));
             list.add(item);
         }

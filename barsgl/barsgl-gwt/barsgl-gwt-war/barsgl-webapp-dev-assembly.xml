@@ -43,7 +43,7 @@
             <directory>../../barsgl-ejbparent/barsgl-ejbtest/src/test/resources</directory>
             <outputDirectory>excel</outputDirectory>
             <includes>
-                <include>**/example.xlsx</include>
+                <include>**/*.xlsx</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -54,7 +54,7 @@
             </includes>
         </fileSet>
     </fileSets>
-
+    
     <dependencySets>
         <dependencySet>
             <outputDirectory>WEB-INF/lib</outputDirectory>

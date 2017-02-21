@@ -111,6 +111,17 @@ public class ManualOperationProcessor extends ValidationAwareHandler<BatchPostin
             }
         });
 
+        context.addValidator(() -> {
+            ValidationError error = glAccountRepository.checkAccount9999(target.getAccountDebit(), target.getAccountCredit(), GLOperation.OperSide.D);
+            if (null != error)
+                throw error;
+
+            error = glAccountRepository.checkAccount9999(target.getAccountCredit(), target.getAccountDebit(), GLOperation.OperSide.D);
+            if (null != error)
+                throw error;
+        });
+
+
         // ============ Валюта ==============
         // Валюта дебета
         context.addValidator(() -> {

@@ -9,7 +9,6 @@ import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
@@ -635,14 +634,31 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public BigDecimal getAccountBalance(String bsaAcid, String acid, Date datto) {
         try {
-//            DataRecord data = selectFirst("select OBAC + DTAC + CTAC from BALTUR where BSAACID = ? and ACID = ? and DATTO = ?",
-//                    bsaAcid, acid, datto);
-
             DataRecord data = selectFirst("SELECT sum(OBAC) + sum(DTAC) + sum(CTAC) from" +
                     " (SELECT BSAACID, ACID, OBAC, DTAC, CTAC from BALTUR where DATTO = ? and ACID = ? and BSAACID = ? union all" +
                     " SELECT BSAACID, ACID, 0 as OBAC, DTAC, CTAC from GL_BALTUR WHERE MOVED = 'N' and DAT <= ? and ACID = ? and BSAACID = ?" +
                     ") T group by BSAACID, ACID", datto, acid, bsaAcid, datto, acid, bsaAcid);
             return (null == data) ? BigDecimal.ZERO : data.getBigDecimal(0);
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {
+        try {
+            DataRecord data = selectFirst("SELECT * from BALTUR where DAT < ? and ACID = ? and BSAACID = ? "
+                    , dat, acid, bsaAcid);
+            return (null != data);
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public Boolean hasAccountBalanceAfter(String bsaAcid, String acid, Date dat) {
+        try {
+            DataRecord data = selectFirst("SELECT * from BALTUR where DAT > ? and ACID = ? and BSAACID = ? "
+                    , dat, acid, bsaAcid);
+            return (null != data);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -753,32 +769,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
                 }
             });
         } catch (Exception e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * true - клиентсий счет, контролируемый АБС
-     * @param bsaacid
-     * @return
-     */
-    public boolean isControlableAccount(String bsaacid) {
-        // TODO условие будет меняться
-/*
-        if (isEmpty(bsaacid) || bsaacid.length() < 5)
-            return false;
-        try {
-            String acc2 = bsaacid.substring(0, 5);
-            DataRecord res = selectFirst("select CLIENTTYPE from GL_ACCSRV where ACC2 = ? and CLIENTTYPE = 'U'", acc2);
-            return (null != res);
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-*/
-        try {
-            DataRecord res = selectFirst("select IS_CTRL from V_ACC_CTRL where BSAACID = ? and IS_CTRL = ?", bsaacid, YesNo.Y.name());
-            return (null != res);
-        } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }

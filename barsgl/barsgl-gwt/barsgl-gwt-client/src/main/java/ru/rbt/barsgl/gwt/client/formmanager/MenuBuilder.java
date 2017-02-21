@@ -131,7 +131,7 @@ public class MenuBuilder {
                                 protected String prepareSql() {
                                   return "SELECT * FROM " + schedTableName;
                                 }
-
+                                
                               });
                           }
 
@@ -139,9 +139,9 @@ public class MenuBuilder {
                           public void onFailure(Throwable caught) {
                             throw new RuntimeException(caught);
                           }
-                      });
+                      });      
                 }
-            });
+            });            
 
             case LoaderControl: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
@@ -246,6 +246,12 @@ public class MenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new BatchPostingForm());
+                }
+            });
+            case FileIncomePkg: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new BatchPackageForm());
                 }
             });
             case PostingSource: return new MenuItem(wrapper.getMenuName(), false, new Command() {

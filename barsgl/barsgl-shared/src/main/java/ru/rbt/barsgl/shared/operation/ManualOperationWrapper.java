@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.shared.operation;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
-import ru.rbt.barsgl.shared.DatePartsContainer;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
@@ -11,7 +10,6 @@ import ru.rbt.barsgl.shared.enums.PostingChoice;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * Created by ER18837 on 13.08.15.
@@ -26,6 +24,7 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     private boolean isExtended;         // только для шаблона
     private boolean isSystem;           // только для шаблона
 
+    private boolean withCheck;          // с проверкой баланса
     private String dealSrc;             // 7    //    @Column(name = "PST_SRC")
     private String dealId;              // 20   //    @Column(name = "DEAL_ID")
     private String paymentRefernce;     // 20   //    @Column(name = "PMT_REF")
@@ -79,7 +78,6 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     private Long userId;
     // ID пакета
     private Long pkgId;
-
 
     // список ошибок
     private ErrorList errorList = new ErrorList();
@@ -403,5 +401,13 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
 
     public void setPkgId(Long pkgId) {
         this.pkgId = pkgId;
+    }
+
+    public boolean isWithCheck() {
+        return withCheck;
+    }
+
+    public void setWithCheck(boolean withCheck) {
+        this.withCheck = withCheck;
     }
 }

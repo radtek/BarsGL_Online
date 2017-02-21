@@ -15,7 +15,7 @@ import java.util.List;
 public class LoaderControlServiceImpl extends AbstractGwtService implements LoaderControlService {
 
     @Override
-    public RpcRes_Base<LoadStepWrapper> saveLoadStepAction(LoadStepWrapper wrapper, FormAction action) throws Exception {
+    public RpcRes_Base<LoadStepWrapper> saveLoadStepAction(final LoadStepWrapper wrapper, final FormAction action) throws Exception {
         return new RpcResProcessor<LoadStepWrapper>() {
             @Override
             public RpcRes_Base<LoadStepWrapper> buildResponse() throws Throwable {

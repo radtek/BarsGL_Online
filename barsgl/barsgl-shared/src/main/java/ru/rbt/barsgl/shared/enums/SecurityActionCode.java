@@ -63,8 +63,11 @@ public enum SecurityActionCode {
     , LoaderStepActionCancel("Отмена действий, назначенных на шаги загрузки")
     , TaskMonitor("Мониторинг")
     , OperManualLook("Просмотр списка запросов ручного ввода")
+<<<<<<< HEAD
     , Acc707Inp("Ввод счета ОФР прошлых лет")
     , Acc707Chng("Изменение счета ОФР прошлых лет")
+=======
+>>>>>>> remotes/origin/branch-async-1
     ;
 
     private final String desc;

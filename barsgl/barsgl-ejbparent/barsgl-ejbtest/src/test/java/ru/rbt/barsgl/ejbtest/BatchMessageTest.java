@@ -7,20 +7,19 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessor;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
-//import ru.rbt.barsgl.gwt.server.upload.ExcelParser;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.BatchPostAction;
-import ru.rbt.barsgl.shared.enums.BatchPostStatus;
-import ru.rbt.barsgl.shared.enums.BatchPostStep;
-import ru.rbt.barsgl.shared.enums.InvisibleType;
+import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
-import java.io.InputStream;
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+//import ru.rbt.barsgl.gwt.server.upload.ExcelParser;
 
 /**
  * Created by ER18837 on 29.02.16.
@@ -28,7 +27,9 @@ import java.util.regex.Pattern;
  */
 public class BatchMessageTest extends AbstractTimerJobTest {
 
+    public static final String exampleBatchName = "example_batch.xlsx";
 //    private static final String ETL_SINGLE_ACTION_MONITOR = "ETL_SINGLE_ACTION_MONITOR";
+    private final Long USER_ID = 2L;
 
     @BeforeClass
     public static void beforeClass() {
@@ -41,26 +42,9 @@ public class BatchMessageTest extends AbstractTimerJobTest {
      */
     @Test
     public void testLoadPackage() throws Exception {
-        // TODO поиск юзера с нужными правами
-        Long userId = 2L;
-        try (InputStream is = BatchMessageTest.class.getClassLoader().getResourceAsStream("example_batch.xlsx")){
-//            ExcelParser parser = new ExcelParser(is);
-//            List<List<Object>> rows = parser.parse(1, "K+TP", "AAC");
-
-//            rows = Lists.newArrayList(Iterables.transform(rows, (List<Object> objects) -> {
-//                objects.set(0, System.currentTimeMillis() + "");
-//                objects.set(7, getOperday().getCurrentDate());
-//                return objects;
-//            }));
-
-//            Assert.assertTrue(Iterables.all(rows, row ->
-//                    null != row.get(17) && null != row.get(18) && null != row.get(19) && null != row.get(20)));
-
-//            String msg = remoteAccess.invoke(BatchMessageProcessor.class, "processMessage", rows, "test.xlsx", userId, false);
-//            System.out.println(msg);
-//            PackageParam param = getPackageParam(msg);
-//            Assert.assertNotNull(param.getId());
-//            Assert.assertEquals(0, param.getErrorCount());
+        try {
+            PackageParam param = loadPackage(USER_ID);
+            System.out.println(param);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             Assert.assertFalse(true);
@@ -73,15 +57,14 @@ public class BatchMessageTest extends AbstractTimerJobTest {
      */
     @Test
     public void testForSignPackage() throws Exception {
-        Long userId = 2L;
 		// создать пакет
-		PackageParam param = loadPackage(userId);
+		PackageParam param = loadPackage(USER_ID);
 
 		// передать на подпись
         ManualOperationWrapper wrapper = new ManualOperationWrapper();
         wrapper.setPkgId(param.getId());
 		wrapper.setAction(BatchPostAction.SIGN);
-        wrapper.setUserId(userId);
+        wrapper.setUserId(USER_ID);
 
         RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(BatchPackageController.class, "forSignPackageRq", wrapper);
         if (res.isError())
@@ -89,7 +72,7 @@ public class BatchMessageTest extends AbstractTimerJobTest {
         Assert.assertFalse(res.isError());
         wrapper = res.getResult();
         BatchPackage pkg = (BatchPackage) baseEntityRepository.findById(BatchPackage.class, wrapper.getPkgId());
-        Assert.assertEquals(EtlPackage.PackageState.PROCESSED, pkg.getPackageState());
+        Assert.assertEquals(BatchPackageState.ON_CONTROL, pkg.getPackageState());
         Assert.assertNotNull(pkg.getDateLoad());
     }
 
@@ -150,7 +133,7 @@ public class BatchMessageTest extends AbstractTimerJobTest {
         Assert.assertFalse(res.isError());
         pkg = (BatchPackage) baseEntityRepository.findById(BatchPackage.class, wrapper2.getPkgId());
         Assert.assertNotNull(pkg);
-        Assert.assertEquals(BatchPackage.PackageState.DELETED, pkg.getPackageState());
+        Assert.assertEquals(BatchPackageState.DELETED, pkg.getPackageState());
         BatchPosting posting0 = (BatchPosting) baseEntityRepository.selectFirst(BatchPosting.class, "from BatchPosting p where p.packageId = ?1",
                 pkg.getId());
         Assert.assertNotNull(posting0);
@@ -163,17 +146,16 @@ public class BatchMessageTest extends AbstractTimerJobTest {
      */
     @Test
     public void testAuthorizePackage() throws Exception {
-        Long userId = 2L;
         // создать пакет
-        PackageParam param = loadPackage(userId);
+        PackageParam param = loadPackage(USER_ID);
 
         // передать на подпись
         ManualOperationWrapper wrapper1 = new ManualOperationWrapper();
         wrapper1.setPkgId(param.getId());
         wrapper1.setAction(BatchPostAction.SIGN);
-        wrapper1.setUserId(userId);
+        wrapper1.setUserId(USER_ID);
 
-        RpcRes_Base<ManualOperationWrapper> res = res = remoteAccess.invoke(BatchPackageController.class, "forSignPackageRq", wrapper1);
+        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(BatchPackageController.class, "forSignPackageRq", wrapper1);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -186,7 +168,7 @@ public class BatchMessageTest extends AbstractTimerJobTest {
         // изменить пользователя
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set USER_NAME = 'zz' where ID_PKG = ?", wrapper2.getPkgId());
 
-        wrapper2.setUserId(userId);
+        wrapper2.setUserId(USER_ID);
         res = remoteAccess.invoke(BatchPackageController.class, "authorizePackageRq", wrapper2, BatchPostStep.HAND2);
         if (res.isError())
             System.out.println(res.getMessage());
@@ -197,16 +179,23 @@ public class BatchMessageTest extends AbstractTimerJobTest {
                 pkg.getId(), InvisibleType.N);
         Assert.assertNotNull(postings);
         for (BatchPosting posting: postings) {
-            Assert.assertEquals(BatchPostStatus.COMPLETED, posting.getStatus());
+            Assert.assertEquals(BatchPostStatus.SIGNED, posting.getStatus());
         }
     }
 
     public static PackageParam loadPackage(Long userId) {
         String msg = "";
-        try (InputStream is = BatchMessageTest.class.getClassLoader().getResourceAsStream("example_batch.xlsx")){
-//            ExcelParser parser = new ExcelParser(is);
-//            List<List<Object>> rows = parser.parse(1, "K+TP", "AAC");
-//            msg = remoteAccess.invoke(BatchMessageProcessor.class, "processMessage", rows, "test.xlsx", userId, false);
+        try {
+            File file = new File(BatchMessageTest.class.getClassLoader().getResource(exampleBatchName).getFile());
+
+            Map<String, String> params = new HashMap<>();
+            params.put("filename", file.getAbsolutePath());
+            params.put("userid", userId.toString());
+            params.put("movement_off", "false");
+            params.put("source", "K+TP");
+            params.put("department", "AAC");
+
+            msg = remoteAccess.invoke(BatchMessageProcessor.class, "processMessage", file, params);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             Assert.assertFalse(true);
@@ -265,6 +254,11 @@ public class BatchMessageTest extends AbstractTimerJobTest {
 
         public void setErrorCount(int errorCount) {
             this.errorCount = errorCount;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("ID: %d Count: %d Errors: %d", id, postingCount, errorCount);
         }
     }
 }
