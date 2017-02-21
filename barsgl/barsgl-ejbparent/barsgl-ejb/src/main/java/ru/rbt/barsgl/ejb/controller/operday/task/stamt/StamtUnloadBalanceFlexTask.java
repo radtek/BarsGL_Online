@@ -77,7 +77,7 @@ public class StamtUnloadBalanceFlexTask extends AbstractJobHistoryAwareTask {
         try {
             if (TaskUtils.getCheckRun(properties, true)) {
 
-                unloadController.checkConsumed(executeDate);
+                unloadController.checkConsumed();
 
                 boolean isAlready = unloadController.getAlreadyHeaderCount(executeDate, BALANCE_DELTA_FLEX) > 0;
                 Assert.isTrue(!isAlready, () -> new ValidationError(ErrorCode.STAMT_DELTA_ERR

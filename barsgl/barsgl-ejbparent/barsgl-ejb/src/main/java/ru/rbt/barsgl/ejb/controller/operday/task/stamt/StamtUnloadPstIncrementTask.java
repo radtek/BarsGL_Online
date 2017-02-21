@@ -96,7 +96,7 @@ public class StamtUnloadPstIncrementTask implements ParamsAwareRunnable {
             try {
                 Assert.isTrue(operdayController.getOperday().getPhase() == ONLINE
                         , () -> new ValidationError(STAMT_INCR_DELTA, format("Операционный день в фазе:  %s, ожидалось %s", operdayController.getOperday().getPhase(), ONLINE)));
-                unloadController.checkConsumed(operday);
+                unloadController.checkConsumed();
                 return true;
             } catch (Throwable e) {
                 auditController.error(StamtIncrement, "Задача инкр.выгрузки backvalue не отработала", null, e);

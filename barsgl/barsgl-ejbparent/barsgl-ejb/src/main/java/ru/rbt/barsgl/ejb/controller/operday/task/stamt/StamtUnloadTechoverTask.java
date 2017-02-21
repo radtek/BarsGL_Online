@@ -133,7 +133,7 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
                         properties.getProperty("stepName")).orElse("MI4GL").trim();
                 Assert.isTrue(workprocRepository.isStepOK(stepName, (Date) properties.get(TechoverContext.LWDATE))
                         , () -> new ValidationError(OPERDAY_LDR_STEP_ERR, stepName, dateUtils.onlyDateString((Date) properties.get(TechoverContext.LWDATE))));
-                unloadController.checkConsumed(executeDate);
+                unloadController.checkConsumed();
             }
             return true;
         } catch (ValidationError validationError) {

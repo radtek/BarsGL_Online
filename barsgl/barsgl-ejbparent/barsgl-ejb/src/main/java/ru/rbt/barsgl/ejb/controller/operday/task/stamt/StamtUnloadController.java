@@ -129,14 +129,13 @@ public class StamtUnloadController {
 
     /**
      * Проверяем закончена ли обработка данных по выгрузкам проводок в TDS
-     * @param executeDate
      * @throws Exception
      */
-    public void checkConsumed(Date executeDate) throws Exception {
+    public void checkConsumed() throws Exception {
         List<DataRecord> unloads = repository.select(
                         "select *\n" +
                         "  from V_GL_STM_AWAIT s\n" +
-                        " where s.operday = ?", executeDate);
+                        " where s.operday >= (select lwdate from gl_od)");
         Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(TASK_ERROR
                 , format("Найдены необработанные выгрузки: %s", unloads.stream()
                 .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
