@@ -76,4 +76,11 @@ public class BtnTxtBox extends TxtBox {
         button.setEnabled(enabled);
     }
 
+    public void setButtonImage(Image img){
+        button.getUpFace().setImage(img);
+    }
+
+    public void setHint(String hint){
+        button.setTitle(hint);
+    }
 }

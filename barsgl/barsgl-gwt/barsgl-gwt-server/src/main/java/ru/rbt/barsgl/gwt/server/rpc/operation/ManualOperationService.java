@@ -4,6 +4,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 /**
@@ -23,4 +24,6 @@ public interface ManualOperationService  extends RemoteService {
     RpcRes_Base<ManualAccountWrapper> saveOfrAccount(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> getOfrAccountParameters(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> savePlAccount(ManualAccountWrapper wrapper) throws Exception;
+
+    RpcRes_Base<CurExchangeWrapper> exchangeCurrency(CurExchangeWrapper wrapper) throws Exception;
 }

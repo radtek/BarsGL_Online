@@ -27,6 +27,52 @@ public class MovementCreateTest extends AbstractTimerJobTest {
     public static final Logger logger = Logger.getLogger(MovementCreateTest.class.getName());
 
     @Test
+    public void testFull2() throws Exception {
+        // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
+        // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
+        // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+
+        MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
+
+
+        // Config
+        cf.setHostName("172.17.148.210");
+        cf.setPort(1414);
+        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+        cf.setQueueManager("QM_MBROKER10_TEST");
+        cf.setChannel("SYSTEM.ADMIN.SVRCONN");
+
+        SingleActionJob job =
+            SingleActionJobBuilder.create()
+                .withClass(MovementCreateTask.class)
+
+//                .withProps(
+//                    "mq.type = queue\n" +
+//                        "mq.host = vs338\n" +
+//                        "mq.port = 1414\n" +
+//                        "mq.queueManager = QM_MBROKER10_TEST\n" +
+//                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
+//                        "mq.batchSize = 1\n" + //todo
+//                        "mq.topics = LIRQ!!!!:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF"+
+//                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF\n"+
+//                        "mq.user=er22228\n" +
+//                        "mq.password=Vugluskr6"
+//
+//                )//;MIDAS_UPDATE:UCBRU.ADP.BARSGL.V4.ACDENO.MDSUPD.NOTIF
+
+                .build();
+        jobService.executeJob(job);
+
+//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
+//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
+//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
+//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF");
+//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF");
+//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF");
+
+    }
+
+    @Test
     public void testFull() throws Exception {
         // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
         // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)

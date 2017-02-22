@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejbtest.utl;
 
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -69,7 +68,7 @@ public class Utl4Tests {
                     "(select BSAACID from accrln where acid = ? and RLNTYPE = '2')", acid);
             int cntBsaAcc = baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID in " +
                     "(select BSAACID from accrln where acid = ? and RLNTYPE = '2')", acid);
-            int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from accrln where acid = ?", acid);
+            int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from ACCRLN where acid = ?", acid);
             logger.info("deleted Midas from GL_ACC:" + cntGlAcc + "; ACCRLN:" + cntAccRln + "; BSAACC:" + cntBsaAcc);
         }finally {
 

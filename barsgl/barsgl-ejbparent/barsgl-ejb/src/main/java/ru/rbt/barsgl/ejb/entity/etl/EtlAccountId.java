@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 /**
  * Created by ER18837 on 29.04.15.
+ * @deprecated не используется
  */
 @Embeddable
 @MappedSuperclass

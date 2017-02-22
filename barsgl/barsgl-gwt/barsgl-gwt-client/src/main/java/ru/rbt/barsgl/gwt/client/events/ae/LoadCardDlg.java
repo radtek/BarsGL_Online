@@ -4,9 +4,10 @@ package ru.rbt.barsgl.gwt.client.events.ae;
  * Created by ER18837 on 24.09.16.
  */
 public class LoadCardDlg extends LoadFileDlgBase {
-
+    public static final String TITLE = "Загрузка картотеки из Excel файла";
     public LoadCardDlg() {
-        super("Загрузка картотеки из Excel файла");
+        super();
+        setCaption(TITLE);
     }
 
     @Override

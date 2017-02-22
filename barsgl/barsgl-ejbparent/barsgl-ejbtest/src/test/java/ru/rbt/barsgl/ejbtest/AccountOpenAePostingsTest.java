@@ -925,7 +925,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         pst2.setCurrencyDebit(pst2.getCurrencyCredit());
         pst2 = (EtlPosting) baseEntityRepository.save(pst2);
 
-        remoteAccess.invoke(EtlStructureMonitorTask.class, "processPackage", pkg);
+        remoteAccess.invoke(EtlStructureMonitorTask.class, "processEtlPackage", pkg);
 
         GLOperation oper1 = getOperation(pst1.getId());
         Assert.assertTrue(0 < oper1.getId());

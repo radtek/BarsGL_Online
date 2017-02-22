@@ -7,6 +7,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
@@ -15,10 +16,11 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.CheckFileExtention;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
-import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.dictionary.BatchPostingFormDlg;
+import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
+import ru.rbt.barsgl.gwt.core.dialogs.IAfterShowEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
@@ -36,15 +38,13 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 /**
  * Created by akichigi on 20.06.16.
  */
-abstract public class LoadFileDlgBase extends DlgFrame {
+abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEvent {
     private final static String LIST_DELIMITER = "#";
 
     private final String LABEL_WIDTH = "110px";
     private final String FIELD_WIDTH = "300px";
 
     private static final String UPLOAD_TYPE = "uploadtype";
-
-    private String caption;
 
     private FormPanel formPanel;
     private DataListBox mSource;
@@ -67,16 +67,16 @@ abstract public class LoadFileDlgBase extends DlgFrame {
     private RichAreaBox requestBox;
     private Long idPackage = null;
 
+    private int asyncListCount = 2; /*count async lists: mDepartment; mSource*/
     private HandlerRegistration registration;
+    private Timer timer;
 
-    public LoadFileDlgBase(String caption){
+
+    public LoadFileDlgBase(){
         super();
-        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, createDataListBoxEventHandler());
-        this.caption = caption;
-        setCaption(caption);
         ok.setText("Передать на подпись");
         ok.setEnabled(false);
-
+        setAfterShowEvent(this);
     }
 
     protected abstract String getFileUploadName();
@@ -91,8 +91,11 @@ abstract public class LoadFileDlgBase extends DlgFrame {
 
             @Override
             public void completeLoadData(String dataListBoxId) {
-                if (mDepartment.getId().equalsIgnoreCase(dataListBoxId)){
+                asyncListCount--;
+
+                if (asyncListCount == 0) {
                     registration.removeHandler();
+
                     AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
                     if (wrapper != null){
                         mDepartment.setValue(wrapper.getBranch());
@@ -100,6 +103,11 @@ abstract public class LoadFileDlgBase extends DlgFrame {
                 }
             }
         };
+    }
+
+    @Override
+    public void beforeCreateContent() {
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, createDataListBoxEventHandler());
     }
 
     @Override
@@ -244,7 +252,9 @@ abstract public class LoadFileDlgBase extends DlgFrame {
                 errorButton.setEnabled(isError);
                 showButton.setEnabled(idPackage != null);
                 deleteButton.setEnabled(idPackage != null);
-                ok.setEnabled(!(idPackage == null || isError));
+                boolean isOk = !(idPackage == null || isError);
+                ok.setEnabled(isOk);
+                switchControlsState(!isOk);
 
                 return new StringBuilder()
                         .append(list[1]).append("<BR>")
@@ -258,7 +268,7 @@ abstract public class LoadFileDlgBase extends DlgFrame {
     }
 
     private Long parseLong(String stringWithNumber, String keyWord, String delim) {
-        int index = -1;
+        int index;
         if (!isEmpty(stringWithNumber) && (index = stringWithNumber.indexOf(delim)) >= 0) {
             try {
                 return Long.decode(stringWithNumber.substring(index+1).trim());
@@ -286,6 +296,7 @@ abstract public class LoadFileDlgBase extends DlgFrame {
                         if (wrapper.isError()) {
                             showInfo("Ошибка", wrapper.getMessage());
                         } else {
+                            switchControlsState(true);
                             deleteButton.setEnabled(false);
                             showButton.setEnabled(false);
                             errorButton.setEnabled(false);
@@ -322,8 +333,7 @@ abstract public class LoadFileDlgBase extends DlgFrame {
                     CheckNotEmptyString check = new CheckNotEmptyString();
                     source.setValue(check((String) mSource.getValue()
                             , "Источник сделки", "поле не заполнено", check));
-                    department.setValue(check((String) mDepartment.getValue()
-                            , "Подразделение", "поле не заполнено", check));
+                    department.setValue((String) mDepartment.getValue());
                     String filename = check(fileUpload.getFilename(), "Файл для загрузки", "не выбран", check);
 
                     fileName.setValue(check(filename, "Файл для загрузки", "нужен файл типа 'xlsx'", new CheckFileExtention("xlsx")));
@@ -333,11 +343,10 @@ abstract public class LoadFileDlgBase extends DlgFrame {
                     formPanel.submit();
 
                 } catch (IllegalArgumentException e) {
+                    switchControlsState(true);
                     if (e.getMessage() == null || !e.getMessage().equals("column")) {
                         throw e;
                     }
-                } finally {
-                    switchControlsState(true);
                 }
             }
         });
@@ -390,14 +399,37 @@ abstract public class LoadFileDlgBase extends DlgFrame {
         return btn;
     }
 
-
     @Override
     protected boolean onClickOK() throws Exception {
         params = idPackage;
         return idPackage != null;
     }
 
-    public String getCaption() {
-        return caption;
+    @Override
+    protected void fillContent(){
+        if (asyncListCount > 0) {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
+        }
+    }
+
+    @Override
+    public void afterShow() {
+        switchControlsState(true);
+        errorButton.setEnabled(false);
+        showButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+        ok.setEnabled(false);
+        loadingResult.clear();
     }
 }

@@ -27,6 +27,7 @@ import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
@@ -44,8 +45,8 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 /**
  * Created by ER22317 on 21.09.2016.
  */
@@ -177,7 +178,7 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
     private BatchPackage createPackage(String userName, String fileName) {
         BatchPackage pkg = new BatchPackage();
         pkg.setUserName(userName);
-        pkg.setPackageState(BatchPackage.PackageState.INPROGRESS);
+        pkg.setPackageState(BatchPackageState.INPROGRESS);
         pkg.setFileName(fileName);
         pkg.setDateLoad(new Date());
         pkg = packageRepository.save(pkg);
@@ -425,7 +426,9 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
         pkg.setFileName(fileName);
         pkg.setDateLoad(new Date());
         pkg.setMovementOff(movementOff ? YesNo.Y : YesNo.N);
-        pkg.setPackageState(errorCount > 0 ? BatchPackage.PackageState.ERROR : BatchPackage.PackageState.LOADED);
+        pkg.setPostDate(postDate0);
+        pkg.setProcDate(curdate);
+        pkg.setPackageState(errorCount > 0 ? BatchPackageState.ERROR : BatchPackageState.LOADED);
         packageRepository.save(pkg);
 
         String result = new StringBuffer().append(LIST_DELIMITER)

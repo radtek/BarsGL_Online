@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.entity.etl;
 
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -12,10 +13,6 @@ import java.util.Date;
 @Entity
 @Table(name = "GL_BATPKG")
 public class BatchPackage extends BaseEntity<Long> {
-
-    public enum PackageState {
-        INPROGRESS, LOADED, PROCESSED, ERROR, WORKING, DELETED, ON_CONTROL, ON_WAITDATE, IS_SIGNED, IS_SIGNEDDATE, WAITPROC
-    }
 
     @Id
     @Column(name = "ID_PKG")
@@ -28,7 +25,7 @@ public class BatchPackage extends BaseEntity<Long> {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "STATE")
-    private PackageState packageState;
+    private BatchPackageState packageState;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "DT_PRC")
@@ -47,6 +44,14 @@ public class BatchPackage extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     @Column(name = "MVMNT_OFF")
     private YesNo movementOff;               // 1
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "POSTDATE")
+    private Date postDate;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "PROCDATE")
+    private Date procDate;
 
     @Transient
     private Integer errorCount;
@@ -73,11 +78,11 @@ public class BatchPackage extends BaseEntity<Long> {
         this.dateLoad = dateLoad;
     }
 
-    public PackageState getPackageState() {
+    public BatchPackageState getPackageState() {
         return packageState;
     }
 
-    public void setPackageState(PackageState packageState) {
+    public void setPackageState(BatchPackageState packageState) {
         this.packageState = packageState;
     }
 
@@ -127,5 +132,21 @@ public class BatchPackage extends BaseEntity<Long> {
 
     public void setMovementOff(YesNo movementOff) {
         this.movementOff = movementOff;
+    }
+
+    public Date getPostDate() {
+        return postDate;
+    }
+
+    public void setPostDate(Date postDate) {
+        this.postDate = postDate;
+    }
+
+    public Date getProcDate() {
+        return procDate;
+    }
+
+    public void setProcDate(Date procDate) {
+        this.procDate = procDate;
     }
 }

@@ -448,6 +448,11 @@ public class BatchPostingProcessor extends ValidationAwareHandler<ManualOperatio
         posting.setErrorMessage(null);
         posting.setReasonOfDeny(null);
 
+        // очистить движение
+        posting.setMovementId(null);
+        posting.setSendTimestamp(null);
+        posting.setReceiveTimestamp(null);
+
         // текущее системное время
         posting.setChangeTimestamp(userContext.getTimestamp());
         posting.setChangeName(userContext.getUserName());   // изменятель

@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 
@@ -12,8 +14,8 @@ import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
  * Created by akichigi on 03.06.16.
  */
 public class DateIntervalQuickFilterDlg extends DlgFrame {
-    private DatePickerBox mDateBegin;
-    private DatePickerBox mDateEnd;
+    protected DatePickerBox mDateBegin;
+    protected DatePickerBox mDateEnd;
 
     private DateIntervalQuickFilterParams filterParams;
 
@@ -56,7 +58,7 @@ public class DateIntervalQuickFilterDlg extends DlgFrame {
         return true;
     }
 
-    private Widget createDatePanel() {
+    protected Widget createDatePanel() {
         Grid g1 = new Grid(1, 4);
         g1.setWidget(0, 0, createLabel("Дата начала"));
         g1.setWidget(0, 1, mDateBegin = createDateBox());
@@ -64,4 +66,5 @@ public class DateIntervalQuickFilterDlg extends DlgFrame {
         g1.setWidget(0, 3, mDateEnd = createDateBox());
         return g1;
     }
+
 }
