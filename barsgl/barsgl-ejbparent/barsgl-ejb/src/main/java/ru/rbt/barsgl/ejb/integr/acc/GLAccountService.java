@@ -701,7 +701,7 @@ public class GLAccountService {
         String errorCode = ValidationError.getErrorCode(errMessage);
         String errorMessage = substr(errMessage, start, stop);
         String errorText = ValidationError.getErrorText(errorMessage);
-        errorList.addNewErrorDescription("", "", errorText, errorCode);
+        errorList.addNewErrorDescription(errorText, errorCode);
 
         log.error(format("%s: %s. Обнаружена: %s\n'", errorList.getErrorMessage(), errMessage, source), e);
 /*

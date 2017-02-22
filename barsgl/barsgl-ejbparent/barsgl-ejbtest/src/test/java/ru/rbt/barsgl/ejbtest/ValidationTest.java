@@ -10,8 +10,10 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
+import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -97,9 +99,8 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
+        checkPostingErrorRecord(pst, "1");
         String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
 
         Assert.assertTrue(errorMessage.contains("'GL_ETLPST.ID_PST'"));
         Assert.assertTrue(errorMessage.contains("'GL_ETLPST.SRC_PST'"));
@@ -145,9 +146,8 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
+        checkPostingErrorRecord(pst, "2");
         String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
 
         Assert.assertTrue(errorMessage.contains("'GL_ETLPST.ID_PST'"));
     }
@@ -182,14 +182,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
-        Assert.assertTrue(errorMessage.contains("'3'"));
-        Assert.assertTrue(errorMessage.contains("'6'"));
-        Assert.assertTrue(errorMessage.contains("'9'"));
-        Assert.assertTrue(errorMessage.contains("'10'"));
-        Assert.assertTrue(errorMessage.contains("'12'"));
+        checkPostingErrorRecord(pst, "3", "6", "9", "10", "12");
 
     }
 
@@ -225,13 +218,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
-        Assert.assertTrue(errorMessage.contains("'12'"));
-        Assert.assertTrue(errorMessage.contains("'13'"));
-        Assert.assertTrue(errorMessage.contains("'5'"));
-
+        checkPostingErrorRecord(pst, "13", "12", "5");
     }
 
     /**
@@ -261,9 +248,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNotNull(operation);                                               // операция должна быть создана с ошибкой
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.WTAC, operation.getState());
-        String errorMessage = operation.getErrorMessage();
-        Assert.assertTrue(errorMessage, errorMessage.contains("'4'"));
+        checkOperErrorRecord(operation, "4", OperState.WTAC);
         List<GLPosting> postList = getPostings(operation);
         Assert.assertNotNull(postList);
         Assert.assertEquals(0, postList.size());        // нет проводки
@@ -364,14 +349,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.ERCHK, operation.getState());
-        String errorMessage = operation.getErrorMessage();
-        Assert.assertTrue(errorMessage.contains("'1001'"));
-
-
+        checkOperErrorRecord(operation, "1001", OperState.ERCHK);
 /*
         EtlPosting pstS = newStornoPosting(System.currentTimeMillis(), pkg, pst);
         pstS.setValueDate(DateUtils.addDays(operDate, -62));  // неверная дата (< опердень на 2 м-ца)
@@ -420,11 +398,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNull(operation);
 
-        pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
-        Assert.assertTrue(errorMessage.contains("'10'"));
+        checkPostingErrorRecord(pst, "10");
 
     }
 
@@ -457,11 +431,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNull(operation);
 
-        pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
-        Assert.assertTrue(errorMessage.contains("'38'"));
+        checkPostingErrorRecord(pst, "38");
 
     }
 
@@ -491,12 +461,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.ERCHK);
-        String errorMessage = operation.getErrorMessage();
-        Assert.assertTrue(errorMessage.contains("'1005'"));
+        checkOperErrorRecord(operation, "1005", OperState.ERCHK);
     }
 
     /**
@@ -581,12 +546,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.ERCHK);
-        String errorMessage = operation.getErrorMessage();
-        Assert.assertTrue(errorMessage.contains("1003"));
+        checkOperErrorRecord(operation, "1003", OperState.ERCHK);
     }
 
     /**
@@ -629,10 +589,8 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.ERCHK);
         Assert.assertNull(operationS.getStornoOperation());        // ссылка на сторно операцию
-        String errorMessage = operationS.getErrorMessage();
-        Assert.assertTrue(errorMessage.contains("1007"));
+        checkOperErrorRecord(operationS, "1007", OperState.ERCHK);
 
     }
 
@@ -678,10 +636,8 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.ERCHK);
         Assert.assertNull(operationS.getStornoOperation());        // ссылка на сторно операцию
-        String errorMessage = operationS.getErrorMessage();
-        Assert.assertTrue(errorMessage.contains("1007"));
+        checkOperErrorRecord(operationS, "1007", OperState.ERCHK);
 
     }
 
@@ -712,10 +668,9 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
+        checkPostingErrorRecord(pst, "14");
 
+        String errorMessage = pst.getErrorMessage();
         Assert.assertTrue(errorMessage.contains("'GL_ETLPST.AC_DR'"));
         Assert.assertTrue(errorMessage.contains("'GL_ETLPST.ACCKEY_DR'"));
         Assert.assertTrue(errorMessage.contains("'GL_ETLPST.AC_CR'"));
@@ -754,11 +709,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
-        Assert.assertTrue(errorMessage.contains("'9'"));
-        Assert.assertTrue(errorMessage.contains("'10'"));
+        checkPostingErrorRecord(pst, "9", "10");
 
     }
 
@@ -863,10 +814,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        Assert.assertTrue(pst.getErrorCode() == 1);
-        String errorMessage = pst.getErrorMessage();
-        Assert.assertNotEquals(errorMessage, "SUCCESS");
-        Assert.assertTrue(errorMessage.contains("'26'"));
+        checkPostingErrorRecord(pst, "26");
 
     }
 
@@ -973,11 +921,8 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst2 = (EtlPosting) baseEntityRepository.save(pst2);
 
         operation = (GLOperation) postingController.processMessage(pst2);
-        Assert.assertNotNull(operation);                                               // операция не должна быть создана
-
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        errorMessage = operation.getErrorMessage();
-        Assert.assertTrue(errorMessage.contains("Код ошибки '27'"));
+        Assert.assertNotNull(operation);                                               // операция должна быть создана
+        checkOperErrorRecord(operation, "27", OperState.ERCHK);
 
     }
 
@@ -1108,10 +1053,37 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(operation.getErrorMessage().contains("Код ошибки '2008'"));
+        checkOperErrorRecord(operation, "2008", OperState.ERCHK);
 
+    }
+
+    public static void checkPostingErrorRecord(EtlPosting posting, String ... errorCodes) {
+        Assert.assertNotNull(posting);
+        Long pstRef = posting.getId();
+        EtlPosting pst = (EtlPosting) baseEntityRepository.refresh(posting, true);
+        Assert.assertTrue(pst.getErrorCode() == 1);
+        String errorMessage = pst.getErrorMessage();
+        Assert.assertNotEquals(errorMessage, "SUCCESS");
+        for (String errorCode : errorCodes)
+            Assert.assertTrue(errorMessage.contains(errorCode));
+
+        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        String errRecordCode = errorRecord.getErrorCode();
+        for (String errorCode : errorCodes)
+            Assert.assertTrue(errRecordCode.contains(errorCode));
+    }
+
+    public static void checkOperErrorRecord(GLOperation operation, String errorCode, OperState state) {
+        Assert.assertNotNull(operation);
+        Long pstRef = operation.getEtlPostingRef();
+        Long gloRef = operation.getId();
+        GLOperation oper = (GLOperation) baseEntityRepository.refresh(operation, true);
+        Assert.assertEquals(oper.getState(), state);
+        String errorMessage = oper.getErrorMessage();
+        Assert.assertTrue(errorMessage.contains(errorCode));
+
+        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        Assert.assertEquals(gloRef, errorRecord.getGlOperRef());
+        Assert.assertTrue(errorRecord.getErrorCode().contains(errorCode));
     }
 }

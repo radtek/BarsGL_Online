@@ -282,7 +282,7 @@ public class OperationPostingForm extends MDForm {
 
         String errorMessage = (String) getValue("EMSG");
         if (!isEmpty(errorMessage))
-            wrapper.getErrorList().addErrorDescription(null, null, errorMessage, null);
+            wrapper.getErrorList().addErrorDescription(errorMessage);
 
         return wrapper;
     }
