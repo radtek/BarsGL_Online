@@ -33,20 +33,22 @@ public class FilterItem implements Serializable, IsSerializable {
     }
 
     public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined, boolean readOnly) {
-        this(column.getName(), column.getType(), criteria, value, pined);
+        this(column.getName(), column.getType(), column.getCaption(), criteria, value, pined);
         this.setReadOnly(readOnly);
     }
 
     public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined) {
-        this(column.getName(), column.getType(), criteria, value, pined);
+        this(column.getName(), column.getType(), column.getCaption(), criteria, value, pined);
     }
 
-    public FilterItem(String name, Column.Type type, FilterCriteria criteria, Serializable value, boolean pined) {
+    public FilterItem(String name, Column.Type type, String caption, FilterCriteria criteria, Serializable value, boolean pined) {
         this.name = name;
         this.value = value;
         this.criteria = criteria;
         this.pined = pined;
         this.sqlName = name;
+        this.caption = caption;
+        this.strValue = value.toString();
         this.sqlValue = value;
 
         if (null != value ) {
@@ -54,11 +56,13 @@ public class FilterItem implements Serializable, IsSerializable {
             switch (type) {
             case DATETIME:
                 this.sqlName = "DATE(" + name + ")";
-                this.sqlValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.strValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.sqlValue = this.strValue;
                 break;
             case DATE:
                 this.sqlName = name;
-                this.sqlValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.strValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.sqlValue = this.strValue;
                 break;
             }
         }
@@ -76,7 +80,7 @@ public class FilterItem implements Serializable, IsSerializable {
         return criteria;
     }
 
-    public boolean needValue() { return criteria.isBinary(); };
+    public boolean needValue() { return criteria.isBinary(); }
 
     public boolean isPined() {
         return pined;
