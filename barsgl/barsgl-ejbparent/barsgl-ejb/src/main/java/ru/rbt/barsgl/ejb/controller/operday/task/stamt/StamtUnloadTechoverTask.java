@@ -97,7 +97,7 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
             }
 
             auditController.info(TechoverTask, format("Помечено полупроводок как выгруженных по теховердрафту %s в опердне %s "
-                    , repository.executeNativeUpdate("update gl_pdjover d set d.unf = 'Y' where d.unf = 'N' and operday = ?", executeDate)
+                    , repository.executeNativeUpdate("update gl_pdjover d set d.unf = 'Y' where d.unf = 'N' and operday >= ?", lwDate)
                     , dateUtils.onlyDateString(executeDate)));
 
             auditController.info(TechoverTask, format("Выгрузка технических овердрафтов за дату '%s' завершена успешно", dateUtils.onlyDateString(executeDate)));
