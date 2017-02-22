@@ -167,7 +167,7 @@ public class OfrAccountService {
         String errorCode = ValidationError.getErrorCode(errMessage);
         String errorMessage = substr(errMessage, start, stop);
         String errorText = ValidationError.getErrorText(errorMessage);
-        errorList.addNewErrorDescription(errorText, errorCode);
+        errorList.addNewErrorDescription("", "", errorText, errorCode);
         return errorList.getErrorMessage();
     }
 

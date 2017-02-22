@@ -14,8 +14,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
-
 /**
  * Created by Ivan Sevastyanov
  */
@@ -44,7 +42,7 @@ public class EtlPostingRepository extends AbstractBaseEntityRepository<EtlPostin
 
     public void updatePostingStateError(EtlPosting posting, String message) {
         executeUpdate("update EtlPosting p set p.errorCode = ?1, p.errorMessage = ?2 where p = ?3",
-                1, substr(message, 4000), posting);
+                1, message, posting);
     }
 
     public long nextId() {

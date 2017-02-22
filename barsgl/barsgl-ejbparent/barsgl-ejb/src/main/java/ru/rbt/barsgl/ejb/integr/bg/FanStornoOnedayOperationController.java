@@ -1,13 +1,16 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
+import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.fan.FanOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.fan.FanStornoOnedayOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.annotation.Resource;
@@ -22,6 +25,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FanOperation;
+import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 
 /**
@@ -66,8 +70,8 @@ public class FanStornoOnedayOperationController extends FanOperationController {
                 operList = getFanOperations(parentReference, storno);
             } catch (Throwable e) {
                 String msg = "Ошибка определения данных" + msgCommon;
-//                auditController.error(FanOperation, msg, null, e);
-                operationFanErrorMessage(e, msg, null, parentReference, storno, OperState.ERPROC, initSource());
+                auditController.error(FanOperation, msg, null, e);
+                operationFanErrorMessage(e, msg, parentReference, storno, OperState.ERPROC, initSource());
                 return Collections.emptyList();
             }
 
@@ -97,7 +101,7 @@ public class FanStornoOnedayOperationController extends FanOperationController {
                 updateOperation(operationProcessor, operation);
             }catch(Throwable e){
                 String msg = "Ошибка заполнения данных" + msgCommon;
-//                auditController.error(FanOperation, msg, operation, e);
+                auditController.error(FanOperation, msg, operation, e);
                 operationErrorMessage(e, msg, operation, OperState.ERCHK, initSource(e));
                 return Collections.emptyList();
             }
@@ -107,7 +111,7 @@ public class FanStornoOnedayOperationController extends FanOperationController {
                 auditController.info(FanOperation, "Успешное завершение обработки" + msgCommon, operation);
             }catch(Throwable e){
                 String msg = "Ошибка обработки" + msgCommon;
-//                auditController.error(FanOperation, msg, operation, e);
+                auditController.error(FanOperation, msg, operation, e);
                 operationErrorMessage(e, msg, operation, OperState.ERCHK, initSource(e));
                 return Collections.emptyList();
             }
@@ -118,8 +122,8 @@ public class FanStornoOnedayOperationController extends FanOperationController {
             auditController.info(FanOperation, "Успешное завершение" + msgCommon);
         } catch (Throwable e) {
             String msg = "Ошибка" + msgCommon;
-//            auditController.error(AuditRecord.LogCode.FanOperation, msg, null, e);
-            operationFanErrorMessage(e, msg, operList, parentReference, YesNo.Y, OperState.ERPOST, initSource());
+            auditController.error(AuditRecord.LogCode.FanOperation, msg, null, e);
+            operationFanErrorMessage(e, msg, parentReference, YesNo.Y, OperState.ERPOST, initSource());
             return Collections.emptyList();
         }
         return operList;

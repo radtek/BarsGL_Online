@@ -287,7 +287,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     }
 
     public void updateOperationStatusError(GLOperation operation, OperState state, String message) {
-        executeUpdate("update GLOperation o set o.state = ?1, o.errorMessage = ?2 where o = ?3", state, substr(message, 4000), operation);
+        executeUpdate("update GLOperation o set o.state = ?1, o.errorMessage = ?2 where o = ?3", state, message, operation);
     }
 
     public void updateOperationFanStatusSuccess(String parentRef, YesNo storno, OperState state) {

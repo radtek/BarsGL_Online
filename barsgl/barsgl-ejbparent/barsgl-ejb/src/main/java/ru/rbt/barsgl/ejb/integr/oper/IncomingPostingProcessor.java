@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
@@ -384,13 +385,11 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         }
     }
 
-/*
     public String validationErrorMessage(EtlPosting posting, List<ValidationError> errors) {
         StringBuilder result = new StringBuilder(format("Обнаружены ошибки валидации входных данных по проводке АЕ '%s': \n", posting.getId()));
         result.append(validationErrorsToString(errors));
         return result.toString();
     }
-*/
 
     /**
      * Создает GL операцию, заполняет параметры, пришедшие из ETL

@@ -30,7 +30,7 @@ public abstract class ValidationAwareHandler<T> {
      */
     public abstract void fillValidationContext(T target, ValidationContext context);
 
-    public final static String validationErrorsToString(List<ValidationError> errors) {
+    public final String validationErrorsToString(List<ValidationError> errors) {
 //        String res1 = Joiner.on(",").join(errors);
         StringBuilder result = new StringBuilder();
         for (ValidationError error : errors) {
@@ -39,13 +39,13 @@ public abstract class ValidationAwareHandler<T> {
         return result.toString();
     }
 
-    public final static String validationErrorsToString(List<ValidationError> errors, ErrorList descriptors) {
+    public final String validationErrorsToString(List<ValidationError> errors, ErrorList descriptors) {
         StringBuilder result = new StringBuilder();
         for (ValidationError error : errors) {
             String errCode = ValidationError.getErrorCode(error.getMessage());
             String errMessage = ValidationError.getErrorText(error.getMessage());
             if (null != descriptors) {
-                descriptors.addErrorDescription(errMessage, errCode);
+                descriptors.addErrorDescription(error.getEnityName(), error.getFieldName(), errMessage, errCode);
             }
             result.append(error.getMessage());
         }

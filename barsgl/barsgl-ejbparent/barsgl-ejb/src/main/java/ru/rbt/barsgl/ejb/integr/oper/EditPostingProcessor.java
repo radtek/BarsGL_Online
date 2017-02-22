@@ -196,8 +196,8 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
         if (changeDate) {
             checkControllable(pdList, "Нельзя изменить дату проводок");
             // сообщение а аудит
-            wrapper.getErrorList().addErrorDescription(String.format(" (дата проводки была: '" + dateUtils.onlyDateString(pod) + "'" +
-                    ", стала: '" + wrapper.getPostDateStr() + "')"));
+            wrapper.getErrorList().addErrorDescription("", "", String.format(" (дата проводки была: '" + dateUtils.onlyDateString(pod) + "'" +
+                    ", стала: '" + wrapper.getPostDateStr() + "')"), "");
         }
 
         Date dateMin = pod.before(postDate) ? pod : postDate;
