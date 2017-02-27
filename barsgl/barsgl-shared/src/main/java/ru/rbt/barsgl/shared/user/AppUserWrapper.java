@@ -26,6 +26,7 @@ public class AppUserWrapper implements Serializable, IsSerializable {
     private String branch;  // TODO: deptId - Подразделение
     private String closeDateStr; //Date
     private String pwdMD5;
+    private String errorListProcPermit;
 
     private ArrayList<String> grantedHeadBranches;
     private ArrayList<String> grantedSources;
@@ -140,5 +141,13 @@ public class AppUserWrapper implements Serializable, IsSerializable {
 
     public void setCloseDateStr(String closeDateStr) {
         this.closeDateStr = closeDateStr;
+    }
+
+    public String getErrorListProcPermit() {
+        return errorListProcPermit;
+    }
+
+    public void setErrorListProcPermit(String errorListProcPermit) {
+        this.errorListProcPermit = errorListProcPermit;
     }
 }
