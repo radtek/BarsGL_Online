@@ -320,7 +320,6 @@ public class PreCobStepController {
 
         } catch (Throwable e) {
             auditController.error(PreCob, format("Ошибка обработки веерных операций по референсу '%s'", parentRef), null, e);
-            // TODO надо ли писать ошибку в GL_ERRORS ?
         }
 
         return toContinue;

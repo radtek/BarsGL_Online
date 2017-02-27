@@ -72,7 +72,7 @@ abstract public class OperSuperBase extends GridForm {
         wrapper.setReasonOfDeny((String) getValue("DESCRDENY"));
         String errorMessage = (String) getValue("EMSG");
         if (!isEmpty(errorMessage))
-            wrapper.getErrorList().addErrorDescription(errorMessage);
+            wrapper.getErrorList().addErrorDescription(null, null, errorMessage, null);
         return wrapper;
     }
 
