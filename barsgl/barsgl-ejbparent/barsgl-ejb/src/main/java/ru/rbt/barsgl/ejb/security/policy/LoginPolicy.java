@@ -7,6 +7,7 @@ import ru.rbt.barsgl.ejb.repository.AppUserRepository;
 import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.barsgl.ejb.repository.access.UserMenuRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.shared.Assert;
@@ -43,6 +44,9 @@ public abstract class LoginPolicy {
 
     @Inject
     private AccessServiceSupport accessServiceSupport;
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
 
     public final LoginResult login(String userName,String pasword) throws Exception {
         final AppUser user = userRepository.findUserByName(userName);
@@ -83,9 +87,9 @@ public abstract class LoginPolicy {
         wrapper.setGrantedSources(granted.getGrantedSources());
         wrapper.setGrantedHeadBranches(granted.getGrantedHeadBranches());
 
+        wrapper.setErrorListProcPermit(propertiesRepository.getStringDef("list.err.proc.permit", "N"));
         return wrapper;
     }
-
 
 
     private LoginResult buildCommonLoginResult(AppUser user) {
