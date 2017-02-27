@@ -103,6 +103,14 @@ public class PropertiesRepository extends AbstractCachedRepository <AbstractConf
         return Optional.ofNullable((StringProperty)getCachedProperty(key)).orElse(nullStringProperty()).getValue();
     }
 
+    public String getStringDef(String key, String def){
+        try{
+            return Optional.ofNullable((StringProperty)getCachedProperty(key)).orElse(new StringProperty(def)).getValue();
+        } catch (ExecutionException e) {
+            return def;
+        }
+    }
+
     /**
      * Некэширемый список параметров по родительскому узлу
      * @param name

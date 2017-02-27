@@ -127,4 +127,10 @@ public abstract interface ImageConstants extends ClientBundle{
 
     @ClientBundle.Source({"refresh_simple.png"})
     public abstract ImageResource refresh_simple();
+
+    @ClientBundle.Source({"process.png"})
+    public abstract ImageResource process();
+
+    @ClientBundle.Source({"ok.png"})
+    public abstract ImageResource ok();
 }
