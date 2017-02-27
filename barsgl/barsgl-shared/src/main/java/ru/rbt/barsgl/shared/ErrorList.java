@@ -20,13 +20,17 @@ public class ErrorList  implements Serializable, IsSerializable {
         errorList.clear();
     }
 
-    public void addErrorDescription(String enityName, String fieldName, String message, String code) {
-        errorList.add(new ErrorDescriptor(enityName, fieldName, message, code));
+    public void addErrorDescription(String message) {
+        errorList.add(new ErrorDescriptor(message, null));
     }
 
-    public void addNewErrorDescription(String enityName, String fieldName, String message, String code) {
-        if (null == findErrorMessage(enityName, fieldName, message)){
-            errorList.add(new ErrorDescriptor(enityName, fieldName, message, code));
+    public void addErrorDescription(String message, String code) {
+        errorList.add(new ErrorDescriptor(message, code));
+    }
+
+    public void addNewErrorDescription(String message, String code) {
+        if (null == findErrorMessage(message)){
+            errorList.add(new ErrorDescriptor(message, code));
         }
     }
 
@@ -38,10 +42,9 @@ public class ErrorList  implements Serializable, IsSerializable {
         return builder.toString();
     }
 
-    public ErrorDescriptor findErrorMessage(final String enityName, final String fieldName, final String message) {
+    public ErrorDescriptor findErrorMessage(final String message) {
         for (ErrorDescriptor desc : errorList) {
-            if (// desc.getEnityName().equals(enityName) && desc.getFieldName().equals(fieldName) &&
-                    desc.getMessatge().equals(message))
+            if ( desc.getMessatge().equals(message) )
                 return desc;
         }
         return null;

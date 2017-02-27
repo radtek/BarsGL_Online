@@ -7,7 +7,6 @@ import java.util.Date;
 
 /**
  * Created by ER18837 on 07.02.17.
- * Таблица регистрации ошибок обработки АЕ
  */
 @Entity
 @Table(name = "GL_ERRORS")
