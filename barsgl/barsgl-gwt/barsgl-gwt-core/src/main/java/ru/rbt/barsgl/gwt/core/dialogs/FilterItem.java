@@ -48,7 +48,7 @@ public class FilterItem implements Serializable, IsSerializable {
         this.pined = pined;
         this.sqlName = name;
         this.caption = caption;
-        this.strValue = value.toString();
+        this.strValue = (null != value) ? value.toString() : "";
         this.sqlValue = value;
 
         if (null != value ) {
