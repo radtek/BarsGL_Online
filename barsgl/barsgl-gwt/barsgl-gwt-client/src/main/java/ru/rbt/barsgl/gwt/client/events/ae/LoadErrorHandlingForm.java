@@ -17,6 +17,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
@@ -48,8 +49,8 @@ public class LoadErrorHandlingForm  extends GridForm {
             String permit = current_user.getErrorListProcPermit();
             if (permit != null && permit.equals("Y")) action = manualCorrectionList();
         }
-        abw.addAction(action); //TODO SecureAction
-        abw.addAction(processCorrection()); //TODO SecureAction
+        abw.addSecureAction(action, SecurityActionCode.OperErrClose);
+        abw.addSecureAction(processCorrection(), SecurityActionCode.OperErrProc);
         //Init quick filter with additional parameter
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
         FilterItem item = new FilterItem(colCorrect, FilterCriteria.EQ, "N", true);
@@ -82,7 +83,6 @@ public class LoadErrorHandlingForm  extends GridForm {
         };
     }
 
-
    private GridAction manualCorrection(){
        return new GridAction(grid, null, "Отметить как исправленное", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
            DlgFrame errorCorrectionDlg = null;
@@ -94,7 +94,6 @@ public class LoadErrorHandlingForm  extends GridForm {
            }
        };
    }
-
 
     private GridAction manualCorrectionList(){
         final PopupPanel sidePanel = new PopupPanel(true, true);
