@@ -152,6 +152,7 @@ public class GLAccountController {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLAccountAE(GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                        AccountKeys keys, ErrorList descriptors) throws Exception {
+        //todo XX
         GLAccount glAccount = findGLAccountAEnoLock(keys, operSide);     // счет создается вручную
         if (null != glAccount) {
             return glAccount;
@@ -591,13 +592,8 @@ public class GLAccountController {
             }
         }
         if (isGlSeqXX && data.getString("PLCODE") != null){
-            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, defaultString(keys.getAccountType())
-                                                  , defaultString(keys.getCustomerNumber())
-                                                  , defaultString(keys.getAccountCode())
-                                                  , defaultString(keys.getAccSequence())
-                                                  , defaultString(keys.getDealId())
-                                                  , defaultString(keys.getPlCode())
-                                                  , defaultString(keys.getGlSequence()));
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, side.getMsgName(), defaultString(keys.getAccountType()), defaultString(keys.getCustomerNumber()), defaultString(keys.getAccountCode())
+                                                  , defaultString(keys.getAccSequence()), defaultString(keys.getDealId()), defaultString(keys.getPlCode()), defaultString(keys.getGlSequence()));
         }
 
         if (isEmpty(keys.getPlCode())) {
@@ -620,11 +616,7 @@ public class GLAccountController {
                 }
             }
         }
-//        todo замена AccSequence для XX
         // подмена сиквенса Майдас для сделок FCC
-//        if (isGlSeqXX)
-//            keys.setAccSequence(sq);
-//        else
         keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
 
         int cnum = (int) glAccountProcessor.stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());

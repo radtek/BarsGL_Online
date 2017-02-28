@@ -22,7 +22,7 @@ public class EtlMessXXTest extends AbstractTimerJobTest{
     public static final Logger log = Logger.getLogger(EtlMessXXTest.class.getName());
 
     @Test
-    public void testSQEmpty() throws ParseException {
+    public void test() throws ParseException {
         long stamp = System.currentTimeMillis();
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -48,7 +48,88 @@ public class EtlMessXXTest extends AbstractTimerJobTest{
         pst1.setCurrencyDebit(BankCurrency.RUB);
         pst1.setSourcePosting("AXAPTA");
         pst1.setFan(YesNo.N);
-        pst1.setAccountKeyDebit("015;RUR;00000151;505030203;00;00;XX00000738;0015;;;;;AXAPTA;;");
+        pst1.setAccountKeyDebit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
+        pst1.setAccountKeyCredit("001;RUR;00400038;351020301;9;;0001042928;0001;47408;;;;K+TP;917244;");
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+    }
+
+    @Test
+    public void testOK_SQ00_K_TP() throws ParseException {
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(1);
+        pkg.setPostingCnt(2);
+        pkg = (EtlPackage) baseEntityRepository.update(pkg);
+
+        EtlPosting pst1 = newPosting(stamp, pkg);
+        pst1.setAePostingId("21084014");
+        pst1.setEventId("ГК07248804_000000001");
+        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setOperationTimestamp(new Date());
+        pst1.setNarrative("Narrative");
+        pst1.setRusNarrativeLong("RusNarrativeLong");
+        pst1.setRusNarrativeShort("RusNarrativeShort");
+        pst1.setStorno(YesNo.N);
+        pst1.setAmountCredit(new BigDecimal("4380.450"));
+        pst1.setAmountDebit(new BigDecimal("4380.450"));
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(BankCurrency.RUB);
+        pst1.setSourcePosting("AXAPTA");
+        pst1.setFan(YesNo.N);
+//        pst1.setAccountKeyDebit("015;RUR;00000151;505030203;00;00;XX00000738;0015;;;;;AXAPTA;;");
+//        pst1.setAccountKeyDebit("015;RUR;00118390;443040100;18;11;XX00000319;0015;;;4105;;AXAPTA;;");
+        pst1.setAccountKeyDebit("001;RUR;00400038;131060102;9;;XX00000034;0001;30424;;1049;;K+TP;;");
+//        '00000151RUR449110015'
+        pst1.setAccountKeyCredit("001;RUR;00400038;351020301;9;;0001042928;0001;47408;;;;K+TP;917244;");
+//        pst1.setAccountKeyCredit("015;RUR;00000151;505030201;00;00;XX00000737;0015;;;4491;01;AXAPTA;;");
+//        pst1.setAccountCredit("47425810400014560229");
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+    }
+
+        @Test
+    public void testOK() throws ParseException {
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(1);
+        pkg.setPostingCnt(2);
+        pkg = (EtlPackage) baseEntityRepository.update(pkg);
+
+        EtlPosting pst1 = newPosting(stamp, pkg);
+        pst1.setAePostingId("21084014");
+        pst1.setEventId("ГК07248804_000000001");
+        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setOperationTimestamp(new Date());
+        pst1.setNarrative("Narrative");
+        pst1.setRusNarrativeLong("RusNarrativeLong");
+        pst1.setRusNarrativeShort("RusNarrativeShort");
+        pst1.setStorno(YesNo.N);
+        pst1.setAmountCredit(new BigDecimal("4380.450"));
+        pst1.setAmountDebit(new BigDecimal("4380.450"));
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(BankCurrency.RUB);
+        pst1.setSourcePosting("AXAPTA");
+        pst1.setFan(YesNo.N);
+        pst1.setAccountKeyDebit("015;RUR;00118390;443040100;18;11;XX00000319;0015;;;4105;10;AXAPTA;;");
 //        '00000151RUR449110015'
         pst1.setAccountKeyCredit("015;RUR;00000151;505030201;00;00;XX00000737;0015;;;4491;01;AXAPTA;;");
 //        pst1.setAccountCredit("47425810400014560229");
