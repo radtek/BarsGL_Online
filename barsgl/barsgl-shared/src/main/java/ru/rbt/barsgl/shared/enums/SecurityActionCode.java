@@ -65,6 +65,11 @@ public enum SecurityActionCode {
     , OperManualLook("Просмотр списка запросов ручного ввода")
     , Acc707Inp("Ввод счета ОФР прошлых лет")
     , Acc707Chng("Изменение счета ОФР прошлых лет")
+    , OperErrProc("Переобработка ошибок АЕ")
+    , OperErrClose("Закрытие ошибок АЕ")
+    /*, ToolsErrLook("Просмотр настройки по обработке ошибок")
+    , ToolsErrChng("Изменение настройки по обработке ошибок")
+    */
     ;
 
     private final String desc;
