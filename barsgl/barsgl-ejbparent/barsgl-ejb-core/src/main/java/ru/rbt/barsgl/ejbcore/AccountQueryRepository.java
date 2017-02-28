@@ -23,27 +23,19 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 public class AccountQueryRepository extends AbstractBaseEntityRepository {
     private static final Logger log = Logger.getLogger(AccountQueryRepository.class);
 
-    public List<DataRecord> getCountsByAccount(String customerNo, Set<String> acids) {
+    public List<DataRecord> getCountsByAccount(Set<String> acids) throws Exception {
         try {
             String acidsStr = "'" + StringUtils.listToString(acids, ",") + "'";
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM DWH.GL_ACC A WHERE "
-                        + "A.CUSTNO=? "
-                        + "AND A.BSAACID IN (" + acidsStr + ") "
+                "SELECT * FROM DWH.GL_ACC A WHERE "
+                        + "A.BSAACID IN (" + acidsStr + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
-                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                , Integer.MAX_VALUE, new Object[]{customerNo});
+                        + "AND A.DTC IS NULL "
+                , Integer.MAX_VALUE, null);
             return dataRecords;            
-//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-//            return result;
-        } catch (NoResultException e) {
-            return Collections.emptyList();
         } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
+            throw new Exception(e);
         }
-        return Collections.emptyList();
     }
     
     /*
@@ -70,16 +62,9 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     }
     */
     
-    public List<DataRecord> getCountsByAcod(String customerNo, List<String> accountSpecials) {
-//    public Set<String> getCountsByAcod(String customerNo, List<String> accountSpecials) {
+    public List<DataRecord> getCountsByAcod(String customerNo, List<String> accountSpecials) throws Exception {
         try {
             String glacods = "'" + StringUtils.listToString(accountSpecials, "','") + "'";
-//            List<DataRecord> dataRecords = selectMaxRows(
-//                "SELECT BSAACID FROM DWH.ACCRLN A WHERE A.CNUM=? AND VALUE(A.BSAACID,'')<>'' AND A.GLACOD IN (" + glacods + ") "+
-//                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
-//                    "AND (CURRENT DATE - A.DRLNC) <= 1131 " +
-//                    "AND A.RLNTYPE <> 1"
-//                , Integer.MAX_VALUE, new Object[]{customerNo});
             List<DataRecord> dataRecords = selectMaxRows(
                 "SELECT * FROM DWH.GL_ACC A WHERE "
                         + "A.CUSTNO=? "
@@ -88,20 +73,12 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
               return dataRecords;
-//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-//            return result;
-        } catch (NoResultException e) {
-            return Collections.emptyList();
         } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
+            throw new Exception(e);
         }
-        return Collections.emptyList();
     }
 
-    public List<DataRecord> getCountsByAcctype(String customerNo, List<String> accountTypes) {
-//    public Set<String> getCountsByAcctype(String customerNo, List<String> accountTypes) {
+    public List<DataRecord> getCountsByAcctype(String customerNo, List<String> accountTypes) throws Exception {
         try {
             accountTypes = accountTypes.stream().filter(accountSpecial -> accountSpecial.matches("[0-9]+")).collect(Collectors.toList());
             String acctypes = StringUtils.listToString(accountTypes, ",");
@@ -115,20 +92,12 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 , Integer.MAX_VALUE, new Object[]{customerNo});
 
             return dataRecords;
-//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-//            return result;
-        } catch (NoResultException e) {
-            return Collections.emptyList();
         } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
+            throw new Exception(e);
         }
-        return Collections.emptyList();
     }
 
-    //    public Set<String> getCountsByCustomerNoOnly(String customerNo, List<String> accountingType) {
-    public List<DataRecord> getCountsByCustomerNoOnly(String customerNo) {
+    public List<DataRecord> getCountsByCustomerNoOnly(String customerNo) throws Exception {
         try {
             List<DataRecord> dataRecords = null;
             dataRecords = selectMaxRows(
@@ -139,50 +108,34 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
 //            }
             return dataRecords;
-//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-//            return result;
-        } catch (NoResultException e) {
-            return Collections.emptyList();
         } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
+            throw new Exception(e);
         }
-        return Collections.emptyList();
     }
 
-
-    public List<DataRecord> getAccrlnRecords(String inCondition, String customerNo) {
+    public List<DataRecord> getAccrlnRecords(String inCondition, String customerNo) throws Exception {
         try {
             String selectExpression = "SELECT * FROM DWH.ACCRLN A WHERE A.BSAACID IN (" + inCondition + ")";
             if(customerNo != null)
               selectExpression+=" AND CNUM = '"+customerNo+"'";
             return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
-        } catch (NoResultException e) {
-            return Collections.emptyList();
         } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
+            throw new Exception(e);
         }
-        return Collections.emptyList();
     }
 
-    public List<DataRecord> getGlAccRecords(String inCondition, String customerNo) {
+    public List<DataRecord> getGlAccRecords(String inCondition, String customerNo) throws Exception {
         try {
             String selectExpression = "SELECT * FROM DWH.GL_ACC WHERE BSAACID IN (" + inCondition + ")";
             if(customerNo != null)
               selectExpression+=" AND CUSTNO = '"+customerNo+"'";
             return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
-        } catch (NoResultException e) {
-            return Collections.emptyList();
-        } catch (Exception e) {
-            log.error("",e);
+        } catch (SQLException e) {
+            throw new Exception(e);
         }
-        return Collections.emptyList();
     }
 
-    public void loadCurrency(Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap) {
+    public void loadCurrency(Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap) throws Exception {
         try {
             List<DataRecord> dataRecords = selectMaxRows("SELECT GLCCY,CBCCY,NBDP FROM DWH.CURRENCY", Integer.MAX_VALUE, null);
             for (DataRecord item : dataRecords) {
@@ -190,11 +143,11 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 currencyNBDPMap.put(item.getString("CBCCY"), item.getInteger("NBDP"));
             }
         } catch (SQLException e) {
-            log.error("",e);
+            throw new Exception(e);
         }
     }
 
-    public String getBranchByBsaacidorAcid(String bsaacid, String acid, Date workday) { //todo код БРАНЧА Midas
+    public String getBranchByBsaacidorAcid(String bsaacid, String acid, Date workday) throws Exception { //todo код БРАНЧА Midas
         try {
             DataRecord record = selectFirst(
                 "SELECT BRANCH FROM DH_ACC_INF WHERE CBRF_ACC_NUMBER=? AND DAT=? AND DATTO=?", bsaacid, workday, workday);
@@ -202,8 +155,6 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             if (record != null && !isEmpty(record.getString("BRANCH"))) {
                 return record.getString("BRANCH");
             }
-        } catch (NoResultException e) {
-            // Возможный вариант
         } catch (SQLException e) {
             log.error("",e);
         }
@@ -228,8 +179,6 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             if (record != null && !isEmpty(record.getString("ACCOUNT_NAME"))) {
                 return record.getString("ACCOUNT_NAME");
             }
-        } catch (NoResultException e) {
-            // Возможный вариант
         } catch (SQLException e) {
             log.error("",e);
         }
@@ -239,8 +188,6 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             if (record != null && !isEmpty(record.getString("ANAM"))) {
                 return record.getString("ANAM");
             }
-        } catch (NoResultException e) {
-            // Возможный вариант
         } catch (SQLException e) {
             log.error("",e);
         }
@@ -252,7 +199,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
      * @param bsaacid
      * @return <code>new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB"), record.getBigDecimal("OUTCO"), record.getBigDecimal("OUTRUB")}</code>
      */
-    public BigDecimal[] getAccountBalance(String bsaacid) {
+    public BigDecimal[] getAccountBalance(String bsaacid) throws Exception {
         try {
             DataRecord record = selectFirst(
                     "SELECT INCO + VALUE(INCTURN, 0) INCO, INCORUB + VALUE(INCTURNRUB, 0) INCORUB\n" +
@@ -286,12 +233,12 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 return new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB"), record.getBigDecimal("OUTCO"), record.getBigDecimal("OUTRUB")};
             }
         } catch (SQLException e) {
-            log.error("",e);
+            throw new Exception(e);
         }
         return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO};
     }
 
-    public Set<String> getCountsByAB(String condition) {
+    public Set<String> getCountsByAB(String condition) throws Exception {
         try {
             List<DataRecord> dataRecords = selectMaxRows(
                 "SELECT BSAACID FROM DWH.ACCRLN A WHERE VALUE(A.BSAACID,'')<>'' AND " + condition + " "+
@@ -301,17 +248,12 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
             Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
             return result;
-        } catch (NoResultException e) {
-            return Collections.emptySet();
         } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
+            throw new Exception(e);
         }
-        return Collections.emptySet();
     }
 
-    public String convertBranchToFcc(String branch) {
+    public String convertBranchToFcc(String branch) throws Exception {
         try {
             List<DataRecord> records = select("SELECT FCC_BRANCH FROM DH_BR_MAP WHERE MIDAS_BRANCH=? ORDER BY FCC_BRANCH", branch);
             if (null == records)
@@ -332,7 +274,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 return records.get(0).getString("FCC_BRANCH");
             }
         } catch (SQLException e) {
-            log.error("",e);
+            throw new Exception(e);
         }
         return "";
     }

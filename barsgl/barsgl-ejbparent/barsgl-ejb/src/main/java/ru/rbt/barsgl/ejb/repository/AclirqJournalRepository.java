@@ -30,21 +30,21 @@ public class AclirqJournalRepository extends AbstractBaseEntityRepository<Aclirq
         return journal.getId();
     }
 
-    public void updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage) {
+    public AclirqJournal updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage) {
         AclirqJournal journal = findById(AclirqJournal.class, jId);
         journal.setComment(errorMessage);
         journal.setStatusDate(new Timestamp(new Date().getTime()));
         journal.setStatus(status);
-        update(journal);
+        return update(journal);
     }
 
-    public void updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage, String outMessage) {
+    public AclirqJournal updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage, String outMessage) {
         AclirqJournal journal = findById(AclirqJournal.class, jId);
         journal.setOutMessage(outMessage);
         journal.setComment(errorMessage);
         journal.setStatusDate(new Timestamp(new Date().getTime()));
         journal.setStatus(status);
-        update(journal);
+        return update(journal);
     }
     
     public boolean finalizeOnException(Long jId) {

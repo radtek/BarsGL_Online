@@ -144,7 +144,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         return accounts;
     }
 
-    private String createOutMessage(Set<String> countsToProcess, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) {
+    private String createOutMessage(Set<String> countsToProcess, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
         List<String> stringList = countsToProcess==null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                                      "<asbo:AccountBalanceList xmlns:asbo=\"urn:asbo:barsgl\">\n");
@@ -155,7 +155,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         return result.append("</asbo:AccountBalanceList>").toString();
     }
 
-    private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) {
+    private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
         StringBuilder sb = new StringBuilder();
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
