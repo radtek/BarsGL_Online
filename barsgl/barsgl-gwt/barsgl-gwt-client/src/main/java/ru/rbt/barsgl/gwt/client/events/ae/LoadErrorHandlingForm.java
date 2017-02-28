@@ -5,6 +5,7 @@ import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.ErrorQFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.QuickFilterAction;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -16,6 +17,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
 
@@ -40,7 +42,13 @@ public class LoadErrorHandlingForm  extends GridForm {
         GridAction quickFilterAction;
         abw.addAction(quickFilterAction = new ErrorQFilterAction(grid, colDealSource, colProcDate));
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
-        abw.addAction(manualCorrection()  /*manualCorrectionList()*/); //TODO SecureAction
+        GridAction action = manualCorrection();
+        AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+        if (current_user != null){
+            String permit = current_user.getErrorListProcPermit();
+            if (permit != null && permit.equals("Y")) action = manualCorrectionList();
+        }
+        abw.addAction(action); //TODO SecureAction
         abw.addAction(processCorrection()); //TODO SecureAction
         //Init quick filter with additional parameter
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
