@@ -25,6 +25,7 @@ public class Sql2Xls {
     private final ArrayList<Object> params;
     private List<XlsColumn> columns = new ArrayList();
     private ExcelExportHead head = null;
+    private List<Row> headRows = new ArrayList();
 
     public Sql2Xls(String query, ArrayList<Object> params) {
         this.query = query;
@@ -82,6 +83,10 @@ public class Sql2Xls {
                     cell = row.createCell(e);
                     cell.setCellValue(columns.get(e).getCaption());
                 }
+                for(int e = 0; e < this.columns.size(); ++e) {
+                    curSheet.autoSizeColumn(e, true);
+                }
+                writeHead(curSheet);
 
                 while(rs.next()) {
                     ++rowNumber;
@@ -140,16 +145,13 @@ public class Sql2Xls {
                     }
                 }
 
-                for(int e = 0; e < this.columns.size(); ++e) {
-                    curSheet.autoSizeColumn(e, true);
-                }
-
-                writeHead(curSheet);
-
                 wb.write(out);
             } catch (Exception var24) {
                 var24.printStackTrace();
                 throw new Exception(var24.getMessage(),var24);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                throw new Exception(t.getMessage(),t);
             } finally {
 //                wb.dispose();
                 try {
