@@ -23,6 +23,30 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 public class AccountQueryRepository extends AbstractBaseEntityRepository {
     private static final Logger log = Logger.getLogger(AccountQueryRepository.class);
 
+    public List<DataRecord> getCountsByAccount(String customerNo, Set<String> acids) {
+        try {
+            String acidsStr = "'" + StringUtils.listToString(acids, ",") + "'";
+            List<DataRecord> dataRecords = selectMaxRows(
+                "SELECT BSAACID FROM DWH.GL_ACC A WHERE "
+                        + "A.CUSTNO=? "
+                        + "AND A.BSAACID IN (" + acidsStr + ") "
+                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                , Integer.MAX_VALUE, new Object[]{customerNo});
+            return dataRecords;            
+//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
+//            return result;
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        } catch (SQLException e) {
+            log.error("",e);
+        } catch (Exception e) {
+            log.error("",e);
+        }
+        return Collections.emptyList();
+    }
+    
+    /*
     public Set<String> getCountsByAcid(String customerNo, List<String> acids) {
         try {
             String acidsStr = "'" + StringUtils.listToString(acids, ",") + "'";
@@ -44,75 +68,87 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         }
         return Collections.emptySet();
     }
-
-    public Set<String> getCountsByAcod(String customerNo, List<String> accountSpecials) {
+    */
+    
+    public List<DataRecord> getCountsByAcod(String customerNo, List<String> accountSpecials) {
+//    public Set<String> getCountsByAcod(String customerNo, List<String> accountSpecials) {
         try {
             String glacods = "'" + StringUtils.listToString(accountSpecials, "','") + "'";
+//            List<DataRecord> dataRecords = selectMaxRows(
+//                "SELECT BSAACID FROM DWH.ACCRLN A WHERE A.CNUM=? AND VALUE(A.BSAACID,'')<>'' AND A.GLACOD IN (" + glacods + ") "+
+//                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
+//                    "AND (CURRENT DATE - A.DRLNC) <= 1131 " +
+//                    "AND A.RLNTYPE <> 1"
+//                , Integer.MAX_VALUE, new Object[]{customerNo});
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM DWH.ACCRLN A WHERE A.CNUM=? AND VALUE(A.BSAACID,'')<>'' AND A.GLACOD IN (" + glacods + ") "+
-                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
-                    "AND (CURRENT DATE - A.DRLNC) <= 1131 " +
-                    "AND A.RLNTYPE <> 1"
+                "SELECT * FROM DWH.GL_ACC A WHERE "
+                        + "A.CUSTNO=? "
+                        + "AND A.ACOD IN (" + glacods + ") "
+                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
-
-            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-            return result;
+              return dataRecords;
+//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
+//            return result;
         } catch (NoResultException e) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         } catch (SQLException e) {
             log.error("",e);
         } catch (Exception e) {
             log.error("",e);
         }
-        return Collections.emptySet();
+        return Collections.emptyList();
     }
 
-    public Set<String> getCountsByAcctype(String customerNo, List<String> accountTypes) {
+    public List<DataRecord> getCountsByAcctype(String customerNo, List<String> accountTypes) {
+//    public Set<String> getCountsByAcctype(String customerNo, List<String> accountTypes) {
         try {
             accountTypes = accountTypes.stream().filter(accountSpecial -> accountSpecial.matches("[0-9]+")).collect(Collectors.toList());
             String acctypes = StringUtils.listToString(accountTypes, ",");
 
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM DWH.GL_ACC A WHERE A.CUSTNO=? AND VALUE(A.BSAACID,'')<>'' AND A.ACCTYPE IN (" + acctypes + ") "+
-                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
-                    "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 " + 
-                    "AND A.RLNTYPE <> 1"
+                "SELECT * FROM DWH.GL_ACC A WHERE "
+                        + "A.CUSTNO=? "
+                        + "AND A.ACCTYPE IN (" + acctypes + ") "
+                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
 
-            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-            return result;
+            return dataRecords;
+//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
+//            return result;
         } catch (NoResultException e) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         } catch (SQLException e) {
             log.error("",e);
         } catch (Exception e) {
             log.error("",e);
         }
-        return Collections.emptySet();
+        return Collections.emptyList();
     }
 
     //    public Set<String> getCountsByCustomerNoOnly(String customerNo, List<String> accountingType) {
-    public Set<String> getCountsByCustomerNoOnly(String customerNo) {
+    public List<DataRecord> getCountsByCustomerNoOnly(String customerNo) {
         try {
             List<DataRecord> dataRecords = null;
             dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM DWH.ACCRLN A WHERE CNUM=? AND VALUE(BSAACID,'')<>'' " +
-                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
-                    "AND (CURRENT DATE - A.DRLNC) <= 1131 "+
-                    "AND A.RLNTYPE <> 1"                    
+                "SELECT * FROM DWH.GL_ACC A WHERE "
+                        + "A.CUSTNO=? "
+                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
 //            }
-
-            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-            return result;
+            return dataRecords;
+//            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
+//            return result;
         } catch (NoResultException e) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         } catch (SQLException e) {
             log.error("",e);
         } catch (Exception e) {
             log.error("",e);
         }
-        return Collections.emptySet();
+        return Collections.emptyList();
     }
 
 
@@ -172,9 +208,16 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             log.error("",e);
         }
 
+        String vAcid = null;
         if (acid.length() == 20) {
-            return convertBranchToFcc(acid.substring(acid.length() - 3));
+          vAcid = acid.substring(acid.length() - 3);
+        }else if (acid.length() == 3){
+          vAcid = acid;
         }
+        
+        if(vAcid != null)
+          return convertBranchToFcc(vAcid);
+        
         return "";
     }
 
