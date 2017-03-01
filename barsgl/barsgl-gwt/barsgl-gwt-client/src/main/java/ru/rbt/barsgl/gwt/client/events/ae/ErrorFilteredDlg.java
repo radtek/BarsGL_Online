@@ -35,20 +35,29 @@ public class ErrorFilteredDlg extends DlgFrame {
     private ValuesBox comment;
     private AreaBox commentBox;
     private Label totalOper;
+
+    private Label closeRemark;
+    private Label opersOnPage;
+
     public ErrorFilteredDlg(Mode mode){
         super();
         this.mode = mode;
-        setCaption(mode == Mode.PROCESSING ? "Повторная обработка выбранных сообщений" :
-                "Отметка выбранных сообщений об исправлении");
+        setCaption(mode == Mode.PROCESSING ? "Повторная обработка ошибок выбранных сообщений" :
+                "Закрытие ошибок выбранных сообщений");
 
 
         ok.setText(mode == Mode.PROCESSING ? "Обработать" : "Сохранить");
+
+        closeRemark.setText(Utils.Fmt("Отметка о причине {0} списком",
+                mode == Mode.PROCESSING ? "переобработки" : "закрытия"));
+        opersOnPage.setText(Utils.Fmt("Всего (на странице) операций для {0} ошибок:",
+                mode == Mode.PROCESSING ? "переобработки" : "закрытия"));
     }
 
     @Override
     public Widget createContent(){
         Grid grid = new Grid(1, 2);
-        grid.setWidget(0, 0, new Label("Отметка о причине закрытия списком"));
+        grid.setWidget(0, 0, closeRemark = new Label());
         grid.setWidget(0, 1, comment = new ValuesBox());
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
 
@@ -73,7 +82,7 @@ public class ErrorFilteredDlg extends DlgFrame {
         commentBox.getElement().getStyle().setMarginBottom(10, Style.Unit.PX);
 
         Grid grid2 = new Grid(1, 2);
-        grid2.setText(0, 0, "Всего (на странице) операций для исправления");
+        grid2.setWidget(0, 0, opersOnPage = new Label());
         grid2.setWidget(0, 1, totalOper = new Label());
 
         VerticalPanel vPanel = new VerticalPanel();
@@ -100,7 +109,8 @@ public class ErrorFilteredDlg extends DlgFrame {
     }
 
     private void checkRowsUniformity() throws Exception {
-        if (rows == null || rows.size() == 0) throw new Exception("Отсутствуют данные для повторной обработки");
+        if (rows == null || rows.size() == 0) throw new Exception(Utils.Fmt("Отсутствуют данные для {0} ошибок",
+                mode == Mode.PROCESSING ? "повторной обработки" : "закрытия"));
 
         String src = Utils.toStr((String) rows.get(0).getField(10).getValue());
         Date operDate = (Date) rows.get(0).getField(12).getValue();

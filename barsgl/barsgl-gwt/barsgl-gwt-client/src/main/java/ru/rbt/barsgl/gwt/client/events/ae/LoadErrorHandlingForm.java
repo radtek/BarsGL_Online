@@ -84,7 +84,7 @@ public class LoadErrorHandlingForm  extends GridForm {
     }
 
    private GridAction manualCorrection(){
-       return new GridAction(grid, null, "Отметить как исправленное", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
+       return new GridAction(grid, null, "Закрытие ошибок", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
            DlgFrame errorCorrectionDlg = null;
 
            @Override
@@ -127,7 +127,7 @@ public class LoadErrorHandlingForm  extends GridForm {
 
         sidePanel.setWidget(bar);
 
-        return new GridAction(grid, null, "Отметить как исправленное", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
+        return new GridAction(grid, null, "Закрытие ошибок", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
 
             @Override
             public void execute() {
@@ -174,7 +174,7 @@ public class LoadErrorHandlingForm  extends GridForm {
 
         sidePanel.setWidget(bar);
 
-        return new GridAction(grid, null, "Переобработать", new Image(ImageConstants.INSTANCE.process()), 10, true) {
+        return new GridAction(grid, null, "Переобработка ошибок", new Image(ImageConstants.INSTANCE.process()), 10, true) {
             @Override
             public void execute() {
                 final PushButton button = abw.getButton(this);

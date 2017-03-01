@@ -31,7 +31,7 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
 
     public ErrorCorrectionDlg(){
         super();
-        setCaption("Отметка сообщения об исправлении");
+        setCaption("Отметка сообщения о закрытии ошибки");
         setAfterShowEvent(this);
     }
 
