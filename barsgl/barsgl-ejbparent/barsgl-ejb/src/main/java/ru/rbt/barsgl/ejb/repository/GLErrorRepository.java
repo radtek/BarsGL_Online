@@ -1,11 +1,15 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
+import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
+import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 
@@ -46,5 +50,20 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
             return getRecordByGloRef(gloRef);
         } else
             return null;
+    }
+
+    public List<String> getListSources(String idList) throws SQLException {
+        List<DataRecord> res = select("select distinct SRC_PST from GL_ERRORS where ID in (" + idList + ")") ;
+        return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+    }
+
+    public List<Date> getListDates(String idList) throws SQLException {
+        List<DataRecord> res = select("select distinct PROCDATE from GL_ERRORS where ID in (" + idList + ")") ;
+        return res.stream().map(r -> r.getDate(0)).collect(Collectors.toList());
+    }
+
+    public int getCorrectedCount(String idList) throws SQLException {
+        DataRecord res = selectFirst("select count(1) from GL_ERRORS where CORRECT = 'Y' and ID in (" + idList + ")");
+        return res.getInteger(0);
     }
 }

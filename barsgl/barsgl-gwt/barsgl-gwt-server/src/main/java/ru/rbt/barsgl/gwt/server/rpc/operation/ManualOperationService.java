@@ -26,4 +26,7 @@ public interface ManualOperationService  extends RemoteService {
     RpcRes_Base<ManualAccountWrapper> savePlAccount(ManualAccountWrapper wrapper) throws Exception;
 
     RpcRes_Base<CurExchangeWrapper> exchangeCurrency(CurExchangeWrapper wrapper) throws Exception;
+
+//    RpcRes_Base<Integer> correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type) throws Exception;
+
 }
