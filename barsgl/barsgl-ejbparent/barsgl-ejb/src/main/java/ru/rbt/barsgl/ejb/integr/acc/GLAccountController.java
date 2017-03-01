@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.util.StringUtil;
 import ru.rb.ucb.util.AccountUtil;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.*;
@@ -205,6 +206,43 @@ public class GLAccountController {
     }
 
     /**
+     * Открытие техническолго счета, когда заполнены ключи и счет
+     * @param operation
+     * @param operSide
+     * @param dateOpen
+     * @param keys
+     * @return
+     * @throws Exception
+     */
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount findOrCreateGLAccountTH(
+            GLOperation operation, AccountingType accType,GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) throws Exception {
+
+        GLAccount glAccount = findTechnicalAccount(accType,keys.getCompanyCode(),keys.getCompanyCode());
+
+
+        if (null != glAccount) {
+            return glAccount;
+        }
+
+        /*
+        DataRecord companyCode = Optional
+                .ofNullable(glAccountRepository.selectFirst("select bcbbr, a8cmcd from imbcbbrp where a8brcd = ?", keys.getBranch()))
+                .orElseThrow(() -> new ValidationError(ErrorCode.COMPANY_CODE_NOT_FOUND
+                        , format("Не удалось определить код компании по бранчу '%s'", keys.getBranch())));
+        keys.setCompanyCode(companyCode.getString("bcbbr"));
+        keys.setFilial(companyCode.getString("a8cmcd"));
+        */
+
+        // создать счет с этим номером в GL и BARS
+        String bsaacid = this.getGlAccountNumberTHWithKeys(operation,operSide,keys);
+        glAccount = createAccount(bsaacid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
+
+        return glAccount;
+    }
+
+    /**
      * Поиск открытого счета по стороне операции
      * @param operation операция GL
      * @param operSide сторона дебит/крети
@@ -218,6 +256,26 @@ public class GLAccountController {
     @Lock(LockType.READ)
     public String getGlAccountNumberWithKeys(GLOperation operation, GLOperation.OperSide operSide) {
         String bsaacid = C == operSide ? operation.getAccountCredit() : operation.getAccountDebit();
+        Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));
+        return bsaacid;
+    }
+
+    /**
+     * Генерация номера для технического счёта
+     * @param operation
+     * @param operSide
+     * @return
+     */
+    @Lock(LockType.READ)
+    public String getGlAccountNumberTHWithKeys(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) {
+
+        DataRecord drAccParm = glAccountRepository.getActParamByAccType(keys.getAccountType());
+        DataRecord drCurr = glAccountRepository.getCbccy(keys.getCurrency());
+        String bsaacidMask = new StringBuilder().append(drAccParm.getString("ACC2")).append(drCurr.getString("CBCCY")).append("0").append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),4,6)).toString();
+        String keyDigit = glAccountFrontPartController.calculateKeyDigit(bsaacidMask,keys.getCompanyCode());
+
+        String bsaacid = new StringBuilder().append(drAccParm.getString("ACC2")).append(drCurr.getString("CBCCY")).append(keyDigit).append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),4,6)).toString();
+
         Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));
         return bsaacid;
     }
@@ -362,6 +420,7 @@ public class GLAccountController {
 
     private GLAccount createAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.OpenType openType) {
+
         // создать счет GL
         GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
         // определить дополнительные папаметры счета

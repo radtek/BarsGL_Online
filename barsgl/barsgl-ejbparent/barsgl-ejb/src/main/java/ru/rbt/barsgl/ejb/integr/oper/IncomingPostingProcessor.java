@@ -329,7 +329,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         }
     }
 
-    private void checkCurrency(EtlPosting target, GLOperation.OperSide operSide,
+    protected void checkCurrency(EtlPosting target, GLOperation.OperSide operSide,
                                BankCurrency currency, String currencyField, String account, String accountKey) {
         String sideRus = operSide.getMsgName();
         if (null == currency) {
@@ -355,7 +355,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         }
     }
 
-    private void checkAmount(EtlPosting target, GLOperation.OperSide operSide, boolean isCurrencyRUR,
+    protected void checkAmount(EtlPosting target, GLOperation.OperSide operSide, boolean isCurrencyRUR,
                                 BigDecimal amount, BigDecimal amountRu, String amountField) {
         boolean trueAmount = true;
         if (isCurrencyRUR) {                        // валюта - рубли
@@ -369,7 +369,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         }
     }
 
-    private void checkAmountRu(EtlPosting target, GLOperation.OperSide operSide, boolean isCurrencyRUR,
+    protected void checkAmountRu(EtlPosting target, GLOperation.OperSide operSide, boolean isCurrencyRUR,
                              BigDecimal amount, BigDecimal amountRu, String amountFieldRu) {
         boolean trueAmountRu = true;
         if (isCurrencyRUR) {                        // валюта - рубли

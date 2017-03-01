@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejb.entity.etl;
 
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -16,6 +18,9 @@ import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
 @Entity
 @Table(name = "GL_ETLPST")
 public class EtlPosting extends BaseEntity <Long> {
+
+    //Признак технического счёта
+    private static final String _TH = "TH";
 
     @Id
     @Column(name = "ID")
@@ -391,6 +396,31 @@ public class EtlPosting extends BaseEntity <Long> {
 
     public boolean isCurrencyCreditRUR() {
         return BankCurrency.RUB.equals(currencyCredit);
+    }
+
+    /**
+     * Свойство определяющее статус технического счёта
+     * @return
+     */
+    public boolean isTech()
+    {
+        try {
+            AccountKeys keysDb = new AccountKeys(this.getAccountKeyDebit());
+            AccountKeys keysCr = new AccountKeys(this.getAccountKeyCredit());
+            String glseq1 = StringUtils.substr(keysDb.getGlSequence(), 0, 2);
+            String glseq2 = StringUtils.substr(keysCr.getGlSequence(), 0, 2);
+
+            if (glseq1.equals(_TH) && glseq2.equals(_TH)) {
+                return true;
+
+            } else {
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
     }
 
 }

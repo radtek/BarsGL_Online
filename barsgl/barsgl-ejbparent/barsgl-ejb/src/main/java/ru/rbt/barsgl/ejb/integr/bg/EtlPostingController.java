@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
+import ru.rbt.barsgl.ejb.integr.oper.TechAccPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.SimpleOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;

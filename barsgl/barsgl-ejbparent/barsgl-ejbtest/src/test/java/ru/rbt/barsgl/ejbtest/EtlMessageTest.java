@@ -5,6 +5,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
@@ -18,6 +19,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -916,6 +918,79 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         String acc = bsaacid.substring(0,5);
         baseEntityRepository
                 .executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype, INCLUDEBLN) values (?, '1', 'B', '1')", acc);
+    }
+
+    /**
+     * Тестовый метод проверки работы с техническими счетами
+     */
+    @Test public void testTechAccountPostingProcessor()
+    {
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "TECHACC");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        //pst.setAccountCredit("40817036200012959997");
+        //pst.setAccountDebit("40817036250010000018");
+        pst.setAccountKeyDebit(";RUR;;008010201;;;TH01096367;0001;;;;;K+TP;;");
+        pst.setAccountKeyCredit(";RUR;;007010201;;;TH01096366;0001;;;;;K+TP;;");
+        pst.setAmountCredit(new BigDecimal("20320000.000"));
+        pst.setAmountDebit(new BigDecimal("20320000.000"));
+        pst.setAmountCreditRu(pst.getAmountCredit());
+        pst.setAmountDebitRu(pst.getAmountDebit());
+        pst.setCurrencyCredit(BankCurrency.RUB);
+        pst.setCurrencyDebit(BankCurrency.RUB);
+        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setEventId("2316768");
+        pst.setDeptId("TBM");
+        pst.setDealId("875859");
+        pst.setOperationTimestamp(getOperday().getCurrentDate());
+        pst.setNarrative("SW;122240;875859;402727");
+        pst.setRusNarrativeLong("Реализованный финансовый результат по сделке SWAP № KTP875859");
+        pst.setRusNarrativeShort("Реализованный финансовый результат по сделке SWAP № KTP875859");
+        pst.setStorno(YesNo.N);
+        pst.setFan(YesNo.N);
+        pst.setEventType("Revaluation");
+
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+
+//        List<Pd> pds = getPostingPd(getPostingByOper(operation));
+//        Assert.assertTrue(pds.stream().allMatch(pd -> pd.getBsaAcid().matches("^90075.*")));
+
+        /*
+        List<GLPosting> postList = getPostings(operation);
+        Assert.assertNotNull(postList);                 // 1 проводка
+        Assert.assertEquals(postList.size(), 1);
+
+        List<Pd> pdList = getPostingPd(postList.get(0));
+        Pd pdDr = pdList.get(0);
+        Pd pdCr = pdList.get(1);
+        Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
+        Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
+        Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
+        Assert.assertEquals(StringUtils.leftPad(pst.getDealId(), 6, "0"), pdDr.getPref());
+        Assert.assertEquals(StringUtils.leftPad(pst.getDealId(), 6, "0"), pdCr.getPref());
+
+        Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
+        Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
+
+        */
+
     }
 
 

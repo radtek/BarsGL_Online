@@ -202,6 +202,20 @@ public class GLAccountService {
                     throw new DefaultApplicationException(e);
                 }
             }).getBsaAcid();
+        }if(!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
+                && keys.getGlSequence().toUpperCase().startsWith("TH")) {
+            // заполнены и ключи и счет
+            //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            String sAccType = keys.getAccountType();
+            AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
+            return Optional.ofNullable(glAccountController.findTechnicalAccount(accType,keys.getCompanyCode(),keys.getCompanyCode())).orElseGet(() -> {
+                try {
+                    checkNotStorno(operation, operSide);
+                    return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
+                } catch (Exception e) {
+                    throw new DefaultApplicationException(e);
+                }
+            }).getBsaAcid();
         } else {
             // поиск открытого счета по ключам
             return Optional.ofNullable(glAccountController.findGLAccountAE(keys, operSide)).orElseGet(() -> {

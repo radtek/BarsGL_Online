@@ -169,6 +169,37 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    /**
+     * Метод плучения записи из GL_ACCPARM
+     * @param accType код типа счёта
+     * @return даные из таблицы
+     */
+    public DataRecord getActParamByAccType(String accType)
+    {
+        try
+        {
+            String sql = "select ACC2, ACOD, SQ from ACCPARM where ACCTYPE = ? and CTYPE = '0' and TERM='0' and DTE IS NULL";
+            DataRecord res = selectFirst(sql, accType);
+            return res;
+        }
+        catch (SQLException e){
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public DataRecord getCbccy(String ccy)
+    {
+        try
+        {
+            String sql = "select CBCCY from CURRENCY where GLCCY = ?";
+            DataRecord res = selectFirst(sql, ccy);
+            return res;
+        }
+        catch (SQLException e){
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
 
     /**
      * Определяет код валюты ЦБ по номеру счета ЦБ
@@ -623,6 +654,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+
+
 
     public boolean isExistsGLAccountByOpenType(String bsaAcid) {
         try {
