@@ -57,13 +57,16 @@ public class CommonQueueProcessor4 {
     @EJB
     private CoreRepository coreRepository;
 
-    @Inject
+    //@Inject
+    @EJB
     private AccountQueryProcessor queryProcessor;
 
-    @Inject
+    //@Inject
+    @EJB
     private AccountQueryBAProcessor queryProcessorBA;
 
-    @Inject
+    //@Inject
+    @EJB
     private MasterAccountProcessor queryProcessorMAPB;
 
     @EJB
