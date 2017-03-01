@@ -194,14 +194,24 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         if(countsToProcessList != null){
           for (int i = 0; i < countsToProcessList.size(); i += batchSize) {
               result.append(batchCreateOutMessage(countsToProcessList.subList(i, Math.min(i + batchSize, countsToProcessList.size())), 
-                      notExistsAccounts, currencyMap, workday, showUnspents, currencyNBDPMap));
+                      currencyMap, workday, showUnspents, currencyNBDPMap));
           }
         }
 
+        // Если есть счета, для которых нет данных
+        notExistsAccounts.forEach(item -> {
+          result.
+          append("<asbo:AccountDetails>\n").
+            append("<asbo:CBAccountNo>").
+                  append(item).
+            append("</asbo:CBAccountNo>\n").
+          append("</asbo:AccountDetails>\n");
+        });
+        
         return result.append("</asbo:AccountList>").toString();
     }
 
-    private StringBuilder batchCreateOutMessage(List<DataRecord> accrlnRecordsRaw, Set<String> notExistsAccounts, Map<String, String> currencyMap, Date workday, boolean showUnspents, Map<String, Integer> currencyNBDPMap) throws Exception {
+    private StringBuilder batchCreateOutMessage(List<DataRecord> accrlnRecordsRaw, Map<String, String> currencyMap, Date workday, boolean showUnspents, Map<String, Integer> currencyNBDPMap) throws Exception {
 //@@@        String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
 //@@@        List<DataRecord> accrlnRecordsRaw = queryRepository.getAccrlnRecords(inCondition, customerNo);
@@ -323,11 +333,6 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
 //        }
 
         // Если есть счета, для которых нет данных
-        notExistsAccounts.forEach(item -> {
-          sb.append("<asbo:AccountDetails>\n");
-          sb.append("<asbo:CBAccountNo>").append(item).append("</asbo:CBAccountNo>\n");
-          sb.append("</asbo:AccountDetails>\n");
-        });
         /*@@@
         if (counts.size() != processedBsaacids.size()) {
             for (String item : counts) {
