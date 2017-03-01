@@ -11,8 +11,11 @@ import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+
+import java.util.List;
 
 /**
  * Created by ER18837 on 19.08.15.
@@ -151,5 +154,10 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
                 return res;
             }
         }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Integer> correctErrors(List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type) throws Exception {
+        return null;
     }
 }
