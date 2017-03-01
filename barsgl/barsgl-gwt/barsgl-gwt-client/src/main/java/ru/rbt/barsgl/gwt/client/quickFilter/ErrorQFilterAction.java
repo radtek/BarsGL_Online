@@ -14,6 +14,7 @@ import java.util.Date;
 public class ErrorQFilterAction extends QuickFilterAction {
     private Column colDealSource;
     private Column colOperDay;
+    private DlgFrame dlg;
 
     public ErrorQFilterAction(GridWidget grid, Column colDealSource, Column colOperDay){
         super(grid, null, "Быстрый фильтр", new Image(ImageConstants.INSTANCE.quickfilter()), 10);
@@ -23,7 +24,7 @@ public class ErrorQFilterAction extends QuickFilterAction {
 
     @Override
     public DlgFrame getFilterDialog() {
-        return new ErrorQFilterDlg();
+        return dlg == null ? dlg = new ErrorQFilterDlg() : dlg;
     }
 
     @Override

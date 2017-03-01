@@ -1,9 +1,14 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDateBox;
@@ -20,11 +25,35 @@ public class ErrorQFilterDlg extends DlgFrame {
     private DataListBox dealSource;
     private DatePickerBox operDay;
 
+    private int asyncListCount = 1; /*count async lists: dealSource*/
+    private HandlerRegistration registration;
+    private Timer timer;
+
     public ErrorQFilterDlg(){
         super();
         ok.setText(TEXT_CONSTANTS.applyBtn_caption());
         cancel.setText(TEXT_CONSTANTS.btn_cancel());
         setCaption("Выбор параметров обработки ошибок");
+    }
+
+    @Override
+    public void beforeCreateContent() {
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
+    }
+
+    private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
+
+        return new DataListBoxEventHandler(){
+
+            @Override
+            public void completeLoadData(String dataListBoxId) {
+                asyncListCount--;
+
+                if (asyncListCount == 0) {
+                    registration.removeHandler();
+                }
+            }
+        };
     }
 
     @Override
@@ -38,12 +67,33 @@ public class ErrorQFilterDlg extends DlgFrame {
         return grid;
     }
 
-    @Override
-    protected void fillContent(){
+    protected void fillUp(){
         filterParams = (ErrorQFilterParams) params;
         if (null != filterParams){
             dealSource.setSelectValue(ifEmpty(filterParams.getDealSource(), ""));
             operDay.setValue(filterParams.getOperDay());
+        }
+    }
+
+    @Override
+    protected void fillContent(){
+        if (asyncListCount == 0) {
+            //если закончена обработка списков
+            fillUp();
+        } else {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        fillUp();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
         }
     }
 
