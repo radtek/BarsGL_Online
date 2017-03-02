@@ -51,11 +51,11 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     @EJB
     private AclirqJournalRepository journalRepository;
 
-    @EJB
-    private AuditController auditController;
-
-    @EJB
-    private CoreRepository coreRepository;
+//    @EJB
+//    private AuditController auditController;
+//
+//    @EJB
+//    private CoreRepository coreRepository;
 
     @EJB
     private AccountQueryRepository queryRepository;
@@ -179,7 +179,6 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     }
 
     private String processAccountListQuery(String fullTopic, Long jId, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap, boolean showUnspents) throws Exception {
-        //List<DataRecord> countsToProcess = readFromXML(fullTopic, jId);
         Map<AccountMap, Object> map = readFromXML(fullTopic, jId);
         List<DataRecord> countsToProcess = (List<DataRecord>) map.get(AccountMap.EXISTS);
         Set<String> notExistsAccounts = (Set<String>) map.get(AccountMap.NOT_EXISTS);
@@ -212,24 +211,8 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     }
 
     private StringBuilder batchCreateOutMessage(List<DataRecord> accrlnRecordsRaw, Map<String, String> currencyMap, Date workday, boolean showUnspents, Map<String, Integer> currencyNBDPMap) throws Exception {
-//@@@        String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
-
-//@@@        List<DataRecord> accrlnRecordsRaw = queryRepository.getAccrlnRecords(inCondition, customerNo);
-//@@@
-//@@@        List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition, customerNo);
-        
-//@@@        Map<String, DataRecord> glAccRecordMap = new HashMap<>();
-//@@@        for (DataRecord item : glAccRecordsRaw) {
-//@@@            glAccRecordMap.put(item.getString("BSAACID"), item);
-//@@@        }
-
-//@@@        List<String> processedBsaacids = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
-//@@@        try {
         for (DataRecord record : accrlnRecordsRaw) {
-
-            // Список обработанных, чтобы потом заполнить ответы для счетов, по которым нет информации
-//@@@                processedBsaacids.add(record.getString("BSAACID"));
 
             sb.append("<asbo:AccountDetails>\n");
 
@@ -245,33 +228,32 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
 //                sb.append("<asbo:AccountNo>").append(acid).append("</asbo:AccountNo>\n");
             sb.append(toTag("AccountNo", rsubstr(acid, 18)));
 
-//@@@                String branch = queryRepository.getBranchByBsaacidorAcid(record.getString("BSAACID"), acid, workday);
             String branch = queryRepository.getBranchByBsaacidorAcid(record.getString("BSAACID"), 
                     record.getString("BRANCH"), 
                     workday);
+            
+            // method convertBranchToFcc calling from getBranchByBsaacidorAcid now
+            /*
             if (!(branch.charAt(0) >= 'A' && branch.charAt(0) <= 'Z')) {
                 branch = ifEmpty(queryRepository.convertBranchToFcc(branch), branch);
             }
+            */
 
             sb.append("<asbo:Branch>").append(branch).append("</asbo:Branch>\n");
 
-//@@@                sb.append("<asbo:Ccy>").append(currencyMap.get(record.getString("CBCCY"))).append("</asbo:Ccy>\n");
             sb.append("<asbo:Ccy>").append(record.getString("CCY")).append("</asbo:Ccy>\n");
-//@@@                sb.append("<asbo:CcyDigital>").append(record.getString("CBCCY")).append("</asbo:CcyDigital>\n");
-            sb.append("<asbo:CcyDigital>").append(record.getString("BSAACID").substring(5, 8)).append("</asbo:CcyDigital>\n");
-//@@@                sb.append("<asbo:CustomerNo>").append(record.getString("CNUM")).append("</asbo:CustomerNo>\n");
+            String ccyDigital = record.getString("BSAACID").substring(5, 8);
+            sb.append("<asbo:CcyDigital>").append(ccyDigital).append("</asbo:CcyDigital>\n");
             sb.append("<asbo:CustomerNo>").append(record.getString("CUSTNO")).append("</asbo:CustomerNo>\n");
 
-//@@@                String acod = acid.length() == 20 ? acid.substring(11, 15) : "0";
-//@@@                sb.append("<asbo:Special>").append(acod).append("</asbo:Special>\n");
             sb.append("<asbo:Special>").append(record.getString("ACOD")).append("</asbo:Special>\n");
 
             if (showUnspents && isAccRst.get()) {
                 sb.append("<asbo:OpenBalance>\n");
                 BigDecimal[] amounts = queryRepository.getAccountBalance(record.getString("BSAACID"));
                 if (amounts != null) {
-                    sb.append("<asbo:Amount>").append(amounts[0].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
-                    sb.append("<asbo:AmountRub>").append(amounts[1].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
+                    sb.append("<asbo:Amount>").append(amounts[0].movePointLeft(currencyNBDPMap.get(ccyDigital))).append("</asbo:Amount>\n");
+                    sb.append("<asbo:AmountRub>").append(amounts[1].movePointLeft(currencyNBDPMap.get(ccyDigital))).append("</asbo:AmountRub>\n");
                 }
                 XMLGregorianCalendar xmlGregorianCalendar = dateToXML(new Date());
                 sb.append("<asbo:Date>").append(xmlGregorianCalendar.toString().substring(0, 10)).append("</asbo:Date>\n");
@@ -280,37 +262,28 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
 
                 sb.append("<asbo:CurrentBalance>\n");
                 if (amounts != null) {
-                    sb.append("<asbo:Amount>").append(amounts[2].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
-                    sb.append("<asbo:AmountRub>").append(amounts[3].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
+                    sb.append("<asbo:Amount>").append(amounts[2].movePointLeft(currencyNBDPMap.get(ccyDigital))).append("</asbo:Amount>\n");
+                    sb.append("<asbo:AmountRub>").append(amounts[3].movePointLeft(currencyNBDPMap.get(ccyDigital))).append("</asbo:AmountRub>\n");
                 }
                 sb.append("<asbo:Date>").append(xmlGregorianCalendar.toString().substring(0, 10)).append("</asbo:Date>\n");
                 sb.append("<asbo:Time>").append(xmlGregorianCalendar.toString().substring(11, 19)).append("</asbo:Time>\n");
                 sb.append("</asbo:CurrentBalance>\n");
             }
 
-//@@@                sb.append("<asbo:OpenDate>").append(sdf.format(record.getDate("DRLNO"))).append("</asbo:OpenDate>\n");
             sb.append("<asbo:OpenDate>").append(sdf.format(record.getDate("DTO"))).append("</asbo:OpenDate>\n");
 
-//@@@                if (!lastDate.equals(record.getDate("DRLNC"))) {
-//@@@                    sb.append("<asbo:CloseDate>").append(sdf.format(record.getDate("DRLNC"))).append("</asbo:CloseDate>\n");
             if (record.getDate("DTC") != null) {
                 sb.append("<asbo:CloseDate>").append(sdf.format(record.getDate("DTC"))).append("</asbo:CloseDate>\n");
             }
 
-//@@@                sb.append("<asbo:Status>").append(lastDate.compareTo(record.getDate("DRLNC")) == 0 ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");
             sb.append("<asbo:Status>").append(record.getDate("DTC") == null ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");
 
             String sq = acid.length() == 20 ? acid.substring(15, 17) : "0";
             sb.append("<asbo:AccountSequence>").append(sq).append("</asbo:AccountSequence>\n");
 
             String desc = "";
-//@@@                DataRecord glDR = glAccRecordMap.get(record.getString("BSAACID"));
             String glDR = record.getString("BSAACID");
             if (glDR != null) {
-//@@@                    sb.append("<asbo:AccountingType>").append(ifEmpty(glDR.getString("ACCTYPE"), "")).append("</asbo:AccountingType>\n");
-//@@@                    sb.append("<asbo:DealSourceId>").append(ifEmpty(glDR.getString("DEALSRS"), "")).append("</asbo:DealSourceId>\n");
-//@@@                    sb.append("<asbo:DealId>").append(ifEmpty(glDR.getString("DEALID"), "")).append("</asbo:DealId>\n");
-//@@@                    sb.append("<asbo:SubDealId>").append(ifEmpty(glDR.getString("SUBDEALID"), "")).append("</asbo:SubDealId>\n");
                 sb.append("<asbo:AccountingType>").append(ifEmpty(record.getString("ACCTYPE"), "")).append("</asbo:AccountingType>\n");
                 sb.append("<asbo:DealSourceId>").append(ifEmpty(record.getString("DEALSRS"), "")).append("</asbo:DealSourceId>\n");
                 sb.append("<asbo:DealId>").append(ifEmpty(record.getString("DEALID"), "")).append("</asbo:DealId>\n");
@@ -327,23 +300,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
             sb.append(toTag("Description", desc, descriptionLength));
             sb.append("</asbo:AccountDetails>\n");
         }
-//        } catch (Exception ex) {
-//            log.error("", ex);
-//            throw ex;
-//        }
 
-        // Если есть счета, для которых нет данных
-        /*@@@
-        if (counts.size() != processedBsaacids.size()) {
-            for (String item : counts) {
-                if (processedBsaacids.contains(item)) continue;
-                sb.append("<asbo:AccountDetails>\n");
-                sb.append("<asbo:CBAccountNo>").append(item).append("</asbo:CBAccountNo>\n");
-                sb.append("</asbo:AccountDetails>\n");
-            }
-        }
-        */
-        
         return sb;
     }
 

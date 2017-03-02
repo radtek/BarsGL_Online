@@ -186,9 +186,12 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
             sb.append(toTag("AccountNo", rsubstr(acid, 18)));
             sb.append("<asbo:Status>").append(lastDate.compareTo(record.getDate("DRLNC")) == 0 ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");
             String branch = queryRepository.getBranchByBsaacidorAcid(record.getString("BSAACID"), acid, workday);
+            // method convertBranchToFcc calling from getBranchByBsaacidorAcid now
+            /*
             if (!(branch.charAt(0) >= 'A' && branch.charAt(0) <= 'Z')) {
                 branch = ifEmpty(queryRepository.convertBranchToFcc(branch), branch);
             }
+            */
             sb.append("<asbo:Branch>").append(branch).append("</asbo:Branch>\n");
             sb.append("<asbo:CBAccountNo>").append(record.getString("BSAACID")).append("</asbo:CBAccountNo>\n");
 

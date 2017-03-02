@@ -7,7 +7,6 @@ import ru.rbt.barsgl.ejbcore.util.StringUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.persistence.NoResultException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*;
@@ -25,7 +24,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public List<DataRecord> getCountsByAccount(Set<String> acids) throws Exception {
         try {
-            String acidsStr = "'" + StringUtils.listToString(acids, ",") + "'";
+            String acidsStr = "'" + StringUtils.listToString(acids, "','") + "'";
             List<DataRecord> dataRecords = selectMaxRows(
                 "SELECT * FROM DWH.GL_ACC A WHERE "
                         + "A.BSAACID IN (" + acidsStr + ") "
@@ -106,7 +105,6 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
-//            }
             return dataRecords;
         } catch (SQLException e) {
             throw new Exception(e);

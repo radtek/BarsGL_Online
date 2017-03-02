@@ -270,8 +270,10 @@ public class CommonQueueProcessor4 {
                 } catch (Exception e) {
                     log.error("Ошибка при подготовке ответа. ", e);
                     auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
-                    AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
-                    return getErrorMessage(aclirqJournal.getComment());
+                    return journalRepository.executeInNewTransaction(persistence2 -> {
+                        AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
+                        return getErrorMessage(aclirqJournal.getComment());
+                    });
                 }
                 return "";
             });
