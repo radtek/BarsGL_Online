@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.integr.acc.OfrAccountService;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
+import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
 import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -158,6 +159,14 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
 
     @Override
     public RpcRes_Base<Integer> correctErrors(List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type) throws Exception {
-        return null;
+        return new RpcResProcessor<Integer>() {
+            @Override
+            public RpcRes_Base<Integer> buildResponse() throws Throwable {
+                RpcRes_Base<Integer> res = localInvoker.invoke(ReprocessPostingService.class, "correctErrors",
+                        errorIdList, comment, idPstCorr, type);
+                if (res == null) throw new Throwable("Не удалось скорректировать ошибки");
+                return res;
+            }
+        }.process();
     }
 }

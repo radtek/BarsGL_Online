@@ -64,4 +64,5 @@ public class EtlPostingRepository extends AbstractBaseEntityRepository<EtlPostin
         List<EtlPosting> allPostings = select(EtlPosting.class, "from EtlPosting p join fetch p.etlPackage k where k.id = ?1", etlPackage.getId());
         return allPostings.stream().filter(failedPostings::contains).collect(Collectors.toList());
     }
+
 }

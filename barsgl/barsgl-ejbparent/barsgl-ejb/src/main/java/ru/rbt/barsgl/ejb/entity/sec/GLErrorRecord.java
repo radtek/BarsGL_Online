@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.sec;
 
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -58,8 +59,9 @@ public class GLErrorRecord extends BaseEntity<Long> {
     @Column(name = "ID_PST_NEW")
     private String aePostingIdNew;
 
-    @Column(name = "CORRECT", insertable = false)
-    private String correct;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "CORRECT")
+    private YesNo correct;
 
     @Override
     public Long getId() {
@@ -170,12 +172,11 @@ public class GLErrorRecord extends BaseEntity<Long> {
         this.aePostingIdNew = aePostingIdNew;
     }
 
-    public String getCorrect() {
+    public YesNo getCorrect() {
         return correct;
     }
 
-    public void setCorrect(String correct) {
+    public void setCorrect(YesNo correct) {
         this.correct = correct;
     }
-
 }
