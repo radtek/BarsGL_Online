@@ -1,7 +1,10 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.ErrorQFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.QuickFilterAction;
@@ -11,18 +14,19 @@ import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourcePart;
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
 /**
  * Created by akichigi on 14.02.17.
@@ -71,14 +75,32 @@ public class LoadErrorHandlingForm  extends GridForm {
 
                 dlg.setDlgEvents(this);
 
-                Object[] data = {(String) grid.getFieldValue("ID_PST"), grid.getVisibleItems()};
+                Object[] data = {(String) grid.getFieldValue("ID_PST"), grid.getVisibleItems(),
+                                 (Long) grid.getFieldValue("ID_PKG")};
                 dlg.show(data);
             }
 
             @Override
             public void onDlgOkClick(Object prms) throws Exception{
-                System.out.println(prms.toString());
-                dlg.hide(); //???
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                //List<id_pkg>, comment, id_pst, ErrorCorrectType
+                Object[] res = (Object[]) prms;
+
+                BarsGLEntryPoint.operationService.correctErrors((List<Long>)res[0], (String)res[1], (String)res[2] , (ErrorCorrectType)res[3],
+                        new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+                            @Override
+                            public void onSuccess(RpcRes_Base<Integer> res) {
+                                if (res.isError()) {
+                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                                } else {
+                                    dlg.hide();
+                                    refreshAction.execute();
+                                    DialogManager.message("Информация", res.getMessage());
+                                }
+                                WaitingManager.hide();
+                            }
+                        });
             }
         };
     }

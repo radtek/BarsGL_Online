@@ -11,7 +11,9 @@ import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
@@ -24,6 +26,7 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
     private final String CORRECT_LABEL = "ИД сообщ.АЕ исправительной операции";
 
     private ValuesBox comment;
+    private Long id;
     private TxtBox errorID;
     private TxtBox correctID;
     private AreaBox commentBox;
@@ -92,6 +95,7 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
         clear();
         Object[] data = (Object[])params;
         errorID.setValue((String)data[0]);
+        id = (Long)data[2];
     }
 
     private void checkUp(){
@@ -112,9 +116,12 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
     protected boolean onClickOK() throws Exception {
         try {
             checkUp();
-           /* setWrapperFields();
-            params = wrapper;*/
-            params = ">>>> ErrorCorrectionDlg";
+
+            List<Long> listID = new ArrayList<Long>();
+            listID.add(id);
+
+            params = new Object[]{listID, commentBox.getValue(), correctID.getValue(), ErrorCorrectType.CLOSE_ONE};
+
         } catch (IllegalArgumentException e) {
             if (e.getMessage() != null && e.getMessage().equals("column")) {
                 return false;

@@ -9,6 +9,10 @@ import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
@@ -17,6 +21,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  */
 public class ErrorProcessingDlg extends DlgFrame {
     private final String ERROR_LABEL = "ИД сообщ.АЕ";
+    private Long id;
     private ValuesBox comment;
     private TxtBox errorID;
     private AreaBox commentBox;
@@ -78,6 +83,7 @@ public class ErrorProcessingDlg extends DlgFrame {
         clear();
         Object[] data = (Object[])params;
         errorID.setValue((String) data[0]);
+        id = (Long)data[2];
     }
 
     private void checkUp(){
@@ -90,14 +96,16 @@ public class ErrorProcessingDlg extends DlgFrame {
         }
     }
 
-
     @Override
     protected boolean onClickOK() throws Exception {
         try {
             checkUp();
-           /* setWrapperFields();
-            params = wrapper;*/
-            params = ">>>> ErrorProcessingDlg";
+
+            List<Long> listID = new ArrayList<Long>();
+            listID.add(id);
+
+            params = new Object[]{listID, commentBox.getValue(), null, ErrorCorrectType.REPROCESS_ONE};
+
         } catch (IllegalArgumentException e) {
             if (e.getMessage() != null && e.getMessage().equals("column")) {
                 return false;

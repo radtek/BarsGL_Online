@@ -12,7 +12,9 @@ import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -144,9 +146,13 @@ public class ErrorFilteredDlg extends DlgFrame {
     protected boolean onClickOK() throws Exception {
         try {
             checkUp();
-           /* setWrapperFields();
-            params = wrapper;*/
-            params = ">>>> ErrorFilternDlg " + mode.name();
+            List<Long> listID = new ArrayList<Long>();
+            for (Row row : rows){
+                listID.add((Long)row.getField(0).getValue());
+            }
+
+            params = new Object[]{listID, commentBox.getValue(), null,
+                                   mode == Mode.PROCESSING ? ErrorCorrectType.REPROCESS_LIST : ErrorCorrectType.CLOSE_LIST};
         } catch (IllegalArgumentException e) {
             if (e.getMessage() != null && e.getMessage().equals("column")) {
                 return false;
