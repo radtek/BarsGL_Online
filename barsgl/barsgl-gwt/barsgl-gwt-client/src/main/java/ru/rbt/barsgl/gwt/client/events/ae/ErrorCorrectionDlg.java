@@ -27,8 +27,8 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
 
     private ValuesBox comment;
     private Long id;
-    private TxtBox errorID;
-    private TxtBox correctID;
+    private TxtBox id_pst;
+    private TxtBox id_pst_correct;
     private AreaBox commentBox;
 
 
@@ -42,12 +42,12 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
     public Widget createContent() {
         Grid grid = new Grid(2, 2);
         grid.setWidget(0, 0, new Label(ERROR_LABEL));
-        grid.setWidget(0, 1, errorID = new TxtBox());
-        errorID.setReadOnly(true);
-        errorID.setWidth("210px");
+        grid.setWidget(0, 1, id_pst = new TxtBox());
+        id_pst.setReadOnly(true);
+        id_pst.setWidth("210px");
         grid.setWidget(1, 0, new Label(CORRECT_LABEL));
-        grid.setWidget(1, 1, correctID = new TxtBox());
-        correctID.setWidth("210px");
+        grid.setWidget(1, 1, id_pst_correct = new TxtBox());
+        id_pst_correct.setWidth("210px");
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
 
         Grid grid2 = new Grid(1, 2);
@@ -84,8 +84,8 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
     }
 
     private void clear(){
-        errorID.clear();
-        correctID.clear();
+        id_pst.clear();
+        id_pst_correct.clear();
         comment.setSelectedIndex(0);
         commentBox.clear();
     }
@@ -94,15 +94,15 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
     protected void fillContent(){
         clear();
         Object[] data = (Object[])params;
-        errorID.setValue((String)data[0]);
+        id_pst.setValue((String)data[0]);
         id = (Long)data[2];
     }
 
     private void checkUp(){
         try{
-            if ((correctID.getText() == null || correctID.getText().trim().isEmpty()) &&
+            if ((id_pst_correct.getText() == null || id_pst_correct.getText().trim().isEmpty()) &&
                (commentBox.getText() == null || commentBox.getText().trim().isEmpty())) throw new Exception(Utils.Fmt("Пустое значение в поле {0} \nи {1}", CORRECT_LABEL, "Комментарий"));
-            if (correctID.getText() != null &&  correctID.getText().length() > 128) throw new Exception(Utils.Fmt("Количество символов в поле {0} превышает 128", CORRECT_LABEL));
+            if (id_pst_correct.getText() != null &&  id_pst_correct.getText().length() > 128) throw new Exception(Utils.Fmt("Количество символов в поле {0} превышает 128", CORRECT_LABEL));
 
             if (commentBox.getText() != null && commentBox.getText().length() > 255) throw new Exception(Utils.Fmt("Количество символов в поле {0} превышает 255","Комментарий"));
         }catch(Exception e){
@@ -120,7 +120,7 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
             List<Long> listID = new ArrayList<Long>();
             listID.add(id);
 
-            params = new Object[]{listID, commentBox.getValue(), correctID.getValue(), ErrorCorrectType.CLOSE_ONE};
+            params = new Object[]{listID, commentBox.getValue(), id_pst_correct.getValue(), ErrorCorrectType.CLOSE_ONE};
 
         } catch (IllegalArgumentException e) {
             if (e.getMessage() != null && e.getMessage().equals("column")) {
@@ -133,9 +133,8 @@ public class ErrorCorrectionDlg extends DlgFrame implements IAfterShowEvent {
         return true;
     }
 
-
     @Override
     public void afterShow() {
-        correctID.setFocus(true);
+        id_pst_correct.setFocus(true);
     }
 }

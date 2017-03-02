@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -76,7 +75,7 @@ public class LoadErrorHandlingForm  extends GridForm {
                 dlg.setDlgEvents(this);
 
                 Object[] data = {(String) grid.getFieldValue("ID_PST"), grid.getVisibleItems(),
-                                 (Long) grid.getFieldValue("ID_PKG")};
+                                 (Long) grid.getFieldValue("ID_ERR")};
                 dlg.show(data);
             }
 
@@ -84,7 +83,7 @@ public class LoadErrorHandlingForm  extends GridForm {
             public void onDlgOkClick(Object prms) throws Exception{
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                //List<id_pkg>, comment, id_pst, ErrorCorrectType
+                //List<id_err>, comment, id_pst, ErrorCorrectType
                 Object[] res = (Object[]) prms;
 
                 BarsGLEntryPoint.operationService.correctErrors((List<Long>)res[0], (String)res[1], (String)res[2] , (ErrorCorrectType)res[3],
@@ -219,6 +218,7 @@ public class LoadErrorHandlingForm  extends GridForm {
     @Override
     protected Table prepareTable() {
         Table result = new Table();
+        result.addColumn(new Column("ID_ERR", Column.Type.LONG, "ID ошибки", 60, false, false));
         result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60, false, false));
         result.addColumn(new Column("PKG_STATE", Column.Type.STRING, "Статус пакета", 80, false, false));
         result.addColumn(new Column("DT_LOAD", Column.Type.DATETIME, "Время загрузки", 130, false, false));

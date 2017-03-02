@@ -23,7 +23,7 @@ public class ErrorProcessingDlg extends DlgFrame {
     private final String ERROR_LABEL = "ИД сообщ.АЕ";
     private Long id;
     private ValuesBox comment;
-    private TxtBox errorID;
+    private TxtBox id_pst;
     private AreaBox commentBox;
 
    public ErrorProcessingDlg() {
@@ -36,9 +36,9 @@ public class ErrorProcessingDlg extends DlgFrame {
     public Widget createContent() {
         Grid grid = new Grid(1, 2);
         grid.setWidget(0, 0, new Label(ERROR_LABEL));
-        grid.setWidget(0, 1, errorID = new TxtBox());
-        errorID.setReadOnly(true);
-        errorID.setWidth("280px");
+        grid.setWidget(0, 1, id_pst = new TxtBox());
+        id_pst.setReadOnly(true);
+        id_pst.setWidth("280px");
 
         Grid grid2 = new Grid(1, 2);
         grid2.setWidget(0, 0, new Label("Комментарий"));
@@ -73,7 +73,7 @@ public class ErrorProcessingDlg extends DlgFrame {
     }
 
     private void clear(){
-        errorID.clear();
+        id_pst.clear();
         comment.setSelectedIndex(0);
         commentBox.clear();
     }
@@ -82,7 +82,7 @@ public class ErrorProcessingDlg extends DlgFrame {
     protected void fillContent(){
         clear();
         Object[] data = (Object[])params;
-        errorID.setValue((String) data[0]);
+        id_pst.setValue((String) data[0]);
         id = (Long)data[2];
     }
 
