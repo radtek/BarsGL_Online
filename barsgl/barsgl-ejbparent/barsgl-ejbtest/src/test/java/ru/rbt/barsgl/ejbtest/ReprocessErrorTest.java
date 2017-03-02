@@ -68,6 +68,7 @@ public class ReprocessErrorTest extends AbstractTimerJobTest {
                 errorIdList, "testCloseOne", pst.getAePostingId().replace('d', 't'), ErrorCorrectType.CLOSE_ONE);
 
         Assert.assertFalse(res.isError());
+        Assert.assertEquals(1, res.getResult().intValue());
         System.out.println(res.getMessage());
 
         err = (GLErrorRecord) baseEntityRepository.refresh(err, true);
@@ -103,6 +104,7 @@ public class ReprocessErrorTest extends AbstractTimerJobTest {
                 errorIdList, "testReprocessOne", null, ErrorCorrectType.REPROCESS_ONE);
 
         Assert.assertFalse(res.isError());
+        Assert.assertEquals(1, res.getResult().intValue());
         System.out.println(res.getMessage());
 
         err = (GLErrorRecord) baseEntityRepository.refresh(err, true);
@@ -151,6 +153,7 @@ public class ReprocessErrorTest extends AbstractTimerJobTest {
                 errorIdList, "testReprocessList", null, ErrorCorrectType.REPROCESS_LIST);
 
         Assert.assertFalse(res.isError());
+        Assert.assertEquals(3, res.getResult().intValue());
         System.out.println(res.getMessage());
 
         for (Long errId : errorIdList ) {
@@ -205,6 +208,7 @@ public class ReprocessErrorTest extends AbstractTimerJobTest {
                 errorIdList, "testReprocessError", null, ErrorCorrectType.REPROCESS_LIST);
 
         Assert.assertTrue(res.isError());
+        Assert.assertEquals(0, res.getResult().intValue());
         System.out.println(res.getMessage());
 
         for (Long errId : errorIdList ) {

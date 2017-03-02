@@ -81,7 +81,7 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
 
     public int setErrorsCorrected(String idList, String comment, String idPstNew, Date timestamt, String userName) {
         return executeNativeUpdate("update GL_ERRORS e set e.CORRECT = ?1, e.COMMENT = ?2, e.ID_PST_NEW = ?3, e.OTS_PROC = ?4, e.USER_NAME = ?5" +
-                " where e.ID in (" + idList + ") and e.CORRECT = ?6",
+                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?6",
                 YesNo.Y.name(), comment, idPstNew, timestamt, userName, YesNo.N.name());
     }
 
