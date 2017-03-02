@@ -152,7 +152,6 @@ public class GLAccountController {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLAccountAE(GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                        AccountKeys keys, ErrorList descriptors) throws Exception {
-        //todo XX
         GLAccount glAccount = findGLAccountAEnoLock(keys, operSide);     // счет создается вручную
         if (null != glAccount) {
             return glAccount;

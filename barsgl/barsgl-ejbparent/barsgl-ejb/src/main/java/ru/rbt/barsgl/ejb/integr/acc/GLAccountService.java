@@ -309,7 +309,7 @@ public class GLAccountService {
         }
         return bsaasid;
     }
-//todo XX
+//todo XX findBsaAcid_for_XX
     private String findBsaAcid_for_XX(String acid, AccountKeys keys, String operside) throws SQLException {
         final Date operday = operdayController.getOperday().getCurrentDate();
         final List<DataRecord> glacc = glAccountRepository.findByAcidRlntype04(requiredNotEmpty(acid, ""), operday);

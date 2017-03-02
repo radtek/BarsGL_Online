@@ -85,7 +85,7 @@ public enum ErrorCode {
     , BRANCH_NOT_FOUND(2007, "Ключи счета %s: Бранч не найден: '%s' (поле '%s')")
     , COMPANY_CODE_NOT_VALID(2008, "Ключи счета %s: Код филиала '%s' (поле '%s') не соответствует бранчу '%s' (поле '%s')")
     , COMPANY_CODE_NOT_FOUND(2009, "%s")
-    , TOO_MANY_ACCRLN_ENTRIES(2010, "Найдено более одного счета ЦБ '%s' по счету Midas '%s' для CTYPE '%s'")
+    , TOO_MANY_ACCRLN_ENTRIES(2010, "Найдено более одного счета ЦБ '%s' по счету Midas '%s' для '%s'")
     , ACCOUNT_PARAMS_NOT_FOUND(2011, "Ключи счета %s: Не найдены настройки (GL_ACTPARM) для AccountType = '%s', CustomerType = '%s', Term = '%s' на дату '%s'")
     , ACCOUNT_TYPE_IS_NOT_NUMBER(2012, "Ключи счета %s: Неверный формат типа счета (не число): '%s' (поле '%s')")
     , ACCOUNT_TYPE_INVALID(2013, "Ключи счета %s: Тип счета не задан в системе: '%s' (поле '%s')")
