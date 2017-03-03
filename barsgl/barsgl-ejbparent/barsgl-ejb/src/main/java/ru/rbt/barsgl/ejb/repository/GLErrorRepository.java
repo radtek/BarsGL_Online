@@ -70,18 +70,18 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
 
     public List<String> getOperPostList(String idList) throws SQLException {
         List<DataRecord> res = select("select distinct e.ID_PST from GL_ERRORS e join GL_OPER o on e.ID_PST = o.ID_PST" +
-                " where e.ID in (" + idList + ") and o.STATE in (?1)", OperState.POST.name()) ;
+                " where e.ID in (" + idList + ") and o.STATE = ?", OperState.POST.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
     public List<String> getOperCorrList(String idList) throws SQLException {
         List<DataRecord> res = select("select e.ID_PST from GL_ERRORS e " +
-                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?1", YesNo.Y.name()) ;
+                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?", YesNo.Y.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
     public boolean isOperCorrPost(String idPstNew) throws SQLException {
-        DataRecord res = selectFirst("select o.GLOID from GL_OPER o where o.ID_PST = ?1 and o.STATE in (?2)"
+        DataRecord res = selectFirst("select o.GLOID from GL_OPER o where o.ID_PST = ? and o.STATE = ?"
                 , idPstNew, OperState.POST.name() ) ;
         return null != res;
     }
@@ -92,9 +92,9 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
     }
 
     public int setErrorsCorrected(String idList, String corrType, String comment, String idPstNew, Date timestamt, String userName) {
-        int cnt =  executeNativeUpdate("update GL_ERRORS e set e.CORRECT = ?1, e.COMMENT = ?2, e.ID_PST_NEW = ?3, e.OTS_PROC = ?4, e.USER_NAME = ?5, e.CORR_TYPE = ?6," +
-                " e.ID_PKG = (select ID_PKG from GL_ETLPST p where p.ID = e.PST_REF), e.OLD_PKG_DT = ?8" +
-                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?9",
+        int cnt =  executeNativeUpdate("update GL_ERRORS e set e.CORRECT = ?, e.COMMENT = ?, e.ID_PST_NEW = ?, e.OTS_PROC = ?, e.USER_NAME = ?, e.CORR_TYPE = ?," +
+                " e.ID_PKG = (select ID_PKG from GL_ETLPST p where p.ID = e.PST_REF)" +
+                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?",
                 YesNo.Y.name(), comment, idPstNew, timestamt, userName, corrType, YesNo.N.name());
         executeNativeUpdate("update GL_ERRORS e set e.OLD_PKG_DT = (select DT_LOAD from GL_ETLPKG g where g.ID_PKG = e.ID_PKG)" +
                 " where e.ID in (" + idList + ") and e.OLD_PKG_DT is null");
@@ -102,9 +102,9 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
     }
 
     public void updatePostingsStateReprocess(String idPstList, String idPkgList) {
-        executeNativeUpdate("update GL_ETLPST p set p.ECODE = ?1, p.EMSG = ?2 where p.ID in (" + idPstList + ")",
+        executeNativeUpdate("update GL_ETLPST p set p.ECODE = ?, p.EMSG = ? where p.ID in (" + idPstList + ")",
                 null, null);
-        executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?1, p.DT_LOAD = max(p.DT_LOAD, CURRENT TIMESTAMP - 5 DAYS)" +
+        executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = max(p.DT_LOAD, CURRENT TIMESTAMP - 5 DAYS)" +
                 " where p.ID_PKG in (" + idPkgList + ")",
                 EtlPackage.PackageState.LOADED.name());
     }
