@@ -46,6 +46,9 @@ public class ReprocessPostingService {
             if (dates.size() != 1) {
                 errorList.addErrorDescription("В списке более одной даты опердня: " + StringUtils.listToString(dates, ","));
             }
+            if (!StringUtils.isEmpty(idPstCorr) && !errorRepository.isOperCorrPost(idPstCorr)) {
+                errorList.addErrorDescription(String.format("По данному ID_PST '%s' нет операции в статусе 'POST'", idPstCorr));
+            }
             if (!errorList.isEmpty()) {
                 return new RpcRes_Base<>(0, true, errorList.getErrorMessage());
             }

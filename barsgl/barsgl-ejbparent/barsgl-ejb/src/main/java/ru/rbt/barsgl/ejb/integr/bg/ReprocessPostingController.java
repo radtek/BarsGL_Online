@@ -13,10 +13,9 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
+import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.*;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CLOSE_LIST;
-import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CLOSE_ONE;
 
 /**
  * Created by ER18837 on 27.02.17.
@@ -38,14 +37,26 @@ public class ReprocessPostingController {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public int correctPostings(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType) throws SQLException {
         String idList = StringUtils.listToString(errorIdList, ",");
-        int cnt = errorRepository.setErrorsCorrected(idList, comment, idPstNew, userContext.getTimestamp(), userContext.getUserName());
+        if (REPROC  == correctType.getCorrectType()) {
+            List<String> opers = errorRepository.getOperPostList(idList);
+            if (opers.size() != 0) {
+                throw new DefaultApplicationException("В списке есть успешно обработанные операции со статусом 'POST', ИД АЕ: " + StringUtils.listToString(opers, ","));
+            }
+        }
+        List<String> opers = errorRepository.getOperCorrList(idList);
+        if (opers.size() != 0) {
+            throw new DefaultApplicationException("В списке есть переобработанные (закрытые) операции, ИД АЕ: " + StringUtils.listToString(opers, ","));
+        }
+        int cnt = errorRepository.setErrorsCorrected(idList, correctType.getTypeName(), comment, idPstNew, userContext.getTimestamp(), userContext.getUserName());
         if (errorIdList.size() != cnt) {
-            throw new DefaultApplicationException(String.format("В списке есть переобработанные (закрытые) операции: %d", errorIdList.size() - cnt));
+            throw new DefaultApplicationException(String.format("Ошибка обновления таблицы GL_ERRORS. В списке %d записей, обновлено %d",
+                    errorIdList.size(), cnt));
         }
 
-        if(CLOSE_LIST == correctType || CLOSE_ONE == correctType) {
+        if(NEW  == correctType.getCorrectType()) {
             return cnt;
         }
+
         // получить список из GL_ETLPST: ID, PKG_ID
         List<DataRecord> postingList  = errorRepository.getPostingIdList(idList);
         String idPstList = StringUtils.listToString(postingList.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");

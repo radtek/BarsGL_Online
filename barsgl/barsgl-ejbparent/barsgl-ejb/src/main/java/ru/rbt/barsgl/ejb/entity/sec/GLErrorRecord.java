@@ -59,9 +59,19 @@ public class GLErrorRecord extends BaseEntity<Long> {
     @Column(name = "ID_PST_NEW")
     private String aePostingIdNew;
 
+    @Column(name = "ID_PKG")
+    private Long idPackage;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "OLD_PKG_DT")
+    private Date reprocPackageTimestamp;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "CORRECT")
     private YesNo correct;
+
+    @Column(name = "CORR_TYPE")
+    private String correctType;
 
     @Override
     public Long getId() {
@@ -178,5 +188,29 @@ public class GLErrorRecord extends BaseEntity<Long> {
 
     public void setCorrect(YesNo correct) {
         this.correct = correct;
+    }
+
+    public String getCorrectType() {
+        return correctType;
+    }
+
+    public void setCorrectType(String correctType) {
+        this.correctType = correctType;
+    }
+
+    public Long getIdPackage() {
+        return idPackage;
+    }
+
+    public void setIdPackage(Long idPackage) {
+        this.idPackage = idPackage;
+    }
+
+    public Date getReprocPackageTimestamp() {
+        return reprocPackageTimestamp;
+    }
+
+    public void setReprocPackageTimestamp(Date reprocPackageTimestamp) {
+        this.reprocPackageTimestamp = reprocPackageTimestamp;
     }
 }

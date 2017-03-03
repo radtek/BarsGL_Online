@@ -36,6 +36,7 @@ public class LoadErrorHandlingForm  extends GridForm {
     protected Column colDealSource;
 
     private Column colCorrect;
+    private Column colCorrectType;
 
     public LoadErrorHandlingForm() {
         super(FORM_NAME, true);
@@ -225,7 +226,8 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(new Column("CR_DT", Column.Type.DATETIME, "Время обработки", 130));
         result.addColumn(new Column("LWD_STATUS", Column.Type.STRING, "Баланс пред.дня", 80, false, false));
         result.addColumn(new Column("PST_REF", Column.Type.LONG, "ID сообщения АЕ", 70, false, false));
-        result.addColumn(new Column("GLOID", Column.Type.LONG, "ID операции", 70, false, false));
+        result.addColumn(new Column("GLOID", Column.Type.LONG, "ID операции", 70));
+        result.addColumn(new Column("GLOID_NEW", Column.Type.LONG, "ID нов. операции", 70));
         result.addColumn(new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 50));
         result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 70));
         result.addColumn(new Column("ID_PST", Column.Type.STRING, "ИД сообщ АЕ", 80));
@@ -260,7 +262,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(new Column("USER_NAME", Column.Type.STRING, "Исполнитель", 80, false, false));
         result.addColumn(new Column("OTS_PROC", Column.Type.DATETIME, "Время исправления", 130, false, false));
         result.addColumn(colCorrect = new Column("CORRECT", Column.Type.STRING, "Исправлено", 80));
-        result.addColumn(new Column("GLOID_NEW", Column.Type.LONG, "ID переобр. операции", 70, false, false));
+        result.addColumn(new Column("CORR_TYPE", Column.Type.STRING, "Тип корректировки", 80));
         result.addColumn(new Column("ID_PST_NEW", Column.Type.STRING, "ИД исправ. сообщ АЕ", 100, false, false));
         result.addColumn(new Column("COMMENT", Column.Type.STRING, "Комментарий", 300, false, false));
 
