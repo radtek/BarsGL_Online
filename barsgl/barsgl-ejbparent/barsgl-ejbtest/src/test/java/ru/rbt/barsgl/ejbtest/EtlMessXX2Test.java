@@ -1,13 +1,20 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -16,6 +23,9 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+
 /**
  * Created by ER22317 on 28.02.2017.
  */
@@ -23,7 +33,14 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     static final String BSAACID0 = "30424810500014588436";
     static final String ACID = "00400038RUR104902001";
 
-    @Test
+    @Before
+    public void beforeClass() throws Exception{
+        Date operday = DateUtils.parseDate("2016-03-23", "yyyy-MM-dd");
+        setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN);
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        testInitTable();
+    }
+
     public void testInitTable() throws Exception {
         int count = 0;
         if (null == baseEntityRepository.selectFirst("select 1 from GL_ACTPARM where ACCTYPE = '131060102' and CUSTYPE = '00' and term='00' and acc2='30424'")) {
@@ -63,7 +80,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     (Стандартная функциональность формирования ACID и новые процедуры поиска)
     */
     @Test
-    public void test1() throws Exception {
+    public void test01() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -120,7 +137,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     (Стандартная функциональность формирования ACID и новые процедуры поиска)
      */
     @Test
-    public void test2() throws Exception {
+    public void test02() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -175,7 +192,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     (Стандартная функциональность формирования ACID и новые процедуры поиска)
     */
     @Test
-    public void test3() throws Exception {
+    public void test03() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -217,7 +234,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2021"));
+//        "2021"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.MIDAS_PARAMS_NOT_VALID.getStrErrorCode()));
     }
 
     /*
@@ -231,7 +249,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     в активно-пассивных счетах; отличен от клиентов только для PL-счетов.)
      */
     @Test
-    public void test4() throws Exception {
+    public void test04() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -284,7 +302,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     поиска)
      */
     @Test
-    public void test5() throws Exception {
+    public void test05() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -338,7 +356,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     новые процедуры поиска)
      */
     @Test
-    public void test6() throws Exception {
+    public void test06() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -392,7 +410,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     (Стандартная функциональность формирования ACID и новые процедуры поиска)
      */
     @Test
-    public void test7() throws Exception {
+    public void test07() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -448,7 +466,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     интерпретировано как пустое (Шаг 5 а) поиска счета)
     */
     @Test
-    public void test8() throws Exception {
+    public void test08() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -511,7 +529,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     интерпретировано как пустое. (Шаг 5 а) поиска счета)
     */
     @Test
-    public void test9() throws Exception {
+    public void test09() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
@@ -675,7 +693,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2045"));
+        //"2045"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_DEAL.getStrErrorCode()));
     }
 
     /*
@@ -725,7 +744,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2046"));
+        //"2046"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_SUBDEAL.getStrErrorCode()));
     }
 
     /*
@@ -775,7 +795,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2047"));
+        //"2047"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_PLCODE.getStrErrorCode()));
     }
 
     /*
@@ -826,7 +847,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2050"));
+        //"2050"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_DB_PLCODE.getStrErrorCode()));
     }
 
     /*
@@ -1024,7 +1046,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2049"));
+        //"2049"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_ACCRLN_NOT_FOUND.getStrErrorCode()));
     }
 
     /*
@@ -1292,7 +1315,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2048"));
+        //"2048"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_GL_ACC_NOT_FOUND.getStrErrorCode()));
     }
 
     /*
@@ -1521,7 +1545,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2052"));
+        //"2052"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_FL_CTRL.getStrErrorCode()));
     }
     /*
     Case 24: Ключ счета кредита с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 9
@@ -1666,7 +1691,100 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), "2051"));
+        //2051
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_SQ_0.getStrErrorCode()));
+    }
+
+    @Test
+    public void test26_SameAccount22() throws Exception {
+        long stamp = System.currentTimeMillis();
+        String crKeys = "001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;";
+
+        glAccBeginState();
+
+        List<DataRecord> glAcc4 = getGlAccRlnType4();
+        setGlAccDealId123(glAcc4);
+        setGlAcc0DealId();
+        setCloseDateGlAcc(2, glAcc4);
+        setGlAcc4AccType101(glAcc4);
+
+//        GLAccount glAcc = remoteAccess.invoke(GLAccountController.class, "findGLAccountAE",
+//                new AccountKeys(crKeys), GLOperation.OperSide.D );
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(1);
+        pkg.setPostingCnt(2);
+        pkg = (EtlPackage) baseEntityRepository.update(pkg);
+
+        EtlPosting pst1 = newPosting(stamp, pkg);
+        pst1.setAePostingId("21084014");
+        pst1.setEventId("ГК07248804_000000001");
+        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setOperationTimestamp(new Date());
+        pst1.setNarrative("Narrative");
+        pst1.setRusNarrativeLong("RusNarrativeLong");
+        pst1.setRusNarrativeShort("RusNarrativeShort");
+        pst1.setStorno(YesNo.N);
+        pst1.setAmountCredit(new BigDecimal("410.450"));
+        pst1.setAmountDebit(new BigDecimal("410.450"));
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(BankCurrency.RUB);
+        pst1.setSourcePosting("AXAPTA");
+        pst1.setFan(YesNo.N);
+        pst1.setAccountKeyDebit("001;RUR;00400038;351020301;9;;0001042928;0001;47408;;;;K+TP;917244;");
+        pst1.setAccountKeyCredit(crKeys);
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
+
+//        glAccBeginState();
+
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        newAccountOpen(glAcc4, operation.getAccountCredit());
+        String createdAcc = operation.getAccountCredit();
+// повторение
+        pkg = newPackage(System.currentTimeMillis(), "SIMPLE2");
+        Assert.assertTrue(pkg.getId() > 0);
+        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(1);
+        pkg.setPostingCnt(2);
+        pkg = (EtlPackage) baseEntityRepository.update(pkg);
+
+        pst1 = newPosting(stamp, pkg);
+        pst1.setAePostingId("21084014");
+        pst1.setEventId("ГК07248804_000000001");
+        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setOperationTimestamp(new Date());
+        pst1.setNarrative("Narrative");
+        pst1.setRusNarrativeLong("RusNarrativeLong");
+        pst1.setRusNarrativeShort("RusNarrativeShort");
+        pst1.setStorno(YesNo.N);
+        pst1.setAmountCredit(new BigDecimal("410.450"));
+        pst1.setAmountDebit(new BigDecimal("410.450"));
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(BankCurrency.RUB);
+        pst1.setSourcePosting("AXAPTA");
+        pst1.setFan(YesNo.N);
+        pst1.setAccountKeyDebit("001;RUR;00400038;351020301;9;;0001042928;0001;47408;;;;K+TP;917244;");
+        pst1.setAccountKeyCredit(crKeys);
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        operation = (GLOperation) postingController.processMessage(pst1);
+        glAccBeginState();
+
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(createdAcc, operation.getAccountCredit());
+
     }
         //===============================================================
     private void setGlAcc4AccType101(List<DataRecord> glAcc4) {
@@ -1701,10 +1819,17 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
             Assert.assertTrue(count == 1);
         }
     }
+    private void setCloseDateGlAcc(int from, List<DataRecord> glAcc, int to){
+        for(int i = from; i < glAcc.size() - to; i++ ) {
+            int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+            System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+            Assert.assertTrue(count == 1);
+        }
+    }
 
     private List<DataRecord> getGlAccRlnType4() throws Exception{
         List<DataRecord> glAcc = null;
-        glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '"+ACID+"' and rlntype='4'");
+        glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '"+ACID+"' and rlntype='4' order by bsaacid");
         Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
         return glAcc;
     }

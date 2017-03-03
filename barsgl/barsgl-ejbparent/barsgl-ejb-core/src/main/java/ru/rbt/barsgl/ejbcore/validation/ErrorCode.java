@@ -191,6 +191,9 @@ public enum ErrorCode {
     public int getErrorCode() {
         return errorCode;
     }
+    public String getStrErrorCode() {
+        return Integer.toString(errorCode);
+    }
 
     public String getRawMessage() {
         return rawMessage;
