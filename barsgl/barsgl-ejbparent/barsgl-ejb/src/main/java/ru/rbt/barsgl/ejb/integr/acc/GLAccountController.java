@@ -563,7 +563,7 @@ public class GLAccountController {
      * @param keys
      */
     public AccountKeys fillAccountKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
-//        boolean isGlSeqXX = !isEmpty(keys.getGlSequence()) && keys.getGlSequence().toUpperCase().startsWith("XX");
+        boolean isGlSeqXX = !isEmpty(keys.getGlSequence()) && keys.getGlSequence().toUpperCase().startsWith("XX");
         /* не будем подменять пришедшие реальные данные, чтоб потом не думать, что сохранять
         if (isEmpty(keys.getCustomerType())) {
             keys.setCustomerType("00");
@@ -590,15 +590,10 @@ public class GLAccountController {
                 throw error;
             }
         }
-//        if (isGlSeqXX && data.getString("PLCODE") != null){
-//            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, defaultString(keys.getAccountType())
-//                                                  , defaultString(keys.getCustomerNumber())
-//                                                  , defaultString(keys.getAccountCode())
-//                                                  , defaultString(keys.getAccSequence())
-//                                                  , defaultString(keys.getDealId())
-//                                                  , defaultString(keys.getPlCode())
-//                                                  , defaultString(keys.getGlSequence()));
-//        }
+        if (isGlSeqXX && data.getString("PLCODE") != null){
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, side.getMsgName(), defaultString(keys.getAccountType()), defaultString(keys.getCustomerNumber()), defaultString(keys.getAccountCode())
+                                                  , defaultString(keys.getAccSequence()), defaultString(keys.getDealId()), defaultString(keys.getPlCode()), defaultString(keys.getGlSequence()));
+        }
 
         if (isEmpty(keys.getPlCode())) {
             keys.setPlCode(ifEmpty(data.getString("PLCODE"), ""));
@@ -620,11 +615,7 @@ public class GLAccountController {
                 }
             }
         }
-//        todo замена AccSequence для XX
         // подмена сиквенса Майдас для сделок FCC
-//        if (isGlSeqXX)
-//            keys.setAccSequence(sq);
-//        else
         keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
 
         int cnum = (int) glAccountProcessor.stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
