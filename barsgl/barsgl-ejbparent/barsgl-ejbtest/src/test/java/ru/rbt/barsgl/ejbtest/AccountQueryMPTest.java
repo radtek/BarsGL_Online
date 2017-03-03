@@ -140,6 +140,8 @@ mq.password=UsATi8hU
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\test\\lirq1.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 
         sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
+//                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
+//                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
                 new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
                 "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 //                new File(this.getClass().getResource("/AccountBalanceListQuery-B4.xml").getFile()),
