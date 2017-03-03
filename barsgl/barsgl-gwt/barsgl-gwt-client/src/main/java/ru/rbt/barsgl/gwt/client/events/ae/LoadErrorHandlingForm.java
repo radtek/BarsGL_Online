@@ -24,6 +24,8 @@ import ru.rbt.barsgl.shared.user.AppUserWrapper;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourcePart;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
@@ -36,7 +38,6 @@ public class LoadErrorHandlingForm  extends GridForm {
     protected Column colDealSource;
 
     private Column colCorrect;
-    private Column colCorrectType;
 
     public LoadErrorHandlingForm() {
         super(FORM_NAME, true);
@@ -219,6 +220,7 @@ public class LoadErrorHandlingForm  extends GridForm {
     @Override
     protected Table prepareTable() {
         Table result = new Table();
+        Column col;
         result.addColumn(new Column("ID_ERR", Column.Type.LONG, "ID ошибки", 60, false, false));
         result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60, false, false));
         result.addColumn(new Column("PKG_STATE", Column.Type.STRING, "Статус пакета", 80, false, false));
@@ -226,12 +228,12 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(new Column("CR_DT", Column.Type.DATETIME, "Время обработки", 130));
         result.addColumn(new Column("LWD_STATUS", Column.Type.STRING, "Баланс пред.дня", 80, false, false));
         result.addColumn(new Column("PST_REF", Column.Type.LONG, "ID сообщения АЕ", 70, false, false));
-        result.addColumn(new Column("GLOID", Column.Type.LONG, "ID операции", 70));
-        result.addColumn(new Column("GLOID_NEW", Column.Type.LONG, "ID нов. операции", 70));
         result.addColumn(new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 50));
         result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 70));
-        result.addColumn(new Column("ID_PST", Column.Type.STRING, "ИД сообщ АЕ", 80));
+        result.addColumn(new Column("ID_PST", Column.Type.STRING, "ИД сообщ АЕ", 90));
         result.addColumn(colDealSource = new Column("SRC_PST", Column.Type.STRING, "Источник сделки", 70));
+        result.addColumn(new Column("GLOID", Column.Type.LONG, "ID операции", 70));
+        result.addColumn(new Column("GLOID_NEW", Column.Type.LONG, "ID нов. операции", 70));
         result.addColumn(new Column("EVTP", Column.Type.STRING, "Тип события", 80, false, false));
         result.addColumn(colProcDate = new Column("PROCDATE", Column.Type.DATE, "Дата опердня", 80));
         result.addColumn(new Column("VDATE", Column.Type.DATE, "Дата валютирования", 80));
@@ -262,7 +264,9 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(new Column("USER_NAME", Column.Type.STRING, "Исполнитель", 80, false, false));
         result.addColumn(new Column("OTS_PROC", Column.Type.DATETIME, "Время исправления", 130, false, false));
         result.addColumn(colCorrect = new Column("CORRECT", Column.Type.STRING, "Исправлено", 80));
-        result.addColumn(new Column("CORR_TYPE", Column.Type.STRING, "Тип корректировки", 80));
+        colCorrect.setList(getYesNoList());
+        result.addColumn(col = new Column("CORR_TYPE", Column.Type.STRING, "Тип корректировки", 80));
+        col.setList(getEnumLabelsList(ErrorCorrectType.CorrectType.values()));
         result.addColumn(new Column("ID_PST_NEW", Column.Type.STRING, "ИД исправ. сообщ АЕ", 100, false, false));
         result.addColumn(new Column("COMMENT", Column.Type.STRING, "Комментарий", 300, false, false));
 

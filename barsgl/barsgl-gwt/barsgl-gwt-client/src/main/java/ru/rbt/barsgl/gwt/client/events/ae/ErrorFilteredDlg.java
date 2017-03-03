@@ -24,6 +24,8 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  * Created by akichigi on 16.02.17.
  */
 public class ErrorFilteredDlg extends DlgFrame {
+    private final int IDX_SRC = 11;
+    private final int IDX_DATE = 15;
 
     public enum Mode{
         CORRECTION,
@@ -114,13 +116,13 @@ public class ErrorFilteredDlg extends DlgFrame {
         if (rows == null || rows.size() == 0) throw new Exception(Utils.Fmt("Отсутствуют данные для {0} ошибок",
                 mode == Mode.PROCESSING ? "повторной обработки" : "закрытия"));
 
-        String src = Utils.toStr((String) rows.get(0).getField(11).getValue());
-        Date operDate = (Date) rows.get(0).getField(13).getValue();
+        String src = Utils.toStr((String) rows.get(0).getField(IDX_SRC).getValue());
+        Date operDate = (Date) rows.get(0).getField(IDX_DATE).getValue();
         int count = 0;
 
         for ( int i = 1; i < rows.size(); i++){
-            if ((operDate.compareTo((Date) rows.get(i).getField(13).getValue()) != 0) ||
-                  src.compareTo(Utils.toStr((String) rows.get(i).getField(11).getValue()))!= 0){
+            if ((operDate.compareTo((Date) rows.get(i).getField(IDX_DATE).getValue()) != 0) ||
+                  src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0){
                // System.out.println((String)  rows.get(i).getField(10).getValue() + " - " + (Date)  rows.get(i).getField(12).getValue());
                 count++;
             }
