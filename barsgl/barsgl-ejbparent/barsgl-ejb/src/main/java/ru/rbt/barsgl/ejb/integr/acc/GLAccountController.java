@@ -173,14 +173,17 @@ public class GLAccountController {
         return glAccount;
     }
 
+    //todo XX
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public GLAccount createGLAccountXX(GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
+    public String createGLAccountXX(GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                        AccountKeys keys, ErrorList descriptors) throws Exception {
 
-        GLAccount glAccount = findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());     // счет создается вручную
-        if (null != glAccount) {
-            return glAccount;
+        String bsaacidXX = findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
+//        GLAccount glAccount = findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
+        // счет создается вручную
+        if (null != bsaacidXX) {
+            return bsaacidXX;
         }
 
         if (keys.getAccSequence().equals("00")) {
@@ -197,9 +200,7 @@ public class GLAccountController {
         // сгенерировать номер счета ЦБ
         String bsaAcid = getAccountNumber(operSide, dateOpen, keys);
         // создать счет с этим номером в GL и BARS
-        glAccount = createAccount(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
-
-        return glAccount;
+        return createAccount(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW).getBsaAcid();
     }
 
     /**
@@ -1066,17 +1067,19 @@ public class GLAccountController {
     }
 
     @Lock(LockType.READ)
-    public GLAccount findBsaAcid_for_XX(String acid, AccountKeys keys, String operside) throws SQLException {
+    public String findBsaAcid_for_XX(String acid, AccountKeys keys, String operside) throws SQLException {
         final Date operday = operdayController.getOperday().getCurrentDate();
         final List<DataRecord> glacc = glAccountRepository.findByAcidRlntype04(requiredNotEmpty(acid, ""), operday);
         if (1 == glacc.size()) {
-            return glAccountRepository.findById(GLAccount.class, glacc.get(0).getLong("ID"));
+            return glacc.get(0).getString("BSAACID");
+//            return glAccountRepository.findById(GLAccount.class, glacc.get(0).getLong("ID"));
         }else if (1 < glacc.size()){
             String keyAcctype = defaultString(keys.getAccountType());
             final List<DataRecord> filtered = glacc.stream().filter(
                     r -> r.getString("ACCTYPE").equals(keyAcctype)).collect(toList());
             if (filtered.size() == 1){
-                return glAccountRepository.findById(GLAccount.class,filtered.get(0).getLong("ID"));
+                return filtered.get(0).getString("BSAACID");
+//                return glAccountRepository.findById(GLAccount.class,filtered.get(0).getLong("ID"));
             }else if (filtered.size() > 1){
                 throw new ValidationError(GL_SEQ_XX_GL_ACC_NOT_FOUND, operside
                         , defaultString(keys.getAccountType())
@@ -1090,7 +1093,8 @@ public class GLAccountController {
             }
         }else{
             final List<DataRecord> accrln = accRlnRepository.findByAcid_Rlntype0(acid, operday);
-            if (accrln.size() == 1) return glAccountRepository.findById(GLAccount.class,accrln.get(0).getLong("ID"));
+            if (accrln.size() == 1) return accrln.get(0).getString("BSAACID");
+//            if (accrln.size() == 1) return glAccountRepository.findById(GLAccount.class,accrln.get(0).getLong("ID"));
             else if (accrln.size() > 1){
                 throw new ValidationError(GL_SEQ_XX_ACCRLN_NOT_FOUND, operside
                         , defaultString(keys.getAccountType())

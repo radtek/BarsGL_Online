@@ -128,12 +128,12 @@ public class GLAccountService {
             checkDealPlcode(keys, operSide.getMsgName());
             // ищем счет Майдас
             glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
-            GLAccount glAccount = glAccountController.findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
-            if (glAccount != null) {
-                return glAccount.getBsaAcid();
+            String bsaacidXX = glAccountController.findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
+            if (bsaacidXX != null) {
+                return bsaacidXX;
             } else{//создание в accrln,accrlnext(триггер),bsaacc,gl_acc
                 checkNotStorno(operation, operSide);
-                return glAccountController.createGLAccountXX(operation, operSide, dateOpen, keys, null).getBsaAcid();
+                return glAccountController.createGLAccountXX(operation, operSide, dateOpen, keys, null);
             }
         } else if (!isEmpty(keys.getGlSequence())                           // счета ОФР
                 && keys.getGlSequence().toUpperCase().startsWith("PL")) {
