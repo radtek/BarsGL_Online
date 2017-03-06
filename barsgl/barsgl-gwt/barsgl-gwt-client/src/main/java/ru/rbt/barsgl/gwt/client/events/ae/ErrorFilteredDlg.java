@@ -24,8 +24,8 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  * Created by akichigi on 16.02.17.
  */
 public class ErrorFilteredDlg extends DlgFrame {
-    private final int IDX_SRC = 11;
-    private final int IDX_DATE = 15;
+    private final int IDX_SRC = 10;
+    private final int IDX_DATE = 14;
 
     public enum Mode{
         CORRECTION,

@@ -11,7 +11,7 @@ import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.REPROC;
 public enum ErrorCorrectType {
     CLOSE_ONE(NEW), CLOSE_LIST(NEW), REPROCESS_ONE(REPROC), REPROCESS_LIST(REPROC);
 
-    public enum CorrectType implements HasLabel{
+    public enum CorrectType implements HasLabel{ 
         NEW("Новое сообщение"), REPROC("Переобработка");
 
         CorrectType(String label) {
