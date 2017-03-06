@@ -23,13 +23,15 @@ import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourcePart;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.*;
 
 /**
  * Created by akichigi on 14.02.17.
@@ -410,11 +412,16 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(colCorrect = new Column("CORRECT", Column.Type.STRING, "Исправлено", 80));
         colCorrect.setList(getYesNoList());
         result.addColumn(col = new Column("CORR_TYPE", Column.Type.STRING, "Тип корректировки", 80));
-        col.setList(getEnumLabelsList(ErrorCorrectType.CorrectType.values()));
+        col.setList(getCorrectTypeList());
         result.addColumn(new Column("ID_PST_NEW", Column.Type.STRING, "ИД исправ. сообщ АЕ", 100, false, false));
         result.addColumn(new Column("COMMENT", Column.Type.STRING, "Комментарий", 300, false, false));
 
         return result;
+    }
+
+    private HashMap<Serializable, String> getCorrectTypeList() {
+        ErrorCorrectType.CorrectType[] arrayTypes = new ErrorCorrectType.CorrectType[]{NEW, REPROC};
+        return getArrayLabelsList(arrayTypes, true);
     }
 
     @Override
