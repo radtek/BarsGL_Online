@@ -350,27 +350,6 @@ public class GLAccountService {
         return null;
     }
 
-//        private String findBsaAcid(String acid, AccountKeys keys) throws SQLException {
-//        final Date operday = operdayController.getOperday().getCurrentDate();
-//        final List<DataRecord> rlns = accRlnRepository.findByAcid(requiredNotEmpty(acid, "")
-//                , requiredNotEmpty(keys.getAccount2(), ""), operday, !isEmpty(keys.getPlCode()));
-//        if (1 == rlns.size()) {
-//            return rlns.get(0).getString("BSAACID");
-//        } else if (1 < rlns.size() && !isEmpty(keys.getCustomerType())) {
-//            final List<DataRecord> filtered = rlns.stream().filter(
-//                    r -> r.getString("CTYPE").equals(keys.getCustomerType())).collect(toList());
-//            if (1 < filtered.size()) {
-//                throw new ValidationError(TOO_MANY_ACCRLN_ENTRIES
-//                        , filtered.stream().map(r -> r.getString("BSAACID"))
-//                        .limit(10).collect(joining(",")), acid, keys.getCustomerType());
-//            } else {
-//                return filtered.isEmpty() ? null : filtered.get(0).getString("BSAACID");
-//            }
-//        } else {
-//            return null;
-//        }
-//    }
-
     private void checkAccountPermission(ManualAccountWrapper wrapper, FormAction action) {
         String acc2 = wrapper.getBalanceAccount2();
         if (isEmpty(acc2))
