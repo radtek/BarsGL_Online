@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -17,6 +18,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.enums.BoolType;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
@@ -48,6 +50,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         GridAction quickFilterAction;
         abw.addAction(quickFilterAction = new ErrorQFilterAction(grid, colDealSource, colProcDate));
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
+        abw.addSecureAction(edit(), SecurityActionCode.OperErrClose, SecurityActionCode.OperErrProc);
         GridAction action = manualCorrection();
         AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
         if (current_user != null){
@@ -56,6 +59,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         }
         abw.addSecureAction(action, SecurityActionCode.OperErrClose);
         abw.addSecureAction(processCorrection(), SecurityActionCode.OperErrProc);
+
         //Init quick filter with additional parameter
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
         FilterItem item = new FilterItem(colCorrect, FilterCriteria.EQ, "N", true);
@@ -63,6 +67,33 @@ public class LoadErrorHandlingForm  extends GridForm {
         ((QuickFilterAction)quickFilterAction).setInitFilterItems(list);
 
         quickFilterAction.execute();
+    }
+
+    private GridAction edit(){
+        return new GridAction(grid, null, "Редактирование сообщения", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
+            ErrorHandlingEditDlg dlg = null;
+
+            @Override
+            public void execute() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+
+                if (((String) grid.getFieldValue("CORRECT")).equals(BoolType.N.name())) {
+                    DialogManager.message("Информация", "Нельзя редактировать непереобработанное (незакрытое) сообщение");
+                    return;
+                }
+
+                Window.alert((String) grid.getFieldValue("CORR_TYPE"));
+
+                dlg = dlg == null ? new ErrorHandlingEditDlg() : dlg;
+                dlg.setDlgEvents(this);
+
+                Object[] data = {(Long) grid.getFieldValue("ID_ERR"), (String) grid.getFieldValue("ID_PST_NEW"),
+                                 (String) grid.getFieldValue("COMMENT"), ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW")};
+
+                dlg.show(data);
+            }
+        };
     }
 
     private GridAction executeAction(final DlgFrame dlg){

@@ -67,9 +67,9 @@ public enum SecurityActionCode {
     , Acc707Chng("Изменение счета ОФР прошлых лет")
     , OperErrProc("Переобработка ошибок АЕ")
     , OperErrClose("Закрытие ошибок АЕ")
-    /*, ToolsErrLook("Просмотр настройки по обработке ошибок")
-    , ToolsErrChng("Изменение настройки по обработке ошибок")
-    */
+   /* , ToolsErrLook("Просмотр настройки по обработке ошибок")
+    , ToolsErrChng("Изменение настройки по обработке ошибок")*/
+
     ;
 
     private final String desc;
