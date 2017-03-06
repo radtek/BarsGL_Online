@@ -82,7 +82,7 @@ public class ErrorHandlingEditDlg extends DlgFrame implements IAfterShowEvent {
         id = (Long)data[0];
         id_pst_correct.setValue((String) data[1]);
         comment.setValue((String) data[2]);
-        id_pst_correct.setReadOnly(!((boolean) data[3]));
+//        id_pst_correct.setReadOnly(!((boolean) data[3]));
     }
 
     @Override

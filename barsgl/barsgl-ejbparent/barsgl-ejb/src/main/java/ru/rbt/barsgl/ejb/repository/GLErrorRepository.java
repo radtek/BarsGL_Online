@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
+import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
@@ -58,6 +59,11 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
             return null;
     }
 
+    public List<String> getNotUniqueList(String idList) throws SQLException {
+        List<DataRecord> res = select("select ID_PST from GL_ERRORS where ID in (" + idList + ") group by ID_PST having count(1) > 1") ;
+        return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+    }
+
     public List<String> getSourceList(String idList) throws SQLException {
         List<DataRecord> res = select("select distinct SRC_PST from GL_ERRORS where ID in (" + idList + ")") ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
@@ -74,16 +80,15 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
-    public List<String> getOperCorrList(String idList) throws SQLException {
+    public List<String> getOperCorrList(String idList, YesNo isCorrect) throws SQLException {
         List<DataRecord> res = select("select e.ID_PST from GL_ERRORS e " +
-                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?", YesNo.Y.name()) ;
+                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?", isCorrect.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
-    public boolean isOperCorrPost(String idPstNew) throws SQLException {
-        DataRecord res = selectFirst("select o.GLOID from GL_OPER o where o.ID_PST = ? and o.STATE = ?"
-                , idPstNew, OperState.POST.name() ) ;
-        return null != res;
+    public List<GLOperation> getOperationCorrPost(String idPstNew, String srcPst) {
+        return select(GLOperation.class, "from GLOperation o where o.sourcePosting = ?1 and o.aePostingId = ?2 and o.state = ?3"
+                , srcPst, idPstNew, OperState.POST ) ;
     }
 
     public List<DataRecord> getPostingIdList(String idList) throws SQLException {
@@ -107,6 +112,16 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = max(p.DT_LOAD, CURRENT TIMESTAMP - 5 DAYS)" +
                 " where p.ID_PKG in (" + idPkgList + ")",
                 EtlPackage.PackageState.LOADED.name());
+    }
+
+    public int updateErrorsCorrected(String idList, String comment, Date timestamt, String userName) {
+        return executeNativeUpdate("update GL_ERRORS e set e.COMMENT = ?, e.OTS_PROC = ?, e.USER_NAME = ?" +
+                " where e.ID in (" + idList + ") and e.CORRECT = ?", comment, timestamt, userName, YesNo.Y.name());
+    }
+
+    public int updateErrorsCorrected(String idList, String comment, String idPstNew, Date timestamt, String userName) {
+        return executeNativeUpdate("update GL_ERRORS e set e.COMMENT = ?, e.ID_PST_NEW = ?, e.OTS_PROC = ?, e.USER_NAME = ?" +
+                " where e.ID in (" + idList + ") and e.CORRECT = ?", comment, idPstNew, timestamt, userName, YesNo.Y.name());
     }
 
 }
