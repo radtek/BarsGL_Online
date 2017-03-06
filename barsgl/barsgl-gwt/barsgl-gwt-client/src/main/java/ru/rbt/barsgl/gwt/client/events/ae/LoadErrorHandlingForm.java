@@ -69,7 +69,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         quickFilterAction.execute();
     }
 
-    private GridAction edit(){
+    /*private GridAction edit(){
         return new GridAction(grid, null, "Редактирование сообщения", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
             ErrorHandlingEditDlg dlg = null;
 
@@ -89,9 +89,122 @@ public class LoadErrorHandlingForm  extends GridForm {
                 dlg.setDlgEvents(this);
 
                 Object[] data = {(Long) grid.getFieldValue("ID_ERR"), (String) grid.getFieldValue("ID_PST_NEW"),
-                                 (String) grid.getFieldValue("COMMENT"), ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW")};
+                                 (String) grid.getFieldValue("COMMENT"),
+                        ((String) grid.getFieldValue("CORR_TYPE")) != null &&
+                        ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW")};
 
                 dlg.show(data);
+            }
+        };
+    }*/
+
+    /*private GridAction manualCorrection(){
+        return new GridAction(grid, null, "Закрытие ошибок", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
+            DlgFrame errorCorrectionDlg = null;
+
+            @Override
+            public void execute() {
+                executeAction(errorCorrectionDlg == null ? errorCorrectionDlg = new ErrorCorrectionDlg()
+                        : errorCorrectionDlg).execute();
+            }
+        };
+    }*/
+
+
+    private GridAction executeEditAction(final DlgFrame dlg){
+
+        return new GridAction(grid, "", "", null, 0) {
+
+            @Override
+            public void execute() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+
+                if (((String) grid.getFieldValue("CORRECT")).equals(BoolType.N.name())) {
+                    DialogManager.message("Информация", "Нельзя редактировать непереобработанное (незакрытое) сообщение");
+                    return;
+                }
+
+                dlg.setDlgEvents(this);
+
+                Object[] data = {
+                        (Long) grid.getFieldValue("ID_ERR"),
+                        (String) grid.getFieldValue("ID_PST_NEW"),
+                        (String) grid.getFieldValue("COMMENT"),
+                        ((String) grid.getFieldValue("CORR_TYPE")) != null && ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW"),
+                        grid.getVisibleItems()
+                };
+
+                dlg.show(data);
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms) throws Exception{
+              /*  WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                //List<id_err>, comment, id_pst, ErrorCorrectType
+                Object[] res = (Object[]) prms;
+
+                BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
+                        new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+                            @Override
+                            public void onSuccess(RpcRes_Base<Integer> res) {
+                                if (res.isError()) {
+                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                                } else {
+                                    dlg.hide();
+                                    refreshAction.execute();
+                                    DialogManager.message("Информация", res.getMessage());
+                                }
+                                WaitingManager.hide();
+                            }
+                        });*/
+            }
+        };
+    }
+
+    private GridAction edit(){
+        final PopupPanel sidePanel = new PopupPanel(true, true);
+        MenuItem itemCurrent = new MenuItem("Текущее сообщение", new Command() {
+            DlgFrame ErrorHandlingEditDlg = null;
+
+            @Override
+            public void execute() {
+                sidePanel.hide();
+                executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorProcessingDlg()
+                        : ErrorHandlingEditDlg).execute();
+            }
+        });
+
+        MenuItem itemFiltered = new MenuItem("Сообщения по фильтру", new Command() {
+            DlgFrame ErrorHandlingEditListDlg = null;
+
+            @Override
+            public void execute() {
+                sidePanel.hide();
+                executeEditAction(ErrorHandlingEditListDlg == null ? ErrorHandlingEditListDlg = new ErrorHandlingEditListDlg()
+                        : ErrorHandlingEditListDlg).execute();
+            }
+        });
+
+        MenuBar bar = new MenuBar(true);
+        bar.addItem(itemCurrent);
+        bar.addSeparator();
+        bar.addItem(itemFiltered);
+
+        sidePanel.setWidget(bar);
+
+        return new GridAction(grid, null, "Редактирование", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
+            @Override
+            public void execute() {
+                final PushButton button = abw.getButton(this);
+                sidePanel.setPopupPositionAndShow(new PopupPanel.PositionCallback() {
+
+                    @Override
+                    public void setPosition(int i, int i1) {
+                        sidePanel.setPopupPosition(button.getAbsoluteLeft(), button.getAbsoluteTop() + button.getOffsetHeight());
+                    }
+                });
             }
         };
     }
@@ -119,7 +232,7 @@ public class LoadErrorHandlingForm  extends GridForm {
                 //List<id_err>, comment, id_pst, ErrorCorrectType
                 Object[] res = (Object[]) prms;
 
-                BarsGLEntryPoint.operationService.correctErrors((List<Long>)res[0], (String)res[1], (String)res[2] , (ErrorCorrectType)res[3],
+                BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
                         new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
                             @Override
                             public void onSuccess(RpcRes_Base<Integer> res) {
@@ -137,7 +250,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         };
     }
 
-   private GridAction manualCorrection(){
+    private GridAction manualCorrection(){
        return new GridAction(grid, null, "Закрытие ошибок", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
            DlgFrame errorCorrectionDlg = null;
 
@@ -147,7 +260,7 @@ public class LoadErrorHandlingForm  extends GridForm {
                                                         : errorCorrectionDlg).execute();
            }
        };
-   }
+    }
 
     private GridAction manualCorrectionList(){
         final PopupPanel sidePanel = new PopupPanel(true, true);
@@ -163,7 +276,7 @@ public class LoadErrorHandlingForm  extends GridForm {
             }
         });
 
-        MenuItem itemFiltered = new MenuItem("Сообщение по фильтру", new Command() {
+        MenuItem itemFiltered = new MenuItem("Сообщения по фильтру", new Command() {
             DlgFrame errorCorrectionFilteredDlg = null;
 
             @Override
@@ -210,7 +323,7 @@ public class LoadErrorHandlingForm  extends GridForm {
             }
         });
 
-        MenuItem itemFiltered = new MenuItem("Сообщение по фильтру", new Command() {
+        MenuItem itemFiltered = new MenuItem("Сообщения по фильтру", new Command() {
             DlgFrame errorProcessingFilteredDlg = null;
 
             @Override
