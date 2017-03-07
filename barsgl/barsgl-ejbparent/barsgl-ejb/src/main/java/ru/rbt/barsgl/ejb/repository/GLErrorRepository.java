@@ -74,9 +74,14 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         return res.stream().map(r -> new SimpleDateFormat("dd.MM.yyyy").format(r.getDate(0))).collect(Collectors.toList());
     }
 
-    public List<String> getOperPostList(String idList) throws SQLException {
+    public List<String> getErrorCodeList(String idList) throws SQLException {
+        List<DataRecord> res = select("select distinct ERR_CODE from GL_ERRORS where ID in (" + idList + ")") ;
+        return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+    }
+
+    public List<String> getOperPostList(String idList, OperState state) throws SQLException {
         List<DataRecord> res = select("select distinct e.ID_PST from GL_ERRORS e join GL_OPER o on e.ID_PST = o.ID_PST" +
-                " where e.ID in (" + idList + ") and o.STATE = ?", OperState.POST.name()) ;
+                " where e.ID in (" + idList + ") and o.STATE = ?", state.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 

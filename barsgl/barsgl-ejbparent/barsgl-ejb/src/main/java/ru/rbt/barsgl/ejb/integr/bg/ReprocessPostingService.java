@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.integr.bg;
 
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
@@ -13,6 +14,7 @@ import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
+import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
 import javax.persistence.PersistenceException;
@@ -43,15 +45,23 @@ public class ReprocessPostingService {
             String idList = StringUtils.listToString(errorIdList, ",");
             List<String> sources = errorRepository.getSourceList(idList);
             if (sources.size() != 1) {
-                errorList.addErrorDescription("В списке более одного источника сделки: " + StringUtils.listToString(sources, ", "));
+                errorList.addErrorDescription("В списке более одного источника сделки: " + StringUtils.listToString(sources, ", ", "'"));
             }
             List<String> dates = errorRepository.getDateList(idList);
             if (dates.size() != 1) {
-                errorList.addErrorDescription("В списке более одной даты опердня: " + StringUtils.listToString(dates, ", "));
+                errorList.addErrorDescription("В списке более одной даты опердня: " + StringUtils.listToString(dates, ", ", "'"));;
             }
             List<String> notUnique = errorRepository.getNotUniqueList(idList);
             if (notUnique.size() != 0) {
-                errorList.addErrorDescription("В списке есть операции с совпадающим ID_PST: " + StringUtils.listToString(notUnique, ", "));
+                errorList.addErrorDescription("В списке есть операции с совпадающим ID_PST: " + StringUtils.listToString(notUnique, ", ", "'"));
+            }
+            List<String> codes = errorRepository.getErrorCodeList(idList);
+            if (codes.size() != 1) {
+                errorList.addErrorDescription("В списке разные комбинации кодов ошибок: " + StringUtils.listToString(codes, ", ", "'"));
+            }
+            List<String> opers = errorRepository.getOperPostList(idList, OperState.WTAC);
+            if (opers.size() != 0) {
+                throw new DefaultApplicationException("В списке есть операции со статусом 'WTAC', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
             }
             if (!StringUtils.isEmpty(idPstCorr)) {
                 String err = checkIdPst(errorIdList.get(0), idPstCorr);
@@ -62,13 +72,20 @@ public class ReprocessPostingService {
                 return new RpcRes_Base<>(0, true, errorList.getErrorMessage());
             }
 
+            auditController.info(AuditRecord.LogCode.ReprocessError, String.format("Начало оброаботки '%s' ошибок ID : %s",
+                    correctType.getTypeLabel(), idList));
             int cnt = reprocessController.correctPostingErrors(errorIdList, comment, idPstCorr, correctType);
-
-            return new RpcRes_Base<>(errorIdList.size(), false,
-                    String.format("Сообщения АЕ (%d) %s\nДата опердня: '%s'\nИсточник сделки: '%s'", cnt,
-                            correctType.getTypeMessage(), dates.get(0), sources.get(0)));
+            String msg = String.format("Сообщения АЕ (%d) %s\nДата опердня: '%s'\nИсточник сделки: '%s'", cnt,
+                    correctType.getTypeMessage(), dates.get(0), sources.get(0));
+            auditController.info(AuditRecord.LogCode.ReprocessError, msg);
+            return new RpcRes_Base<>(errorIdList.size(), false, msg);
         } catch (Throwable t) {
-            return new RpcRes_Base<>(0, true, getErrorMessage(t));
+            String msg = getErrorMessage(t);
+            if (t instanceof ValidationError)
+                auditController.warning(AuditRecord.LogCode.ReprocessError, msg);
+            else
+                auditController.error(AuditRecord.LogCode.ReprocessError, msg, null, t);
+            return new RpcRes_Base<>(0, true, msg);
         }
     }
 

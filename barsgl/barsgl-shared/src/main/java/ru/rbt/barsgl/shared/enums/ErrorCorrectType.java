@@ -47,6 +47,10 @@ public enum ErrorCorrectType {
         return correctType.name();
     }
 
+    public String getTypeLabel() {
+        return correctType.label;
+    }
+
     public String getTypeMessage() {
         return correctType.message;
     }
