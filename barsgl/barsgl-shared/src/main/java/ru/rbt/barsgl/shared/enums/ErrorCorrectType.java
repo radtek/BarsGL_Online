@@ -11,16 +11,25 @@ public enum ErrorCorrectType {
     CLOSE_ONE(NEW), CLOSE_LIST(NEW), REPROCESS_ONE(REPROC), REPROCESS_LIST(REPROC), EDIT_COMMENT(EDIT), EDIT_PST_COMMENT(EDIT);
 
     public enum CorrectType implements HasLabel{ 
-        NEW("Новое сообщение"), REPROC("Переобработка"), EDIT("Редактирование");
+        NEW("Новое сообщение", "помечены закрытыми"),
+        REPROC("Переобработка", "отправлены на переобработку"),
+        EDIT("Редактирование", "изменены");
 
-        CorrectType(String label) {
+        CorrectType(String label, String message) {
             this.label = label;
+            this.message = message;
         }
 
         private String label;
+        private String message;
+
         @Override
         public String getLabel() {
             return label;
+        }
+
+        public String getMessage() {
+            return message;
         }
     }
 
@@ -36,6 +45,10 @@ public enum ErrorCorrectType {
 
     public String getTypeName() {
         return correctType.name();
+    }
+
+    public String getTypeMessage() {
+        return correctType.message;
     }
 
 }
