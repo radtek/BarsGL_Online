@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
+import ru.rbt.barsgl.gwt.core.dialogs.IAfterShowEvent;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.shared.Utils;
@@ -21,62 +22,38 @@ import java.util.List;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
 /**
- * Created by akichigi on 16.02.17.
+ * Created by akichigi on 06.03.17.
  */
-public class ErrorFilteredDlg extends DlgFrame {
+public class ErrorHandlingEditListDlg extends DlgFrame implements IAfterShowEvent {
     private final int IDX_SRC = 10;
     private final int IDX_DATE = 14;
-    private final int IDX_ERRCODE = 36;
-
-    public enum Mode{
-        CORRECTION,
-        PROCESSING
-    }
-    private final String COMMENT_LABEL = "Отметка о причине закрытия списком";
-
-    private Mode mode;
-    private List<Row> rows;
 
     private ValuesBox comment;
+    private List<Row> rows;
     private AreaBox commentBox;
     private Label totalOper;
 
-    private Label closeRemark;
-    private Label opersOnPage;
+    private final String COMMENT_LABEL = "Отметка о причине переобработки/ закрытии списком";
 
-    public ErrorFilteredDlg(Mode mode){
+    public ErrorHandlingEditListDlg(){
         super();
-        this.mode = mode;
-        setCaption(mode == Mode.PROCESSING ? "Повторная обработка ошибок выбранных сообщений" :
-                "Закрытие ошибок выбранных сообщений");
-
-
-        ok.setText(mode == Mode.PROCESSING ? "Обработать" : "Сохранить");
-
-        closeRemark.setText(Utils.Fmt("Отметка о причине {0} списком",
-                mode == Mode.PROCESSING ? "переобработки" : "закрытия"));
-        opersOnPage.setText(Utils.Fmt("Всего (на странице) операций для {0} ошибок:",
-                mode == Mode.PROCESSING ? "переобработки" : "закрытия"));
-        if (mode == Mode.PROCESSING) {
-            comment.addItem(1, "Исправлены справочники");
-            comment.addItem(2, "Переобработка после системной ошибки");
-        } else{
-            comment.addItem(1, "Операция прислана ошибочно");
-            comment.addItem(2, "Исправлено бухгалтерией");
-        }
+        setCaption("Редактирование списка сообщений");
+        setAfterShowEvent(this);
     }
+
+
 
     @Override
     public Widget createContent(){
         Grid grid = new Grid(1, 2);
-        grid.setWidget(0, 0, closeRemark = new Label());
+        grid.setWidget(0, 0, new Label(COMMENT_LABEL));
         grid.setWidget(0, 1, comment = new ValuesBox());
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
 
         comment.setWidth("280px");
         comment.addItem(0, "");
-       /* comment.addItem(1, "Операция прислана ошибочно");
-        comment.addItem(2, "Исправлено бухгалтерией");*/
+        comment.addItem(1, "Операция прислана ошибочно");
+        comment.addItem(2, "Исправлено бухгалтерией");
 
         comment.addChangeHandler(new ChangeHandler() {
             @Override
@@ -94,7 +71,7 @@ public class ErrorFilteredDlg extends DlgFrame {
         commentBox.getElement().getStyle().setMarginBottom(10, Style.Unit.PX);
 
         Grid grid2 = new Grid(1, 2);
-        grid2.setWidget(0, 0, opersOnPage = new Label());
+        grid2.setWidget(0, 0, new Label("Всего (на странице) операций для редактирования:"));
         grid2.setWidget(0, 1, totalOper = new Label());
 
         VerticalPanel vPanel = new VerticalPanel();
@@ -104,7 +81,6 @@ public class ErrorFilteredDlg extends DlgFrame {
 
         return vPanel;
     }
-
 
     private void clear(){
         totalOper.setText("");
@@ -116,30 +92,27 @@ public class ErrorFilteredDlg extends DlgFrame {
     protected void fillContent() {
         clear();
         Object[] data = (Object[])params;
-        rows = (List<Row>)data[1];
+        commentBox.setValue((String) data[2]);
+        rows = (List<Row>)data[4];
         if (rows != null) totalOper.setText("" + rows.size());
     }
 
     private void checkRowsUniformity() throws Exception {
-        if (rows == null || rows.size() == 0) throw new Exception(Utils.Fmt("Отсутствуют данные для {0} ошибок",
-                mode == Mode.PROCESSING ? "повторной обработки" : "закрытия"));
+        if (rows == null || rows.size() == 0) throw new Exception("Отсутствуют данные для исправления");
 
         String src = Utils.toStr((String) rows.get(0).getField(IDX_SRC).getValue());
         Date operDate = (Date) rows.get(0).getField(IDX_DATE).getValue();
-        String errCode = Utils.toStr((String) rows.get(0).getField(IDX_ERRCODE).getValue());
-
         int count = 0;
 
         for ( int i = 1; i < rows.size(); i++){
             if ((operDate.compareTo((Date) rows.get(i).getField(IDX_DATE).getValue()) != 0) ||
-                 src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0 ||
-                 errCode.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_ERRCODE).getValue()))!= 0){
-
+                    src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0){
+                // System.out.println((String)  rows.get(i).getField(10).getValue() + " - " + (Date)  rows.get(i).getField(12).getValue());
                 count++;
             }
         }
-        if (count > 0) throw new Exception(Utils.Fmt("Выборка содержит операции за разные даты опердня\nили разные источники сделки\nили разные коды ошибки в количестве {0} шт.",
-                                           count));
+        if (count > 0) throw new Exception(Utils.Fmt("Выборка содержит операции за разные даты опердня\nили разные источники сделки в количестве {0} шт.",
+                count));
     }
 
     private void checkUp(){
@@ -164,8 +137,8 @@ public class ErrorFilteredDlg extends DlgFrame {
                 listID.add((Long)row.getField(0).getValue());
             }
 
-            params = new Object[]{listID, commentBox.getValue(), null,
-                                   mode == Mode.PROCESSING ? ErrorCorrectType.REPROCESS_LIST : ErrorCorrectType.CLOSE_LIST};
+            params = new Object[]{listID, commentBox.getValue(), null, ErrorCorrectType.EDIT_COMMENT};
+
         } catch (IllegalArgumentException e) {
             if (e.getMessage() != null && e.getMessage().equals("column")) {
                 return false;
@@ -175,5 +148,10 @@ public class ErrorFilteredDlg extends DlgFrame {
         }
 
         return true;
+    }
+
+    @Override
+    public void afterShow() {
+        commentBox.setFocus(true);
     }
 }

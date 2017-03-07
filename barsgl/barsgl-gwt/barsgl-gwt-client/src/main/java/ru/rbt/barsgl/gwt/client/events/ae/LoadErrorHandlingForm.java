@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -16,6 +15,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BoolType;
@@ -71,9 +71,10 @@ public class LoadErrorHandlingForm  extends GridForm {
         quickFilterAction.execute();
     }
 
-    private GridAction edit(){
-        return new GridAction(grid, null, "Редактирование сообщения", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
-            ErrorHandlingEditDlg dlg = null;
+
+    private GridAction executeEditAction(final DlgFrame dlg){
+
+        return new GridAction(grid, "", "", null, 0) {
 
             @Override
             public void execute() {
@@ -85,15 +86,93 @@ public class LoadErrorHandlingForm  extends GridForm {
                     return;
                 }
 
-                Window.alert((String) grid.getFieldValue("CORR_TYPE"));
-
-                dlg = dlg == null ? new ErrorHandlingEditDlg() : dlg;
                 dlg.setDlgEvents(this);
 
-                Object[] data = {(Long) grid.getFieldValue("ID_ERR"), (String) grid.getFieldValue("ID_PST_NEW"),
-                                 (String) grid.getFieldValue("COMMENT"), ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW")};
+                Object[] data = {
+                        (Long) grid.getFieldValue("ID_ERR"),
+                        (String) grid.getFieldValue("ID_PST_NEW"),
+                        (String) grid.getFieldValue("COMMENT"),
+                        (((Boolean) ((((String) grid.getFieldValue("CORR_TYPE")) != null) && (((String) grid.getFieldValue("CORR_TYPE")).equals("NEW"))))),
+                        grid.getVisibleItems()
+                };
 
                 dlg.show(data);
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms) throws Exception{
+                clickHandler(dlg, prms);
+            }
+        };
+    }
+
+    private void clickHandler(final DlgFrame dlg, final Object prms){
+        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+        //List<id_err>, comment, id_pst, ErrorCorrectType
+        Object[] res = (Object[]) prms;
+
+        BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
+                new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<Integer> res) {
+                        if (res.isError()) {
+                            // DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                            DialogUtils.showInfo("Ошибка", res.getMessage());
+
+                        } else {
+                            dlg.hide();
+                            refreshAction.execute();
+                            //DialogManager.message("Информация", res.getMessage());
+                            DialogUtils.showInfo("Информация", res.getMessage());
+                        }
+                        WaitingManager.hide();
+                    }
+                });
+    }
+
+    private GridAction edit(){
+        final PopupPanel sidePanel = new PopupPanel(true, true);
+        MenuItem itemCurrent = new MenuItem("Текущее сообщение", new Command() {
+            DlgFrame ErrorHandlingEditDlg = null;
+
+            @Override
+            public void execute() {
+                sidePanel.hide();
+                executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorHandlingEditDlg()
+                        : ErrorHandlingEditDlg).execute();
+            }
+        });
+
+        MenuItem itemFiltered = new MenuItem("Сообщения по фильтру", new Command() {
+            DlgFrame ErrorHandlingEditListDlg = null;
+
+            @Override
+            public void execute() {
+                sidePanel.hide();
+                executeEditAction(ErrorHandlingEditListDlg == null ? ErrorHandlingEditListDlg = new ErrorHandlingEditListDlg()
+                        : ErrorHandlingEditListDlg).execute();
+            }
+        });
+
+        MenuBar bar = new MenuBar(true);
+        bar.addItem(itemCurrent);
+        bar.addSeparator();
+        bar.addItem(itemFiltered);
+
+        sidePanel.setWidget(bar);
+
+        return new GridAction(grid, null, "Редактирование", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
+            @Override
+            public void execute() {
+                final PushButton button = abw.getButton(this);
+                sidePanel.setPopupPositionAndShow(new PopupPanel.PositionCallback() {
+
+                    @Override
+                    public void setPosition(int i, int i1) {
+                        sidePanel.setPopupPosition(button.getAbsoluteLeft(), button.getAbsoluteTop() + button.getOffsetHeight());
+                    }
+                });
             }
         };
     }
@@ -116,40 +195,22 @@ public class LoadErrorHandlingForm  extends GridForm {
 
             @Override
             public void onDlgOkClick(Object prms) throws Exception{
-                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-
-                //List<id_err>, comment, id_pst, ErrorCorrectType
-                Object[] res = (Object[]) prms;
-
-                BarsGLEntryPoint.operationService.correctErrors((List<Long>)res[0], (String)res[1], (String)res[2] , (ErrorCorrectType)res[3],
-                        new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
-                            @Override
-                            public void onSuccess(RpcRes_Base<Integer> res) {
-                                if (res.isError()) {
-                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
-                                } else {
-                                    dlg.hide();
-                                    refreshAction.execute();
-                                    DialogManager.message("Информация", res.getMessage());
-                                }
-                                WaitingManager.hide();
-                            }
-                        });
+               clickHandler(dlg, prms);
             }
         };
     }
 
-   private GridAction manualCorrection(){
+    private GridAction manualCorrection(){
        return new GridAction(grid, null, "Закрытие ошибок", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
            DlgFrame errorCorrectionDlg = null;
 
            @Override
            public void execute() {
                executeAction(errorCorrectionDlg == null ? errorCorrectionDlg = new ErrorCorrectionDlg()
-                                                        : errorCorrectionDlg).execute();
+                       : errorCorrectionDlg).execute();
            }
        };
-   }
+    }
 
     private GridAction manualCorrectionList(){
         final PopupPanel sidePanel = new PopupPanel(true, true);
@@ -165,7 +226,7 @@ public class LoadErrorHandlingForm  extends GridForm {
             }
         });
 
-        MenuItem itemFiltered = new MenuItem("Сообщение по фильтру", new Command() {
+        MenuItem itemFiltered = new MenuItem("Сообщения по фильтру", new Command() {
             DlgFrame errorCorrectionFilteredDlg = null;
 
             @Override
@@ -212,7 +273,7 @@ public class LoadErrorHandlingForm  extends GridForm {
             }
         });
 
-        MenuItem itemFiltered = new MenuItem("Сообщение по фильтру", new Command() {
+        MenuItem itemFiltered = new MenuItem("Сообщения по фильтру", new Command() {
             DlgFrame errorProcessingFilteredDlg = null;
 
             @Override
