@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -16,6 +15,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BoolType;
@@ -71,47 +71,6 @@ public class LoadErrorHandlingForm  extends GridForm {
         quickFilterAction.execute();
     }
 
-    /*private GridAction edit(){
-        return new GridAction(grid, null, "Редактирование сообщения", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
-            ErrorHandlingEditDlg dlg = null;
-
-            @Override
-            public void execute() {
-                final Row row = grid.getCurrentRow();
-                if (row == null) return;
-
-                if (((String) grid.getFieldValue("CORRECT")).equals(BoolType.N.name())) {
-                    DialogManager.message("Информация", "Нельзя редактировать непереобработанное (незакрытое) сообщение");
-                    return;
-                }
-
-                Window.alert((String) grid.getFieldValue("CORR_TYPE"));
-
-                dlg = dlg == null ? new ErrorHandlingEditDlg() : dlg;
-                dlg.setDlgEvents(this);
-
-                Object[] data = {(Long) grid.getFieldValue("ID_ERR"), (String) grid.getFieldValue("ID_PST_NEW"),
-                                 (String) grid.getFieldValue("COMMENT"),
-                        ((String) grid.getFieldValue("CORR_TYPE")) != null &&
-                        ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW")};
-
-                dlg.show(data);
-            }
-        };
-    }*/
-
-    /*private GridAction manualCorrection(){
-        return new GridAction(grid, null, "Закрытие ошибок", new Image(ImageConstants.INSTANCE.ok()), 10, true) {
-            DlgFrame errorCorrectionDlg = null;
-
-            @Override
-            public void execute() {
-                executeAction(errorCorrectionDlg == null ? errorCorrectionDlg = new ErrorCorrectionDlg()
-                        : errorCorrectionDlg).execute();
-            }
-        };
-    }*/
-
 
     private GridAction executeEditAction(final DlgFrame dlg){
 
@@ -133,7 +92,7 @@ public class LoadErrorHandlingForm  extends GridForm {
                         (Long) grid.getFieldValue("ID_ERR"),
                         (String) grid.getFieldValue("ID_PST_NEW"),
                         (String) grid.getFieldValue("COMMENT"),
-                        ((String) grid.getFieldValue("CORR_TYPE")) != null && ((String) grid.getFieldValue("CORR_TYPE")).equals("NEW"),
+                        (((Boolean) ((((String) grid.getFieldValue("CORR_TYPE")) != null) && (((String) grid.getFieldValue("CORR_TYPE")).equals("NEW"))))),
                         grid.getVisibleItems()
                 };
 
@@ -142,27 +101,34 @@ public class LoadErrorHandlingForm  extends GridForm {
 
             @Override
             public void onDlgOkClick(Object prms) throws Exception{
-              /*  WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-
-                //List<id_err>, comment, id_pst, ErrorCorrectType
-                Object[] res = (Object[]) prms;
-
-                BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
-                        new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
-                            @Override
-                            public void onSuccess(RpcRes_Base<Integer> res) {
-                                if (res.isError()) {
-                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
-                                } else {
-                                    dlg.hide();
-                                    refreshAction.execute();
-                                    DialogManager.message("Информация", res.getMessage());
-                                }
-                                WaitingManager.hide();
-                            }
-                        });*/
+                clickHandler(dlg, prms);
             }
         };
+    }
+
+    private void clickHandler(final DlgFrame dlg, final Object prms){
+        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+        //List<id_err>, comment, id_pst, ErrorCorrectType
+        Object[] res = (Object[]) prms;
+
+        BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
+                new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<Integer> res) {
+                        if (res.isError()) {
+                            // DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                            DialogUtils.showInfo("Ошибка", res.getMessage());
+
+                        } else {
+                            dlg.hide();
+                            refreshAction.execute();
+                            //DialogManager.message("Информация", res.getMessage());
+                            DialogUtils.showInfo("Информация", res.getMessage());
+                        }
+                        WaitingManager.hide();
+                    }
+                });
     }
 
     private GridAction edit(){
@@ -173,7 +139,7 @@ public class LoadErrorHandlingForm  extends GridForm {
             @Override
             public void execute() {
                 sidePanel.hide();
-                executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorProcessingDlg()
+                executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorHandlingEditDlg()
                         : ErrorHandlingEditDlg).execute();
             }
         });
@@ -229,25 +195,7 @@ public class LoadErrorHandlingForm  extends GridForm {
 
             @Override
             public void onDlgOkClick(Object prms) throws Exception{
-                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-
-                //List<id_err>, comment, id_pst, ErrorCorrectType
-                Object[] res = (Object[]) prms;
-
-                BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
-                        new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
-                            @Override
-                            public void onSuccess(RpcRes_Base<Integer> res) {
-                                if (res.isError()) {
-                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
-                                } else {
-                                    dlg.hide();
-                                    refreshAction.execute();
-                                    DialogManager.message("Информация", res.getMessage());
-                                }
-                                WaitingManager.hide();
-                            }
-                        });
+               clickHandler(dlg, prms);
             }
         };
     }
@@ -259,7 +207,7 @@ public class LoadErrorHandlingForm  extends GridForm {
            @Override
            public void execute() {
                executeAction(errorCorrectionDlg == null ? errorCorrectionDlg = new ErrorCorrectionDlg()
-                                                        : errorCorrectionDlg).execute();
+                       : errorCorrectionDlg).execute();
            }
        };
     }

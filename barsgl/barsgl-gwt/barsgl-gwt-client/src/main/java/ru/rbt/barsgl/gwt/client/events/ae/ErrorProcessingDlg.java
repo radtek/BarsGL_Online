@@ -46,8 +46,8 @@ public class ErrorProcessingDlg extends DlgFrame {
 
         comment.setWidth("280px");
         comment.addItem(0, "");
-        comment.addItem(1, "Операция прислана ошибочно");
-        comment.addItem(2, "Исправлено бухгалтерией");
+        comment.addItem(1, "Исправлены справочники");
+        comment.addItem(2, "Переобработка после системной ошибки");
 
         comment.addChangeHandler(new ChangeHandler() {
             @Override

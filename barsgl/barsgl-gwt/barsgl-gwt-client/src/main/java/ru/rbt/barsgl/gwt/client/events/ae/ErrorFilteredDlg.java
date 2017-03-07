@@ -26,6 +26,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 public class ErrorFilteredDlg extends DlgFrame {
     private final int IDX_SRC = 10;
     private final int IDX_DATE = 14;
+    private final int IDX_ERRCODE = 36;
 
     public enum Mode{
         CORRECTION,
@@ -56,6 +57,13 @@ public class ErrorFilteredDlg extends DlgFrame {
                 mode == Mode.PROCESSING ? "переобработки" : "закрытия"));
         opersOnPage.setText(Utils.Fmt("Всего (на странице) операций для {0} ошибок:",
                 mode == Mode.PROCESSING ? "переобработки" : "закрытия"));
+        if (mode == Mode.PROCESSING) {
+            comment.addItem(1, "Исправлены справочники");
+            comment.addItem(2, "Переобработка после системной ошибки");
+        } else{
+            comment.addItem(1, "Операция прислана ошибочно");
+            comment.addItem(2, "Исправлено бухгалтерией");
+        }
     }
 
     @Override
@@ -67,8 +75,8 @@ public class ErrorFilteredDlg extends DlgFrame {
 
         comment.setWidth("280px");
         comment.addItem(0, "");
-        comment.addItem(1, "Операция прислана ошибочно");
-        comment.addItem(2, "Исправлено бухгалтерией");
+       /* comment.addItem(1, "Операция прислана ошибочно");
+        comment.addItem(2, "Исправлено бухгалтерией");*/
 
         comment.addChangeHandler(new ChangeHandler() {
             @Override
@@ -118,16 +126,19 @@ public class ErrorFilteredDlg extends DlgFrame {
 
         String src = Utils.toStr((String) rows.get(0).getField(IDX_SRC).getValue());
         Date operDate = (Date) rows.get(0).getField(IDX_DATE).getValue();
+        String errCode = Utils.toStr((String) rows.get(0).getField(IDX_ERRCODE).getValue());
+
         int count = 0;
 
         for ( int i = 1; i < rows.size(); i++){
             if ((operDate.compareTo((Date) rows.get(i).getField(IDX_DATE).getValue()) != 0) ||
-                  src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0){
-               // System.out.println((String)  rows.get(i).getField(10).getValue() + " - " + (Date)  rows.get(i).getField(12).getValue());
+                 src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0 ||
+                 errCode.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_ERRCODE).getValue()))!= 0){
+
                 count++;
             }
         }
-        if (count > 0) throw new Exception(Utils.Fmt("Выборка содержит операции за разные даты опердня\nили разные источники сделки в количестве {0} шт.",
+        if (count > 0) throw new Exception(Utils.Fmt("Выборка содержит операции за разные даты опердня\nили разные источники сделки\nили разные коды ошибки в количестве {0} шт.",
                                            count));
     }
 
