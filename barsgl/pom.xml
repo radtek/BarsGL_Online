@@ -10,6 +10,8 @@
         <module>barsgl-common</module>
         <module>security</module>
         <module>barsgl-testjavadoc</module>
+        <module>tasks</module>
+        <module>grid</module>
     </modules>
 
     <!-- TODO слить что ли профили ???-->

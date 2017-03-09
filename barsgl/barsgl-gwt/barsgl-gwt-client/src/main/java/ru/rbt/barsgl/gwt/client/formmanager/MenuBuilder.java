@@ -33,7 +33,7 @@ import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
-import ru.rbt.barsgl.gwt.client.tasks.TasksFormNew;
+import ru.rbt.tasks.gwt.client.tasks.TasksFormNew;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;

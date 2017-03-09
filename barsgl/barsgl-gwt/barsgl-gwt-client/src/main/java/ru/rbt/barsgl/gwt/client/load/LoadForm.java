@@ -20,6 +20,7 @@ import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
@@ -64,14 +65,14 @@ public class LoadForm extends BaseForm {
         Grid g = new Grid(2, 2);
         panel.add(g);
         mSource = createDealSourceListBox("", FIELD_WIDTH);
-        g.setWidget(0, 0, createLabel("Источник сделки", LABEL_WIDTH));
+        g.setWidget(0, 0, Components.createLabel("Источник сделки", LABEL_WIDTH));
         g.setWidget(0, 1, mSource);
 
         mDepartment = createDepartmentListBox("", FIELD_WIDTH, true);
-        g.setWidget(1, 0, createLabel("Подразделение", LABEL_WIDTH));
+        g.setWidget(1, 0, Components.createLabel("Подразделение", LABEL_WIDTH));
         g.setWidget(1, 1, mDepartment);
 
-        Label selectLabel = createLabel("Файл для загрузки");
+        Label selectLabel = Components.createLabel("Файл для загрузки");
         panel.add(selectLabel);
 
         fileUpload = new FileUpload();

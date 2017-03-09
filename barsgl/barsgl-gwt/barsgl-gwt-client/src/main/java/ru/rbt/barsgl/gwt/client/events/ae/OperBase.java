@@ -17,6 +17,7 @@ import ru.rbt.barsgl.shared.user.AppUserWrapper;
 import java.util.EnumSet;
 
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.getWhereInClause;
 
 /**
@@ -78,7 +79,7 @@ public abstract class OperBase extends OperSuperBase {
                 _ownMessages = (Boolean)((Object[])prms)[1];
                 _type = (StepChoiceDlg.MessageType)((Object[])prms)[2];
 
-                FormManagerUI.ChangeStatusBarText("Шаг обработки: " + (_step.isNoneStep() ? "" : _step.getLabel()), FormManagerUI.MessageReason.MSG);
+                StatusBarManager.ChangeStatusBarText("Шаг обработки: " + (_step.isNoneStep() ? "" : _step.getLabel()), StatusBarManager.MessageReason.MSG);
                 doActionVisibility();
 
                 changeWhereStepPart();

@@ -1,12 +1,12 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
-import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;

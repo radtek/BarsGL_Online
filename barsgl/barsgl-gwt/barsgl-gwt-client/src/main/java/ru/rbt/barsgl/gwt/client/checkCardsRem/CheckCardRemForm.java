@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.checkCardsRem;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;

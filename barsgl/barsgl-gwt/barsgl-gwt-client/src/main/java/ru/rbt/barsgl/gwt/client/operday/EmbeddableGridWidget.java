@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import ru.rbt.security.gwt.client.CommonEntryPoint;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
@@ -28,12 +28,12 @@ public class EmbeddableGridWidget extends GridWidget {
         dataProvider = new GridDataProvider(true) {
             @Override
             protected void getServerCount(AsyncCallback<Integer> callback) {
-                CommonEntryPoint.asyncGridService.getAsyncCount(sql, filter, callback);
+                GridEntryPoint.asyncGridService.getAsyncCount(sql, filter, callback);
             }
 
             @Override
             protected void getServerData(int start, int pageSize, AsyncCallback<List<Row>> callback) {
-                CommonEntryPoint.asyncGridService.getAsyncRows(sql, table.getColumns(), start, pageSize, filter, sort, callback);
+                GridEntryPoint.asyncGridService.getAsyncRows(sql, table.getColumns(), start, pageSize, filter, sort, callback);
             }
         };
         setDataProvider(dataProvider);

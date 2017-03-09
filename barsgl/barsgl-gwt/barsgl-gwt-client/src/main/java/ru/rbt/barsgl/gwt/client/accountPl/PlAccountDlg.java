@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import static ru.rbt.barsgl.gwt.core.comp.Components.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
@@ -81,16 +83,16 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
 
         Grid g0 = new Grid(3, 3);
         mainVP.add(g0);
-        g0.setWidget(0, 0, createLabel("Отделение", LABEL_WIDTH));
+        g0.setWidget(0, 0, Components.createLabel("Отделение", LABEL_WIDTH));
         g0.setWidget(0, 1, mBranch = createBranchAuthListBox("", LIST_WIDTH, true));
-        g0.setWidget(1, 0, createLabel("Тип собственности", LABEL_WIDTH));
+        g0.setWidget(1, 0, Components.createLabel("Тип собственности", LABEL_WIDTH));
         g0.setWidget(1, 1, mCustomerType = createCustTypeListBox("", LIST_WIDTH, true));
-        g0.setWidget(2, 0, createLabel("Код срока", LABEL_WIDTH));
+        g0.setWidget(2, 0, Components.createLabel("Код срока", LABEL_WIDTH));
         g0.setWidget(2, 1, mTerm = createTermListBox("", LIST_WIDTH, true));
 
         Grid g1 = new Grid(2, 4);
         mainVP.add(g1);
-        g1.setWidget(0, 2, createLabel("Символ доходов/расходов", LABEL_WIDTH2));
+        g1.setWidget(0, 2, Components.createLabel("Символ доходов/расходов", LABEL_WIDTH2));
         g1.setWidget(0, 3, mPlcode = new LookUpPlcode(TEXT_WIDTH) {
             @Override
             protected void onSetResult() {
@@ -99,8 +101,8 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
             }
         });
         g1.setWidget(1, 0, mAccountTypeButton = createAccountTypeButton("Accounting Type", BUTTON_WIDTH));
-        g1.setWidget(1, 1, createAlignWidget(mAccountType = createTxtIntBox(9, TEXT_WIDTH), FIELD_WIDTH));
-        g1.setWidget(1, 2, createLabel("Б/счет 2-го порядка", LABEL_WIDTH2));
+        g1.setWidget(1, 1, Components.createAlignWidget(mAccountType = createTxtIntBox(9, TEXT_WIDTH), FIELD_WIDTH));
+        g1.setWidget(1, 2, Components.createLabel("Б/счет 2-го порядка", LABEL_WIDTH2));
         g1.setWidget(1, 3, mAcc2 = new LookUpAcc2(TEXT_WIDTH){
             @Override
             protected Object[] getInitialFilterParams() {
@@ -113,18 +115,18 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
 
         Grid g2 = new Grid(2, 2);
         mainVP.add(g2);
-        g2.setWidget(0, 0, createLabel("Название счета", LABEL_WIDTH));
-        g2.setWidget(0, 1, mAccountDesc = createAreaBox(LONG_WIDTH, "60px"));
+        g2.setWidget(0, 0, Components.createLabel("Название счета", LABEL_WIDTH));
+        g2.setWidget(0, 1, mAccountDesc = Components.createAreaBox(LONG_WIDTH, "60px"));
 
         Grid g4 = new Grid(2, 4);
         mainVP.add(g4);
-        g4.setWidget(0, 0, createLabel("Дата открытия", LABEL_WIDTH));
-        g4.setWidget(0, 1, createAlignWidget(mDateOpen = createDateBox(), FIELD_WIDTH2));
-        g4.setWidget(1, 0, createLabel("Дата закрытия", LABEL_WIDTH));
-        g4.setWidget(1, 1, createAlignWidget(mDateClose = createDateBox(null), FIELD_WIDTH2));
+        g4.setWidget(0, 0, Components.createLabel("Дата открытия", LABEL_WIDTH));
+        g4.setWidget(0, 1, Components.createAlignWidget(mDateOpen = createDateBox(), FIELD_WIDTH2));
+        g4.setWidget(1, 0, Components.createLabel("Дата закрытия", LABEL_WIDTH));
+        g4.setWidget(1, 1, Components.createAlignWidget(mDateClose = createDateBox(null), FIELD_WIDTH2));
 
-        g4.setWidget(0, 2, createLabel("Текущий опердень", LABEL_WIDTH));
-        g4.setWidget(0, 3, mDateOperDay = createTxtBox(10));
+        g4.setWidget(0, 2, Components.createLabel("Текущий опердень", LABEL_WIDTH));
+        g4.setWidget(0, 3, mDateOperDay = Components.createTxtBox(10));
 
         setChangeHandlers();
         return mainVP;

@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
@@ -26,7 +27,7 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountBalanceUnload;
-import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.*;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.*;
 
 /**
  * Created by Ivan Sevastyanov<br/>

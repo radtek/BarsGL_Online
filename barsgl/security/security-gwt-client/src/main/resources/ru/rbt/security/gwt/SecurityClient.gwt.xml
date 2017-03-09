@@ -8,5 +8,6 @@
     <inherits name="com.google.gwt.resources.Resources" />
     <inherits name="ru.rbt.security.gwt.SecurityServer" />
     <source path="client" />
+    <entry-point class="ru.rbt.security.gwt.client.CommonEntryPoint"/>
     <extend-property name="locale" values="ru"/>
 </module>

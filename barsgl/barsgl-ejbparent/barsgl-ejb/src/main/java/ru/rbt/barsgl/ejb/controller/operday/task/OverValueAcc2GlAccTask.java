@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountBalanceUnloadTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.audit.controller.AuditController;
@@ -23,7 +23,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
-import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.ERROR;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
 
 /**
  * Created by ER22317 on 01.11.2016.

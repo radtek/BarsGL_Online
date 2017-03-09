@@ -9,8 +9,7 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createAreaBox;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createLabel;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 
 
@@ -28,8 +27,8 @@ public class OperationHandsViewDlg extends OperationHandsDlg {
     public Widget createContent() {
         VerticalPanel mainVP = (VerticalPanel)super.createContent();
         Grid grid = new Grid(1,2);
-        grid.setWidget(0, 0, createLabel("Причина отказа / Код ошибки", LABEL2_WIDTH));
-        grid.setWidget(0, 1, mReasonOfDeny = createAreaBox(LONG_DEP_WIDTH, "70px"));
+        grid.setWidget(0, 0, Components.createLabel("Причина отказа / Код ошибки", LABEL2_WIDTH));
+        grid.setWidget(0, 1, mReasonOfDeny = Components.createAreaBox(LONG_DEP_WIDTH, "70px"));
         mReasonOfDeny.setReadOnly(true);
         mainVP.add(grid);
         return mainVP;

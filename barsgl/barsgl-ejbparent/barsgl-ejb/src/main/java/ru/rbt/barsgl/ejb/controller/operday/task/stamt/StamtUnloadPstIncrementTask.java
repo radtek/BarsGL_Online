@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.audit.controller.AuditController;
@@ -21,7 +21,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.STARTED;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.STARTED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.DELTA_POSTING_INCR;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtIncrement;

@@ -33,7 +33,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import static ru.rbt.barsgl.gwt.core.comp.Components.*;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Sort.ASC;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.LONG;
@@ -99,31 +101,31 @@ public class OfrAccountDlg extends DlgFrame {
 
         g0.setWidget(1, 0, createAlignLabel("ACOD"));
 //        g0.setWidget(1, 1, createAlignList(mAcod = createAcodListBox("", null)));
-        g0.setWidget(1, 2, createLabel("SQ", "40px"));
-        g0.setWidget(1, 3, mSq = createTxtIntBox(2));
+        g0.setWidget(1, 2, Components.createLabel("SQ", "40px"));
+        g0.setWidget(1, 3, mSq = Components.createTxtIntBox(2));
         g0.setWidget(2, 0, createAlignLabel("Тип собственности"));
         g0.setWidget(2, 1, mCustType = createCustTypeListBox("0", LIST_WIDTH, false));
 
         Grid g1 = new Grid(2, 4);
         mainVP.add(g1);
         g1.setWidget(0, 0, createAlignLabel("Дата открытия"));
-        g1.setWidget(0, 1, createAlignField(mDateOpen = createDateBox()));
+        g1.setWidget(0, 1, createAlignField(mDateOpen = Components.createDateBox()));
         g1.setWidget(0, 2, createAlignLabel("Текущий опердень"));
-        g1.setWidget(0, 3, mDateOperDay = createTxtBox(10));
+        g1.setWidget(0, 3, mDateOperDay = Components.createTxtBox(10));
         mDateOperDay.setEnabled(false);
 
         Grid g2 = new Grid(1, 4);
         mainVP.add(g2);
         g2.setWidget(0, 0, createMidasButton());
-        g2.setWidget(0, 1, createAlignField(mAcid = createTxtIntBox(20, "150px")));
+        g2.setWidget(0, 1, createAlignField(mAcid = Components.createTxtIntBox(20, "150px")));
 
         Grid g3 = new Grid(3, 4);
         mainVP.add(g3);
         g3.setWidget(0, 0, createAlignLabel("Балансовый счет"));
-        g3.setWidget(0, 1, createAlignWidget(mAcc2 = createTxtIntBox(5), "80px"));
+        g3.setWidget(0, 1, Components.createAlignWidget(mAcc2 = createTxtIntBox(5), "80px"));
         g3.setWidget(1, 0, createAlignLabel("Символ ОФР"));
         g3.setWidget(1, 0, createOfrButton());	// TODO сделать позже
-        g3.setWidget(1, 1, mSymbolOfr = createTxtIntBox(5));
+        g3.setWidget(1, 1, mSymbolOfr = Components.createTxtIntBox(5));
 
         mAcid.setEnabled(false);
         mAcc2.setEnabled(false);
@@ -231,7 +233,7 @@ public class OfrAccountDlg extends DlgFrame {
 
 
     private Label createAlignLabel(String text) {
-        return createLabel(text, LABEL_WIDTH);
+        return Components.createLabel(text, LABEL_WIDTH);
     }
 
     private DataListBox createAlignList(DataListBox list) {
@@ -240,7 +242,7 @@ public class OfrAccountDlg extends DlgFrame {
     }
 
     private Widget createAlignField(Widget widget) {
-        return createAlignWidget(widget, FIELD_WIDTH);
+        return Components.createAlignWidget(widget, FIELD_WIDTH);
     }
 
     /**

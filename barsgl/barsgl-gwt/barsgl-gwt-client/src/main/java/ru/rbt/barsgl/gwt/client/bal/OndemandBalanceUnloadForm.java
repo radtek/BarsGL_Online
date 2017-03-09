@@ -9,7 +9,6 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
@@ -21,6 +20,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
 
 /**
@@ -69,7 +69,7 @@ public class OndemandBalanceUnloadForm extends BaseForm {
                     WaitingManager.show();
                     Map<String,String> map = new HashMap<>();
                     map.put("operday", format.format(dateUnloadPicker.getValue()));
-                    BarsGLEntryPoint.timerJobService.executeJob(UNLOAD_JOB_NAME, map, new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                    TimerEntryPoint.timerJobService.executeJob(UNLOAD_JOB_NAME, map, new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                         @Override
                         public void onSuccess(List<TimerJobWrapper> result) {
                             WaitingManager.hide();

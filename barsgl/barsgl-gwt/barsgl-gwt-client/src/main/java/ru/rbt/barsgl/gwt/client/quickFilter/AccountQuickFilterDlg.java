@@ -11,6 +11,7 @@ import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 
@@ -55,32 +56,32 @@ public class AccountQuickFilterDlg extends DlgFrame {
         Grid grid = new Grid(8, 2);
         int row = 0;
 
-        grid.setWidget(row, 0, createLabel("Источник сделки", LABEL_WIDTH));
+        grid.setWidget(row, 0, Components.createLabel("Источник сделки", LABEL_WIDTH));
         grid.setWidget(row++, 1, mDealSource = createDealSourceListBox("", FIELD_WIDTH));
 
-        grid.setWidget(row, 0, createLabel("Номер сделки"));
-        grid.setWidget(row++, 1, mDealId = createTxtBox(20, ACCOUNT_WIDTH));
+        grid.setWidget(row, 0, Components.createLabel("Номер сделки"));
+        grid.setWidget(row++, 1, mDealId = Components.createTxtBox(20, ACCOUNT_WIDTH));
 
-        grid.setWidget(row, 0, lCustomerNumber = createLabel("Номер клиента"));
-        grid.setWidget(row++, 1, mCustomerNumber = createTxtBox(8, FIELD_WIDTH));
+        grid.setWidget(row, 0, lCustomerNumber = Components.createLabel("Номер клиента"));
+        grid.setWidget(row++, 1, mCustomerNumber = Components.createTxtBox(8, FIELD_WIDTH));
         lCustomerNumber.setTitle("Номер клиента" + hint);
         mCustomerNumber.setTitle("Номер клиента" + hint);
 
-        grid.setWidget(row, 0, createLabel("Филиал"));
+        grid.setWidget(row, 0, Components.createLabel("Филиал"));
         grid.setWidget(row++, 1, mFilial = createFilialAuthListBox("", FIELD_WIDTH, false, true));
 
-        grid.setWidget(row, 0, createLabel("Валюта", LABEL_WIDTH));
+        grid.setWidget(row, 0, Components.createLabel("Валюта", LABEL_WIDTH));
         grid.setWidget(row++, 1, mCurrency = createCurrencyListBox("", FIELD_WIDTH, false, true));
 
-        grid.setWidget(row, 0, lAccount = createLabel("Маска счета"));
-        grid.setWidget(row++, 1, mAccount = createTxtBox(20, ACCOUNT_WIDTH));
+        grid.setWidget(row, 0, lAccount = Components.createLabel("Маска счета"));
+        grid.setWidget(row++, 1, mAccount = Components.createTxtBox(20, ACCOUNT_WIDTH));
         lAccount.setTitle("Маска счета" + hint);
         mAccount.setTitle("Маска счета" + hint);
 
-        grid.setWidget(row, 0, createLabel("Дата открытия с"));
-        grid.setWidget(row++, 1, mDateFrom = createDateBox());
-        grid.setWidget(row, 0, createLabel("Дата открытия по"));
-        grid.setWidget(row++, 1, mDateTo = createDateBox());
+        grid.setWidget(row, 0, Components.createLabel("Дата открытия с"));
+        grid.setWidget(row++, 1, mDateFrom = Components.createDateBox());
+        grid.setWidget(row, 0, Components.createLabel("Дата открытия по"));
+        grid.setWidget(row++, 1, mDateTo = Components.createDateBox());
 
         mainVP.add(grid);
         

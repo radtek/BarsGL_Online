@@ -5,7 +5,6 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -20,7 +19,7 @@ import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.util.Date;
 
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDateBox;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
@@ -54,13 +53,13 @@ public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
         Grid g = new Grid(3, 4);
         mainVP.add(g);
         g.setWidget(0, 0, new Label("Счет ЦБ:"));
-        g.setWidget(0, 1, mBsaAcid = GLComponents.createTxtBox(20));
+        g.setWidget(0, 1, mBsaAcid = Components.createTxtBox(20));
         mBsaAcid.setEnabled(false);
         g.setWidget(1, 0, new Label("Дата открытия:"));
-        g.setWidget(1, 1, mDateOpen = GLComponents.createTxtBox(20));
+        g.setWidget(1, 1, mDateOpen = Components.createTxtBox(20));
         mDateOpen.setEnabled(false);
         g.setWidget(2, 0, new Label("Дата закрытия:"));
-        g.setWidget(2, 1, mDateClose = createDateBox());
+        g.setWidget(2, 1, mDateClose = Components.createDateBox());
 
         mBsaAcid.setWidth("150px");
         mDateOpen.setWidth("150px");

@@ -1,12 +1,12 @@
 package ru.rbt.barsgl.ejb.repository.lg;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepId;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepPattern;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.EJB;

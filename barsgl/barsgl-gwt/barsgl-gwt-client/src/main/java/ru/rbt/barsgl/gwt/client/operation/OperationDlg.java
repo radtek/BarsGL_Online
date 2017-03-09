@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
@@ -148,21 +149,21 @@ public class OperationDlg extends OperationDlgBase {
     protected Grid createHeader() {
         Grid grid = new Grid(3,4);
 
-        grid.setWidget(0, 0, createLabel("Текущий опердень", LABEL_WIDTH));
-        grid.setWidget(0, 1, createAlignWidget(mDateOperDay = createTxtBox(10), "142px"));
+        grid.setWidget(0, 0, Components.createLabel("Текущий опердень", LABEL_WIDTH));
+        grid.setWidget(0, 1, Components.createAlignWidget(mDateOperDay = Components.createTxtBox(10), "142px"));
         mDateOperDay.setEnabled(false);
-        grid.setWidget(1, 0, createLabel("Дата проводки"));
-        grid.setWidget(1, 1, mDateOperation = createDateBox());
-        grid.setWidget(2, 0, createLabel("Дата валютирования"));
-        grid.setWidget(2, 1, mDateValue = createDateBox());
+        grid.setWidget(1, 0, Components.createLabel("Дата проводки"));
+        grid.setWidget(1, 1, mDateOperation = Components.createDateBox());
+        grid.setWidget(2, 0, Components.createLabel("Дата валютирования"));
+        grid.setWidget(2, 1, mDateValue = Components.createDateBox());
 
-        grid.setWidget(0, 2, createAlignWidget(createLabel("Источник сделки"), LABEL2_WIDTH));
+        grid.setWidget(0, 2, Components.createAlignWidget(Components.createLabel("Источник сделки"), LABEL2_WIDTH));
         //grid.setWidget(0, 3, mDealSource =  createDealSourceAuthListBox("", FIELD2_WIDTH));
         grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
-        grid.setWidget(1, 2, createAlignWidget(createLabel("N сделки/ платежа"), LABEL2_WIDTH));
-        grid.setWidget(1, 3, mDealId = createTxtBox(20, SUM_WIDTH));
-        grid.setWidget(2, 2, createAlignWidget(createLabel("N субсделки"), LABEL2_WIDTH));
-        grid.setWidget(2, 3, mSubDealId = createTxtBox(20, SUM_WIDTH));
+        grid.setWidget(1, 2, Components.createAlignWidget(Components.createLabel("N сделки/ платежа"), LABEL2_WIDTH));
+        grid.setWidget(1, 3, mDealId = Components.createTxtBox(20, SUM_WIDTH));
+        grid.setWidget(2, 2, Components.createAlignWidget(Components.createLabel("N субсделки"), LABEL2_WIDTH));
+        grid.setWidget(2, 3, mSubDealId = Components.createTxtBox(20, SUM_WIDTH));
 
         return grid;
     }
@@ -170,7 +171,7 @@ public class OperationDlg extends OperationDlgBase {
     protected Grid createSumRu() {
         Grid grid = new Grid(2,4);
         //g3.setWidget(0, 0, createLabel("", "40px"));
-        grid.setWidget(0, 0, createLabel("Сумма в рублях", LABEL2_WIDTH));
+        grid.setWidget(0, 0, Components.createLabel("Сумма в рублях", LABEL2_WIDTH));
         grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
         grid.setWidget(0, 2, mCheckSumRu = new CheckBox("Без расчета курсовой разницы"));
         grid.setWidget(1, 2, mCheckCorrection = new CheckBox("Исправительная проводка"));

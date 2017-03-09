@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Sort.ASC;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.LONG;
@@ -36,162 +37,10 @@ import static ru.rbt.barsgl.shared.ClientDateUtils.TZ_CLIENT;
 public class GLComponents {
     public static final char decimalPoint = '.';
 
-    /**
-	 * создает виджет, вложенный в горизонтальную панель заданной ширины
-	 * @param widget
-	 * @param width
-	 * @return
-	 */
-    public static Widget createAlignWidget(Widget widget, String width) {
-        HorizontalPanel panel = new HorizontalPanel();
-        panel.add(widget);
-        panel.setWidth(width);
-        return panel;
-    }
-
-    /**
-     * создает метку
-     * @param text
-     * @return
-     */
-    public static Label createLabel(String text) {
-        return new Label(text);
-    }
-
-    /**
-     * создает метку заданной ширины
-     * @param text
-     * @param width
-     * @return
-     */
-    public static Label createLabel(String text, String width) {
-        Label lab = new Label(text);
-        lab.setWidth(width);
-        return lab;
-    }
-
-    /**
-     * Создает текстовое поле заданной длины
-     * @param length
-     * @return
-     */
-    public static TxtBox createTxtBox(int length)
-    {
-        TxtBox txtBox = new TxtBox();
-        txtBox.setMaxLength(length);
-        txtBox.setVisibleLength(length);
-        return txtBox;
-    }
-
-    /**
-     * Создает текстовое поле заданной длины и ширины
-     * @param length
-     * @return
-     */
-    public static TxtBox createTxtBox(int length, String width)
-    {
-        TxtBox txtBox = createTxtBox(length);
-        txtBox.setWidth(width);
-        return txtBox;
-    }
-
-    /**
-     * Создаaeт текстовое поле для ввода целого числа заданной длины
-     * @param length
-     * @return
-     */
-    public static TxtBox createTxtIntBox(int length)
-    {
-        TxtBox res = createTxtBox(length);
-        res.addKeyPressHandler(new KeyPressHandler() {
-
-            public void onKeyPress(KeyPressEvent event) {
-                char charCode = event.getCharCode();
-                if (!Character.isDigit(charCode)) {
-                    ((TextBox) event.getSource()).cancelKey();
-                }
-            }
-        });
-        return res;
-    }
-
-    /**
-     * Создаaeт текстовое поле для ввода целого числа заданной длины и ширины
-     * @param length
-     * @return
-     */
-    public static TxtBox createTxtIntBox(int length, String width) {
-        TxtBox box = createTxtIntBox(length);
-        box.setWidth(width);
-        return box;
-    }
-
-    /**
-     * Создает поле ввода целого числа
-     * @return
-     */
-    public static IntBox createIntBox()
-    {
-        return new IntBox();
-    }
-
-    /**
-     * Создает поле ввода целого числа заданной длины
-     * @return
-     */
-    public static IntBox createIntBox(int length)
-    {
-        IntBox intBox = createIntBox();
-        intBox.setMaxLength(length);
-        return intBox;
-    }
-
-    /**
-     * Создает поле ввода десятичного числа с двумя знаками после запятой
-     * @return
-     */
-    public static DecBox createDecBox(int scale)
-    {
-        DecBox box = new DecBox();
-        box.setScale(2);
-        return box;
-    }
-
-    public static AreaBox createAreaBox()
-    {
-        AreaBox box = new AreaBox();
-        return box;
-    }
-
-    public static AreaBox createAreaBox(String width, String height)
-    {
-        AreaBox box = new AreaBox();
-        box.setSize(width, height);
-        return box;
-    }
-
-    public static AreaBox createAreaBox(String width, String height, int length)
-    {
-        AreaBox box = createAreaBox(width, height);
-        ((InputElement)box.getElement().cast()).setMaxLength(length);
-        return box;
-    }
-
-    /**
-     * Создает поле выбора даты
-     * @return
-     */
-    public static DatePickerBox createDateBox() {
-        return new DatePickerBox(new Date(), TZ_CLIENT);
-    }
-
-    public static DatePickerBox createDateBox(Date date) {
-        return new DatePickerBox(date, TZ_CLIENT);
-    }
 
     public static TxtBox createTextBoxForSumma(int length, String width)
     {
-    	TxtBox res = createTxtBox(length, width);
+    	TxtBox res = Components.createTxtBox(length, width);
     	res.addKeyPressHandler(new KeyPressHandler() {
 
             public void onKeyPress(KeyPressEvent event) {

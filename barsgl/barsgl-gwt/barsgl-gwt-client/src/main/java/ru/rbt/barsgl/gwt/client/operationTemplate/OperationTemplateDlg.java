@@ -20,6 +20,7 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
@@ -65,9 +66,9 @@ public class OperationTemplateDlg extends OperationDlgBase {
 
     private Grid createHeader(){
         Grid grid = new Grid(2,2);
-        grid.setWidget(0, 0, createLabel("Наименование шаблона", LABEL_WIDTH));
-        grid.setWidget(0, 1, mName = createAreaBox(LONG_WIDTH, "40px"));
-        grid.setWidget(1, 0, createLabel("Источник сделки"));
+        grid.setWidget(0, 0, Components.createLabel("Наименование шаблона", LABEL_WIDTH));
+        grid.setWidget(0, 1, mName = Components.createAreaBox(LONG_WIDTH, "40px"));
+        grid.setWidget(1, 0, Components.createLabel("Источник сделки"));
         grid.setWidget(1, 1, mDealSource = createDealSourceListBox("", "100px"));
         return grid;
     };

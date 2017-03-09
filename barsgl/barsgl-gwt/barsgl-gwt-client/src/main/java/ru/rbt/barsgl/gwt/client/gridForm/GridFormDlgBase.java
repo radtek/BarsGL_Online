@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.gridForm;
 
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.Widget;

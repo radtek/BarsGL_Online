@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;

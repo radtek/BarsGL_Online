@@ -19,6 +19,7 @@ import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
@@ -63,24 +64,24 @@ public class LoadStepControlDlg extends EditableDialog<LoadStepWrapper> {
         VerticalPanel mainVP = new VerticalPanel();
 
         Grid stepCodeGrid = new Grid(1, 2);
-        Label stepCodeLabel = createLabel("Код шага загрузки", LABEL_WIDTH);
+        Label stepCodeLabel = Components.createLabel("Код шага загрузки", LABEL_WIDTH);
         stepCodeGrid.setWidget(0, 0, stepCodeLabel);
-        stepCodeTxtBox = createTxtBox(200, LONG_WIDTH);
+        stepCodeTxtBox = Components.createTxtBox(200, LONG_WIDTH);
         stepCodeGrid.setWidget(0, 1, stepCodeTxtBox);
         stepCodeTxtBox.setEnabled(false);
         mainVP.add(stepCodeGrid);
 
         Grid actionGrid = new Grid(1, 2);
-        Label actionLabel = createLabel("Действие", LABEL_WIDTH);
+        Label actionLabel = Components.createLabel("Действие", LABEL_WIDTH);
         actionGrid.setWidget(0, 0, actionLabel);
         actionListBox = new EnumListBox<>(LoadManagementAction.values());
         actionGrid.setWidget(0, 1, actionListBox);
         mainVP.add(actionGrid);
 
         Grid orderGrid = new Grid(1, 2);
-        Label orderLabel = createLabel("Порядок выполнения", LABEL_WIDTH);
+        Label orderLabel = Components.createLabel("Порядок выполнения", LABEL_WIDTH);
         orderGrid.setWidget(0, 0, orderLabel);
-        orderTxtBox = createTxtIntBox(9, TEXT_WIDTH);
+        orderTxtBox = Components.createTxtIntBox(9, TEXT_WIDTH);
         orderGrid.setWidget(0, 1, orderTxtBox);
         mainVP.add(orderGrid);
 

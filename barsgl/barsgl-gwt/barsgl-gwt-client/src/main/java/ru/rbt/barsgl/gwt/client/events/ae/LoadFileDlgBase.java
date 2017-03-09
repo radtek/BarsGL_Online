@@ -32,6 +32,7 @@ import ru.rbt.barsgl.shared.user.AppUserWrapper;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
@@ -116,17 +117,17 @@ abstract public class LoadFileDlgBase extends DlgFrame {
         Grid g = new Grid(2, 2);
         panel.add(g);
         mSource = createDealSourceAuthListBox("", FIELD_WIDTH);
-        g.setWidget(0, 0, createLabel("Источник сделки", LABEL_WIDTH));
+        g.setWidget(0, 0, Components.createLabel("Источник сделки", LABEL_WIDTH));
         g.setWidget(0, 1, mSource);
 
         mDepartment = createDepartmentListBox("", FIELD_WIDTH, true);
-        g.setWidget(1, 0, createLabel("Подразделение", LABEL_WIDTH));
+        g.setWidget(1, 0, Components.createLabel("Подразделение", LABEL_WIDTH));
         g.setWidget(1, 1, mDepartment);
 
         panel.add(excludeOper = new CheckBox("Исключение создания проводки в АБС по контролируемым счетам"));
         excludeOper.setVisible(isExcludeVisible());
 
-        Label selectLabel = createLabel("Файл для загрузки");
+        Label selectLabel = Components.createLabel("Файл для загрузки");
         panel.add(selectLabel);
 
         fileUpload = new FileUpload();

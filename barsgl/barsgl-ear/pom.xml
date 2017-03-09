@@ -48,6 +48,12 @@
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-audit</artifactId>
                                     <bundleDir>lib</bundleDir>
                                     <bundleFileName>barsgl-audit.jar</bundleFileName>
@@ -133,6 +139,12 @@
                                     <artifactId>security-ejb</artifactId>
                                     <bundleDir>lib</bundleDir>
                                     <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -228,6 +240,12 @@
                                     <artifactId>security-ejb</artifactId>
                                     <bundleDir>lib</bundleDir>
                                     <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleDir>lib</bundleDir>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -512,6 +530,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>security-ejb</artifactId>
+            <version>${project.version}</version>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tasks-ejb</artifactId>
             <version>${project.version}</version>
             <type>ejb</type>
         </dependency>

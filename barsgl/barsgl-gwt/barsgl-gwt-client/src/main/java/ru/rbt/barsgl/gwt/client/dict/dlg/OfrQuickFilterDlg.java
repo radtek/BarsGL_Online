@@ -13,9 +13,8 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.util.Date;
 
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDateBox;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createLabel;
 import static ru.rbt.barsgl.gwt.client.dict.dlg.OfrQuickFilterParams.SymbolState.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
@@ -44,9 +43,9 @@ public class OfrQuickFilterDlg extends DlgFrame {
 
         Grid g1 = new Grid(2, 2);
         mainVP.add(g1);
-        g1.setWidget(0, 0, createLabel("Дата:"));
-        g1.setWidget(0, 1, mDate = createDateBox());
-        g1.setWidget(1, 0, createLabel("Состояние:"));
+        g1.setWidget(0, 0, Components.createLabel("Дата:"));
+        g1.setWidget(0, 1, mDate = Components.createDateBox());
+        g1.setWidget(1, 0, Components.createLabel("Состояние:"));
         g1.setWidget(1, 1, mState = createStateBox());
         mState.setWidth("150px");
         mDate.setWidth("150px");

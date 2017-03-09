@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.lg;
 
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;

@@ -109,18 +109,6 @@
                                             <version>${project.version}</version>
                                             <type>jar</type>
                                         </artifactItem>
-<!--                                        <artifactItem>
-                                            <groupId>${project.groupId}</groupId>
-                                            <artifactId>barsgl-audit</artifactId>
-                                            <version>${project.version}</version>
-                                            <type>jar</type>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>${project.groupId}</groupId>
-                                            <artifactId>security-ejb</artifactId>
-                                            <version>${project.version}</version>
-                                            <type>jar</type>
-                                        </artifactItem>-->
                                         <artifactItem>
                                             <groupId>${project.groupId}</groupId>
                                             <artifactId>barsgl-ejb</artifactId>
@@ -299,14 +287,19 @@
             <artifactId>barsgl-gwt-serverutil</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>security-ejb</artifactId>
-            <version>${project.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>security-gwt-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>grid-gwt-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tasks-gwt-server</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

@@ -6,7 +6,7 @@ import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
-import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;

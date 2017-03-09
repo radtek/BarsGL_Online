@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus.*;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.*;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountBalanceUnload;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.DwhUnloadPosting;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;

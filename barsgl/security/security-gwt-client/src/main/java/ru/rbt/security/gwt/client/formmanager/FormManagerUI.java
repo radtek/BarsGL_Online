@@ -1,6 +1,8 @@
 package ru.rbt.security.gwt.client.formmanager;
 
 //import ru.rbt.barsgl.gwt.client.formmanager.MenuBuilder;
+import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
+import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -23,7 +25,7 @@ import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 //import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
-import ru.rbt.barsgl.gwt.core.forms.IDisposable;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.shared.access.UserMenuWrapper;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
@@ -37,8 +39,6 @@ public class FormManagerUI extends Composite {
     public interface FormManagerUIBinder extends UiBinder<Widget, FormManagerUI> { }
 
     private static final FormManagerUI formManager = null;
-
-    public enum MessageReason {MSG, INFO, ERROR}
 
     @UiField
     DockLayoutPanel basePanel;
@@ -100,7 +100,7 @@ public class FormManagerUI extends Composite {
     private StatusBarEventHandler createStatusBarEventHandler() {
         return new StatusBarEventHandler() {
             @Override
-            public void message(String msg, MessageReason reason) {
+            public void message(String msg, StatusBarManager.MessageReason reason) {
                 String color ;
 
                 switch (reason) {
@@ -120,9 +120,6 @@ public class FormManagerUI extends Composite {
         };
     }
 
-    public static void ChangeStatusBarText(String text, MessageReason reason) {
-        LocalEventBus.fireEvent(new StatusBarEvent(text, reason));
-    }
 
     public static void show(Widget form){
         LocalEventBus.fireEvent(new FormEvent(form));

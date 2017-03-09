@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;

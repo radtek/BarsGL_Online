@@ -5,9 +5,9 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -23,7 +23,6 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.Repository;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
-import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.util.*;
 
@@ -359,7 +358,7 @@ public abstract class LoaderControlForm extends EditableDictionary<LoadStepWrapp
         return new GridWidget(table, new GridDataProvider(delayLoad) {
             @Override
             protected void getServerCount(AsyncCallback<Integer> callback) {
-                CommonEntryPoint.asyncGridService.getAsyncCount(repository, sql_select, getFilterCriteria(initialFilterParams), callback);
+                GridEntryPoint.asyncGridService.getAsyncCount(repository, sql_select, getFilterCriteria(initialFilterParams), callback);
             }
 
             @Override
@@ -367,7 +366,7 @@ public abstract class LoaderControlForm extends EditableDictionary<LoadStepWrapp
                 List<SortItem> sortItems = getSortCriteria();
                 List<FilterItem> filterItems = getFilterCriteria(initialFilterParams);
                 refreshGridParams(filterItems, sortItems);
-                CommonEntryPoint.asyncGridService.getAsyncRows(repository, sql_select, table.getColumns(), start, pageSize,
+                GridEntryPoint.asyncGridService.getAsyncRows(repository, sql_select, table.getColumns(), start, pageSize,
                         filterItems, sortItems, callback);
             };
         }, 30);

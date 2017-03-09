@@ -24,6 +24,8 @@
 
         <class>ru.rbt.barsgl.audit.entity.AuditRecord</class>
         
+        <class>ru.rbt.tasks.ejb.entity.task.JobHistory</class>
+        
         <class>ru.rbt.security.ejb.entity.AppUser</class>
         <class>ru.rbt.security.ejb.entity.access.PrmValue</class>
         <class>ru.rbt.security.ejb.entity.access.PrmValueHistory</class>

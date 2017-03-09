@@ -13,7 +13,7 @@ import ru.rbt.barsgl.gwt.client.compLookup.LookUpPlcode;
 import ru.rbt.barsgl.gwt.client.compLookup.LookupBoxBase;
 import ru.rbt.barsgl.gwt.client.compLookup.LookUpAcc2;
 import ru.rbt.barsgl.gwt.client.dict.*;
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;

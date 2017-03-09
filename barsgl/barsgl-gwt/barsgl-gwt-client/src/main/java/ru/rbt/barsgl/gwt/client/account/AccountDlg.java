@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
@@ -121,55 +122,55 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
 
         Grid g0 = new Grid(2, 4);
         mainVP.add(g0);
-        g0.setWidget(0, 0, createLabel("Отделение", LABEL_WIDTH));
+        g0.setWidget(0, 0, Components.createLabel("Отделение", LABEL_WIDTH));
         g0.setWidget(0, 1, mBranch = createBranchAuthListBox("", "250px", true));
-        g0.setWidget(0, 2, createLabel("Валюта", "50px"));
+        g0.setWidget(0, 2, Components.createLabel("Валюта", "50px"));
         g0.setWidget(0, 3, mCurrency = createCurrencyListBox("RUR", "70px"));
 
         Grid g11 = new Grid(1, 4);
         mainVP.add(g11);
         g11.setWidget(0, 0, mCustomerButton = createCustomerButton("Клиент", BUTTON_WIDTH));
-        g11.setWidget(0, 1, mCustomerNumber = createTxtIntBox(8, TEXT_WIDTH));
-        g11.setWidget(0, 2, createLabel("Тип собств", "75px"));
-        g11.setWidget(0, 3, mCustomerType = createTxtBox(70, "220px"));
+        g11.setWidget(0, 1, mCustomerNumber = Components.createTxtIntBox(8, TEXT_WIDTH));
+        g11.setWidget(0, 2, Components.createLabel("Тип собств", "75px"));
+        g11.setWidget(0, 3, mCustomerType = Components.createTxtBox(70, "220px"));
 
         Grid g12 = new Grid(1, 2);
         mainVP.add(g12);
-        g12.setWidget(0, 0, createLabel("", LABEL_WIDTH));
-        g12.setWidget(0, 1, mCustomerName = createTxtBox(200, LONG_WIDTH));
+        g12.setWidget(0, 0, Components.createLabel("", LABEL_WIDTH));
+        g12.setWidget(0, 1, mCustomerName = Components.createTxtBox(200, LONG_WIDTH));
 
         Grid g13 = new Grid(2, 5);
         mainVP.add(g13);
-        g13.setWidget(0, 2, createLabel("Код срока", "75px"));
+        g13.setWidget(0, 2, Components.createLabel("Код срока", "75px"));
         g13.setWidget(0, 3, mTerm = createTermListBox("00", "220px", false));
         g13.setWidget(1, 0, mAccountTypeButton = createAccountTypeButton("Accounting Type", BUTTON_WIDTH));
-        g13.setWidget(1, 1, mAccountType = createTxtIntBox(9, TEXT_WIDTH));
+        g13.setWidget(1, 1, mAccountType = Components.createTxtIntBox(9, TEXT_WIDTH));
 
         Grid g2 = new Grid(2, 2);
         mainVP.add(g2);
-        g2.setWidget(0, 0, createLabel("Название счета", LABEL_WIDTH));
-        g2.setWidget(0, 1, mAccountDesc = createAreaBox(LONG_WIDTH, "60px"));
+        g2.setWidget(0, 0, Components.createLabel("Название счета", LABEL_WIDTH));
+        g2.setWidget(0, 1, mAccountDesc = Components.createAreaBox(LONG_WIDTH, "60px"));
 
         Grid g3 = new Grid(3, 4);
         mainVP.add(g3);
-        g3.setWidget(0, 0, createLabel("Источник сделки", LABEL_WIDTH));
-        g3.setWidget(0, 1, createAlignWidget(mDealSource = createDealSourceAuthListBox("", TEXT_WIDTH), FIELD_WIDTH));
-        g3.setWidget(1, 0, createLabel("SQ Midas", LABEL_WIDTH));
-        g3.setWidget(1, 1, mSQ = createTxtIntBox(2, TEXT_WIDTH));
-        g3.setWidget(0, 2, createLabel("N сделки/платежа", LABEL_WIDTH2));
-        g3.setWidget(0, 3, mDealId = createTxtBox(20, FIELD_WIDTH2));
-        g3.setWidget(1, 2, createLabel("N субсделки"));
-        g3.setWidget(1, 3, mSubdealId = createTxtBox(20, FIELD_WIDTH2));
+        g3.setWidget(0, 0, Components.createLabel("Источник сделки", LABEL_WIDTH));
+        g3.setWidget(0, 1, Components.createAlignWidget(mDealSource = createDealSourceAuthListBox("", TEXT_WIDTH), FIELD_WIDTH));
+        g3.setWidget(1, 0, Components.createLabel("SQ Midas", LABEL_WIDTH));
+        g3.setWidget(1, 1, mSQ = Components.createTxtIntBox(2, TEXT_WIDTH));
+        g3.setWidget(0, 2, Components.createLabel("N сделки/платежа", LABEL_WIDTH2));
+        g3.setWidget(0, 3, mDealId = Components.createTxtBox(20, FIELD_WIDTH2));
+        g3.setWidget(1, 2, Components.createLabel("N субсделки"));
+        g3.setWidget(1, 3, mSubdealId = Components.createTxtBox(20, FIELD_WIDTH2));
 
         Grid g4 = new Grid(2, 4);
         mainVP.add(g4);
-        g4.setWidget(0, 0, createLabel("Дата открытия", LABEL_WIDTH));
-        g4.setWidget(0, 1, createAlignWidget(mDateOpen = createDateBox(), FIELD_WIDTH));
-        g4.setWidget(1, 0, createLabel("Дата закрытия", LABEL_WIDTH));
-        g4.setWidget(1, 1, createAlignWidget(mDateClose = createDateBox(null), FIELD_WIDTH));
+        g4.setWidget(0, 0, Components.createLabel("Дата открытия", LABEL_WIDTH));
+        g4.setWidget(0, 1, Components.createAlignWidget(mDateOpen = Components.createDateBox(), FIELD_WIDTH));
+        g4.setWidget(1, 0, Components.createLabel("Дата закрытия", LABEL_WIDTH));
+        g4.setWidget(1, 1, Components.createAlignWidget(mDateClose = Components.createDateBox(null), FIELD_WIDTH));
 
-        g4.setWidget(0, 2, createLabel("Текущий опердень", LABEL_WIDTH2));
-        g4.setWidget(0, 3, mDateOperDay = createTxtBox(10));
+        g4.setWidget(0, 2, Components.createLabel("Текущий опердень", LABEL_WIDTH2));
+        g4.setWidget(0, 3, mDateOperDay = Components.createTxtBox(10));
 
         setChangeHandlers();
         return mainVP;

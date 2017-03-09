@@ -4,8 +4,7 @@ import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDateBox;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createLabel;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
 /**
@@ -85,10 +84,10 @@ public class DateQuickFilterDlg extends DlgFrame {
 
     private Widget createDatePanel() {
         Grid g1 = new Grid(1, 4);
-        g1.setWidget(0, 0, createLabel("Дата начала"));
-        g1.setWidget(0, 1, mDateBegin = createDateBox());
-        g1.setWidget(0, 2, createLabel("Дата окончания"));
-        g1.setWidget(0, 3, mDateEnd = createDateBox());
+        g1.setWidget(0, 0, Components.createLabel("Дата начала"));
+        g1.setWidget(0, 1, mDateBegin = Components.createDateBox());
+        g1.setWidget(0, 2, Components.createLabel("Дата окончания"));
+        g1.setWidget(0, 3, mDateEnd = Components.createDateBox());
         return g1;
     }
 }

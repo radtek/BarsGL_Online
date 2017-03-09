@@ -12,7 +12,7 @@ import com.google.gwt.user.client.ui.Image;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.dict.dlg.DlgFactory;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.RefreshAction;

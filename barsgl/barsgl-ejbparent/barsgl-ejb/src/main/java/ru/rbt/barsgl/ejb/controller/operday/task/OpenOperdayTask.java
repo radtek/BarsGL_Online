@@ -41,7 +41,7 @@ import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.OpenOperday;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPEN_OPERDAY_ERROR;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 /**
  * Created by Ivan Sevastyanov

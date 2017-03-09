@@ -56,10 +56,14 @@
                             <gwtSdkFirstInClasspath>true</gwtSdkFirstInClasspath>
                             <compileSourcesArtifacts>
                                 <artifact>ru.rbt:barsgl-shared</artifact>
-                                <artifact>ru.rbt:security-gwt-client</artifact>
-                                <artifact>ru.rbt:security-gwt-server</artifact>
                                 <artifact>ru.rbt:barsgl-gwt-core</artifact>
+                                <artifact>ru.rbt:security-gwt-server</artifact>
+                                <artifact>ru.rbt:grid-gwt-server</artifact>
+                                <artifact>ru.rbt:tasks-gwt-server</artifact>
                                 <artifact>ru.rbt:barsgl-gwt-server</artifact>
+                                <artifact>ru.rbt:grid-gwt-client</artifact>
+                                <artifact>ru.rbt:security-gwt-client</artifact>
+                                <artifact>ru.rbt:tasks-gwt-client</artifact>
                             </compileSourcesArtifacts>
                             <module>ru.rbt.barsgl.gwt.BarsGLClient</module>
                         </configuration>
@@ -92,6 +96,16 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>security-gwt-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>grid-gwt-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tasks-gwt-client</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

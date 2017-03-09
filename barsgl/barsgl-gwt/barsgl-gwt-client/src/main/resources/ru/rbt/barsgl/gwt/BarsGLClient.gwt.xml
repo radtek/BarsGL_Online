@@ -11,8 +11,11 @@
     <inherits name="ru.rbt.security.gwt.SecurityClient" />
     <inherits name="ru.rbt.barsgl.gwt.BarsGLServer" />
     <inherits name="ru.rbt.barsgl.gwt.BarsGLCore" />
+    <inherits name="ru.rbt.grid.gwt.GridServer" />
+    <inherits name="ru.rbt.grid.gwt.GridClient" />
+    <inherits name="ru.rbt.tasks.gwt.TasksServer" />    
+    <inherits name="ru.rbt.tasks.gwt.TasksClient" />
     <source path="client" />
     <entry-point class="ru.rbt.barsgl.gwt.client.BarsGLEntryPoint"/>
-    <entry-point class="ru.rbt.security.gwt.client.CommonEntryPoint"/>
     <extend-property name="locale" values="ru"/>
 </module>

@@ -17,8 +17,8 @@ import ru.rbt.barsgl.gwt.server.rpc.access.AccessServiceAsync;
 //import ru.rbt.security.gwt.server.rpc.asyncGrid.AsyncGridServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.dict.ManualDictionaryService;
 import ru.rbt.barsgl.gwt.server.rpc.dict.ManualDictionaryServiceAsync;
-import ru.rbt.barsgl.gwt.server.rpc.job.TimerJobService;
-import ru.rbt.barsgl.gwt.server.rpc.job.TimerJobServiceAsync;
+import ru.rbt.tasks.gwt.server.rpc.job.TimerJobService;
+import ru.rbt.tasks.gwt.server.rpc.job.TimerJobServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.loader.LoaderControlService;
 import ru.rbt.barsgl.gwt.server.rpc.loader.LoaderControlServiceAsync;
 //import ru.rbt.monitoring.MonitorService;
@@ -49,7 +49,6 @@ import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
  */
 public class BarsGLEntryPoint implements EntryPoint {
 
-    public static TimerJobServiceAsync timerJobService;
     public static OperDayServiceAsync operDayService;
     public static ManualOperationServiceAsync operationService;
     public static ManualDictionaryServiceAsync dictionaryService;
@@ -60,7 +59,6 @@ public class BarsGLEntryPoint implements EntryPoint {
     
     @Override
     public void onModuleLoad() {
-        timerJobService = GWT.create(TimerJobService.class);
         operDayService = GWT.create(OperDayService.class);
         operationService = GWT.create(ManualOperationService.class);
         dictionaryService = GWT.create(ManualDictionaryService.class);
