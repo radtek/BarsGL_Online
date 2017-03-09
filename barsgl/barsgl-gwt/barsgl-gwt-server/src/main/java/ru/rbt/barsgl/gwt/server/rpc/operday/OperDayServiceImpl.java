@@ -12,11 +12,8 @@ import ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
-import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-
-import java.text.SimpleDateFormat;
 
 /**
  * Created by akichigi on 23.03.15.
