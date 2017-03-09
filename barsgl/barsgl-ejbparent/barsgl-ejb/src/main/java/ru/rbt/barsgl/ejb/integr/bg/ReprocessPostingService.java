@@ -22,6 +22,8 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.util.List;
 
+import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.*;
+
 /**
  * Created by ER18837 on 01.03.17.
  */
@@ -57,14 +59,14 @@ public class ReprocessPostingService {
             }
             List<String> codes = errorRepository.getErrorCodeList(idList);
             if (codes.size() != 1) {
-                errorList.addErrorDescription("В списке разные комбинации кодов ошибок: " + StringUtils.listToString(codes, ", ", "'"));
+                errorList.addErrorDescription("В списке разные комбинации кодов ошибок");   // + StringUtils.listToString(codes, ", ", "'"));
             }
             List<String> opers = errorRepository.getOperPostList(idList, OperState.WTAC);
             if (opers.size() != 0) {
-                throw new DefaultApplicationException("В списке есть операции со статусом 'WTAC', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
+                errorList.addErrorDescription("В списке есть операции со статусом 'WTAC', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
             }
             if (!StringUtils.isEmpty(idPstCorr)) {
-                String err = checkIdPst(errorIdList.get(0), idPstCorr);
+                String err = checkIdPst(errorIdList.get(0), idPstCorr, correctType);
                 if (!StringUtils.isEmpty(err))
                     errorList.addErrorDescription(err);
             }
@@ -72,25 +74,32 @@ public class ReprocessPostingService {
                 return new RpcRes_Base<>(0, true, errorList.getErrorMessage());
             }
 
-            auditController.info(AuditRecord.LogCode.ReprocessError, String.format("Начало оброаботки '%s' ошибок ID : %s",
+            auditController.info(AuditRecord.LogCode.ReprocessAEOper, String.format("Начало оброаботки '%s' ошибок ID : %s",
                     correctType.getTypeLabel(), idList));
             int cnt = reprocessController.correctPostingErrors(errorIdList, comment, idPstCorr, correctType);
             String msg = String.format("Сообщения АЕ (%d) %s\nДата опердня: '%s'\nИсточник сделки: '%s'", cnt,
                     correctType.getTypeMessage(), dates.get(0), sources.get(0));
-            auditController.info(AuditRecord.LogCode.ReprocessError, msg);
+            auditController.info(AuditRecord.LogCode.ReprocessAEOper, msg);
             return new RpcRes_Base<>(errorIdList.size(), false, msg);
         } catch (Throwable t) {
             String msg = getErrorMessage(t);
-            if (t instanceof ValidationError)
-                auditController.warning(AuditRecord.LogCode.ReprocessError, msg);
-            else
-                auditController.error(AuditRecord.LogCode.ReprocessError, msg, null, t);
+            if (null != ExceptionUtils.findException(t, ValidationError.class)) {
+                auditController.warning(AuditRecord.LogCode.ReprocessAEOper, msg);
+                msg = ValidationError.getErrorText(msg);
+            }
+            else {
+                auditController.error(AuditRecord.LogCode.ReprocessAEOper, getErrorMessage(t), null, t);
+            }
             return new RpcRes_Base<>(0, true, msg);
         }
     }
 
-    private String checkIdPst(Long idError, String idPstCorr) {
+    private String checkIdPst(Long idError, String idPstCorr, ErrorCorrectType correctType) {
         GLErrorRecord errorRecord = errorRepository.findById(GLErrorRecord.class, idError);
+        if (EDIT == correctType.getCorrectType() && idPstCorr.equals(errorRecord.getAePostingIdNew())) {
+            return null;
+        }
+
         EtlPosting postingErr = etlPostingRepository.findById(EtlPosting.class, errorRecord.getEtlPostingRef());
         if (null == postingErr)
             return String.format("Для ошибки ID = %d не найдено входящее сообщение АЕ", idError);

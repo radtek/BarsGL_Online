@@ -58,10 +58,7 @@ public class ReprocessPostingController {
             throw new ValidationError(ErrorCode.REPROCESS_ERROR, "В списке есть переобработанные (закрытые) операции, ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
         }
         int cnt = errorRepository.setErrorsCorrected(idList, correctType.getTypeName(), comment, idPstNew, userContext.getTimestamp(), userContext.getUserName());
-        if (errorIdList.size() != cnt) {
-            throw new DefaultApplicationException(String.format("Ошибка обновления таблицы GL_ERRORS. В списке %d записей, обновлено %d",
-                    errorIdList.size(), cnt));
-        }
+        checkUpdate(errorIdList.size(), cnt);
 
         return cnt;
     }
@@ -77,10 +74,7 @@ public class ReprocessPostingController {
             throw new ValidationError(ErrorCode.REPROCESS_ERROR, "В списке есть успешно обработанные операции со статусом 'POST', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
         }
         int cnt = errorRepository.setErrorsCorrected(idList, correctType.getTypeName(), comment, idPstNew, userContext.getTimestamp(), userContext.getUserName());
-        if (errorIdList.size() != cnt) {
-            throw new DefaultApplicationException(String.format("Ошибка обновления таблицы GL_ERRORS. В списке %d записей, обновлено %d",
-                    errorIdList.size(), cnt));
-        }
+        checkUpdate(errorIdList.size(), cnt);
 
         // получить список из GL_ETLPST: ID, PKG_ID
         List<DataRecord> postingList  = errorRepository.getPostingIdList(idList);
@@ -94,7 +88,7 @@ public class ReprocessPostingController {
 
     public int editPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType) throws SQLException {
         String idList = StringUtils.listToString(errorIdList, ",");
-        List<String> opers = errorRepository.getOperCorrList(idList, YesNo.Y);
+        List<String> opers = errorRepository.getOperCorrList(idList, YesNo.N);
         if (opers.size() != 0) {
             throw new ValidationError(ErrorCode.REPROCESS_ERROR, "В списке есть не переобработанные операции, ID_PST: " + StringUtils.listToString(opers, ","));
         }
@@ -105,12 +99,17 @@ public class ReprocessPostingController {
         else {
             cnt = errorRepository.updateErrorsCorrected(idList, comment, userContext.getTimestamp(), userContext.getUserName());
         }
-        if (errorIdList.size() != cnt) {
-            throw new DefaultApplicationException(String.format("Ошибка обновления таблицы GL_ERRORS. В списке %d записей, обновлено %d",
-                    errorIdList.size(), cnt));
-        }
+        checkUpdate(errorIdList.size(), cnt);
 
         return cnt;
+    }
+
+    private void checkUpdate(int countNeed, int countIs) {
+        if (countNeed != countIs) {
+            throw new DefaultApplicationException(String.format("Ошибка обновления таблицы GL_ERRORS. В списке %d записей, обновлено %d",
+                    countNeed, countIs));
+        }
+
     }
 
 }

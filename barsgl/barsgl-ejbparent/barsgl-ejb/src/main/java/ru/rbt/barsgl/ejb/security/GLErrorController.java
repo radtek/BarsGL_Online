@@ -30,7 +30,7 @@ import java.util.List;
 public class GLErrorController {
 
     private static final Logger log = Logger.getLogger(GLErrorController.class);
-    public static final String ERR_DELIMITER = ":\n";
+    public static final String ERR_DELIMITER = "; \n";
 
     @EJB
     GLErrorRepository errorRepository;
