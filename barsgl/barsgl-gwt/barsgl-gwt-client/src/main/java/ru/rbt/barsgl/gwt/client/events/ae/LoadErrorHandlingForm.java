@@ -362,7 +362,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(col = new Column("CORR_TYPE", Column.Type.STRING, "Тип корректировки", 80));
         col.setList(getCorrectTypeList());
         result.addColumn(new Column("ID_PST_NEW", Column.Type.STRING, "ИД исправ. сообщ АЕ", 100, false, false));
-        result.addColumn(new Column("COMMENT", Column.Type.STRING, "Комментарий", 300, false, false));
+        result.addColumn(new Column("COMMENT", Column.Type.STRING, "Комментарий", 300));
 
         return result;
     }
