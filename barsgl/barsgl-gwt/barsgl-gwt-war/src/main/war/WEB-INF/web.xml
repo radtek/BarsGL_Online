@@ -21,7 +21,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     </servlet>
     <servlet>
         <servlet-name>TimerJobServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.job.TimerJobServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.tasks.gwt.server.rpc.job.TimerJobServiceImpl</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>OperDayServiceImpl</servlet-name>
@@ -33,7 +33,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     </servlet>
     <servlet>
         <servlet-name>AsyncGridServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.security.gwt.server.rpc.asyncGrid.AsyncGridServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.grid.gwt.server.rpc.asyncGrid.AsyncGridServiceImpl</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>ManualOperationServiceImpl</servlet-name>
