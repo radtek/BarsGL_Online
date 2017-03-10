@@ -65,7 +65,7 @@ public class GlPdTh extends BaseEntity<Long> {
     /**
      * Source of posting
      */
-    @Column(name = "PBR",length = 7)
+    @Column(name = "PBR",length = 8)
     private String pbr;
 
     /**

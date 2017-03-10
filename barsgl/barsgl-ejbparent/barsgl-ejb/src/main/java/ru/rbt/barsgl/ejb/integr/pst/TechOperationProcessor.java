@@ -64,7 +64,7 @@ public class TechOperationProcessor extends GLOperationProcessor
 
         List<GlPdTh> pdthList = new ArrayList<GlPdTh>();
         pdthList.add(this.getPdTh(operation, GLOperation.OperSide.D));
-        pdthList.add(this.getPdTh(operation, GLOperation.OperSide.D));
+        pdthList.add(this.getPdTh(operation, GLOperation.OperSide.C));
 
         return pdthList;
     }
@@ -93,6 +93,8 @@ public class TechOperationProcessor extends GLOperationProcessor
         pdth.setId(id);
         pdth.setPod(operation.getPostDate());
         pdth.setVald(operation.getValueDate());
+        pdth.setPbr("@@GL-"+StringUtils.substr(operation.getSourcePosting(),2));
+        pdth.setInvisible("N");
 
         if (operSide == GLOperation.OperSide.D) {
             pdth.setId(id);

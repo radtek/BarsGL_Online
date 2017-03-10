@@ -104,6 +104,7 @@ public class GlPdThRepositoty extends AbstractBaseEntityRepository<GlPdTh, Long>
                                 pdTh1 = save(pdth);
                             }
                             else{
+                                pdth.setPcId(pdth.getId());
                                 pdTh1 = save(pdth);
                             }
                             // пересчет/локализация только в рамках задачи мониторинга вход сообщений по журналу backvalue recalculate(pd);
