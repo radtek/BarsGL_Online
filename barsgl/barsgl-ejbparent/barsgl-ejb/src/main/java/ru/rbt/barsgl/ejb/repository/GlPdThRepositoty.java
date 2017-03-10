@@ -61,7 +61,7 @@ public class GlPdThRepositoty extends AbstractBaseEntityRepository<GlPdTh, Long>
 
     public Long getID()
     {
-        return this.nextId("DWH.SEQ_GL_PDTH");
+        return this.nextId("PD_SEQ");
     }
 
     @Override

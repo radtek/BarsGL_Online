@@ -94,7 +94,7 @@ public class TechOperationProcessor extends GLOperationProcessor
         pdth.setPod(operation.getPostDate());
         pdth.setVald(operation.getValueDate());
         pdth.setPbr("@@GL-"+StringUtils.substr(operation.getSourcePosting(),2));
-        pdth.setInvisible("N");
+        pdth.setInvisible("0");
 
         if (operSide == GLOperation.OperSide.D) {
             pdth.setId(id);
