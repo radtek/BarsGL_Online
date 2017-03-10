@@ -5,6 +5,7 @@ import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -27,6 +28,7 @@ public class GLOperation extends BaseEntity<Long> {
 
     public static final String srcPaymentHub = "PH";
     public static final String srcKondorPlus = "K+TP";
+    public static final String flagTechOper = "Т";
 
     public enum OperClass {
         AUTOMATIC, MANUAL
@@ -952,6 +954,18 @@ public class GLOperation extends BaseEntity<Long> {
 
     public boolean isCorrection() {
         return (Y == storno) || (Y == isCorrection);
+    }
+
+    public boolean isTech()
+    {
+        if (this.bsChapter!=null)
+        {
+            return this.bsChapter.trim().equals(flagTechOper);
+        }
+        else {
+
+            return false;
+        }
     }
 }
 

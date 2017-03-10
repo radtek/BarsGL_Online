@@ -373,7 +373,9 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public Long nextId(EntityManager persistence, String sequenceName) {
+
         Long id = (Long) persistence.createNativeQuery("select (next value for " + sequenceName + ") id_seq from sysibm.sysdummy1").getSingleResult();
+
         return id;
     }
 

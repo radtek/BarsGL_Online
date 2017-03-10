@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -42,6 +43,9 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 
     @EJB
     private OperdayController operdayController;
+
+    @EJB
+    private GLAccountRepository glAccountRepository;
 
     /**
      * Определяет код компании (числовой код филиала) для счета
@@ -124,7 +128,14 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getFilial(String bsaAcid, AccountKeys accountParams) {
         if (!isEmpty(bsaAcid)) {
-            return getFilialByAccount(bsaAcid);
+            if ((null!=accountParams) && (accountParams.getGlSequence().startsWith("TH")))
+            {
+                GLAccount account = glAccountRepository.findGLAccount(bsaAcid);
+                return account.getFilial();
+            }
+            else {
+                return getFilialByAccount(bsaAcid);
+            }
         } else if (null != accountParams) {
             return getFilialByBranch(accountParams.getBranch());
         } else {
@@ -133,10 +144,14 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     }
 
     public void setFilials(GLOperation operation) throws SQLException {
-        if (isEmpty(operation.getFilialDebit()))
+        if (isEmpty(operation.getFilialDebit())) {
+            operation.createAccountParamDebit();
             operation.setFilialDebit(getFilial(operation.getAccountDebit(), operation.getAccountParamDebit()));
-        if (isEmpty(operation.getFilialCredit()))
+        }
+        if (isEmpty(operation.getFilialCredit())) {
+            operation.createAccountParamCredit();
             operation.setFilialCredit(getFilial(operation.getAccountCredit(), operation.getAccountParamCredit()));
+        }
     }
 
     /**
@@ -148,7 +163,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         // глава балансового счета
         String chapterDebit = getBSChapter(operation.getAccountDebit(), operation.getAccountParamDebit());
         String chapterCredit = getBSChapter(operation.getAccountCredit(), operation.getAccountParamCredit());
-        // Задаем гдаву баланса только когда она совпадает по дебету и кредиту
+        // Задаем главу баланса только когда она совпадает по дебету и кредиту
         if (!isEmpty(chapterDebit) && chapterDebit.equals(chapterCredit)) {
             operation.setBsChapter(chapterDebit);
         }
@@ -269,7 +284,13 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         if (!isEmpty(bsaAcid))
             return getBSChapter(bsaAcid);
         else if (null != accountKeys)
-            return getBSChapterAcc2(accountKeys.getAccount2());
+                if (accountKeys.getGlSequence().startsWith("TH"))
+                {
+                    return "Т";
+                }
+                else {
+                    return getBSChapterAcc2(accountKeys.getAccount2());
+                }
         else return "";
     }
 

@@ -121,7 +121,8 @@ public class GLAccountService {
     @Inject
     private UserContext userContext;
 
-    public String getAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) throws Exception {
+    public String
+    getAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) throws Exception {
         // проверяем по какой ветке идти - искать в Майдас или создать счет ...
         Date dateOpen = operation.getValueDate();
 //todo вход в GlSequence = XX
@@ -208,7 +209,7 @@ public class GLAccountService {
             //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
-            return Optional.ofNullable(glAccountController.findTechnicalAccount(accType,keys.getCompanyCode(),keys.getCompanyCode())).orElseGet(() -> {
+            return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
                 try {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);

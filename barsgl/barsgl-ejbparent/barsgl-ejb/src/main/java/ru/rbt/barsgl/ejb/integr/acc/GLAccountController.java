@@ -219,7 +219,7 @@ public class GLAccountController {
     public GLAccount findOrCreateGLAccountTH(
             GLOperation operation, AccountingType accType,GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) throws Exception {
 
-        GLAccount glAccount = findTechnicalAccount(accType,keys.getCompanyCode(),keys.getCompanyCode());
+        GLAccount glAccount = findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode());
 
 
         if (null != glAccount) {
@@ -237,7 +237,7 @@ public class GLAccountController {
 
         // создать счет с этим номером в GL и BARS
         String bsaacid = this.getGlAccountNumberTHWithKeys(operation,operSide,keys);
-        glAccount = createAccount(bsaacid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
+        glAccount = createAccountTH(bsaacid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
 
         return glAccount;
     }
@@ -271,10 +271,10 @@ public class GLAccountController {
 
         DataRecord drAccParm = glAccountRepository.getActParamByAccType(keys.getAccountType());
         DataRecord drCurr = glAccountRepository.getCbccy(keys.getCurrency());
-        String bsaacidMask = new StringBuilder().append(drAccParm.getString("ACC2")).append(drCurr.getString("CBCCY")).append("0").append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),4,6)).toString();
-        String keyDigit = glAccountFrontPartController.calculateKeyDigit(bsaacidMask,keys.getCompanyCode());
 
-        String bsaacid = new StringBuilder().append(drAccParm.getString("ACC2")).append(drCurr.getString("CBCCY")).append(keyDigit).append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),4,6)).toString();
+
+        String bsaacidMask = new StringBuilder().append(drAccParm.getString("ACC2")).append(drCurr.getString("CBCCY")).append("0").append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),3,9)).toString();
+        String bsaacid = glAccountFrontPartController.calculateKeyDigit(bsaacidMask,keys.getCompanyCode());
 
         Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));
         return bsaacid;
@@ -424,9 +424,23 @@ public class GLAccountController {
         // создать счет GL
         GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
         // определить дополнительные папаметры счета
+
         glAccountProcessor.enrichment(glAccount, keys);
         // записать счет в таблицы BARS
         glAccountProcessor.createBarsAccounts(glAccount);
+        // сохранить счет GL
+        return glAccountRepository.save(glAccount);
+    }
+
+    private GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
+                                    AccountKeys keys, GLAccount.OpenType openType) {
+
+        // создать счет GL
+        GLAccount glAccount = glAccountProcessor.createGlAccountTH(bsaAcid, operation, operSide, dateOpen, keys, openType);
+        // определить дополнительные папаметры счета
+        //glAccountProcessor.enrichmentTH(glAccount, keys);
+        // записать счет в таблицы BARS
+        //glAccountProcessor.createBarsAccounts(glAccount);
         // сохранить счет GL
         return glAccountRepository.save(glAccount);
     }
@@ -1030,6 +1044,11 @@ public class GLAccountController {
     @Lock(LockType.READ)
     public GLAccount findTechnicalAccount(AccountingType accountingType, String glccy, String cbccn) {
         return glAccountRepository.findTechnicalAccount(accountingType, glccy, cbccn);
+    }
+
+    @Lock(LockType.READ)
+    public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
+        return glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn);
     }
 
     /**

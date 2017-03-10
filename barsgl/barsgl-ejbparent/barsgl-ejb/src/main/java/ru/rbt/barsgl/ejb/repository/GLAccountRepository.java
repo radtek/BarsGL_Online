@@ -17,6 +17,7 @@ import ru.rbt.barsgl.shared.Assert;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
+import javax.xml.transform.Result;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -119,6 +120,17 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public ResultCode checkBsaAccountGlAcc(String bsaAcid)
+    {
+        try {
+            DataRecord res = selectFirst("select 0 from GL_ACC where bsaacid = ?", bsaAcid);
+
+            return (null == res) ? ResultCode.ACCOUNT_NOT_FOUND : ResultCode.valueOf(res.getInteger(0));
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
 
     public int checkBsaAccount(String bsaAcid, Date dateCurrent) {
         try {
@@ -178,7 +190,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try
         {
-            String sql = "select ACC2, ACOD, SQ from ACCPARM where ACCTYPE = ? and CTYPE = '0' and TERM='0' and DTE IS NULL";
+            String sql = "select ACC2, ACOD, AC_SQ from DWH.GL_ACTPARM where ACCTYPE = ? and CUSTYPE = '00' and TERM='00' and DTE IS NULL";
             DataRecord res = selectFirst(sql, accType);
             return res;
         }
@@ -191,7 +203,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try
         {
-            String sql = "select CBCCY from CURRENCY where GLCCY = ?";
+            String sql = "select CBCCY from DWH.CURRENCY where GLCCY = ?";
             DataRecord res = selectFirst(sql, ccy);
             return res;
         }
@@ -200,6 +212,32 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+
+    public String getCBCC(String cbccn)
+    {
+        try
+        {
+            String sql = "select CCPCD from dwh.IMBCBCMP where CCBBR = ?";
+            DataRecord res = selectFirst(sql, cbccn);
+            return null!=res?res.getString("CCPCD"):"";
+        }
+        catch (SQLException e){
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public DataRecord getIMBCBBRP(String cbccn)
+    {
+        try
+        {
+            String sql = "select A8BRCD,A8BICN from dwh.IMBCBBRP where BCBBR = ?";
+            DataRecord res = selectFirst(sql, cbccn);
+            return res;
+        }
+        catch (SQLException e){
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 
     /**
      * Определяет код валюты ЦБ по номеру счета ЦБ
@@ -935,6 +973,22 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     public GLAccount findTechnicalAccount(AccountingType accountingType, String glccy, String cbccn) {
         List<GLAccount> accrecs = findNative(GLAccount.class, "select * from gl_acc a where a.acctype = ? and a.ccy = ? and a.cbccn = ? and a.rlntype = ?"
                 , 5, accountingType.getId(), glccy, cbccn, GLAccount.RelationType.E.getValue());
+        if (accrecs.isEmpty()) {
+            return null;
+        }
+        else if (accrecs.size() > 1)
+        {
+            throw new DefaultApplicationException(String.format("Найдено '%s' счетов по acctype='%s', ccy='%s', cbccn='%s'. Счета: %s"
+                    , accrecs.size(), accountingType.getId(), glccy, cbccn, accrecs.stream().map(GLAccount::getBsaAcid).collect(Collectors.joining(","))));
+        } else {
+            return accrecs.get(0);
+        }
+
+    }
+
+    public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
+        List<GLAccount> accrecs = findNative(GLAccount.class, "select * from gl_acc a where a.acctype = ? and a.ccy = ? and a.cbccn = ? and a.rlntype = ?"
+                , 5, accountingType.getId(), glccy, cbccn, GLAccount.RelationType.NINE.getValue());
         if (accrecs.isEmpty()) {
             return null;
         }
