@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbcore.util;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 
 import java.io.OutputStream;
@@ -10,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,28 +24,55 @@ public class Sql2Xls {
     private final String query;
     private final ArrayList<Object> params;
     private List<XlsColumn> columns = new ArrayList();
+    private ExcelExportHead head = null;
+    private List<Row> headRows = new ArrayList();
 
     public Sql2Xls(String query, ArrayList<Object> params) {
         this.query = query;
         this.params = params;
     }
 
+    private void writeHead(Sheet sheet){
+        if (head == null) return;
+        int rowNumber = 0;
+
+        Row row;
+        Cell cell;
+        row = sheet.createRow(rowNumber++);
+        cell = row.createCell(0);
+        cell.setCellValue("Форма выгрузки: " + head.getFormTitle());
+
+        row = sheet.createRow(rowNumber++);
+        cell = row.createCell(0);
+        cell.setCellValue("Пользователь: " + head.getUser());
+
+        row = sheet.createRow(rowNumber++);
+        cell = row.createCell(0);
+        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss");
+        cell.setCellValue("Дата выгрузки: " + df.format(new Date()));
+
+        row = sheet.createRow(rowNumber++);
+        cell = row.createCell(0);
+        cell.setCellValue("Условия фильтра: " + head.getFilter());
+    }
+
     public void process(OutputStream out, Connection connection) throws Exception {
         if(this.columns.isEmpty()) {
             throw new Exception("Колонки не заданы");
         } else {
-            SXSSFWorkbook wb = null;
-            Sheet curSheet = null;
+            SXSSFWorkbook wb;
+            Sheet curSheet;
             PreparedStatement statement = null;
             ResultSet rs = null;
-            Row row = null;
-            int rowNumber = 0;
+            Row row;
+            int rowNumber = head == null ? 0 : 5;
             wb = new SXSSFWorkbook(100);
             CreationHelper cHelper = wb.getCreationHelper();
             HashMap cellStyles = new HashMap();
 
             try {
                 curSheet = wb.createSheet();
+
                 statement = connection.prepareStatement(this.query);
                 bindParameters(statement, this.params);
                 rs = statement.executeQuery();
@@ -54,6 +83,10 @@ public class Sql2Xls {
                     cell = row.createCell(e);
                     cell.setCellValue(columns.get(e).getCaption());
                 }
+                for(int e = 0; e < this.columns.size(); ++e) {
+                    curSheet.autoSizeColumn(e, true);
+                }
+                writeHead(curSheet);
 
                 while(rs.next()) {
                     ++rowNumber;
@@ -112,14 +145,13 @@ public class Sql2Xls {
                     }
                 }
 
-                for(int e = 0; e < this.columns.size(); ++e) {
-                    curSheet.autoSizeColumn(e, true);
-                }
-
                 wb.write(out);
             } catch (Exception var24) {
                 var24.printStackTrace();
                 throw new Exception(var24.getMessage(),var24);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                throw new Exception(t.getMessage(),t);
             } finally {
 //                wb.dispose();
                 try {
@@ -171,10 +203,12 @@ public class Sql2Xls {
                 }
             }
         }
+    }
 
+    public void setHead(ExcelExportHead head) {
+        this.head = head;
     }
 
     public static void main(String[] args) {
     }
-
 }

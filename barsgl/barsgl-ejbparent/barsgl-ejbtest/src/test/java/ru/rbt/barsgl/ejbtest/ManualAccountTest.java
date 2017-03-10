@@ -42,11 +42,11 @@ public class ManualAccountTest extends AbstractRemoteTest {
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
     private static final Long USER_ID = 2L;
 
+
     @Before
     public void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
-
     /**
      * Тест создания счета по ручному вводу
      * @throws java.sql.SQLException

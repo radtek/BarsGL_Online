@@ -5,7 +5,6 @@ import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -36,7 +35,10 @@ public class MovementCreateTask implements ParamsAwareRunnable {
         datas.add(data);
 
         datas.get(0).setAccountCBD("40807810000010496202");
-        processor.process(datas);
+        //processor.process(datas);
+        processor.sendRequests(datas);
+        processor.putTestAnswer();
+//        processor.receiveResponses(datas);
         auditController.info(AuditRecord.LogCode.MovementCreate,"Status cb account: "+data.getState());
         /*List<DataRecord> records = coreRepository.select("SELECT bsaacid " +
                                                              "FROM dwh.baltur " +

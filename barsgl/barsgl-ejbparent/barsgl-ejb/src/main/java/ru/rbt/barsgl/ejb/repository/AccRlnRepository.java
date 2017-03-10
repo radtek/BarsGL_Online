@@ -64,13 +64,16 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
      * @param ondate на дату
      * @return
      */
-    public List<DataRecord> findByAcid(String acid, String acc2, Date ondate, boolean plCodeExists) throws SQLException {
-        return select("select * from ACCRLN r where R.ACID = ? and ACC2 = ? and R.DRLNC > ? and RLNTYPE in (" +
-                (plCodeExists ? "'2'" : "'0', '4'") + ")"
-            , acid, acc2, DateUtils.onlyDate(ondate));
-    }
+//    public List<DataRecord> findByAcid(String acid, String acc2, Date ondate, boolean plCodeExists) throws SQLException {
+//        return select("select * from ACCRLN r where R.ACID = ? and ACC2 = ? and R.DRLNC > ? and RLNTYPE in (" +
+//                (plCodeExists ? "'2'" : "'0', '4'") + ")"
+//            , acid, acc2, DateUtils.onlyDate(ondate));
+//    }
     public List<DataRecord> findByAcid_Rlntype0(String acid, Date ondate) throws SQLException {
-        return select("select * from ACCRLN r where R.ACID = ? and R.DRLNC > ? and RLNTYPE='0'", acid, DateUtils.onlyDate(ondate));
+        return select("select * from ACCRLN r where R.ACID = ? and R.DRLNC > ? and r.RLNTYPE='0' "+
+                      "and not exists(select 1 from gl_acc g where g.bsaacid=r.bsaacid and g.acid=r.acid and "+
+                      "DTO <= ? and (DTC is null or DTC > ?))",
+                       acid, DateUtils.onlyDate(ondate), DateUtils.onlyDate(ondate), DateUtils.onlyDate(ondate));
     }
     /**
      * Поиск по счету ЦБ

@@ -36,9 +36,9 @@ public class OperationHandsViewDlg extends OperationHandsDlg {
     }
 
     @Override
-    protected void fillContent() {
+    protected void fillUp(){
         ManualOperationWrapper operation = (ManualOperationWrapper)params;
-        super.fillContent();
+        super.fillUp();
         mDealId.setValue(isEmpty(operation.getDealId()) ? operation.getPaymentRefernce() : operation.getDealId());
 
         String errorMessage = operation.getErrorMessage();

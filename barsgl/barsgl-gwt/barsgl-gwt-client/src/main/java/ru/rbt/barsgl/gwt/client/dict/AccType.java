@@ -55,6 +55,7 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
         initSubProduct = subproduct;
         initModifier = modifier;
         title.setText(Utils.Fmt(FORM_NAME, section, product, subproduct, modifier));
+        exportToExcel.setFormTitle(title.getText());
         reconfigure(false);
     }
 

@@ -6,11 +6,12 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
-import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
+import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -31,6 +32,7 @@ import java.util.Map;
  */
 public class ManualEditPostingDirectTest extends AbstractTimerJobTest {
 
+    private final Long USER_ID = 2L;
 
     @Before
     public void beforeClass() {
@@ -59,12 +61,13 @@ public class ManualEditPostingDirectTest extends AbstractTimerJobTest {
         wrapper.setProfitCenter(profit);
         wrapper.setInputMethod(InputMethod.M);
 
-        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualPostingController.class, "processMessageWrapper", wrapper);
-        Assert.assertFalse(res.isError());
-        wrapper = res.getResult();
-        Assert.assertTrue(0 < wrapper.getId());
+        BatchPosting posting = ManualOperationTest.createAuthorizedPosting(wrapper, USER_ID);
+        Assert.assertNotNull(posting);
 
-        GLManualOperation operation = (GLManualOperation) baseEntityRepository.findById(GLManualOperation.class, wrapper.getId());
+        GLManualOperation operation0 = remoteAccess.invoke(ManualOperationController.class, "processPosting", posting, false);
+        Assert.assertNotNull(operation0);
+
+        GLManualOperation operation = (GLManualOperation) baseEntityRepository.findById(GLManualOperation.class, operation0.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
         List<GLPosting> postList = getPostings(operation);
         Assert.assertNotNull(postList);
@@ -75,6 +78,7 @@ public class ManualEditPostingDirectTest extends AbstractTimerJobTest {
         wrapper.setPdIdList(idList);
         wrapper.setPostingChoice(PostingChoice.PST_ALL);
         wrapper.setPdMode(getOperday().getPdMode().name());
+        wrapper.setId(operation.getId());
 
         // изменить общие параметры
         final String dealId2 = "DD_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 4);
@@ -226,8 +230,8 @@ public class ManualEditPostingDirectTest extends AbstractTimerJobTest {
         EtlPackage pkg = newPackage(stamp, "MfoExchange");
         Assert.assertTrue(pkg.getId() > 0);
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0050%");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817840_0045%");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0050%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47427840_0045%");
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setSourcePosting("FC12_CL");
         pst.setDealId("DD_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 4));

@@ -64,7 +64,9 @@ public class OperationPostingForm extends MDForm {
 
     @Override
     protected String prepareMasterSql() {
-        return "select * from V_GL_OPERCUST " + getSourceAndFilialPart("where", "SRC_PST", "CBCC_CR", "CBCC_DR");
+        //return "select * from V_GL_OPERCUST " + getSourceAndFilialPart("where", "SRC_PST", "CBCC_CR", "CBCC_DR");
+        return "select * from (select a.*, a.AC_DR || ' ' || a.AC_CR as dr_cr from V_GL_OPERCUST as a) op "
+                + getSourceAndFilialPart("where", "SRC_PST", "CBCC_CR", "CBCC_DR");
     }
 
     @Override
@@ -138,6 +140,8 @@ public class OperationPostingForm extends MDForm {
         col.setList(yesNoList);
 
         result.addColumn(new Column("USER_NAME", STRING, "Пользователь", 100, false, false));
+        //вычисляемое поле для фильтра по условию "ИЛИ"
+        result.addColumn(new Column("DR_CR", STRING, "Счета Дт/Кр", 70, false, false));
 
         return result;
     }

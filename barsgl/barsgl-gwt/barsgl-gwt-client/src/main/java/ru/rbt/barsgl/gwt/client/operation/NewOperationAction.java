@@ -57,12 +57,8 @@ public class NewOperationAction extends GridAction {
             }
         });
 
-
         Object params = getParams();
-        if (null == params)
-            dlg.show();
-        else
-            dlg.show(params);
+        dlg.show(params);
     }
 
     @Override

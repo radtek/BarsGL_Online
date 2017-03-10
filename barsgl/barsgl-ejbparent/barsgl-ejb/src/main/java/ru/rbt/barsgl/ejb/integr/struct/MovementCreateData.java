@@ -2,13 +2,14 @@ package ru.rbt.barsgl.ejb.integr.struct;
 
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
 /**
  * Created by ER22228 on 31.05.2016.
  */
-public class MovementCreateData {
+public class MovementCreateData implements Serializable{
     String operIdC;          //ID_CR;       //	P1	ID операции
     String accountCBC;       //AC_CR;    //	P2	Счет ЦБ по дебету операции
     BigDecimal operAmountC;  //AMT_CR;  //  P3	сумма по дебету операции
@@ -37,7 +38,7 @@ public class MovementCreateData {
     String blockId;
 
     public enum StateEnum{
-        SUCCESS, ERROR, WARNING
+        SUCCESS, ERROR, WARNING, SENT
     }
 
     public String getOperIdD() {

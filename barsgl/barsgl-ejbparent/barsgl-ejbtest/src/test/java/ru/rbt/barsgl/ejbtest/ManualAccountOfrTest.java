@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
@@ -128,6 +129,8 @@ public class ManualAccountOfrTest extends AbstractRemoteTest {
      * @throws ParseException
      */
     @Test
+    @Ignore
+    // этим сервисом счета ОФР уже не создаются вручную
     public void testCreateManualOfrAccount() throws SQLException, ParseException {
         // создать счет Midas и псевдо-счет ЦБ
         Date dateOpen = getOperday().getCurrentDate();
