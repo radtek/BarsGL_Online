@@ -1,10 +1,8 @@
 /*
  * ООО "Артком Системы" & "3G Banking Technologies" 2017
- * Financial Board Project
  */
 package ru.rbt.security.gwt.client.security;
 
-import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -21,7 +19,6 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
 import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
-//import ru.rbt.security.gwt.formmanager.FormManagerUI;
 import ru.rbt.security.gwt.server.rpc.auth.AuthorizationService;
 import ru.rbt.security.gwt.server.rpc.auth.AuthorizationServiceAsync;
 

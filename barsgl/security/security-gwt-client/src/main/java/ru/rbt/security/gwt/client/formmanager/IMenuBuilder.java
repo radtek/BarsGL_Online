@@ -1,6 +1,5 @@
 /*
  * ООО "Артком Системы" & "3G Banking Technologies" 2017
- * Financial Board Project
  */
 package ru.rbt.security.gwt.client.formmanager;
 
