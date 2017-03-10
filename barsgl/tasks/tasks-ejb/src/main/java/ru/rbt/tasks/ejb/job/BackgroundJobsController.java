@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import javax.inject.Inject;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.JobControl;
 
 /**
@@ -42,7 +43,7 @@ public class BackgroundJobsController {
 //    @EJB
 //    private RequestContextBean contextBean;
 
-    @EJB
+    @Inject
     private TimerJobRepository timerJobRepository;
 
     @EJB
