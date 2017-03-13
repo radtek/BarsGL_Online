@@ -141,9 +141,11 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                     customerNo = format("%08d", Integer.parseInt(value));
                 } else if (name.endsWith("AccountSpecials")) {
                     if (!"ALL".equalsIgnoreCase(value) && !"*".equals(value)) {
+                      if(value.trim().length() > 0)
                         specs.add(value);
                     }
                 } else if (name.endsWith("AccountingType")) {
+                  if(value.trim().length() > 0)
                     accTypes.add(value);
                 }
             }

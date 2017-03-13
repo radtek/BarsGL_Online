@@ -80,6 +80,11 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     public List<DataRecord> getCountsByAcctype(String customerNo, List<String> accountTypes) throws Exception {
         try {
             accountTypes = accountTypes.stream().filter(accountSpecial -> accountSpecial.matches("[0-9]+")).collect(Collectors.toList());
+            
+            if(accountTypes.isEmpty()){
+              throw new Exception("Элемент AccountingType содержит некорректные данные");
+            }
+            
             String acctypes = StringUtils.listToString(accountTypes, ",");
 
             List<DataRecord> dataRecords = selectMaxRows(
