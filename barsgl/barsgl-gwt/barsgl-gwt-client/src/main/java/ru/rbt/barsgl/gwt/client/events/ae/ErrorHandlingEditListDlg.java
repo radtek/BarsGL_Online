@@ -25,15 +25,16 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  * Created by akichigi on 06.03.17.
  */
 public class ErrorHandlingEditListDlg extends DlgFrame implements IAfterShowEvent {
-    private final int IDX_SRC = 10;
-    private final int IDX_DATE = 14;
+    private final int IDX_SRC = 11;
+    private final int IDX_DATE = 15;
+    private final int IDX_ERRCODE = 37;
 
     private ValuesBox comment;
     private List<Row> rows;
     private AreaBox commentBox;
     private Label totalOper;
-
-    private final String COMMENT_LABEL = "Отметка о причине переобработки/ закрытии списком";
+    private Label labelComment;
+    private final String COMMENT_LABEL = "Отметка о причине {0} списком";
 
     public ErrorHandlingEditListDlg(){
         super();
@@ -41,20 +42,14 @@ public class ErrorHandlingEditListDlg extends DlgFrame implements IAfterShowEven
         setAfterShowEvent(this);
     }
 
-
-
     @Override
     public Widget createContent(){
         Grid grid = new Grid(1, 2);
-        grid.setWidget(0, 0, new Label(COMMENT_LABEL));
+        grid.setWidget(0, 0, labelComment = new Label(""));
         grid.setWidget(0, 1, comment = new ValuesBox());
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
 
         comment.setWidth("280px");
-        comment.addItem(0, "");
-        comment.addItem(1, "Операция прислана ошибочно");
-        comment.addItem(2, "Исправлено бухгалтерией");
-
         comment.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
@@ -84,7 +79,7 @@ public class ErrorHandlingEditListDlg extends DlgFrame implements IAfterShowEven
 
     private void clear(){
         totalOper.setText("");
-        comment.setSelectedIndex(0);
+        comment.clear();
         commentBox.clear();
     }
 
@@ -92,9 +87,23 @@ public class ErrorHandlingEditListDlg extends DlgFrame implements IAfterShowEven
     protected void fillContent() {
         clear();
         Object[] data = (Object[])params;
-        commentBox.setValue((String) data[2]);
+
         rows = (List<Row>)data[4];
         if (rows != null) totalOper.setText("" + rows.size());
+        comment.addItem(0, "");
+        if (((Boolean) data[3])){
+            //New
+            comment.addItem(1, "Операция прислана ошибочно");
+            comment.addItem(2, "Исправлено бухгалтерией");
+            labelComment.setText(Utils.Fmt(COMMENT_LABEL, "закрытия"));
+        } else {
+            //Reproc
+            comment.addItem(1, "Исправлены справочники");
+            comment.addItem(2, "Переобработка после системной ошибки");
+            labelComment.setText(Utils.Fmt(COMMENT_LABEL, "переобработки"));
+        }
+        comment.setSelectedIndex(0);
+        commentBox.setValue((String) data[2]);
     }
 
     private void checkRowsUniformity() throws Exception {
@@ -102,16 +111,19 @@ public class ErrorHandlingEditListDlg extends DlgFrame implements IAfterShowEven
 
         String src = Utils.toStr((String) rows.get(0).getField(IDX_SRC).getValue());
         Date operDate = (Date) rows.get(0).getField(IDX_DATE).getValue();
+        String errCode = Utils.toStr((String) rows.get(0).getField(IDX_ERRCODE).getValue());
+
         int count = 0;
 
         for ( int i = 1; i < rows.size(); i++){
             if ((operDate.compareTo((Date) rows.get(i).getField(IDX_DATE).getValue()) != 0) ||
-                    src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0){
-                // System.out.println((String)  rows.get(i).getField(10).getValue() + " - " + (Date)  rows.get(i).getField(12).getValue());
+                    src.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_SRC).getValue()))!= 0 ||
+                    errCode.compareTo(Utils.toStr((String) rows.get(i).getField(IDX_ERRCODE).getValue()))!= 0){
+
                 count++;
             }
         }
-        if (count > 0) throw new Exception(Utils.Fmt("Выборка содержит операции за разные даты опердня\nили разные источники сделки в количестве {0} шт.",
+        if (count > 0) throw new Exception(Utils.Fmt("Выборка содержит операции за разные даты опердня\nили разные источники сделки\nили разные коды ошибки в количестве {0} шт.",
                 count));
     }
 

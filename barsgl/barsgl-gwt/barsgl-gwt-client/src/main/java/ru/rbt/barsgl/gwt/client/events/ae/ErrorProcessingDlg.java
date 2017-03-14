@@ -28,7 +28,7 @@ public class ErrorProcessingDlg extends DlgFrame {
 
    public ErrorProcessingDlg() {
        super();
-       setCaption("Повторная обработка ошибки сообщения");
+       setCaption("Повторная обработка сообщения");
        ok.setText("Обработать");
    }
 

@@ -325,6 +325,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 50));
         result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 70));
         result.addColumn(new Column("ID_PST", Column.Type.STRING, "ИД сообщ АЕ", 90));
+        result.addColumn(new Column("EVT_ID", Column.Type.STRING, "ИД сообытия", 90));
         result.addColumn(colDealSource = new Column("SRC_PST", Column.Type.STRING, "Источник сделки", 70));
         result.addColumn(new Column("GLOID", Column.Type.LONG, "ID операции", 70));
         result.addColumn(new Column("GLOID_NEW", Column.Type.LONG, "ID нов. операции", 70));
@@ -348,9 +349,9 @@ public class LoadErrorHandlingForm  extends GridForm {
         result.addColumn(new Column("NRT", Column.Type.STRING, "Назначение анг.", 175, false, false));
         result.addColumn(new Column("RNRTL", Column.Type.STRING, "Назначение рус.", 175));
         result.addColumn(new Column("STRN", Column.Type.STRING, "Сторно", 40));
-        result.addColumn(new Column("STRNRF", Column.Type.STRING, "Сторно операция", 80, false, false));
+        result.addColumn(new Column("STRNRF", Column.Type.STRING, "Сторно операция", 120));
         result.addColumn(new Column("FAN", Column.Type.STRING, "Веер", 40));
-        result.addColumn(new Column("PAR_RF", Column.Type.STRING, "Голова веера", 80, false, false));
+        result.addColumn(new Column("PAR_RF", Column.Type.STRING, "Голова веера", 120));
         result.addColumn(new Column("ERR_CODE", Column.Type.STRING, "Код ошибки", 100));
         result.addColumn(new Column("ERR_TYPE", Column.Type.STRING, "Тип ошибки", 500));
         result.addColumn(new Column("ERR_MSG", Column.Type.STRING, "Описание ошибки", 1200));

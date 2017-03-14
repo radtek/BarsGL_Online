@@ -24,9 +24,9 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  * Created by akichigi on 16.02.17.
  */
 public class ErrorFilteredDlg extends DlgFrame {
-    private final int IDX_SRC = 10;
-    private final int IDX_DATE = 14;
-    private final int IDX_ERRCODE = 36;
+    private final int IDX_SRC = 11;
+    private final int IDX_DATE = 15;
+    private final int IDX_ERRCODE = 37;
 
     public enum Mode{
         CORRECTION,
@@ -47,9 +47,8 @@ public class ErrorFilteredDlg extends DlgFrame {
     public ErrorFilteredDlg(Mode mode){
         super();
         this.mode = mode;
-        setCaption(mode == Mode.PROCESSING ? "Повторная обработка ошибок выбранных сообщений" :
+        setCaption(mode == Mode.PROCESSING ? "Повторная обработка выбранных сообщений" :
                 "Закрытие ошибок выбранных сообщений");
-
 
         ok.setText(mode == Mode.PROCESSING ? "Обработать" : "Сохранить");
 
@@ -104,7 +103,6 @@ public class ErrorFilteredDlg extends DlgFrame {
 
         return vPanel;
     }
-
 
     private void clear(){
         totalOper.setText("");

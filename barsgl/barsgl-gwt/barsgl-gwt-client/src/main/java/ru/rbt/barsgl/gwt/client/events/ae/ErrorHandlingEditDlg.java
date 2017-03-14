@@ -31,7 +31,6 @@ public class ErrorHandlingEditDlg extends DlgFrame implements IAfterShowEvent {
     private TxtBox id_pst_correct;
     private AreaBox commentBox;
 
-
     public ErrorHandlingEditDlg(){
         super();
         setCaption("Редактирование сообщения");
@@ -80,7 +79,7 @@ public class ErrorHandlingEditDlg extends DlgFrame implements IAfterShowEvent {
 
     private void clear(){
         id_pst_correct.clear();
-        comment.setSelectedIndex(0);
+        comment.clear();
         commentBox.clear();
     }
 
@@ -92,9 +91,20 @@ public class ErrorHandlingEditDlg extends DlgFrame implements IAfterShowEvent {
         id = (Long)data[0];
         id_pst_correct.setValue((String) data[1]);
 
-        commentBox.setValue((String) data[2]);
-
         id_pst_correct.setReadOnly(!((Boolean) data[3]));
+        
+        comment.addItem(0, "");
+        if (((Boolean) data[3])){
+            //New
+            comment.addItem(1, "Операция прислана ошибочно");
+            comment.addItem(2, "Исправлено бухгалтерией");
+        } else {
+            //Reproc
+            comment.addItem(1, "Исправлены справочники");
+            comment.addItem(2, "Переобработка после системной ошибки");
+        }
+        comment.setSelectedIndex(0);
+        commentBox.setValue((String) data[2]);
     }
 
     private void checkUp(){
