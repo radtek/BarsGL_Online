@@ -10,12 +10,21 @@ import java.math.BigDecimal;
  * Created by ER18837 on 10.03.17.
  */
 public class CobStepItem implements Serializable, IsSerializable {
+    private int phaseNo;
     private String phaseName;
     private CobStepStatus status;
     private BigDecimal estimation;
     private BigDecimal duration;
-    private BigDecimal pescent;
+    private BigDecimal percent;
     private String message;
+
+    public int getPhaseNo() {
+        return phaseNo;
+    }
+
+    public void setPhaseNo(int phaseNo) {
+        this.phaseNo = phaseNo;
+    }
 
     public String getPhaseName() {
         return phaseName;
@@ -49,12 +58,12 @@ public class CobStepItem implements Serializable, IsSerializable {
         this.duration = duration;
     }
 
-    public BigDecimal getPescent() {
-        return pescent;
+    public BigDecimal getPercent() {
+        return percent;
     }
 
-    public void setPescent(BigDecimal pescent) {
-        this.pescent = pescent;
+    public void setPercent(BigDecimal pescent) {
+        this.percent = pescent;
     }
 
     public String getMessage() {
@@ -63,5 +72,12 @@ public class CobStepItem implements Serializable, IsSerializable {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Phase: '%d'; status: '%s'; estimation = %s, duration = %s, percent = %s; %s",
+            phaseNo, status.name(), estimation.toString(), duration.toString(), percent.toString(),
+                null != message ? ("message: " + message) : "");
     }
 }

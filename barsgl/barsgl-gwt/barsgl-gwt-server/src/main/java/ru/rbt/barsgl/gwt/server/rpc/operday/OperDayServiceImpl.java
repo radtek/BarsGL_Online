@@ -2,6 +2,7 @@ package ru.rbt.barsgl.gwt.server.rpc.operday;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
@@ -12,6 +13,7 @@ import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
@@ -152,6 +154,28 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
 
     private boolean isPreCOBAllowed() throws Exception {
         return (Boolean) localInvoker.invoke(ExecutePreCOBTask.class, "checkPackagesToloadExists");
+    }
+
+    public RpcRes_Base<CobWrapper> getCobInfo(Long idCob) throws Exception {
+        return new RpcResProcessor<CobWrapper>() {
+            @Override
+            protected RpcRes_Base<CobWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<CobWrapper> res = localInvoker.invoke(CobStatService.class, "getCobInfo", idCob);
+                if (res == null) throw new Throwable("Не удалось получить данные мониторинга COB!");
+                return res;
+            }
+        }.process();
+    }
+
+    public RpcRes_Base<CobWrapper> calculateCob() throws Exception {
+        return new RpcResProcessor<CobWrapper>() {
+            @Override
+            protected RpcRes_Base<CobWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<CobWrapper> res = localInvoker.invoke(CobStatService.class, "calculateCob");
+                if (res == null) throw new Throwable("Не удалось рассчитать данные мониторинга COB!");
+                return res;
+            }
+        }.process();
     }
 
 }

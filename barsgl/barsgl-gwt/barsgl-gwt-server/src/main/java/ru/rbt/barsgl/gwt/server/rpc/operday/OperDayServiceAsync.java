@@ -2,6 +2,7 @@ package ru.rbt.barsgl.gwt.server.rpc.operday;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
@@ -15,4 +16,7 @@ public interface OperDayServiceAsync {
      void runOpenOperdayTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
      void swithPdMode(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);
      void getProcessingStatus(AsyncCallback<RpcRes_Base<ProcessingStatus>> callback);
+
+     void getCobInfo(Long idCob, AsyncCallback<RpcRes_Base<CobWrapper>> callback) throws Exception;
+     void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback) throws Exception;
 }

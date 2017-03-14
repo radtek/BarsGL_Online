@@ -21,6 +21,9 @@ import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PreCob;
 @Singleton
 @AccessTimeout(value = 5, unit = MINUTES)
 public class CobStatRecalculator {
+    public enum CobStatAction {
+        Calculate, IncEstimate
+    }
 
     @Inject
     private OperdayController operdayController;
@@ -41,7 +44,7 @@ public class CobStatRecalculator {
             Long idCob = statRepository.createCobStepGroup(curdate);
             for (CobStep step : CobStep.values()) {
                 Long parameter = statRepository.getStepParameter(step, curdate, operday.getLastWorkingDay());
-                statRepository.setStepEstimation(idCob, step, parameter);
+                statRepository.setStepEstimate(idCob, step.getPhaseNo(), parameter);
             }
             return idCob;
         } catch (Throwable t) {

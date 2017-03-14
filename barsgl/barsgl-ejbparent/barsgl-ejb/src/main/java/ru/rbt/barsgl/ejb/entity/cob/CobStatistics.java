@@ -17,11 +17,6 @@ public class CobStatistics extends BaseEntity<CobStatId> {
     @EmbeddedId
     private CobStatId id;
 
-    @Override
-    public CobStatId getId() {
-        return id;
-    }
-
     @Column(name = "DAT")
     @Temporal(TemporalType.DATE)
     private Date curdate;
@@ -66,6 +61,16 @@ public class CobStatistics extends BaseEntity<CobStatId> {
     public void setId(CobStatId id) {
         this.id = id;
     }
+
+    @Override
+    public CobStatId getId() {
+        return id;
+    }
+
+    public Long getIdCob() {return id.getIdCob();}
+
+    public Integer getPhaseNo() {return id.getPhaseNo();}
+
 
     public Date getCurdate() {
         return curdate;
