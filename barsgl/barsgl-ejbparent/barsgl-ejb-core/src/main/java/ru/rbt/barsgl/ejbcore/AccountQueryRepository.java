@@ -63,7 +63,14 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     
     public List<DataRecord> getCountsByAcod(String customerNo, List<String> accountSpecials) throws Exception {
         try {
+            accountSpecials = accountSpecials.stream().filter(accountSpecial -> accountSpecial.matches("\\d+")).collect(Collectors.toList());
+            
+            if(accountSpecials.isEmpty()){
+              throw new Exception("Элемент AccountSpecials содержит некорректные данные");
+            }
+
             String glacods = "'" + StringUtils.listToString(accountSpecials, "','") + "'";
+
             List<DataRecord> dataRecords = selectMaxRows(
                 "SELECT * FROM DWH.GL_ACC A WHERE "
                         + "A.CUSTNO=? "
@@ -79,7 +86,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public List<DataRecord> getCountsByAcctype(String customerNo, List<String> accountTypes) throws Exception {
         try {
-            accountTypes = accountTypes.stream().filter(accountSpecial -> accountSpecial.matches("[0-9]+")).collect(Collectors.toList());
+            accountTypes = accountTypes.stream().filter(accountType -> accountType.matches("\\d+")).collect(Collectors.toList());
             
             if(accountTypes.isEmpty()){
               throw new Exception("Элемент AccountingType содержит некорректные данные");
