@@ -85,7 +85,7 @@ public enum ErrorCode {
     , BRANCH_NOT_FOUND(2007, "Ключи счета %s: Бранч не найден: '%s' (поле '%s')")
     , COMPANY_CODE_NOT_VALID(2008, "Ключи счета %s: Код филиала '%s' (поле '%s') не соответствует бранчу '%s' (поле '%s')")
     , COMPANY_CODE_NOT_FOUND(2009, "%s")
-    , TOO_MANY_ACCRLN_ENTRIES(2010, "Найдено более одного счета ЦБ '%s' по счету Midas '%s' для CTYPE '%s'")
+    , TOO_MANY_ACCRLN_ENTRIES(2010, "Найдено более одного счета ЦБ '%s' по счету Midas '%s' для '%s'")
     , ACCOUNT_PARAMS_NOT_FOUND(2011, "Ключи счета %s: Не найдены настройки (GL_ACTPARM) для AccountType = '%s', CustomerType = '%s', Term = '%s' на дату '%s'")
     , ACCOUNT_TYPE_IS_NOT_NUMBER(2012, "Ключи счета %s: Неверный формат типа счета (не число): '%s' (поле '%s')")
     , ACCOUNT_TYPE_INVALID(2013, "Ключи счета %s: Тип счета не задан в системе: '%s' (поле '%s')")
@@ -125,14 +125,15 @@ public enum ErrorCode {
     , ACCOUNT_707_BAD_BRANCH(2042, "Счет '707...' можно открыть только в головном отделении!")
     , PLCODE_NOT_CORRECT(2043, "Символ доходов / расходов '%s' не соответсвует настройкам для:\nAccountType '%s', Тип собств '%s', Код срока '%s', должан быть '%s'")
     , ACCOUNT2_NOT_CORRECT(2044, "Балансовый счет 2-го порядка '%s' не соответсвует настройкам для:\nAccountType '%s', Тип собств '%s', Код срока '%s', должан быть '%s'")
-    , GL_SEQ_XX_KEY_WITH_DEAL(2045, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s задан ключом некорректно, DEALID д.б.пустым")
-    , GL_SEQ_XX_KEY_WITH_SUBDEAL(2046, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, SUBDEAL=%s задан ключом некорректно, SUBDEAL д.б.пустым")
-    , GL_SEQ_XX_KEY_WITH_PLCODE(2047, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, PLCODE д.б.пустым")
-    , GL_SEQ_XX_GL_ACC_NOT_FOUND(2048,"Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s не определяется однозначно, GL_ACC.ACID=%s")
-    , GL_SEQ_XX_ACCRLN_NOT_FOUND(2049, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s не определяется однозначно, ACCRLN.ACID=%s")
-    , GL_SEQ_XX_KEY_WITH_DB_PLCODE(2050, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым")
-    , GL_SEQ_XX_KEY_WITH_SQ_0(2051, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, SQ=0")
-    , GL_SEQ_XX_KEY_WITH_FL_CTRL(2052, "Счет ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s GL_SEQ=%s задан ключом некорректно, GL_ACTNAME.FL_CTRL=Y")
+//    GL_SEQ = XX
+    , GL_SEQ_XX_KEY_WITH_DEAL(2045, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, DEALID д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_SUBDEAL(2046, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, SUBDEAL=%s, GL_SEQ=%s некорректно, SUBDEAL д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_PLCODE(2047, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, PLCODE д.б.пустым")
+    , GL_SEQ_XX_GL_ACC_NOT_FOUND(2048,"Счет %s с ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s не определяется однозначно, GL_ACC.ACID=%s")
+    , GL_SEQ_XX_ACCRLN_NOT_FOUND(2049, "Счет %s с ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s не определяется однозначно, ACCRLN.ACID=%s")
+    , GL_SEQ_XX_KEY_WITH_DB_PLCODE(2050, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_SQ_0(2051, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, SQ=0")
+    , GL_SEQ_XX_KEY_WITH_FL_CTRL(2052, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, GL_ACTNAME.FL_CTRL=Y")
     // Опердень и задачи
     , OPEN_OPERDAY_ERROR(3001, "%s")
     , CLOSE_OPERDAY_ERROR(3002, "%s")
@@ -191,6 +192,9 @@ public enum ErrorCode {
 
     public int getErrorCode() {
         return errorCode;
+    }
+    public String getStrErrorCode() {
+        return Integer.toString(errorCode);
     }
 
     public String getRawMessage() {

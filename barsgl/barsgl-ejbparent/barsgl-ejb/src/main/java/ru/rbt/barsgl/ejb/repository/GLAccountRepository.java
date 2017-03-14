@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 
@@ -482,11 +483,17 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
                 term = "-1";
                 termField = "value(TERM, -1)";
             }
+            //todo XX
+            String addForXX = "";
+            if (!isEmpty(glSeguence) && glSeguence.toUpperCase().startsWith("XX")){
+                addForXX = " and (dealid is null or dealid ='' or dealid ='нет') and (subdealid is null or subdealid ='' or subdealid ='нет')";
+            }
             DataRecord data = selectFirst("select ID from GL_ACC where " +
                             "BRANCH = ? and CCY = ? and CUSTNO = ? and ACCTYPE = ?" +
                             " and GL_SEQ = ?" +
                             " and (DTC is null or DTC > ?) and "
                             + custTypeField + " = ? and " + termField + " = ? "
+                            + addForXX
                     , branch, currency, customerNumber, accountType, glSeguence, dateCurrent, cbCustType, term);
             return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
         } catch (SQLException e) {
