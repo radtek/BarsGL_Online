@@ -100,22 +100,24 @@ public class TechOperationProcessor extends GLOperationProcessor
             pdth.setId(id);
             pdth.setBsaAcid(operation.getAccountDebit());
             pdth.setCcy(operation.getCurrencyDebit());
+            pdth.setGlAcID(glPdThRepositoty.getAccID(operation.getAccountDebit()));
 
-            BigDecimal amnt = BigDecimal.valueOf(-1).multiply(operation.getAmountDebit().multiply(BigDecimal.valueOf(10).pow(operation.getCurrencyDebit().getScale().intValue())));
+            BigDecimal amnt = BigDecimal.valueOf(-1).multiply(operation.getAmountDebit().movePointRight(operation.getCurrencyDebit().getScale().intValue()));
             pdth.setAmount(amnt);
 
-            BigDecimal amntс = BigDecimal.valueOf(-1).multiply(operation.getAmountPosting().multiply(BigDecimal.valueOf(10).pow(operation.getCurrencyDebit().getScale().intValue())));
+            BigDecimal amntс = BigDecimal.valueOf(-1).multiply(operation.getAmountPosting().movePointRight(operation.getCurrencyDebit().getScale().intValue()));
             pdth.setAmountBC(amntс);
         }
         else if (operSide == GLOperation.OperSide.C)
         {
             pdth.setBsaAcid(operation.getAccountCredit());
             pdth.setCcy(operation.getCurrencyCredit());
+            pdth.setGlAcID(glPdThRepositoty.getAccID(operation.getAccountCredit()));
 
-            BigDecimal amnt = operation.getAmountCredit().multiply(BigDecimal.valueOf(10).pow(operation.getCurrencyCredit().getScale().intValue()));
+            BigDecimal amnt = operation.getAmountCredit().movePointRight(operation.getCurrencyCredit().getScale().intValue());
             pdth.setAmount(amnt);
 
-            BigDecimal amntс = operation.getAmountPosting().multiply(BigDecimal.valueOf(10).pow(operation.getCurrencyCredit().getScale().intValue()));
+            BigDecimal amntс = operation.getAmountPosting().movePointRight(operation.getCurrencyCredit().getScale().intValue());
             pdth.setAmountBC(amntс);
         }
 
@@ -133,7 +135,6 @@ public class TechOperationProcessor extends GLOperationProcessor
         pdth.setIsCorrection(operation.getIsCorrection());
         pdth.setProfitCenter(operation.getProfitCenter());
         pdth.setNarrative(operation.getNarrative());
-        pdth.setGlAcID(glPdThRepositoty.getAccID(operation.getAccountDebit()));
 
         return pdth;
     }
