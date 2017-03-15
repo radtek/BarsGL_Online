@@ -16,6 +16,9 @@ public class CobStepItem implements Serializable, IsSerializable {
     private BigDecimal estimation;
     private BigDecimal duration;
     private BigDecimal percent;
+    private Integer intEstimation;
+    private Integer intDuration;
+    private Integer intPercent;
     private String message;
 
     public CobStepItem() {
@@ -64,6 +67,30 @@ public class CobStepItem implements Serializable, IsSerializable {
 
     public void setPercent(BigDecimal pescent) {
         this.percent = pescent;
+    }
+
+    public Integer getIntEstimation() {
+        return intEstimation;
+    }
+
+    public void setIntEstimation(Integer intEstimation) {
+        this.intEstimation = intEstimation;
+    }
+
+    public Integer getIntDuration() {
+        return intDuration;
+    }
+
+    public void setIntDuration(Integer intDuration) {
+        this.intDuration = intDuration;
+    }
+
+    public Integer getIntPercent() {
+        return intPercent;
+    }
+
+    public void setIntPercent(Integer intPercent) {
+        this.intPercent = intPercent;
     }
 
     public String getMessage() {

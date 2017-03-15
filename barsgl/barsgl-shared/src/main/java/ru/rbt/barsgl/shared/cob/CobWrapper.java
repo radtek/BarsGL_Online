@@ -13,6 +13,7 @@ public class CobWrapper implements Serializable, IsSerializable {
     private CobStepItem total;
     private List<CobStepItem> stepList;
     private String errorMessage;
+    private Boolean startTimer;
 
     public Long getIdCob() {
         return idCob;
@@ -44,5 +45,13 @@ public class CobWrapper implements Serializable, IsSerializable {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public Boolean getStartTimer() {
+        return startTimer;
+    }
+
+    public void setStartTimer(Boolean startTimer) {
+        this.startTimer = startTimer;
     }
 }

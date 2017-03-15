@@ -126,9 +126,11 @@ public class CobStatTest extends AbstractTimerJobTest  {
     }
 
     private void printStepInfo(CobStepItem item) {
-            System.out.printf("Phase: '%s'; status: '%s'; estimation = %s, duration = %s, percent = %s; %s",
-                        item.getPhaseNo().toString(), item.getStatus().name(),
-                        item.getEstimation().toString(), item.getDuration().toString(), item.getPercent().toString(),
-                        null != item.getMessage() ? ("message: " + item.getMessage()) : "");
+            System.out.printf("Phase: '%s'; status: '%s'; " +    //estimation = %s, duration = %s, percent = %s;" +
+                " intEstimation = %s, intDuration = %s, intPercent = %s; %s\n",
+                    item.getPhaseNo().toString(), item.getStatus().name(),
+                    item.getEstimation().toString(), item.getDuration().toString(), item.getPercent().toString(),
+                    item.getIntEstimation().toString(), item.getIntDuration().toString(), item.getIntPercent().toString(),
+                    null != item.getMessage() ? ("message: " + item.getMessage()) : "");
     }
 }

@@ -14,10 +14,7 @@ import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
@@ -75,39 +72,41 @@ public class CobStatService {
         List<CobStepItem> stepItemList = new ArrayList<>();
         wrapper.setStepList(stepItemList);
         List<String> errorList = new ArrayList<>();
-        CobStepItem itemTolal = new CobStepItem(0, "Всего: ");
-        wrapper.setTotal(itemTolal);
-        itemTolal.setDuration(BigDecimal.ZERO);
-        itemTolal.setEstimation(BigDecimal.ZERO);
+        CobStepItem itemTotal = new CobStepItem(0, "Всего: ");
+        wrapper.setTotal(itemTotal);
+        itemTotal.setDuration(BigDecimal.ZERO);
+        itemTotal.setEstimation(BigDecimal.ZERO);
         for (CobStatistics stepStat : stepList) {
             CobStepItem item = new CobStepItem(stepStat.getPhaseNo(), stepStat.getPhaseName());
             item.setStatus(stepStat.getStatus());
             item.setMessage(stepStat.getMessage());
             if (!StringUtils.isEmpty(stepStat.getErrorMsg()))
                 errorList.add(String.format("Шаг %d: %s", stepStat.getPhaseNo(), stepStat.getErrorMsg()));
-            calcStepDuration(stepStat, item, systime);
-            itemTolal.setDuration(itemTolal.getDuration().add(item.getDuration()));
-            itemTolal.setEstimation(itemTolal.getEstimation().add(item.getEstimation()));
+            calcStepParameters(stepStat, item, systime);
+            itemTotal.setDuration(itemTotal.getDuration().add(item.getDuration()));
+            itemTotal.setEstimation(itemTotal.getEstimation().add(item.getEstimation()));
             stepItemList.add(item);
         }
         CobStepStatus firstStatus = stepItemList.get(0).getStatus();
         CobStepStatus lastStatus = stepItemList.get(stepItemList.size() - 1).getStatus();
         if (firstStatus == Step_NotStart) {
-            itemTolal.setStatus(Step_NotStart);
-            itemTolal.setPercent(BigDecimal.ZERO);
+            itemTotal.setStatus(Step_NotStart);
+            itemTotal.setPercent(BigDecimal.ZERO);
         } else if (lastStatus == Step_Success || lastStatus == Step_Error){
-            itemTolal.setStatus(lastStatus);
-            itemTolal.setPercent(BigDecimal.ZERO);
+            itemTotal.setStatus(lastStatus);
+            itemTotal.setPercent(ALL);
         } else {
-            itemTolal.setStatus(Step_Running);
-            itemTolal.setPercent(getPercent(itemTolal.getDuration(), itemTolal.getEstimation()));  // percent
+            itemTotal.setStatus(Step_Running);
+            itemTotal.setPercent(getPercent(itemTotal.getDuration(), itemTotal.getEstimation()));  // percent
         }
+        setIntValues(itemTotal);
 
+        wrapper.setStartTimer(Step_Running == itemTotal.getStatus());       // TODO это пока
         wrapper.setErrorMessage(StringUtils.listToString(errorList, "; "));
         return true;
     }
 
-    private void calcStepDuration(CobStatistics stepStat, CobStepItem item, Long systime){
+    private void calcStepParameters(CobStatistics stepStat, CobStepItem item, Long systime){
         switch(stepStat.getStatus()) {
             case Step_NotStart:
                 item.setEstimation(stepStat.getEstimated());
@@ -144,6 +143,13 @@ public class CobStatService {
             default:
                 break;
         }
+        setIntValues(item);
+    }
+
+    private void setIntValues(CobStepItem item){
+        item.setIntDuration(Optional.ofNullable(item.getDuration()).orElse(BigDecimal.ZERO).intValue());
+        item.setIntEstimation(Optional.ofNullable(item.getEstimation()).orElse(BigDecimal.ZERO).intValue());
+        item.setIntPercent(Optional.ofNullable(item.getPercent()).orElse(BigDecimal.ZERO).intValue());
     }
 
     private BigDecimal getPercent(BigDecimal value, BigDecimal whole) {
