@@ -37,7 +37,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
         Assert.assertNotNull(total);
         checkStepState(total, Step_NotStart);
         Assert.assertNotEquals(BigDecimal.ZERO, total.getEstimation());
-        System.out.println(total);
+        printStepInfo(total);
         System.out.println(wrapper.getErrorMessage());
     }
 
@@ -86,10 +86,10 @@ public class CobStatTest extends AbstractTimerJobTest  {
         CobStepItem total = wrapper1.getTotal();
 
         System.out.println("ID COB: " + wrapper1.getIdCob());
-        System.out.println(phase);
+        printStepInfo(phase);
         checkStepState(phase, stepStatus);
 
-        System.out.println(total);
+        printStepInfo(total);
         checkStepState(total, totalStatus);
         return wrapper1;
     }
@@ -123,5 +123,12 @@ public class CobStatTest extends AbstractTimerJobTest  {
         baseEntityRepository.executeNativeUpdate("insert into GL_PRPRP(ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, DECIMAL_VALUE, STRING_VALUE, NUMBER_VALUE)" +
                 " VALUES (?, 'root', 'N', 'DECIMAL_TYPE', 'Коэффициент COB', ?, null, null)", PropertyName.COB_STAT_INC.getName(), koef);
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+    }
+
+    private void printStepInfo(CobStepItem item) {
+            System.out.printf("Phase: '%s'; status: '%s'; estimation = %s, duration = %s, percent = %s; %s",
+                        item.getPhaseNo().toString(), item.getStatus().name(),
+                        item.getEstimation().toString(), item.getDuration().toString(), item.getPercent().toString(),
+                        null != item.getMessage() ? ("message: " + item.getMessage()) : "");
     }
 }

@@ -75,14 +75,12 @@ public class CobStatService {
         List<CobStepItem> stepItemList = new ArrayList<>();
         wrapper.setStepList(stepItemList);
         List<String> errorList = new ArrayList<>();
-        CobStepItem itemTolal = new CobStepItem();
+        CobStepItem itemTolal = new CobStepItem(0, "Всего: ");
         wrapper.setTotal(itemTolal);
-        itemTolal.setPhaseName("Всего: ");
         itemTolal.setDuration(BigDecimal.ZERO);
         itemTolal.setEstimation(BigDecimal.ZERO);
         for (CobStatistics stepStat : stepList) {
-            CobStepItem item = new CobStepItem();
-            item.setPhaseName(stepStat.getPhaseName());
+            CobStepItem item = new CobStepItem(stepStat.getPhaseNo(), stepStat.getPhaseName());
             item.setStatus(stepStat.getStatus());
             item.setMessage(stepStat.getMessage());
             if (!StringUtils.isEmpty(stepStat.getErrorMsg()))
