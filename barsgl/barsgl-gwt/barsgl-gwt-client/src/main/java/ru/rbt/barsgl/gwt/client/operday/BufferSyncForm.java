@@ -3,7 +3,6 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.thirdparty.guava.common.base.Splitter;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -39,7 +38,6 @@ public class BufferSyncForm extends BaseForm {
     private EmbeddableGridWidget grid;
     private DataListBox historiesBox;
     private RefreshAction refreshAction;
-    private PushButton executeButton;
     private ListBoxSqlDataProvider listBoxDataProvider;
     private PushButton refreshComboButton;
 
@@ -185,5 +183,4 @@ public class BufferSyncForm extends BaseForm {
         pushButton.setTitle("Запуск");
         return pushButton;
     }
-
 }

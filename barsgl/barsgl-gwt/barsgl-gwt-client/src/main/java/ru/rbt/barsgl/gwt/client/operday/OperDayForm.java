@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
@@ -85,6 +87,7 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
+        abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
 
         refreshAction.execute();
 
@@ -158,12 +161,12 @@ public class OperDayForm extends BaseForm {
                     public void onSuccess(RpcRes_Base<Boolean> res) {
                         WaitingManager.hide();
 
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             open_OD.setEnable(false);
-                            DialogManager.message("Инфо","Задание 'Открытие ОД' выполнено.\n" +
-                                                  "Для обновления информации нажмите 'Обновить'.");
+                            DialogManager.message("Инфо", "Задание 'Открытие ОД' выполнено.\n" +
+                                    "Для обновления информации нажмите 'Обновить'.");
                         }
                     }
                 });
@@ -188,7 +191,7 @@ public class OperDayForm extends BaseForm {
                     public void onSuccess(RpcRes_Base<Boolean> res) {
                         WaitingManager.hide();
 
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             close_Balance_Previous_OD.setEnable(false);
@@ -254,4 +257,15 @@ public class OperDayForm extends BaseForm {
             }
         };
     }
+
+   private Action createMonitoring(){
+       return new Action(null, "Мониторинг COB", new Image(ImageConstants.INSTANCE.display()), 5){
+           COBMonitoringDlg dlg = null;
+           @Override
+           public void execute() {
+               //TODO null -> data for dlg
+               (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(null);
+           }
+       };
+   }
 }
