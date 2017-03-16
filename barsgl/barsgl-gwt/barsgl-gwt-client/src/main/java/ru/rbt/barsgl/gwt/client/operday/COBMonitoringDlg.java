@@ -4,54 +4,48 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.GradientProgressBar;
 import ru.rbt.barsgl.gwt.core.ui.ProgressBar;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.cob.CobStepItem;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
+
+import java.util.HashMap;
+import java.util.List;
+
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
 /**
  * Created by akichigi on 09.03.17.
  */
 public class COBMonitoringDlg extends DlgFrame {
+    private final int steps = 6;
     private final int barsCount = 20;
     private final String completeMessage = "Завершено {0}%";
-
-    private Label phase1Name;
-    private Label phase2Name;
-    private Label phase3Name;
-    private Label phase4Name;
-    private Label phase5Name;
-    private Label phase6Name;
-
-    private ProgressBar bar1;
-    private ProgressBar bar2;
-    private ProgressBar bar3;
-    private ProgressBar bar4;
-    private ProgressBar bar5;
-    private ProgressBar bar6;
+    private final String phaseNameTmpl = "Фаза {0} {1}";
     private GradientProgressBar barTotal;
-
-    private Label phase1Status;
-    private Label phase2Status;
-    private Label phase3Status;
-    private Label phase4Status;
-    private Label phase5Status;
-    private Label phase6Status;
     private Label phaseTotalStatus;
-
-    private AreaBox phase1Msg;
-    private AreaBox phase2Msg;
-    private AreaBox phase3Msg;
-    private AreaBox phase4Msg;
-    private AreaBox phase5Msg;
-    private AreaBox phase6Msg;
     private AreaBox phaseTotalMsg;
+
+    private Long idCOB = null;
+    private boolean isNeedStartTimer = false;
+    private HashMap<Integer, Label> phaseNames;
+    private HashMap<Integer, Label> phaseStatuses;
+    private HashMap<Integer, ProgressBar> bars;
+    private HashMap<Integer, AreaBox> phaseMsgs;
 
     public COBMonitoringDlg(){
         super();
@@ -59,82 +53,65 @@ public class COBMonitoringDlg extends DlgFrame {
         ok.setText("Пересчитать");
     }
 
+    private void prepareElements(int steps){
+        phaseNames = new HashMap<>();
+        phaseStatuses = new HashMap<>();
+        bars = new HashMap<>();
+        phaseMsgs = new HashMap<>();
+
+        for (int i = 1; i <= steps; i++){
+            phaseNames.put(i, createPhaseName());
+            phaseStatuses.put(i, createPhaseStatus());
+            bars.put(i, createBar());
+            phaseMsgs.put(i, createPhaseMsg());
+        }
+    }
+
+    private Label createPhaseName(){
+        return new Label();
+    }
+
+    private Label createPhaseStatus(){
+        return new Label();
+    }
+
+    private ProgressBar createBar(){
+        ProgressBar bar = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT);
+        bar.setText(Utils.Fmt(completeMessage, 0));
+        return bar;
+    }
+
+    private AreaBox createPhaseMsg(){
+        AreaBox box = new AreaBox();
+        box.setReadOnly(true);
+        box.setHeight("50px");
+        box.setWidth("300px");
+        return box;
+    }
+
+
     @Override
     public Widget createContent(){
-        Grid grid = new Grid(7, 4);
-        //Labels
-        grid.setWidget(0, 0, phase1Name = new Label("Фаза 1 Остановка обработки проводок"));
-        grid.setWidget(1, 0, phase2Name = new Label("Фаза 2 Автоматический сброс буфера"));
-        grid.setWidget(2, 0, phase3Name = new Label("Фаза 3 Обработка необработанных запросов на операцию"));
-        grid.setWidget(3, 0, phase4Name = new Label("Фаза 4 Обработка сторно текущего дня"));
-        grid.setWidget(4, 0, phase5Name = new Label("Фаза 5 Обработка вееров"));
-        grid.setWidget(5, 0, phase6Name = new Label("Фаза 6 Пересчеты и локализация"));
+        prepareElements(steps);
+        Grid grid = new Grid(steps + 1, 4);
+        for(int i = 0; i < steps; i++){
+            grid.setWidget(i, 0, phaseNames.get(i + 1));
+            grid.setWidget(i, 1, bars.get(i + 1));
+            grid.setWidget(i, 2, phaseStatuses.get(i + 1));
+            grid.setWidget(i, 3, phaseMsgs.get(i + 1));
+        }
+
         grid.setWidget(6, 0, new Label("Общее по COB"));
 
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
         grid.getCellFormatter().getElement(6, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
 
-        //ProgressBars
-        grid.setWidget(0, 1, bar1 = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT));
-        grid.setWidget(1, 1, bar2 = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT));
-        grid.setWidget(2, 1, bar3 = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT));
-        grid.setWidget(3, 1, bar4 = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT));
-        grid.setWidget(4, 1, bar5 = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT));
-        grid.setWidget(5, 1, bar6 = new ProgressBar(barsCount, ProgressBar.SHOW_TEXT));
         grid.setWidget(6, 1, barTotal = new GradientProgressBar(barsCount, ProgressBar.SHOW_TEXT));
-
-        bar1.setText(Utils.Fmt(completeMessage, 0));
-        bar2.setText(Utils.Fmt(completeMessage, 0));
-        bar3.setText(Utils.Fmt(completeMessage, 0));
-        bar4.setText(Utils.Fmt(completeMessage, 0));
-        bar5.setText(Utils.Fmt(completeMessage, 0));
-        bar6.setText(Utils.Fmt(completeMessage, 0));
         barTotal.setText(Utils.Fmt(completeMessage, 0));
         barTotal.setShowGradientColor(true);
 
-        //Statuses
-        grid.setWidget(0, 2, phase1Status = new Label("Статус 1 Остановка обработки проводок"));
-        grid.setWidget(1, 2, phase2Status = new Label("Статус 2 Автоматический сброс буфера"));
-        grid.setWidget(2, 2, phase3Status = new Label("Статус 3 Обработка необработанных запросов на операцию"));
-        grid.setWidget(3, 2, phase4Status = new Label("Статус 4 Обработка сторно текущего дня"));
-        grid.setWidget(4, 2, phase5Status = new Label("Статус 5 Обработка вееров"));
-        grid.setWidget(5, 2, phase6Status = new Label("Статус 6 Пересчеты и локализация"));
-        grid.setWidget(6, 2, phaseTotalStatus = new Label("Статус 123456 Общее по СОВ Статус 123456 Общее по СОВ 12345!"));
-
+        grid.setWidget(6, 2, phaseTotalStatus = new Label());
         grid.getCellFormatter().getElement(0, 2).getStyle().setWidth(200, Style.Unit.PX);
-
-        //Messages
-        grid.setWidget(0, 3, phase1Msg = new AreaBox());
-        grid.setWidget(1, 3, phase2Msg = new AreaBox("Статус 2 Автоматический сброс буфера"));
-        grid.setWidget(2, 3, phase3Msg = new AreaBox("Статус 3 Обработка необработанных запросов на операцию"));
-        grid.setWidget(3, 3, phase4Msg = new AreaBox("Статус 4 Обработка сторно текущего дня"));
-        grid.setWidget(4, 3, phase5Msg = new AreaBox("Статус 5 Обработка вееров"));
-        grid.setWidget(5, 3, phase6Msg = new AreaBox("Статус 6 Пересчеты и локализация Статус 6 Пересчеты и локализация Статус 6 Пересчеты и локализацияСтатус 6 Пересчеты и локализация"));
-
-        phase1Msg.setReadOnly(true);
-        phase2Msg.setReadOnly(true);
-        phase3Msg.setReadOnly(true);
-        phase4Msg.setReadOnly(true);
-        phase5Msg.setReadOnly(true);
-        phase6Msg.setReadOnly(true);
-
-        phase1Msg.setHeight("50px");
-        phase1Msg.setWidth("300px");
-
-        phase2Msg.setHeight("50px");
-        phase2Msg.setWidth("300px");
-
-        phase3Msg.setHeight("50px");
-        phase3Msg.setWidth("300px");
-
-        phase4Msg.setHeight("50px");
-        phase4Msg.setWidth("300px");
-
-        phase5Msg.setHeight("50px");
-        phase5Msg.setWidth("300px");
-
-        phase6Msg.setHeight("50px");
-        phase6Msg.setWidth("300px");
 
         phaseTotalMsg = new AreaBox();
         phaseTotalMsg.setReadOnly(true);
@@ -171,62 +148,119 @@ public class COBMonitoringDlg extends DlgFrame {
             }
         };
         t.scheduleRepeating(1000);*/
-
-        bar4.setProgress(25);
-        bar5.setProgress(100);
-        bar6.setProgress(50);
-        barTotal.setProgress(80);
-
         return vp ;
     }
 
-
     @Override
     protected void fillContent(){
-
+        //reset();
+        CobWrapper  wrapper = (CobWrapper) params;
+        setPhaseNames(wrapper);
+        setMonitoringInfo(wrapper);
+        Window.alert(wrapper.getStartTimer().toString());
+        //TODO watcher
+    }
+    //TODO rewrite
+    private void getMonitoringInfo(){
+        BarsGLEntryPoint.operDayService.getCobInfo(idCOB, new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
+            @Override
+            public void onSuccess(RpcRes_Base<CobWrapper> result) {
+                if (result.isError()) {
+                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                } else {
+                    setMonitoringInfo(result.getResult());
+                }
+            }
+        });
     }
 
-    private void reset(){
-        bar1.setText(Utils.Fmt(completeMessage, 0));
-        bar2.setText(Utils.Fmt(completeMessage, 0));
-        bar3.setText(Utils.Fmt(completeMessage, 0));
-        bar4.setText(Utils.Fmt(completeMessage, 0));
-        bar5.setText(Utils.Fmt(completeMessage, 0));
-        bar6.setText(Utils.Fmt(completeMessage, 0));
-        barTotal.setText(Utils.Fmt(completeMessage, 0));
+    private void setPhaseNames(CobWrapper wrapper){
+        List<CobStepItem> stepItems = wrapper.getStepList();
+        for(int i = 0; i < stepItems.size(); i++){
+            CobStepItem item = stepItems.get(i);
+            phaseNames.get(item.getPhaseNo()).setText(Utils.Fmt(phaseNameTmpl, item.getPhaseNo().toString(), item.getPhaseName()));
+        }
+    }
 
-        bar1.setProgress(0);
-        bar2.setProgress(0);
-        bar3.setProgress(0);
-        bar4.setProgress(0);
-        bar5.setProgress(0);
-        bar6.setProgress(0);
+    private void setMonitoringInfo(CobWrapper wrapper){
+        List<CobStepItem> stepItems = wrapper.getStepList();
+        for(int i = 0; i < stepItems.size(); i++){
+            CobStepItem item = stepItems.get(i);
+            phaseMsgs.get(item.getPhaseNo()).setValue(item.getMessage());
+            bars.get(item.getPhaseNo()).setText(Utils.Fmt(completeMessage, item.getIntPercent()));
+            bars.get(item.getPhaseNo()).setProgress(item.getIntPercent());
+            phaseStatuses.get(item.getPhaseNo()).setText(getPhaseMessage(item));
+        }
+
+        idCOB = wrapper.getIdCob();
+        isNeedStartTimer = wrapper.getStartTimer();
+
+        phaseTotalMsg.setValue(wrapper.getErrorMessage());
+        CobStepItem item = wrapper.getTotal();
+        barTotal.setProgress(item.getIntPercent());
+        barTotal.setText(Utils.Fmt(completeMessage, item.getIntPercent()));
+        phaseTotalStatus.setText(getPhaseMessage(item));
+    }
+
+    private String getPhaseMessage(CobStepItem item){
+       String res = "";
+        switch (item.getStatus()){
+            case Step_NotStart:
+                res = Utils.Fmt("{0}. Завершится за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntEstimation()));
+                break;
+            case Step_Running:
+                res = Utils.Fmt("{0}. Выполняется {1}. Завершится за {2}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()),
+                        Value2TimeStr(item.getIntEstimation()));
+                break;
+            case Step_Success:
+                res = Utils.Fmt("{0} за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
+                break;
+            case Step_Error:
+                res = Utils.Fmt("{0} через {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
+                break;
+            default:res = item.getStatus().getLabel();
+        }
+        return res;
+    }
+
+    private String Value2TimeStr(int value){
+        int min = value / 60;
+        int sec = value % 60;
+        return Utils.Fmt("{0} мин {1} сек", min, sec);
+    }
+
+   /* private void reset(){
+        for(int i = 1; i <= steps; i++){
+            bars.get(i).setProgress(0);
+            bars.get(i).setText(Utils.Fmt(completeMessage, 0));
+            phaseStatuses.get(i).setText("");
+            phaseMsgs.get(i).clear();
+        }
         barTotal.setProgress(0);
-
-        phase1Status.setText("");
-        phase2Status.setText("");
-        phase3Status.setText("");
-        phase4Status.setText("");
-        phase5Status.setText("");
-        phase6Status.setText("");
+        barTotal.setText(Utils.Fmt(completeMessage, 0));
         phaseTotalStatus.setText("");
-
-        phase1Msg.clear();
-        phase2Msg.clear();
-        phase3Msg.clear();
-        phase4Msg.clear();
-        phase5Msg.clear();
-        phase6Msg.clear();
         phaseTotalMsg.clear();
-    }
-
+    }*/
 
     @Override
     protected boolean onClickOK() throws Exception {
-        DialogManager.confirm("Подтверждение", "Запустить задачу синхронизации полупроводок?", "Запустить", new ClickHandler() {
+        DialogManager.confirm("Подтверждение", "Пересчитать статистику по СОВ?", "Пересчитать", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                reset();
+               // reset();
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                BarsGLEntryPoint.operDayService.calculateCob(new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<CobWrapper> result) {
+                        if (result.isError()) {
+                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                        } else {
+                            setMonitoringInfo(result.getResult());
+                        }
+                        WaitingManager.hide();
+                    }
+                });
             }
         });
 

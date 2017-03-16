@@ -18,6 +18,6 @@ public enum CobStepStatus implements HasLabel {
 
     @Override
     public String getLabel() {
-        return null;
+        return label;
     }
 }

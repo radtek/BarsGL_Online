@@ -14,6 +14,7 @@ import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
@@ -132,7 +133,7 @@ public class OperDayForm extends BaseForm {
 
                     @Override
                     public void onSuccess(RpcRes_Base<OperDayWrapper> res) {
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             operDateRefresh(res.getResult());
@@ -263,8 +264,19 @@ public class OperDayForm extends BaseForm {
            COBMonitoringDlg dlg = null;
            @Override
            public void execute() {
-               //TODO null -> data for dlg
-               (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(null);
+               WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+               BarsGLEntryPoint.operDayService.getCobInfo(null, new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
+                   @Override
+                   public void onSuccess(RpcRes_Base<CobWrapper> result) {
+                       if (result.isError()) {
+                           DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                       } else {
+                           (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(result.getResult());
+                       }
+                       WaitingManager.hide();
+                   }
+               });
            }
        };
    }
