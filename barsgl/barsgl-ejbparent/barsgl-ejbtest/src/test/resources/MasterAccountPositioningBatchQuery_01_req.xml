@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<asbo:MasterAccountPositioningBatchQuery xmlns:asbo="urn:asbo:barsgl">
+	<asbo:MasterAccountPositioningQuery>
+<!--		<asbo:CBAccount>47407840620010000001</asbo:CBAccount>-->
+		<asbo:CBAccount>40807840700014197220</asbo:CBAccount>                
+	</asbo:MasterAccountPositioningQuery>
+</asbo:MasterAccountPositioningBatchQuery>

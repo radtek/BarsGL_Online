@@ -104,7 +104,7 @@ public class MfoExchOperationProcessor extends GLOperationProcessor {
             postingAsst = glPostingRepository.createPosting(operation, GLPosting.PostingType.MfoCredit,
                     operation.getAccountAsset(), ccyCredit, amountCredit,
                     bsaAcidCredit, ccyCredit, amountCredit,
-                    operation.getAmountCredit());
+                    operation.getAmountPosting());
 
         }
 

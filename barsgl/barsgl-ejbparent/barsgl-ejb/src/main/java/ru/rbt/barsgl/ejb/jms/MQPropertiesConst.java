@@ -1,6 +1,5 @@
 /*
  * ООО "Артком Системы" & "3G Banking Technologies" 2016
- * Financial Board Project
  */
 package ru.rbt.barsgl.ejb.jms;
 

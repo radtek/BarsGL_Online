@@ -57,13 +57,16 @@ public class CommonQueueProcessor4 {
     @EJB
     private CoreRepository coreRepository;
 
-    @Inject
+    //@Inject
+    @EJB
     private AccountQueryProcessor queryProcessor;
 
-    @Inject
+    //@Inject
+    @EJB
     private AccountQueryBAProcessor queryProcessorBA;
 
-    @Inject
+    //@Inject
+    @EJB
     private MasterAccountProcessor queryProcessorMAPB;
 
     @EJB
@@ -137,7 +140,7 @@ public class CommonQueueProcessor4 {
         }
     }
 
-    private void loadCurrency() {
+    private void loadCurrency() throws Exception {
         if (currencyMap == null || currencyNBDPMap == null || currencyMap.size() == 0 || currencyNBDPMap.size() == 0) {
             queryRepository.loadCurrency(currencyMap, currencyNBDPMap);
         }
@@ -266,8 +269,11 @@ public class CommonQueueProcessor4 {
                     auditController.warning(AccountQuery, "Ошибка при отправке сообщения / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
                 } catch (Exception e) {
                     log.error("Ошибка при подготовке ответа. ", e);
-                    AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
-                    return getErrorMessage(aclirqJournal.getComment());
+                    auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
+                    return journalRepository.executeInNewTransaction(persistence2 -> {
+                        AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
+                        return getErrorMessage(aclirqJournal.getComment());
+                    });
                 }
                 return "";
             });
@@ -277,16 +283,20 @@ public class CommonQueueProcessor4 {
                 try {
                     sendToQueue(outMessage, queueProperties, incMessage, queue);
                     long sendingAnswerTime = System.currentTimeMillis();
-                    //journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" + (createAnswerTime - startProcessing) + "/" + (sendingAnswerTime - createAnswerTime));
-                    journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" 
-                            + (createAnswerTime - startProcessing) 
-                            + "/" 
-                            + (sendingAnswerTime - createAnswerTime) 
-                            + "/",
-                            "true".equals(queueProperties.writeOut) ? outMessage : null);
+                    //journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" + (createAnswerTime - startProcessing) + "/" + (sendingAnswerTime - createAnswerTime));                    
+                    journalRepository.invokeAsynchronous(em -> {
+                      return journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" 
+                              + (createAnswerTime - startProcessing) 
+                              + "/" 
+                              + (sendingAnswerTime - createAnswerTime) 
+                              + "/",
+                              "true".equals(queueProperties.writeOut) ? outMessage : null);
+                    });                    
                 } catch (Exception e) {
                     log.error("Ошибка отправки ответа. ", e);
-                    journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
+                    journalRepository.invokeAsynchronous(em -> {
+                      return journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
+                    });
                 }
             }
             return null;

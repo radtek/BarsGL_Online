@@ -22,6 +22,8 @@ public class AclirqJournal extends BaseEntity<Long> {
     @Column(name = "REQUEST_ID")
     private String requestId;
 
+    @Basic(fetch = FetchType.LAZY)
+    @Lob    
     @Column(name = "REQUEST")
     private String request;
 
@@ -35,6 +37,8 @@ public class AclirqJournal extends BaseEntity<Long> {
     @Column(name = "COMMENT")
     private String comment;
 
+    @Basic(fetch = FetchType.LAZY)
+    @Lob    
     @Column(name = "OUT")
     private String outMessage;
     
