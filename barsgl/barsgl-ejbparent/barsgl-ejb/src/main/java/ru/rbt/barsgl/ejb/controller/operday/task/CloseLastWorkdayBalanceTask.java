@@ -36,10 +36,10 @@ public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
-        executeWork();
+        executeWork(true);
     }
 
-    public void executeWork() {
+    public void executeWork(boolean withStorno) {
         final Operday operday = operdayController.getOperday();
         try {
             auditController.info(Operday, format("Закрытие баланса предыдущего ОД '%s'. Текущий ОД '%s'."
@@ -47,7 +47,9 @@ public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
 
             checkOperdayStatus(operdayController.getOperday());
 
-            etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
+            if (withStorno) {
+                etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
+            }
 
             operdayController.closeLastWorkdayBalance();
 

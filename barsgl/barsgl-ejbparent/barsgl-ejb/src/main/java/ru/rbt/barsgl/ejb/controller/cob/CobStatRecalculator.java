@@ -4,7 +4,11 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.CobStep;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -28,20 +32,32 @@ public class CobStatRecalculator {
     @Inject
     private OperdayController operdayController;
 
-    @Inject
+    @EJB
     private CobStatRepository statRepository;
 
     @EJB
     private AuditController auditController;
 
+    @Inject
+    DateUtils dateUtils;
+
+    public Long calculateCob() {
+        return calculateCob(false);
+    }
+
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long calculateCob() {
+    public Long calculateCob(boolean withRun) {
         try {
             Operday operday = operdayController.getOperday();
             Date curdate = operday.getCurrentDate();
+            // TODO проверка, что COB в этот опердень не запущен!!
 
-            Long idCob = statRepository.createCobStepGroup(curdate);
+            if (statRepository.getRunCobStatus(curdate) == CobStepStatus.Running) {
+                throw new ValidationError(ErrorCode.COB_IS_RUNNING, dateUtils.onlyDateString(curdate));
+            }
+
+            Long idCob = statRepository.createCobStepGroup(curdate, withRun);
             for (CobStep step : CobStep.values()) {
                 Long parameter = statRepository.getStepParameter(step, curdate, operday.getLastWorkingDay());
                 statRepository.setStepEstimate(idCob, step.getPhaseNo(), parameter);

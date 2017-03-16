@@ -752,28 +752,32 @@ public class OperdaySynchronizationController {
      */
     public boolean waitStopProcessing() {
         try {
-            if (operdayController.isProcessingAllowed()
-                    || ProcessingStatus.REQUIRED == operdayController.getProcessingStatus()) {
-                auditController.warning(Operday, format("Обработка проводок в статусе '%s' требуется остановка"
-                        , operdayController.getProcessingStatus()), null, "");
-                if (ProcessingStatus.STARTED == operdayController.getProcessingStatus()) {
-                    pdRepository.executeInNewTransaction(p ->  {operdayController.setProcessingStatus(ProcessingStatus.REQUIRED); return null; });
-                }
-                int tryCount = 0;
-                while (tryCount < 3) {
-                    tryCount++;
-                    TimeUnit.MINUTES.sleep(1);
-                    if (ProcessingStatus.STOPPED == operdayController.getProcessingStatus()) {
-                        return true;
-                    }
-                }
-                return false;
-            } else {
-                return true;
-            }
+            return waitStopProcessingOnly();
         } catch (Throwable e) {
             auditController.error(Operday, "Ошибка ожидания остановки обработки", null, e);
             return false;
+        }
+    }
+
+    public boolean waitStopProcessingOnly() throws Exception {
+        if (operdayController.isProcessingAllowed()
+                || ProcessingStatus.REQUIRED == operdayController.getProcessingStatus()) {
+            auditController.warning(Operday, format("Обработка проводок в статусе '%s' требуется остановка"
+                    , operdayController.getProcessingStatus()), null, "");
+            if (ProcessingStatus.STARTED == operdayController.getProcessingStatus()) {
+                pdRepository.executeInNewTransaction(p ->  {operdayController.setProcessingStatus(ProcessingStatus.REQUIRED); return null; });
+            }
+            int tryCount = 0;
+            while (tryCount < 3) {
+                tryCount++;
+                TimeUnit.MINUTES.sleep(1);
+                if (ProcessingStatus.STOPPED == operdayController.getProcessingStatus()) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return true;
         }
     }
 

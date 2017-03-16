@@ -12,7 +12,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_COB_STAT")
-public class CobStatistics extends BaseEntity<CobStatId> {
+public class CobStepStatistics extends BaseEntity<CobStatId> {
 
     @EmbeddedId
     private CobStatId id;

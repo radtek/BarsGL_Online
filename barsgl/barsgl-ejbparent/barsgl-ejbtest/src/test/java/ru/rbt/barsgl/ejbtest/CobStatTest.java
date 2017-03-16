@@ -35,7 +35,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
         Assert.assertEquals(6, wrapper.getStepList().size());
         CobStepItem total = wrapper.getTotal();
         Assert.assertNotNull(total);
-        checkStepState(total, Step_NotStart);
+        checkStepState(total, NotStart);
         Assert.assertNotEquals(BigDecimal.ZERO, total.getEstimation());
         printStepInfo(total);
         System.out.println(wrapper.getErrorMessage());
@@ -54,25 +54,25 @@ public class CobStatTest extends AbstractTimerJobTest  {
 
         Thread.sleep(2000L);
         remoteAccess.invoke(CobStatRepository.class, "updateStepMessage", wrapper.getIdCob(), phaseFirst, "Выполнен этап 1");
-        checkGetInfo(wrapper, null, phaseFirst, Step_Running, Step_Running);
+        checkGetInfo(wrapper, null, phaseFirst, Running, Running);
 
         Thread.sleep(2000L);
         remoteAccess.invoke(CobStatRepository.class, "updateStepMessage", wrapper.getIdCob(), phaseFirst, "Выполнен этап 2");
-        checkGetInfo(wrapper, null, phaseFirst, Step_Running, Step_Running);
+        checkGetInfo(wrapper, null, phaseFirst, Running, Running);
 
         remoteAccess.invoke(CobStatRepository.class, "setStepSuccess", wrapper.getIdCob(), phaseFirst, getSystemDateTime(), "Шаг завершен успешно");
-        checkGetInfo(wrapper, null, phaseFirst, Step_Success, Step_Running);
+        checkGetInfo(wrapper, null, phaseFirst, Success, Running);
 
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 0, wrapper.getIdCob(), phaseLast);
         remoteAccess.invoke(CobStatRepository.class, "setStepStart", wrapper.getIdCob(), phaseLast, getSystemDateTime());
-        checkGetInfo(wrapper, null, phaseLast, Step_Running, Step_Running);
+        checkGetInfo(wrapper, null, phaseLast, Running, Running);
 
         Thread.sleep(2000L);
-        checkGetInfo(wrapper, null, phaseLast, Step_Running, Step_Running);
+        checkGetInfo(wrapper, null, phaseLast, Running, Running);
 
         remoteAccess.invoke(CobStatRepository.class, "setStepError", wrapper.getIdCob(), phaseLast, getSystemDateTime(), "Шаг завершен с ошибкой",
             "Ошибка при выполнении шага " + CobStep.values()[0].name());
-        CobWrapper wrapper1 = checkGetInfo(wrapper, null, phaseLast, Step_Error, Step_Error);
+        CobWrapper wrapper1 = checkGetInfo(wrapper, null, phaseLast, Error, Error);
         Assert.assertNotNull(wrapper1.getErrorMessage());
         System.out.println("ErrorMessage: " + wrapper1.getErrorMessage());
     }
@@ -98,19 +98,19 @@ public class CobStatTest extends AbstractTimerJobTest  {
         Assert.assertEquals(status, step.getStatus());
 //        if (BigDecimal.ZERO == step.getEstimation());   // TODO
         switch(status) {
-            case Step_NotStart:
+            case NotStart:
                 Assert.assertTrue(step.getDuration().compareTo(BigDecimal.ZERO) == 0);
                 Assert.assertTrue(step.getPercent().compareTo(BigDecimal.ZERO) == 0);
                 break;
-            case Step_Running:
+            case Running:
                 Assert.assertTrue(step.getDuration().compareTo(BigDecimal.ZERO) >= 0);
                 Assert.assertTrue(step.getPercent().compareTo(BigDecimal.ZERO) >= 0);
                 break;
-            case Step_Success:
+            case Success:
                 Assert.assertTrue(step.getDuration().compareTo(step.getEstimation()) <= 0);
                 Assert.assertTrue(step.getPercent().compareTo(new BigDecimal(100)) == 0);
                 break;
-            case Step_Error:
+            case Error:
                 Assert.assertTrue(step.getDuration().compareTo(step.getEstimation()) <= 0);
                 Assert.assertTrue(step.getPercent().compareTo(new BigDecimal(100)) == 0);
                 break;
@@ -129,7 +129,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
             System.out.printf("Phase: '%s'; status: '%s'; " +    //estimation = %s, duration = %s, percent = %s;" +
                 " intEstimation = %s, intDuration = %s, intPercent = %s; %s\n",
                     item.getPhaseNo().toString(), item.getStatus().name(),
-                    item.getEstimation().toString(), item.getDuration().toString(), item.getPercent().toString(),
+//                    item.getEstimation().toString(), item.getDuration().toString(), item.getPercent().toString(),
                     item.getIntEstimation().toString(), item.getIntDuration().toString(), item.getIntPercent().toString(),
                     null != item.getMessage() ? ("message: " + item.getMessage()) : "");
     }

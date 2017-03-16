@@ -1,11 +1,14 @@
 package ru.rbt.barsgl.ejb.controller.cob;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.entity.cob.CobStatistics;
+import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
@@ -28,7 +31,7 @@ public class CobStatService {
     @EJB
     private CobStatRecalculator recalculator;
 
-    @Inject
+    @EJB
     private CobStatRepository statRepository;
 
     @Inject
@@ -37,9 +40,19 @@ public class CobStatService {
     @EJB
     private PropertiesRepository propertiesRepository;
 
+    @Inject
+    DateUtils dateUtils;
+
     public RpcRes_Base<CobWrapper> calculateCob() {
         CobWrapper wrapper = new CobWrapper();
         try {
+            Date curdate = operdayController.getOperday().getCurrentDate();
+            if (statRepository.getRunCobStatus(curdate) == CobStepStatus.Running) {
+                return new RpcRes_Base<CobWrapper>(wrapper, true,
+                        new ValidationError(ErrorCode.COB_IS_RUNNING, dateUtils.onlyDateString(curdate)).getMessage()
+                );
+            }
+
             Long idCob = recalculator.calculateCob();
             if (null == idCob) {
                 return new RpcRes_Base<CobWrapper>(wrapper, true, "Не удалось рассчитать COB");
@@ -54,11 +67,11 @@ public class CobStatService {
         CobWrapper wrapper = new CobWrapper();
         try {
             if (null == idCob)
-                idCob = statRepository.getMaxCobId();
+                idCob = statRepository.getMaxRunCobId();
             if (null == idCob) {
                 return new RpcRes_Base<CobWrapper>(wrapper, true, "Нет ни одной записи о расчете COB");
             }
-            List<CobStatistics> stepList = statRepository.getCobSteps(idCob);
+            List<CobStepStatistics> stepList = statRepository.getCobSteps(idCob);
             fillWrapper(wrapper, idCob, stepList);
             return new RpcRes_Base<CobWrapper>(wrapper, false, "");
         } catch (Throwable t) {
@@ -66,7 +79,7 @@ public class CobStatService {
         }
     }
 
-    private boolean fillWrapper(CobWrapper wrapper, Long idCob, List<CobStatistics> stepList) {
+    private boolean fillWrapper(CobWrapper wrapper, Long idCob, List<CobStepStatistics> stepList) throws Exception {
         Long systime = getDateInMillis(operdayController.getSystemDateTime());
         wrapper.setIdCob(idCob);
         List<CobStepItem> stepItemList = new ArrayList<>();
@@ -76,7 +89,7 @@ public class CobStatService {
         wrapper.setTotal(itemTotal);
         itemTotal.setDuration(BigDecimal.ZERO);
         itemTotal.setEstimation(BigDecimal.ZERO);
-        for (CobStatistics stepStat : stepList) {
+        for (CobStepStatistics stepStat : stepList) {
             CobStepItem item = new CobStepItem(stepStat.getPhaseNo(), stepStat.getPhaseName());
             item.setStatus(stepStat.getStatus());
             item.setMessage(stepStat.getMessage());
@@ -87,33 +100,34 @@ public class CobStatService {
             itemTotal.setEstimation(itemTotal.getEstimation().add(item.getEstimation()));
             stepItemList.add(item);
         }
-        CobStepStatus firstStatus = stepItemList.get(0).getStatus();
-        CobStepStatus lastStatus = stepItemList.get(stepItemList.size() - 1).getStatus();
-        if (firstStatus == Step_NotStart) {
-            itemTotal.setStatus(Step_NotStart);
-            itemTotal.setPercent(BigDecimal.ZERO);
-        } else if (lastStatus == Step_Success || lastStatus == Step_Error){
-            itemTotal.setStatus(lastStatus);
-            itemTotal.setPercent(ALL);
-        } else {
-            itemTotal.setStatus(Step_Running);
-            itemTotal.setPercent(getPercent(itemTotal.getDuration(), itemTotal.getEstimation()));  // percent
+        CobStepStatus totalStatus = statRepository.getCobStatus(stepList);
+        switch (totalStatus) {
+            case NotStart:
+                itemTotal.setPercent(BigDecimal.ZERO);
+                break;
+            case Success:
+                itemTotal.setPercent(ALL);
+                break;
+            default:
+                itemTotal.setPercent(getPercent(itemTotal.getDuration(), itemTotal.getEstimation()));  // percent
+                break;
         }
         setIntValues(itemTotal);
 
-        wrapper.setStartTimer(Step_Running == itemTotal.getStatus());       // TODO это пока
+        wrapper.setStartTimer(Running == itemTotal.getStatus());       // TODO это пока
         wrapper.setErrorMessage(StringUtils.listToString(errorList, "; "));
         return true;
     }
 
-    private void calcStepParameters(CobStatistics stepStat, CobStepItem item, Long systime){
+    private void calcStepParameters(CobStepStatistics stepStat, CobStepItem item, Long systime) throws Exception {
         switch(stepStat.getStatus()) {
-            case Step_NotStart:
+            case NotStart:
+            case Skipped:
                 item.setEstimation(stepStat.getEstimated());
                 item.setDuration(BigDecimal.ZERO);
                 item.setPercent(BigDecimal.ZERO);
                 break;
-            case Step_Running:
+            case Running:
                 Long timeBegin = getDateInMillis(stepStat.getStartTimestamp());
                 if (timeBegin == 0L) {
                     item.setEstimation(stepStat.getEstimated());
@@ -125,7 +139,8 @@ public class CobStatService {
                     if(duration.compareTo(estimate) > 0) {
                         BigDecimal koef = propertiesRepository.getDecimalDef(PropertyName.COB_STAT_INC.getName(),INC);
                         BigDecimal newEstimate = duration.multiply(koef);
-                        statRepository.increaseStepEstimate(stepStat.getIdCob(), stepStat.getPhaseNo(), newEstimate, stepStat.getDuration());
+                        statRepository.executeInNewTransaction((persistence ->
+                                statRepository.increaseStepEstimate(stepStat.getIdCob(), stepStat.getPhaseNo(), newEstimate, stepStat.getDuration())));
                         statRepository.refresh(stepStat, true);
                         estimate = stepStat.getDuration();
                     }
@@ -134,11 +149,17 @@ public class CobStatService {
                     item.setPercent(getPercent(duration, estimate));  // percent
                 }
                 break;
-            case Step_Success:
-            case Step_Error:
+            case Success:
                 item.setEstimation(stepStat.getDuration());
                 item.setDuration(stepStat.getDuration());
                 item.setPercent(ALL);
+                break;
+            case Error:
+            case Halt:
+                BigDecimal estimate = stepStat.getEstimated().max(stepStat.getDuration());
+                item.setEstimation(estimate);
+                item.setDuration(stepStat.getDuration());
+                item.setPercent(getPercent(stepStat.getDuration(), estimate));  // percent
                 break;
             default:
                 break;

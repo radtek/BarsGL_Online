@@ -9,7 +9,7 @@ public enum CobStep {
     CobManualProc(3),   //"Обработка необработанных запросов на операцию"
     CobStornoProc(4),   //"Обработка сторно текущего дня"
     CobFanProc(5),      //"Обработка вееров"
-    CobRecalc(6)        // "Пересчет и локализация"
+    CobRecalcBaltur(6)        // "Пересчет и локализация"
     ;
 
     private int phaseNo;

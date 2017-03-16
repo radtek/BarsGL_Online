@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
@@ -21,6 +22,7 @@ import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.annotation.PostConstruct;
@@ -379,22 +381,23 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * @param date2 вторая дата валютирования
      * @return false в случае ошибок иначе true
      */
-    public boolean reprocessErckStorno(Date date1, Date date2) throws Exception {
-        boolean result = true;
+    public CobStepResult reprocessErckStorno(Date date1, Date date2) throws Exception {
+        int cnt = 0;
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
                 "FROM GLOperation g WHERE g.state = ?1 AND g.valueDate IN (?2 , ?3) and g.storno = ?4 ORDER BY g.id"
                 , ERCHK, date1, date2, YesNo.Y);
         if (operations.size() > 0) {
             auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций", operations.size()));
             for (GLOperation operation : operations) {
-                if (!reprocessOperation(findOperationProcessor(operation), operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
-                    result = false;
+                if (reprocessOperation(findOperationProcessor(operation), operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
+                    cnt++;
                 }
             }
+            return new CobStepResult(CobStepStatus.Success, format("Обработано %d отложенных СТОРНО операций", cnt));
         } else {
-            auditController.info(Operation, "Не найдено сторно операций для повторной обработки");
+//            auditController.info(Operation, "Не найдено сторно операций для повторной обработки");
+            return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");
         }
-        return result;
     }
 
     private boolean reprocessOperation(GLOperationProcessor processor, GLOperation operation, String reason) throws Exception {

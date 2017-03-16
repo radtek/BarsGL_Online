@@ -2,6 +2,8 @@ package ru.rbt.barsgl.shared;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.sql.DataTruncation;
+import java.sql.SQLException;
 
 /**
  * Created by Ivan Sevastyanov
