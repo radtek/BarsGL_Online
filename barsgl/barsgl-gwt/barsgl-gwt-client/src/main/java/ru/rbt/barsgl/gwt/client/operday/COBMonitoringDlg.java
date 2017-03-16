@@ -3,7 +3,6 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
@@ -21,7 +20,6 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import java.util.HashMap;
 import java.util.List;
@@ -205,17 +203,17 @@ public class COBMonitoringDlg extends DlgFrame {
     private String getPhaseMessage(CobStepItem item){
        String res = "";
         switch (item.getStatus()){
-            case Step_NotStart:
+            case NotStart:
                 res = Utils.Fmt("{0}. Завершится за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntEstimation()));
                 break;
-            case Step_Running:
+            case Running:
                 res = Utils.Fmt("{0}. Выполняется {1}. Завершится за {2}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()),
                         Value2TimeStr(item.getIntEstimation()));
                 break;
-            case Step_Success:
+            case Success:
                 res = Utils.Fmt("{0} за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
                 break;
-            case Step_Error:
+            case Error:
                 res = Utils.Fmt("{0} через {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
                 break;
             default:res = item.getStatus().getLabel();

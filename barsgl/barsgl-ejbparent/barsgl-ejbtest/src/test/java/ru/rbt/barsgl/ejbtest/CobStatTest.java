@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
@@ -14,6 +15,7 @@ import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import java.math.BigDecimal;
 
+import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
 /**
@@ -77,6 +79,12 @@ public class CobStatTest extends AbstractTimerJobTest  {
         System.out.println("ErrorMessage: " + wrapper1.getErrorMessage());
     }
 
+    @Test
+    public void testCobRunningTaskController() {
+        boolean res = remoteAccess.invoke(ExecutePreCOBTaskFake.class, "execWork");
+        Assert.assertTrue(res);
+    }
+
     private CobWrapper checkGetInfo(CobWrapper wr0, Long idCob, int phaseNo, CobStepStatus stepStatus, CobStepStatus totalStatus) {
         RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);
         Assert.assertFalse(res.isError());
@@ -112,7 +120,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
                 break;
             case Error:
                 Assert.assertTrue(step.getDuration().compareTo(step.getEstimation()) <= 0);
-                Assert.assertTrue(step.getPercent().compareTo(new BigDecimal(100)) == 0);
+                Assert.assertTrue(step.getPercent().compareTo(new BigDecimal(100)) <= 0);
                 break;
         }
 
@@ -128,8 +136,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
     private void printStepInfo(CobStepItem item) {
             System.out.printf("Phase: '%s'; status: '%s'; " +    //estimation = %s, duration = %s, percent = %s;" +
                 " intEstimation = %s, intDuration = %s, intPercent = %s; %s\n",
-                    item.getPhaseNo().toString(), item.getStatus().name(),
-//                    item.getEstimation().toString(), item.getDuration().toString(), item.getPercent().toString(),
+                    item.getPhaseNo().toString(), item.getStatus().getLabel(),
                     item.getIntEstimation().toString(), item.getIntDuration().toString(), item.getIntPercent().toString(),
                     null != item.getMessage() ? ("message: " + item.getMessage()) : "");
     }

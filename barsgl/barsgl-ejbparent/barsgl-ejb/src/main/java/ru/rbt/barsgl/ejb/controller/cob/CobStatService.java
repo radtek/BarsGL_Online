@@ -100,8 +100,8 @@ public class CobStatService {
             itemTotal.setEstimation(itemTotal.getEstimation().add(item.getEstimation()));
             stepItemList.add(item);
         }
-        CobStepStatus totalStatus = statRepository.getCobStatus(stepList);
-        switch (totalStatus) {
+        itemTotal.setStatus(statRepository.getCobStatus(stepList));
+        switch (itemTotal.getStatus()) {
             case NotStart:
                 itemTotal.setPercent(BigDecimal.ZERO);
                 break;

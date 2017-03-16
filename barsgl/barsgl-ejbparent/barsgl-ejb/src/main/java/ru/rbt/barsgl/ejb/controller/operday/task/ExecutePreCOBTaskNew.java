@@ -175,16 +175,16 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return recalculateAll(operday);
         }));
 
-        Long idCob = statRecalculator.calculateCob();
+        Long idCob = statRecalculator.calculateCob(true);
         for (CobRunningStepWork work : works) {
             CobStepStatistics step = taskController.executeWithLongRunningStep(idCob, work.getStep(), work.getWork());
             if (null == step){
-                auditController.error(BufferModeSyncTask,
+                auditController.error(PreCob,
                         format("Не удалось создать шаг выполнения для '%s'", work), null, new DefaultApplicationException(""));
             } else
             if (step.getStatus() == CobStepStatus.Halt) {
-                auditController.error(BufferModeSyncTask,
-                        format("Сбой синхронизация проводок. Шаг '%s'. Процесс остановлен", step), null, new DefaultApplicationException(""));
+                auditController.error(PreCob,
+                        format("Сбой выполнения COB. Шаг %s: '%s'. Процесс остановлен", step.getPhaseNo().toString(), step.getPhaseName()), null, new DefaultApplicationException(""));
                 return false;
             }
         }

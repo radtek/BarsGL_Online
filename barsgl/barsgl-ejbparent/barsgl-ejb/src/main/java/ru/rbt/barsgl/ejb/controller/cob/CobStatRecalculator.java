@@ -57,7 +57,10 @@ public class CobStatRecalculator {
                 throw new ValidationError(ErrorCode.COB_IS_RUNNING, dateUtils.onlyDateString(curdate));
             }
 
-            Long idCob = statRepository.createCobStepGroup(curdate, withRun);
+            Long idCob = statRepository.createCobStepGroup(curdate);
+            if(withRun) {   // TODO это чтобы сразу пометить запущенным. Надо отлельный признак
+                statRepository.setStepStart(idCob, 1, operdayController.getSystemDateTime());
+            }
             for (CobStep step : CobStep.values()) {
                 Long parameter = statRepository.getStepParameter(step, curdate, operday.getLastWorkingDay());
                 statRepository.setStepEstimate(idCob, step.getPhaseNo(), parameter);

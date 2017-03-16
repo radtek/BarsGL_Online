@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.CobStep;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -77,6 +78,13 @@ public class CobRunningTaskController {
             }
             return null;
         }
+    }
+
+    public CobStepResult fakeTimerStep(int duration, CobStepStatus status) throws InterruptedException {
+        Thread.sleep(duration * 1000L);
+        String errorMsg = (status == CobStepStatus.Error || status == CobStepStatus.Halt) ? "Это ошибка !" : "";
+
+        return new CobStepResult(status, "Шаг " + status.getLabel(), errorMsg);
     }
 
     public String getErrorMessage(Throwable throwable) {

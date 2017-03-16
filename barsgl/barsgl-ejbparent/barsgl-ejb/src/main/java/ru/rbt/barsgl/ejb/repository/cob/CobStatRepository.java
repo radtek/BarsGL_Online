@@ -29,7 +29,7 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 @LocalBean
 public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStatistics, CobStatId> {
 
-    public Long createCobStepGroup(Date curdate, boolean withRun) {
+    public Long createCobStepGroup(Date curdate) {
         Long idCob = nextId("SEQ_GL_COB");
 /*      // так почему-то не работает - не может связать параметры в подзапросе
         int cnt = executeNativeUpdate("insert into GL_COB_STAT " +
@@ -41,15 +41,11 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 " (ID_COB, PHASE_NO, DAT, PHASE_NAME, COEF_A, COEF_B, STATUS)" +
                 " select " + idCob + ", PHASE_NO, '" + DateUtils.dbDateString(curdate) + "', PHASE_NAME, COEF_A, COEF_B, '"
                 + CobStepStatus.NotStart.name() + "' from GL_COB_MOD", curdate);
-        if (withRun) {
-            executeNativeUpdate("update GL_COB_STAT set STATUS = ? where ID_COB = ? and PHASE_NO = ? ",
-                    Running, idCob, 1);
-        }
         return idCob;
     }
 
     public List<CobStepStatistics> getCobSteps(Long idCob) {
-        return select(CobStepStatistics.class, "from CobStatistics s where s.id.idCob = ?1 order by s.id.phaseNo", idCob);
+        return select(CobStepStatistics.class, "from CobStepStatistics s where s.id.idCob = ?1 order by s.id.phaseNo", idCob);
     }
 
     /**
