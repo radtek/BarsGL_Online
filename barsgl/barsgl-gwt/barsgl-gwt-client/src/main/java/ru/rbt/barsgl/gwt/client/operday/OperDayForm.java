@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
@@ -12,6 +14,7 @@ import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
@@ -85,6 +88,7 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
+        abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
 
         refreshAction.execute();
 
@@ -129,7 +133,7 @@ public class OperDayForm extends BaseForm {
 
                     @Override
                     public void onSuccess(RpcRes_Base<OperDayWrapper> res) {
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             operDateRefresh(res.getResult());
@@ -158,12 +162,12 @@ public class OperDayForm extends BaseForm {
                     public void onSuccess(RpcRes_Base<Boolean> res) {
                         WaitingManager.hide();
 
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             open_OD.setEnable(false);
-                            DialogManager.message("Инфо","Задание 'Открытие ОД' выполнено.\n" +
-                                                  "Для обновления информации нажмите 'Обновить'.");
+                            DialogManager.message("Инфо", "Задание 'Открытие ОД' выполнено.\n" +
+                                    "Для обновления информации нажмите 'Обновить'.");
                         }
                     }
                 });
@@ -188,7 +192,7 @@ public class OperDayForm extends BaseForm {
                     public void onSuccess(RpcRes_Base<Boolean> res) {
                         WaitingManager.hide();
 
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             close_Balance_Previous_OD.setEnable(false);
@@ -254,4 +258,26 @@ public class OperDayForm extends BaseForm {
             }
         };
     }
+
+   private Action createMonitoring(){
+       return new Action(null, "Мониторинг COB", new Image(ImageConstants.INSTANCE.display()), 5){
+           COBMonitoringDlg dlg = null;
+           @Override
+           public void execute() {
+               WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+               BarsGLEntryPoint.operDayService.getCobInfo(null, new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
+                   @Override
+                   public void onSuccess(RpcRes_Base<CobWrapper> result) {
+                       if (result.isError()) {
+                           DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                       } else {
+                           (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(result.getResult());
+                       }
+                       WaitingManager.hide();
+                   }
+               });
+           }
+       };
+   }
 }

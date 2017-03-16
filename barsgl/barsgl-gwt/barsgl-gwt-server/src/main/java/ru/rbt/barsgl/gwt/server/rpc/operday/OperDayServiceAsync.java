@@ -17,6 +17,6 @@ public interface OperDayServiceAsync {
      void swithPdMode(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);
      void getProcessingStatus(AsyncCallback<RpcRes_Base<ProcessingStatus>> callback);
 
-     void getCobInfo(Long idCob, AsyncCallback<RpcRes_Base<CobWrapper>> callback) throws Exception;
-     void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback) throws Exception;
+     void getCobInfo(Long idCob, AsyncCallback<RpcRes_Base<CobWrapper>> callback);
+     void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback);
 }
