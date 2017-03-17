@@ -1,8 +1,6 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
@@ -17,6 +15,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -290,9 +289,9 @@ public class OperDayForm extends BaseForm {
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                BarsGLEntryPoint.operDayService.runExecuteFakeCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                BarsGLEntryPoint.operDayService.runExecuteFakeCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>>() {
                     @Override
-                    public void onSuccess(RpcRes_Base<Boolean> result) {
+                    public void onSuccess(RpcRes_Base<TimerJobHistoryWrapper> result) {
                         if (result.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                         } else {

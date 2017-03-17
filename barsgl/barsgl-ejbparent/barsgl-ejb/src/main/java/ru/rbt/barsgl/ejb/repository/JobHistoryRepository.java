@@ -8,7 +8,6 @@ import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -34,6 +33,12 @@ public class JobHistoryRepository extends AbstractBaseEntityRepository<JobHistor
         return null != selectFirst(JobHistory.class
                 , "from JobHistory h where h.jobName = ?1 and h.operday = ?2 and h.result = ?3"
                 , taskName, operday, DwhUnloadStatus.STARTED);
+    }
+
+    public boolean isAlreadyRunning(String taskName, Long idHist, Date operday) {
+        return null != selectFirst(JobHistory.class
+                , "from JobHistory h where h.jobName = ?1 and h.id != ?2 and h.operday = ?3 and h.result = ?4"
+                , taskName, idHist, operday, DwhUnloadStatus.STARTED);
     }
 
     public JobHistory createHeader(String jobName, Date operday) {

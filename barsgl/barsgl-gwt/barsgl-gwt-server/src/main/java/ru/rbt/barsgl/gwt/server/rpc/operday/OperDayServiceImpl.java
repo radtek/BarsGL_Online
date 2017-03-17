@@ -6,9 +6,10 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
+import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
@@ -17,14 +18,17 @@ import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.text.SimpleDateFormat;
+import java.util.Properties;
 
 /**
  * Created by akichigi on 23.03.15.
  */
 public class OperDayServiceImpl extends AbstractGwtService implements OperDayService{
+    private static final String COB_FAKE_NAME = "ExecutePreCOBTaskFake";
 
     @Override
     public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
@@ -181,18 +185,32 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
 
     /*для отладки интерфейса*/
     @Override
-    public RpcRes_Base<Boolean> runExecuteFakeCOBTask() throws Exception{
+    public RpcRes_Base<TimerJobHistoryWrapper> runExecuteFakeCOBTask() throws Exception{
+/*
         return new RpcResProcessor<Boolean>() {
             @Override
             protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
-                if (!isPreCOBAllowed()) {
-                    throw new RuntimeException("Флаг мониторинга в недопустимом для закрытия дня статусе." +
-                            "\n Вероятно, обработка проводок еще не закончена");
-                }
                 return runTask(ExecutePreCOBTaskFake.class.getSimpleName(), "Перевод опердня в состояние PRE_COB");
             }
         }.process();
+*/
+
+        try {
+            boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_FAKE_NAME});
+            if (isAlreadyRunning) {
+                return new RpcRes_Base<>(null, true, "Есть незаконченная задача синхронизации");
+            } else {
+                TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_FAKE_NAME);
+                Properties properties = new Properties();
+                properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
+                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_FAKE_NAME, properties, 3000);
+                return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через 3 сек");
+            }
+        } catch (Exception e) {
+            return new RpcRes_Base<>(null, true, "Ошибка при запуске задачи: " + e.getMessage());
+        }
     }
+
 
 
 }

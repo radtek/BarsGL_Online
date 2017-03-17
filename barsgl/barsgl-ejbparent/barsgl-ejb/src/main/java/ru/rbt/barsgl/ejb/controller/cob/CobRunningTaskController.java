@@ -6,7 +6,6 @@ import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.CobStep;
@@ -39,29 +38,27 @@ public class CobRunningTaskController {
     @EJB
     private AuditController auditController;
 
+    @Inject
+    CobStatService statService;
+
+    @EJB
+    private CobStatRecalculator recalculator;
+
     public CobStepStatistics executeWithLongRunningStep(Long idCob, CobStep cobStepEnum, CobRunningWork work) {
         CobStepStatistics step = statRepository.findById(CobStepStatistics.class, new CobStatId(idCob, cobStepEnum.getPhaseNo()));
         try {
-            auditController.info(PreCob, String.format("Начало выполнения шага %d: '%s'", cobStepEnum.getPhaseNo(), cobStepEnum.getPhaseName()));
-            statRepository.executeInNewTransaction(persistence ->
-                    statRepository.setStepStart(idCob, step.getPhaseNo(), operdayController.getSystemDateTime()));
+            recalculator.setStepStart(idCob, step);
             CobStepResult result = statRepository.executeInNewTransaction(persistence -> work.runWork());
             switch(result.getStepStatus()) {
                 case Success:
-                    auditController.info(PreCob, result.getMessage(), step);
-                    statRepository.executeInNewTransaction(persistence -> statRepository.setStepSuccess(
-                            idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), result.getMessage()));
+                    recalculator.setStepSuccess(idCob, step, result.getMessage());
                     break;
                 case Skipped:
-                    auditController.info(PreCob, result.getMessage(), step);
-                    statRepository.executeInNewTransaction(persistence -> statRepository.setStepSkipped(
-                            idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), result.getMessage()));
+                    recalculator.setStepSkipped(idCob, step, result.getMessage());
                     break;
                 case Error:
                 case Halt:
-                    auditController.error(PreCob, result.getMessage(), step, new ValidationError(ErrorCode.COB_STEP_ERROR, result.getErrorMessage()));
-                    statRepository.executeInNewTransaction(persistence -> statRepository.setStepError(
-                            idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), result.getMessage(), result.getErrorMessage()));
+                    recalculator.setStepError(idCob, step, result.getMessage(), result.getErrorMessage());
                     break;
                 default:
                     auditController.error(PreCob, result.getMessage(), step, "Invalid COB result status: " + result.getStepStatus().name());

@@ -5,6 +5,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 /**
@@ -29,6 +30,6 @@ public interface OperDayService extends RemoteService {
 
         RpcRes_Base<CobWrapper> calculateCob() throws Exception;
 
-        RpcRes_Base<Boolean> runExecuteFakeCOBTask() throws Exception;
+        RpcRes_Base<TimerJobHistoryWrapper> runExecuteFakeCOBTask() throws Exception;
 }
 

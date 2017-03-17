@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.controller.cob;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
@@ -13,6 +14,7 @@ import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import javax.ejb.*;
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -26,6 +28,8 @@ import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PreCob;
 @Singleton
 @AccessTimeout(value = 5, unit = MINUTES)
 public class CobStatRecalculator {
+    private final SimpleDateFormat msgDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+
     public enum CobStatAction {
         Calculate, IncEstimate
     }
@@ -74,10 +78,34 @@ public class CobStatRecalculator {
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void setStepMessage(Long idCob, Integer phaseNo, String message) {
-        auditController.info(PreCob, String.format("Фаза %d: %s", phaseNo, message));
-        statRepository.updateStepMessage(idCob, phaseNo, message);
+    public void setStepStart(Long idCob, CobStepStatistics step) throws Exception {
+        auditController.info(PreCob, String.format("Начало выполнения шага %d: '%s'", step.getPhaseNo(), step.getPhaseName()));
+        statRepository.executeInNewTransaction(persistence ->
+                statRepository.setStepStart(idCob, step.getPhaseNo(), operdayController.getSystemDateTime()));
+    }
+
+    public void setStepSuccess(Long idCob, CobStepStatistics step, String message) throws Exception {
+        auditController.info(PreCob, message, step);
+        statRepository.executeInNewTransaction(persistence -> statRepository.setStepSuccess(
+                idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), message));
+    }
+
+    public void setStepSkipped(Long idCob, CobStepStatistics step, String message) throws Exception {
+        auditController.info(PreCob, message, step);
+        statRepository.executeInNewTransaction(persistence -> statRepository.setStepSkipped(
+                idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), message));
+    }
+
+    public void setStepError(Long idCob, CobStepStatistics step, String message, String errorMessage) throws Exception {
+        auditController.error(PreCob, message, step, new ValidationError(ErrorCode.COB_STEP_ERROR, errorMessage));
+        statRepository.executeInNewTransaction(persistence -> statRepository.setStepError(
+                idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), message, errorMessage));
+    }
+
+    public void setStepMessage(Long idCob, CobStepStatistics step, String message) throws Exception {
+        auditController.info(PreCob, message, step);
+        statRepository.executeInNewTransaction(persistence -> statRepository.updateStepMessage(idCob, step.getPhaseNo(),
+                String.format("%s: %s", msgDateFormat.format(operdayController.getSystemDateTime()) ,message)));
     }
 
 }

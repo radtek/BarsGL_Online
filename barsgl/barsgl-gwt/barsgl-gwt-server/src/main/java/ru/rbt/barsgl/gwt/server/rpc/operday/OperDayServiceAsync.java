@@ -4,6 +4,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 /**
@@ -19,5 +20,5 @@ public interface OperDayServiceAsync {
 
      void getCobInfo(Long idCob, AsyncCallback<RpcRes_Base<CobWrapper>> callback);
      void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback);
-     void runExecuteFakeCOBTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
+     void runExecuteFakeCOBTask(AsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>> callback);
 }
