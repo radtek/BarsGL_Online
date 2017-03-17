@@ -151,11 +151,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return waitStopProcessing(operday);
         }));
 
-        works.add(new CobRunningStepWork(CobStep.CobStopEtlProc, () -> {
+        works.add(new CobRunningStepWork(CobStep.CobResetBuffer, () -> {
             return synchronizePostings();
         }));
 
-        works.add(new CobRunningStepWork(CobStep.CobStopEtlProc, () -> {
+        works.add(new CobRunningStepWork(CobStep.CobManualProc, () -> {
             return processUnprocessedBatchPostings(operday);
         }));
 
@@ -163,11 +163,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return reprocessStorno(operday);
         }));
 
-        works.add(new CobRunningStepWork(CobStep.CobStornoProc, () -> {
+        works.add(new CobRunningStepWork(CobStep.CobCloseBalance, () -> {
             return closeBalance(operday);
         }));
 
-        works.add(new CobRunningStepWork(CobStep.CobStornoProc, () -> {
+        works.add(new CobRunningStepWork(CobStep.CobFanProc, () -> {
             return processFan(operday);
         }));
 

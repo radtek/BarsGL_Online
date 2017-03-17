@@ -28,5 +28,7 @@ public interface OperDayService extends RemoteService {
         RpcRes_Base<CobWrapper> getCobInfo(Long idCob) throws Exception;
 
         RpcRes_Base<CobWrapper> calculateCob() throws Exception;
+
+        RpcRes_Base<Boolean> runExecuteFakeCOBTask() throws Exception;
 }
 

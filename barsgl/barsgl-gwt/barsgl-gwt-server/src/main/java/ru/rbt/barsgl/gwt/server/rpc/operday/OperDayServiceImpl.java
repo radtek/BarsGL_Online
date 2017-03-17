@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
@@ -177,5 +178,21 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
             }
         }.process();
     }
+
+    /*для отладки интерфейса*/
+    @Override
+    public RpcRes_Base<Boolean> runExecuteFakeCOBTask() throws Exception{
+        return new RpcResProcessor<Boolean>() {
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                if (!isPreCOBAllowed()) {
+                    throw new RuntimeException("Флаг мониторинга в недопустимом для закрытия дня статусе." +
+                            "\n Вероятно, обработка проводок еще не закончена");
+                }
+                return runTask(ExecutePreCOBTaskFake.class.getSimpleName(), "Перевод опердня в состояние PRE_COB");
+            }
+        }.process();
+    }
+
 
 }

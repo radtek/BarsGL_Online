@@ -19,4 +19,5 @@ public interface OperDayServiceAsync {
 
      void getCobInfo(Long idCob, AsyncCallback<RpcRes_Base<CobWrapper>> callback);
      void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback);
+     void runExecuteFakeCOBTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
 }

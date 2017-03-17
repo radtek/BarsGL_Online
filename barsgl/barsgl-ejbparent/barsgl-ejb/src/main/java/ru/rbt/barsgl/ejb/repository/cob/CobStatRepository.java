@@ -71,6 +71,8 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 res = selectOne("select count(1) from GL_OPER where STATE = ? and VDATE in (?, ?) and STRN = ?",
                         OperState.ERCHK.name(), curdate, lwdate, YesNo.Y.name());
                 return res.getLong(0);
+            case CobCloseBalance:
+                return 1L;
             case CobFanProc:
                 res = selectOne("select count(DISTINCT PAR_RF) from GL_OPER where FAN = ? and PROCDATE = ? and STATE = ?",
                         YesNo.Y.name(), curdate, OperState.LOAD.name());

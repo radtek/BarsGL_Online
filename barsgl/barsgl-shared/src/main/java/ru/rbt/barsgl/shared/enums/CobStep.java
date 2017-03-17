@@ -8,8 +8,9 @@ public enum CobStep {
     CobResetBuffer(2),  //"Автоматический сброс буфера"$
     CobManualProc(3),   //"Обработка необработанных запросов на операцию"
     CobStornoProc(4),   //"Обработка сторно текущего дня"
-    CobFanProc(5),      //"Обработка вееров"
-    CobRecalcBaltur(6)        // "Пересчет и локализация"
+    CobCloseBalance(5), //"Закрытие баланса предыдущего дня"
+    CobFanProc(6),      //"Обработка вееров"
+    CobRecalcBaltur(7)  // "Пересчет и локализация"
     ;
 
     private int phaseNo;

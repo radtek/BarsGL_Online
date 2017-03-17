@@ -34,7 +34,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
 
         CobWrapper wrapper = res.getResult();
         Assert.assertTrue(wrapper.getIdCob() > 0);
-        Assert.assertEquals(6, wrapper.getStepList().size());
+        Assert.assertEquals(CobStep.values().length, wrapper.getStepList().size());
         CobStepItem total = wrapper.getTotal();
         Assert.assertNotNull(total);
         checkStepState(total, NotStart);
