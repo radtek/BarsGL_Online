@@ -54,6 +54,7 @@ public class AreaBox extends Composite implements IBoxValue<String>{
     public void setValue(String value) {
         this.value = (value == null || value.isEmpty()) ? null : value;
         textBox.setText(value == null ? "" : value);
+        textBox.setFocus(true);
     }
 
     @Override

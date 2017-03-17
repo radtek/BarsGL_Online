@@ -54,7 +54,7 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
         int st = 0;
         for(CobStepStatistics step: steps) {
             works.add(new CobRunningStepWork(CobStep.values()[st++], () -> {
-                return fakeTimerStep(10, CobStepStatus.Success);   //step.getEstimated().intValue()
+                return fakeTimerStep(idCob, step.getPhaseNo(), 10, CobStepStatus.Success);   //step.getEstimated().intValue()
             }));
         }
 
@@ -65,16 +65,19 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
             return false;
     }
 
-    public CobStepResult fakeTimerStep(int duration, CobStepStatus status) throws InterruptedException {
+    public CobStepResult fakeTimerStep(Long idCob, Integer phaseNo, int duration, CobStepStatus status) throws InterruptedException {
+        statRecalculator.setStepMessage(idCob, phaseNo, "Запуск шага " + phaseNo);
         Thread.sleep(duration * 1000L);
         String errorMsg = (status == CobStepStatus.Error || status == CobStepStatus.Halt) ? "Это ошибка !" : "";
+
+        statRecalculator.setStepMessage(idCob, phaseNo, "Завершен шаг " + phaseNo);
 
         return new CobStepResult(status, "Шаг " + status.getLabel(), errorMsg);
     }
 
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
-        return false;
+        return true;
     }
 
     @Override
