@@ -74,7 +74,7 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
 
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
-        return false;
+        return true;
     }
 
     @Override

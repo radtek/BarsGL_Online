@@ -101,16 +101,16 @@ public class COBMonitoringDlg extends DlgFrame {
             grid.setWidget(i, 3, phaseMsgs.get(i + 1));
         }
 
-        grid.setWidget(6, 0, new Label("Общее по COB"));
+        grid.setWidget(steps, 0, new Label("Общее по COB"));
 
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
-        grid.getCellFormatter().getElement(6, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.getCellFormatter().getElement(steps, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
 
-        grid.setWidget(6, 1, barTotal = new GradientProgressBar(barsCount, ProgressBar.SHOW_TEXT));
+        grid.setWidget(steps, 1, barTotal = new GradientProgressBar(barsCount, ProgressBar.SHOW_TEXT));
         barTotal.setText(Utils.Fmt(completeMessage, 0));
         barTotal.setShowGradientColor(true);
 
-        grid.setWidget(6, 2, phaseTotalStatus = new Label());
+        grid.setWidget(steps, 2, phaseTotalStatus = new Label());
         grid.getCellFormatter().getElement(0, 2).getStyle().setWidth(200, Style.Unit.PX);
 
         phaseTotalMsg = new AreaBox();
@@ -218,6 +218,7 @@ public class COBMonitoringDlg extends DlgFrame {
                 res = Utils.Fmt("{0} за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
                 break;
             case Error:
+            case Halt:
                 res = Utils.Fmt("{0} через {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
                 break;
             default:res = item.getStatus().getLabel();
@@ -230,19 +231,6 @@ public class COBMonitoringDlg extends DlgFrame {
         int sec = value % 60;
         return Utils.Fmt("{0} мин {1} сек", min, sec);
     }
-
-   /* private void reset(){
-        for(int i = 1; i <= steps; i++){
-            bars.get(i).setProgress(0);
-            bars.get(i).setText(Utils.Fmt(completeMessage, 0));
-            phaseStatuses.get(i).setText("");
-            phaseMsgs.get(i).clear();
-        }
-        barTotal.setProgress(0);
-        barTotal.setText(Utils.Fmt(completeMessage, 0));
-        phaseTotalStatus.setText("");
-        phaseTotalMsg.clear();
-    }*/
 
     @Override
     protected boolean onClickOK() throws Exception {
