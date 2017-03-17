@@ -90,6 +90,8 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
 
+        abw.addSecureAction(createFakeCOB(), SecurityActionCode.TskOdPreCobRun);
+
         refreshAction.execute();
 
         DockLayoutPanel panel = new DockLayoutPanel(Style.Unit.MM);
@@ -280,4 +282,26 @@ public class OperDayForm extends BaseForm {
            }
        };
    }
+
+    private Action createFakeCOB(){
+        return new Action("Fake COB", "", null, 5){
+            COBMonitoringDlg dlg = null;
+            @Override
+            public void execute() {
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                BarsGLEntryPoint.operDayService.runExecuteFakeCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<Boolean> result) {
+                        if (result.isError()) {
+                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                        } else {
+                            Window.alert(result.getResult().toString());
+                        }
+                        WaitingManager.hide();
+                    }
+                });
+            }
+        };
+    }
 }
