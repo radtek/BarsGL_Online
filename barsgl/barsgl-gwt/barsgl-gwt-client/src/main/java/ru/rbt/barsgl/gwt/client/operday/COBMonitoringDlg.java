@@ -3,6 +3,7 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
@@ -44,6 +45,8 @@ public class COBMonitoringDlg extends DlgFrame {
     private HashMap<Integer, Label> phaseStatuses;
     private HashMap<Integer, ProgressBar> bars;
     private HashMap<Integer, AreaBox> phaseMsgs;
+
+    private Timer timer;;
 
     public COBMonitoringDlg(){
         super();
@@ -155,7 +158,7 @@ public class COBMonitoringDlg extends DlgFrame {
         CobWrapper  wrapper = (CobWrapper) params;
         setPhaseNames(wrapper);
         setMonitoringInfo(wrapper);
-        Window.alert(wrapper.getStartTimer().toString());
+
         //TODO watcher
     }
     //TODO rewrite
@@ -198,6 +201,8 @@ public class COBMonitoringDlg extends DlgFrame {
         barTotal.setProgress(item.getIntPercent());
         barTotal.setText(Utils.Fmt(completeMessage, item.getIntPercent()));
         phaseTotalStatus.setText(getPhaseMessage(item));
+
+        ok.setEnabled(!isNeedStartTimer);
     }
 
     private String getPhaseMessage(CobStepItem item){
@@ -263,5 +268,10 @@ public class COBMonitoringDlg extends DlgFrame {
         });
 
         return false;
+    }
+
+    protected void onCancelClick(){
+       if (timer != null) timer.cancel();
+        super.onCancelClick();
     }
 }
