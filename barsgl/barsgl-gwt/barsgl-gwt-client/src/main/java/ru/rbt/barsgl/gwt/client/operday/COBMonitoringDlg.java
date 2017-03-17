@@ -4,7 +4,6 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -31,7 +30,7 @@ import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
  * Created by akichigi on 09.03.17.
  */
 public class COBMonitoringDlg extends DlgFrame {
-    private final int steps = 6;
+    private final int steps = 7;
     private final int barsCount = 20;
     private final String completeMessage = "Завершено {0}%";
     private final String phaseNameTmpl = "Фаза {0} {1}";

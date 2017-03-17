@@ -17,9 +17,11 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PreCob;
 
 /**
@@ -37,7 +39,7 @@ public class CobRunningTaskController {
     @EJB
     private AuditController auditController;
 
-    public CobStepStatistics executeWithLongRunningStep(Long idCob, CobStep cobStepEnum, CobRunningWork work) throws Exception {
+    public CobStepStatistics executeWithLongRunningStep(Long idCob, CobStep cobStepEnum, CobRunningWork work) {
         CobStepStatistics step = statRepository.findById(CobStepStatistics.class, new CobStatId(idCob, cobStepEnum.getPhaseNo()));
         try {
             auditController.info(PreCob, String.format("Начало выполнения шага %d: '%s'", cobStepEnum.getPhaseNo(), cobStepEnum.getPhaseName()));
@@ -71,26 +73,39 @@ public class CobRunningTaskController {
             String msg = String.format("Шаг COB %d '%s' завершен с ошибкой", cobStepEnum.getPhaseNo(), cobStepEnum.getPhaseName());
             auditController.error(PreCob, msg, step, t);
             if (null != step){
-                statRepository.executeInNewTransaction(persistence ->
-                    statRepository.setStepError(idCob, step.getPhaseNo(), operdayController.getSystemDateTime(),
-                        "Шаг завершен с ошибкой", getErrorMessage(t)));   // TODO подумать тему сообщений
-                return statRepository.refresh(step, true);
+                try {
+                    statRepository.executeInNewTransaction(persistence ->
+                        statRepository.setStepError(idCob, step.getPhaseNo(), operdayController.getSystemDateTime(),
+                            "Шаг завершен с ошибкой", getErrorMessage(t)));   // TODO подумать тему сообщений
+                    return statRepository.refresh(step, true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                step.setStatus(CobStepStatus.Error);
             }
-            return null;
+            return step;
         }
-    }
-
-    public CobStepResult fakeTimerStep(int duration, CobStepStatus status) throws InterruptedException {
-        Thread.sleep(duration * 1000L);
-        String errorMsg = (status == CobStepStatus.Error || status == CobStepStatus.Halt) ? "Это ошибка !" : "";
-
-        return new CobStepResult(status, "Шаг " + status.getLabel(), errorMsg);
     }
 
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
                 PersistenceException.class);
+    }
+
+    public boolean execWorks(List<CobRunningStepWork> works, Long idCob) {
+        for (CobRunningStepWork work : works) {
+            CobStepStatistics step = executeWithLongRunningStep(idCob, work.getStep(), work.getWork());
+            if (null == step) {
+                auditController.error(PreCob,
+                        format("Не удалось создать шаг выполнения для '%s'", work), null, new DefaultApplicationException(""));
+            } else if (step.getStatus() == CobStepStatus.Halt) {
+                auditController.error(PreCob,
+                        format("Сбой выполнения COB. Шаг %s: '%s'. Процесс остановлен", step.getPhaseNo().toString(), step.getPhaseName()), null, new DefaultApplicationException(""));
+                return false;
+            }
+        }
+        return true;
     }
 
 }

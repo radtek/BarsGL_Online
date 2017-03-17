@@ -16,7 +16,6 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
@@ -49,9 +48,7 @@ import java.util.*;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.PRE_COB;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
@@ -176,20 +173,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }));
 
         Long idCob = statRecalculator.calculateCob(true);
-        for (CobRunningStepWork work : works) {
-            CobStepStatistics step = taskController.executeWithLongRunningStep(idCob, work.getStep(), work.getWork());
-            if (null == step){
-                auditController.error(PreCob,
-                        format("Не удалось создать шаг выполнения для '%s'", work), null, new DefaultApplicationException(""));
-            } else
-            if (step.getStatus() == CobStepStatus.Halt) {
-                auditController.error(PreCob,
-                        format("Сбой выполнения COB. Шаг %s: '%s'. Процесс остановлен", step.getPhaseNo().toString(), step.getPhaseName()), null, new DefaultApplicationException(""));
-                return false;
-            }
-        }
-        auditController.info(AuditRecord.LogCode.Operday, "Процедура закрытия ОД отработала успешно");
-        return true;
+        if (taskController.execWorks(works, idCob)) {
+            auditController.info(AuditRecord.LogCode.Operday, "Процедура закрытия ОД отработала успешно");
+            return true;
+        } else
+            return false;
     }
 
     private CobStepResult checkCurrentState() {
