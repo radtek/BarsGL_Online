@@ -2,7 +2,6 @@ package ru.rbt.barsgl.ejb.entity.etl;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 
 /**
@@ -10,7 +9,7 @@ import java.io.Serializable;
  * @deprecated не используется
  */
 @Embeddable
-@MappedSuperclass
+//@MappedSuperclass
 public class EtlAccountId implements Serializable {
 
     @Column(name = "ID_PKG")

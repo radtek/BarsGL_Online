@@ -6,7 +6,6 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.Assert;
@@ -126,7 +125,7 @@ public class OperdayController {
     }
 
     @PostConstruct
-    public void init() throws Exception {
+    public void init() {
         initOperday();
         initTimeService();
     }

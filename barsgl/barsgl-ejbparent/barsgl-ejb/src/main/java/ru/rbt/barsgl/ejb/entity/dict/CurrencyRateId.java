@@ -1,6 +1,9 @@
 package ru.rbt.barsgl.ejb.entity.dict;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -8,7 +11,7 @@ import java.util.Date;
  * Created by Ivan Sevastyanov
  */
 @Embeddable
-@MappedSuperclass
+//@MappedSuperclass
 public class CurrencyRateId  implements Serializable {
 
     @Column (name = "DAT")

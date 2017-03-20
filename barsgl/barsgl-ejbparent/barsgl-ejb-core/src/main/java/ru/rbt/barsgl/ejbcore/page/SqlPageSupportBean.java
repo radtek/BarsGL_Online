@@ -18,7 +18,6 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,7 +79,8 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
         SQL sql = prepareCommonSql(nativeSql, criterion);
-        String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;
+        String sqlDummy = "select * from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
+        String resultSql = "select count(*) cnt from (" + sqlDummy + " ) " + COUNT_ALIAS;
         try {
             DataSource dataSource = repository.getDataSource(rep);
             int cnt = repository.selectFirst(dataSource, resultSql, sql.getParams()).getInteger("cnt");
@@ -131,7 +131,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
                 params.add(startWith + pageSize - 1);
                 return resultSql;
             } else {
-                String resultSql = "select * from (" + query + ") v " + orderByString + " fetch first " + pageSize + " rows only";
+                String resultSql = "select * from (" + query + ") v where rownum <=" + pageSize + orderByString;
                 return resultSql;
             }
         } else {

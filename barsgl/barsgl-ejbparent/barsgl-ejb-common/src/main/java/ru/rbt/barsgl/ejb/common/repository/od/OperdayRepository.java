@@ -5,12 +5,14 @@ import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.shared.Assert;
 
+import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.util.Date;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
 public class OperdayRepository extends AbstractBaseEntityRepository <Operday, Date> {
 
     @Override

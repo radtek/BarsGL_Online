@@ -36,13 +36,14 @@ public class BeanManagedProcessor {
     @Resource
     private UserTransaction tx;
 
-    @PersistenceContext(unitName="GLAS400DataSource")
+    @PersistenceContext(unitName="GLOracleDataSource")
     protected EntityManager persistence;
 
     @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
     private TransactionSynchronizationRegistry trx;
 
-    @Resource(mappedName="/jdbc/As400GL")
+//    @Resource(mappedName="/jdbc/As400GL")
+    @Resource(mappedName="/jdbc/OracleGL")
     private DataSource dataSource;
 
     /**
