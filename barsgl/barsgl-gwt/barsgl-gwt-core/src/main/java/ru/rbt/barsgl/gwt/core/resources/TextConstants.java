@@ -171,4 +171,6 @@ public abstract interface TextConstants extends Constants {
     @Constants.DefaultStringValue("Bars GL")
     public abstract String window_title();
 
+    @Constants.DefaultStringValue("Начало выгрузки таблицы в Excel. Ожидайте...")
+    public abstract String export2Excel();
 }
