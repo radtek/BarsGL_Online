@@ -2,12 +2,14 @@ package ru.rbt.barsgl.gwt.client.Export;
 
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
+import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Utils;
 
@@ -16,7 +18,7 @@ import java.util.List;
 /**
  * Created by akichigi on 28.07.16.
  */
-public class Export2ExcelAction extends GridAction {
+public class Export2ExcelAction extends GridAction implements IExportData {
     private GridWidget grid;
     private String sql;
     protected int exportMaxRows = 4999;
@@ -65,13 +67,36 @@ public class Export2ExcelAction extends GridAction {
     private void beginExportToExcel(){
         setEnable(false);
         ExcelExportHead head = new Export2ExcelHead(formTitle, grid.getFilterCriteria()).createExportHead();
-
-        Export2Excel e2e = new Export2Excel(sql, grid.getTable().getColumns(), grid.getFilterCriteria(), linkDetailFilterCriteria,
-                grid.getSortCriteria(), head, new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));
+        Export2Excel e2e = new Export2Excel(this, head, new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));
         e2e.export();
     }
 
     public void setFormTitle(String formTitle) {
         this.formTitle = formTitle;
+    }
+
+    @Override
+    public String sql() {
+        return sql;
+    }
+
+    @Override
+    public Columns columns() {
+        return grid.getTable().getColumns();
+    }
+
+    @Override
+    public List<FilterItem> masterFilterItems() {
+        return grid.getFilterCriteria();
+    }
+
+    @Override
+    public List<FilterItem> detailFilterItems() {
+        return linkDetailFilterCriteria;
+    }
+
+    @Override
+    public List<SortItem> sortItems() {
+        return  grid.getSortCriteria();
     }
 }
