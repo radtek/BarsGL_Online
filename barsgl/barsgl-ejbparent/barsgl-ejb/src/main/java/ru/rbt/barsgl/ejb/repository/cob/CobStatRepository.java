@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
 /**
@@ -125,14 +126,14 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
         return cnt;
     }
 
-    public int setStepError(Long idCob, Integer phaseNo, Date timestamp, String message, String errorMessage) {
+    public int setStepError(Long idCob, Integer phaseNo, Date timestamp, String message, String errorMessage, CobStepStatus status) {
         int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = ?, ERRORMSG = ? " +
                         " where ID_COB = ? and PHASE_NO = ?",
                 Error.name(), timestamp, message, errorMessage, idCob, phaseNo);
         if (cnt == 1) {
             cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
                             " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                    idCob, phaseNo, Error.name());
+                    idCob, phaseNo, status.name());
         }
         return cnt;
     }
@@ -172,14 +173,11 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
         CobStepStatus lastStatus = stepList.get(stepList.size() - 1).getStatus();
         if (firstStatus == NotStart) {
             return NotStart;
+        } else if (stepList.stream().anyMatch(a -> a.getStatus() == Halt)){
+            return Halt;
         } else if (lastStatus != NotStart) {
             return lastStatus;
         } else {
-            for (CobStepStatistics item: stepList) {
-                if (item.getStatus() == Halt) {
-                    return Halt;
-                }
-            }
             return Running;
         }
     }

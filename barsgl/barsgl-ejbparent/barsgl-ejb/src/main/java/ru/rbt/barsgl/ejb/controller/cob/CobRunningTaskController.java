@@ -57,8 +57,10 @@ public class CobRunningTaskController {
                     recalculator.setStepSkipped(idCob, step, result.getMessage());
                     break;
                 case Error:
+                    recalculator.setStepError(idCob, step, result.getMessage(), result.getErrorMessage(), result.getStepStatus());
+                    break;
                 case Halt:
-                    recalculator.setStepError(idCob, step, result.getMessage(), result.getErrorMessage());
+                    recalculator.setStepError(idCob, step, result.getMessage(), result.getErrorMessage(), result.getStepStatus());
                     break;
                 default:
                     auditController.error(PreCob, result.getMessage(), step, "Invalid COB result status: " + result.getStepStatus().name());
@@ -72,15 +74,12 @@ public class CobRunningTaskController {
             if (null != step){
                 try {
                     statRepository.executeInNewTransaction(persistence ->
-                        statRepository.setStepError(idCob, step.getPhaseNo(), operdayController.getSystemDateTime(),
-                            "Шаг завершен с ошибкой", getErrorMessage(t)));   // TODO подумать тему сообщений
+                            statRepository.setStepError(idCob, step.getPhaseNo(), operdayController.getSystemDateTime(),
+                                    "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt));   // TODO подумать тему сообщений
                     return statRepository.refresh(step, true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                step.setStatus(CobStepStatus.Error);
+                } catch (Exception ignored) {}
             }
-            return step;
+            return null;
         }
     }
 

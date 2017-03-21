@@ -96,10 +96,10 @@ public class CobStatRecalculator {
                 idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), message));
     }
 
-    public void setStepError(Long idCob, CobStepStatistics step, String message, String errorMessage) throws Exception {
+    public void setStepError(Long idCob, CobStepStatistics step, String message, String errorMessage, CobStepStatus stepStatus) throws Exception {
         auditController.error(PreCob, message, step, new ValidationError(ErrorCode.COB_STEP_ERROR, errorMessage));
         statRepository.executeInNewTransaction(persistence -> statRepository.setStepError(
-                idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), message, errorMessage));
+                idCob, step.getPhaseNo(), operdayController.getSystemDateTime(), message, errorMessage, stepStatus));
     }
 
     public void setStepMessage(Long idCob, CobStepStatistics step, String message) throws Exception {
