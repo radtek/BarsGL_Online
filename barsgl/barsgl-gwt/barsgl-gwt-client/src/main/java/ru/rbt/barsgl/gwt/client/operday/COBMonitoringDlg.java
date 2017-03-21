@@ -4,6 +4,7 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -45,7 +46,9 @@ public class COBMonitoringDlg extends DlgFrame {
     private HashMap<Integer, ProgressBar> bars;
     private HashMap<Integer, AreaBox> phaseMsgs;
 
-    private Timer timer;;
+    private Timer timer;
+    private boolean isAllowPing;
+    private final int tick = 1000;
 
     public COBMonitoringDlg(){
         super();
@@ -89,7 +92,6 @@ public class COBMonitoringDlg extends DlgFrame {
         return box;
     }
 
-
     @Override
     public Widget createContent(){
         prepareElements(steps);
@@ -123,49 +125,51 @@ public class COBMonitoringDlg extends DlgFrame {
         vp.add(grid);
         vp.add(phaseTotalMsg);
 
-       /* final ProgressBar progressBar = new ProgressBar(20
-                ,ProgressBar.SHOW_TIME_REMAINING
-                +ProgressBar.SHOW_TEXT);
-        progressBar.setText("Doing something...");
-
-
-        final GradientProgressBar progressBar2 = new GradientProgressBar(20, ProgressBar.SHOW_TEXT);
-        progressBar2.setShowGradientColor(true);
-        progressBar2.setText(Utils.Fmt(completeMessage, 0));
-
-
-        Timer t = new Timer() {
-            public void run() {
-                int progress = progressBar.getProgress()+4;
-                if (progress>100) cancel();
-                progressBar.setProgress(progress);
-
-
-                int progress2 = progressBar2.getProgress()+4;
-                if (progress2>100) cancel();
-                progressBar2.setProgress(progress2);
-                progressBar2.setText(Utils.Fmt(completeMessage,  progress2 + 1 > 100 ? 100 : progress2 + 1));
-            }
-        };
-        t.scheduleRepeating(1000);*/
         return vp ;
     }
 
     @Override
     protected void fillContent(){
-        //reset();
         CobWrapper  wrapper = (CobWrapper) params;
         setPhaseNames(wrapper);
         setMonitoringInfo(wrapper);
 
-        //TODO watcher
+        startWatching();
     }
-    //TODO rewrite
+
+    private void startWatching(){
+        if (! isNeedStartTimer) {
+            if (timer != null) timer.cancel();
+            return;
+        }
+
+        Window.alert("Watching");
+        timer = new Timer(){
+
+            @Override
+            public void run() {
+                if (isNeedStartTimer){
+                    if (isAllowPing){
+                        isAllowPing = false;
+                        getMonitoringInfo();
+                    }
+                } else{
+                    timer.cancel();
+                    Window.alert("Stop Watching");
+                }
+            }
+        };
+
+        timer.scheduleRepeating(tick);
+    }
+
+
     private void getMonitoringInfo(){
         BarsGLEntryPoint.operDayService.getCobInfo(idCOB, new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
             @Override
             public void onSuccess(RpcRes_Base<CobWrapper> result) {
                 if (result.isError()) {
+                    if (timer != null) timer.cancel();
                     DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                 } else {
                     setMonitoringInfo(result.getResult());
@@ -202,6 +206,7 @@ public class COBMonitoringDlg extends DlgFrame {
         phaseTotalStatus.setText(getPhaseMessage(item));
 
         ok.setEnabled(!isNeedStartTimer);
+        isAllowPing = true;
     }
 
     private String getPhaseMessage(CobStepItem item){
@@ -237,7 +242,6 @@ public class COBMonitoringDlg extends DlgFrame {
         DialogManager.confirm("Подтверждение", "Пересчитать статистику по СОВ?", "Пересчитать", new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-               // reset();
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
                 BarsGLEntryPoint.operDayService.calculateCob(new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {

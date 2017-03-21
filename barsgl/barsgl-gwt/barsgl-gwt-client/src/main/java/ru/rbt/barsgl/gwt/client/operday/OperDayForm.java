@@ -5,11 +5,14 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
+import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
@@ -83,6 +86,7 @@ public class OperDayForm extends BaseForm {
         ActionBarWidget abw = new ActionBarWidget();
         abw.addAction(createRefreshAction());
 
+
         abw.addSecureAction(createOpenODAction(), SecurityActionCode.TskOdOpenRun);
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
@@ -90,6 +94,7 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
 
         abw.addSecureAction(createFakeCOB(), SecurityActionCode.TskOdPreCobRun);
+
 
         refreshAction.execute();
 
@@ -282,9 +287,10 @@ public class OperDayForm extends BaseForm {
        };
    }
 
+  
+
     private Action createFakeCOB(){
         return new Action("Fake COB", "", null, 5){
-            COBMonitoringDlg dlg = null;
             @Override
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
