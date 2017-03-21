@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -24,14 +25,22 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -931,8 +940,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
     @Test public void testTechAccountPostingProcessor() throws ParseException {
         Date curDate = new Date(); //DateUtils.parseDate("2017-02-10","yyyy-MM-dd");
 
-        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
-        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+        //setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        //updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
         //Добавление нового курса
         //CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
@@ -1081,4 +1090,130 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         baseEntityRepository.executeUpdate("delete from EtlPackage p WHERE p.description=?1","TECHACC");
     }
 
+
+    @Test public void LoadEtlFromFile() throws IOException, InvalidFormatException, ParseException {
+
+        File f = new File("c:\\Projects\\GL_ETLPST_20170320_01.xlsx");
+        Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());
+
+        if (f.exists()) {
+
+            InputStream fileStream = new FileInputStream(f);
+            ExcelParser parser = new ExcelParser(fileStream);
+            Iterator<List<Object>> it = parser.parseSafe(0);
+
+            Assert.assertTrue("Нет строк для загрузки",parser.hasNext());
+
+            long stamp = System.currentTimeMillis();
+            EtlPackage pkg = newPackage(stamp, "TECHACC_1");
+            Assert.assertTrue(pkg.getId() > 0);
+
+            //Сохраняем дату опердня и меняем на свою
+            Operday oldOperday = getOperday();
+            Date curDate = DateUtils.parseDate("2017-03-13","yyy-MM-dd");
+            setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+            List<Object> header = it.next();
+
+            while (it.hasNext())
+            {
+                List<Object> row = it.next();
+                EtlPosting pst = newPosting(stamp, pkg);
+                pst = this.fillEtlPst(pst,row);
+                pst = (EtlPosting) baseEntityRepository.save(pst);
+                GLOperation operation = (GLOperation) postingController.processMessage(pst);
+                Assert.assertNotNull("Ошибка создания операции.",operation);
+                operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+                Assert.assertEquals("Ошибка при обработке операции: "+operation.getId(),OperState.POST, operation.getState());
+            }
+
+            setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+        }
+    }
+
+    @Test public void LoadEtlFromFileByNumber() throws IOException, InvalidFormatException, ParseException {
+
+        File f = new File("c:\\Projects\\GL_ETLPST_20170320_02.xlsx");
+        Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());
+        final int ROW_NUMBER = 9;  //номер строки начиная с данных. Первая строка считается нулевой (заголовок).
+
+        if (f.exists()) {
+
+            InputStream fileStream = new FileInputStream(f);
+            ExcelParser parser = new ExcelParser(fileStream);
+            Iterator<List<Object>> it = parser.parseSafe(0);
+
+
+            Assert.assertTrue("Нет строк для загрузки",parser.hasNext());
+
+            long stamp = System.currentTimeMillis();
+            EtlPackage pkg = newPackage(stamp, "TECHACC_1");
+            Assert.assertTrue(pkg.getId() > 0);
+
+            //Сохраняем дату опердня и меняем на свою
+            Operday oldOperday = getOperday();
+            Date curDate = DateUtils.parseDate("2017-02-20","yyy-MM-dd");
+            setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+            //List<Object> header = it.next();
+
+            for(int i=0;i<ROW_NUMBER;i++)
+            {
+                it.next();
+            }
+
+            List<Object> row = it.next();
+            EtlPosting pst = newPosting(stamp, pkg);
+            pst = this.fillEtlPst(pst,row);
+            pst = (EtlPosting) baseEntityRepository.save(pst);
+            GLOperation operation = (GLOperation) postingController.processMessage(pst);
+            Assert.assertNotNull("Ошибка создания операции.",operation);
+            operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+            Assert.assertEquals("Ошибка при обработке операции: "+operation.getId(),OperState.POST, operation.getState());
+
+           /* while (it.hasNext())
+            {
+                List<Object> row = it.next();
+                EtlPosting pst = newPosting(stamp, pkg);
+                pst = this.fillEtlPst(pst,row);
+                pst = (EtlPosting) baseEntityRepository.save(pst);
+                GLOperation operation = (GLOperation) postingController.processMessage(pst);
+                Assert.assertNotNull("Ошибка создания операции.",operation);
+                operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+                Assert.assertEquals("Ошибка при обработке операции: "+operation.getId(),OperState.POST, operation.getState());
+            }*/
+
+            setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+        }
+    }
+
+    private EtlPosting fillEtlPst(EtlPosting pst, List<Object> row) throws ParseException {
+
+        pst.setSourcePosting(row.get(3).toString());
+        pst.setEventId(row.get(4).toString());
+        pst.setDealId(row.get(5).toString());
+        pst.setDeptId(row.get(8).toString());
+        pst.setValueDate(DateUtils.parseDate(row.get(9).toString(),"yyyy-MM-dd"));
+        pst.setOperationTimestamp(DateUtils.parseDate(row.get(10).toString().trim(),"yyyy-MM-dd HH:mm:ss.SSS"));
+        //pst.setOperationTimestamp(DateUtils.parseDate("2016-07-21 15:37:57.930000","yyyy-MM-dd HH:mm:ss.SSS"));
+        pst.setNarrative(row.get(11).toString());
+        pst.setRusNarrativeLong(row.get(12).toString());
+        pst.setRusNarrativeShort(row.get(13).toString());
+        pst.setStorno(YesNo.valueOf(row.get(14).toString()));
+        pst.setCurrencyDebit(row.get(17).toString().equals("RUR")?BankCurrency.RUB:BankCurrency.USD);
+        pst.setAmountDebit(new BigDecimal(row.get(18).toString()));
+        pst.setCurrencyCredit(row.get(21).toString().equals("RUR")?BankCurrency.RUB:BankCurrency.USD);
+        pst.setAmountCredit(new BigDecimal(row.get(22).toString()));
+        pst.setFan(YesNo.valueOf(row.get(24).toString()));
+
+        pst.setAccountKeyDebit(row.get(28).toString());
+        pst.setAccountKeyCredit(row.get(29).toString());
+        pst.setEventType(row.get(30).toString());
+
+        return pst;
+    }
 }

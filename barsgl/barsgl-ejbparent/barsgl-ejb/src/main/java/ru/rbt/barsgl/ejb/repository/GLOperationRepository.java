@@ -286,7 +286,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         else if (null != accountKeys)
                 if (accountKeys.getGlSequence().startsWith("TH"))
                 {
-                    return "Т";
+                    return "T";
                 }
                 else {
                     return getBSChapterAcc2(accountKeys.getAccount2());
