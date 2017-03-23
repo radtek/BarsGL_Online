@@ -19,6 +19,10 @@ public class GradientProgressBar extends ProgressBar {
         super(elements);
     }
 
+    public GradientProgressBar(int elements, int options, boolean isBarSmooth) {
+        super(elements, options, isBarSmooth);
+    }
+
     public boolean isShowGradientColor() {
         return showGradientColor;
     }
@@ -32,7 +36,7 @@ public class GradientProgressBar extends ProgressBar {
         if (showGradientColor) elm.setStyleName(getGradientColorStyle(offset * 100 / elements));
         else
         elm.setStyleName("progressbar-fullbar");
-        elm.addStyleName("progressbar-bar");
+        elm.addStyleName(elmStyle);
     }
 
     private String getGradientColorStyle(int offset){

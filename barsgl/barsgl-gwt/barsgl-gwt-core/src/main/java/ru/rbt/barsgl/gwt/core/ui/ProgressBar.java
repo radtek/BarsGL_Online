@@ -62,13 +62,16 @@ public class ProgressBar extends VerticalPanel {
     private boolean showRemaining = false;
     private boolean showText = false;
 
+    protected String elmStyle;
+
     /**
      * Base constructor for this widget
      *
      * @param elements The number of elements (bars) to show on the progress bar
      * @param options The display options for the progress bar
+     * @param isBarSmooth set smooth ot discrete bar style
      */
-    public ProgressBar (int elements, int options)
+    public ProgressBar (int elements, int options, boolean isBarSmooth)
     {
         // Read the options and set convenience variables
         if ((options & SHOW_TIME_REMAINING) == SHOW_TIME_REMAINING) showRemaining = true;
@@ -76,6 +79,8 @@ public class ProgressBar extends VerticalPanel {
 
         // Set element count
         this.elements = elements;
+
+        elmStyle = isBarSmooth ? "progressbar-bar-smooth" : "progressbar-bar";
 
         // Styling
         remainLabel.setStyleName("progressbar-remaining");
@@ -89,10 +94,12 @@ public class ProgressBar extends VerticalPanel {
 
         for (int loop = 0; loop < elements; loop++) {
             Grid elm = new Grid(1, 1);
+            elm.setCellPadding(0);//?
+            elm.setCellSpacing(0);//?
             //elm.setHTML(0, 0, "&nbsp;");
             elm.setHTML(0, 0, "");
             elm.setStyleName("progressbar-blankbar");
-            elm.addStyleName("progressbar-bar");
+            elm.addStyleName(elmStyle);
             elementGrid.setWidget(0, loop, elm);
         }
 
@@ -117,6 +124,14 @@ public class ProgressBar extends VerticalPanel {
 
         // Initialize progress bar
         setProgress(0);
+    }
+
+    /**
+     * @param elements The number of elements (bars) to show on the progress bar
+     * @param options The display options for the progress bar
+     */
+    public ProgressBar (int elements, int options){
+        this(elements, options, false);
     }
 
     /**
@@ -305,11 +320,11 @@ public class ProgressBar extends VerticalPanel {
 
     protected void competeProgressStyle(Grid elm, int offset){
         elm.setStyleName("progressbar-fullbar");
-        elm.addStyleName("progressbar-bar");
+        elm.addStyleName(elmStyle);
     }
 
     protected void uncompleteProgressStyle(Grid elm, int offset){
         elm.setStyleName("progressbar-blankbar");
-        elm.addStyleName("progressbar-bar");
+        elm.addStyleName(elmStyle);
     }
 }
