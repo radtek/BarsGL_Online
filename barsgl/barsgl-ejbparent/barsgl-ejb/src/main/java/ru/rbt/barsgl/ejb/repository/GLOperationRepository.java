@@ -145,11 +145,15 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 
     public void setFilials(GLOperation operation) throws SQLException {
         if (isEmpty(operation.getFilialDebit())) {
-            operation.createAccountParamDebit();
+            if (operation.getAccountKeyDebit()!=null) {
+                operation.createAccountParamDebit();
+            }
             operation.setFilialDebit(getFilial(operation.getAccountDebit(), operation.getAccountParamDebit()));
         }
         if (isEmpty(operation.getFilialCredit())) {
-            operation.createAccountParamCredit();
+            if (operation.getAccountKeyCredit()!=null) {
+                operation.createAccountParamCredit();
+            }
             operation.setFilialCredit(getFilial(operation.getAccountCredit(), operation.getAccountParamCredit()));
         }
     }

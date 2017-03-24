@@ -28,7 +28,7 @@ public class GLOperation extends BaseEntity<Long> {
 
     public static final String srcPaymentHub = "PH";
     public static final String srcKondorPlus = "K+TP";
-    public static final String flagTechOper = "Т";
+    public static final String flagTechOper = "T";
 
     public enum OperClass {
         AUTOMATIC, MANUAL

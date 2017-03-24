@@ -1,9 +1,10 @@
-package ru.rbt.barsgl.gwt.client.account;
+package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.account.AccountCloseDlg;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
 import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
@@ -22,12 +23,16 @@ import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.CREDIT;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.DEBIT;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
@@ -38,8 +43,8 @@ import static ru.rbt.barsgl.shared.dict.FormAction.*;
 /**
  * Created by ER18837 on 14.03.16.
  */
-public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
-    public static final String FORM_NAME = "Лицевые счета (учёт по техническим счетам)";
+public class PostingFormTech2 extends EditableDictionary<ManualAccountWrapper> {
+    public static final String FORM_NAME = "Проводки (учёт по техническим счетам)";
     PopupPanel sidePanel;
 
     private Column colFilial;
@@ -52,10 +57,17 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     private Column colDateOpen;
     private Column colDateClose;
 
+    protected Column colProcDate;
+    protected Column colPostDate;
+    protected Column colValueDate;
+    protected Column colGloid;
+
+    private int podIndex, invisibleIndex, idDrIndex, idCrIndex, fanIndex, fanTypeIndex;
+
     AccountQuickFilterParams quickFilterParams;
     GridAction quickFilterAction;
 
-    public AccountFormTech() {
+    public PostingFormTech2() {
         super(FORM_NAME, true);
         reconfigure();
     }
@@ -74,22 +86,19 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
-                "ACC2, PLCODE, ACOD, SQ, ACID, PSAV, DEALSRS, DEALID, SUBDEALID, DESCRIPTION, " +
-                "DTO, DTC, DTR, DTM, OPENTYPE, GLOID, GLO_DC, BALANCE " +
-                "from V_GL_ACC_TH"
-                + getSourceAndFilialPart("where", "", "CBCC");
+        return "SELECT * FROM V_GL_PDTH "
+                + getSourceAndFilialPart("where", "SRC_PST", "FILIAL_DR");
     }
 
     @Override
     public ArrayList<SortItem> getInitialSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
-        list.add(new SortItem("ID", Column.Sort.DESC));
+        list.add(new SortItem("GLO_REF", Column.Sort.DESC));
         return list;
     }
 
     protected Table prepareTable() {
-        Table result = new Table();
+        /*Table result = new Table();
 
         result.addColumn(new Column("ACCTYPE", DECIMAL, "Accounting Type", 80, true, false, Column.Sort.ASC, "000000000"));// No Space
         result.addColumn(colCurrency = new Column("CCY", STRING, "Валюта", 60));
@@ -101,25 +110,44 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("DESCRIPTION", STRING, "Название счета", 380));
         result.addColumn(colDateOpen = new Column("DTO", DATE, "Дата открытия", 80));
         result.addColumn(colDateClose = new Column("DTC", DATE, "Дата закрытия", 80));
-        result.addColumn(new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.NONE, ""));
+        result.addColumn(new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.NONE, ""));*/
 
-/*
-        result.addColumn(new Column("ID", STRING, "ID Счета", 160));
-        result.addColumn(new Column("PSAV", STRING, "А/ П", 25));
-        result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 70));
-        result.addColumn(colDealId = new Column("DEALID", STRING, "ИД сделки", 120));
+        Table result = new Table();
+        Column col;
+
+        HashMap<Serializable, String> yesNoList = getYesNoList();
+        result.addColumn(new Column("GLO_REF", LONG, "ID операции", 70));
+        result.addColumn(col = new Column("INP_METHOD", STRING, "Способ ввода", 50));
+        col.setList(getEnumLabelsList(InputMethod.values()));
+        result.addColumn(new Column("PCID", LONG, "ID проводки", 80));
+        result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 60));
+        result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
         result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120));
-        result.addColumn(new Column("CBCCN", STRING, "Код филиала", 60, false, false));
-        result.addColumn(new Column("CBCUSTTYPE", DECIMAL, "Тип соб", 40, true, true, Column.Sort.NONE, "#,##"));
-        result.addColumn(new Column("TERM", DECIMAL, "Код срока", 40, true, true, Column.Sort.NONE, "#,##"));
-        result.addColumn(colAcc2 = new Column("ACC2", STRING, "Счет 2-го порядка", 60, false, false));
-        result.addColumn(new Column("PLCODE", STRING, "Символ ОФР", 30, false, false));
-        result.addColumn(new Column("ACOD", DECIMAL, "Midas Acod", 50, false, false));
-        result.addColumn(new Column("SQ", DECIMAL, "Midas SQ", 40, false, false));
-        result.addColumn(new Column("DTR", DATE, "Дата регистрации", 80, false, false));
-        result.addColumn(new Column("DTM", DATE, "Дата изменения", 80, false, false));
-        result.addColumn(new Column("OPENTYPE", STRING, "Способ открытия", 70, false, false));
-        result.addColumn(new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.DESC, ""));*/
+        result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 120, false, false));
+        result.addColumn(colProcDate = new Column("PROCDATE", DATE, "Дата опердня", 80));
+        colProcDate.setFormat("dd.MM.yyyy");
+        result.addColumn(colValueDate = new Column("VALD", DATE, "Дата валютирования", 80));
+        colValueDate.setFormat("dd.MM.yyyy");
+        podIndex = result.addColumn(colPostDate = new Column("POD", DATE, "Дата проводки", 80));
+        colPostDate.setFormat("dd.MM.yyyy");
+        result.addColumn(new Column("ACCTYPE_DR", STRING, "Тип счёта ДБ", 160));
+        result.addColumn(new Column("BSAACID_DR", STRING, "Счет ДБ", 160));
+        result.addColumn(new Column("CCY_DR", STRING, "Валюта ДБ", 60));
+        result.addColumn(new Column("AMNT_DR", DECIMAL, "Сумма ДБ", 100));
+        result.addColumn(new Column("AMNTBC_DR", DECIMAL, "Сумма в руб. ДБ", 100));
+        result.addColumn(new Column("ACCTYPE_CR", STRING, "Тип счёта КР", 160));
+        result.addColumn(new Column("BSAACID_CR", STRING, "Счет КР", 160));
+        result.addColumn(new Column("CCY_CR", STRING, "Валюта КР", 60));
+        result.addColumn(new Column("AMNT_CR", DECIMAL, "Сумма КР", 100));
+        result.addColumn(new Column("AMNTBC_CR", DECIMAL, "Сумма в руб. КР", 100));
+        result.addColumn(new Column("NRT", STRING, "Описание", 500, false, false));
+        result.addColumn(new Column("RNARSHT", STRING, "Основание RUS", 200, false, false));
+        result.addColumn(col = new Column("STRN", STRING, "Сторно", 40));
+        col.setList(yesNoList);
+        result.addColumn(col = new Column("FCHNG", STRING, "Исправительная", 40));
+        col.setList(yesNoList);
+        result.addColumn(new Column("DEPT_ID", STRING, "Подразделение", 60));
+
 
         return result;
     }
@@ -224,7 +252,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
         private boolean isDebit;
         public NewOperationAccAction(OperationDlg.Side side) {
-            super(AccountFormTech.this.grid, ImageConstants.INSTANCE.oper_go());
+            super(PostingFormTech2.this.grid, ImageConstants.INSTANCE.oper_go());
             isDebit = side.equals(DEBIT);
         }
 
@@ -234,12 +262,10 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
             if (row == null) return null;
 
             Columns columns = grid.getTable().getColumns();
-            String bsaAcid = (String)row.getField(columns.getColumnIndexByName("BSAACID")).getValue();
-            String ccy = (String)row.getField(columns.getColumnIndexByName("CCY")).getValue();
-            String filial = (String)row.getField(columns.getColumnIndexByName("CBCC")).getValue();
-            String dealId = (String)row.getField(columns.getColumnIndexByName("DEALID")).getValue();
-            String subDealId = (String)row.getField(columns.getColumnIndexByName("SUBDEALID")).getValue();
-            String dealSounce = (String)row.getField(columns.getColumnIndexByName("DEALSRS")).getValue();
+            String bsaAcid = (String)row.getField(columns.getColumnIndexByName("BSAACID_DR")).getValue();
+            String ccy = (String)row.getField(columns.getColumnIndexByName("CCY_DR")).getValue();
+            String filial = (String)row.getField(columns.getColumnIndexByName("FILIAL_DR")).getValue();
+            String dealId = (String)row.getField(columns.getColumnIndexByName("DEAL_ID")).getValue();
 
             ManualOperationWrapper wrapper = new ManualOperationWrapper();
             wrapper.setCurrencyDebit(ccy);
@@ -251,9 +277,6 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
             } else {
                 wrapper.setAccountCredit(bsaAcid);
             }
-            wrapper.setDealSrc(dealSounce);
-            wrapper.setDealId(dealId);
-            wrapper.setSubdealId(subDealId);
             return wrapper;
         }
     }

@@ -12,6 +12,7 @@ import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
+import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
 import ru.rbt.barsgl.gwt.client.account_ofr.OfrAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
@@ -28,6 +29,7 @@ import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
 import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
+import ru.rbt.barsgl.gwt.client.pd.PostingFormTech2;
 import ru.rbt.barsgl.gwt.client.security.AppUserForm;
 import ru.rbt.barsgl.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
@@ -198,6 +200,12 @@ public class MenuBuilder {
                     formLoad(new AccountForm());
                 }
             });
+            case CBAccountTH: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountFormTech());
+                }
+            });
             case Operation: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
@@ -208,6 +216,12 @@ public class MenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new PostingForm());
+                }
+            });
+            case PostingTH: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PostingFormTech2());
                 }
             });
             case OperSemiposting: return new MenuItem(wrapper.getMenuName(), false, new Command() {

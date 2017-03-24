@@ -938,14 +938,15 @@ public class EtlMessageTest extends AbstractTimerJobTest {
      * Тестовый метод проверки работы с техническими счетами
      */
     @Test public void testTechAccountPostingProcessor() throws ParseException {
-        Date curDate = new Date(); //DateUtils.parseDate("2017-02-10","yyyy-MM-dd");
 
-        //setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
-        //updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+        Operday oldOperday = getOperday();
+        Date curDate = DateUtils.parseDate("2017-03-13","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
         //Добавление нового курса
-        //CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
-        //baseEntityRepository.save(currencyRate);
+        CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
+        baseEntityRepository.save(currencyRate);
 
         List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
@@ -953,33 +954,16 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         //Удаление записей по техничесим с счетам.
         //this.clearTechRecords();
-/*
-        EtlPosting pst_1 = this.getPosting_RUR_RUR();
 
-        //Проверяем проводки RUR -> RUR
-        pst_1 = (EtlPosting) baseEntityRepository.save(pst_1);
-
-        GLOperation operation_1 = (GLOperation) postingController.processMessage(pst_1);
-        Assert.assertNotNull(operation_1);
-        Assert.assertTrue(0 < operation_1.getId());
-        operation_1 = (GLOperation) baseEntityRepository.findById(operation_1.getClass(), operation_1.getId());
-        Assert.assertEquals(OperState.POST, operation_1.getState());
-
-        Assert.assertEquals(getOperday().getCurrentDate(), operation_1.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation_1.getLastWorkdayStatus());
-
-*/
-
-
-        EtlPosting pst_2 = this.getPosting_USD_RUR();
+        EtlPosting pst_2 = this.getPosting_RUR_RUR();
         pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
         GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
         Assert.assertNotNull(operation_2);
         Assert.assertTrue(0 < operation_2.getId());
         operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
         Assert.assertEquals(OperState.POST, operation_2.getState());
-        Assert.assertEquals(getOperday().getCurrentDate(), operation_2.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation_2.getLastWorkdayStatus());
+        //Assert.assertEquals(getOperday().getCurrentDate(), operation_2.getCurrentDate());
+        //Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation_2.getLastWorkdayStatus());
 
         //Проверяем наличие счёта по дебету
         List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
@@ -991,7 +975,59 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
         Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
     }
+
+
+    @Test public void testNotTechAccountPostingProcessor() throws ParseException {
+
+        //Operday oldOperday = getOperday();
+        //Date curDate = DateUtils.parseDate("2017-03-13","yyy-MM-dd");
+        //setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        //updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+        //Добавление нового курса
+         //CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
+         //baseEntityRepository.save(currencyRate);
+
+        //List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
+        //Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
+
+
+        //Удаление записей по техничесим с счетам.
+        //this.clearTechRecords();
+
+
+        EtlPackage pkg = (EtlPackage)baseEntityRepository.findById(EtlPackage.class,147252L);
+        List<EtlPosting> listPst = baseEntityRepository.select(EtlPosting.class,"from EtlPosting p where p.etlPackage = ?1",pkg);
+        EtlPosting pst_2 = listPst.get(0);
+        pst_2.setErrorCode(null);
+        //pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
+        GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
+        Assert.assertNotNull(operation_2);
+        Assert.assertTrue(0 < operation_2.getId());
+        operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
+        Assert.assertEquals(OperState.POST, operation_2.getState());
+        //Assert.assertEquals(getOperday().getCurrentDate(), operation_2.getCurrentDate());
+        //Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation_2.getLastWorkdayStatus());
+
+        //Проверяем наличие счёта по дебету
+        List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
+        Assert.assertFalse("Отсутствует и не создан счёт по дебету.",accListDebit.isEmpty());
+
+        //Проверяем наличе счёта по кредиту
+        List<GLAccount> accListCredit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountCredit());
+        Assert.assertFalse("Отсутствует и не создан счёт по кредиту.",accListCredit.isEmpty());
+
+        //List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
+        //Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        //setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+        //updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+    }
+
 
     private EtlPosting getPosting_USD_RUR() throws ParseException {
         long stamp = System.currentTimeMillis();
@@ -1137,7 +1173,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         File f = new File("c:\\Projects\\GL_ETLPST_20170320_02.xlsx");
         Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());
-        final int ROW_NUMBER = 9;  //номер строки начиная с данных. Первая строка считается нулевой (заголовок).
+        final int ROW_NUMBER = 1;  //номер строки начиная с данных. Первая строка считается нулевой (заголовок).
 
         if (f.exists()) {
 
@@ -1217,3 +1253,4 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         return pst;
     }
 }
+;
