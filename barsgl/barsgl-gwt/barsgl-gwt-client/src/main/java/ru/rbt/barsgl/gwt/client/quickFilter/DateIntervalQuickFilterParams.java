@@ -11,9 +11,9 @@ import java.util.Date;
  * Created by akichigi on 03.06.16.
  */
 public class DateIntervalQuickFilterParams implements IQuickFilterParams{
-    private Date dateBegin;
-    private Date dateEnd;
-    private Column dateColumn;
+    protected Date dateBegin;
+    protected Date dateEnd;
+    protected Column dateColumn;
 
     public DateIntervalQuickFilterParams(Column dateColumn){
         this.dateColumn = dateColumn;

@@ -2,14 +2,14 @@ package ru.rbt.barsgl.ejb.entity.etl;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 
 /**
  * Created by ER18837 on 29.04.15.
+ * @deprecated не используется
  */
 @Embeddable
-@MappedSuperclass
+//@MappedSuperclass
 public class EtlAccountId implements Serializable {
 
     @Column(name = "ID_PKG")

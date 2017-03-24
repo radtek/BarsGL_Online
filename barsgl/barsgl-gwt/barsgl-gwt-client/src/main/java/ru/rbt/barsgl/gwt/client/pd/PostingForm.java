@@ -84,12 +84,14 @@ public class PostingForm extends MDForm {
 
     @Override
     protected String prepareMasterSql() {
-        return "select * from V_GL_PDLINK " + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
+        return "select * from (select a.*, a.BSAACID_DR || ' ' || a.BSAACID_CR as DR_CR from V_GL_PDLINK as a) tl "
+                + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
+        //return "select * from V_GL_PDLINK " + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
     }
 
     @Override
     protected Table prepareMasterTable() {
-        return prepareTable();
+        return prepareTable(true);
     }
 
     @Override
@@ -99,7 +101,7 @@ public class PostingForm extends MDForm {
 
     @Override
     protected Table prepareDetailTable() {
-        return prepareTable();
+        return prepareTable(false);
     }
 
     @Override
@@ -111,7 +113,7 @@ public class PostingForm extends MDForm {
     }
 
 
-    protected Table prepareTable() {
+    private Table prepareTable(boolean forMasterTable) {
     /*
 	PAR_GLO, GLOID, INP_METHOD, SRC_PST, FAN, STRN, STRN_GLO,
 	POST_TYPE, PCID, ID_DR, ID_CR,
@@ -127,8 +129,8 @@ public class PostingForm extends MDForm {
         Column col;
 
         HashMap<Serializable, String> yesNoList = getYesNoList();
-        result.addColumn(colGloid = new Column("PAR_GLO", LONG, "ID осн. операции", 70));
-        result.addColumn(new Column("GLOID", LONG, "ID операции", 70, false, false));
+        result.addColumn(new Column("GLOID", LONG, "ID операции", 70));
+        result.addColumn(colGloid = new Column("PAR_GLO", LONG, "ID осн. операции", 70, false, false));
         result.addColumn(col = new Column("INP_METHOD", STRING, "Способ ввода", 50));
         col.setList(getEnumLabelsList(InputMethod.values()));
 
@@ -187,10 +189,16 @@ public class PostingForm extends MDForm {
         fanIndex = result.addColumn(col = new Column("FAN", STRING, "Веер", 40));
         col.setList(yesNoList);
         fanTypeIndex = result.addColumn(new Column("FAN_TYPE", STRING, "Тип веерной проводки", 40, false, false));
+        result.addColumn(new Column("FAN_GLO", LONG, "ID операции веера", 70, false, false));
         result.addColumn(new Column("GLO_DR", LONG, "ID операции ДБ", 70, false, false));
         result.addColumn(new Column("GLO_CR", LONG, "ID операции КР", 70, false, false));
         result.addColumn(col = new Column("PDMODE", STRING, "Режим записи", 70, false, false));
-        col.setList(getArrayValuesList(new String[] {"BUFFER", "DIRECT"}));
+        col.setList(getArrayValuesList(new String[]{"BUFFER", "DIRECT"}));
+        //вычисляемое поле для фильтра по условию "ИЛИ"
+        if (forMasterTable){
+            result.addColumn(new Column("DR_CR", STRING, "Счета Дт/Кр", 70, false, false));
+        }
+
         return result;
     }
 

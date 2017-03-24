@@ -10,8 +10,10 @@ import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.enums.Repository;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.*;
+import javax.naming.InitialContext;
 import javax.persistence.*;
 import javax.sql.DataSource;
 import javax.transaction.TransactionSynchronizationRegistry;
@@ -32,23 +34,27 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     public static final int MAX_ROWS = 1000;
 
-    @PersistenceContext(unitName="GLAS400DataSource")
+    @PersistenceContext(unitName="GLOracleDataSource")
     protected EntityManager persistence;
 
     @PersistenceContext(unitName="RepAS400DataSource")
     protected EntityManager barsrepPersistence;
 
-    @Resource(mappedName="/jdbc/As400GL")
+//    @Resource(mappedName="/jdbc/As400GL")
+//    @Resource(mappedName="/jdbc/OracleGL")
     private DataSource dataSource;
 
-    @Resource(mappedName="/jdbc/As400Rep")
+//    @Resource(mappedName="/jdbc/As400Rep")
     private DataSource  barsrepDataSource;
 
     @Resource
-    private EJBContext context;
+    EJBContext context;
 
     @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
     private TransactionSynchronizationRegistry trx;
+
+    @Resource
+    private SessionContext sessionContext;
 
     private static final Logger log = Logger.getLogger(AbstractBaseEntityRepository.class);
 
@@ -483,6 +489,21 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
                 return barsrepDataSource;
             default:
                 throw new Exception("Неизвестный репозиторий: " + repository.name());
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        dataSource = findConnection("/jdbc/OracleGL");
+        barsrepDataSource = findConnection("/jdbc/As400Rep");
+    }
+
+    private DataSource findConnection(String jndiName) {
+        try {
+            InitialContext c = new InitialContext();
+            return  (DataSource) c.lookup(jndiName);
+        } catch (Throwable e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 

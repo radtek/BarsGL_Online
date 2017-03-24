@@ -1,10 +1,5 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
-import com.ibm.jms.JMSBytesMessage;
-import com.ibm.jms.JMSMessage;
-import com.ibm.jms.JMSTextMessage;
-import com.ibm.mq.jms.*;
-import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -17,10 +12,8 @@ import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
 
 import javax.ejb.EJB;
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import javax.jms.*;
 import javax.jms.Queue;
-import javax.jms.Session;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 
 import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.MovementCreate;
+import ru.rbt.barsgl.ejb.jms.MessageContext;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 
@@ -47,8 +42,8 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
  */
 public class MovementCreateProcessor {
     private static final Logger log = Logger.getLogger(MovementCreateProcessor.class.getName());
-    private static final String PROP_ATTEMPTS = "mvmt.attempts";
-    private static final String MC_QUEUES_PARAM = "mc.queues.param";
+    private static final String PROP_ATTEMPTS = "mc.attempts";
+    private static final String PROP_MVMTDEBUG = "mc.debug";
 
     @EJB
     private AuditController auditController;
@@ -59,10 +54,11 @@ public class MovementCreateProcessor {
     @EJB
     private PropertiesRepository propertiesRepository;
 
+    private QueueProperties queueProperties = null;
+
     public static final String SYSTEM_CODE = "BARSGL";
     public static final String EXT_OPERATION_CODE = "PAY";
     public static final String PRIORITY = "5";
-    public static final String DIRECTION = "D";
 
     private static final long ATTEMPTS = 3600;
     private static final int PERIOD = 1000;
@@ -101,10 +97,44 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 );
      */
 
+    public int getAttempls() {
+        return (int)(long)propertiesRepository.getNumberDef(PROP_ATTEMPTS, ATTEMPTS);
+    }
+
+    private boolean isMovementDebug() {
+        return "Y".equals(propertiesRepository.getStringDef(PROP_MVMTDEBUG, "N").toUpperCase());
+    }
+
+/*
     public void process(List<MovementCreateData> mcdList) {
+        try {
+            loadQueueProperties();
+            if (queueProperties == null) {
+                auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate. Неполные данные для подключения к очередям", null, "");
+                throw new IllegalArgumentException();
+            }
+
+            sendRequests(mcdList);
+            if ("yes".equals(queueProperties.local)) {
+                putTestAnswer();
+            }
+            receiveResponses(mcdList);
+        } catch (Exception e) {
+            log.info("MovementCreate ", e);
+            auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate.", null, e);
+            for (MovementCreateData item : mcdList) {
+                item.setErrType(MovementErrorTypes.ERR_REQUEST);
+                item.setState(MovementCreateData.StateEnum.ERROR);
+            }
+        }
+    }
+*/
+
+    @Deprecated
+    public void processOld(List<MovementCreateData> mcdList) {
 
         try {
-            loadProperties();
+            loadQueueProperties();
             if (queueProperties == null) {
                 auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate. Неполные данные для подключения к очередям", null, "");
                 throw new IllegalArgumentException();
@@ -129,6 +159,238 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             }
         }
     }
+
+    private void sendRequestsDebug(List<MovementCreateData> mcdList) {
+        for (MovementCreateData item : mcdList) {
+            responseStorage.put(item.getMessageUUID(), item);
+        }
+        return;
+    }
+
+    private List<MovementCreateData> receiveResponsesDebug() {
+        List<MovementCreateData> mcdList = new ArrayList<>();
+        for (Map.Entry<String, MovementCreateData> entry : responseStorage.entrySet()) {
+            MovementCreateData item = entry.getValue();
+            MovementCreateData.StateEnum res = MovementCreateData.StateEnum.SUCCESS;
+            MovementErrorTypes errType = null;
+            String errDescr = null;
+            if (item.getDealId().equals("TIMEOUT")) {
+                continue;
+            } else if (item.getDealId().equals("ERROR")) {
+                res = MovementCreateData.StateEnum.ERROR;
+                errType = MovementErrorTypes.ERR_SERVICE;
+                errDescr = "Error";
+            } else if (item.getDealId().equals("REFUSE")) {
+                res = MovementCreateData.StateEnum.ERROR;
+                errType = MovementErrorTypes.ERR_BUSINESS;
+                errDescr = "Insufficient balance";
+            }
+            // В MovementCreateData заполненяем только: messageUUID, state, errType, errDescr, blockId
+            MovementCreateData mcd = new MovementCreateData();
+            mcd.setBlockId(item.getBlockId());
+            mcd.setMessageUUID(item.getMessageUUID());
+            mcd.setState(res);
+            mcd.setErrType(errType);
+            mcd.setErrDescr(errDescr);
+            mcdList.add(mcd);
+            log.info(String.format("MC Message UUID '%s' received", mcd.getMessageUUID()));
+        }
+        responseStorage.clear();
+        return mcdList;
+    }
+
+    public void sendRequests(List<MovementCreateData> mcdList) {
+        try {
+            if (isMovementDebug()) {
+                sendRequestsDebug(mcdList);
+                return;
+            }
+            loadQueueProperties();
+            if (queueProperties == null) {
+                auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate. Неполные данные для подключения к очередям", null, "");
+                throw new IllegalArgumentException();
+            }
+
+            // Формируем конверты запросов
+            for (MovementCreateData item : mcdList) {
+                createOneEnvelope(item);
+            }
+            // Debug if local
+            sendEnvelops(mcdList);
+        } catch (Exception e) {
+            log.info("MovementCreate ", e);
+            auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate.", null, e);
+            for (MovementCreateData item : mcdList) {
+                if (item.getState() == null || isEmpty(item.getState().toString())) {
+                    item.setErrType(MovementErrorTypes.ERR_REQUEST);
+                    item.setState(MovementCreateData.StateEnum.ERROR);
+                    item.setErrDescr(e.getMessage());
+                }
+            }
+            throw new DefaultApplicationException(e);
+        }
+    }
+
+    /**
+     * Это вариант ЛК, получаем все что есть и возвращаем
+     */
+    public List<MovementCreateData> receiveResponses() {
+        try {
+            if (isMovementDebug()) {
+                return receiveResponsesDebug();
+            }
+            loadQueueProperties();
+            if (queueProperties == null) {
+                auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate. Неполные данные для подключения к очередям", null, "");
+                throw new IllegalArgumentException();
+            }
+
+            return receiveAllResponses();
+        } catch (Exception e) {
+            log.info("MovementCreate ", e);
+            auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate.", null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private List<MovementCreateData> receiveAllResponses() throws JMSException, Exception {
+        List<MovementCreateData> mcdList = new ArrayList<>();
+        try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr),
+                queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
+            messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
+            MessageConsumer messageConsumer = messageContext.createConsumer(queue);
+
+            messageContext.start();
+
+            while (true) {
+                String[] messageParts = readFromJMS(messageConsumer);
+                if (isEmpty(messageParts[1])) {
+                    break;
+                } else {
+                    String messageID = getMessageUUID(messageParts);
+                    auditController.stat(MovementCreate, "Service answer", messageParts[1], messageID);
+
+                    // Есть ID по которому можно найти запрос?
+                    if (isEmpty(messageID)) {
+                        // не можем найти запрос для данного ответа
+                        auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageID);
+                    } else {
+//                        responseStorage.put(messageID,messageParts);
+                        String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
+                        MovementCreateData mcd = new MovementCreateData();
+                        parseResponse(envelopeParts[0], mcd);
+                        mcd.setMessageUUID(messageID);
+                        mcdList.add(mcd);
+                        log.info(String.format("MC: message UUID = '%s' parsed", messageID));
+                    }
+                }
+            }
+
+            messageConsumer.close();
+        }
+        return mcdList;
+    }
+
+    /**
+     * Это для полностью асинхронного варианта
+     * @param receivedMessage
+     * @return
+     * @throws JMSException
+     */
+    public MovementCreateData getMovementCreateData(Message receivedMessage) throws JMSException{
+        MovementCreateData mcd = null;
+
+        String [] messageParts = parseMessage(receivedMessage);
+
+        if(!isEmpty(messageParts[1])){
+
+            String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
+            String messageUUID = isEmpty(messageParts[0]) ? envelopeParts[1] : messageParts[0];
+
+            if (!isEmpty(messageUUID)) {
+                mcd = new MovementCreateData();
+
+                mcd.setMessageUUID(messageUUID);
+                auditController.stat(MovementCreate, "Service answer", messageParts[1], messageUUID);
+
+                parseResponse(envelopeParts[0], mcd);
+            }else{
+                // не можем найти запрос для данного ответа
+                auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageUUID);
+            }
+        }
+
+        return mcd;
+    }
+
+    /**
+     * Это Женин вариант
+     * предполагает, что на входе список запросов, ожидающих ответы
+     */
+/*    public void receiveResponses(List<MovementCreateData> mcdList) {
+        try {
+            loadQueueProperties();
+            if (queueProperties == null) {
+                auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate. Неполные данные для подключения к очередям", null, "");
+                throw new IllegalArgumentException();
+            }
+
+            receiveAllResponses();
+            parseAllResponses(mcdList);
+        } catch (Exception e) {
+            log.info("MovementCreate ", e);
+            auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate.", null, e);
+            for (MovementCreateData item : mcdList) {
+                if (item.getState() == null || isEmpty(item.getState().toString()) || MovementCreateData.StateEnum.SENT.equals(item.getState())) {
+                    item.setErrType(MovementErrorTypes.ERR_REQUEST);
+                    item.setState(MovementCreateData.StateEnum.ERROR);
+                }
+            }
+        }
+    }
+
+    private void receiveAllResponses() throws JMSException, Exception {
+        try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
+            messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
+            MessageConsumer messageConsumer = messageContext.createConsumer(queue);
+
+            messageContext.start();
+
+            while (true) {
+                String[] messageParts = readFromJMS(messageConsumer);
+                if (isEmpty(messageParts[1])) {
+                    break;
+                } else {
+                    String messageID = getMessageUUID(messageParts);
+                    auditController.stat(MovementCreate, "Service answer", messageParts[1], messageID);
+
+                    // Есть ID по которому можно найти запрос?
+                    if (isEmpty(messageID)) {
+                        // не можем найти запрос для данного ответа
+                        auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageID);
+                    } else {
+                        responseStorage.put(messageID,messageParts);
+                    }
+                }
+            }
+
+            messageConsumer.close();
+        }
+    }
+
+    private void parseAllResponses(List<MovementCreateData> mcdList) {
+        for (MovementCreateData mcd : mcdList) {
+            String[] messageParts = responseStorage.get(mcd.getMessageUUID());
+            if (messageParts != null) {
+                String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
+                parseResponse(envelopeParts[0], mcd);
+                responseStorage.remove(mcd.getMessageUUID());
+                auditController.stat(MovementCreate, "Service answer from Storage", messageParts[1], mcd.getMessageUUID());
+            }
+        }
+    }*/
 
     private class QueueProperties {
         String mqHost;
@@ -176,14 +438,12 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         return queueProperties;
     }
 
-    private QueueProperties queueProperties = null;
-
-    private void loadProperties() throws SQLException, IOException, ExecutionException {
-        String strProp = propertiesRepository.getString(MC_QUEUES_PARAM);
+    private void loadQueueProperties() throws SQLException, IOException, ExecutionException {
+        String strProp = propertiesRepository.getString(PropertyName.MC_QUEUES_PARAM.getName());
         if(isEmpty(strProp)){
           throw new IllegalArgumentException("No data in table GL_PRPRP for ID_PRP='mc.queues.param'");
         }
-
+        
         Properties properties = new Properties();
         properties.load(new ByteArrayInputStream(strProp.getBytes("UTF-8")));
 
@@ -191,56 +451,56 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
     }
 
     // Debug "server"
-    private void putTestAnswer() throws JMSException {
-        MQQueueConnectionFactory cf = configMQCF();
+    public void putTestAnswer() throws JMSException, Exception {
+      try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
+        messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queueOut = messageContext.createQueue("queue:///" + queueProperties.mqQueueOut);
+        MessageConsumer messageConsumer = messageContext.createConsumer(queueOut);
 
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueProperties.mqQueueInc);
-        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
+        messageContext.start();
 
-        MQQueue queueErr = (MQQueue) session.createQueue("queue:///" + queueProperties.mqQueueInc);
-        MQQueueSender senderErr = (MQQueueSender) session.createSender(queueErr);
+        String[] fromOperator = readFromJMS(messageConsumer);
 
-        MQQueue queueOut = (MQQueue) session.createQueue("queue:///" + queueProperties.mqQueueOut);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queueOut);
+        Queue queue = null;
+        MessageProducer sender = null;
+//        if (Math.random() > 0.2) {
+//        if(true){
+          TextMessage message = messageContext.createTextMessage();
 
-        connection.start();
-
-        String[] fromOperator = readFromJMS(receiver);
-
-        if (false && Math.random() > 0.2) {
-            JMSTextMessage message = (JMSTextMessage) session.createTextMessage();
             message.setText(incomingExample);
             message.setJMSReplyTo(queueOut);
 
             if (fromOperator != null && fromOperator.length == 3) {
-                queue = (MQQueue) session.createQueue(fromOperator[2]);
-                sender = (MQQueueSender) session.createSender(queue);
+            queue = messageContext.createQueue(fromOperator[2]);
+            sender = messageContext.createProducer(queue);
                 message.setJMSCorrelationID(fromOperator[0]);
+          }else{
+            queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
+            sender = messageContext.createProducer(queue);
             }
-
             sender.send(message);
             System.out.println("Test answer sent");
-
-        } else {
-            JMSTextMessage message = (JMSTextMessage) session.createTextMessage();
-            message.setText(doubleError/*errorExample2*/);
-            if (fromOperator != null) {
-                message.setJMSCorrelationID(fromOperator[0]);
+//        } else {
+//            JMSTextMessage message = (JMSTextMessage) session.createTextMessage();
+//            message.setText(doubleError/*errorExample2*/);
+//            if (fromOperator != null) {
+//                message.setJMSCorrelationID(fromOperator[0]);
+//            }
+//            senderErr.send(message);
+//            System.out.println("Test error sent");
+//        }
+//
+          sender.close();
+//        senderErr.close();
             }
-            senderErr.send(message);
-            System.out.println("Test error sent");
         }
 
-        sender.close();
-        senderErr.close();
-        session.close();
-        connection.close();
+    private String[] readFromJMS(MessageConsumer receiver) throws JMSException {
+        Message receivedMessage = receiver.receiveNoWait();//receive(10000);
+        return parseMessage(receivedMessage);
     }
 
-    private String[] readFromJMS(MQMessageConsumer receiver) throws JMSException {
-        JMSMessage receivedMessage = (JMSMessage) receiver.receiveNoWait();//receive(10000);
+    private String[] parseMessage(Message receivedMessage) throws JMSException {
         if (receivedMessage == null) {
             return new String[]{null, null, null};
         }
@@ -255,10 +515,10 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             }
         }
 
-        if (receivedMessage instanceof JMSTextMessage) {
-            textMessage = ((JMSTextMessage) receivedMessage).getText();
-        } else if (receivedMessage instanceof JMSBytesMessage) {
-            JMSBytesMessage bytesMessage = (JMSBytesMessage) receivedMessage;
+      if (receivedMessage instanceof TextMessage) {
+        textMessage = ((TextMessage) receivedMessage).getText();
+      } else if (receivedMessage instanceof BytesMessage) {
+        BytesMessage bytesMessage = (BytesMessage) receivedMessage;
 
             int length = (int) bytesMessage.getBodyLength();
             byte[] incomingBytes = new byte[length];
@@ -281,22 +541,21 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         return new String[]{correlationID, textMessage, destinationStr};
     }
 
-    private void receiveEnvelops(List<MovementCreateData> mcdList) throws JMSException, JAXBException {
+    @Deprecated
+    private void receiveEnvelops(List<MovementCreateData> mcdList) throws JMSException, JAXBException, Exception {
 //        auditController.info(MovementCreate, "Messages receiving");
-        MQQueueConnectionFactory cf = configMQCF();
+      try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {        
+        messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
+        MessageConsumer messageConsumer = messageContext.createConsumer(queue);
 
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueProperties.mqQueueInc);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
-
-        connection.start();
+        messageContext.start();
 
         int completed = 0;
-        Long att = propertiesRepository.getNumberDef(PROP_ATTEMPTS, ATTEMPTS);
+        int att = getAttempls();
         for (int i = 0; i < att && completed < mcdList.size(); i++) {
             while (true) {
-                int ret = receiveMessage(receiver, mcdList);
+            int ret = receiveMessage(messageConsumer, mcdList);
                 if (ret == 2) {
                     completed++;
                     if (completed >= mcdList.size()) {
@@ -328,9 +587,8 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             }
         }
 
-        receiver.close();
-        session.close();
-        connection.close();
+        messageConsumer.close();
+    }
     }
 
     private Map<String, String> readFromXML(String bodyXML/*, Long jId*/) throws Exception {
@@ -399,8 +657,16 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         return answerMap;
     }
 
+    private String getMessageUUID(String[] messageParts){
+      String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
+
+      String messageUUID = isEmpty(messageParts[0]) ? envelopeParts[1] : messageParts[0];      
+      
+      return messageUUID;
+    }
+    
     // Message queue
-    private int receiveMessage(MQQueueReceiver receiver, List<MovementCreateData> mcdList) throws JMSException {
+    private int receiveMessage(MessageConsumer receiver, List<MovementCreateData> mcdList) throws JMSException {
         String[] messageParts = readFromJMS(receiver);
         if (!isEmpty(messageParts[1])) {
             //Парсим
@@ -410,21 +676,21 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 
             String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
 
-            String messageID = isEmpty(messageParts[0]) ? envelopeParts[1] : messageParts[0];
+            String messageUUID = isEmpty(messageParts[0]) ? envelopeParts[1] : messageParts[0];      
 
-            auditController.stat(MovementCreate, "Service answer", messageParts[1], messageID);
+            auditController.stat(MovementCreate, "Service answer", messageParts[1], messageUUID);
 
             // Есть ID по которому можно найти запрос?
-            if (isEmpty(messageID)) {
+            if (isEmpty(messageUUID)) {
                 // не можем найти запрос для данного ответа
-                auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageID);
+                auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageUUID);
                 return 1;//continue;
             }
 
-            // Ждём ли мы ответ для полученного messageID
+            // Ждём ли мы ответ для полученного messageUUID
             MovementCreateData item = null;
             for (MovementCreateData mcd : mcdList) {
-                if (messageID.equals(mcd.getMessageUUID())) {
+                if (messageUUID.equals(mcd.getMessageUUID())) {
                     item = mcd;
                     break;
                 }
@@ -434,13 +700,13 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             // item == null -> не можем найти запрос для данного ответа
             if (item != null) {
                 //
-//                auditController.stat(MovementCreate, "Parse directly", messageParts[1], messageID);
+//                auditController.stat(MovementCreate, "Parse directly", messageParts[1], messageUUID);
                 parseResponse(envelopeParts[0], item);
                 return 2;
             } else {
                 // Записать в storage
-                if (!messageID.startsWith("ID:")) {
-                    responseStorage.put(messageID, messageParts);
+                if (!messageUUID.startsWith("ID:")) {
+//                    responseStorage.put(messageUUID, messageParts);   // TODO
 //                    auditController.stat(MovementCreate, "Save to storage", Arrays.toString(responseStorage.entrySet().toArray()));
                 } else {
                     auditController.stat(MovementCreate, "Nodata message received", messageParts[1]);
@@ -449,6 +715,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         } else {
             // Проверить storage
             MovementCreateData item = null;
+/*
             for (MovementCreateData mcd : mcdList) {
                 messageParts = responseStorage.get(mcd.getMessageUUID());
                 if (messageParts != null) {
@@ -460,6 +727,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
                     return 2;
                 }
             }
+*/
         }
         return 3;//break;
     }
@@ -533,6 +801,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             description = (String) xPath.evaluate("./ErrorDescription", mvment, XPathConstants.STRING);
             String message = ((!isEmpty(abs) ? abs + ": " : "") + (!isEmpty(source) ? source + ": " : "") + (!isEmpty(description) ? description : "")).replaceAll("\\s+"," ");
             item.setErrDescr(isEmpty(item.getErrDescr())?message:item.getErrDescr()+" \n"+message);
+//            item.setErrDescr(((!isEmpty(abs) ? abs + ": " : "") + (!isEmpty(source) ? source + ": " : "") + (!isEmpty(description) ? description : "")).replaceAll("\\s+", " "));
         }
 
     }
@@ -560,7 +829,8 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
     private void createOneEnvelope(MovementCreateData item) {
         try {
             String body = fillMovementData(item);
-            item.setMessageUUID(ifEmpty(item.getOperIdD(), "") + "." + ifEmpty(item.getOperIdC(), "")); //+"."+UUID.randomUUID().toString().substring(0,6));
+            // TODO перенесено в ManualPostingController
+//            item.setMessageUUID(ifEmpty(item.getOperIdD(), "") + "." + ifEmpty(item.getOperIdC(), "")); //+"."+UUID.randomUUID().toString().substring(0,6));
             item.setEnvelopOutcoming(createSOAPEnvelop(body, item.getMessageUUID()));
         } catch (JAXBException e) {
             log.info("", e);
@@ -568,32 +838,30 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         }
     }
 
-    private void sendEnvelops(List<MovementCreateData> envelopes) throws JMSException, UnsupportedEncodingException {
-        MQQueueConnectionFactory cf = configMQCF();
+    private void sendEnvelops(List<MovementCreateData> envelopes) throws JMSException, UnsupportedEncodingException, Exception {
+      try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
+        messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueOut);        
+        MessageProducer messageProducer = messageContext.createProducer(queue);
+        Queue queueReplyTo = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
 
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueProperties.mqQueueOut);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
-        MQQueue queueReplyTo = (MQQueue) session.createQueue("queue:///" + queueProperties.mqQueueInc);
-        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-
-        connection.start();
+        messageContext.start();
 
         for (MovementCreateData oneEnvelope : envelopes) {
-            JMSTextMessage message = (JMSTextMessage) session.createTextMessage();
+          TextMessage message = messageContext.createTextMessage();
             message.setText(oneEnvelope.getEnvelopOutcoming());
             message.setJMSCorrelationID(oneEnvelope.getMessageUUID());
             message.setJMSReplyTo(queueReplyTo);
-            sender.send(message);
+          messageProducer.send(message);
             auditController.stat(MovementCreate, "Message sent", oneEnvelope.getEnvelopOutcoming(), oneEnvelope.getMessageUUID());
+          oneEnvelope.setState(MovementCreateData.StateEnum.SENT);
         }
 
-        System.out.println("Messages sent");
-        sender.close();
-        session.close();
-        connection.close();
+        messageProducer.close();
+    }
     }
 
+    /*
     private MQQueueConnectionFactory configMQCF() throws JMSException {
         MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
         cf.setHostName(queueProperties.mqHost);
@@ -603,6 +871,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         cf.setChannel(queueProperties.mqChannel);
         return cf;
     }
+    */
 
     private String createSOAPEnvelop(String answerBody, String xRef) throws JAXBException {
         String headerStr =
@@ -697,6 +966,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         sb.append("</ns2:ABSSpecificParameters>");
     }
 
+/*
     public static void main(String[] args) {
         MovementCreateProcessor processor = new MovementCreateProcessor();
         MovementCreateData data = processor.fillTestData();
@@ -704,6 +974,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         datas.add(data);
         processor.process(datas);
     }
+*/
 
     public MovementCreateData fillTestData() {
         MovementCreateData data = new MovementCreateData();

@@ -1,27 +1,20 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
-import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
-import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
-
-import ru.rbt.barsgl.gwt.core.comp.Components;
-import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Created by ER18837 on 29.03.16.
  */
-public class DateQuickFilterDlg extends DlgFrame {
+public class DateQuickFilterDlg extends DateIntervalQuickFilterDlg {
 
-    protected DatePickerBox mDateBegin;
-    protected DatePickerBox mDateEnd;
     private RadioButton[] choiceButton;
     private DateQuickFilterParams filterParams;
 
     public DateQuickFilterDlg() {
         super();
-        ok.setText(TEXT_CONSTANTS.applyBtn_caption());
-        cancel.setText(TEXT_CONSTANTS.btn_cancel());
-        setCaption("Выбор периода просмотра");
     }
 
     @Override
@@ -82,12 +75,5 @@ public class DateQuickFilterDlg extends DlgFrame {
         return panel;
     }
 
-    private Widget createDatePanel() {
-        Grid g1 = new Grid(1, 4);
-        g1.setWidget(0, 0, Components.createLabel("Дата начала"));
-        g1.setWidget(0, 1, mDateBegin = Components.createDateBox());
-        g1.setWidget(0, 2, Components.createLabel("Дата окончания"));
-        g1.setWidget(0, 3, mDateEnd = Components.createDateBox());
-        return g1;
-    }
+
 }

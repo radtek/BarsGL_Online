@@ -6,7 +6,13 @@ package ru.rbt.barsgl.ejb.props;
 public enum PropertyName {
 
     PD_CONCURENCY("pd.cuncurency")
-    , ETLPKG_PROCESS_COUNT("etlpkg.process.count");
+    , ETLPKG_PROCESS_COUNT("etlpkg.process.count")
+    , BATPKG_PROCESS_COUNT("batpkg.process.count")
+    , MANUAL_PROCESS_COUNT("manual.process.count")
+    , BATCH_PROCESS_ALLOWED("manual.process.allowed")
+    , BATPKG_MAXROWS("batpkg.max.count")
+    , MC_QUEUES_PARAM("mc.queues.param")
+    , MC_TIMEOUT("mc.timeout.sec");
 
     private String name;
 

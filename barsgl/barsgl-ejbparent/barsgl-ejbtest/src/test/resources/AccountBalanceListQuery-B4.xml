@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<AccountBalanceListQuery xmlns="urn:ucbru:gbo:v3">
+    <AccountBalanceQuery>
+        <CBAccountNo>47408810220010000045</CBAccountNo>
+    </AccountBalanceQuery>
+    <AccountBalanceQuery>
+        <CBAccountNo>47407840700010060039</CBAccountNo>
+    </AccountBalanceQuery>
+<!--            
+    <AccountBalanceQuery>
+        <AccountNo>000091RUR210700001</AccountNo>
+        <Branch>001</Branch>
+    </AccountBalanceQuery>
+            -->
+    <AccountBalanceQuery>
+        <AccountNo>47407840700010060039</AccountNo>
+        <Branch>001</Branch>
+    </AccountBalanceQuery>
+</AccountBalanceListQuery>

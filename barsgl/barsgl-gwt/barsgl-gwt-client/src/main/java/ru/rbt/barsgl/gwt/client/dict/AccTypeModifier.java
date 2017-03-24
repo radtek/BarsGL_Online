@@ -44,6 +44,7 @@ public class AccTypeModifier extends EditableDictionary<AccTypeModifierWrapper> 
         initProduct = product;
         initSubProduct = subproduct;
         title.setText(Utils.Fmt(FORM_NAME, section, product, subproduct));
+        exportToExcel.setFormTitle(title.getText());
         reconfigure();
     }
 

@@ -72,7 +72,7 @@ public class OperInpConfirmForm extends OperBase {
     @Override
     protected String getSelectClause() {
         return "select PST.ID, PST.GLOID_REF, PST.STATE, PST.ECODE, PST.ID_PKG, PST.NROW, " +
-                "PST.INVISIBLE, PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.OTS_SRV, PST.SRC_PST, " +
+                "PST.INVISIBLE, PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.SEND_SRV, PST.OTS_SRV, PST.SRC_PST, " +
                 "PST.DEAL_ID, PST.SUBDEALID, PST.PMT_REF, PST.PROCDATE, PST.VDATE, PST.POSTDATE, " +
                 "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +
                 "PST.AMTRU, PST.NRT, PST.RNRTL, PST.RNRTS, PST.DEPT_ID, PST.PRFCNTR, PST.FCHNG, PST.EMSG, " +
@@ -93,6 +93,7 @@ public class OperInpConfirmForm extends OperBase {
         _backward.setVisible(_step.isControlStep() || _step.isConfirmStep());
         _sign.setVisible(_step.isControlStep());
         _confirmDate.setVisible(_step.isConfirmStep());
+        _packageStatAction.setVisible(false);
     }
 
     private GridAction createNewOperation() {
@@ -310,21 +311,17 @@ public class OperInpConfirmForm extends OperBase {
         result.addColumn(new Column("EMSG", Column.Type.STRING, "Описание ошибки", 800));
 
         result.addColumn(new Column("USER_NAME", Column.Type.STRING, "Логин 1 руки", 100, false, false));
-        result.addColumn(col = new Column("OTS", Column.Type.DATETIME, "Дата создания", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS", Column.Type.DATETIME, "Дата создания", 130, false, false));
         result.addColumn(new Column("HEADBRANCH", Column.Type.STRING, "Филиал 1 руки", 100, false, false));
         result.addColumn(new Column("USER_AU2", Column.Type.STRING, "Логин 2 руки", 100, false, false));
-        result.addColumn(col = new Column("OTS_AU2", Column.Type.DATETIME, "Дата подписи", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS_AU2", Column.Type.DATETIME, "Дата подписи", 130, false, false));
         result.addColumn(new Column("USER_AU3", Column.Type.STRING, "Логин 3 руки", 100, false, false));
-        result.addColumn(col = new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130, false, false));
         result.addColumn(new Column("USER_CHNG", Column.Type.STRING, "Логин изменения", 100, false, false));
-        result.addColumn(col = new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
-        result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 80));
-        result.addColumn(col = new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 72));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130, false, false));
+        result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 150));
+        result.addColumn(new Column("SEND_SRV", Column.Type.DATETIME, "Запрос в АБС", 120, false, false));
+        result.addColumn(new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 120));
 
         result.addColumn(new Column("DESCRDENY", Column.Type.STRING, "Причина возврата", 300, false, false));
 

@@ -21,7 +21,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.STARTED;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.DELTA_POSTING_INCR;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtIncrement;
@@ -70,7 +70,7 @@ public class StamtUnloadPstIncrementTask implements ParamsAwareRunnable {
                 auditController.info(StamtIncrement, format("Исключаем в текущей выгрузке ранее выгруженные PCID '%s'", unloadController.moveIntrodayHistory()));
                 auditController.info(StamtIncrement, format("Удалено старых данных '%s'", unloadDeltaTask.cleanOld()));
                 auditController.info(StamtIncrement, format("Выгружено инкрем. проводок в STAMT: %s", fillBackvalueIncrPostings(operday)));
-                unloadController.setHeaderStatus(headerId, DwhUnloadStatus.SUCCEDED);
+                unloadController.setHeaderStatus(headerId, SUCCEDED);
             } catch (Throwable e) {
                 unloadController.setHeaderStatus(headerId, DwhUnloadStatus.ERROR);
                 auditController.error(StamtIncrement, format("Ошибка при инкрем. выгрузке проводок в STAMT за %s", dateUtils.onlyDateString(operday)), null, e);
@@ -82,7 +82,7 @@ public class StamtUnloadPstIncrementTask implements ParamsAwareRunnable {
             try {
                 auditController.info(StamtIncrement, format("Выгружено остатков по счетам с проводками backvalue: '%s'"
                         , unloadBalanceTask.fillDataDelta(operday, StamtUnloadBalanceTask.BalanceDeltaMode.InsertUpdate)));
-                unloadController.setHeaderStatus(headerId, DwhUnloadStatus.SUCCEDED);
+                unloadController.setHeaderStatus(headerId, SUCCEDED);
             } catch (Throwable e) {
                 unloadController.setHeaderStatus(headerId, DwhUnloadStatus.ERROR);
                 auditController.error(StamtIncrement, format("Ошибка при инкрем.выгрузке остатков в STAMT за %s", dateUtils.onlyDateString(operday)), null, e);
@@ -96,10 +96,7 @@ public class StamtUnloadPstIncrementTask implements ParamsAwareRunnable {
             try {
                 Assert.isTrue(operdayController.getOperday().getPhase() == ONLINE
                         , () -> new ValidationError(STAMT_INCR_DELTA, format("Операционный день в фазе:  %s, ожидалось %s", operdayController.getOperday().getPhase(), ONLINE)));
-                Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(operday, DELTA_POSTING_INCR, STARTED)
-                        , () -> new ValidationError(STAMT_INCR_DELTA, format("Инкрементальная выгрузка проводок не закончена в '%s'", dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()))));
-                Assert.isTrue(0 == unloadController.getAlreadyHeaderCount(operday, BALANCE_DELTA_INCR, STARTED)
-                        , () -> new ValidationError(STAMT_INCR_DELTA, format("Инкрементальная выгрузка остатков не закончена в '%s'", dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()))));
+                unloadController.checkConsumed();
                 return true;
             } catch (Throwable e) {
                 auditController.error(StamtIncrement, "Задача инкр.выгрузки backvalue не отработала", null, e);

@@ -151,7 +151,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
                         , getWorkprocDate(operdayController.getOperday()))
                         , () -> new ValidationError(ErrorCode.OPERDAY_LDR_STEP_ABSENT, getStepName(jobName, properties)
                                 , dateUtils.onlyDateString(operdayController.getOperday().getLastWorkingDay())));
-                unloadController.checkConsumed(getOperday(properties));
+                unloadController.checkConsumed();
             }
             return true;
         } catch (ValidationError e) {

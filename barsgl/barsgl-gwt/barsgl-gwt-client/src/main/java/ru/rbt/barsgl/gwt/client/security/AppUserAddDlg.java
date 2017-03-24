@@ -335,8 +335,7 @@ public class AppUserAddDlg extends EditableDialog<AppUserWrapper> implements IAf
         
         user.setFilial(check((String) dlbFilialList.getValue(), 
         		"Филиал", "поле не заполнено", new CheckNotEmptyString()));
-        user.setBranch(check((String) dlbBranchList.getValue(),
-                "Подразделение", "поле не заполнено", new CheckNotEmptyString()));
+        user.setBranch((String) dlbBranchList.getValue());
 
         if (action == FormAction.CREATE){
             //Create

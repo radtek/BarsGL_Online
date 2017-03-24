@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.server.rpc.operation;
 
+import ru.rbt.barsgl.ejb.cur_exchng.CurrencyExchangeSupport;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.integr.acc.OfrAccountService;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
@@ -8,7 +9,9 @@ import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 /**
@@ -136,4 +139,17 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
         }.process();
     }
 
+    @Override
+    public RpcRes_Base<CurExchangeWrapper> exchangeCurrency(final CurExchangeWrapper wrapper) throws Exception {
+        return new RpcResProcessor<CurExchangeWrapper>(){
+
+            @Override
+            protected RpcRes_Base<CurExchangeWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<CurExchangeWrapper> res = localInvoker.invoke(CurrencyExchangeSupport.class, "exchange", wrapper);
+                if (res == null) throw new Throwable(Utils.Fmt("Не удалось выполнить пересчет суммы из {0} в {1}",
+                        wrapper.getSourceCurrency(), wrapper.getTargetCurrency()));
+                return res;
+            }
+        }.process();
+    }
 }

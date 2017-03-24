@@ -1,17 +1,23 @@
 package ru.rbt.barsgl.gwt.client.operationTemplate;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
+import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlgBase;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
-import ru.rbt.barsgl.gwt.core.datafields.Columns;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -34,10 +40,38 @@ public class OperationTemplateDlg extends OperationDlgBase {
     protected AreaBox mName;
     protected DataListBox mDealSource;
 
+    private int asyncListCount = 7; /*count async lists:  mDtCurrency; mCrCurrency; mDtFilial; mCrFilial;
+                                                          mDepartment; mProfitCenter; mDealSource*/
+    private HandlerRegistration registration;
+    private Boolean isAsyncListsCached;
+    private Timer timer;
+
+    @Override
+    public void beforeCreateContent(){
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        if (isAsyncListsCached != null && isAsyncListsCached) return;
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
+        //save in local storage sign that async list is already cached
+        LocalDataStorage.putParam("isAsyncListsCached", true);
+    }
+
+    private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
+        return new DataListBoxEventHandler(){
+
+            @Override
+            public void completeLoadData(String dataListBoxId) {
+                //Вызывается после заполнения списка значениями
+                asyncListCount--;
+
+                if (asyncListCount == 0) {
+                    registration.removeHandler();
+                }
+            }
+        };
+    }
 
     @Override
     public Widget createContent() {
-
         mainVP = new VerticalPanel();
         mainVP.setSpacing(15);
 
@@ -54,13 +88,6 @@ public class OperationTemplateDlg extends OperationDlgBase {
         mainVP.add(createDescriptions());
         mainVP.add(createDepartments(false));
 
-        getOperday(new IDataConsumer<OperDayWrapper>() {
-            @Override
-            public void accept(OperDayWrapper wrapper) {
-                operday = DateTimeFormat.getFormat(OperDayGetter.dateFormat).parse(wrapper.getCurrentOD());
-            }
-        });
-
         return mainVP;
     }
 
@@ -69,7 +96,8 @@ public class OperationTemplateDlg extends OperationDlgBase {
         grid.setWidget(0, 0, Components.createLabel("Наименование шаблона", LABEL_WIDTH));
         grid.setWidget(0, 1, mName = Components.createAreaBox(LONG_WIDTH, "40px"));
         grid.setWidget(1, 0, Components.createLabel("Источник сделки"));
-        grid.setWidget(1, 1, mDealSource = createDealSourceListBox("", "100px"));
+        grid.setWidget(1, 1, mDealSource = createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, "100px"));
+        //grid.setWidget(1, 1, mDealSource = createDealSourceListBox("", "100px"));
         return grid;
     };
 
@@ -90,11 +118,11 @@ public class OperationTemplateDlg extends OperationDlgBase {
         mName.setValue(null);
         mDealSource.setValue(null);
 
-        mDtCurrency.setValue(null);
+        mDtCurrency.setSelectValue("RUR");
         mDtFilial.setValue(null);
         mDtAccount.setValue(null);
 
-        mCrCurrency.setValue(null);
+        mCrCurrency.setSelectValue("RUR");
         mCrFilial.setValue(null);
         mCrAccount.setValue(null);
 
@@ -104,12 +132,19 @@ public class OperationTemplateDlg extends OperationDlgBase {
         mProfitCenter.setValue(null);
         setContentEnabled(false);
     }
-    
-    @Override
-    protected void fillContent() {
+
+    protected void fillUp(){
         ok.setEnabled(true);
+
+        getOperday(new IDataConsumer<OperDayWrapper>() {
+            @Override
+            public void accept(OperDayWrapper wrapper) {
+                operday = DateTimeFormat.getFormat(OperDayGetter.dateFormat).parse(wrapper.getCurrentOD());
+            }
+        });
+
         if (null == params)
-        	return;
+            return;
 
         row = (Row) params;
 
@@ -137,6 +172,34 @@ public class OperationTemplateDlg extends OperationDlgBase {
             ok.setEnabled(!sys);
 
             setContentEnabled(action == FormAction.DELETE || sys);
+        }
+    }
+
+    @Override
+    protected void fillContent() {
+        if (isAsyncListsCached != null && isAsyncListsCached){
+            //если закэшировано
+            fillUp();
+            return;
+        }
+
+        if (asyncListCount == 0) {
+            //если закончена обработка списков
+            fillUp();
+        } else {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        fillUp();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
         }
     }
 

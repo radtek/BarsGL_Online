@@ -128,7 +128,7 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
 //        return null;
     }
 
-    private String createOutMessage(Set<String> countsToProcess) {
+    private String createOutMessage(Set<String> countsToProcess) throws Exception {
         List<String> stringList = countsToProcess == null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                                      "<asbo:MasterAccountPositioningBatch xmlns:asbo=\"urn:asbo:barsgl\">\n");
@@ -141,7 +141,7 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
 
     private static final String dohodnik = "70601810";
 
-    private StringBuilder batchCreateOutMessage(List<String> counts) {
+    private StringBuilder batchCreateOutMessage(List<String> counts) throws Exception {
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
         List<DataRecord> glAccRecordsRaw = queryRepository.getGlAccRecords(inCondition, null);
 

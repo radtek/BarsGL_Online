@@ -2,16 +2,16 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.PreCobBatchPostingTask;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
+import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
-import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
+import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -31,12 +31,13 @@ import java.util.Date;
 import java.util.List;
 
 import static ru.rbt.barsgl.ejbtest.BatchMessageTest.loadPackage;
-import static ru.rbt.barsgl.shared.enums.BatchPostStatus.WAITDATE;
 
 /**
  * Created by ER18837 on 04.07.16.
  */
 public class ManualOperationPreCobTest extends AbstractTimerJobTest {
+
+    private final Long USER_ID = 2L;
 
     @Before
     public  void before() {
@@ -46,7 +47,7 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
     @Test
     public void testProcessPostings() throws SQLException {
 
-        // 1.INPUT
+        // 1.CONTROL
         String bsaDt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%1");
         String bsaCt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%3");
         ManualOperationWrapper wrapper1 = newOperationWrapper("А",
@@ -54,113 +55,98 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
                 "MOS", bsaCt1, "AUD", new BigDecimal("161.057")
         );
 
-        wrapper1.setAction(BatchPostAction.SAVE);
-        // создать запрос
-        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper1, BatchPostStatus.INPUT);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        wrapper1 = res.getResult();
+        BatchPosting posting = ManualOperationTest.createAuthorizedPosting(wrapper1, USER_ID, BatchPostStatus.CONTROL);
+        Assert.assertNotNull(posting);
+        wrapper1.setId(posting.getId());
+        wrapper1.setStatus(posting.getStatus());
 
-        // 2.CONTROL
+        // 2.CONTROL -> WORKING
         String bsaDt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%2");
         String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
         ManualOperationWrapper wrapper2 = newOperationWrapper("А",
                 "MOS", bsaDt2, "AUD", new BigDecimal("162.057"),
                 "MOS", bsaCt2, "AUD", new BigDecimal("162.057")
         );
+        posting = ManualOperationTest.createAuthorizedPosting(wrapper2, USER_ID, BatchPostStatus.WORKING);
+        Assert.assertNotNull(posting);
+        wrapper2.setId(posting.getId());
+        wrapper2.setStatus(posting.getStatus());
 
-        wrapper2.setAction(BatchPostAction.SAVE_CONTROL);
-        // создать запрос
-        res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper2, BatchPostStatus.CONTROL);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        wrapper2 = res.getResult();
-
-        // 3.CONTROL -> SIGNEDDATE
+        // 3.SIGNEDDATE
         String bsaDt3 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%3");
         String bsaCt3 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%5");
         ManualOperationWrapper wrapper3 = newOperationWrapper("А",
-                "MOS", bsaDt2, "AUD", new BigDecimal("163.057"),
-                "MOS", bsaCt2, "AUD", new BigDecimal("163.057")
+                "MOS", bsaDt3, "AUD", new BigDecimal("163.057"),
+                "MOS", bsaCt3, "AUD", new BigDecimal("163.057")
         );
         wrapper3.setPostDateStr(new SimpleDateFormat(wrapper3.dateFormat).format(getOperday().getLastWorkingDay()));
         wrapper3.setValueDateStr(wrapper3.getPostDateStr());
 
-        wrapper3.setAction(BatchPostAction.SAVE_CONTROL);
-        // создать запрос
-        res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper3, BatchPostStatus.CONTROL);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        wrapper3 = res.getResult();
-        baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ? where ID = ?", "SIGNEDDATE", wrapper3.getId());
+        posting = ManualOperationTest.createAuthorizedPosting(wrapper3, USER_ID, BatchPostStatus.SIGNEDDATE);
+        Assert.assertNotNull(posting);
+        wrapper3.setId(posting.getId());
+        wrapper3.setStatus(posting.getStatus());
 
-        // 4.COMPLETED -> SIGNED
+        // 4.COMPLETED -> WORKING
         String bsaDt4 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
         String bsaCt4 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%6");
         ManualOperationWrapper wrapper4 = newOperationWrapper("А",
-                "MOS", bsaDt2, "AUD", new BigDecimal("164.057"),
-                "MOS", bsaCt2, "AUD", new BigDecimal("164.057")
+                "MOS", bsaDt4, "AUD", new BigDecimal("164.057"),
+                "MOS", bsaCt4, "AUD", new BigDecimal("164.057")
         );
 
-        wrapper4.setAction(BatchPostAction.SAVE_CONTROL);
-        // создать запрос
-        res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper4, BatchPostStatus.CONTROL);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        wrapper4 = res.getResult();
-        wrapper4.setAction(BatchPostAction.SIGN);
-        // обработать свой запрос
-        BatchPosting posting = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper4.getId());
-        res = remoteAccess.invoke(ManualPostingController.class, "authorizeOperationRqInternal", posting, wrapper4, BatchPostStatus.SIGNED);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ? where ID = ?", "SIGNED", wrapper4.getId());
+        posting = ManualOperationTest.createAuthorizedPosting(wrapper4, USER_ID, BatchPostStatus.SIGNED);
+        Assert.assertNotNull(posting);
+        wrapper4.setId(posting.getId());
+        wrapper4.setStatus(posting.getStatus());
+        GLManualOperation operation = remoteAccess.invoke(ManualOperationController.class, "processPosting", posting, false);
+        Assert.assertNotNull(operation);
+        baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ? where ID = ?", BatchPostStatus.WORKING.name(), wrapper4.getId());
 
         // 5.WAITDATE - ручной
         String bsaDt5 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%5");
         String bsaCt5 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%7");
         ManualOperationWrapper wrapper5 = newOperationWrapper("А",
-                "MOS", bsaDt2, "AUD", new BigDecimal("165.057"),
-                "MOS", bsaCt2, "AUD", new BigDecimal("165.057")
+                "MOS", bsaDt5, "AUD", new BigDecimal("165.057"),
+                "MOS", bsaCt5, "AUD", new BigDecimal("165.057")
         );
         wrapper5.setPostDateStr(new SimpleDateFormat(wrapper5.dateFormat).format(getOperday().getLastWorkingDay()));
         wrapper5.setValueDateStr(wrapper5.getPostDateStr());
 
-        wrapper5.setAction(BatchPostAction.SAVE_CONTROL);
-        // создать запрос
-        res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper5, BatchPostStatus.CONTROL);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        wrapper5 = res.getResult();
-        posting = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper5.getId());
-        res = remoteAccess.invoke(ManualPostingController.class, "setOperationRqStatus", wrapper5, posting, WAITDATE, false);
+        posting = ManualOperationTest.createAuthorizedPosting(wrapper5, USER_ID, BatchPostStatus.WAITDATE);
+        Assert.assertNotNull(posting);
+        wrapper5.setId(posting.getId());
+        wrapper5.setStatus(posting.getStatus());
 
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
+        // 6.CONTROL -> WAITSRV
+        String bsaDt6 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%2");
+        String bsaCt6 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
+        ManualOperationWrapper wrapper6 = newOperationWrapper("А",
+                "MOS", bsaDt6, "AUD", new BigDecimal("162.057"),
+                "MOS", bsaCt6, "AUD", new BigDecimal("162.057")
+        );
+        posting = ManualOperationTest.createAuthorizedPosting(wrapper2, USER_ID, BatchPostStatus.WAITSRV);
+        Assert.assertNotNull(posting);
+        wrapper6.setId(posting.getId());
+        wrapper6.setStatus(posting.getStatus());
+        baseEntityRepository.executeNativeUpdate("update GL_BATPST set SRV_REF = 'TEST', SEND_SRV = CURRENT TIMESTAMP where ID = ?", wrapper6.getId());
 
         // проверить статусы
         BatchPosting posting1 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper1.getId());
-        Assert.assertEquals(BatchPostStatus.INPUT, posting1.getStatus());
+        Assert.assertEquals(BatchPostStatus.CONTROL, posting1.getStatus());
         BatchPosting posting2 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper2.getId());
-        Assert.assertEquals(BatchPostStatus.CONTROL, posting2.getStatus());
+        Assert.assertEquals(BatchPostStatus.WORKING, posting2.getStatus());
         BatchPosting posting3 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper3.getId());
         Assert.assertEquals(BatchPostStatus.SIGNEDDATE, posting3.getStatus());
         BatchPosting posting4 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper4.getId());
-        Assert.assertEquals(BatchPostStatus.SIGNED, posting4.getStatus());
+        Assert.assertEquals(BatchPostStatus.WORKING, posting4.getStatus());
         BatchPosting posting5 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper5.getId());
         Assert.assertEquals(BatchPostStatus.WAITDATE, posting5.getStatus());
+        BatchPosting posting6 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper6.getId());
+        Assert.assertEquals(BatchPostStatus.WAITSRV, posting6.getStatus());
 
         // запустить обработку PreCob
-//        remoteAccess.invoke(PreCobBatchPostingTask.class, "executeWork");
         remoteAccess.invoke(ExecutePreCOBTask.class, "processUnprocessedBatchPostings");
-
 
         // проверить статусы и видимость снова
         posting1 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper1.getId());
@@ -168,28 +154,30 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
         posting2 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper2.getId());
         Assert.assertEquals(InvisibleType.S, posting2.getInvisible());
         posting3 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper3.getId());
-        Assert.assertEquals(InvisibleType.S, posting3.getInvisible());
+        Assert.assertEquals(BatchPostStatus.COMPLETED, posting3.getStatus());
         posting4 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper4.getId());
         Assert.assertEquals(BatchPostStatus.COMPLETED, posting4.getStatus());
         // TODO history
         posting5 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper5.getId());
         Assert.assertEquals(BatchPostStatus.COMPLETED, posting5.getStatus());
         // TODO postDate
+        posting6 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper6.getId());
+        Assert.assertEquals(InvisibleType.S, posting6.getInvisible());
+        Assert.assertEquals(BatchPostStatus.TIMEOUTSRV, posting6.getStatus());
 
     }
 
     @Test
     public void testProcessPackage() {
         // TODO WAITDATE - пакет
-        Long userId = 2L;   // TODO find userId
         // создать пакет
-        BatchMessageTest.PackageParam param = loadPackage(userId);
+        BatchMessageTest.PackageParam param = loadPackage(USER_ID);
 
         // передать на подпись
         ManualOperationWrapper wrapper = new ManualOperationWrapper();
         wrapper.setPkgId(param.getId());
         wrapper.setAction(BatchPostAction.SIGN);
-        wrapper.setUserId(2L);
+        wrapper.setUserId(USER_ID);
 
         RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(BatchPackageController.class, "forSignPackageRq", wrapper);
         if (res.isError())
@@ -381,27 +369,16 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
                 filialCredit, accountCredit, currencyCredit, amountCredit
         );
 
-        wrapper.setAction(BatchPostAction.SAVE_CONTROL);
-        // создать запрос
-        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper, BatchPostStatus.CONTROL);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
-        wrapper = res.getResult();
-        Assert.assertTrue(0 < wrapper.getId());
+        BatchPosting posting0 = ManualOperationTest.createAuthorizedPosting(wrapper, USER_ID, BatchPostStatus.CONTROL);
+        Assert.assertNotNull(posting0);
+        wrapper.setId(posting0.getId());
+        wrapper.setStatus(posting0.getStatus());
+        GLManualOperation operation = remoteAccess.invoke(ManualOperationController.class, "processPosting", posting0, false);
+        Assert.assertNotNull(operation);
 
-        BatchPosting posting0 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper.getId());
-        wrapper.setAction(BatchPostAction.SIGN);
-//        wrapper.setAccountDebit("408170/36050010000015");
-        // обработать свой запрос
-        res = remoteAccess.invoke(ManualPostingController.class, "authorizeOperationRqInternal", posting0, wrapper, BatchPostStatus.SIGNED);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
         BatchPosting posting = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper.getId());
         Assert.assertNotNull(posting);  // запрос
         Assert.assertEquals(BatchPostStatus.COMPLETED, posting.getStatus());
-        Assert.assertNotNull(posting.getSignerTamestamp());
         return posting.getOperation();
     }
 

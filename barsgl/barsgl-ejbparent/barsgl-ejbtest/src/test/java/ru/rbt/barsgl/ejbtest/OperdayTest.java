@@ -19,7 +19,6 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
@@ -49,6 +48,7 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 /**
  * Created by Ivan Sevastyanov

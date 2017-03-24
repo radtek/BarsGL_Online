@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-    <persistence-unit name="GLAS400DataSource" transaction-type="JTA">
+    <persistence-unit name="GLOracleDataSource" transaction-type="JTA">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
-        <jta-data-source>/jdbc/As400GL</jta-data-source>
+        <jta-data-source>/jdbc/OracleGL</jta-data-source>
         <mapping-file>META-INF/fix-orm.xml</mapping-file>
 
         <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
@@ -44,12 +44,12 @@
         <properties>
             <property name="eclipselink.ddl-generation" value="none"/>
             <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
-            <property name="eclipselink.target-database" value="DB2"/>
+            <property name="eclipselink.target-database" value="Oracle"/>
             <property name="eclipselink.target-server" value="WebLogic"/>
             <property name="eclipselink.logging.logger" value="ServerLogger"/>
             <property name="eclipselink.logging.session" value="true"/>
             <property name="eclipselink.logging.level" value="FINE"/>
-            <property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>
+            <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
         </properties>
     </persistence-unit>
 	<persistence-unit name="RepAS400DataSource" transaction-type="JTA">
@@ -64,12 +64,12 @@
         <properties>
             <property name="eclipselink.ddl-generation" value="none"/>
             <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
-            <property name="eclipselink.target-database" value="DB2"/>
+            <property name="eclipselink.target-database" value="Oracle"/>
             <property name="eclipselink.target-server" value="WebLogic"/>
             <property name="eclipselink.logging.logger" value="ServerLogger"/>
             <property name="eclipselink.logging.session" value="true"/>
             <property name="eclipselink.logging.level" value="FINE"/>
-            <property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>
+            <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
         </properties>
     </persistence-unit>
 </persistence>

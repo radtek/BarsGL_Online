@@ -15,7 +15,6 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
@@ -34,6 +33,7 @@ import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.shortTimestamp;
 import static ru.rbt.barsgl.shared.LoginResult.LoginResultStatus.FAILED;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
+import ru.rbt.security.AuthorizationServiceSupport;
 
 /**
  * Created by Ivan Sevastyanov

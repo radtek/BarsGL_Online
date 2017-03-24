@@ -144,7 +144,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         return accounts;
     }
 
-    private String createOutMessage(Set<String> countsToProcess, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) {
+    private String createOutMessage(Set<String> countsToProcess, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
         List<String> stringList = countsToProcess==null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                                      "<asbo:AccountBalanceList xmlns:asbo=\"urn:asbo:barsgl\">\n");
@@ -155,7 +155,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         return result.append("</asbo:AccountBalanceList>").toString();
     }
 
-    private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) {
+    private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
         StringBuilder sb = new StringBuilder();
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
@@ -186,16 +186,19 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
             sb.append(toTag("AccountNo", rsubstr(acid, 18)));
             sb.append("<asbo:Status>").append(lastDate.compareTo(record.getDate("DRLNC")) == 0 ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");
             String branch = queryRepository.getBranchByBsaacidorAcid(record.getString("BSAACID"), acid, workday);
+            // method convertBranchToFcc calling from getBranchByBsaacidorAcid now
+            /*
             if (!(branch.charAt(0) >= 'A' && branch.charAt(0) <= 'Z')) {
                 branch = ifEmpty(queryRepository.convertBranchToFcc(branch), branch);
             }
+            */
             sb.append("<asbo:Branch>").append(branch).append("</asbo:Branch>\n");
             sb.append("<asbo:CBAccountNo>").append(record.getString("BSAACID")).append("</asbo:CBAccountNo>\n");
 
             sb.append("<asbo:Ccy>").append(currencyMap.get(record.getString("CBCCY"))).append("</asbo:Ccy>\n");
 
             sb.append("<asbo:OpenBalance>\n");
-            BigDecimal[] amounts = queryRepository.getAccountAmountsIncoming(record.getString("BSAACID"), workday);
+            BigDecimal[] amounts = queryRepository.getAccountBalance(record.getString("BSAACID"));
             if (amounts != null) {
                 sb.append("<asbo:Amount>").append(amounts[0].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
                 sb.append("<asbo:AmountRub>").append(amounts[1].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
@@ -206,10 +209,9 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
             sb.append("</asbo:OpenBalance>\n");
 
             sb.append("<asbo:CurrentBalance>\n");
-            BigDecimal[] curamounts = queryRepository.getAccountAmountsCurrent(record.getString("BSAACID"), workday);
             if (amounts != null) {
-                sb.append("<asbo:Amount>").append(curamounts[0].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
-                sb.append("<asbo:AmountRub>").append(curamounts[1].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
+                sb.append("<asbo:Amount>").append(amounts[2].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:Amount>\n");
+                sb.append("<asbo:AmountRub>").append(amounts[3].movePointLeft(currencyNBDPMap.get(record.getString("CBCCY")))).append("</asbo:AmountRub>\n");
             }
             sb.append("<asbo:Date>").append(xmlGregorianCalendar.toString().substring(0, 10)).append("</asbo:Date>\n");
             sb.append("<asbo:Time>").append(xmlGregorianCalendar.toString().substring(11, 19)).append("</asbo:Time>\n");

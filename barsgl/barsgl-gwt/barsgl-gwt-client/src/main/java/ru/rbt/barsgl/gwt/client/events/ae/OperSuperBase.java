@@ -3,23 +3,32 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsViewDlg;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.EnumSet;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.getWhereInClause;
+import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
  * Created by ER18837 on 15.07.16.
  */
 abstract public class OperSuperBase extends GridForm {
+    protected Boolean _ownMessages;
+    protected StepChoiceDlg.MessageType _type = StepChoiceDlg.MessageType.ALL;
+
     public OperSuperBase(String title) {
         super(title);
     }
@@ -81,5 +90,56 @@ abstract public class OperSuperBase extends GridForm {
             }
         };
     }
+
+    protected String getOwnMessagesClause(Boolean ownMessages, BatchPostStep step, String tbl){
+        if (!ownMessages) return "";
+
+        String tblPref = isEmpty(tbl) ? "" : tbl + ".";
+
+        String field;
+        switch (step){
+            case HAND1:
+                field = "USER_NAME";
+                break;
+            case HAND2:
+                field = "USER_AU2";
+                break;
+            case HAND3:
+                field = "USER_AU3";
+                break;
+            default:
+                field = "";
+                break;
+        }
+
+        AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+        if (wrapper == null) return "";
+
+        return  field.isEmpty() ? " and " + "'" + wrapper.getUserName() + "' in (" + tblPref + "USER_NAME, USER_AU2, USER_AU3, USER_CHNG)"
+                : " and " + tblPref + field + "=" + "'" + wrapper.getUserName() + "'";
+    }
+
+    protected String getWhereMessageTypePart(String tbl){
+        String predicate = "";
+        String tblPref = isEmpty(tbl) ? "" : tbl + ".";
+
+        switch (_type){
+            case COMPLETED:
+                predicate = " and " + tblPref + "STATE='" + BatchPostStatus.COMPLETED.name() + "'";
+                break;
+            case WORKING:
+                EnumSet<BatchPostStatus> statuses = EnumSet.of(SIGNEDVIEW, SIGNED, SIGNEDDATE, WAITSRV, OKSRV, WORKING);
+                predicate = " and " + getWhereInClause(statuses, tblPref + "STATE");
+                break;
+            case NOTCOMPLETED:
+                predicate = " and " + tblPref + "STATE<>'" + BatchPostStatus.COMPLETED.name() + "'";
+                break;
+            default:
+                predicate = "";
+                break;
+        }
+        return predicate;
+    }
+
 
 }

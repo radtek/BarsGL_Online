@@ -8,8 +8,6 @@ import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
@@ -18,16 +16,9 @@ import ru.rbt.barsgl.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.parseDate;
@@ -129,6 +120,7 @@ public class StamtUnloadBalanceStep2Task implements ParamsAwareRunnable {
                 Assert.isTrue(isStepOk, () -> new ValidationError(ErrorCode.STAMT_DELTA_ERR
                         , format("Выгрузка остатков по счетам (%s) для STAMT (шаг 2) в ОД '%s' невозможна. Не завершен шаг '%s'"
                             , params.getParamName(), dateUtils.onlyDateString(executeDate), stepName)));
+                unloadController.checkConsumed();
                 return true;
             } else {
                 return true;

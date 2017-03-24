@@ -23,7 +23,6 @@ import ru.rbt.barsgl.gwt.client.bal.OndemandBalanceUnloadForm;
 import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
-import ru.rbt.barsgl.gwt.client.load.LoadForm;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
 import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
@@ -45,6 +44,7 @@ import ru.rbt.barsgl.shared.enums.UserMenuType;
 
 import java.util.ArrayList;
 import java.util.List;
+import ru.rbt.barsgl.gwt.client.load.LoadForm;
 import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
 
 /**

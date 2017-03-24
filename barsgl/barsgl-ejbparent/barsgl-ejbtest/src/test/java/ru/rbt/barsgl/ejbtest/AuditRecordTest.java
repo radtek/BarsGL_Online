@@ -2,12 +2,12 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejbtesting.test.AuditControllerTest;
 
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
+import ru.rbt.barsgl.audit.entity.AuditRecord;
 
 /**
  * Created by Ivan Sevastyanov

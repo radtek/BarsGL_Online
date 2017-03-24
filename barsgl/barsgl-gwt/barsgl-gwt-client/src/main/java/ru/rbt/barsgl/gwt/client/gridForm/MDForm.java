@@ -34,7 +34,9 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
     private FilterAction  masterFilterAction;
     protected ActionBarWidget masterActionBar;
     protected RefreshAction masterRefreshAction;
+    private Export2ExcelAction masterExport2Excel;
     private Export2ExcelAction detailExport2Excel;
+
 
     protected GridWidget detailGrid;
     protected Table detailTable;
@@ -86,11 +88,13 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
 
         masterActionBar.addAction(masterRefreshAction);
         masterActionBar.addAction(masterFilterAction = createMasterFilterAction());
-        masterActionBar.addSecureAction(new Export2ExcelAction(masterGrid, masterSql), SecurityActionCode.OperToExcel);
+        masterActionBar.addSecureAction(masterExport2Excel = new Export2ExcelAction(masterGrid, masterSql), SecurityActionCode.OperToExcel);
+        masterExport2Excel.setFormTitle(title.getText());
 
         detailActionBar.addAction(detailRefreshAction);
         detailActionBar.addAction(detailFilterAction = createDetailFilterAction());
         detailActionBar.addSecureAction(detailExport2Excel = new Export2ExcelAction(detailGrid, detailSql), SecurityActionCode.OperToExcel);
+        detailExport2Excel.setFormTitle(title.getText());
 
         mdWidget = new MDWidget(masterGrid, masterActionBar, masterTitle,
                                 detailGrid, detailActionBar, detailTitle);

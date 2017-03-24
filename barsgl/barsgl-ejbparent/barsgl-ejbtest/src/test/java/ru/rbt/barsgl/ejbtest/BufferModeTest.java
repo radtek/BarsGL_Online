@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.PdSyncTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.SyncStamtBackvalueTask;
@@ -15,8 +14,6 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
-import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -30,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
@@ -37,6 +35,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.

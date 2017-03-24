@@ -19,7 +19,7 @@
                 <include>**/logging.properties</include>
                 <include>**/web.xml</include>
                 <include>**/*.jsp</include>
-            </includes>
+            </includes>            
         </fileSet>
         <fileSet>
             <directory>src/main/resources</directory>
@@ -33,11 +33,11 @@
             <directory>../../barsgl-ejbparent/barsgl-ejbtest/src/test/resources</directory>
             <outputDirectory>excel</outputDirectory>
             <includes>
-                <include>**/example.xlsx</include>
+                <include>**/*.xlsx</include>
             </includes>
         </fileSet>
     </fileSets>
-
+    
     <dependencySets>
         <dependencySet>
             <outputDirectory>WEB-INF/lib</outputDirectory>

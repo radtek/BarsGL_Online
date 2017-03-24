@@ -18,15 +18,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
-import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.DECIMAL;
-import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.LONG;
-import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.STRING;
+import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 
 /**
  *
  * @author Andrew Samsonov
  */
-public class InEventsAE extends GridForm {
+public class
+InEventsAE extends GridForm {
   public static final String FORM_NAME = "Входящие сообщения АЕ";
   protected Column colPkgDate;
   protected Column colValueDate;
@@ -58,8 +57,9 @@ public class InEventsAE extends GridForm {
 
     result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 70, true, false, Column.Sort.DESC, ""));
     result.addColumn(colPkgDate = new Column("DT_LOAD", Column.Type.DATE, "Дата пакета", 80));
+    result.addColumn(new Column("ID", Column.Type.LONG, "ID сообщения AE", 70, false, false));
     result.addColumn(new Column("ECODE", Column.Type.INTEGER, "Статус сообщения", 80));
-    result.addColumn(new Column("ID_PST", Column.Type.STRING, "ID сообщ AE", 80));
+    result.addColumn(new Column("ID_PST", Column.Type.STRING, "ИД сообщ AE", 80));
     result.addColumn(new Column("SRC_PST", Column.Type.STRING, "Источник сделки", 80));
     result.addColumn(new Column("EVTP", Column.Type.STRING, "Тип события", 70));    
     result.addColumn(colValueDate = new Column("VDATE", Column.Type.DATE, "Дата валютирования", 80));
@@ -89,7 +89,7 @@ public class InEventsAE extends GridForm {
   @Override
   protected String prepareSql() {
     return "select * from (" +
-           "select PST.ID_PKG, DATE(PKG.DT_LOAD) as DT_LOAD, PST.ECODE, PST.ID_PST, PST.SRC_PST, PST.EVTP, PST.VDATE, PST.DEAL_ID, PST.PMT_REF, " +
+           "select PST.ID_PKG, DATE(PKG.DT_LOAD) as DT_LOAD, PST.ECODE, PST.ID, PST.ID_PST, PST.SRC_PST, PST.EVTP, PST.VDATE, PST.DEAL_ID, PST.PMT_REF, " +
            "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.AMTRU_DR, PST.ACCKEY_DR, " +
            "PST.AC_CR, PST.CCY_CR, PST.AMT_CR, PST.AMTRU_CR, PST.ACCKEY_CR, PST.EMSG, " +
            "PST.RNRTS, PST.FAN, PST.STRN, PST.STRNRF " +

@@ -132,4 +132,19 @@ public class StringUtils {
             sb.append(delimiter);
         }
     }
+
+    public static <E>  String arrayToString(E ar[], String delimiter, String quote) {
+        if ((null == ar) || (0 == ar.length))
+            return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ar.length; i++) {
+            E e = ar[i];
+            sb.append(quote).append(e).append(quote);
+            if (i == ar.length - 1)
+                return sb.toString();
+            sb.append(delimiter);
+        }
+        return sb.toString();
+    }
 }

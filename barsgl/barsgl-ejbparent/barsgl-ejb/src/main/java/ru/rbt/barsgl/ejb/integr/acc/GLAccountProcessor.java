@@ -158,6 +158,14 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
             }
         });
 
+        //если задан номер субсделки, должен быть номер сделки
+        context.addValidator(() -> {
+            String dealId = target.getDealId();
+            String subDealId = target.getSubDealId();
+            if (isEmpty(dealId) && !isEmpty(subDealId))
+                throw new ValidationError(SUBDEAL_ID_NOT_EMPTY, GLOperation.OperSide.N.getMsgName());
+        });
+
         // TODO дата открытия
     }
 
@@ -216,6 +224,21 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         BigDecimal balance = glAccountRepository.getAccountBalance(account.getBsaAcid(), account.getAcid(), dateTo);
         if (!balance.equals(BigDecimal.ZERO)) {
             throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid(), dateUtils.onlyDateString(dateFrom));
+        }
+    }
+
+    // Баланс счета при изменении даты закрвтия / открытия
+    private void checkBalanceBefore(GLAccount account, Date toDate, String fieldName) {
+        if (glAccountRepository.hasAccountBalanceBefore(account.getBsaAcid(), account.getAcid(), toDate)) {
+            throw new ValidationError(ACCOUNT_IN_USE_BEFORE, account.getBsaAcid(),
+                    "", dateUtils.onlyDateString(toDate));
+        }
+    }
+
+    private void checkBalanceAfter(GLAccount account, Date toDate, String fieldName) {
+        if (glAccountRepository.hasAccountBalanceAfter(account.getBsaAcid(), account.getAcid(), toDate)) {
+            throw new ValidationError(ACCOUNT_IN_USE_AFTER, account.getBsaAcid(),
+                    "", dateUtils.onlyDateString(toDate));
         }
     }
 
@@ -443,10 +466,10 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         checkDateOpen(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
         // проверка даты открытия для 707 счетов
         checkDateOpen707(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
-        // проверка баланса
-        checkBalance(glAccount, dateOpen, dateOpen, "Баланс");
         // проверка необарботанных операций
         checkOperationsBefore(glAccount, dateOpen, "Операции");
+        // проверка движений после
+        checkBalanceBefore(glAccount, dateOpen, "Баланс");
 
         glAccount.setDateOpen(dateOpen);
         // счет ЦБ
@@ -465,6 +488,8 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
             checkBalance(glAccount, dateClose, glAccount.getDateLast(), "Баланс");
             // проверка необарботанных операций
             checkOperationsAfter(glAccount, dateClose, "Операции");
+            // проверка движений после
+            checkBalanceAfter(glAccount, dateClose, "Баланс");
         }
         glAccount.setDateClose(dateClose);
         // счет ЦБ

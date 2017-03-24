@@ -2,19 +2,15 @@ package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
+import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
+import ru.rbt.security.ejb.entity.AppUser;
+import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
-import ru.rbt.barsgl.ejb.integr.oper.ManualOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
-import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
-import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
-import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.ManualOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.audit.controller.AuditController;
@@ -40,19 +36,17 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
@@ -62,22 +56,15 @@ import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 @Stateless
 @LocalBean
 public class ManualPostingController {
-
     private static final Logger log = Logger.getLogger(EtlPostingController.class);
     private static final String postingName = "GL_BATPST";
-    private static final SimpleDateFormat timeFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    public static final SimpleDateFormat timeFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
     @EJB
     private AuditController auditController;
 
-    @EJB
-    private EtlPostingController etlPostingController;
-
     @Inject
     private BatchPostingProcessor postingProcessor;
-
-    @Inject
-    private ManualOperationProcessor operationProcessor;
 
     @EJB
     private BatchPostingRepository postingRepository;
@@ -86,10 +73,7 @@ public class ManualPostingController {
     private ManualOperationRepository operationRepository;
 
     @Inject
-    GLAccountRepository accountRepository;
-
-    @Inject
-    private OrdinaryPostingProcessor ordinaryPostingProcessor;
+    private AppUserRepository userRepository;
 
     @Inject
     private OperdayController operdayController;
@@ -98,10 +82,7 @@ public class ManualPostingController {
     private PdRepository pdRepository;
 
     @Inject
-    private BackvalueJournalController journalController;
-
-    @Inject
-    private MovementCreateProcessor movementProcessor = new MovementCreateProcessor();  // TODO ??
+    private MovementCreateProcessor movementProcessor;
 
     @Inject
     private UserContext userContext;
@@ -117,7 +98,7 @@ public class ManualPostingController {
      */
     public RpcRes_Base<ManualOperationWrapper> processOperationRq(ManualOperationWrapper wrapper) throws Exception {
         try {
-            checkOperdayOnline(wrapper.getErrorList());
+//            checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
                 case SAVE:              // сохранить - шаг 1 (INPUT)
                     return saveOperationRq(wrapper, BatchPostStatus.INPUT);
@@ -286,20 +267,23 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> forSignOperationRqInternal(ManualOperationWrapper wrapper) throws Exception {
         BatchPosting posting0 = getPostingWithCheck(wrapper, INPUT);
         BatchPosting posting = createPostingHistory(posting0, BatchPostStep.HAND1, wrapper.getAction());
-        return setOperationRqStatusControl(wrapper, posting, posting != posting0);
+        return setOperationRqStatusControl(wrapper, posting != posting0);
     }
 
     public RpcRes_Base<ManualOperationWrapper> refuseOperationRq(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
-        BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL, REFUSEDATE, ERRSRV, REFUSESRV, WAITDATE);
+        BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL, REFUSEDATE, ERRSRV, REFUSESRV, WAITDATE, ERRPROC, ERRPROCDATE);
         String msg;
         if (hasMovement(posting0)) {
             msg = "Нельзя вернуть запрос на операцию ID = " + wrapper.getId() + " на доработку,\nпо нему выполнен успешный запрос в сервис движений";
         } else {
-            operationRepository.executeInNewTransaction(persistence -> {
-                BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
-                postingRepository.refusePostingStatus(posting, wrapper.getReasonOfDeny(), userContext.getTimestamp(), userContext.getUserName(), status);
-                return null;
+            BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
+            BatchPostStatus oldStatus = posting.getStatus();
+            int count = operationRepository.executeInNewTransaction(persistence -> {
+                return postingRepository.refusePostingStatus(posting.getId(), wrapper.getReasonOfDeny(),
+                        userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
             });
+            if (0 == count)
+                throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
             wrapper.setStatus(status);
             msg = "Запрос на операцию ID = " + wrapper.getId() + " возвращён на доработку";
         }
@@ -309,38 +293,28 @@ public class ManualPostingController {
 
     public RpcRes_Base<ManualOperationWrapper> authorizeOperationRq(ManualOperationWrapper wrapper) throws Exception {
         try {
-            checkProcessingAllowed(wrapper.getErrorList());
+//            checkProcessingAllowed(wrapper.getErrorList());
             BatchPostStep step = wrapper.getStatus().getStep();
             if (!step.isControlStep()) {
                 return new RpcRes_Base<>(wrapper, false, "Неверный шаг оерации: " + step.name());
             }
-            if (SIGNED.equals(wrapper.getStatus())) {
-                return reprocessOperationRq(wrapper);
-            }
+//            if (SIGNED.equals(wrapper.getStatus())) {
+//                return reprocessOperationRq(wrapper);
+//            }
             postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
             BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL);
             checkHand12Diff(posting0);
-            Date operday = operdayController.getOperday().getCurrentDate();
-            BatchPostStatus newStatus;
-            if (posting0.getPostDate().equals(operday)) {    // текущий день
-                newStatus = SIGNED;
-            } else if (postingProcessor.checkActionEnable(wrapper.getUserId(), SecurityActionCode.OperHand3)) {
-                newStatus = SIGNEDDATE;      // архивный день и 3-я рука
-            } else {
-                newStatus = WAITDATE;         // ждать 3-ю руку
-            }
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             // тестируем статус - что никто еще не менял
-            updatePostingStatusNew(posting0, SIGNEDVIEW);
-            // устанавливаем статус
-            RpcRes_Base<ManualOperationWrapper>  result = setOperationRqStatusSigned(wrapper, posting, newStatus, false);
-            // посылка запроса в MovementCreate
-            sendMovement(posting, wrapper);
-            if (WAITDATE.equals(newStatus)) {       // ждать 3 руку
-                result = setOperationRqStatusSigned(wrapper, posting, newStatus, true);
-                return result;
-            } else {                                // авторизовать
-                return authorizeOperationRqInternal(posting, wrapper, newStatus);
+            updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);
+            BatchPostStatus newStatus = getOperationRqStatusSigned(wrapper.getUserId(), posting.getPostDate());
+            setOperationRqStatusSigned(wrapper, userContext.getUserName(), SIGNEDVIEW, newStatus);
+
+            if (posting0.isControllable()) {                    // есть контролируемы счет
+                return sendMovement(posting, wrapper, newStatus);          // посылка запроса в MovementCreate
+            } else {
+                // устанавливаем статус SIGNED / SIGNEDDATE / WAITDATE
+                return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
             }
         } catch (ValidationError e) {
                 String msg = "Ошибка при авторизации запроса на операцию ID = " + wrapper.getId();
@@ -352,31 +326,31 @@ public class ManualPostingController {
 
     public RpcRes_Base<ManualOperationWrapper> confirmOperationRq(ManualOperationWrapper wrapper) throws Exception {
         try {
-            checkProcessingAllowed(wrapper.getErrorList());
+//            checkProcessingAllowed(wrapper.getErrorList());
             BatchPostStep step = wrapper.getStatus().getStep();
             if (!step.isConfirmStep()) {
                 return new RpcRes_Base<>(wrapper, false, "Неверный шаг оерации: " + step.name());
             }
-            if (SIGNEDDATE.equals(wrapper.getStatus())) {
-                return reprocessOperationRq(wrapper);
-            }
+//            if (SIGNEDDATE.equals(wrapper.getStatus())) {
+//                return reprocessOperationRq(wrapper);
+//            }
             postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
             BatchPosting posting0 = getPostingWithCheck(wrapper, WAITDATE);
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             BatchPostStatus newStatus = SIGNEDDATE;
             // тестируем статус - что никто еще не менял
-            updatePostingStatusNew(posting0, newStatus);
+            updatePostingStatusNew(posting0, newStatus, wrapper);
             // устанавливаем статус
-            RpcRes_Base<ManualOperationWrapper>  result = setOperationRqStatusSigned(wrapper, posting, newStatus, true);
             Date operday = operdayController.getOperday().getCurrentDate();
             if (BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())) {
                 wrapper.setPostDateStr(operday == null ? null : dateUtils.onlyDateString(operday));
                 postingRepository.executeInNewTransaction(persistence -> {
-                    postingRepository.setPostingDate(posting, userContext.getCurrentDate());
+                    postingRepository.setPostingDate(posting.getId(), userContext.getCurrentDate());
                     return null;
                 });
             }
-            return authorizeOperationRqInternal(posting, wrapper, newStatus);
+            return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
+//            return authorizeOperationRqInternal(posting, wrapper, newStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты запроса на операцию ID = " + wrapper.getId();
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -385,6 +359,7 @@ public class ManualPostingController {
         }
     }
 
+    /*
     public RpcRes_Base<ManualOperationWrapper> reprocessOperationRq(ManualOperationWrapper wrapper) throws Exception {
         try {
             checkProcessingAllowed(wrapper.getErrorList());
@@ -426,60 +401,146 @@ public class ManualPostingController {
         auditController.info(ManualOperation, msg, operation);
         return new RpcRes_Base<>(wrapper, false, msg);
     }
+    */
 
-    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusControl(ManualOperationWrapper wrapper, BatchPosting posting, boolean withChange) throws Exception {
+    public void updatePostingStatusNew(BatchPosting posting, BatchPostStatus newStatus, ManualOperationWrapper wrapper) throws Exception {
+        int cnt = postingRepository.executeInNewTransaction(persistence -> postingRepository.updatePostingStatusNew(posting.getId(), newStatus));
+        if (cnt != 1) {
+            throw new ValidationError(ErrorCode.POSTING_IS_WORKING, posting.getId().toString(), newStatus.name());
+        }
+        if (null != wrapper)
+            wrapper.setStatus(newStatus);
+    }
+
+    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusControl(ManualOperationWrapper wrapper, boolean withChange) throws Exception {
         final BatchPostStatus status = CONTROL;
-        operationRepository.executeInNewTransaction(persistence -> {
+        BatchPostStatus oldStatus = wrapper.getStatus();
+        int count = operationRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
-                postingRepository.updatePostingStatusChanged(posting, userContext.getTimestamp(), userContext.getUserName(), status);
+                return postingRepository.updatePostingStatusChanged(wrapper.getId(), userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
             } else {
-                postingRepository.updatePostingStatus(posting, status);
+                return postingRepository.updatePostingStatus(wrapper.getId(), status, oldStatus);
             }
-            return null;
         });
+        if (0 == count)
+            throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
         wrapper.setStatus(status);
         String msg = "Запрос на операцию ID = " + wrapper.getId() + " передан на подпись";
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
-    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSigned(ManualOperationWrapper wrapper, BatchPosting posting, BatchPostStatus newStatus, boolean signed) throws Exception {
-        BatchPostStatus dbStatus = signed ? newStatus : SIGNEDVIEW;
-        String message = operationRepository.executeInNewTransaction(persistence -> {    // TODO надо ??
-            String msg = "???";
+    public BatchPostStatus getOperationRqStatusSigned(String signerName, Date postDate) throws Exception {
+        AppUser user = userRepository.findUserByName(signerName);
+        Assert.notNull(user, "Не найден пользователь: " + signerName);
+        return getOperationRqStatusSigned(user.getId(), postDate);
+    }
+
+    public BatchPostStatus getOperationRqStatusSigned(Long signerId, Date postDate) throws Exception {
+        Date operday = operdayController.getOperday().getCurrentDate();
+        BatchPostStatus newStatus;
+        if (operday.equals(postDate)) {    // текущий день
+            newStatus = SIGNED;
+        } else if (postingProcessor.checkActionEnable(signerId, SecurityActionCode.OperHand3)) {
+            newStatus = SIGNEDDATE;      // архивный день и 3-я рука
+        } else {
+            newStatus = WAITDATE;         // ждать 3-ю руку
+        }
+        return newStatus;
+    }
+
+    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSigned(ManualOperationWrapper wrapper, String userName,
+                                                                          BatchPostStatus newStatus, BatchPostStatus logStatus) throws Exception {
+        BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
+        BatchPostStatus oldStatus = wrapper.getStatus();
+        BatchPostAction action = wrapper.getAction();
+        int count = operationRepository.executeInNewTransaction(persistence -> {
+            Date timestamp = userContext.getTimestamp();
+            int cnt = 0;
             switch (newStatus) {
+                case SIGNEDVIEW:
+                    if (SIGNEDDATE.equals(logStatus)) {
+                        cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
+                    } else {
+                        cnt = postingRepository.signedPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
+                    }
+                    break;
                 case SIGNED:
-                    postingRepository.signedPostingStatus(posting, userContext.getTimestamp(), userContext.getUserName(), dbStatus);
-                    msg = " подписан";
+                case WAITDATE:
+                    cnt = postingRepository.signedPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
                     break;
                 case SIGNEDDATE:
                     if (wrapper.getStatus().getStep().isControlStep()) {
-                        postingRepository.signedConfirmPostingStatus(posting, userContext.getTimestamp(), userContext.getUserName(), dbStatus);
-                        msg = " подписан с подтверждением даты проводки";
+                        cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
+                        result.setProcessDate(BT_PAST);
                     } else {
-                        postingRepository.confirmPostingStatus(posting, userContext.getTimestamp(), userContext.getUserName(), dbStatus);
-                        msg = " подтверждена дата проводки";
+                        cnt = postingRepository.confirmPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
+                        result.setStatus(CONFIRM);
+                        result.setProcessDate(CONFIRM_NOW.equals(action) ? BT_NOW : BT_PAST);
                     }
-                    break;
-                case WAITDATE:
-                    postingRepository.signedPostingStatus(posting, userContext.getTimestamp(), userContext.getUserName(), dbStatus);
-                    msg = " подписан и передан на подтверждение даты проводки";
-                    break;
+                   break;
                 default:
-                    Assert.isTrue(true, "Неверный статус");
+                    Assert.isTrue(false, "Неверный статус");
             }
-            return signed ? msg : " визуально проверен";
+            return cnt; //msg;
         });
-        wrapper.setStatus(dbStatus);
-        String msg = "Запрос на операцию ID = " + wrapper.getId() + message;
+        if (0 == count)
+            throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
+        wrapper.setStatus(newStatus);
+        String msg = result.getPostSignedMessage();
         wrapper.getErrorList().addErrorDescription("", "", msg, null);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
+    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSend(ManualOperationWrapper wrapper, String movementId, BatchPostStatus srvStatus, BatchPostStatus nextStatus) throws Exception {
+//        BatchPostStatus srvStatus = WAITSRV;
+        // устанавливаем статус = WAITSRV, movementId , SEND_SRV
+        BatchPostStatus oldStatus = wrapper.getStatus();
+        int count = operationRepository.executeInNewTransaction(persistence -> {
+            return postingRepository.sendPostingStatus(wrapper.getId(), movementId, userContext.getTimestamp(), srvStatus, oldStatus);
+        });
+        if (0 == count) {
+            throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
+        }
+        wrapper.setStatus(srvStatus);
+//        String msg = "Запрос на операцию ID = " + wrapper.getId() + message;
+        BatchProcessResult result = new BatchProcessResult(wrapper.getId(), nextStatus);
+        result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
+        String msg = result.getPostSendMessage();
+        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
+        return new RpcRes_Base<>(wrapper, false, msg);
+    }
+
+    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusReceive(ManualOperationWrapper wrapper, String movementId,
+                                                                           BatchPostStatus newStatus, int errorCode, String errorMessage) throws Exception {
+        BatchPostStatus oldStatus = wrapper.getStatus();
+        BatchPostStatus stepStatus = getStepStatus(wrapper.getStatus().getStep(), newStatus);
+        Date timstamp = (TIMEOUTSRV == newStatus) ? null : userContext.getTimestamp();
+        int count = operationRepository.executeInNewTransaction(persistence -> {
+            return postingRepository.receivePostingStatus(wrapper.getId(), movementId, timstamp, stepStatus, oldStatus, errorCode, errorMessage);
+        });
+        if (0 == count) {
+            throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
+        }
+        wrapper.setStatus(newStatus);
+        BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
+        String msg = result.getPostSignedMessage();
+
+        wrapper.getErrorList().addErrorDescription("", "", msg + errorMessage, null);
+        if (errorCode == 0) {
+            auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
+        } else {
+            auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), errorMessage);
+        }
+        return new RpcRes_Base<>(wrapper, false, msg);
+    }
+
     private boolean hasMovement(BatchPosting posting) {
         //TODO не вполне корректная проверка. Нет однозначного признака прохождения movement
-        return (null != posting.getMovementId() && null != posting.getMovementTimestamp()); // && !(ERRSRV.equals(posting.getStatus()) || REFUSESRV.equals(posting.getStatus()));
+        return ((null != posting.getMovementId()) && !(ERRSRV.equals(posting.getStatus()) || REFUSESRV.equals(posting.getStatus())))
+                || TIMEOUTSRV.equals(posting.getStatus()) ;
     }
 
     /**
@@ -533,10 +594,10 @@ public class ManualPostingController {
         try {
             BatchPosting posting = getPostingWithCheck(wrapper);
             if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, BatchPostAction.DELETE)) {
-                postingRepository.setPostingInvisible(posting, userContext.getTimestamp(), userContext.getUserName());
-                return postingRepository.findById(BatchPosting.class, posting.getId());
+                postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), userContext.getUserName());
+                return postingRepository.findById(posting.getId());
             } else {
-                postingRepository.deletePosting(posting);   // удалить запрос на операцию
+                postingRepository.deletePosting(posting.getId());   // удалить запрос на операцию
                 return null;
             }
 
@@ -550,7 +611,7 @@ public class ManualPostingController {
 
     // TODO сверять значения Wrapper и Posting ?
     private BatchPosting getPostingWithCheck(ManualOperationWrapper wrapper, BatchPostStatus ... enabledStatus) {
-        final BatchPosting posting = Optional.ofNullable(postingRepository.findById(BatchPosting.class, wrapper.getId()))
+        final BatchPosting posting = Optional.ofNullable(postingRepository.findById(wrapper.getId()))
                 .orElseThrow(() -> new DefaultApplicationException("Не найден запрос на операцию с Id = " + wrapper.getId()));
         checkPostingStatus(posting, wrapper, enabledStatus);
         return posting;
@@ -558,15 +619,15 @@ public class ManualPostingController {
 
     private boolean checkPostingStatus(BatchPosting posting, ManualOperationWrapper wrapper, BatchPostStatus ... enabledStatus) {
         if (!posting.getStatus().equals(wrapper.getStatus())) {
-            String msg = String.format("Запрос на операцию ID = %s изменен, статус: '%s'." +
+            String msg = String.format("Запрос на операцию ID = %d изменен, статус: '%s' ('%s')." +
                     "\n Обновите информацию и выполните операцию повторно"
-                    , posting.getId().toString(), posting.getStatus().name());
+                    , posting.getId(), posting.getStatus().name(), posting.getStatus().getLabel());
             wrapper.getErrorList().addErrorDescription("", "", msg, null);
             throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
-            String msg = String.format("Запрос на операцию ID = %s изменен, признак 'Удален': '%s'" +
-                    "\n Обновите информацию", posting.getId().toString(), posting.getInvisible().name() );
+            String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')\n Обновите информацию",
+                    posting.getId(), posting.getInvisible().name(), posting.getInvisible().getLabel() );
             wrapper.getErrorList().addErrorDescription("", "", msg, null);
             throw new DefaultApplicationException(msg);
         }
@@ -577,8 +638,8 @@ public class ManualPostingController {
                 return true;
             }
         }
-        String msg = String.format("Запрос на операцию ID = '%s' в недопустимом статусе: '%s'"
-                , posting.getId().toString(), posting.getStatus().name());
+        String msg = String.format("Запрос на операцию ID = '%d': нельзя '%s' запрос в статусе: '%s' ('%s')", posting.getId(),
+                wrapper.getAction().getLabel(), posting.getStatus().name(), posting.getStatus().getLabel());
         wrapper.getErrorList().addErrorDescription("", "", msg, null);
         throw new DefaultApplicationException(msg);
     }
@@ -590,7 +651,12 @@ public class ManualPostingController {
                 : posting;
     }
 
-    private BatchPostStatus getStepStatus(BatchPostStep step, BatchPostStatus status) {
+    private BatchPosting createPostingHistory(Long postingId) throws Exception {
+        return operationRepository.executeInNewTransaction(persistence ->
+                        postingRepository.createPostingHistory(postingId, userContext.getTimestamp(), userContext.getUserName()));
+    }
+
+    public BatchPostStatus getStepStatus(BatchPostStep step, BatchPostStatus status) {
         if (step.equals(status.getStep()))
             return status;
         if (step.isConfirmStep()) {
@@ -622,364 +688,8 @@ public class ManualPostingController {
         }
     }
 
-    // ==============================================================================================
-
-    public void checkOperdayOnline(ErrorList errList) {
-        if (ONLINE != operdayController.getOperday().getPhase()) {
-            String msg = "Ошибка при создании операции";
-            ValidationError e = new ValidationError(OPERDAY_NOT_ONLINE, operdayController.getOperday().getPhase().name());
-            addOperationErrorMessage(e, msg, errList, initSource());
-            throw new DefaultApplicationException(null == errList ? msg : errList.getErrorMessage(), e);
-        }
-    }
-
-    public void checkProcessingAllowed(ErrorList errList) {
-        if (!operdayController.isProcessingAllowed()) {
-            String msg = "Ошибка при создании операции";
-            ValidationError e = new ValidationError(OPERDAY_IN_SYNCHRO);
-            addOperationErrorMessage(e, msg, errList, initSource());
-            throw new DefaultApplicationException(null == errList ? msg : errList.getErrorMessage(), e);
-        }
-    }
-
-    public GLManualOperation processMessage(BatchPosting posting0, ManualOperationWrapper wrapper, boolean withCheck) {
-        // проверка статуса опердня
-        if (withCheck) {
-            checkOperdayOnline(wrapper.getErrorList());
-            checkProcessingAllowed(wrapper.getErrorList());
-        }
-
-        String oper = " операции по запросу ID = " + posting0.getId();
-        auditController.info(Operation, "Начало обработки" + oper, posting0);
-        try {
-            return operationRepository.executeInNewTransaction(persistence -> {
-                try {
-                    BatchPostStep step = posting0.getStatus().getStep();
-                    // устанавливаем статус обработки с проверкой, что еще не было обработки
-                    updatePostingStatusNew(posting0, BatchPostStatus.UNKNOWN);
-                    BatchPosting posting = postingRepository.findById(BatchPosting.class, posting0.getId());
-
-                    GLManualOperation operation0;
-                    try {
-                        operation0 = operationRepository.executeInNewTransaction(persistence1 -> createOperation(posting, wrapper));
-                    } catch (Throwable e) {
-                        throw new DefaultApplicationException(logPostingError(e, "Ошибка при создании" + oper, wrapper, ERRPROC, 1));
-                    }
-
-                    final Long operationId = operation0.getId();
-                    try {
-                        final GLManualOperation enrichedOperation = operationRepository.findById(GLManualOperation.class, operationId);
-                        operationRepository.executeInNewTransaction(persistence1 -> enrichmentOperation(enrichedOperation));
-                    } catch (Throwable e) {
-                        throw new DefaultApplicationException(
-                                logOperationError(e, "Ошибка при заполнения данных" + oper, wrapper, operationId, OperState.ERCHK));
-                    }
-
-                    try {
-                        GLManualOperation resultOperation = operationRepository.executeInNewTransaction(persistence1 -> {
-                            final GLManualOperation processedOperation = operationRepository.findById(GLManualOperation.class, operationId);
-                            if (processOperation(wrapper, processedOperation)) {
-                                auditController.info(Operation, "Успешное завершение обработки"  + oper, processedOperation);
-                            }
-                            postingRepository.updatePostingStatusSuccess(posting.getId(), processedOperation);
-                            return processedOperation;
-                        });
-                        return resultOperation;
-                    } catch (Throwable e) {
-                        throw new DefaultApplicationException(
-                                logOperationError(e, "Ошибка при обработке данных" + oper, wrapper, operationId, OperState.ERCHK));
-                    }
-                } catch (DefaultApplicationException e) {
-                    operationRepository.setRollbackOnly();
-                    auditController.error(Operation, "Системная ошибка при обработке"  + oper, posting0, e);
-                    throw new DefaultApplicationException(e.getMessage(), e);
-                } finally {
-                    operationRepository.executeInNewTransaction(persistence1 -> {
-                        if (DIRECT == operdayController.getOperday().getPdMode()) {
-                            try {
-                                journalController.recalculateBackvalueJournal();
-                            } catch (Exception e){
-                                log.error("Ошибка при пересчете/локализации. See GL_AUDIT for details");
-                            }
-                        }
-                        return null;
-                    });
-                }
-            });
-        } catch (Exception e) {
-            throw new DefaultApplicationException(e);
-        }
-    }
-
-    /**
-     * Проверяет, есть ли в операции контролируемые счета
-     * Если нет, возвращает false
-     * Если есть - true
-     * В случае ошибки возникает исключение
-     * @param wrapper
-     * @return
-     */
-    public boolean sendMovement(BatchPosting posting, ManualOperationWrapper wrapper) {
-//        if (true)
-//            return false;     // TODO DEBUG - пока исключаем обращение к MovementCreate
-
-        if (null != posting.getMovementTimestamp()) {
-            auditController.info(getLogCode(wrapper), String.format("По запоросу ID = '%s' уже было выполнено успешное движение в MovementCreate: '%s', время: '%s'",
-                    posting.getId().toString(), posting.getMovementId(), timeFormat.format(posting.getMovementTimestamp()))
-                    , postingName, posting.getId().toString());
-            return true;
-        }
-        try {
-            String movementDr = null, movementCr = null;
-            String oper = posting.getId().toString();
-            String rand = getRundomUUID(6);
-            if (accountRepository.isControlableAccount(posting.getAccountDebit())) {
-                movementDr = oper + "D." + rand;
-            }
-            if (accountRepository.isControlableAccount(posting.getAccountCredit())) {
-                movementCr = oper + "C." + rand;
-            }
-            if (isEmpty(movementDr) && isEmpty(movementCr))
-                return false;
-            // сохранить movementId в таблице
-            final String movementId = !isEmpty(movementDr) ? movementDr : movementCr;
-
-            Date operday = operdayController.getOperday().getCurrentDate();
-
-            operationRepository.executeInNewTransaction(persistence ->
-                    postingRepository.updateMovementId(posting.getId(), movementId, userContext.getTimestamp(), userContext.getUserName()));
-            List<MovementCreateData> movementData = fillMovementData(posting, movementDr, movementCr, operday);
-
-            MovementCreateData data = movementData.get(0);
-            String msg1 = String.format("Отправлено в MovementCreate: " +
-                    "ID_DR = '%s', AC_DR = '%s', AMT_DR = %s, ID_CR = '%s', AC_CR = '%s', AMT_CR = %s",
-                    data.getOperIdD(), data.getAccountCBD(), null == data.getOperAmountD() ? "null" : data.getOperAmountD().toString(),
-                    data.getOperIdC(), data.getAccountCBC(), null == data.getOperAmountC() ? "null" : data.getOperAmountC().toString());
-            log.info(msg1);
-
-            auditController.info(getLogCode(wrapper), msg1, postingName, getWrapperId(wrapper));
-            movementProcessor.process(movementData);
-//            processMovementDebug(movementData);   // TODO DEBUG - для отладки без MovementCreate
-
-            data = movementData.get(0);
-            String msg2 = String.format("Получено из MovementCreate: Id = '%s', State = '%s', ErrType = '%s', ErrDescr = '%s'",
-                    data.getOperIdD(), data.getState(), data.getErrType(), data.getErrDescr());
-            log.info(msg2);
-            auditController.info(getLogCode(wrapper), msg2, postingName, getWrapperId(wrapper));
-            if (!MovementCreateData.StateEnum.ERROR.equals(data.getState())) {  // SUCCESS или WARNING
-                // TODO не перезаписываем время посылки в АБС
-                operationRepository.executeInNewTransaction(persistence -> postingRepository.updateMovementTimestamp(wrapper.getId(), movementId, userContext.getTimestamp()));
-                return true;
-            }
-
-            // TODO надо вынести запись статуса ошибки наружу? Падает при обработке пакетных операций
-            log.info(String.format("MovementCreate ERROR: Id = '%s'", data.getOperIdD()));
-            MovementErrorTypes error = data.getErrType();
-            BatchPostStatus status = MovementErrorTypes.ERR_BUSINESS.equals(error) ? REFUSESRV : ERRSRV;
-            String errorMsg = error.getMessage();
-            if (!isEmpty(data.getErrDescr())) {
-                errorMsg += "\n" + data.getErrDescr();
-            }
-            ValidationError validationError = new ValidationError(MOVEMENT_ERROR, getWrapperId(wrapper), errorMsg);
-            logPostingError(validationError, error.getMessage(), wrapper, status, error.getCode());
-            throw validationError;
-
-        } catch (Exception e) {
-                throw new DefaultApplicationException(logPostingError(e,
-                        String.format("Ошибка при обращении к сервису движений по запросу ID = %s", getWrapperId(wrapper)),
-                        wrapper, ERRSRV, MovementErrorTypes.ERR_REQUEST.getCode()));
-        }
-    }
-
-    private String getRundomUUID(int num) {
-        return UUID.randomUUID().toString().substring(0, num);
-    }
-
-    private List<MovementCreateData> fillMovementData(BatchPosting posting,
-                                                      String movementDr, String movementCr, Date operday) throws ParseException {
-        MovementCreateData data = new MovementCreateData();
-        if (!isEmpty(movementDr)) {
-            data.setOperIdD(movementDr);
-            data.setAccountCBD(posting.getAccountDebit());
-            data.setOperAmountD(posting.getAmountDebit());
-        }
-        if (!isEmpty(movementCr)) {
-            data.setOperIdC(movementCr);
-            data.setAccountCBC(posting.getAccountCredit());
-            data.setOperAmountC(posting.getAmountCredit());
-        }
-        data.setDestinationR(StringUtils.removeCtrlChars(posting.getRusNarrativeLong()));
-        data.setPnar(pdRepository.getPnarManual(posting.getDealId(), posting.getSubDealId(), posting.getPaymentRefernce()));
-
-        data.setPstDate(posting.getValueDate());
-        data.setDealId(substr(!isEmpty(posting.getDealId()) ? posting.getDealId() : posting.getPaymentRefernce(), 15));
-        data.setPstSource(posting.getSourcePosting());
-        data.setDeptId(posting.getDeptId());
-        data.setProfitCenter(posting.getProfitCenter());
-        data.setCorrectionPst(YesNo.Y.equals(posting.getIsCorrection()));
-        // TODO DEBUG
-//        data.setOperCreate(userContext.getTimestamp());
-//        data.setOperCreate(data.getPstDate());
-        data.setOperCreate(operday);
-
-        List<MovementCreateData> datas = new ArrayList<>();
-        datas.add(data);
-
-        return datas;
-    }
-
-    private void processMovementDebug(List<MovementCreateData> movementData) {
-        MovementCreateData item = movementData.get(0);
-        char deal = (null == item.getDealId()) ? ' ' : item.getDealId().charAt(0);
-        if (null == item.getDealId()) {
-            item.setState(MovementCreateData.StateEnum.ERROR);
-            item.setErrType(MovementErrorTypes.ERR_SERVICE);
-        }
-        if (deal == '0') {
-            item.setState(MovementCreateData.StateEnum.SUCCESS);
-        } else {
-            switch (deal) {
-                case '2':
-                    item.setErrType(MovementErrorTypes.ERR_BUSINESS); break;
-                case '3':
-                    item.setErrType(MovementErrorTypes.ERR_SERVICE); break;
-                case '4':
-                    item.setErrType(MovementErrorTypes.ERR_REQUEST); break;
-                default:
-                    item.setErrType(MovementErrorTypes.ERR_REQUEST); break;
-            }
-            item.setState(MovementCreateData.StateEnum.ERROR);
-            item.setErrDescr(item.getDealId());
-        }
-    }
-
-    /**
-     * Создает операцию по набору данных, введенных с экрана
-     * Заполняет дополнительные параметры операции
-     * @param wrapper
-     * @return
-     * @throws Exception
-     */
-    private GLManualOperation createOperation(BatchPosting posting, ManualOperationWrapper wrapper) throws Exception {
-        List<ValidationError> errors = operationProcessor.validate(posting, new ValidationContext());
-
-        if (errors.isEmpty()) {
-            GLManualOperation operation = operationProcessor.createOperation(posting);       // создать операцию
-            operation.setState(OperState.LOAD);
-
-            return operationRepository.save(operation);     // сохранить операцию
-        } else {
-            throw new DefaultApplicationException(postingProcessor.validationErrorMessage(errors, wrapper.getErrorList()));
-        }
-    }
-
-    /**
-     * Заполняет дополнительные параметры операции
-     * @param operation
-     * @throws Exception
-     */
-    private GLManualOperation enrichmentOperation(GLManualOperation operation) throws Exception {
-        ordinaryPostingProcessor.enrichment(operation);                                  // обогащение операции
-        return (GLManualOperation)operationRepository.update(operation);
-    }
-
-    /**
-     * Обрабатывает входящую операцию, введенную с экрана
-     * @param operation         - операция
-     * @return                  - true, если опеарция обработана, false - WTAC или ERCHK
-     */
-    private boolean processOperation(ManualOperationWrapper wrapper, GLManualOperation operation) throws Exception {
-        final Long operationId = operation.getId();
-        GLOperationProcessor operationProcessor = etlPostingController.findOperationProcessor(operation);
-        String msgCommon = format(" операцию ID = %s", operation.getId());
-        boolean toContinue = true;
-/*      // TODO исключаю как лишнее действие
-        try {
-            toContinue = validateOperation(operationProcessor, operation);
-        } catch ( Throwable e ) {
-            if (!(e instanceof DefaultApplicationException)) {
-                String msg = "Ошибка валидации данных" + msgCommon;
-                setOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource(), operationId, OperState.ERCHK);
-                auditController.error(Operation, msg, operation, e);
-            }
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-*/
-        if ( toContinue ) {
-            try {
-                operationRepository.executeInNewTransaction(persistence -> updateOperation(operationProcessor, operation));
-            } catch ( Throwable e ) {
-                String msg = "Ошибка заполнения данных" + msgCommon;
-                setOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource(), operationId, OperState.ERCHK);
-                auditController.error(ManualOperation, msg, operation, e);
-                throw new DefaultApplicationException(e.getMessage(), e);
-            }
-            try {
-                finalOperation(operationProcessor, operation);
-            } catch ( Throwable e ) {
-                String msg = "Ошибка обработки" + msgCommon;
-                setOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource(), operationId, OperState.ERPOST);
-                auditController.error(ManualOperation, msg, operation, e);
-                throw new DefaultApplicationException(e.getMessage(), e);
-            }
-        }
-        return true;
-    }
-
-    private boolean validateOperation(GLOperationProcessor operationProcessor, GLManualOperation operation) {
-        List<ValidationError> errors = operationProcessor.validate(operation, new ValidationContext());
-        boolean toContinue = errors.isEmpty();
-        if (!toContinue) {
-            String msg = "Ошибка валидации" + format(" операции '%s'", operation.getId());
-            String err = operationProcessor.validationErrorsToString(errors);
-            auditController.error(ManualOperation, msg, operation, err);
-            throw new DefaultApplicationException(err);
-        }
-        return toContinue;
-    }
-
-    private GLManualOperation updateOperation(GLOperationProcessor operationProcessor, GLManualOperation operation) throws Exception {
-        operation.setProcDate(operdayController.getOperday().getCurrentDate());
-        operation.setPstScheme(operationProcessor.getOperationType());              // определить схему операции
-        operationProcessor.resolveOperationReference(operation);
-        operationProcessor.setSpecificParameters(operation);
-        return operationRepository.update(operation);
-    }
-
-    private void finalOperation(GLOperationProcessor operationProcessor, GLManualOperation operation) throws Exception {
-        List<GLPosting> pstList = operationRepository
-                .executeInNewTransaction(persistence -> operationProcessor.createPosting(operation));      // обработать операцию
-        if (!pstList.isEmpty()) {                                                   // создать проводки
-            operationRepository.executeInNewTransaction(persistence -> {
-                operationProcessor.resolvePostingReference(operation, pstList);
-                return null;
-            });
-            pdRepository.processPosting(pstList, operationProcessor.getSuccessStatus());                             // обработать / записать проводки
-        }
-    }
-
-    private String logPostingError(Throwable e, String msg, ManualOperationWrapper wrapper,
-                                   BatchPostStatus status, int errorCode) {
-        log.error("-->" + msg, e);
-        addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-        try {
-            // TODO здесь падает при обработке пакета!!
-            operationRepository.executeInNewTransaction(persistence -> postingRepository.updatePostingStatusError(wrapper.getId(), wrapper.getErrorMessage(),
-                        getStepStatus(wrapper.getStatus().getStep(), status), errorCode));
-        } catch (Throwable e1) {
-            return msg + "\n" + e.getMessage();
-        }
-        log.error("<--" + msg, e);
-        auditController.error(getLogCode(wrapper), msg, postingName, getWrapperId(wrapper), e);
-        return msg;
-    }
-
-    private String logOperationError(Throwable e, String msg, ManualOperationWrapper wrapper, Long operationId, OperState state) {
-        log.error(msg, e);
-        String errMsg = setOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource(), operationId, state);
-        if (!(e instanceof ValidationError))
-            auditController.error(getLogCode(wrapper), msg, postingName, getWrapperId(wrapper), e);
-        return msg;
+    private String getWrapperId(ManualOperationWrapper wrapper) {
+        return null == wrapper.getId() ? "" : wrapper.getId().toString();
     }
 
     private AuditRecord.LogCode getLogCode(ManualOperationWrapper wrapper) {
@@ -1000,33 +710,26 @@ public class ManualPostingController {
         return errMessage;
     }
 
-    private String setOperationErrorMessage(Throwable e, String msg, ErrorList errorList, String source, Long operationId, OperState state) {
-        String errMessage = addOperationErrorMessage(e, msg, errorList, source);
-        final GLManualOperation operation = operationRepository.findById(GLManualOperation.class, operationId);
-        if (null != operation) {
-            try {
-                operationRepository.executeInNewTransaction(persistence -> {
-                    operationRepository.updateOperationStatusError(operation, state, substr(errMessage, 4000));
-                    return null;
-                });
-            } catch (Exception e1) {
-                return errMessage + "\n" + e.getMessage();
-            }
-        }
-        return errMessage;
-    }
-
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
                 PersistenceException.class);
     }
 
-    public void updatePostingStatusNew(BatchPosting posting, BatchPostStatus state) throws Exception {
-        int cnt = postingRepository.executeInNewTransaction(persistence -> postingRepository.updatePostingStatusNew(posting, state));
-        if (cnt != 1) {
-            throw new ValidationError(ErrorCode.POSTING_IS_WORKING, posting.getId().toString(), state.name());
+    public String logPostingError(Throwable e, String msg, ManualOperationWrapper wrapper,
+                                  BatchPostStatus status, int errorCode) {
+        log.error("-->" + msg, e);
+        addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+        try {
+            // TODO здесь падает при обработке пакета!!
+            operationRepository.executeInNewTransaction(persistence -> postingRepository.updatePostingStatusError(wrapper.getId(), wrapper.getErrorMessage(),
+                    getStepStatus(wrapper.getStatus().getStep(), status), errorCode));
+        } catch (Throwable e1) {
+            return msg + "\n" + e.getMessage();
         }
+        log.error("<--" + msg, e);
+        auditController.error(getLogCode(wrapper), msg, postingName, getWrapperId(wrapper), e);
+        return msg;
     }
 
     public ManualOperationWrapper createStatusWrapper(BatchPosting posting) {
@@ -1038,7 +741,167 @@ public class ManualPostingController {
         return wrapper;
     }
 
-    private String getWrapperId(ManualOperationWrapper wrapper) {
-        return null == wrapper.getId() ? "" : wrapper.getId().toString();
+    // ==============================================================================================
+    // Сервис движений
+
+    /**
+     * Проверяет, есть ли в операции контролируемые счета
+     * Если есть, посылает движение и возвращает movementId, иначе пустую строку
+     * В случае ошибки возникает исключение
+     * @param wrapper
+     * @return
+     */
+    public RpcRes_Base<ManualOperationWrapper> sendMovement(BatchPosting posting, ManualOperationWrapper wrapper, BatchPostStatus nextStatus) {
+        if (null != posting.getReceiveTimestamp()) {
+            String msg = String.format("По запоросу ID = '%s' уже было выполнено движение в MovementCreate: '%s', время: '%s'",
+                    posting.getId().toString(), posting.getMovementId(), timeFormat.format(posting.getReceiveTimestamp()));
+            auditController.info(getLogCode(wrapper), msg, posting);
+            return new RpcRes_Base<>(wrapper, true, msg);              // TODO норма ?? ValidationError ??
+        }
+        try {
+            MovementCreateData data = createMovementData(posting, wrapper);
+            String movementId = data.getMessageUUID();
+            RpcRes_Base<ManualOperationWrapper> res = setOperationRqStatusSend(wrapper, movementId, WAITSRV, nextStatus);
+            List<MovementCreateData> movementData = new ArrayList<>();
+            movementData.add(data);
+            try {
+                movementProcessor.sendRequests(movementData);
+                return res;
+            } catch (Throwable e) {     // ошибка отправки
+                MovementErrorTypes error = data.getErrType();
+                String msg = error.getMessage() + "\n" + data.getErrDescr();
+                return setOperationRqStatusReceive(wrapper, movementId, ERRSRV, error.getCode(), msg);
+            }
+        }
+        catch (Throwable e) {
+            throw new DefaultApplicationException(logPostingError(e,
+                    String.format("Ошибка при обращении к сервису движений по запросу ID = %s", getWrapperId(wrapper)),
+                    wrapper, ERRSRV, MovementErrorTypes.ERR_REQUEST.getCode()));
+        }
     }
+
+    public void receiveMovement(MovementCreateData data) {
+        String movementId = data.getMessageUUID();
+        try {
+            BatchPosting posting = postingRepository.findPostingByMovementId(movementId, operdayController.getOperday().getCurrentDate());
+            if (null == posting) { // || postings.size() == 0) {     // posting not fount
+                throw new DefaultApplicationException(format("Не найдены запросы с movementId = '%s' в текущем опердне", movementId));
+            }
+
+            log.error(format("Найден запрос с movementId = '%s' в текущем опердне: ID = %d", movementId, posting.getId()));
+/*
+            if (BatchPostStatus.WAITSRV != posting.getStatus()) {   // invalid status
+                throw new DefaultApplicationException(format("Неверный статус запроса %d: '%s'", posting.getId(), posting.getStatus().name()));
+            }
+*/
+
+            ManualOperationWrapper wrapper = createStatusWrapper(posting);
+            String signerName = posting.getSignerName();
+            String msg = String.format("Получено из MovementCreate: Id = '%s', State = '%s', ErrType = '%s', ErrDescr = '%s'",
+                    data.getMessageUUID(), data.getState(), data.getErrType(), data.getErrDescr());
+            log.info(msg);
+            auditController.info(getLogCode(wrapper), msg, posting);
+            // записываем время приема ответа из АБС, меняем статус
+            BatchPostStatus oldStatus = wrapper.getStatus();
+            if (!MovementCreateData.StateEnum.ERROR.equals(data.getState())) {  // SUCCESS или WARNING
+                if (WAITSRV == oldStatus) {     // все ОК
+                    setOperationRqStatusReceive(wrapper, movementId, OKSRV, 0, null);        // одобрен
+                    if (null == posting.getPackageId()) {
+                        BatchPostStatus newStatus = getOperationRqStatusSigned(signerName, posting.getPostDate());
+                        wrapper.setAction(BatchPostAction.SIGN);
+                        setOperationRqStatusSigned(wrapper, signerName, newStatus, newStatus);  // авторизован
+                    }
+                    return;
+                } else {        // получен ответ после таймаута или ошибки
+                    createPostingHistory(wrapper.getId());
+                    auditController.error(ManualOperation,
+                            "Ошибка при получении ответа от сервиса движений по запросу ID = " + wrapper.getId(), postingName, getWrapperId(wrapper),
+                            String.format("Получен положительный ответ от сервиса движений по запросу в статусе %s (%s)", oldStatus.name(), oldStatus.getLabel()));
+                    setOperationRqStatusReceive(wrapper, movementId, ERROPERSRV, 0, null);        // одобрен
+                }
+            } else {
+                // TODO надо вынести запись статуса ошибки наружу? Падает при обработке пакетных операций
+                log.info(String.format("MovementCreate ERROR: Id = '%s' '%s'", movementId, data.getErrDescr()));
+                MovementErrorTypes error = data.getErrType();
+                BatchPostStatus errStatus = MovementErrorTypes.ERR_BUSINESS.equals(error) ? REFUSESRV : ERRSRV;
+                String errDescr = data.getErrDescr();
+                if (!isEmpty(errDescr) && (errDescr.contains("Insufficient balance") || errDescr.contains("Insufficient funds")) ) {
+                    error = MovementErrorTypes.ERR_NOMONEY;
+                }
+                String errorMsg = error.getMessage() + "\n" + errDescr;
+                if (WAITSRV != oldStatus) {   // получен ответ после таймаута или ошибки
+                    createPostingHistory(wrapper.getId());
+                }
+                setOperationRqStatusReceive(wrapper, movementId, errStatus, error.getCode(), errorMsg);        // одобрен
+            }
+        }
+        catch (Exception e) {
+            String msg = String.format("Ошибка при обработке ответа от сервиса движений по запросу ID = %s", data);
+            log.info(msg);
+            auditController.error(ManualOperation, msg, null, movementId, e);
+        }
+    }
+
+    public MovementCreateData createMovementData(BatchPosting posting, ManualOperationWrapper wrapper) {
+        String movementDr = null, movementCr = null;
+        String oper = posting.getId().toString();
+        String rand = getRundomUUID(6);
+        if (posting.isControllableDebit()) {
+            movementDr = oper + "D." + rand;
+        }
+        if (posting.isControllableCredit()) {
+            movementCr = oper + "C." + rand;
+        }
+        if (isEmpty(movementDr) && isEmpty(movementCr)) {
+            return null;
+        }
+        Date operday = operdayController.getOperday().getCurrentDate();
+        MovementCreateData data = fillMovementData(posting, movementDr, movementCr, operday);
+        String msg1 = String.format("Отправка в MovementCreate: ID = '%s', AC_DR = '%s', AMT_DR = %s, AC_CR = '%s', AMT_CR = %s",
+                data.getMessageUUID(), data.getAccountCBD(), null == data.getOperAmountD() ? "" : data.getOperAmountD().toString(),
+                data.getAccountCBC(), null == data.getOperAmountC() ? "" : data.getOperAmountC().toString());
+        log.info(msg1);
+
+        auditController.info(getLogCode(wrapper), msg1, postingName, getWrapperId(wrapper));
+
+        return data;
+    }
+
+    private String getRundomUUID(int num) {
+        return UUID.randomUUID().toString().substring(0, num);
+    }
+
+    private MovementCreateData fillMovementData(BatchPosting posting,
+                                                String movementDr, String movementCr, Date operday) {
+        MovementCreateData data = new MovementCreateData();
+        if (!isEmpty(movementDr)) {
+            data.setOperIdD(movementDr);
+            data.setAccountCBD(posting.getAccountDebit());
+            data.setOperAmountD(posting.getAmountDebit());
+        }
+        if (!isEmpty(movementCr)) {
+            data.setOperIdC(movementCr);
+            data.setAccountCBC(posting.getAccountCredit());
+            data.setOperAmountC(posting.getAmountCredit());
+        }
+
+        data.setMessageUUID(ifEmpty(data.getOperIdD(), "") + "." + ifEmpty(data.getOperIdC(), "")); //+"."+UUID.randomUUID().toString().substring(0,6));
+
+        data.setDestinationR(StringUtils.removeCtrlChars(posting.getRusNarrativeLong()));
+        data.setPnar(pdRepository.getPnarManual(posting.getDealId(), posting.getSubDealId(), posting.getPaymentRefernce()));
+
+        data.setPstDate(posting.getValueDate());
+        data.setDealId(substr(!isEmpty(posting.getDealId()) ? posting.getDealId() : posting.getPaymentRefernce(), 15));
+        data.setPstSource(posting.getSourcePosting());
+        data.setDeptId(posting.getDeptId());
+        data.setProfitCenter(posting.getProfitCenter());
+        data.setCorrectionPst(YesNo.Y.equals(posting.getIsCorrection()));
+        // TODO DEBUG
+//        data.setOperCreate(userContext.getTimestamp());
+//        data.setOperCreate(data.getPstDate());
+        data.setOperCreate(operday);
+
+        return data;
+    }
+
 }

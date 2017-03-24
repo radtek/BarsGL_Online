@@ -50,7 +50,7 @@ public class CheckCardRemForm extends GridForm {
             public void execute() {
                if (dlg == null) dlg = new CheckCardRemFilterDlg();
                dlg.setDlgEvents(this);
-               dlg.show();
+               dlg.show(null);
             }
 
             public void onDlgOkClick(Object prms){

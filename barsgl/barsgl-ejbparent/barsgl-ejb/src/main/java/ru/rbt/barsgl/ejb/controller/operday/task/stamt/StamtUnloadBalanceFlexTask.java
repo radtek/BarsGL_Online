@@ -16,7 +16,6 @@ import ru.rbt.barsgl.shared.Assert;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
@@ -77,6 +76,9 @@ public class StamtUnloadBalanceFlexTask extends AbstractJobHistoryAwareTask {
         final Date executeDate = getExecuteDate(properties);
         try {
             if (TaskUtils.getCheckRun(properties, true)) {
+
+                unloadController.checkConsumed();
+
                 boolean isAlready = unloadController.getAlreadyHeaderCount(executeDate, BALANCE_DELTA_FLEX) > 0;
                 Assert.isTrue(!isAlready, () -> new ValidationError(ErrorCode.STAMT_DELTA_ERR
                         , format("Выгрузка остатков по счетам (%s) для STAMT (шаг AfterFlex) в ОД '%s' невозможна"

@@ -13,7 +13,7 @@ public class CheckNotZeroBigDecimal implements AppPredicate<String> {
         try {
             if (null != target && !target.trim().isEmpty()) {
                 final BigDecimal dec = new BigDecimal(target);
-                return !BigDecimal.ZERO.equals(dec);
+                return dec.compareTo(BigDecimal.ZERO) != 0;
             } else {
                 return false;
             }

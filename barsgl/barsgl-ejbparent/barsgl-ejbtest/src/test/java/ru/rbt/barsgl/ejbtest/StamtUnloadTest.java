@@ -5,7 +5,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.*;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -34,6 +33,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
@@ -308,6 +308,9 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         Assert.assertTrue(baseEntityRepository.select("select * from GL_BALSTMD").stream()
                 .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(operation.getAccountDebit())));
 
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '2'");
+
         // выгрузка в текущем открытом дне - одна проводка
         GLOperation operation2 = getOneOperBackdate(getOperday());
         long pcid2 = getPcid(operation2);;
@@ -328,6 +331,8 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         List<DataRecord> excl = baseEntityRepository.select("select * from gl_etlstma");
         Assert.assertTrue(1 <= excl.size());
         Assert.assertEquals(1, excl.stream().filter(r -> r.getLong("pcid") == pcid).count());
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '2'");
 
         // выгрузка в текущем открытом дне - одна проводка
         GLOperation operation3 = getOneOperBackdate(getOperday());

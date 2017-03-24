@@ -31,7 +31,7 @@ public enum ErrorCode {
     , FILIAL_NOT_VALID(21, "Неверный филиал %s: '%s'. Филиал по счету: '%s'")
     , TOO_MANY_ACCRLN_GL(22, "Найдено более одной записи ACCRLN (контрсчет) филиал '%s', валюта '%s', БС2 '%s'")
     , NOT_FOUND_ACCRLN_GL(23, "Не найдено ни одной записи ACCRLN (контрсчет) филиал '%s', валюта '%s', БС2 '%s'")
-    , ACCOUNT_IS_CLOSED(24, "Счет %s закрыт: '%s' (поле '%s')")
+    , ACCOUNT_IS_CLOSED(24, "Дата открытия/закрытия счета %s ('%s') не соответствует дате проводки (поле '%s')")
     , ACCOUNT_706_NOT_RUR(25, "Счет %s: валютный счет по доходам-расходам недопустим '%s' (поле '%s')")
     , ACCOUNT_706_PSEUDO(26, "Счет %s: псевдо-счет MIDAS недопустим '%s' (поле '%s')")
     , ACCOUNT_NOT_CORRESP(27, "Неверный счет для корреспонденции '%s' с %s счетом '%s'")
@@ -85,7 +85,7 @@ public enum ErrorCode {
     , BRANCH_NOT_FOUND(2007, "Ключи счета %s: Бранч не найден: '%s' (поле '%s')")
     , COMPANY_CODE_NOT_VALID(2008, "Ключи счета %s: Код филиала '%s' (поле '%s') не соответствует бранчу '%s' (поле '%s')")
     , COMPANY_CODE_NOT_FOUND(2009, "%s")
-    , TOO_MANY_ACCRLN_ENTRIES(2010, "Найдено более одного счета ЦБ '%s' по счету Midas '%s' для CTYPE '%s'")
+    , TOO_MANY_ACCRLN_ENTRIES(2010, "Найдено более одного счета ЦБ '%s' по счету Midas '%s' для '%s'")
     , ACCOUNT_PARAMS_NOT_FOUND(2011, "Ключи счета %s: Не найдены настройки (GL_ACTPARM) для AccountType = '%s', CustomerType = '%s', Term = '%s' на дату '%s'")
     , ACCOUNT_TYPE_IS_NOT_NUMBER(2012, "Ключи счета %s: Неверный формат типа счета (не число): '%s' (поле '%s')")
     , ACCOUNT_TYPE_INVALID(2013, "Ключи счета %s: Тип счета не задан в системе: '%s' (поле '%s')")
@@ -125,7 +125,15 @@ public enum ErrorCode {
     , ACCOUNT_707_BAD_BRANCH(2042, "Счет '707...' можно открыть только в головном отделении!")
     , PLCODE_NOT_CORRECT(2043, "Символ доходов / расходов '%s' не соответсвует настройкам для:\nAccountType '%s', Тип собств '%s', Код срока '%s', должан быть '%s'")
     , ACCOUNT2_NOT_CORRECT(2044, "Балансовый счет 2-го порядка '%s' не соответсвует настройкам для:\nAccountType '%s', Тип собств '%s', Код срока '%s', должан быть '%s'")
-
+//    GL_SEQ = XX
+    , GL_SEQ_XX_KEY_WITH_DEAL(2045, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, DEALID д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_SUBDEAL(2046, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, SUBDEAL=%s, GL_SEQ=%s некорректно, SUBDEAL д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_PLCODE(2047, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, PLCODE д.б.пустым")
+    , GL_SEQ_XX_GL_ACC_NOT_FOUND(2048,"Счет %s с ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s не определяется однозначно, GL_ACC.ACID=%s")
+    , GL_SEQ_XX_ACCRLN_NOT_FOUND(2049, "Счет %s с ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s не определяется однозначно, ACCRLN.ACID=%s")
+    , GL_SEQ_XX_KEY_WITH_DB_PLCODE(2050, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым")
+    , GL_SEQ_XX_KEY_WITH_SQ_0(2051, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, SQ=0")
+    , GL_SEQ_XX_KEY_WITH_FL_CTRL(2052, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, GL_ACTNAME.FL_CTRL=Y")
     // Опердень и задачи
     , OPEN_OPERDAY_ERROR(3001, "%s")
     , CLOSE_OPERDAY_ERROR(3002, "%s")
@@ -159,9 +167,17 @@ public enum ErrorCode {
     , PACKAGE_IS_WORKING(4011, "Пакет ID = %s уже находится в обработке (статус '%s')")
     , POSTING_IS_WORKING(4012, "Запрос на операцию ID = %s уже находится в обработке (статус '%s')")
     , OPER_HAS_MOVEMENT(4013, "Нельзя подавить проводки - по операции '%s' было обращение в сервис движений: '%s'")
-    , PACKAGE_BAD_STATUS(4014, "Пакет ID = %s в недопустимом статусе: '%s'%s")
+    , PACKAGE_BAD_STATUS(4014, "Пакет ID = %s: нельзя '%s' пакет в статусе: '%s' ('%s'). Обновите информацию")
     , POSTING_BACK_GT_30(4015, "Нельзя установить дату ранее чем %s (30 дней от текущего опердня)")
     , POSTINGS_CONTROLLABLE(4016, "%s.\nВ операции есть проводки по контролируемым счетам: '%s'")
+    , ACCOUNT707_INP_NOT_ALLOWED(4017, "У Вас нет прав для открытия счетов ОФР прошлых лет")
+    , ACCOUNT707_CHNG_NOT_ALLOWED(4018, "У Вас нет прав для изменения счетов ОФР прошлых лет")
+    , ACCOUNT706_INP_NOT_ALLOWED(4019, "У Вас нет прав для открытия счетов ОФР текущего периода")
+    , ACCOUNT706_CHNG_NOT_ALLOWED(4020, "У Вас нет прав для изменения счетов ОФР текущего периода")
+    , ACCOUNT_INP_NOT_ALLOWED(4021, "У Вас нет прав для открытия счетов данной категории")
+    , ACCOUNT_CHNG_NOT_ALLOWED(4022, "У Вас нет прав для изменения счетов данной категории")
+    , POSTING_STATUS_WRONG(4023, "Статус запроса на операцию не соответствует ожидаемому: '%s' (%s)")
+    , PACKAGE_STATUS_WRONG(4024, "Статус пакета не соответствует ожидаемому: '%s' (%s)")
 
     , BAD_DATE_FORMAT(10000, "Неверный формат поля '%s': %s")
     ;
@@ -176,6 +192,9 @@ public enum ErrorCode {
 
     public int getErrorCode() {
         return errorCode;
+    }
+    public String getStrErrorCode() {
+        return Integer.toString(errorCode);
     }
 
     public String getRawMessage() {

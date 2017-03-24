@@ -1,11 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
-import ru.rbt.barsgl.ejb.entity.AppUser;
-import ru.rbt.barsgl.ejb.entity.access.*;
-import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport;
-import ru.rbt.barsgl.ejb.security.policy.ExternalUserLoginPolicy;
 import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.util.ServerUtils;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
@@ -19,13 +14,23 @@ import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
-import javax.naming.ldap.LdapContext;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import ru.rbt.security.AuthorizationServiceSupport;
+import ru.rbt.security.ejb.entity.AppUser;
+import ru.rbt.security.ejb.entity.access.Role;
+import ru.rbt.security.ejb.entity.access.SecurityAction;
+import ru.rbt.security.ejb.entity.access.SecurityActionGroup;
+import ru.rbt.security.ejb.entity.access.SecurityRoleActionRln;
+import ru.rbt.security.ejb.entity.access.SecurityRoleActionRlnId;
+import ru.rbt.security.ejb.entity.access.UserMenuActionRln;
+import ru.rbt.security.ejb.entity.access.UserMenuItem;
+import ru.rbt.security.ejb.entity.access.UserMenuNode;
+import ru.rbt.security.ejb.entity.access.UserRoleRln;
 
 
 /**

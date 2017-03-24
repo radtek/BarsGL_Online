@@ -29,6 +29,7 @@ public class ExcelParser implements Iterator<List<Object>>, Closeable {
     private String [] params;
 
     private int columnCount;
+    private int rowCount;
 
     public ExcelParser(InputStream stream) {
         this.stream = stream;
@@ -57,7 +58,8 @@ public class ExcelParser implements Iterator<List<Object>>, Closeable {
         this.params = params;
         XSSFWorkbook book = new XSSFWorkbook(stream);
         XSSFSheet sheet = book.getSheetAt(0);
-        columnCount = sheet.getRow(0).getLastCellNum();
+        columnCount = (null != sheet.getRow(0)) ? sheet.getRow(0).getLastCellNum() : 0; // TODO ???
+        rowCount = sheet.getLastRowNum();
         rowIterator = sheet.iterator();
         return this;
      }
@@ -123,5 +125,13 @@ public class ExcelParser implements Iterator<List<Object>>, Closeable {
         } else {
             return rowList;
         }
+    }
+
+    public int getRowCount() {
+        return rowCount;
+    }
+
+    public int getColumnCount() {
+        return columnCount;
     }
 }

@@ -1,10 +1,13 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
+import static java.lang.String.format;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
-import ru.rbt.barsgl.ejb.controller.excel.ProcessExcelPackageTask;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
+import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
+import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.audit.controller.AuditController;
@@ -12,14 +15,16 @@ import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.ejb.EJB;
@@ -29,17 +34,15 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.*;
 
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessStatus.*;
-import static ru.rbt.barsgl.ejb.entity.etl.BatchPackage.PackageState;
-import static ru.rbt.barsgl.ejb.entity.etl.BatchPackage.PackageState.*;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.PACKAGE_IS_PROCESSED;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.PACKAGE_SAME_NOT_ALLOWED;
+import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
-import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM;
+import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
@@ -49,6 +52,7 @@ import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 @Stateless
 @LocalBean
 public class BatchPackageController {
+    private final long MAX_ROWS = 1000;
 
     @EJB
     private BatchPostingRepository postingRepository;
@@ -57,7 +61,7 @@ public class BatchPackageController {
     private BatchPackageRepository packageRepository;
 
     @Inject
-    private ManualPostingController manualPostingController;
+    private ManualPostingController postingController;
 
     @Inject
     private BatchPostingProcessor postingProcessor;
@@ -69,7 +73,14 @@ public class BatchPackageController {
     private AuditController auditController;
 
     @Inject
-    private ProcessExcelPackageTask excelPackageTask;
+    private MovementCreateProcessor movementProcessor;
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
+
+    public int getMaxRowsExcel() {
+        return (int)(long)propertiesRepository.getNumberDef(PropertyName.BATPKG_MAXROWS.getName(), MAX_ROWS);
+    }
 
     /**
      * Обработка запроса от интерфейса на обработку запроса на операцию
@@ -79,7 +90,7 @@ public class BatchPackageController {
      */
     public RpcRes_Base<ManualOperationWrapper> processPackageRq(ManualOperationWrapper wrapper) throws Exception {
         try {
-            manualPostingController.checkOperdayOnline(wrapper.getErrorList());
+//            postingController.checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
                 case CONTROL:           // на подпись - шаг 1 (CONTROL)
                     return forSignPackageRq(wrapper);
@@ -93,6 +104,8 @@ public class BatchPackageController {
                     return confirmPackageRq(wrapper, BatchPostStep.HAND3);
                 case REFUSE:            // отказать - шаг 3 (REFUSEDATE)
                     return refusePackageRq(wrapper, BatchPostStatus.REFUSEDATE);
+                case STATISTICS:            // статистика
+                    return statisticsPackageRq(wrapper);
             }
             return new RpcRes_Base<ManualOperationWrapper>(
                     wrapper, true, "Неверное действие");
@@ -104,21 +117,24 @@ public class BatchPackageController {
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
                 auditController.error(BatchOperation, msg, null, e);
-                return new RpcRes_Base<>(wrapper, true, getErrorMessage(e, ValidationError.class));
+                return new RpcRes_Base<>(wrapper, true, msg + "\n" +  postingController.getErrorMessage(e));
             }
         }
     }
 
-    private BatchPackage getPackageWithCheck(ManualOperationWrapper wrapper, PackageState ... packageState) throws SQLException {
+    private BatchPackage getPackageWithCheck(ManualOperationWrapper wrapper, BatchPackageState ... packageState) throws SQLException {
         Long id = wrapper.getPkgId();
-        final BatchPackage pkg = Optional.of(packageRepository.findById(BatchPackage.class, id))
-                .orElseThrow(() -> new DefaultApplicationException("Не найден пакет с Id = " + id));
-        Set<PackageState> states = new HashSet<PackageState>();
+        final BatchPackage pkg = packageRepository.findById(id);
+        if (null == pkg ) {
+                throw new DefaultApplicationException("Не найден пакет с Id = " + id + ". Обновите информацию");
+        }
+        Set<BatchPackageState> states = new HashSet<BatchPackageState>();
         if (packageState != null) {// !packageState.equals(pkg.getPackageState())) {
             states.addAll(Arrays.asList(packageState));
             if (!states.contains(pkg.getPackageState())) {
-                ValidationError error = new ValidationError(ErrorCode.PACKAGE_BAD_STATUS, id.toString(), pkg.getPackageState().name(),
-                        ERROR.equals(pkg.getPackageState()) ? "\nПакет содержит операции с ошибкой, обработка невозможна" : "");
+                ValidationError error = new ValidationError(ErrorCode.PACKAGE_BAD_STATUS, id.toString(),
+                        wrapper.getAction().getLabel(), pkg.getPackageState().name(), pkg.getPackageState().getLabel());
+//                        ERROR.equals(pkg.getPackageState()) ? "\nПакет содержит операции с ошибкой, обработка невозможна" : "");
                 wrapper.getErrorList().addErrorDescription("", "", ValidationError.getErrorText(error.getMessage()), ValidationError.getErrorCode(error.getMessage()));
                 throw new DefaultApplicationException(wrapper.getErrorMessage(), error);
             }
@@ -156,6 +172,15 @@ public class BatchPackageController {
         }
     }
 
+    public RpcRes_Base<ManualOperationWrapper> statisticsPackageRq(ManualOperationWrapper wrapper) throws Exception {
+        Long pkgId = wrapper.getPkgId();
+        BatchProcessResult result = new BatchProcessResult(pkgId);
+        result.setPackageStatistics(packageRepository.getPackageStatistics(pkgId), true);
+        String msg = result.getPackageProcessMessage();
+        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        return new RpcRes_Base<>(wrapper, false, msg);
+    }
+
     /**
      * Интерфейс: Передает запрос на операцию на подпись
      * @param wrapper
@@ -164,13 +189,13 @@ public class BatchPackageController {
      */
     public RpcRes_Base<ManualOperationWrapper> forSignPackageRq(ManualOperationWrapper wrapper) throws Exception {
         BatchPackage pkg = getPackageWithCheck(wrapper, LOADED);
-        BatchPosting posting0 = packageRepository.getOnePostingByPackage(pkg.getId(), INPUT);
+        BatchPosting posting0 = postingRepository.getOnePostingByPackageWithStatus(pkg.getId(), INPUT);
         try {
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             postingProcessor.checkBackvaluePermission(posting0.getPostDate(), wrapper.getUserId());
         } catch (ValidationError e) {
             String msg = "Ошибка при передаче запроса на операцию на подпись";
-            String errMessage = manualPostingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+            String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
             auditController.warning(BatchOperation, msg, new BatchPosting().getTableName(), wrapper.getId().toString(), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
@@ -180,15 +205,20 @@ public class BatchPackageController {
     }
 
     private RpcRes_Base<ManualOperationWrapper> setPackageRqStatusControl(ManualOperationWrapper wrapper, BatchPackage pkg, boolean withChange) throws Exception {
+        Long pkgId = pkg.getId();
         BatchPostStatus status = BatchPostStatus.CONTROL;
-        BatchPackage.PackageState pkgStatus = ON_CONTROL;
+        String statusIn = StringUtils.arrayToString(new BatchPostStatus[]{INPUT}, ",", "'");
+        BatchPackageState pkgStatus = ON_CONTROL;
         postingRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
-                packageRepository.updatePostingsStatusChange(pkg, userContext.getTimestamp(), userContext.getUserName(), status);
+                packageRepository.updatePostingsStatusChange(pkgId, userContext.getTimestamp(), userContext.getUserName(), status, statusIn);
             } else {
-                packageRepository.updatePostingsStatus(pkg, status);
+                packageRepository.updatePostingsStatus(pkgId, status, statusIn);
             }
-            packageRepository.updatePackageStateProcessed(pkg, pkgStatus, userContext.getTimestamp());
+            BatchPackageState pkgStatusOld = pkg.getPackageState();
+            int cnt = packageRepository.updatePackageState(pkg.getId(), pkgStatus, pkgStatusOld);
+            if (0 == cnt)
+                throw  new ValidationError(PACKAGE_STATUS_WRONG, pkgStatusOld.name(), pkgStatusOld.getLabel());
             return null;
         });
         wrapper.setStatus(status);
@@ -197,44 +227,50 @@ public class BatchPackageController {
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
-    private RpcRes_Base<ManualOperationWrapper> setPackageRqStatusSigned(ManualOperationWrapper wrapper, BatchPackage pkg, BatchPostStatus oldStatus, BatchPostStatus newStatus  ) throws Exception {
-        BatchProcessResult result = new BatchProcessResult(pkg.getId());
+    public RpcRes_Base<ManualOperationWrapper> setPackageRqStatusSigned(ManualOperationWrapper wrapper, String userName, BatchPackage pkg, BatchPackageState pkgStateOld,
+                                                                        BatchPostStatus newStatus, BatchPostStatus logStatus, BatchPostStatus ... oldStats) throws Exception {
+        Assert.notNull(oldStats, "Текущий статус пустой!");
+        Long pkgId = pkg.getId();
+        BatchPostStep step = oldStats[0].getStep();
+        BatchProcessResult result = new BatchProcessResult(pkg.getId(), newStatus);
         postingRepository.executeInNewTransaction(persistence -> {
-            String msg = "???";
-            BatchPackage.PackageState pkgStatus = WORKING;
-            BatchProcessResult.BatchProcessStatus resultStatus = BT_INITIAL;
+            String statusIn = StringUtils.arrayToString(oldStats, ",", "'");
+            BatchPostAction action = wrapper.getAction();
+            int cnt = 0;
+            Date timestamp = userContext.getTimestamp();
             switch (newStatus) {
-                case WAITDATE:
-                    packageRepository.signedPostingsStatus(pkg, userContext.getTimestamp(), userContext.getUserName(), oldStatus, newStatus);
-                    pkgStatus = ON_WAITDATE;
-                    resultStatus = BT_WAITDATE;
+                case SIGNEDVIEW:
+                    if (SIGNEDDATE.equals(logStatus)) {
+                        cnt = packageRepository.signedConfirmPostingsStatus(pkgId, pkgStateOld, timestamp, userName, newStatus, statusIn);
+                    } else {    // SIGNED or WAITDATE
+                        cnt = packageRepository.signedPostingsStatus(pkgId, pkgStateOld, timestamp, userName, newStatus, statusIn);
+                    }
                     break;
                 case SIGNED:
-                    packageRepository.signedPostingsStatus(pkg, userContext.getTimestamp(), userContext.getUserName(), oldStatus, newStatus);
-                    pkgStatus = IS_SIGNED;
-                    resultStatus = BT_SIGNED;
+                case WAITDATE:
+                    cnt = packageRepository.signedPostingsStatus(pkgId, pkgStateOld, timestamp, userName, newStatus, statusIn);
                     break;
                 case SIGNEDDATE:
-                    if (oldStatus.getStep().isControlStep()) {
-                        packageRepository.signedConfirmPostingsStatus(pkg, userContext.getTimestamp(), userContext.getUserName(), oldStatus, newStatus);
-                        resultStatus = BT_SIGNEDDATE;
+                    if (step.isControlStep()) {
+                        cnt = packageRepository.signedConfirmPostingsStatus(pkgId, pkgStateOld, timestamp, userName, newStatus, statusIn);
+                        result.setProcessDate(BT_PAST);
                     } else {
-                        packageRepository.confirmPostingsStatus(pkg, userContext.getTimestamp(), userContext.getUserName(), oldStatus, newStatus);
-                        resultStatus = BT_CONFIRM;
+                        cnt = packageRepository.confirmPostingsStatus(pkgId, pkgStateOld, timestamp, userName, newStatus, statusIn);
+                        result.setStatus(CONFIRM);
+                        result.setProcessDate(CONFIRM_NOW.equals(action) ? BT_NOW : BT_PAST);
                     }
-                    pkgStatus = IS_SIGNEDDATE;
                     break;
                 default:
-                    Assert.isTrue(true, "Неверный статус");
+                    Assert.isTrue(true, "Неверный статус: " + newStatus.name());
             }
-            packageRepository.updatePackageStateProcessed(pkg, pkgStatus, userContext.getTimestamp());
-            result.setStatus(resultStatus);
-            return msg;
+            if (0 == cnt)
+                throw new ValidationError(PACKAGE_STATUS_WRONG, pkgStateOld.name(), pkgStateOld.getLabel());
+            return null;
         });
         wrapper.setStatus(newStatus);
-        result.setStatistics(packageRepository.getPackageStatistics(pkg.getId()));
-        String msg = result.getSignedMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), false);
+        String msg = result.getPackageSignedMessage();
+//        wrapper.getErrorList().addErrorDescription("", "", msg, null);
 
         auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
         return new RpcRes_Base<>(wrapper, false, msg);
@@ -258,19 +294,19 @@ public class BatchPackageController {
     private BatchPackage deletePackage(ManualOperationWrapper wrapper) {
         try {
             BatchPackage pkg = getPackageWithCheck(wrapper, null);
-            checkPostingsStatusNotIn(wrapper, COMPLETED, UNKNOWN, SIGNED, SIGNEDDATE);
-            BatchPosting posting = packageRepository.getOnePostingByPackage(pkg.getId());
+            checkPostingsStatusNotIn(wrapper, COMPLETED, WORKING, SIGNED, SIGNEDDATE);
+            BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
             if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, wrapper.getAction())) {
-                packageRepository.setPackageInvisible(pkg, userContext.getTimestamp(), userContext.getUserName()); // сделать пакет невидимым
-                return packageRepository.findById(BatchPackage.class, pkg.getId());
+                packageRepository.setPackageInvisible(pkg.getId(), userContext.getTimestamp(), userContext.getUserName()); // сделать пакет невидимым
+                return packageRepository.findById(pkg.getId());
             } else {
-                packageRepository.deletePackage(pkg);   // удалить пакет
+                packageRepository.deletePackage(pkg.getId());   // удалить пакет
                 return null;
             }
 
         } catch (Throwable e) {
             String msg = "Ошибка при удалении пакета, загруженного из файла";
-            manualPostingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+            postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
             auditController.error(BatchOperation, msg, null, e);
             throw new DefaultApplicationException(msg, e);
         }
@@ -281,39 +317,91 @@ public class BatchPackageController {
             if (!step.isControlStep()) {
                 throw new DefaultApplicationException("Неверный шаг оерации: " + step.name());
             }
-            manualPostingController.checkProcessingAllowed(wrapper.getErrorList());
-            BatchPackage pkg = getPackageWithCheck(wrapper, ON_CONTROL, WAITPROC);
-            if (WAITPROC.equals(pkg.getPackageState())) {
-                return reprocessPackageRq(wrapper, step);
-            }
+//            postingController.checkProcessingAllowed(wrapper.getErrorList());
+            BatchPackage pkg = getPackageWithCheck(wrapper, ON_CONTROL);
 //            checkPostingsStatusNotError(wrapper.getPkgId()); //, CONTROL
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             BatchPostStatus oldStatus  = BatchPostStatus.CONTROL;
-            BatchPosting posting0 = packageRepository.getOnePostingByPackage(pkg.getId(), oldStatus);
+            BatchPosting posting0 = postingRepository.getOnePostingByPackageWithStatus(pkg.getId(), oldStatus);
             if (null == posting0) {
                 throw new ValidationError(PACKAGE_IS_PROCESSED, pkg.getId().toString(), oldStatus.name());
             }
             checkHand12Diff(posting0);
-            excelPackageTask.updatePackageWorking(pkg, INPROGRESS);
+
+            // TODO переделать
+            updatePackageStateNew(pkg, IS_SIGNEDVIEW);
             createPackageHistory(pkg, oldStatus.getStep(), wrapper.getAction());
-            updatePostingsStatus(pkg, oldStatus, SIGNEDVIEW);
+            BatchPostStatus newStatus = postingController.getOperationRqStatusSigned(wrapper.getUserId(), pkg.getPostDate());
+            setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, SIGNEDVIEW, newStatus, oldStatus);
             oldStatus = SIGNEDVIEW;
-            if (!YesNo.Y.equals(pkg.getMovementOff())) {
-                excelPackageTask.checkPackageMovement(pkg, oldStatus);
+            List<Long> ctrlPostingsId = Collections.emptyList();
+            if (!YesNo.Y.equals(pkg.getMovementOff())) {        // движение НЕ отключено
+                // получить список контролируемых проводок
+                ctrlPostingsId = packageRepository.getPostingsControllable(pkg.getId(), getMaxRowsExcel());
             }
-            Date operday = userContext.getCurrentDate();
-            if (posting0.getPostDate().equals(operday)) {
-                return authorizePackageRqInternal(wrapper, pkg, oldStatus, SIGNED);
-            } else if (postingProcessor.checkActionEnable(wrapper.getUserId(), SecurityActionCode.OperHand3)) {
-                return authorizePackageRqInternal(wrapper, pkg, oldStatus, SIGNEDDATE);
+            if (!ctrlPostingsId.isEmpty()) {
+                // послать движения
+                return sendMovements(pkg, ctrlPostingsId, wrapper, newStatus);
             } else {
-                return setPackageRqStatusSigned(wrapper, pkg, oldStatus, WAITDATE);
+                // изменить статус
+                return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, newStatus, newStatus, oldStatus);
             }
         } catch (ValidationError e) {
             String msg = "Ошибка при авторизации пакета, загруженного из файла";
-            String errMessage = manualPostingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.warning(BatchOperation, msg, null, e);
+            String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+            auditController.error(BatchOperation, msg, null, e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
+        }
+    }
+
+    public RpcRes_Base<ManualOperationWrapper> sendMovements(BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
+                                                             BatchPostStatus nextStatus) throws Exception {
+        try {
+            auditController.info(BatchOperation, format("Пакет ID = '%d': запросов для отправки в сервис движений %d", pkg.getId(), postingsId.size()));
+            if (postingsId.size() == 0) {
+                return new RpcRes_Base<>( pkgWrapper, false, "Нет запросов для отправки в сервис");
+            }
+            BatchPostStep step = BatchPostStep.NOHAND;
+            List<MovementCreateData> movementData = new ArrayList<>();
+            for (Long postingId : postingsId) {
+                BatchPosting posting = postingRepository.findById(postingId);
+                step = posting.getStatus().getStep();
+                if (null != posting.getReceiveTimestamp()) {
+                    String msg = String.format("По запоросу ID = '%s' уже было выполнено движение в MovementCreate: '%s', время: '%s'",
+                            posting.getId().toString(), posting.getMovementId(), postingController.timeFormat.format(posting.getReceiveTimestamp()));
+                    auditController.info(BatchOperation, msg, posting);
+                    continue;
+                }
+                ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
+                MovementCreateData data = postingController.createMovementData(posting, wrapper);
+                String movementId = data.getMessageUUID();
+                postingController.setOperationRqStatusSend(wrapper, movementId, WAITSRV, nextStatus);
+                movementData.add(data);
+            }
+            updatePackageState(pkg, ON_WAITSRV, IS_SIGNEDVIEW);
+            BatchProcessResult result = new BatchProcessResult(pkg.getId(), nextStatus);
+            result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
+            try {
+                movementProcessor.sendRequests(movementData);
+                result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), false);
+                return new RpcRes_Base<>( pkgWrapper, false, result.getPackageSendMessage());
+            } catch (Throwable e) {     // ошибка отправки
+                for (MovementCreateData data : movementData) {
+                    if (MovementCreateData.StateEnum.ERROR == data.getState() )
+                        postingController.receiveMovement(data);
+                }
+                if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
+                    updatePackageState(pkg, ERROR, ON_WAITSRV);
+                }
+                result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), true);
+                result.setPackageState(IS_ERRSRV);
+                return new RpcRes_Base<>( pkgWrapper, false, result.getPackageProcessMessage());
+            }
+        }
+        catch (Throwable e) {
+            pkg = packageRepository.findById(pkg.getId());
+            updatePackageState(pkg, ERROR, pkg.getPackageState());
+            throw new DefaultApplicationException(String.format("Ошибка при обращении к сервису движений для пакета ID = %s", pkg.getId()));
         }
     }
 
@@ -322,40 +410,38 @@ public class BatchPackageController {
             if (!step.isConfirmStep()) {
                 throw new DefaultApplicationException("Неверный шаг оерации: " + step.name());
             }
-            manualPostingController.checkProcessingAllowed(wrapper.getErrorList());
-            BatchPackage pkg = getPackageWithCheck(wrapper, ON_WAITDATE, WAITPROC);
-            if (WAITPROC.equals(pkg.getPackageState())) {
-                return reprocessPackageRq(wrapper, step);
-            }
+//            postingController.checkProcessingAllowed(wrapper.getErrorList());
+            BatchPackage pkg0 = getPackageWithCheck(wrapper, ON_WAITDATE);
 //            checkPostingsStatusNotError(wrapper.getPkgId()); //, WAITDATE);
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             BatchPostStatus oldStatus = WAITDATE;
-            BatchPosting posting0 = packageRepository.getOnePostingByPackage(pkg.getId(), oldStatus);
+            BatchPosting posting0 = postingRepository.getOnePostingByPackageWithStatus(pkg0.getId(), oldStatus);
             if (null == posting0) {
-                throw new ValidationError(PACKAGE_IS_PROCESSED, pkg.getId().toString(), oldStatus.name());
+                throw new ValidationError(PACKAGE_IS_PROCESSED, pkg0.getId().toString(), oldStatus.name());
             }
             checkHand12Diff(posting0);
-            excelPackageTask.updatePackageWorking(pkg, INPROGRESS);
-            BatchPostStatus status = posting0.getStatus();
-            createPackageHistory(pkg, status.getStep(), wrapper.getAction());
+
+            updatePackageStateNew(pkg0, IS_SIGNEDDATE);
+            createPackageHistory(pkg0, posting0.getStatus().getStep(), wrapper.getAction());
             if (CONFIRM_NOW.equals(wrapper.getAction())) {
                 postingRepository.executeInNewTransaction(persistence -> {
-                    packageRepository.setPackagePostingDate(pkg.getId(), userContext.getCurrentDate());
+                    packageRepository.setPackagePostingDate(pkg0.getId(), userContext.getCurrentDate());
                     return null;
                 });
             }
-            return authorizePackageRqInternal(wrapper, pkg, oldStatus, SIGNEDDATE);
+            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_SIGNEDDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты пакета, загруженного из файла";
-            String errMessage = manualPostingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+            String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
             auditController.warning(BatchOperation, msg, null, e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
 
+/*
     public RpcRes_Base<ManualOperationWrapper> reprocessPackageRq(ManualOperationWrapper wrapper, BatchPostStep step) throws Exception {
         try {
-            manualPostingController.checkProcessingAllowed(wrapper.getErrorList());
+            postingController.checkProcessingAllowed(wrapper.getErrorList());
             BatchPackage pkg = getPackageWithCheck(wrapper, WAITPROC);
 //            checkPostingsStatusNotError(wrapper.getPkgId()); //, CONTROL
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
@@ -373,17 +459,19 @@ public class BatchPackageController {
             return reprocessPackageRqInternal(wrapper, pkg, oldStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при переобработке пакета, загруженного из файла";
-            String errMessage = manualPostingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+            String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
             auditController.warning(BatchOperation, msg, null, e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
+*/
 
+/*
     public RpcRes_Base<ManualOperationWrapper> authorizePackageRqInternal(ManualOperationWrapper wrapper, BatchPackage pkg, BatchPostStatus oldStatus, BatchPostStatus newStatus) throws Exception {
         auditController.info(BatchOperation, "Начало обработки пакета ID = " + wrapper.getPkgId(), "GL_BATPKG", wrapper.getPkgId().toString());
         setPackageRqStatusSigned(wrapper, pkg, oldStatus, newStatus);
         BatchProcessResult result = excelPackageTask.execute(wrapper.getPkgId(), wrapper.getAction(), newStatus, true);
-        String msg = result.getProcessMessage();
+        String msg = result.getPackageProcessMessage();
         auditController.info(BatchOperation, msg, "GL_BATPKG", wrapper.getPkgId().toString());
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -391,24 +479,29 @@ public class BatchPackageController {
     public RpcRes_Base<ManualOperationWrapper> reprocessPackageRqInternal(ManualOperationWrapper wrapper, BatchPackage pkg, BatchPostStatus oldStatus) throws Exception {
         auditController.info(BatchOperation, "Начало повторной обработки пакета ID = " + wrapper.getPkgId(), "GL_BATPKG", wrapper.getPkgId().toString());
         BatchProcessResult result = excelPackageTask.execute(wrapper.getPkgId(), wrapper.getAction(), oldStatus, true);
-        String msg = result.getProcessMessage();
+        String msg = result.getPackageProcessMessage();
         auditController.info(BatchOperation, msg, "GL_BATPKG", wrapper.getPkgId().toString());
         return new RpcRes_Base<>(wrapper, false, msg);
     }
+*/
 
     public RpcRes_Base<ManualOperationWrapper> refusePackageRq(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
         BatchPostStatus status0 = WAITDATE;
-        BatchPackage pkg = getPackageWithCheck(wrapper, ON_CONTROL, ON_WAITDATE);
+        BatchPackage pkg0 = getPackageWithCheck(wrapper, ON_CONTROL, ON_WAITDATE);
 //        checkPostingsStatusNotError(wrapper.getPkgId(), status0);
         String msg;
         int momementCount = 0;
-        if ((momementCount = packageRepository.getMovementCount(pkg.getId())) > 0) {
+        if ((momementCount = packageRepository.getMovementCount(pkg0.getId())) > 0) {
             msg = "Нельзя вернуть пакет с ID = " + wrapper.getPkgId() + " на доработку,\n" +
                     "по нему есть операции (" + momementCount + ") с успешным запросом в сервис движений";
         } else {
             postingRepository.executeInNewTransaction(persistence -> {
-                createPackageHistory(pkg, status0.getStep(), wrapper.getAction());
-                packageRepository.refusePackageStatus(pkg, userContext.getTimestamp(), userContext.getUserName(), wrapper.getReasonOfDeny(), status);
+                BatchPackageState stateOld = pkg0.getPackageState();
+                createPackageHistory(pkg0, status0.getStep(), wrapper.getAction());
+                int cnt = packageRepository.refusePackageStatus(pkg0.getId(), stateOld, userContext.getTimestamp(), userContext.getUserName(),
+                        wrapper.getReasonOfDeny(), status);
+                if (0 == cnt)
+                    throw  new ValidationError(PACKAGE_STATUS_WRONG, stateOld.name(), stateOld.getLabel());
                 return null;
             });
             wrapper.setStatus(status);
@@ -419,7 +512,7 @@ public class BatchPackageController {
     }
 
     private boolean createPackageHistory(BatchPackage pkg, BatchPostStep step, BatchPostAction action) throws Exception {
-        BatchPosting posting = packageRepository.getOnePostingByPackage(pkg.getId());
+        BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
         boolean needHistory = postingProcessor.needHistory(posting, step, action);
         if (needHistory) {
             postingRepository.executeInNewTransaction(persistence -> packageRepository.createPackageHistory(pkg));
@@ -442,9 +535,22 @@ public class BatchPackageController {
         }
     }
 
-    public void updatePostingsStatus(BatchPackage pkg, BatchPostStatus statusOld, BatchPostStatus statusNew) throws Exception {
-        postingRepository.executeInNewTransaction(persistence -> packageRepository.updatePostingsStatus(pkg, statusOld, SIGNEDVIEW) );
+    public void updatePackageState(BatchPackage pkg, BatchPackageState stateNew, BatchPackageState stateOld) throws Exception {
+        int cnt = postingRepository.executeInNewTransaction(persistence -> packageRepository.updatePackageState(pkg.getId(), stateNew, stateOld));
+        if (0 == cnt)
+            throw  new ValidationError(PACKAGE_STATUS_WRONG, stateOld.name(), stateOld.getLabel());
     }
 
+    public void updatePackageStateError(BatchPackage pkg, BatchPackageState stateNew, BatchPackageState stateOld) throws Exception {
+        updatePackageState(pkg, stateNew, stateOld);
+        auditController.warning(BatchOperation, format("Пакет ID = %s: перевелен в состояние ошибки", pkg.getId(), "Нет операций для обработки"));
+    }
+
+    public void updatePackageStateNew(BatchPackage pkg, BatchPackageState state) throws Exception {
+        int cnt = postingRepository.executeInNewTransaction(persistence -> packageRepository.updatePackageStateNew(pkg.getId(), state));
+        if (cnt != 1) {
+            throw new ValidationError(ErrorCode.PACKAGE_IS_WORKING, pkg.getId().toString(), state.name());
+        }
+    }
 
 }

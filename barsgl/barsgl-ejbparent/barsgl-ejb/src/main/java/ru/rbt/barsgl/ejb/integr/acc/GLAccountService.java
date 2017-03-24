@@ -18,6 +18,7 @@ import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
@@ -25,6 +26,8 @@ import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -42,17 +45,17 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Account;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.requiredNotEmpty;
+import ru.rbt.barsgl.ejb.security.UserContext;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.PrmValueEnum.Source;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 
 /**
  * Created by ER18837 on 03.08.15.
@@ -109,16 +112,29 @@ public class GLAccountService {
     @Inject
     private DateUtils dateUtils;
 
+    @Inject
+    private SecurityActionRepository actionRepository;
+
+    @Inject
+    private UserContext userContext;
+
     public String getAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) throws Exception {
         // проверяем по какой ветке идти - искать в Майдас или создать счет ...
         Date dateOpen = operation.getValueDate();
-
+//todo вход в GlSequence = XX
         if (!isEmpty(keys.getGlSequence())                                  // совместно используемые с Майдас счета
                 && keys.getGlSequence().toUpperCase().startsWith("XX")) {
+//          проверки fsd открытие счетов по ключам GL_SEQ=XX
+            checkDealPlcode(keys, operSide.getMsgName());
             // ищем счет Майдас
             glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
-            return findBsaAcid(keys.getAccountMidas(), keys);
-
+            String bsaacidXX = glAccountController.findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
+            if (bsaacidXX != null) {
+                return bsaacidXX;
+            } else{//создание в accrln,accrlnext(триггер),bsaacc,gl_acc
+                checkNotStorno(operation, operSide);
+                return glAccountController.createGLAccountXX(operation, operSide, dateOpen, keys, null);
+            }
         } else if (!isEmpty(keys.getGlSequence())                           // счета ОФР
                 && keys.getGlSequence().toUpperCase().startsWith("PL")) {
             return getAccountByPlcode(operation, operSide, keys, dateOpen);
@@ -156,6 +172,42 @@ public class GLAccountService {
             }).getBsaAcid();
         }
     }
+
+    public void checkDealPlcode(AccountKeys keys, String operside){
+        if (!isEmpty(keys.getDealId())){
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DEAL
+                    , operside
+                    , defaultString(keys.getAccountType())
+                    , defaultString(keys.getCustomerNumber())
+                    , defaultString(keys.getAccountCode())
+                    , defaultString(keys.getAccSequence())
+                    , defaultString(keys.getDealId())
+                    , defaultString(keys.getPlCode())
+                    , defaultString(keys.getGlSequence()));
+        }else if  (!isEmpty(keys.getSubDealId())){
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_SUBDEAL
+                    , operside
+                    , defaultString(keys.getAccountType())
+                    , defaultString(keys.getCustomerNumber())
+                    , defaultString(keys.getAccountCode())
+                    , defaultString(keys.getAccSequence())
+                    , defaultString(keys.getDealId())
+                    , defaultString(keys.getPlCode())
+                    , defaultString(keys.getSubDealId())
+                    , defaultString(keys.getGlSequence()));
+        }else if  (!isEmpty(keys.getPlCode())){
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_PLCODE
+                    , operside
+                    , defaultString(keys.getAccountType())
+                    , defaultString(keys.getCustomerNumber())
+                    , defaultString(keys.getAccountCode())
+                    , defaultString(keys.getAccSequence())
+                    , defaultString(keys.getDealId())
+                    , defaultString(keys.getPlCode())
+                    , defaultString(keys.getGlSequence()));
+        }
+    }
+
 
     /**
      * Заполнены ключи и счет по проверяемой стороне
@@ -242,25 +294,47 @@ public class GLAccountService {
         return bsaasid;
     }
 
-    private String findBsaAcid(String acid, AccountKeys keys) throws SQLException {
-        final Date operday = operdayController.getOperday().getCurrentDate();
-        final List<DataRecord> rlns = accRlnRepository.findByAcid(requiredNotEmpty(acid, "")
-                , requiredNotEmpty(keys.getAccount2(), ""), operday, !isEmpty(keys.getPlCode()));
-        if (1 == rlns.size()) {
-            return rlns.get(0).getString("BSAACID");
-        } else if (1 < rlns.size() && !isEmpty(keys.getCustomerType())) {
-            final List<DataRecord> filtered = rlns.stream().filter(
-                    r -> r.getString("CTYPE").equals(keys.getCustomerType())).collect(toList());
-            if (1 < filtered.size()) {
-                throw new ValidationError(TOO_MANY_ACCRLN_ENTRIES
-                        , filtered.stream().map(r -> r.getString("BSAACID"))
-                        .limit(10).collect(joining(",")), acid, keys.getCustomerType());
-            } else {
-                return filtered.isEmpty() ? null : filtered.get(0).getString("BSAACID");
+    private void checkAccountPermission(ManualAccountWrapper wrapper, FormAction action) {
+        String acc2 = wrapper.getBalanceAccount2();
+        if (isEmpty(acc2))
+            acc2 = wrapper.getBsaAcid();
+        Long userId = wrapper.getUserId();
+        if (null == userId)
+            userId = userContext.getUserId();
+        String acc1 = StringUtils.substr(acc2, 3);
+        if (FormAction.CREATE == action) {
+            switch (acc1) {
+                case "707":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.Acc707Inp))
+                        throw new ValidationError(ACCOUNT707_INP_NOT_ALLOWED);
+                    break;
+                case "706":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccOFRInp))
+                        throw new ValidationError(ACCOUNT706_INP_NOT_ALLOWED);
+                    break;
+                default:    // для остальных при открытии будет пусто
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccInp))
+                        throw new ValidationError(ACCOUNT_INP_NOT_ALLOWED);
+                    break;
             }
-        } else {
-            return null;
+        } else if (FormAction.UPDATE == action) {
+            switch (acc1) {
+                case "707":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.Acc707Chng))
+                        throw new ValidationError(ACCOUNT707_CHNG_NOT_ALLOWED);
+                    break;
+                case "706":
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccOFRChng))
+                        throw new ValidationError(ACCOUNT706_CHNG_NOT_ALLOWED);
+                    break;
+                default:
+                    if (!actionRepository.getAvailableActions(userId).contains(SecurityActionCode.AccChng))
+                        throw new ValidationError(ACCOUNT_CHNG_NOT_ALLOWED);
+                    break;
+            }
         }
+
+
     }
 
     /**
@@ -271,6 +345,7 @@ public class GLAccountService {
      */
     public RpcRes_Base<ManualAccountWrapper> createManualAccount(ManualAccountWrapper accountWrapper) throws Exception {
         try {
+            checkAccountPermission(accountWrapper, FormAction.CREATE);
             Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
             AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
             // Такой счет уже есть
@@ -307,6 +382,7 @@ public class GLAccountService {
     public RpcRes_Base<ManualAccountWrapper> createManualPlAccount(ManualAccountWrapper accountWrapper) throws Exception {
         try {
             return glAccountRepository.executeInNewTransaction(persistence -> {
+                checkAccountPermission(accountWrapper, FormAction.CREATE);
                 Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
                 AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
                 // поиск в GL_ACC
@@ -397,6 +473,7 @@ public class GLAccountService {
             if (null == account) {      // Такого счета нет!
                 throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
             }
+            checkAccountPermission(accountWrapper, FormAction.UPDATE);
             String dateOpenStr = accountWrapper.getDateOpenStr();
             Date dateOpen = dateOpenStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateOpenStr);
             String dateCloseStr = accountWrapper.getDateCloseStr();
@@ -409,7 +486,7 @@ public class GLAccountService {
             glAccountController.fillWrapperFields(accountWrapper, glAccount);
             return new RpcRes_Base<>(
                     accountWrapper, false, format("%s счет ЦБ: '%s'", act, accountWrapper.getBsaAcid()));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
             auditController.error(Account, format("Ошибка при изменении счета по ручному вводу: '%s'",
                     accountWrapper.getBsaAcid()), null, e);

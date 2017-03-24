@@ -4,7 +4,6 @@ import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Date;
 
 /**
  * Created by ER22228 on 30.03.2016
@@ -23,6 +22,8 @@ public class AclirqJournal extends BaseEntity<Long> {
     @Column(name = "REQUEST_ID")
     private String requestId;
 
+    @Basic(fetch = FetchType.LAZY)
+    @Lob    
     @Column(name = "REQUEST")
     private String request;
 
@@ -36,6 +37,11 @@ public class AclirqJournal extends BaseEntity<Long> {
     @Column(name = "COMMENT")
     private String comment;
 
+    @Basic(fetch = FetchType.LAZY)
+    @Lob    
+    @Column(name = "OUT")
+    private String outMessage;
+    
     @Override
     public Long getId() {
         return id;
@@ -81,6 +87,14 @@ public class AclirqJournal extends BaseEntity<Long> {
         this.comment = comment;
     }
 
+    public String getOutMessage() {
+      return outMessage;
+    }
+
+    public void setOutMessage(String outMessage) {
+      this.outMessage = outMessage;
+    }
+    
     @Override
     public String toString() {
         return "AcbalirqJournal{" +
@@ -90,6 +104,7 @@ public class AclirqJournal extends BaseEntity<Long> {
                    ", status=" + status +
                    ", statusDate=" + statusDate +
                    ", comment='" + comment + '\'' +
+                   ", outMessage='" + outMessage + '\'' +
                    '}';
     }
 }

@@ -7,6 +7,7 @@ import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.Sql2Xls;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
@@ -17,7 +18,6 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -79,7 +79,8 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
         SQL sql = prepareCommonSql(nativeSql, criterion);
-        String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;
+        String sqlDummy = "select * from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
+        String resultSql = "select count(*) cnt from (" + sqlDummy + " ) " + COUNT_ALIAS;
         try {
             DataSource dataSource = repository.getDataSource(rep);
             int cnt = repository.selectFirst(dataSource, resultSql, sql.getParams()).getInteger("cnt");
@@ -130,7 +131,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
                 params.add(startWith + pageSize - 1);
                 return resultSql;
             } else {
-                String resultSql = "select * from (" + query + ") v " + orderByString + " fetch first " + pageSize + " rows only";
+                String resultSql = "select * from (" + query + ") v where rownum <=" + pageSize + orderByString;
                 return resultSql;
             }
         } else {
@@ -139,12 +140,12 @@ public class SqlPageSupportBean implements SqlPageSupport {
     }
 
     @Override
-    public String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
-        return export2Excel(nativeSql, Repository.BARSGL, xlsColumns, criterion, pageSize, startWith, orderBy);
+    public String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) {
+        return export2Excel(nativeSql, Repository.BARSGL, xlsColumns, criterion, pageSize, startWith, orderBy, head);
     }
 
     @Override
-    public String export2Excel(String nativeSql, Repository rep, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy)  {
+    public String export2Excel(String nativeSql, Repository rep, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head)  {
         int pgSize = (pageSize == 0 || pageSize > MAX_PAGE_SIZE) ? MAX_PAGE_SIZE : pageSize;
 
         String pagingString = buildRowNnumberMarker2(orderBy, pgSize);
@@ -162,6 +163,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
             return (String) repository.executeInNonTransaction(dataSource, connection -> {
                 String excelSql = resultSql;        // TODO resultSQL
                 Sql2Xls getXls = new Sql2Xls(excelSql, params);
+                getXls.setHead(head);
                 getXls.setColumns(xlsColumns);
 
                 File f = File.createTempFile("barsgl", ".xlsx", new File(System.getProperty("java.io.tmpdir")));

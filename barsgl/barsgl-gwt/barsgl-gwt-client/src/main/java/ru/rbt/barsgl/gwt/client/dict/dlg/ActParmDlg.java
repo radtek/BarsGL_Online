@@ -9,9 +9,9 @@ import com.google.gwt.user.client.ui.*;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
+import ru.rbt.barsgl.gwt.client.compLookup.LookUpAcc2;
 import ru.rbt.barsgl.gwt.client.compLookup.LookUpPlcode;
 import ru.rbt.barsgl.gwt.client.compLookup.LookupBoxBase;
-import ru.rbt.barsgl.gwt.client.compLookup.LookUpAcc2;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
@@ -410,7 +410,7 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
 
     private String checkLength(String value, int len, String fieldName){
         try{
-            if (value != null && value.trim().length() != len) throw new Exception( Utils.Fmt("Требуемое количество символов должно быть {0}", len));
+            if (value != null && !value.trim().isEmpty() && value.trim().length() != len) throw new Exception( Utils.Fmt("Требуемое количество символов должно быть {0}", len));
         }catch(Exception e){
             showInfo("Ошибка", Utils.Fmt("Неверное значение в поле {0}. {1}", fieldName, e.getMessage()));
             throw new IllegalArgumentException("column");
@@ -421,18 +421,19 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
 
     private void checkAcc70(String acc2, String plcode){
         try{
-            if (acc2.startsWith("708")) return; //исключить из проверки 708 счета
-            if (acc2.startsWith("70") && ((plcode == null) || (plcode.trim().isEmpty()))){
+            if (acc2.startsWith("707")){
+                throw new Exception("Недопустимое использование балансового счета 707xx. Используйте 706xx счет.");
+            }
+            if (acc2.startsWith("706") && ((plcode == null) || (plcode.trim().isEmpty()))){
                 throw new Exception(Utils.Fmt("Для счетов доходов/расходов обязательно заполнение поля {0}", ActParm.FIELD_PLCODE));
             } else
-                if (!acc2.startsWith("70") && ((plcode != null) && (!plcode.trim().isEmpty()))){
+                if (!acc2.startsWith("706") && ((plcode != null) && (!plcode.trim().isEmpty()))){
                     throw new Exception(Utils.Fmt("Поле {0} обязательно к заполнениею только для счетов доходов/расходов", ActParm.FIELD_PLCODE));
                 }
         }catch(Exception e) {
             showInfo("Ошибка", e.getMessage());
             throw new IllegalArgumentException("column");
         }
-
     }
 
     private void checkAcc706(String acc2, String plcode){
@@ -449,6 +450,24 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         }
     }
 
+    private String checkPlCode(String plCode, String acc2){
+        try{
+            if (acc2.startsWith("706")){
+              if (plCode == null || plCode.trim().isEmpty() || plCode.trim().length() != 5){
+                  throw new Exception(Utils.Fmt("Для счетов 706xx обязательно заполнение поля {0} длиной 5 символов", ActParm.FIELD_PLCODE));
+              }
+            }else{
+              if ((plCode != null) && (!plCode.trim().isEmpty())){
+                  throw  new Exception(Utils.Fmt("Поле {0} обязательно к заполнению только для счетов 706xx", ActParm.FIELD_PLCODE));
+              }
+            }
+        }catch (Exception e){
+            showInfo("Ошибка", e.getMessage());
+            throw new IllegalArgumentException("column");
+        }
+
+        return  plCode;
+    }
 
     private String checkAcod_sq(String sq){
         try{
@@ -484,7 +503,8 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         wrapper.setTerm(checkLength(checkRequeredString(term.getValue(), ActParm.FIELD_TERM), 2, ActParm.FIELD_TERM));
         wrapper.setAcc2(checkLength(checkRequeredString(acc2.getValue(), ActParm.FIELD_ACC2), 5, ActParm.FIELD_ACC2));
 
-        wrapper.setPlcode(checkLength(plcode.getValue(), 5, ActParm.FIELD_PLCODE));
+        wrapper.setPlcode(checkPlCode(plcode.getValue(), wrapper.getAcc2()));
+
         checkAcc70(wrapper.getAcc2(), wrapper.getPlcode());
         checkAcc706(wrapper.getAcc2(), wrapper.getPlcode());
 

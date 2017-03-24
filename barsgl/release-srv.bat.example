@@ -1,3 +1,3 @@
 set JAVA_HOME="C:\dev\tools\jdk8"
 
-mvn release:clean release:prepare release:perform -DscmCommentPrefix="-сборка версии-" -Darguments="-DskipTests -Dmaven.javadoc.skip=true" -DpreparationGoals="" -Dresume=false -DdryRun=false -P with-remote-tests,srv-ear-prod,-full-ear -Denv=barssrv
+mvn release:clean release:prepare release:perform -DscmCommentPrefix="-BUILD BARSSRV RELEASE-" -Darguments="-DskipTests -Dmaven.javadoc.skip=true" -DpreparationGoals="" -Dresume=false -DdryRun=false -P with-remote-tests,srv-ear-prod,release-branch,-full-ear -Denv=barssrv

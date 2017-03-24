@@ -3,14 +3,12 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -20,12 +18,14 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Optional;
 import java.util.logging.Logger;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask.DEFAULT_STEP_NAME;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 /**
  * Created by Ivan Sevastyanov on 18.02.2016.

@@ -28,7 +28,7 @@ insert into gl_etlstmd (
     cast(null as varchar(20)) evtp,
     d.pcid nrt
  from (select j.pcid, min(j.ts) ts from gl_pdjover j
-        where j.operday = 'execdate'
+        where j.operday >= ?
           and j.chfl in ('I', 'U') and j.unf = 'N'
          group by j.pcid
       ) j

@@ -17,7 +17,6 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountCounterType;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountExcludeInterval;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountFrontPartController;
-import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
@@ -495,7 +494,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
      * Обработка ситуации если счета Майдас не найден
      */
     @Test
-    public void testProcessAccountCreateNotExists() throws SQLException {
+    public void testProcessAccountCreateNotExistsXX() throws SQLException {
         long stamp = System.currentTimeMillis();
 
         // убираем все не наши WTAC
@@ -539,50 +538,22 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         if (!isEmpty(keys1.getAccountMidas())) {
             deleteAccountByAcid(baseEntityRepository, keys1.getAccountMidas());
         }
-        final AccountKeys keys2 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", GLOperation.OperSide.D, pst.getValueDate(), acDt);
-        if (!isEmpty(keys2.getAccountMidas())) {
-            deleteAccountByAcid(baseEntityRepository, keys2.getAccountMidas());
+
+        //todo сообщение 'Счет по дебету задан ключом ACCTYPE=643010101, CUSTNO=00000018, ACOD=7301, SQ=01
+        // , DEALID=, PLCODE=16101, GL_SEQ=XX некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым'
+        // , источник ru.rbt.barsgl.ejb.integr.acc.GLAccountController:595
+        Throwable exception = null;
+        try {
+            remoteAccess.invoke(GLAccountController.class
+                    , "fillAccountKeysMidas", GLOperation.OperSide.D, pst.getValueDate(), acDt);
+        }catch(Throwable e){
+            exception = e;
         }
+        Assert.assertNotNull(exception);
+        ValidationError error = ExceptionUtils.findException(exception, ValidationError.class);
+        Assert.assertNotNull(error);
+        Assert.assertEquals(ErrorCode.GL_SEQ_XX_KEY_WITH_DB_PLCODE, error.getCode());
 
-        pst.setAccountKeyCredit(accountKeyCt);
-        pst.setAccountKeyDebit(accountKeyDt);
-
-        pst.setAmountCredit(new BigDecimal("13.99"));
-        pst.setAmountDebit(pst.getAmountCredit());
-
-        pst = (EtlPosting) baseEntityRepository.save(pst);
-
-        GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.WTAC, operation.getState());
-        Assert.assertTrue(!isEmpty(operation.getAccountKeyCredit()));
-        Assert.assertTrue(!isEmpty(operation.getAccountKeyDebit()));
-
-        acCt.setAccountCode("1001"); acCt.setAccSequence("01");
-        acDt.setAccountCode("1001"); acDt.setAccSequence("01");
-        accountKeyCt = acCt.toString();
-        accountKeyDt = acDt.toString();
-
-        int cnt = baseEntityRepository.executeUpdate("update GLOperation G set G.accountKeyCredit = ?1, G.accountKeyDebit = ?2 WHERE G.id=?3"
-                , accountKeyCt, accountKeyDt, operation.getId());
-        Assert.assertEquals(1, cnt);
-
-
-        remoteAccess.invoke(EtlPostingController.class, "reprocessWtacOperations", getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
-
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertTrue(OperState.POST == operation.getState() || OperState.ERCHK == operation.getState());
-
-        /* счета не нашли - ошибка, соответственно там пусто
-        if (isEmpty(pst.getAccountDebit()))
-            checkDefinedAccount(GLOperation.OperSide.D, operation.getAccountDebit(), operation.getAccountKeyDebit());
-        if (isEmpty(pst.getAccountCredit()))
-            checkDefinedAccount(GLOperation.OperSide.C, operation.getAccountCredit(), operation.getAccountKeyCredit());
-        */
     }
 
     /**
@@ -926,7 +897,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         pst2.setCurrencyDebit(pst2.getCurrencyCredit());
         pst2 = (EtlPosting) baseEntityRepository.save(pst2);
 
-        remoteAccess.invoke(EtlStructureMonitorTask.class, "processPackage", pkg);
+        remoteAccess.invoke(EtlStructureMonitorTask.class, "processEtlPackage", pkg);
 
         GLOperation oper1 = getOperation(pst1.getId());
         Assert.assertTrue(0 < oper1.getId());

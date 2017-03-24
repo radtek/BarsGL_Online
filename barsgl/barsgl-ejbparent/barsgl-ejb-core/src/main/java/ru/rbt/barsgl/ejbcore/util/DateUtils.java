@@ -66,4 +66,7 @@ public class DateUtils {
         return org.apache.commons.lang3.time.DateUtils.addDays(date, days);
     }
 
+    public static Date addSeconds(Date date, int seconds) {
+        return org.apache.commons.lang3.time.DateUtils.addSeconds(date, seconds);
+}
 }

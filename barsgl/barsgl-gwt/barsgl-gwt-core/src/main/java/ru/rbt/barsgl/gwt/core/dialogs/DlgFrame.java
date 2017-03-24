@@ -18,6 +18,7 @@ public abstract class DlgFrame {
     protected Button cancel;
     protected Object params;
     protected Widget content;
+    protected Widget frame;
     
     private String caption = "Диалог";
 
@@ -31,11 +32,15 @@ public abstract class DlgFrame {
         dlg.setGlassEnabled(true);
         dlg.setText(caption);
         dlg.setAnimationEnabled(true);
-        dlg.add(createFrame());       
+        dlg.add(frame = createFrame());
     }
 
     public void setCaption(String caption){
         dlg.setText(caption);
+    }
+
+    public String getCaption() {
+        return caption;
     }
 
     private Widget createFrame() {
@@ -45,7 +50,7 @@ public abstract class DlgFrame {
         btnPanel.add(createCancelButton());
 
         VerticalPanel vp = new VerticalPanel();
-
+        beforeCreateContent();
         contentPanel = new SimplePanel();
         content = createContent();
         if (content != null) contentPanel.add(content);
@@ -58,7 +63,7 @@ public abstract class DlgFrame {
 
     public void setContent(Widget content){
     	this.content = content;
-    	contentPanel.clear();
+        contentPanel.clear();
     	contentPanel.add(content);
     }
     
@@ -145,8 +150,8 @@ public abstract class DlgFrame {
         dlg.hide();
     }
     
-    public void setModal(boolean modal){
-    	dlg.setModal(modal);
+    public void setModal(boolean modal) {
+        dlg.setModal(modal);
     }
 
     protected void setPopupPosition() {};
@@ -161,6 +166,26 @@ public abstract class DlgFrame {
 
     public void setOkButtonCaption(String caption){
         ok.setText(caption);
+    }
+
+    protected void beforeCreateContent(){
+    }
+
+    private Label label = null;
+    protected void showPreload(boolean isShow){
+        if (isShow){
+            if (label != null) return;
+            label = new Label("Загрузка данных...  Подождите!");
+            label.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+            dlg.remove(frame);
+            dlg.add(label);
+        } else{
+            if (label == null) return;
+            dlg.remove(label);
+            label = null;
+            dlg.add(frame);
+            dlg.center();
+        }
     }
 }
 

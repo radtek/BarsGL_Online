@@ -3,6 +3,7 @@ package ru.rbt.barsgl.gwt.server.rpc.operation;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 /**
@@ -21,4 +22,6 @@ public interface ManualOperationServiceAsync {
     void saveOfrAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
     void getOfrAccountParameters(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
     void savePlAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
+
+    void exchangeCurrency(CurExchangeWrapper wrapper, AsyncCallback<RpcRes_Base<CurExchangeWrapper>> callback);
 }

@@ -5,8 +5,6 @@ import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistrationBean;
 
 import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import java.util.Properties;
 
 import static java.lang.String.format;
@@ -14,8 +12,8 @@ import static java.lang.String.format;
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
+//@Stateless
+//@LocalBean
 public class TestingJob implements ParamsAwareRunnable {
 
     private static final Logger LOG = Logger.getLogger(TestingJob.class);

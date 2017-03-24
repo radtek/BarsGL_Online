@@ -3,7 +3,7 @@
     <parent>
         <artifactId>barsgl-ejbparent</artifactId>
         <groupId>ru.rbt</groupId>
-        <version>3.0.4-SNAPSHOT</version>
+        <version>3.0.15-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -46,13 +46,13 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-audit</artifactId>
-            <version>3.0.4-SNAPSHOT</version>
+            <version>3.0.15-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>security-ejb</artifactId>
-            <version>3.0.4-SNAPSHOT</version>
+            <version>3.0.15-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -128,12 +128,12 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-ejb-common</artifactId>
-            <version>3.0.4-SNAPSHOT</version>
+            <version>3.0.15-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-ejb-common</artifactId>
-            <version>3.0.4-SNAPSHOT</version>
+            <version>3.0.15-SNAPSHOT</version>
         </dependency>
         <!--        <dependency>
                     <groupId>com.ibm</groupId>

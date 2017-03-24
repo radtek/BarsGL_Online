@@ -36,13 +36,12 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 public class BatchPostingForm extends OperBase {
     public static final String FORM_NAME = "Ввод и авторизация пакетов";
 
-    private GridAction _preview;
     private GridAction _delete;
     private GridAction _forward;
     private GridAction _backward;
     private GridAction _sign;
     private GridAction _confirmDate;
-    private GridAction _load;
+    private GridAction _loadFile;
     private GridAction _loadCard;
 
     protected Column colPackage;
@@ -56,8 +55,8 @@ public class BatchPostingForm extends OperBase {
     @Override
     protected void reconfigure() {
         super.reconfigure();
-        abw.addAction(_load = createLoad(new LoadFileDlg(), ImageConstants.INSTANCE.load()));
-        abw.addAction(_loadCard = createLoad(new LoadCardDlg(), ImageConstants.INSTANCE.load_blue()));
+        abw.addAction(_loadFile = createLoad(LoadFileFactory.LoadType.FILE, ImageConstants.INSTANCE.load()));
+        abw.addAction(_loadCard = createLoad(LoadFileFactory.LoadType.CARD, ImageConstants.INSTANCE.load_blue()));
         abw.addAction(_delete = createDelete());
         abw.addAction(_forward = createForward());
         abw.addAction(_backward = createBackward());
@@ -67,23 +66,26 @@ public class BatchPostingForm extends OperBase {
 
     @Override
     protected void doActionVisibility() {
-        _load.setVisible(_step.isInputStep());
+        _loadFile.setVisible(_step.isInputStep());
         _loadCard.setVisible(_step.isInputStep());
         _delete.setVisible(_step.isInputStep() || _step.isControlStep());
         _forward.setVisible(_step.isInputStep());
         _backward.setVisible(_step.isConfirmStep());
         _sign.setVisible(_step.isControlStep());
         _confirmDate.setVisible(_step.isConfirmStep());
+        _packageStatAction.setVisible(true);
     }
 
-    private GridAction createLoad(final LoadFileDlgBase loadFileDlg, ImageResource img) {
-        return new GridAction(grid, null, loadFileDlg.getCaption(), new Image(img), 10) {
-            LoadFileDlgBase dlg;
+    private GridAction createLoad(final LoadFileFactory.LoadType loadType, ImageResource img) {
+
+        return new GridAction(grid, null, loadType == LoadFileFactory.LoadType.FILE ? LoadFileDlg.TITLE : LoadCardDlg.TITLE, new Image(img), 10) {
+            LoadFileDlgBase dlg = null;
 
             @Override
             public void execute() {
                WaitingManager.show("Загрузка из файла...");
-               dlg = loadFileDlg;
+               if (dlg == null) dlg = LoadFileFactory.create(loadType);
+
                dlg.setAfterCancelEvent(new IAfterCancelEvent() {
                    @Override
                    public void afterCancel() {
@@ -122,7 +124,7 @@ public class BatchPostingForm extends OperBase {
                    }
                });
 
-               dlg.show();
+               dlg.show(null);
             }
         };
     }
@@ -252,7 +254,7 @@ public class BatchPostingForm extends OperBase {
     @Override
     protected String getSelectClause() {
         return  "select PST.ID, PST.GLOID_REF, PST.STATE, PST.ECODE, PST.ID_PKG, PST.NROW, PKG.FILE_NAME, PKG.STATE PKG_STATE, " +
-                "PST.INVISIBLE, PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.OTS_SRV, PST.SRC_PST, " +
+                "PST.INVISIBLE, PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.SEND_SRV, PST.OTS_SRV, PST.SRC_PST, " +
                 "PST.DEAL_ID, PST.SUBDEALID, PST.PMT_REF, PST.PROCDATE, PST.VDATE, PST.POSTDATE, " +
                 "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +
                 "PST.AMTRU, PST.NRT, PST.RNRTL, PST.RNRTS, PST.DEPT_ID, PST.PRFCNTR, PST.FCHNG, PST.EMSG, " +
@@ -280,13 +282,6 @@ public class BatchPostingForm extends OperBase {
         result.addColumn(new Column("FILE_NAME", Column.Type.STRING, "Имя файла", 100, false, false));
         result.addColumn(new Column("PKG_STATE", Column.Type.STRING, "Статус пакета", 90, false, false));
 
-        //result.addColumn(new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
-        //result.addColumn(new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 80));
-
-        //result.addColumn(new Column("ID_PAR", Column.Type.LONG, "ID род. запроса", 80));
-        //result.addColumn(new Column("ID_PREV", Column.Type.LONG, "ID пред. запроса", 80));
-        //result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 80, false, false));
-        //result.addColumn(new Column("OTS_SRV", Column.Type.DATETIME, "Проводка в АБС", 130));
         result.addColumn(new Column("SRC_PST", Column.Type.STRING, "Источник сделки", 80));
 
         result.addColumn(new Column("DEAL_ID", Column.Type.STRING, "ИД сделки", 70));
@@ -322,22 +317,18 @@ public class BatchPostingForm extends OperBase {
         result.addColumn(new Column("EMSG", Column.Type.STRING, "Описание ошибки", 800));
 
         result.addColumn(new Column("USER_NAME", Column.Type.STRING, "Логин 1 руки", 100, false, false));
-        result.addColumn(col = new Column("OTS", Column.Type.DATETIME, "Дата создания", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS", Column.Type.DATETIME, "Дата создания", 130, false, false));
         result.addColumn(new Column("HEADBRANCH", Column.Type.STRING, "Филиал 1 руки", 100, false, false));
         result.addColumn(new Column("USER_AU2", Column.Type.STRING, "Логин 2 руки", 100, false, false));
-        result.addColumn(col = new Column("OTS_AU2", Column.Type.DATETIME, "Дата подписи", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS_AU2", Column.Type.DATETIME, "Дата подписи", 130, false, false));
         result.addColumn(new Column("USER_AU3", Column.Type.STRING, "Логин 3 руки", 100, false, false));
-        result.addColumn(col = new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130, false, false));
         result.addColumn(new Column("USER_CHNG", Column.Type.STRING, "Логин изменения", 100, false, false));
-        result.addColumn(col = new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130, false, false));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130, false, false));
         result.addColumn(new Column("MVMNT_OFF", Column.Type.STRING, "Искл.запроса к АБС", 150, false, false));
-        result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 80));
-        result.addColumn(col = new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 72));
-        col.setFormat("dd.MM.yyyy HH:mm:ss");
+        result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 150));
+        result.addColumn(new Column("SEND_SRV", Column.Type.DATETIME, "Запрос в АБС", 120, false, false));
+        result.addColumn(new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 120));
 
         result.addColumn(new Column("DESCRDENY", Column.Type.STRING, "Причина возврата", 300, false, false));
 

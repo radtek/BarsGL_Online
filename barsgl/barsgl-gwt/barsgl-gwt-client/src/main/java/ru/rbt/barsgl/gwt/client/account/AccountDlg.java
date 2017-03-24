@@ -5,6 +5,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Grid;
@@ -75,15 +76,18 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
 
     private Date operday;
     private Long accountId;
+    private String bsaAcid;
+    private String acc2;
 
     private int asyncListCount = 4; /*count async lists:  mBranch; mCurrency; mDealSource; mTerm*/
     private HandlerRegistration registration;
+    private Timer timer;
 
-
-    public AccountDlg(){
-        super();
-        //registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
+    @Override
+    public void beforeCreateContent() {
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
     }
+
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
 
@@ -91,21 +95,6 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
 
             @Override
             public void completeLoadData(String dataListBoxId) {
-                if (action == FormAction.UPDATE) {
-                    //for update action repeat setting values on async lists
-                    row = (Row) params;
-
-                    if (mBranch.getId().equalsIgnoreCase(dataListBoxId)) {
-                        mBranch.setValue(getFieldValue("BRANCH"));
-                    } else if (mCurrency.getId().equalsIgnoreCase(dataListBoxId)) {
-                        mCurrency.setValue(getFieldValue("CCY"));
-                    } else if (mDealSource.getId().equalsIgnoreCase(dataListBoxId)) {
-                        mDealSource.setValue(getFieldValue("DEALSRS"));
-                    } else if (mTerm.getId().equalsIgnoreCase(dataListBoxId)) {
-                        String term = "00" + getFieldText("TERM");
-                        mTerm.setValue(term.substring(term.length() - 2, term.length()));
-                    }
-                }
                 asyncListCount--;
 
                 if (asyncListCount == 0) {
@@ -114,7 +103,6 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
             }
         };
     }
-
 
     @Override
     public Widget createContent() {
@@ -184,6 +172,8 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     protected void setFields(ManualAccountWrapper account) {
     	account.setId(accountId);
+        account.setBsaAcid(bsaAcid);
+        account.setBalanceAccount2(acc2);
         account.setBranch(check((String) mBranch.getValue()
                 , "Отделение", "обязательно для заполнения", new CheckNotEmptyString()));
         account.setCurrency(check((String) mCurrency.getValue()
@@ -217,6 +207,8 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     public void clearContent() {
         accountId = null;
+        bsaAcid = null;
+        acc2 = null;
         mBranch.setValue(null);
         mBranch.setEnabled(true);
         mCurrency.setValue("RUR");
@@ -235,15 +227,13 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDateClose.setValue(null);
     }
 
-    @Override
-    protected void fillContent() {
-        clearContent();
-        setControlsEnabled();
-
+    protected void fillUp(){
         if (action == FormAction.UPDATE) {
             row = (Row) params;
 
             accountId = getFieldValue("ID");
+            bsaAcid = getFieldValue("BSAACID");
+            acc2 = getFieldValue("ACC2");
             mBranch.setValue(getFieldValue("BRANCH"));
             mCurrency.setValue(getFieldValue("CCY"));
             mAccountType.setValue(getFieldText("ACCTYPE"));
@@ -267,6 +257,31 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
                 setOperday(wrapper.getCurrentOD());
             }
         });
+    }
+
+    @Override
+    protected void fillContent() {
+        clearContent();
+        setControlsEnabled();
+
+        if (asyncListCount == 0) {
+            //если закончена обработка списков
+            fillUp();
+        } else {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        fillUp();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
+        }
     }
 
     private void setControlsEnabled(){
@@ -347,6 +362,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
                             mAccountDesc.setEnabled(true);
                             mCustomerType.setValue(getCustomerTypeName(result));
                             mCustomerName.setValue((String)result.get("CUSTNAME"));
+                            acc2 = (String)result.get("ACC2");
                             return true;
                         }
                     };
@@ -400,7 +416,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDealSource.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                boolean srcKP = mDealSource.getText().equals(DealSource.KP.getLabel());
+                boolean srcKP = mDealSource.getText().equals(DealSource.KondorPlus.getLabel());
                 mSQ.setEnabled(!srcKP);
                 if (srcKP)
                     mSQ.clear();

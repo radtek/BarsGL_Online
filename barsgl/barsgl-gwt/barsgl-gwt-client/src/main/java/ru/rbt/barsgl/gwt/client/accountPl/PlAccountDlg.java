@@ -5,11 +5,13 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
@@ -21,6 +23,9 @@ import ru.rbt.barsgl.gwt.client.dictionary.AccountTypePlFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
@@ -72,10 +77,34 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
 
     private Date operday;
     private Long accountId;
+    private String bsaAcid;
 
     private boolean fl707;
     private String trueAcc2 = "";
-    
+
+    private int asyncListCount = 3; /*count async lists:  mBranch; mCustomerType; mTerm*/
+    private HandlerRegistration registration;
+    private Timer timer;
+
+    @Override
+    public void beforeCreateContent() {
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
+    }
+
+    private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
+
+        return new DataListBoxEventHandler(){
+
+            @Override
+            public void completeLoadData(String dataListBoxId) {
+                asyncListCount--;
+
+                if (asyncListCount == 0) {
+                    registration.removeHandler();
+                }
+            }
+        };
+    }
 
     @Override
     public Widget createContent() {
@@ -140,6 +169,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     protected void setFields(ManualAccountWrapper account) {
         account.setId(accountId);
+        account.setBsaAcid(bsaAcid);
         account.setBranch(check((String) mBranch.getValue()
                 , "Отделение", "обязательно для заполнения", new CheckNotEmptyString()));
         account.setCustomerNumber((String)mBranch.getParam("CNUM"));
@@ -169,7 +199,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
                 , "Счет доходов/расходов", "обязательно для заполнения", new CheckNotEmptyString()));
 
         account.setCurrency("RUR");
-        account.setDealSource(DealSource.MNL.getLabel());
+        account.setDealSource(DealSource.Manual.getLabel());
 
         account.setDescription(check(mAccountDesc.getValue(),
                 "Наименование счета", "обязательно для заполнения, не более 255 символов \n(Для разблокировки нажмите на кнопку 'Accounting Type')",
@@ -185,6 +215,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     public void clearContent() {
         accountId = null;
+        bsaAcid = null;
         mBranch.setValue(null);
         mBranch.setEnabled(true);
         mAccountType.setValue(null);
@@ -197,21 +228,18 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDateClose.setValue(null);
     }
 
-    @Override
-    protected void fillContent() {
-        clearContent();
-        setControlsEnabled();
-
+    protected void fillUp(){
         if (action == FormAction.UPDATE) {
             row = (Row) params;
 
             accountId = getFieldValue("ID");
+            bsaAcid = getFieldValue("BSAACID");
             mBranch.setValue(getFieldValue("BRANCH"));
             mAccountType.setValue(getFieldText("ACCTYPE"));
             mCustomerType.setValue(getFieldText("CBCUSTTYPE"));
             String term = "00" + getFieldText("TERM");
             mTerm.setValue(term.substring(term.length()-2, term.length()));
-            
+
             mAcc2.setValue(getFieldText("ACC2"));
             mPlcode.setValue(getFieldText("PLCODE"));
 
@@ -228,6 +256,31 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
                 setOperday(wrapper.getCurrentOD());
             }
         });
+    }
+
+    @Override
+    protected void fillContent() {
+        clearContent();
+        setControlsEnabled();
+        
+        if (asyncListCount == 0) {
+            //если закончена обработка списков
+            fillUp();
+        } else {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        fillUp();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
+        }
     }
 
     private void setControlsEnabled(){
@@ -404,8 +457,6 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
     	else
     		return acc2.substring(0, 2) + symbol + (len > 3 ? acc2.substring(3, len) : "");
     }
-
-
 }
 
 

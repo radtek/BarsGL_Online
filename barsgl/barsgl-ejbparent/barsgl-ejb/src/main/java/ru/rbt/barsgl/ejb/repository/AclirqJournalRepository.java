@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
-import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
@@ -31,14 +30,23 @@ public class AclirqJournalRepository extends AbstractBaseEntityRepository<Aclirq
         return journal.getId();
     }
 
-    public void updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage) {
+    public AclirqJournal updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage) {
         AclirqJournal journal = findById(AclirqJournal.class, jId);
         journal.setComment(errorMessage);
         journal.setStatusDate(new Timestamp(new Date().getTime()));
         journal.setStatus(status);
-        update(journal);
+        return update(journal);
     }
 
+    public AclirqJournal updateLogStatus(Long jId, AclirqJournal.Status status, String errorMessage, String outMessage) {
+        AclirqJournal journal = findById(AclirqJournal.class, jId);
+        journal.setOutMessage(outMessage);
+        journal.setComment(errorMessage);
+        journal.setStatusDate(new Timestamp(new Date().getTime()));
+        journal.setStatus(status);
+        return update(journal);
+    }
+    
     public boolean finalizeOnException(Long jId) {
         if(jId==0L) {
             return false;

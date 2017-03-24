@@ -4,19 +4,24 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterUtils;
+import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
-import ru.rbt.grid.gwt.client.GridEntryPoint;
 
 /**
  * Created by akichigi on 28.07.16.
@@ -26,12 +31,12 @@ public class Export2ExcelAction extends GridAction {
     private String sql;
     protected int exportMaxRows = 4999;
     private List<FilterItem> linkDetailFilterCriteria = null;
+    private String formTitle;
 
     public Export2ExcelAction(GridWidget grid, String sql) {
         super(grid, "", "Экспорт в Excel", new Image(ImageConstants.INSTANCE.excel()), 10, true);
         this.grid = grid;
         this.sql = sql;
-
     }
 
     public void setLinkDetailFilterCriteria(List<FilterItem> criteria){
@@ -73,8 +78,9 @@ public class Export2ExcelAction extends GridAction {
         List<SortItem> sortItems = grid.getSortCriteria();
         List<FilterItem> filterItems = FilterUtils.combineFilterCriteria(grid.getFilterCriteria(), linkDetailFilterCriteria);
 
-        GridEntryPoint.asyncGridService.export2Excel(sql, grid.getTable().getColumns(), filterItems, sortItems,
-                new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));
+        ExcelExportHead head = createExportHead(grid.getFilterCriteria());
+        GridEntryPoint.asyncGridService.export2Excel(sql, grid.getTable().getColumns(), filterItems, sortItems, head,
+                new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));        
     }
 
     class ExportActionCallback implements AsyncCallback<String> {
@@ -101,5 +107,29 @@ public class Export2ExcelAction extends GridAction {
 
             rootAction.setEnable(true);
         }
+    }
+
+    public void setFormTitle(String formTitle) {
+        this.formTitle = formTitle;
+    }
+
+    private ExcelExportHead createExportHead(List<FilterItem> items){
+        String user = "";
+        AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+        if (current_user != null){
+            user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
+        }
+       return new ExcelExportHead(formTitle, user, getFilter(items));
+    }
+
+    private String getFilter(List<FilterItem> items){
+         String res = "";
+         if (items == null) return res;
+         for (int i = 0; i < items.size(); i++){
+            FilterItem item = items.get(i);
+            res += Utils.Fmt("[\"{0}\" {1} '{2}']{3} ", item.getCaption(), item.getCriteria().getValue(), item.getStrValue(),
+                   i == items.size()-1 ? "" : ";");
+         }
+        return res;
     }
 }

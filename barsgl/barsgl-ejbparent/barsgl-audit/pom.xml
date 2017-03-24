@@ -4,12 +4,12 @@
     <parent>
     <artifactId>barsgl-ejbparent</artifactId>
     <groupId>ru.rbt</groupId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>3.0.15-SNAPSHOT</version>
   </parent>
 
     <groupId>ru.rbt</groupId>
     <artifactId>barsgl-audit</artifactId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>3.0.15-SNAPSHOT</version>
     <packaging>ejb</packaging>
 
     <name>${artifactId}:${packaging}:${project.version}</name>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-ejb-core</artifactId>
-            <version>3.0.4-SNAPSHOT</version>
+            <version>3.0.15-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>

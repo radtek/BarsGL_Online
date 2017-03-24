@@ -50,10 +50,6 @@ public enum SecurityActionCode {
     , TasksRun("Изменение состояния службы (задания), кроме открытия и закрытия ОД")
     , OthAuditLook("AUDIT")
     , OperAcceptance("Операции, ожидающие подтверждение 2-й или 3-й рукой")
-    , OperEdit("Редактирование запроса на операцию")
-    , OperDel("Удаление запроса на операцию")
-    , OperPkgDel("Удаление пакета с запросами на операцию")
-    , OperReturn("Возврат на доработку запроса на операцию")
     , OperHistory("Просмотр истории создания операций")
     , OperHistoryUser("Просмотр запросов на создание операций")
     , OperToExcel("Выгрузка в Excel")
@@ -66,6 +62,9 @@ public enum SecurityActionCode {
     , LoaderStepActionExecute("Выполнение действий, назначенных на шаги загрузки")
     , LoaderStepActionCancel("Отмена действий, назначенных на шаги загрузки")
     , TaskMonitor("Мониторинг")
+    , OperManualLook("Просмотр списка запросов ручного ввода")
+    , Acc707Inp("Ввод счета ОФР прошлых лет")
+    , Acc707Chng("Изменение счета ОФР прошлых лет")
     ;
 
     private final String desc;

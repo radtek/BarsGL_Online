@@ -2,14 +2,13 @@ package ru.rbt.barsgl.ejb.entity.acc;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 
 /**
  * Created by ER18837 on 28.04.15.
  */
 @Embeddable
-@MappedSuperclass
+//@MappedSuperclass
 public class AccRlnId implements Serializable {
     @Column(name = "ACID")
     private String acid;

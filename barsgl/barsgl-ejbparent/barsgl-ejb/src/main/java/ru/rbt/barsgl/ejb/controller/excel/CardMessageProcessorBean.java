@@ -27,6 +27,7 @@ import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
@@ -44,8 +45,8 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 /**
  * Created by ER22317 on 21.09.2016.
  */
@@ -138,8 +139,11 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
 
                 if (row.get(2) instanceof String)
                     card.setAmount(new BigDecimal(row.get(2).toString()));
-                else
-                    card.setAmount((BigDecimal) row.get(2));
+                else if (row.get(2) instanceof Double)
+                    card.setAmount(new BigDecimal((Double)row.get(2)));
+                else if (row.get(2) instanceof Integer)
+                    card.setAmount(new BigDecimal((Integer)row.get(2)));
+                else throw new IllegalArgumentException("Формат поля суммы может быть строковым или числовым");
 
                 card.setCnum(StringUtils.leftPad((String) row.get(3), 8, "0"));
                 card.setMdacc((String) row.get(4));
@@ -174,7 +178,7 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
     private BatchPackage createPackage(String userName, String fileName) {
         BatchPackage pkg = new BatchPackage();
         pkg.setUserName(userName);
-        pkg.setPackageState(BatchPackage.PackageState.INPROGRESS);
+        pkg.setPackageState(BatchPackageState.INPROGRESS);
         pkg.setFileName(fileName);
         pkg.setDateLoad(new Date());
         pkg = packageRepository.save(pkg);
@@ -422,7 +426,9 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
         pkg.setFileName(fileName);
         pkg.setDateLoad(new Date());
         pkg.setMovementOff(movementOff ? YesNo.Y : YesNo.N);
-        pkg.setPackageState(errorCount > 0 ? BatchPackage.PackageState.ERROR : BatchPackage.PackageState.LOADED);
+        pkg.setPostDate(postDate0);
+        pkg.setProcDate(curdate);
+        pkg.setPackageState(errorCount > 0 ? BatchPackageState.ERROR : BatchPackageState.LOADED);
         packageRepository.save(pkg);
 
         String result = new StringBuffer().append(LIST_DELIMITER)

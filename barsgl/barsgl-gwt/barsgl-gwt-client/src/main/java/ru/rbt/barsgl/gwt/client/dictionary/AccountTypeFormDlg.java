@@ -61,7 +61,8 @@ public abstract class AccountTypeFormDlg extends GridFormDlgBase {
         @Override
         protected String prepareSql() {
             return "select ACCTYPE, CUSTYPE, TERM, ACC2, ACOD, SQ, DTB, DTE, ACCNAME, TERMNAME, CTYPENAME, CUSTNO, CUSTNAME, CTYPE, FL_CTRL" +
-                    " from V_GL_ACCUST where ACOD not in ('7920','7919','7903','7904','7907','7908')";
+                    " from V_GL_ACCUST where not ACC2 like '706%'" //ACOD not in ('7920','7919','7903','7904','7907','7908')
+                    ;
         }
 
         @Override
@@ -104,10 +105,10 @@ public abstract class AccountTypeFormDlg extends GridFormDlgBase {
             String custNo = (String)initialFilterParams[3];
 
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-            list.add(new FilterItem(colDateBegin, FilterCriteria.LE, currentDate, true));
-            list.add(new FilterItem(colDateEnd, FilterCriteria.IS_NULL, null, true));
-            list.add(new FilterItem(colCtrl, FilterCriteria.NE, "Y", true));
-            list.add(new FilterItem(colCustNo, FilterCriteria.EQ, custNo, true));
+            list.add(new FilterItem(colDateBegin, FilterCriteria.LE, currentDate, true, true));
+            list.add(new FilterItem(colDateEnd, FilterCriteria.IS_NULL, null, true, true));
+            list.add(new FilterItem(colCtrl, FilterCriteria.NE, "Y", true, true));
+            list.add(new FilterItem(colCustNo, FilterCriteria.EQ, custNo, true, true));
 
             if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.START_WITH, accType));
             if (!isEmpty(term) && !term.equals("00")) list.add(new FilterItem(colTerm, FilterCriteria.EQ, term));

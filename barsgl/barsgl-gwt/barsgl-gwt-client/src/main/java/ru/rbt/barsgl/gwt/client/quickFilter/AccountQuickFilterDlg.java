@@ -1,12 +1,17 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 
@@ -40,11 +45,36 @@ public class AccountQuickFilterDlg extends DlgFrame {
 
     protected AccountQuickFilterParams filterParams;
 
+    private int asyncListCount = 3; /*count async lists: mDealSource; mCurrency; mFilial*/
+    private HandlerRegistration registration;
+    private Timer timer;
+
+
     public AccountQuickFilterDlg() {
         super();
         ok.setText(TEXT_CONSTANTS.applyBtn_caption());
         cancel.setText(TEXT_CONSTANTS.btn_cancel());
         setCaption("Выбор параметров счета");
+    }
+
+    @Override
+    public void beforeCreateContent() {
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
+    }
+
+    private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
+
+        return new DataListBoxEventHandler(){
+
+            @Override
+            public void completeLoadData(String dataListBoxId) {
+                asyncListCount--;
+
+                if (asyncListCount == 0) {
+                    registration.removeHandler();
+                }
+            }
+        };
     }
 
     @Override
@@ -88,8 +118,7 @@ public class AccountQuickFilterDlg extends DlgFrame {
         return mainVP;
     }
 
-    @Override
-    protected void fillContent() {
+    protected void fillUp(){
         filterParams = (AccountQuickFilterParams)params;
         if (null != filterParams) {
             mDealSource.setSelectValue(ifEmpty(filterParams.getDealSource(), ""));
@@ -100,6 +129,28 @@ public class AccountQuickFilterDlg extends DlgFrame {
             mCustomerNumber.setValue(ifEmpty(filterParams.getCustomerNumber(), ""));
             mDateFrom.setValue(filterParams.getDateFrom());
             mDateTo.setValue(filterParams.getDateTo());
+        }
+    }
+    
+    @Override
+    protected void fillContent() {
+        if (asyncListCount == 0) {
+            //если закончена обработка списков
+            fillUp();
+        } else {
+            showPreload(true);
+            timer = new Timer() {
+                @Override
+                public void run() {
+                    if (asyncListCount == 0) {
+                        timer.cancel();
+                        fillUp();
+                        showPreload(false);
+                    }
+                }
+            };
+
+            timer.scheduleRepeating(500);
         }
     }
 

@@ -5,14 +5,16 @@ package ru.rbt.barsgl.gwt.core.dialogs;
  */
 
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class FilterItem implements Serializable {
-    private static final long serialVersionUID = -294322225561414413L;
-    public static final String DATE_FORMAT = "dd.MM.yyyy";
+public class FilterItem implements Serializable, IsSerializable {
+	private static final long serialVersionUID = -3960734068373764479L;
+
+	public static final String DATE_FORMAT = "dd.MM.yyyy";
 
     private String sqlName;
     private Serializable sqlValue;
@@ -21,6 +23,8 @@ public class FilterItem implements Serializable {
     private FilterCriteria criteria;
     private boolean pined;
     private boolean isReadOnly = false;
+    private String caption;
+    private String strValue;
 
     public FilterItem(){}
 
@@ -28,27 +32,37 @@ public class FilterItem implements Serializable {
         this(column, criteria, value, false);
     }
 
-    public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined) {
-        this(column.getName(), column.getType(), criteria, value, pined);
+    public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined, boolean readOnly) {
+        this(column.getName(), column.getType(), column.getCaption(), criteria, value, pined);
+        this.setReadOnly(readOnly);
     }
 
-    public FilterItem(String name, Column.Type type, FilterCriteria criteria, Serializable value, boolean pined) {
+    public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined) {
+        this(column.getName(), column.getType(), column.getCaption(), criteria, value, pined);
+    }
+
+    public FilterItem(String name, Column.Type type, String caption, FilterCriteria criteria, Serializable value, boolean pined) {
         this.name = name;
         this.value = value;
         this.criteria = criteria;
         this.pined = pined;
         this.sqlName = name;
+        this.caption = caption;
+        this.strValue = (null != value) ? value.toString() : "";
         this.sqlValue = value;
+
         if (null != value ) {
             // преобразуем дату в строку для передачи на сервер (из-за возможной ошибки на 1 день)
             switch (type) {
             case DATETIME:
                 this.sqlName = "DATE(" + name + ")";
-                this.sqlValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.strValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.sqlValue = this.strValue;
                 break;
             case DATE:
                 this.sqlName = name;
-                this.sqlValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.strValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
+                this.sqlValue = this.strValue;
                 break;
             }
         }
@@ -66,7 +80,7 @@ public class FilterItem implements Serializable {
         return criteria;
     }
 
-    public boolean needValue() { return criteria.isBinary(); };
+    public boolean needValue() { return criteria.isBinary(); }
 
     public boolean isPined() {
         return pined;
@@ -86,5 +100,21 @@ public class FilterItem implements Serializable {
 
     public void setReadOnly(boolean isReadOnly) {
         this.isReadOnly = isReadOnly;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public void setCaption(String caption){
+        this.caption = caption;
+    }
+
+    public String getStrValue() {
+        return strValue;
+    }
+
+    public void setStrValue(String strValue) {
+        this.strValue = strValue;
     }
 }

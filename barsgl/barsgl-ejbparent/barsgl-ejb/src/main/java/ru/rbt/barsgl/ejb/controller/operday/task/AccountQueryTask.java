@@ -103,7 +103,7 @@ public class AccountQueryTask implements ParamsAwareRunnable {
     private static final Map<String, String> currencyMap = new HashMap<>();
     private static final Map<String, Integer> currencyNBDPMap = new HashMap<>();
 
-    private void loadCurrency() {
+    private void loadCurrency() throws Exception {
         queryRepository.loadCurrency(currencyMap, currencyNBDPMap);
     }
 
