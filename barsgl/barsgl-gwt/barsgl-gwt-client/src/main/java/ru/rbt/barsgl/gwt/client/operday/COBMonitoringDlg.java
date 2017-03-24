@@ -190,7 +190,7 @@ public class COBMonitoringDlg extends DlgFrame {
         List<CobStepItem> stepItems = wrapper.getStepList();
         for(int i = 0; i < stepItems.size(); i++){
             CobStepItem item = stepItems.get(i);
-            phaseMsgs.get(item.getPhaseNo()).setValue(item.getMessage());
+            phaseMsgs.get(item.getPhaseNo()).setValue(item.getMessage() == null ? " " : item.getMessage()); //fix IE bug
             bars.get(item.getPhaseNo()).setText(Utils.Fmt(completeMessage, item.getIntPercent()));
             bars.get(item.getPhaseNo()).setProgress(item.getIntPercent());
             phaseStatuses.get(item.getPhaseNo()).setText(getPhaseMessage(item));
@@ -199,7 +199,7 @@ public class COBMonitoringDlg extends DlgFrame {
         idCOB = wrapper.getIdCob();
         isNeedStartTimer = wrapper.getStartTimer();
 
-        phaseTotalMsg.setValue(wrapper.getErrorMessage());
+        phaseTotalMsg.setValue(wrapper.getErrorMessage() == null ? " " : wrapper.getErrorMessage()); //fix IE bug
         CobStepItem item = wrapper.getTotal();
         barTotal.setProgress(item.getIntPercent());
         barTotal.setText(Utils.Fmt(completeMessage, item.getIntPercent()));
