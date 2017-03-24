@@ -96,7 +96,7 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select * from V_GL_ACCRLN";
+            return "select * from V_GL_ACCRLN where ACC2 <>'' ";
         }
 
         @Override
