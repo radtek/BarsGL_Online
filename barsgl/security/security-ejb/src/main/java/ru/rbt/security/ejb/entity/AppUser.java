@@ -50,7 +50,8 @@ public class AppUser extends BaseEntity<Long> {
     private Date end_Date;
 
     @Column(name = "LOCKED")
-    @Enumerated(EnumType.ORDINAL)
+    //@Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private UserLocked locked;
 
     @Column(name = "SEC_TYPE")
