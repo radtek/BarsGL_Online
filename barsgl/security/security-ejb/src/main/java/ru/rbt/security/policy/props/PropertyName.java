@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.ejb.props;
+package ru.rbt.security.policy.props;
 
 /**
  * Created by ER21006 on 11.04.2016.

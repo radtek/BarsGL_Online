@@ -1,10 +1,8 @@
 package ru.rbt.security.policy;
 
 import ru.rbt.security.ejb.entity.AppUser;
-import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.conf.map.StringProperty;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
@@ -18,16 +16,15 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Authorization;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.security.policy.props.PropertyName.AD_LDAP_URI;
 
 /**
  * Created by Ivan Sevastyanov on 13.05.2016.
@@ -101,7 +98,7 @@ public class ExternalUserLoginPolicy extends LoginPolicy {
         Hashtable env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, propertiesRepository
-                .getCachedProperty(PropertyName.AD_LDAP_URI.getName()).getValue());
+                .getCachedProperty(AD_LDAP_URI.getName()).getValue());
         env.put(Context.SECURITY_PRINCIPAL, distinguishedName);
         env.put(Context.SECURITY_CREDENTIALS, password);
 
