@@ -86,7 +86,6 @@ public class OperDayForm extends BaseForm {
         ActionBarWidget abw = new ActionBarWidget();
         abw.addAction(createRefreshAction());
 
-
         abw.addSecureAction(createOpenODAction(), SecurityActionCode.TskOdOpenRun);
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
@@ -287,7 +286,7 @@ public class OperDayForm extends BaseForm {
        };
    }
 
-  
+
 
     private Action createFakeCOB(){
         return new Action("Fake COB", "", null, 5){
@@ -301,7 +300,8 @@ public class OperDayForm extends BaseForm {
                         if (result.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                         } else {
-                            Window.alert(result.getResult().toString());
+                            //Window.alert(result.getResult().toString());
+                            Window.alert(result.getMessage());
                         }
                         WaitingManager.hide();
                     }
