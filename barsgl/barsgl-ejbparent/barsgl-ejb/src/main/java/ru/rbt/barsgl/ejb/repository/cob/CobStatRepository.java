@@ -20,7 +20,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
 /**
@@ -29,6 +28,7 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 @Stateless
 @LocalBean
 public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStatistics, CobStatId> {
+    public static final String MSG_DELIMITER = "'; '";    // TODO только для tmb01, надо "CHR(10) || ' '"
 
     public Long createCobStepGroup(Date curdate) {
         Long idCob = nextId("SEQ_GL_COB");
@@ -102,22 +102,26 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 newEstimate, idCob, phaseNo, Running.name(), oldEstimate);
     }
 
-    public int setStepStart(Long idCob, Integer phaseNo, Date timestamp) {
-        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_START = ?, DURATION = ESTIMATED " +
+    private String getDelimMessage(String message) {
+        return MSG_DELIMITER + " || '" + message + "'";
+    }
+
+    public int setStepStart(Long idCob, Integer phaseNo, Date timestamp, String message) {
+        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_START = ?, DURATION = ESTIMATED, MESSAGE = ? " +
                 " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                Running.name(), timestamp, idCob, phaseNo, NotStart.name());
+                Running.name(), timestamp, message, idCob, phaseNo, NotStart.name());
     }
 
     public int setStepSkipped(Long idCob, Integer phaseNo, Date timestamp, String message) {
-        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, DURATION = 0, MESSAGE = ? " +
+        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, DURATION = 0, MESSAGE = MESSAGE || " + getDelimMessage(message) +
                         " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                Skipped.name(), timestamp, idCob, phaseNo, message, Running.name());
+                Skipped.name(), timestamp, idCob, phaseNo, Running.name());
     }
 
     public int setStepSuccess(Long idCob, Integer phaseNo, Date timestamp, String message) {
-        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = ? " +
-                        " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                Success.name(), timestamp, message, idCob, phaseNo, Running.name());
+        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = MESSAGE || " + getDelimMessage(message) +
+                " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
+                Success.name(), timestamp, idCob, phaseNo, Running.name());
         if (cnt == 1) {
             cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
                         " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
@@ -127,9 +131,9 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int setStepError(Long idCob, Integer phaseNo, Date timestamp, String message, String errorMessage, CobStepStatus status) {
-        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = ?, ERRORMSG = ? " +
+        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = MESSAGE || " + getDelimMessage(message) + ", ERRORMSG = ? " +
                         " where ID_COB = ? and PHASE_NO = ?",
-                Error.name(), timestamp, message, errorMessage, idCob, phaseNo);
+                status.name(), timestamp, errorMessage, idCob, phaseNo);
         if (cnt == 1) {
             cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
                             " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
@@ -139,8 +143,9 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int updateStepMessage(Long idCob, Integer phaseNo, String message) {
-        return executeNativeUpdate("update GL_COB_STAT set MESSAGE = ? where ID_COB = ? and PHASE_NO = ?",
-                message, idCob, phaseNo);
+        return executeNativeUpdate("update GL_COB_STAT set MESSAGE = MESSAGE || " + getDelimMessage(message) +
+                        " where ID_COB = ? and PHASE_NO = ?",
+                idCob, phaseNo);
     }
 
     public Long getMaxCobId() throws SQLException {

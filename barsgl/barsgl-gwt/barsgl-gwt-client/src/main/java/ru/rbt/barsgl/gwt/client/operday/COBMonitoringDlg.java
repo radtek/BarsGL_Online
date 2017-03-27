@@ -21,6 +21,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ public class COBMonitoringDlg extends DlgFrame {
     private AreaBox phaseTotalMsg;
 
     private Long idCOB = null;
+    CobStepStatus totalStatus = null;
     private boolean isNeedStartTimer = false;
     private HashMap<Integer, Label> phaseNames;
     private HashMap<Integer, Label> phaseStatuses;
@@ -165,7 +167,8 @@ public class COBMonitoringDlg extends DlgFrame {
 
 
     private void getMonitoringInfo(){
-        BarsGLEntryPoint.operDayService.getCobInfo(idCOB, new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
+        BarsGLEntryPoint.operDayService.getCobInfo(totalStatus == CobStepStatus.Running ? idCOB : null,
+                new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
             @Override
             public void onSuccess(RpcRes_Base<CobWrapper> result) {
                 if (result.isError()) {
@@ -197,6 +200,7 @@ public class COBMonitoringDlg extends DlgFrame {
         }
 
         idCOB = wrapper.getIdCob();
+        totalStatus = wrapper.getTotal().getStatus();
         isNeedStartTimer = wrapper.getStartTimer();
 
         phaseTotalMsg.setValue(wrapper.getErrorMessage() == null ? " " : wrapper.getErrorMessage()); //fix IE bug
@@ -224,7 +228,7 @@ public class COBMonitoringDlg extends DlgFrame {
                 break;
             case Error:
             case Halt:
-                res = Utils.Fmt("{0} через {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
+                res = Utils.Fmt("{0} за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
                 break;
             default:res = item.getStatus().getLabel();
         }

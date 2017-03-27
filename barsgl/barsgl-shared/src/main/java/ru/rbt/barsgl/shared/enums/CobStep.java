@@ -32,12 +32,18 @@ public enum CobStep {
         this.phaseName = phaseName;
     }
 
-    public void setPhaseName(String phaseName, int phaseNo) {
+    public static void setPhaseName(String phaseName, int phaseNo) {
+        CobStep step = getStep(phaseNo);
+        if (null != step)
+            step.phaseName = phaseName;
+    }
+
+    public static CobStep getStep(int phaseNo) {
         for (CobStep step : CobStep.values()) {
             if (step.phaseNo == phaseNo) {
-                step.phaseName = phaseName;
-                return;
+                return step;
             }
         }
+        return null;
     }
 }

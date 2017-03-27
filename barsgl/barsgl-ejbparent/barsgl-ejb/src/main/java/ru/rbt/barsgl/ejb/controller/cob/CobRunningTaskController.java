@@ -73,9 +73,7 @@ public class CobRunningTaskController {
             auditController.error(PreCob, msg, step, t);
             if (null != step){
                 try {
-                    statRepository.executeInNewTransaction(persistence ->
-                            statRepository.setStepError(idCob, step.getPhaseNo(), operdayController.getSystemDateTime(),
-                                    "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt));   // TODO подумать тему сообщений
+                    recalculator.setStepError(idCob, step, "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt);
                     return statRepository.refresh(step, true);
                 } catch (Exception ignored) {}
             }

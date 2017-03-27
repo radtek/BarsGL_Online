@@ -10,7 +10,7 @@ public enum CobStepStatus implements HasLabel {
     Running("Выполняется"),
     Success("Завершен успешно"),
     Error("Завершен с ошибкой"),
-    Halt("Завершен с ошибкой, дальнейшая обработка невозможна"),
+    Halt("Завершен с критической ошибкой"),
     Skipped("Пропущен");
 
     private String label;

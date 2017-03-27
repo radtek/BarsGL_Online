@@ -24,11 +24,12 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
+
 /**
  * Created by akichigi on 23.03.15.
  */
 public class OperDayServiceImpl extends AbstractGwtService implements OperDayService{
-    private static final String COB_FAKE_NAME = "ExecutePreCOBTaskFake";
 
     @Override
     public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
@@ -196,14 +197,14 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
 */
 
         try {
-            boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_FAKE_NAME});
+            boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_TASK_NAME});
             if (isAlreadyRunning) {
-                return new RpcRes_Base<>(null, true, "Есть незаконченная задача синхронизации");
+                return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
             } else {
-                TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_FAKE_NAME);
+                TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_TASK_NAME);
                 Properties properties = new Properties();
                 properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
-                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_FAKE_NAME, properties, 3000);
+                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_TASK_NAME, properties, 3000);
                 return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через 3 сек");
             }
         } catch (Exception e) {

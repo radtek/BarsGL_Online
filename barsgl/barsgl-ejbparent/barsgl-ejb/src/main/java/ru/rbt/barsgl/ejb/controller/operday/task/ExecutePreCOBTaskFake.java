@@ -24,11 +24,13 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
+import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
 /**
  * Created by ER18837 on 16.03.17.
  */
 public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
+    final CobStepStatus results[] = {Success, Success, Error, Skipped, Success, Halt};
 
     @Inject
     private CobStatRepository statRepository;
@@ -56,10 +58,13 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
 
         // TODO здесь создаются шаги. Можно задать любую продолжительность и любой возвращаемый статус
         int st = 0;
+        int res = 0;
         for(CobStepStatistics step: steps) {
+            final CobStepStatus status = (res >= results.length) ? NotStart : results[res];
             works.add(new CobRunningStepWork(CobStep.values()[st++], () -> {
-                return fakeTimerStep(idCob, step, 10, CobStepStatus.Success);   //step.getEstimated().intValue()
+                return fakeTimerStep(idCob, step, step.getEstimated().intValue(), status);
             }));
+            res++;
         }
 
         if (taskController.execWorks(works, idCob)) {
@@ -71,7 +76,9 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
 
     public CobStepResult fakeTimerStep(Long idCob, CobStepStatistics step, int duration, CobStepStatus status) throws Exception {
         statRecalculator.setStepMessage(idCob, step, "Запуск шага " + step.getPhaseNo());
-        Thread.sleep(duration * 1000L);
+        if (status != Skipped) {
+            Thread.sleep((duration == 0 ? 5 : 10) * 1000L);
+        }
         String errorMsg = (status == CobStepStatus.Error || status == CobStepStatus.Halt) ? "Это ошибка !" : "";
 
         statRecalculator.setStepMessage(idCob, step, "Завершен шаг " + step.getPhaseNo());

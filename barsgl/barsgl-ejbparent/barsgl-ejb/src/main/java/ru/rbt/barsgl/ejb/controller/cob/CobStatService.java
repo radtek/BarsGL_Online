@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejb.controller.cob;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.props.PropertyName;
+import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
@@ -19,14 +21,14 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
-
 /**
  * Created by ER18837 on 10.03.17.
  */
 public class CobStatService {
-    final static BigDecimal ALL = new BigDecimal(100);
-    final static BigDecimal INC = new BigDecimal("1.05");
+    public static final String COB_TASK_NAME = ExecutePreCOBTaskFake.class.getSimpleName();
+
+    private static final BigDecimal ALL = new BigDecimal(100);
+    private static final BigDecimal INC = new BigDecimal("1.05");
 
     @EJB
     private CobStatRecalculator recalculator;
@@ -39,6 +41,9 @@ public class CobStatService {
 
     @EJB
     private PropertiesRepository propertiesRepository;
+
+    @Inject
+    private JobHistoryRepository historyRepository;
 
     @Inject
     DateUtils dateUtils;
@@ -114,7 +119,10 @@ public class CobStatService {
         }
         setIntValues(itemTotal);
 
-        wrapper.setStartTimer(Running == itemTotal.getStatus());       // TODO это пока
+//        wrapper.setStartTimer(Running == itemTotal.getStatus());       // TODO это пока
+        wrapper.setStartTimer(isRunning());       // TODO это пока
+        if (itemTotal.getStatus() == CobStepStatus.Halt)
+            errorList.add("Обработка прервана");
         wrapper.setErrorMessage(StringUtils.listToString(errorList, "; "));
         return true;
     }
@@ -184,5 +192,9 @@ public class CobStatService {
         Calendar curTime = Calendar.getInstance();
         curTime.setTime(dateTime);
         return curTime.getTimeInMillis();
+    }
+
+    private boolean isRunning() {
+        return historyRepository.isAlreadyRunningLike(null, COB_TASK_NAME);
     }
 }
