@@ -35,6 +35,7 @@ import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 
 import javax.ejb.EJB;
@@ -51,7 +52,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
+import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -128,12 +129,20 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     @EJB
     private CobStatRecalculator statRecalculator;
 
+    /**
+     * проверка нужно ли запускать задачу взависимости от того запускалась ли она в ОД  AbstractJobHistoryAwareTask#getOperday(java.util.Properties)
+     * @param jobName
+     * @param properties
+     * @return true если проверка прошла и задача должна выполняться
+     */
+    @Override
+    protected boolean checkJobStatus(String jobName, Properties properties) {
+        return checkJobStatus(jobName, properties, null);
+    }
+
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
-        return !(!checkChronology(operdayController.getOperday().getCurrentDate()
-                , operdayController.getSystemDateTime(), properties)
-                || !checkPackagesToloadExists(properties));
-
+        return checkRun(jobName, properties, null);
     }
 
     @Override
@@ -407,24 +416,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
-    public boolean checkChronology(Date operday, Date systemDate, Properties properties) {
-        String checkchronology = Optional.ofNullable(properties.getProperty(CHECK_CHRONOLOGY_KEY)).orElse("true");
-        Date etalonCloseDate = org.apache.commons.lang3.time.DateUtils.addDays(operday, 1);
-        if (Boolean.parseBoolean(checkchronology)) {
-            if (systemDate.compareTo(etalonCloseDate) >= 0) {
-                return true;
-            } else {
-                auditController.info(PreCob, format("Проверка хронологии закрытия ОД включена. " +
-                                "Текущее системное время '%s' меньше необходимого для закрытия '%s'"
-                        , dateUtils.fullDateString(systemDate)
-                        , dateUtils.onlyDateString(etalonCloseDate)));
-                return false;
-            }
-        } else {
-            return true;
-        }
-    }
-
     private boolean recalculateLocalization() {
         String operdayString = dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate());
         try {
@@ -439,7 +430,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
-
     private void setPreCobState() throws Exception {
         repository.executeInNewTransaction(pers-> {
             auditController.info(AuditRecord.LogCode.Operday, format("Установка состояния операционного дня в статус %s", PRE_COB));
@@ -447,23 +437,82 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         });
     }
 
+// ----------------- проверки возможности запуска
+
+    public RpcRes_Base<Boolean> checkEnableRun(String jobName, Properties properties) throws Exception {
+        List<String> errList = new ArrayList<>();
+        boolean check = checkJobStatus(jobName, properties, errList)
+                && checkRun(jobName, properties, errList);
+        return new RpcRes_Base<>(check, false, StringUtils.listToString(errList, ";\n "));
+    }
+
+
+    protected boolean checkJobStatus(String jobName, Properties properties, List<String> errList) {
+        try {
+            Assert.isTrue(!jobHistoryRepository.isTaskOK(jobName, getOperday(properties))
+                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, jobName, dateUtils.onlyDateString(getOperday(properties))));
+            JobHistory history = getHistory(properties);
+            boolean isAlreadyRunning = (null != history) ?
+                    jobHistoryRepository.isAlreadyRunning(jobName, history.getId(), getOperday(properties)) :
+                    jobHistoryRepository.isAlreadyRunning(jobName, getOperday(properties));
+            Assert.isTrue(!isAlreadyRunning
+                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_RUN, jobName, dateUtils.onlyDateString(getOperday(properties))));
+            return true;
+        } catch (ValidationError e) {
+            auditController.warning(Task, format("Задача %s не выполнена", jobName), null, e);
+            if (null != errList)
+                errList.add(getErrorMessage(e));
+            return false;
+        }
+    }
+
+    protected boolean checkRun(String jobName, Properties properties, List<String> errList) throws Exception {
+        return !(!checkChronology(operdayController.getOperday().getCurrentDate()
+                , operdayController.getSystemDateTime(), properties, errList)
+                || !checkPackagesToloadExists(properties, errList));
+
+    }
+
+    public boolean checkChronology(Date operday, Date systemDate, Properties properties, List<String> errList) {
+        String checkchronology = Optional.ofNullable(properties.getProperty(CHECK_CHRONOLOGY_KEY)).orElse("true");
+        Date etalonCloseDate = org.apache.commons.lang3.time.DateUtils.addDays(operday, 1);
+        if (Boolean.parseBoolean(checkchronology)) {
+            if (systemDate.compareTo(etalonCloseDate) >= 0) {
+                return true;
+            } else {
+                String msg = format("Проверка хронологии закрытия ОД включена. " +
+                                "Текущее системное время '%s' меньше необходимого для закрытия '%s'"
+                        , dateUtils.fullDateString(systemDate)
+                        , dateUtils.onlyDateString(etalonCloseDate));
+                auditController.info(PreCob, msg);
+                if (null != errList)
+                    errList.add(msg);
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
     /**
      * Используем для проверки при нажатии кнопки перевод в PRE_COB
      * @return true, если возможно
      * @throws SQLException
      */
-    public boolean checkPackagesToloadExists() throws Exception {
+    public boolean checkPackagesToloadExists(List<String> errList) throws Exception {
         TimerJob job = jobRepository.selectOne(TimerJob.class, "from TimerJob j where j.name = ?1", NAME);
         Properties properties = new Properties();
         properties.load(new StringReader(job.getProperties()));
-        return checkPackagesToloadExists(properties);
+        return checkPackagesToloadExists(properties, errList);
     }
 
-    public boolean checkPackagesToloadExists(Properties properties) throws SQLException {
+    public boolean checkPackagesToloadExists(Properties properties, List<String> errList) throws SQLException {
         if (Boolean.parseBoolean(Optional.ofNullable(properties.getProperty(CHECK_PACKAGES_KEY)).orElse("true"))) {
             int state = repository.selectFirst("select state from v_gla_cob_ok").getInteger("state");
             if (0 == state) {
                 auditController.warning(AuditRecord.LogCode.Operday, "Невозможно закрыть ОД", null, "Есть необработанные пакеты");
+                if (null != errList)
+                    errList.add("Невозможно закрыть ОД: Есть необработанные пакеты");
                 return false;
             } else
             if (1 == state){

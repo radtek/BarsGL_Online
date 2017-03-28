@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
@@ -30,7 +31,8 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.*;
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_FAKE_NAME;
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
 
 /**
  * Created by akichigi on 23.03.15.
@@ -196,12 +198,17 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
             boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_TASK_NAME});
             if (isAlreadyRunning) {
                 return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
-            } else {
-                TimerJobHistoryWrapper history = null;  // localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_TASK_NAME);
-                Properties properties = new Properties();
-//                properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
+            }
+            Properties properties = new Properties();
+            RpcRes_Base<Boolean> enableRun = localInvoker.invoke(ExecutePreCOBTaskNew.class, "checkEnableRun", COB_TASK_NAME, properties);
+            if (!enableRun.getResult()) {
+                return new RpcRes_Base<>(null, true, enableRun.getMessage());
+            }
+            else {
+                TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_TASK_NAME);
+                properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
                 localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_TASK_NAME, properties, COB_DELAY_SEC * 1000);
-                return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через " + COB_DELAY_SEC + " сек");
+                return new RpcRes_Base<>(history, false, "Задача СОВ запустится через " + COB_DELAY_SEC + " сек");
             }
         } catch (Exception e) {
             return new RpcRes_Base<>(null, true, "Ошибка при запуске задачи: " + getErrorMessage(e));
@@ -220,8 +227,8 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
                 TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_FAKE_NAME);
                 Properties properties = new Properties();
                 properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
-                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_FAKE_NAME, properties, 3000);
-                return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через 3 сек");
+                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_FAKE_NAME, properties, COB_DELAY_SEC * 1000);
+                return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через " + COB_DELAY_SEC + " сек");
             }
         } catch (Exception e) {
             return new RpcRes_Base<>(null, true, "Ошибка при запуске задачи: " + getErrorMessage(e));
