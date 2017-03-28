@@ -18,8 +18,6 @@ public interface OperDayService extends RemoteService {
 
         RpcRes_Base<Boolean> runCloseLastWorkdayBalanceTask() throws Exception;
 
-        RpcRes_Base<Boolean> runExecutePreCOBTask() throws Exception;
-
         RpcRes_Base<Boolean> runOpenOperdayTask() throws Exception;
 
         RpcRes_Base<OperDayWrapper> swithPdMode() throws Exception;
@@ -31,5 +29,8 @@ public interface OperDayService extends RemoteService {
         RpcRes_Base<CobWrapper> calculateCob() throws Exception;
 
         RpcRes_Base<TimerJobHistoryWrapper> runExecuteFakeCOBTask() throws Exception;
+
+        RpcRes_Base<TimerJobHistoryWrapper> runExecutePreCOBTask() throws Exception;
+
 }
 

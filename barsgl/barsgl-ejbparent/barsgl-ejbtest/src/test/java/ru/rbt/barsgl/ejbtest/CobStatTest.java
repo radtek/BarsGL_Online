@@ -1,13 +1,22 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
+import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
+import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
+import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
+import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
+import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.CobStep;
@@ -25,6 +34,16 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 public class CobStatTest extends AbstractTimerJobTest  {
     private final int phaseFirst = 1;
     private final int phaseLast = CobStep.values().length;
+
+    @BeforeClass
+    public static void beforeClass() {
+        initCorrectOperday();
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        initCorrectOperday();
+    }
 
     @Test
     public void testCreateStatistics () {
@@ -51,29 +70,33 @@ public class CobStatTest extends AbstractTimerJobTest  {
         Assert.assertTrue(wrapper.getIdCob() > 0);
 
         setKoefIncrease(new BigDecimal(1.5));
-        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 3, wrapper.getIdCob(), 1);
-        remoteAccess.invoke(CobStatRepository.class, "setStepStart", wrapper.getIdCob(), phaseFirst, getSystemDateTime());
+        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 3, wrapper.getIdCob(), phaseFirst);
+        CobStepStatistics stepFirst = (CobStepStatistics) baseEntityRepository.findById(CobStepStatistics.class, new CobStatId(wrapper.getIdCob(), phaseFirst));
+        Assert.assertNotNull(stepFirst);
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepStart", wrapper.getIdCob(), stepFirst);
 
         Thread.sleep(2000L);
-        remoteAccess.invoke(CobStatRepository.class, "updateStepMessage", wrapper.getIdCob(), phaseFirst, "Выполнен этап 1");
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepMessage", wrapper.getIdCob(), stepFirst, "Выполнен этап 1");
         checkGetInfo(wrapper, null, phaseFirst, Running, Running);
 
         Thread.sleep(2000L);
-        remoteAccess.invoke(CobStatRepository.class, "updateStepMessage", wrapper.getIdCob(), phaseFirst, "Выполнен этап 2");
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepMessage", wrapper.getIdCob(), stepFirst, "Выполнен этап 2");
         checkGetInfo(wrapper, null, phaseFirst, Running, Running);
 
-        remoteAccess.invoke(CobStatRepository.class, "setStepSuccess", wrapper.getIdCob(), phaseFirst, getSystemDateTime(), "Шаг завершен успешно");
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepSuccess", wrapper.getIdCob(), stepFirst, "Шаг завершен успешно");
         checkGetInfo(wrapper, null, phaseFirst, Success, Running);
 
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 0, wrapper.getIdCob(), phaseLast);
-        remoteAccess.invoke(CobStatRepository.class, "setStepStart", wrapper.getIdCob(), phaseLast, getSystemDateTime());
+        CobStepStatistics stepLast = (CobStepStatistics) baseEntityRepository.findById(CobStepStatistics.class, new CobStatId(wrapper.getIdCob(), phaseLast));
+        Assert.assertNotNull(stepLast);
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepStart", wrapper.getIdCob(), stepLast);
         checkGetInfo(wrapper, null, phaseLast, Running, Running);
 
         Thread.sleep(2000L);
         checkGetInfo(wrapper, null, phaseLast, Running, Running);
 
-        remoteAccess.invoke(CobStatRepository.class, "setStepError", wrapper.getIdCob(), phaseLast, getSystemDateTime(), "Шаг завершен с ошибкой",
-            "Ошибка при выполнении шага " + CobStep.values()[0].name());
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepError", wrapper.getIdCob(), stepLast, "Шаг завершен с ошибкой",
+            "Ошибка при выполнении шага " + CobStep.values()[0].name(), CobStepStatus.Error);
         CobWrapper wrapper1 = checkGetInfo(wrapper, null, phaseLast, Error, Error);
         Assert.assertNotNull(wrapper1.getErrorMessage());
         System.out.println("ErrorMessage: " + wrapper1.getErrorMessage());
@@ -82,6 +105,21 @@ public class CobStatTest extends AbstractTimerJobTest  {
     @Test
     public void testCobRunningTaskController() {
         boolean res = remoteAccess.invoke(ExecutePreCOBTaskFake.class, "execWork");
+//        Assert.assertTrue(res);
+    }
+
+    @Test
+    public void testCobTaskNew() {
+        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", EtlStructureMonitorTask.class);
+        if (job == null) {
+            throw new RuntimeException(Utils.Fmt("Не найдено задание '{0}'.", "errorMessage"));
+        }
+        if (job.getState() == TimerJob.JobState.STARTED)
+            throw new RuntimeException(Utils.Fmt("Задание '{0}' уже запущено.", "errorMessage"));
+
+        remoteAccess.invoke(BackgroundJobsController.class, "executeJob", job);
+
+        boolean res = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
         Assert.assertTrue(res);
     }
 

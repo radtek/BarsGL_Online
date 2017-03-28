@@ -83,8 +83,8 @@ public class CobRunningTaskController {
 
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
-                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
-                PersistenceException.class);
+                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
+                IllegalArgumentException.class, PersistenceException.class, DefaultApplicationException.class);
     }
 
     public boolean execWorks(List<CobRunningStepWork> works, Long idCob) {

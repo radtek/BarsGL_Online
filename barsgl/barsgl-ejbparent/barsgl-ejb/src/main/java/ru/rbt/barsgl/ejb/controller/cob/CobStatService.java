@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.controller.cob;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
@@ -25,7 +26,8 @@ import java.util.*;
  * Created by ER18837 on 10.03.17.
  */
 public class CobStatService {
-    public static final String COB_TASK_NAME = ExecutePreCOBTaskFake.class.getSimpleName();
+    public static final String COB_TASK_NAME = ExecutePreCOBTaskNew.class.getSimpleName();
+    public static final String COB_FAKE_NAME = ExecutePreCOBTaskFake.class.getSimpleName();
 
     private static final BigDecimal ALL = new BigDecimal(100);
     private static final BigDecimal INC = new BigDecimal("1.05");
@@ -123,7 +125,7 @@ public class CobStatService {
         wrapper.setStartTimer(isRunning());       // TODO это пока
         if (itemTotal.getStatus() == CobStepStatus.Halt)
             errorList.add("Обработка прервана");
-        wrapper.setErrorMessage(StringUtils.listToString(errorList, "; "));
+        wrapper.setErrorMessage(StringUtils.listToString(errorList, ";\n "));
         return true;
     }
 
@@ -195,6 +197,6 @@ public class CobStatService {
     }
 
     private boolean isRunning() {
-        return historyRepository.isAlreadyRunningLike(null, COB_TASK_NAME);
+        return historyRepository.isAlreadyRunningLike(null, COB_TASK_NAME) || historyRepository.isAlreadyRunningLike(null, COB_FAKE_NAME);  // TODO debug
     }
 }

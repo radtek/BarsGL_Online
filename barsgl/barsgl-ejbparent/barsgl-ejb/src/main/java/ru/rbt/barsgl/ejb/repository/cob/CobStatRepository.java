@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.CobStep;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
@@ -102,8 +103,11 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 newEstimate, idCob, phaseNo, Running.name(), oldEstimate);
     }
 
-    private String getDelimMessage(String message) {
-        return MSG_DELIMITER + " || '" + message + "'";
+    private String getJointMessage(String message) {
+        if (StringUtils.isEmpty(message))
+            return "MESSAGE";
+        else
+            return "MESSAGE || " + MSG_DELIMITER + " || '" + message.replace("'", "''") + "'";
     }
 
     public int setStepStart(Long idCob, Integer phaseNo, Date timestamp, String message) {
@@ -113,13 +117,13 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int setStepSkipped(Long idCob, Integer phaseNo, Date timestamp, String message) {
-        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, DURATION = 0, MESSAGE = MESSAGE || " + getDelimMessage(message) +
+        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, DURATION = 0, MESSAGE = " + getJointMessage(message) +
                         " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                 Skipped.name(), timestamp, idCob, phaseNo, Running.name());
     }
 
     public int setStepSuccess(Long idCob, Integer phaseNo, Date timestamp, String message) {
-        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = MESSAGE || " + getDelimMessage(message) +
+        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = " + getJointMessage(message) +
                 " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                 Success.name(), timestamp, idCob, phaseNo, Running.name());
         if (cnt == 1) {
@@ -131,7 +135,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int setStepError(Long idCob, Integer phaseNo, Date timestamp, String message, String errorMessage, CobStepStatus status) {
-        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = MESSAGE || " + getDelimMessage(message) + ", ERRORMSG = ? " +
+        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = " + getJointMessage(message) + ", ERRORMSG = ? " +
                         " where ID_COB = ? and PHASE_NO = ?",
                 status.name(), timestamp, errorMessage, idCob, phaseNo);
         if (cnt == 1) {
@@ -143,7 +147,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int updateStepMessage(Long idCob, Integer phaseNo, String message) {
-        return executeNativeUpdate("update GL_COB_STAT set MESSAGE = MESSAGE || " + getDelimMessage(message) +
+        return executeNativeUpdate("update GL_COB_STAT set MESSAGE = " + getJointMessage(message) +
                         " where ID_COB = ? and PHASE_NO = ?",
                 idCob, phaseNo);
     }

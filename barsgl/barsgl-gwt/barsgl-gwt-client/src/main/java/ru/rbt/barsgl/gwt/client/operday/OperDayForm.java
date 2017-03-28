@@ -5,14 +5,11 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
-import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
-import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
@@ -215,7 +212,7 @@ public class OperDayForm extends BaseForm {
             @Override
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                BarsGLEntryPoint.operDayService.runExecutePreCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                BarsGLEntryPoint.operDayService.runExecutePreCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();
@@ -224,7 +221,7 @@ public class OperDayForm extends BaseForm {
                     }
 
                     @Override
-                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                    public void onSuccess(RpcRes_Base<TimerJobHistoryWrapper> res) {
                         WaitingManager.hide();
 
                         if (res.isError()) {

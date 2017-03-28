@@ -180,23 +180,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return false;
     }
 
-    private CobStepResult checkCurrentState() {
-        final Operday operday = operdayController.getOperday();
-        try {
-            Assert.isTrue(ONLINE == operday.getPhase() || PRE_COB == operday.getPhase()
-                    , format("Недопустимая фаза '%s' текущего операционного дня '%s'"
-                            , operday.getPhase(), dateUtils.onlyDateString(operday.getCurrentDate())));
-            Assert.isTrue(CLOSED == operday.getLastWorkdayStatus()
-                    , format("Недопустимый статус '%s' баланса предыдущего операционного дня '%s'"
-                            , operday.getLastWorkdayStatus(), dateUtils.onlyDateString(operday.getLastWorkingDay())));
-        } catch (IllegalArgumentException e) {
-            String msg = format("Невозможно закрыть ОД '%s'", dateUtils.onlyDateString(operday.getCurrentDate()));
-            auditController.warning(AuditRecord.LogCode.Operday, msg, null, new ValidationError(CLOSE_OPERDAY_ERROR, e.getMessage()));
-            return new CobStepResult(CobStepStatus.Halt, msg, e.getMessage());
-        }
-        return new CobStepResult(CobStepStatus.Success, "Баланс предыдущего дня закрыт");
-    }
-
+    /**
+     * step 1
+     * @param operday
+     * @return
+     */
     public CobStepResult waitStopProcessing(Operday operday) {
         String msgBad = format("Не удалось остановить обработку проводок. Закрытие дня '%s' прервано"
                 , dateUtils.onlyDateString(operday.getCurrentDate()));
@@ -210,6 +198,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * step 2
+     * @return
+     */
     public CobStepResult synchronizePostings() {
         if (BUFFER == operdayController.getOperday().getPdMode()) {
             auditController.info(AuditRecord.LogCode.Operday, format("Режим ввода проводок '%s'. Начало синхронизации проводок", BUFFER));
@@ -249,6 +241,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * step 3
+     * @param operday
+     * @return
+     */
     public CobStepResult processUnprocessedBatchPostings(Operday operday) {
         try {
             return (CobStepResult) repository.executeInNewTransaction(persistence -> {
@@ -275,6 +272,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * step 4
+     * @param operday
+     * @return
+     */
     public CobStepResult reprocessStorno(Operday operday) {
         try {
             return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
@@ -287,6 +289,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * step 5
+     * @param operday
+     * @return
+     */
     public CobStepResult closeBalance(Operday operday) {
         if (ONLINE == operday.getPhase() && OPEN == operday.getLastWorkdayStatus()) {
             auditController.info(AuditRecord.LogCode.Operday, format("Баланс предыдущего ОД открыт. Запуск процедуры закрытия БАЛАНСА предыдущего ОД из задачи ЗАКРЫТИЯ ОД: '%s'"
@@ -307,6 +314,28 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         return checkCurrentState();
     }
 
+    private CobStepResult checkCurrentState() {
+        final Operday operday = operdayController.getOperday();
+        try {
+            Assert.isTrue(ONLINE == operday.getPhase() || PRE_COB == operday.getPhase()
+                    , format("Недопустимая фаза '%s' текущего операционного дня '%s'"
+                            , operday.getPhase(), dateUtils.onlyDateString(operday.getCurrentDate())));
+            Assert.isTrue(CLOSED == operday.getLastWorkdayStatus()
+                    , format("Недопустимый статус '%s' баланса предыдущего операционного дня '%s'"
+                            , operday.getLastWorkdayStatus(), dateUtils.onlyDateString(operday.getLastWorkingDay())));
+        } catch (IllegalArgumentException e) {
+            String msg = format("Невозможно закрыть ОД '%s'", dateUtils.onlyDateString(operday.getCurrentDate()));
+            auditController.warning(AuditRecord.LogCode.Operday, msg, null, new ValidationError(CLOSE_OPERDAY_ERROR, e.getMessage()));
+            return new CobStepResult(CobStepStatus.Halt, msg, e.getMessage());
+        }
+        return new CobStepResult(CobStepStatus.Success, "Баланс предыдущего дня закрыт");
+    }
+
+    /**
+     * step 6
+     * @param operday
+     * @return
+     */
     public CobStepResult processFan(Operday operday) {
         try {
             return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
@@ -321,13 +350,15 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * step 7
+     * @param operday
+     * @return
+     */
     public CobStepResult recalculateAll(Operday operday) {
         List<String> msgList = new ArrayList<String>();
         try {
             beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
-                // устанавливаем статус ОД
-                setPreCobState();
-
                 // пересчет отстатков по проводкам, подавленным/перенесенным вручную
                 String msg1 = format("Пересчитано остатков по подавл/перенесенным '%s'", balturRecalculator.recalculateBaltur());
                 auditController.info(BalturRecalc, msg1);
@@ -450,8 +481,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
-                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
-                PersistenceException.class);
+                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
+                IllegalArgumentException.class, PersistenceException.class, DefaultApplicationException.class);
     }
 
 }

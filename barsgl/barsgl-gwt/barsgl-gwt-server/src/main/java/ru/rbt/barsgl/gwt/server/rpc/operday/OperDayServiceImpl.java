@@ -10,9 +10,12 @@ import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
+import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
+import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
+import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
@@ -21,15 +24,19 @@ import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
+import javax.persistence.PersistenceException;
+import java.sql.DataTruncation;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.*;
 
 /**
  * Created by akichigi on 23.03.15.
  */
 public class OperDayServiceImpl extends AbstractGwtService implements OperDayService{
+    private static final int COB_DELAY_SEC = 3;
 
     @Override
     public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
@@ -108,20 +115,6 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
     }
 
     @Override
-    public RpcRes_Base<Boolean> runExecutePreCOBTask() throws Exception{
-        return new RpcResProcessor<Boolean>() {
-            @Override
-            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
-                if (!isPreCOBAllowed()) {
-                    throw new RuntimeException("Флаг мониторинга в недопустимом для закрытия дня статусе." +
-                            "\n Вероятно, обработка проводок еще не закончена");
-                }
-                return runTask(ExecutePreCOBTask.class.getSimpleName(), "Перевод опердня в состояние PRE_COB");
-            }
-        }.process();
-    }
-
-    @Override
     public RpcRes_Base<Boolean> runOpenOperdayTask() throws Exception {
         return new RpcResProcessor<Boolean>() {
             @Override
@@ -184,14 +177,17 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
         }.process();
     }
 
-    /*для отладки интерфейса*/
     @Override
-    public RpcRes_Base<TimerJobHistoryWrapper> runExecuteFakeCOBTask() throws Exception{
+    public RpcRes_Base<TimerJobHistoryWrapper> runExecutePreCOBTask() throws Exception{
 /*
         return new RpcResProcessor<Boolean>() {
             @Override
             protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
-                return runTask(ExecutePreCOBTaskFake.class.getSimpleName(), "Перевод опердня в состояние PRE_COB");
+                if (!isPreCOBAllowed()) {
+                    throw new RuntimeException("Флаг мониторинга в недопустимом для закрытия дня статусе." +
+                            "\n Вероятно, обработка проводок еще не закончена");
+                }
+                return runTask(ExecutePreCOBTask.class.getSimpleName(), "Перевод опердня в состояние PRE_COB");
             }
         }.process();
 */
@@ -201,15 +197,41 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
             if (isAlreadyRunning) {
                 return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
             } else {
-                TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_TASK_NAME);
+                TimerJobHistoryWrapper history = null;  // localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_TASK_NAME);
+                Properties properties = new Properties();
+//                properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
+                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_TASK_NAME, properties, COB_DELAY_SEC * 1000);
+                return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через " + COB_DELAY_SEC + " сек");
+            }
+        } catch (Exception e) {
+            return new RpcRes_Base<>(null, true, "Ошибка при запуске задачи: " + getErrorMessage(e));
+        }
+    }
+
+    /*для отладки интерфейса*/
+    @Override
+    public RpcRes_Base<TimerJobHistoryWrapper> runExecuteFakeCOBTask() throws Exception{
+        try {
+            boolean isFakeRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, CobStatService.COB_FAKE_NAME});
+            boolean isTaskRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, CobStatService.COB_TASK_NAME});
+            if (isFakeRunning || isTaskRunning) {
+                return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
+            } else {
+                TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_FAKE_NAME);
                 Properties properties = new Properties();
                 properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
-                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_TASK_NAME, properties, 3000);
+                localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_FAKE_NAME, properties, 3000);
                 return new RpcRes_Base<>(history, false, "Задача эмуляции СОВ запустится через 3 сек");
             }
         } catch (Exception e) {
-            return new RpcRes_Base<>(null, true, "Ошибка при запуске задачи: " + e.getMessage());
+            return new RpcRes_Base<>(null, true, "Ошибка при запуске задачи: " + getErrorMessage(e));
         }
+    }
+
+    public String getErrorMessage(Throwable throwable) {
+        return ExceptionUtils.getErrorMessage(throwable,
+                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
+                IllegalArgumentException.class, PersistenceException.class, DefaultApplicationException.class);
     }
 
 
