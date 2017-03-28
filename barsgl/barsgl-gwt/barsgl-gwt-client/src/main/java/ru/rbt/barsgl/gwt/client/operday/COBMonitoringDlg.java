@@ -120,7 +120,7 @@ public class COBMonitoringDlg extends DlgFrame {
         phaseTotalMsg = new AreaBox();
         phaseTotalMsg.setReadOnly(true);
         phaseTotalMsg.setHeight("50px");
-        phaseTotalMsg.setWidth("835px");
+        phaseTotalMsg.setWidth("820px");
         phaseTotalMsg.getElement().getStyle().setMarginBottom(10, Style.Unit.PX);
 
         VerticalPanel vp = new VerticalPanel();
@@ -164,7 +164,6 @@ public class COBMonitoringDlg extends DlgFrame {
 
         timer.scheduleRepeating(tick);
     }
-
 
     private void getMonitoringInfo(){
         BarsGLEntryPoint.operDayService.getCobInfo(totalStatus == CobStepStatus.Running ? idCOB : null,
