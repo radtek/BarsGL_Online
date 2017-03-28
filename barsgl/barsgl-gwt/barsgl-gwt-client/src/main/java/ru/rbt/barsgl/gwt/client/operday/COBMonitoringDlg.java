@@ -115,12 +115,12 @@ public class COBMonitoringDlg extends DlgFrame {
         barTotal.setShowGradientColor(true);
 
         grid.setWidget(steps, 2, phaseTotalStatus = new Label());
-        grid.getCellFormatter().getElement(0, 2).getStyle().setWidth(200, Style.Unit.PX);
+        grid.getCellFormatter().getElement(0, 2).getStyle().setWidth(220, Style.Unit.PX);
 
         phaseTotalMsg = new AreaBox();
         phaseTotalMsg.setReadOnly(true);
         phaseTotalMsg.setHeight("50px");
-        phaseTotalMsg.setWidth("835px");
+        phaseTotalMsg.setWidth("840px");
         phaseTotalMsg.getElement().getStyle().setMarginBottom(10, Style.Unit.PX);
 
         VerticalPanel vp = new VerticalPanel();
@@ -145,7 +145,7 @@ public class COBMonitoringDlg extends DlgFrame {
             return;
         }
 
-        Window.alert("Watching");
+       // Window.alert("Watching");
         timer = new Timer(){
 
             @Override
@@ -157,14 +157,13 @@ public class COBMonitoringDlg extends DlgFrame {
                     }
                 } else{
                     timer.cancel();
-                    Window.alert("Stop Watching");
+                    //Window.alert("Stop Watching");
                 }
             }
         };
 
         timer.scheduleRepeating(tick);
     }
-
 
     private void getMonitoringInfo(){
         BarsGLEntryPoint.operDayService.getCobInfo(totalStatus == CobStepStatus.Running ? idCOB : null,
@@ -197,6 +196,7 @@ public class COBMonitoringDlg extends DlgFrame {
             bars.get(item.getPhaseNo()).setText(Utils.Fmt(completeMessage, item.getIntPercent()));
             bars.get(item.getPhaseNo()).setProgress(item.getIntPercent());
             phaseStatuses.get(item.getPhaseNo()).setText(getPhaseMessage(item));
+            phaseStatuses.get(item.getPhaseNo()).getElement().getStyle().setColor(getPhaseMessageColor(item));
         }
 
         idCOB = wrapper.getIdCob();
@@ -208,9 +208,20 @@ public class COBMonitoringDlg extends DlgFrame {
         barTotal.setProgress(item.getIntPercent());
         barTotal.setText(Utils.Fmt(completeMessage, item.getIntPercent()));
         phaseTotalStatus.setText(getPhaseMessage(item));
+        phaseTotalStatus.getElement().getStyle().setColor(getPhaseMessageColor(item));
 
         ok.setEnabled(!isNeedStartTimer);
         isAllowPing = true;
+    }
+
+    private String getPhaseMessageColor(CobStepItem item){
+        switch (item.getStatus()){
+            case Error:
+            case Halt: return "red";
+
+            default:
+                return "black";
+        }
     }
 
     private String getPhaseMessage(CobStepItem item){
