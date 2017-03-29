@@ -31,13 +31,13 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_FAKE_NAME;
-import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.*;
 
 /**
  * Created by akichigi on 23.03.15.
  */
 public class OperDayServiceImpl extends AbstractGwtService implements OperDayService{
+    private static final String COB_NAME_LIKE = "ExecutePreCOBTask";
     private static final int COB_DELAY_SEC = 3;
 
     @Override
@@ -195,7 +195,7 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
 */
 
         try {
-            boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_TASK_NAME});
+            boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_NAME_LIKE});
             if (isAlreadyRunning) {
                 return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
             }
@@ -219,9 +219,8 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
     @Override
     public RpcRes_Base<TimerJobHistoryWrapper> runExecuteFakeCOBTask() throws Exception{
         try {
-            boolean isFakeRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, CobStatService.COB_FAKE_NAME});
-            boolean isTaskRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, CobStatService.COB_TASK_NAME});
-            if (isFakeRunning || isTaskRunning) {
+            boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, COB_NAME_LIKE});
+            if (isAlreadyRunning) {
                 return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
             } else {
                 TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_FAKE_NAME);
