@@ -231,8 +231,8 @@ public class COBMonitoringDlg extends DlgFrame {
                 res = Utils.Fmt("{0}. Завершится за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntEstimation()));
                 break;
             case Running:
-                res = Utils.Fmt("{0}. Выполняется {1}. Завершится за {2}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()),
-                        Value2TimeStr(item.getIntEstimation()));
+                res = Utils.Fmt("{0}. Выполняется {1}. Завершится через {2}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()),
+                        Value2TimeStr(item.getIntEstimation() - item.getIntDuration()));
                 break;
             case Success:
                 res = Utils.Fmt("{0} за {1}", item.getStatus().getLabel(), Value2TimeStr(item.getIntDuration()));
