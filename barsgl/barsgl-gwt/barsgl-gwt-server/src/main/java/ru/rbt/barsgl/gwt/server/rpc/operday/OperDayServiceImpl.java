@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.server.rpc.operday;
 
+import ru.rbt.barsgl.ejb.common.controller.od.COB_OK_Controller;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
@@ -22,6 +23,7 @@ import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
+import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import javax.persistence.PersistenceException;
@@ -83,6 +85,12 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
                 }
                 wrapper.setEnabledButton(buttonStatus);
 
+                boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
+                if (!isAlreadyRunning){
+                    COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
+                    wrapper.setCobOkWrapper(cobOkWrapper);
+                }
+                wrapper.setIsCOBRunning(isAlreadyRunning);
                 return new RpcRes_Base<>(wrapper, false, "");
             }
         }.process();

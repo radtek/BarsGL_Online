@@ -5,17 +5,22 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
+import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
+import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
+import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -38,6 +43,10 @@ public class OperDayForm extends BaseForm {
     private Label previousOD;
     private Label previousODBalanceStatus;
     private Label pdMode;
+
+    private Grid cob_okInfo;
+    private Label state;
+    private Label reason;
 
     public OperDayForm(){
         super();
@@ -82,6 +91,7 @@ public class OperDayForm extends BaseForm {
 
         ActionBarWidget abw = new ActionBarWidget();
         abw.addAction(createRefreshAction());
+        abw.addAction(export2ExcelActtion());
 
         abw.addSecureAction(createOpenODAction(), SecurityActionCode.TskOdOpenRun);
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
@@ -97,9 +107,47 @@ public class OperDayForm extends BaseForm {
         DockLayoutPanel panel = new DockLayoutPanel(Style.Unit.MM);
 
         panel.addNorth(abw, 10);
-        panel.add(grid);
+        VerticalPanel vp = new VerticalPanel();
 
+        vp.add(grid);
+        vp.add(cob_okInfo = createCOB_OKInfo());
+
+        panel.add(vp);
         return panel;
+    }
+
+    private Grid createCOB_OKInfo(){
+        Grid grid = new Grid(2,2);
+        Label label;
+        grid.getElement().getStyle().setMarginLeft(5, Style.Unit.PX);
+        grid.getElement().getStyle().setMarginTop(10, Style.Unit.PX);
+
+        grid.setWidget(0, 0, label = new Label("State:"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.setWidget(1, 0, label = new Label("Reason:"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+
+        grid.setWidget(0, 1, state = new Label(""));
+        grid.setWidget(1, 1, reason = new Label(""));
+        grid.getCellFormatter().setWidth(0, 0, "285px");
+        grid.setVisible(false);
+
+        return grid;
+    }
+
+    private void setCOB_OKInfo(OperDayWrapper operDayWrapper){
+        state.setText("");
+        reason.setText("");
+        COB_OKWrapper wrapper = operDayWrapper.getCobOkWrapper();
+        if (operDayWrapper.getIsCOBRunning()){
+            cob_okInfo.setVisible(false);
+            return;
+        }
+
+        if (wrapper == null) return;
+        state.setText(wrapper.getState()  == null ? "" : wrapper.getState().toString() );
+        reason.setText(wrapper.getReason()  == null ? "" : wrapper.getReason().toString() );
+        cob_okInfo.setVisible(true);
     }
 
     private void operDateRefresh(OperDayWrapper operDayWrapper){
@@ -110,6 +158,7 @@ public class OperDayForm extends BaseForm {
         pdMode.setText(operDayWrapper.getPdMode());
 
         setButtonsEnabled(operDayWrapper.getEnabledButton());
+        setCOB_OKInfo(operDayWrapper);
     }
 
     private void setButtonsEnabled(OperDayButtons button){
@@ -276,6 +325,12 @@ public class OperDayForm extends BaseForm {
                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                        } else {
                            (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(result.getResult());
+                            dlg.setAfterCancelEvent(new IAfterCancelEvent() {
+                               @Override
+                               public void afterCancel() {
+                                   refreshAction.execute();
+                               }
+                           });
                        }
                        WaitingManager.hide();
                    }
@@ -284,7 +339,17 @@ public class OperDayForm extends BaseForm {
        };
    }
 
-
+   private Action export2ExcelActtion(){
+       return new Action(null, "Ночной отчет об ошибках", new Image(ImageConstants.INSTANCE.excel()), 5) {
+           @Override
+           public void execute() {
+               setEnable(false);
+               Export2Excel e2e = new Export2Excel(new NigthErrRepExportData(), null,
+                                                   new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));
+               e2e.export();
+           }
+       };
+   }
 
     private Action createFakeCOB(){
         return new Action("Fake COB", "", null, 5){
@@ -299,6 +364,7 @@ public class OperDayForm extends BaseForm {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                         } else {
                             //Window.alert(result.getResult().toString());
+                            cob_okInfo.setVisible(false);
                             Window.alert(result.getMessage());
                         }
                         WaitingManager.hide();
