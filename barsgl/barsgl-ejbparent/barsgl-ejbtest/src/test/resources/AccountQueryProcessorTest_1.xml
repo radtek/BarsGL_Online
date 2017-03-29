@@ -1,0 +1,8 @@
+<bars:AccountListQuery xmlns:bars="urn:asbo:barsgl">
+    <bars:AccountQuery>
+        <bars:AccountNumber>47407840500014795429</bars:AccountNumber>
+<!--    </bars:AccountQuery>
+    <bars:AccountQuery>-->
+        <bars:AccountNumber>47407840100014796297</bars:AccountNumber>
+    </bars:AccountQuery>    
+</bars:AccountListQuery>
