@@ -125,6 +125,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
 
         for (int i = 0; i < queries.getLength(); i++) {
             String customerNo = null;
+            Set<String> queryAccounts = new HashSet<>();
             List<String> specs = new ArrayList<>();
             List<String> accTypes = new ArrayList<>();//AccountingType
             for (int j = 0; j < queries.item(i).getChildNodes().getLength(); j++) {
@@ -132,7 +133,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                 String value = queries.item(i).getChildNodes().item(j).getTextContent();
                 if (name.endsWith("AccountNumber")) {
                     if (value.length() == 20) {
-                        accounts.add(value);
+                        queryAccounts.add(value);
                     } else {
                         journalRepository.updateLogStatus(jId, ERROR, "Длина AccountNumber не равна 20");
                         throw new Exception("Длина AccountNumber не равна 20");
@@ -148,8 +149,9 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                 }
             }
             
-            if(!accounts.isEmpty()){
-              accountsDataRecordList.addAll(queryRepository.getCountsByAccount(accounts));
+            if(!queryAccounts.isEmpty()){
+              accounts.addAll(queryAccounts);
+              accountsDataRecordList.addAll(queryRepository.getCountsByAccount(queryAccounts));
               isAccRst.set(true);
             }
             

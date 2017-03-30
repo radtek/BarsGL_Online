@@ -56,7 +56,7 @@ public class GwtServerUtils {
      * @throws NamingException
      */
     private static ServerAccess findServerAccessEJB () throws NamingException {
-        final ServerAccess serverAccess = findJndiReference("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccess");
+        final ServerAccess serverAccess = findJndiReference("java:app/barsgl-ejbcore/ServerAccessBean!ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");
 
         return new AbstractLocalServerAccess() {
             @Override
@@ -98,7 +98,7 @@ public class GwtServerUtils {
      */
     public static ServerAccess findServerAccessEJBNoAuth () {
         try {
-            return findJndiReference("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccess");
+            return findJndiReference("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");
         } catch (NamingException e) {
             throw new RuntimeException(e);
         }

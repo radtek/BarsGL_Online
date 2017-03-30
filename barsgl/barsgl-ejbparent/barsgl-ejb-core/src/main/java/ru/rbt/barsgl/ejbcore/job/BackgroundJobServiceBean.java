@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static java.lang.String.format;
+import javax.annotation.security.PermitAll;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.*;
 import static ru.rbt.barsgl.shared.Assert.assertThat;
@@ -31,6 +32,7 @@ import static ru.rbt.barsgl.shared.enums.JobStartupType.AUTO;
  * Created by Ivan Sevastyanov
  */
 @Stateless
+@PermitAll //WF
 public class BackgroundJobServiceBean implements BackgroundJobService {
 
     private static final Logger LOG = Logger.getLogger(BackgroundJobServiceBean.class);
@@ -38,7 +40,7 @@ public class BackgroundJobServiceBean implements BackgroundJobService {
     @Resource
     private SessionContext context;
 
-    @Inject
+    @EJB
     private TimerJobRepository timerJobRepository;
 
     @Inject
@@ -61,7 +63,7 @@ public class BackgroundJobServiceBean implements BackgroundJobService {
         }
     }
 
-    @Override
+    @Override    
     public void startupAll(){
         List<TimerJob> jobs = getTimerJobs(true);
         for (TimerJob job : jobs) {

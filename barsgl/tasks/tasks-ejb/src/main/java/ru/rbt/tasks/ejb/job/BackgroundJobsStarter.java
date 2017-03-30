@@ -9,12 +9,15 @@ import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 
 /**
  * Created by Ivan Sevastyanov
  */
 @Singleton
 @Startup
+@TransactionManagement(TransactionManagementType.BEAN)
 public class BackgroundJobsStarter {
 
     private static final Logger log = Logger.getLogger(BackgroundJobsStarter.class);

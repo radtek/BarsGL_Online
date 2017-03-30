@@ -23,7 +23,7 @@ import static java.lang.String.format;
  * Created by Ivan Sevastyanov
  */
 @Stateless(mappedName = "ServerAccessBean")
-public class ServerAccessBean implements ServerAccess {
+public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, ServerAccessEJBRemote {
 
     private static final Logger logger = Logger.getLogger(ServerAccessBean.class.getName());
 

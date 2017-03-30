@@ -14,7 +14,7 @@ import java.sql.SQLException;
 public abstract class AbstractBankjarBean {
 
 //    @Resource(mappedName="/jdbc/As400GL")
-    @Resource(mappedName="/jdbc/OracleGL")
+    @Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
 
     @Inject

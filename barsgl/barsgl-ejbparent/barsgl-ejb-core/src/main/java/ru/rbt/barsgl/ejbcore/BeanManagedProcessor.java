@@ -43,7 +43,7 @@ public class BeanManagedProcessor {
     private TransactionSynchronizationRegistry trx;
 
 //    @Resource(mappedName="/jdbc/As400GL")
-    @Resource(mappedName="/jdbc/OracleGL")
+    @Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
 
     /**

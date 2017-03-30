@@ -42,5 +42,6 @@
 
   <modules>
     <module>barsgl-audit</module>
+    <module>barsgl-jpa</module>
   </modules>
 </project>

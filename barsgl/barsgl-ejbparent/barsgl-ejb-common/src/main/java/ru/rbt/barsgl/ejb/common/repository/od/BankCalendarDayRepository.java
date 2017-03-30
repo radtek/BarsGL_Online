@@ -6,10 +6,12 @@ import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.util.Date;
 import java.util.List;
+import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
 public class BankCalendarDayRepository extends AbstractBaseEntityRepository<BankCalendarDay,BankCalendarDayId> {
 
     private static final String BANK_CALENDAR_CODE = "RUR";

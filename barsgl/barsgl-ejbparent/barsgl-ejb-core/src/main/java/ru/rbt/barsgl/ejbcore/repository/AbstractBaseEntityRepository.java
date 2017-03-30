@@ -10,10 +10,8 @@ import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.enums.Repository;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.*;
-import javax.naming.InitialContext;
 import javax.persistence.*;
 import javax.sql.DataSource;
 import javax.transaction.TransactionSynchronizationRegistry;
@@ -42,9 +40,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
 //    @Resource(mappedName="/jdbc/As400GL")
 //    @Resource(mappedName="/jdbc/OracleGL")
+    @Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
 
 //    @Resource(mappedName="/jdbc/As400Rep")
+    @Resource(mappedName="jdbc/As400Rep")
     private DataSource  barsrepDataSource;
 
     @Resource
@@ -492,10 +492,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         }
     }
 
+    /*
     @PostConstruct
     public void init() {
-        dataSource = findConnection("/jdbc/OracleGL");
-        barsrepDataSource = findConnection("/jdbc/As400Rep");
+        dataSource = findConnection("jdbc/OracleGL");
+        barsrepDataSource = findConnection("jdbc/OracleGL");
     }
 
     private DataSource findConnection(String jndiName) {
@@ -506,5 +507,6 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+    //*/
 
 }

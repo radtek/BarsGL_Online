@@ -10,10 +10,12 @@ import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov on 19.04.2016.
  */
+@Stateless
 public class SecurityActionRepository extends AbstractBaseEntityRepository<SecurityAction,Integer> {
 
     @Inject

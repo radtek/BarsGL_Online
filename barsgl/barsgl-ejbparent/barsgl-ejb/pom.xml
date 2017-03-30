@@ -17,7 +17,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ejb-plugin</artifactId>
                 <configuration>
-                    <ejbVersion>3.1</ejbVersion>
+                    <ejbVersion>3.2</ejbVersion>
                 </configuration>
             </plugin>
         </plugins>
@@ -151,7 +151,7 @@
                 </dependency>-->
     </dependencies>
 
-  <profiles>
+<!--  <profiles>
     <profile>
       <id>env-barsgl</id>
 
@@ -200,5 +200,5 @@
       </build>
     </profile>
 
-  </profiles>
+  </profiles>-->
 </project>
