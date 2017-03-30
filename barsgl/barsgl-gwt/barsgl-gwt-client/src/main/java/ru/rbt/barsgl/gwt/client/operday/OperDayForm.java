@@ -276,6 +276,7 @@ public class OperDayForm extends BaseForm {
                         if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
+                            cob_okInfo.setVisible(false);
                             change_Phase_To_PRE_COB.setEnable(false);
 //                            DialogManager.message("Инфо", "Задание 'Перевод фазы в PRE_COB' выполнено.\n" +
 //                                    "Для обновления информации нажмите 'Обновить'.");
