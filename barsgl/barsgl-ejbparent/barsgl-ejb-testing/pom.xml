@@ -29,8 +29,13 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-audit</artifactId>
-            <version>3.0.15-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>barsgl-ejb-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

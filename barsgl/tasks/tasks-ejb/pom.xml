@@ -9,7 +9,6 @@
 
     <groupId>ru.rbt</groupId>
     <artifactId>tasks-ejb</artifactId>
-    <version>3.0.15-SNAPSHOT</version>
     <packaging>ejb</packaging>
 
     <name>${artifactId}:${packaging}:${project.version}</name>

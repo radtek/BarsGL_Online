@@ -1,10 +1,10 @@
 package ru.rbt.barsgl.ejbtesting.time;
 
-import ru.rbt.barsgl.ejb.common.controller.od.SystemTimeService;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import java.util.Date;
+import ru.rbt.barsgl.ejb.common.controller.od.SystemTimeService;
 
 /**
  * Created by Ivan Sevastyanov
