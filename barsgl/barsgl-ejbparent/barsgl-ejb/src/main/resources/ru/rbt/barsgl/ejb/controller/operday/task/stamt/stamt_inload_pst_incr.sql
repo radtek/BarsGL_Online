@@ -20,7 +20,7 @@ insert into GL_ETLSTMD (
     end  dealid,
     value(o.pmt_ref, o.evt_id) psid,                                                             -- источник, ид в системе
     da.bsaacnnum dclient_id, ca.bsaacnnum cclient_id,                                            -- бранч майдас дебет
-    dwh.get_fcc_br(d.acid) dbranch_id, get_fcc_br(c.acid) cbranch_id,                            -- бранч майдас кредит
+    dwh.get_fcc_br(d.bsaacid) dbranch_id, get_fcc_br(c.bsaacid) cbranch_id,                            -- бранч майдас кредит
     d.id did, c.id cid, d.bsaacid dcbaccount, c.bsaacid ccbaccount,                              -- ид и счета полупроводок
     d.ccy dcur, c.ccy ccur,                                                                      -- валюта
     -decimal(d.amnt)/integer(power(10, dc.nbdp)) damount, decimal(c.amnt)/integer(power(10, cc.nbdp)) camount,     -- суммы в валюте

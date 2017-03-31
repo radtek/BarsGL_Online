@@ -55,7 +55,7 @@ select *
           , 'BARS' hostsystem
           , ac.custno fcccustnum
           , cast(ac.dealid as varchar(35)) fccaccount
-          , get_fcc_br(ac.acid) fccbranch
+          , get_fcc_br(ac.branch) fccbranch
           , right(ac.custno, 6) ext_custid
           , ac.branch accbrn
           , ac.bsaacid cbaccount
