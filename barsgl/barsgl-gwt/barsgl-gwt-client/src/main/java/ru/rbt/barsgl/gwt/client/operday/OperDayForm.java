@@ -89,7 +89,7 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
 
-        abw.addSecureAction(createFakeCOB(), SecurityActionCode.TskOdPreCobRun);
+//        abw.addSecureAction(createFakeCOB(), SecurityActionCode.TskOdPreCobRun);
 
 
         refreshAction.execute();

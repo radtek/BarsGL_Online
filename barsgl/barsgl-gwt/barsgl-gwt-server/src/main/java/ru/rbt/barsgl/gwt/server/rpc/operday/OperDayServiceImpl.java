@@ -5,7 +5,6 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
@@ -31,7 +30,8 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.*;
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_FAKE_NAME;
+import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
 
 /**
  * Created by akichigi on 23.03.15.
@@ -154,7 +154,7 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
     }
 
     private boolean isPreCOBAllowed() throws Exception {
-        return (Boolean) localInvoker.invoke(ExecutePreCOBTask.class, "checkPackagesToloadExists");
+        return (Boolean) localInvoker.invoke(ExecutePreCOBTaskNew.class, "checkPackagesToloadExists");
     }
 
     public RpcRes_Base<CobWrapper> getCobInfo(Long idCob) throws Exception {

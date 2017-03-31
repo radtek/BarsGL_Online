@@ -3,7 +3,7 @@ package ru.rbt.barsgl.shared.enums;
 /**
  * Created by ER18837 on 10.03.17.
  */
-public enum CobStep {
+public enum CobPhase {
     CobStopEtlProc(1),  // "Остановка обработки проводок"
     CobResetBuffer(2),  //"Автоматический сброс буфера"$
     CobManualProc(3),   //"Обработка необработанных запросов на операцию"
@@ -14,9 +14,8 @@ public enum CobStep {
     ;
 
     private int phaseNo;
-    private String phaseName;
 
-    CobStep(int phaseNo) {
+    CobPhase(int phaseNo) {
         this.phaseNo = phaseNo;
     }
 
@@ -24,24 +23,10 @@ public enum CobStep {
         return phaseNo;
     }
 
-    public String getPhaseName() {
-        return phaseName;
-    }
-
-    public void setPhaseName(String phaseName) {
-        this.phaseName = phaseName;
-    }
-
-    public static void setPhaseName(String phaseName, int phaseNo) {
-        CobStep step = getStep(phaseNo);
-        if (null != step)
-            step.phaseName = phaseName;
-    }
-
-    public static CobStep getStep(int phaseNo) {
-        for (CobStep step : CobStep.values()) {
-            if (step.phaseNo == phaseNo) {
-                return step;
+    public static CobPhase getPhase(int phaseNo) {
+        for (CobPhase phase : CobPhase.values()) {
+            if (phase.phaseNo == phaseNo) {
+                return phase;
             }
         }
         return null;

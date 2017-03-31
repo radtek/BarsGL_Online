@@ -94,23 +94,30 @@ public class PreCobStepController {
 
     public CobStepResult processFan(Date operday) {
         try {
-            return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                String msg = format(" обработки вееров актуальных на дату '%s'"
-                        , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()));
-                auditController.info(PreCob, "Начало" + msg);
+            List<String> refs = operationRepository.getFanOperationLoad(operdayController.getOperday().getCurrentDate());
+            if (refs.size() > 0) {
+                return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+                    String msg = format(" обработки вееров актуальных на дату '%s'"
+                            , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()));
+                    auditController.info(PreCob, "Начало" + msg);
 
-                auditController.info(PreCob, "Обработка вееров СТОРНО с текущей датой");
-                int cnt1 = processStornoOnedayOperations(operday, true);
+                    auditController.info(PreCob, "Обработка вееров СТОРНО с текущей датой");
+                    int cnt1 = processStornoOnedayOperations(operday, true);
 
-                int cnt2 = processForwardOperations(operday, true);
-                auditController.info(PreCob, format("Обработано повторно (без учета ошибок) вееров НЕ СТОРНО %d", cnt2 ));
+                    int cnt2 = processForwardOperations(operday, true);
+                    auditController.info(PreCob, format("Обработано повторно (без учета ошибок) вееров НЕ СТОРНО %d", cnt2));
 
-                auditController.info(PreCob, "Обработка вееров СТОРНО с прошедшей датой");
-                int cnt3 = processStornoBackvalueOperations(operday, true);
+                    auditController.info(PreCob, "Обработка вееров СТОРНО с прошедшей датой");
+                    int cnt3 = processStornoBackvalueOperations(operday, true);
 
-                auditController.info(PreCob, "Успешное завершение " + msg);
-                return new CobStepResult(CobStepStatus.Success, format("Обработано вееров %d", cnt1 + cnt2 + cnt3));
-            }, 60 * 60);
+                    auditController.info(PreCob, "Успешное завершение " + msg);
+
+                    List<String> res = operationRepository.getFanOperationProcessed(operdayController.getOperday().getCurrentDate(), refs);
+                    return new CobStepResult(CobStepStatus.Success, format("Найдено вееров %d. Обработано вееров %d", refs.size(), res.size()));
+                }, 60 * 60);
+            } else {
+                return new CobStepResult(CobStepStatus.Skipped, format("Нет вееров для обработки"));
+            }
         } catch (Exception e) {
             auditController.error(PreCob, "Ошибка на шаге обработки вееров: ", null, e);
             return new CobStepResult(CobStepStatus.Error, "Ошибка на шаге обработки вееров", e.getMessage());

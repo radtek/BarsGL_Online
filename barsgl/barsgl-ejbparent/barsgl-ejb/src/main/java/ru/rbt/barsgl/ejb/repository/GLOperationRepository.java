@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -23,6 +24,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
 
@@ -348,6 +350,27 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         return select(GLOperation.class
                 , "from GLOperation o where o.parentReference = ?1 and o.storno = ?2 and o.fan = ?3 and o.valueDate >= ?4 order by o.fbSide, o.id"
                 , parentReference, storno, YesNo.Y, getFanVdatefrom());
+    }
+
+    public List<String> getFanOperationLoad(Date procdate) {
+        try {
+            List<DataRecord> res = select("select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE = ?",
+                    procdate, OperState.LOAD.name());
+            return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public List<String> getFanOperationProcessed(Date procdate, List<String> refs) {
+        try {
+            List<DataRecord> res = select("select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE in (?, ?) and PAR_RF in (" +
+                    StringUtils.listToString(refs, ", ", "'") + ") ",
+                    procdate, OperState.POST.name(), OperState.SOCANC.name());
+            return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 
     private Date getFanVdatefrom () {

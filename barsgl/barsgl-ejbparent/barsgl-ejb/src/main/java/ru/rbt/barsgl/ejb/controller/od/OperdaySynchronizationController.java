@@ -100,7 +100,7 @@ public class OperdaySynchronizationController {
     @EJB
     private DbTryingExecutor dbTryingExecutor;
 
-    public void syncPostings() throws Exception {
+    public String syncPostings() throws Exception {
         final DataRecord bufferStat = glPdRepository.selectFirst(
                 "select case when mx is null then 0 else mx end mx, cnt \n" +
                 "  from ( \n" +
@@ -119,15 +119,15 @@ public class OperdaySynchronizationController {
         }
 
         if (maxGlPdId == 0 && balanceStat.getLong("cnt") == 0) {
-            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
-            return;
+//            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
+            return "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется";
         }
 
         try {
             try {
                 dbTryingExecutor.tryExecuteTransactionally((conn, attempt) -> {
                     switchOffTriggers();
-                    return null;
+                    return "";
                 }, 3, TimeUnit.SECONDS, 10);
             } catch (Throwable e) {
                 String message = "Не удалось отключить триггера перед сбросом буфера";
@@ -136,17 +136,18 @@ public class OperdaySynchronizationController {
             }
 
             try {
-                pdRepository.executeInNewTransaction(persistence -> {
+                return pdRepository.executeInNewTransaction(persistence -> {
                     auditController.info(BufferModeSync, format("Кол-во проводок в буфере GL_PD: '%s'", cnt));
 
                     Long currentPdSeq = Long.max(pdRepository.getNextId(), getMaxPdId(0L));
                     Long currentGLPdSeq = glPdRepository.getNextId();
 
-                    auditController.info(BufferModeSync, format("Перенесено проводок: '%s'", copyGLPd(currentPdSeq, currentGLPdSeq)));
-                    auditController.info(BufferModeSync, format("Перенесено остатков по счетам в разрезе дат: '%s'", copyBalance()));
+                    String msg1, msg2;
+                    auditController.info(BufferModeSync, msg1 = format("Перенесено проводок: '%s'", copyGLPd(currentPdSeq, currentGLPdSeq)));
+                    auditController.info(BufferModeSync, msg2 = format("Перенесено остатков по счетам в разрезе дат: '%s'", copyBalance()));
 
                     restartSequencePD(getMaxPdId(0L));
-                    return null;
+                    return format("%s; \n%s", msg1, msg2);
                 });
             } catch (Throwable e) {
                 String message = "Ошибка при сбросе буфера";

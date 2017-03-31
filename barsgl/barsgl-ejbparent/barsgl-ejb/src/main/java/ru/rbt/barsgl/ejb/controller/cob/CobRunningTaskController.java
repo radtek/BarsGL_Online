@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.CobStep;
+import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.EJB;
@@ -44,23 +44,23 @@ public class CobRunningTaskController {
     @EJB
     private CobStatRecalculator recalculator;
 
-    public CobStepStatistics executeWithLongRunningStep(Long idCob, CobStep cobStepEnum, CobRunningWork work) {
-        CobStepStatistics step = statRepository.findById(CobStepStatistics.class, new CobStatId(idCob, cobStepEnum.getPhaseNo()));
+    public CobStepStatistics executeWithLongRunningStep(Long idCob, CobPhase phase, CobRunningWork work) {
+        CobStepStatistics step = statRepository.findById(CobStepStatistics.class, new CobStatId(idCob, phase.getPhaseNo()));
         try {
-            recalculator.setStepStart(idCob, step);
-            CobStepResult result = statRepository.executeInNewTransaction(persistence -> work.runWork());
+            recalculator.setStepStart(idCob, step, phase);
+            CobStepResult result = statRepository.executeInNewTransaction(persistence -> work.runWork(idCob, phase));
             switch(result.getStepStatus()) {
                 case Success:
-                    recalculator.setStepSuccess(idCob, step, result.getMessage());
+                    recalculator.setStepSuccess(idCob, step, phase, result.getMessage());
                     break;
                 case Skipped:
-                    recalculator.setStepSkipped(idCob, step, result.getMessage());
+                    recalculator.setStepSkipped(idCob, step, phase, result.getMessage());
                     break;
                 case Error:
-                    recalculator.setStepError(idCob, step, result.getMessage(), result.getErrorMessage(), result.getStepStatus());
+                    recalculator.setStepError(idCob, step, phase, result.getMessage(), result.getErrorMessage(), result.getStepStatus());
                     break;
                 case Halt:
-                    recalculator.setStepError(idCob, step, result.getMessage(), result.getErrorMessage(), result.getStepStatus());
+                    recalculator.setStepError(idCob, step, phase, result.getMessage(), result.getErrorMessage(), result.getStepStatus());
                     break;
                 default:
                     auditController.error(PreCob, result.getMessage(), step, "Invalid COB result status: " + result.getStepStatus().name());
@@ -69,11 +69,11 @@ public class CobRunningTaskController {
             return statRepository.refresh(step, true);
         } catch (Throwable t) {
             log.log(Level.SEVERE, "Error on long running cob: ", t);
-            String msg = String.format("Шаг COB %d '%s' завершен с ошибкой", cobStepEnum.getPhaseNo(), cobStepEnum.getPhaseName());
+            String msg = String.format("Шаг COB %d завершен с ошибкой", phase.getPhaseNo());
             auditController.error(PreCob, msg, step, t);
             if (null != step){
                 try {
-                    recalculator.setStepError(idCob, step, "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt);
+                    recalculator.setStepError(idCob, step, phase, "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt);
                     return statRepository.refresh(step, true);
                 } catch (Exception ignored) {}
             }
@@ -89,7 +89,7 @@ public class CobRunningTaskController {
 
     public boolean execWorks(List<CobRunningStepWork> works, Long idCob) {
         for (CobRunningStepWork work : works) {
-            CobStepStatistics step = executeWithLongRunningStep(idCob, work.getStep(), work.getWork());
+            CobStepStatistics step = executeWithLongRunningStep(idCob, work.getPhase(), work.getWork());
             if (null == step) {
                 auditController.error(PreCob,
                         format("Не удалось создать шаг выполнения для '%s'", work), null, new DefaultApplicationException(""));

@@ -154,7 +154,7 @@ public abstract class FanOperationController implements GLOperationController <S
         try {
             final List<GLOperation> opList = (null != operList) ? operList :
                     glOperationRepository.getFanOperationByRef(parentRef, storno);
-            auditController.error(FanOperation, msg, (null != opList) ? opList.get(0) : null, e);   // TODO
+            auditController.error(FanOperation, msg, (null != opList && opList.size() > 0) ? opList.get(0) : null, e);   // TODO
             glOperationRepository.executeInNewTransaction(persistence -> {
                 final String errorMessage = format("%s: \n%s Обнаружена: %s\n'", msg, getErrorMessage(e), source);
                 log.error(errorMessage, e);

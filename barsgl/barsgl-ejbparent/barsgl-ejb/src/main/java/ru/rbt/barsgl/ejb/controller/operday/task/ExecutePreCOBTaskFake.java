@@ -12,7 +12,7 @@ import ru.rbt.barsgl.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.enums.CobStep;
+import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.EJB;
@@ -61,8 +61,8 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
         int res = 0;
         for(CobStepStatistics step: steps) {
             final CobStepStatus status = (res >= results.length) ? NotStart : results[res];
-            works.add(new CobRunningStepWork(CobStep.values()[st++], () -> {
-                return fakeTimerStep(idCob, step, step.getEstimated().intValue(), status);
+            works.add(new CobRunningStepWork(CobPhase.values()[st++], (Long id, CobPhase phase) -> {
+                return fakeTimerStep(id, step, phase, step.getEstimated().intValue(), status);
             }));
             res++;
         }
@@ -74,14 +74,14 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
             return false;
     }
 
-    public CobStepResult fakeTimerStep(Long idCob, CobStepStatistics step, int duration, CobStepStatus status) throws Exception {
-        statRecalculator.setStepMessage(idCob, step, "Запуск шага " + step.getPhaseNo());
+    public CobStepResult fakeTimerStep(Long idCob, CobStepStatistics step, CobPhase phase, int duration, CobStepStatus status) throws Exception {
+        statRecalculator.addStepInfo(idCob, phase, "Запуск шага " + step.getPhaseNo());
         if (status != Skipped) {
             Thread.sleep((duration == 0 ? 5 : 10) * 1000L);
         }
         String errorMsg = (status == CobStepStatus.Error || status == CobStepStatus.Halt) ? "Это ошибка !" : "";
 
-        statRecalculator.setStepMessage(idCob, step, "Завершен шаг " + step.getPhaseNo());
+        statRecalculator.addStepInfo(idCob, phase, "Завершен шаг " + step.getPhaseNo());
 
         return new CobStepResult(status, "Шаг " + status.getLabel(), errorMsg);
     }
@@ -98,7 +98,11 @@ public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
     @Override
     protected boolean checkJobStatus(String jobName, Properties properties) {
         try {
-            Assert.isTrue(!jobHistoryRepository.isAlreadyRunning(jobName, getHistory(properties).getId(), getOperday(properties))
+            JobHistory history = getHistory(properties);
+            boolean isAlreadyRunning = (null != history) ?
+                    jobHistoryRepository.isAlreadyRunning(jobName, history.getId(), getOperday(properties)) :
+                    jobHistoryRepository.isAlreadyRunning(jobName, getOperday(properties));
+            Assert.isTrue(!isAlreadyRunning
                     , () -> new ValidationError(OPERDAY_TASK_ALREADY_RUN, jobName, dateUtils.onlyDateString(getOperday(properties))));
             return true;
         } catch (ValidationError e) {

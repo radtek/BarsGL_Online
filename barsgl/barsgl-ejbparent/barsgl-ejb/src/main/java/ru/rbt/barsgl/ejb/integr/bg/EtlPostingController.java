@@ -387,13 +387,14 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                 "FROM GLOperation g WHERE g.state = ?1 AND g.valueDate IN (?2 , ?3) and g.storno = ?4 ORDER BY g.id"
                 , ERCHK, date1, date2, YesNo.Y);
         if (operations.size() > 0) {
-            auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций", operations.size()));
+            String msg = format("Найдено %d отложенных СТОРНО операций", operations.size());
+            auditController.info(Operation, msg);
             for (GLOperation operation : operations) {
                 if (reprocessOperation(findOperationProcessor(operation), operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }
             }
-            return new CobStepResult(CobStepStatus.Success, format("Обработано %d отложенных СТОРНО операций", cnt));
+            return new CobStepResult(CobStepStatus.Success, format("%s. Обработано успешно %d", msg, cnt));
         } else {
 //            auditController.info(Operation, "Не найдено сторно операций для повторной обработки");
             return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");

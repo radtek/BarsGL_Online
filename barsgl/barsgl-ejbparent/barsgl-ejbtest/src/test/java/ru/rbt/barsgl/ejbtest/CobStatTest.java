@@ -19,7 +19,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
-import ru.rbt.barsgl.shared.enums.CobStep;
+import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import java.math.BigDecimal;
@@ -33,7 +33,7 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
  */
 public class CobStatTest extends AbstractTimerJobTest  {
     private final int phaseFirst = 1;
-    private final int phaseLast = CobStep.values().length;
+    private final int phaseLast = CobPhase.values().length;
 
     @BeforeClass
     public static void beforeClass() {
@@ -53,7 +53,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
 
         CobWrapper wrapper = res.getResult();
         Assert.assertTrue(wrapper.getIdCob() > 0);
-        Assert.assertEquals(CobStep.values().length, wrapper.getStepList().size());
+        Assert.assertEquals(CobPhase.values().length, wrapper.getStepList().size());
         CobStepItem total = wrapper.getTotal();
         Assert.assertNotNull(total);
         checkStepState(total, NotStart);
@@ -96,7 +96,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
         checkGetInfo(wrapper, null, phaseLast, Running, Running);
 
         remoteAccess.invoke(CobStatRecalculator.class, "setStepError", wrapper.getIdCob(), stepLast, "Шаг завершен с ошибкой",
-            "Ошибка при выполнении шага " + CobStep.values()[0].name(), CobStepStatus.Error);
+            "Ошибка при выполнении шага " + CobPhase.values()[0].name(), CobStepStatus.Error);
         CobWrapper wrapper1 = checkGetInfo(wrapper, null, phaseLast, Error, Error);
         Assert.assertNotNull(wrapper1.getErrorMessage());
         System.out.println("ErrorMessage: " + wrapper1.getErrorMessage());

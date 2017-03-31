@@ -62,4 +62,8 @@ public class CobStatId implements Serializable {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "idCob=" + idCob + ", phaseNo=" + phaseNo;
+    }
 }
