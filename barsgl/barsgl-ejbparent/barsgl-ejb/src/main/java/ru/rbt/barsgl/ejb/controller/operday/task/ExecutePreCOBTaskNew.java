@@ -65,10 +65,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     public static final String CHECK_CHRONOLOGY_KEY = "chronology";
     public static final String CHECK_PACKAGES_KEY = "checkPackages";
 
-//    public static final String NAME = "ExecutePreCOBTask";
-
-    private static final Logger log = Logger.getLogger(ExecutePreCOBTask.class);
-
+    private static final Logger log = Logger.getLogger(ExecutePreCOBTaskNew.class);
 
     @Inject
     private OperdayController operdayController;

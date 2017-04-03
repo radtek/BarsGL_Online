@@ -23,6 +23,7 @@ import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
@@ -32,8 +33,8 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
  * Тестирование статистики по PreCob
  */
 public class CobStatTest extends AbstractTimerJobTest  {
-    private final int phaseFirst = 1;
-    private final int phaseLast = CobPhase.values().length;
+    private final CobPhase phaseFirst = CobPhase.values()[0];
+    private final CobPhase phaseLast = CobPhase.values()[CobPhase.values().length-1];
 
     @BeforeClass
     public static void beforeClass() {
@@ -70,73 +71,107 @@ public class CobStatTest extends AbstractTimerJobTest  {
         Assert.assertTrue(wrapper.getIdCob() > 0);
 
         setKoefIncrease(new BigDecimal(1.5));
-        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 3, wrapper.getIdCob(), phaseFirst);
-        CobStepStatistics stepFirst = (CobStepStatistics) baseEntityRepository.findById(CobStepStatistics.class, new CobStatId(wrapper.getIdCob(), phaseFirst));
+        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 3, wrapper.getIdCob(), phaseFirst.getPhaseNo());
+        CobStepStatistics stepFirst = (CobStepStatistics) baseEntityRepository.findById(CobStepStatistics.class, new CobStatId(wrapper.getIdCob(), phaseFirst.getPhaseNo()));
         Assert.assertNotNull(stepFirst);
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepStart", wrapper.getIdCob(), stepFirst);
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepStart", wrapper.getIdCob(), stepFirst,  phaseFirst);
 
         Thread.sleep(2000L);
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepMessage", wrapper.getIdCob(), stepFirst, "Выполнен этап 1");
-        checkGetInfo(wrapper, null, phaseFirst, Running, Running);
+        remoteAccess.invoke(CobStatRecalculator.class, "addStepInfo", wrapper.getIdCob(), phaseFirst, "Выполнен этап 1");
+        checkGetInfo(wrapper, phaseFirst, Running, Running);
 
         Thread.sleep(2000L);
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepMessage", wrapper.getIdCob(), stepFirst, "Выполнен этап 2");
-        checkGetInfo(wrapper, null, phaseFirst, Running, Running);
+        remoteAccess.invoke(CobStatRecalculator.class, "addStepInfo", wrapper.getIdCob(), phaseFirst, "Выполнен этап 2");
+        checkGetInfo(wrapper, phaseFirst, Running, Running);
 
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepSuccess", wrapper.getIdCob(), stepFirst, "Шаг завершен успешно");
-        checkGetInfo(wrapper, null, phaseFirst, Success, Running);
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepSuccess", wrapper.getIdCob(), stepFirst, phaseFirst, "Шаг завершен успешно");
+        checkGetInfo(wrapper, phaseFirst, Success, Running);
 
-        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 0, wrapper.getIdCob(), phaseLast);
-        CobStepStatistics stepLast = (CobStepStatistics) baseEntityRepository.findById(CobStepStatistics.class, new CobStatId(wrapper.getIdCob(), phaseLast));
+        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set ESTIMATED = ? where ID_COB = ? and PHASE_NO = ?", 0, wrapper.getIdCob(), phaseLast.getPhaseNo());
+        CobStepStatistics stepLast = (CobStepStatistics) baseEntityRepository.findById(CobStepStatistics.class, new CobStatId(wrapper.getIdCob(), phaseLast.getPhaseNo()));
         Assert.assertNotNull(stepLast);
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepStart", wrapper.getIdCob(), stepLast);
-        checkGetInfo(wrapper, null, phaseLast, Running, Running);
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepStart", wrapper.getIdCob(), stepLast, phaseLast);
+        checkGetInfo(wrapper, phaseLast, Running, Running);
 
         Thread.sleep(2000L);
-        checkGetInfo(wrapper, null, phaseLast, Running, Running);
+        checkGetInfo(wrapper, phaseLast, Running, Running);
 
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepError", wrapper.getIdCob(), stepLast, "Шаг завершен с ошибкой",
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepError", wrapper.getIdCob(), stepLast, phaseLast, "Шаг завершен с ошибкой",
             "Ошибка при выполнении шага " + CobPhase.values()[0].name(), CobStepStatus.Error);
-        CobWrapper wrapper1 = checkGetInfo(wrapper, null, phaseLast, Error, Error);
+        CobWrapper wrapper1 = checkGetInfo(wrapper, phaseLast, Error, Error);
         Assert.assertNotNull(wrapper1.getErrorMessage());
         System.out.println("ErrorMessage: " + wrapper1.getErrorMessage());
     }
 
     @Test
     public void testCobRunningTaskController() {
-        boolean res = remoteAccess.invoke(ExecutePreCOBTaskFake.class, "execWork");
-//        Assert.assertTrue(res);
+        remoteAccess.invoke(ExecutePreCOBTaskFake.class, "execWork");
+
+        Long idCob = null;
+        RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);
+        CobWrapper wrapper1 = res.getResult();
+        System.out.println("ID COB: " + wrapper1.getIdCob());
+
+        List<CobStepItem> itemList = wrapper1.getStepList();
+        int i = 0;
+        for (CobStepStatus stepStatus: ExecutePreCOBTaskFake.results) {
+            CobStepItem item = itemList.get(i++);
+            printStepInfo(item);
+            checkStepState(item, stepStatus);
+        }
+
+        CobStepItem totalItem = wrapper1.getTotal();
+        printStepInfo(totalItem);
+        checkStepState(totalItem, itemList.get(--i).getStatus());
     }
 
     @Test
-    public void testCobTaskNew() {
-        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", EtlStructureMonitorTask.class);
+    public void testCobTaskNew() throws InterruptedException {
+        String monitorName = EtlStructureMonitorTask.class.getSimpleName();
+        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", monitorName);
         if (job == null) {
-            throw new RuntimeException(Utils.Fmt("Не найдено задание '{0}'.", "errorMessage"));
+            throw new RuntimeException(Utils.Fmt("Не найдено задание '{0}'.", monitorName));
         }
-        if (job.getState() == TimerJob.JobState.STARTED)
-            throw new RuntimeException(Utils.Fmt("Задание '{0}' уже запущено.", "errorMessage"));
+        if (job.getState() != TimerJob.JobState.STARTED) {
+            remoteAccess.invoke(BackgroundJobsController.class, "startupJob", job);
+        }
 
-        remoteAccess.invoke(BackgroundJobsController.class, "executeJob", job);
+        boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
+        Assert.assertTrue(ex);
 
-        boolean res = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
-        Assert.assertTrue(res);
+        Long idCob = null;
+        RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);
+        CobWrapper wrapper1 = res.getResult();
+        System.out.println("ID COB: " + wrapper1.getIdCob());
+
+        List<CobStepItem> itemList = wrapper1.getStepList();
+        int i = 0;
+        for (CobStepItem item : itemList) {
+            printStepInfo(item);
+            Assert.assertTrue(item.getStatus() == Success || item.getStatus() == Skipped);
+            checkStepState(item, item.getStatus());
+        }
+
+        CobStepItem totalItem = wrapper1.getTotal();
+        printStepInfo(totalItem);
+        checkStepState(totalItem, Success);
     }
 
-    private CobWrapper checkGetInfo(CobWrapper wr0, Long idCob, int phaseNo, CobStepStatus stepStatus, CobStepStatus totalStatus) {
+    private CobWrapper checkGetInfo(CobWrapper wr0, CobPhase phase, CobStepStatus stepStatus, CobStepStatus totalStatus) {
+        Long idCob = null;
         RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);
         Assert.assertFalse(res.isError());
         CobWrapper wrapper1 = res.getResult();
         Assert.assertEquals(wr0.getIdCob(), wrapper1.getIdCob());
-        CobStepItem phase = wrapper1.getStepList().get(phaseNo - 1);
-        CobStepItem total = wrapper1.getTotal();
+        CobStepItem stepItem = wrapper1.getStepList().get(phase.getPhaseNo() - 1);
+        CobStepItem totalItem = wrapper1.getTotal();
 
         System.out.println("ID COB: " + wrapper1.getIdCob());
-        printStepInfo(phase);
-        checkStepState(phase, stepStatus);
+        printStepInfo(stepItem);
+        checkStepState(stepItem, stepStatus);
 
-        printStepInfo(total);
-        checkStepState(total, totalStatus);
+        printStepInfo(totalItem);
+        checkStepState(totalItem, totalStatus);
         return wrapper1;
     }
 

@@ -121,20 +121,20 @@ public class CobStatRecalculator {
 
     public void addStepInfo(Long idCob, CobPhase phase, String message) {
         auditController.info(PreCob, message);
-        setStepMessage(idCob, null, phase, message);
+        setStepMessage(idCob, phase, message);
     }
 
     public void addStepWarning(Long idCob, CobPhase phase, String message) {
         auditController.warning(PreCob, message);
-        setStepMessage(idCob, null, phase, message);
+        setStepMessage(idCob, phase, message);
     }
 
     public void addStepError(Long idCob, CobPhase phase, String message, Throwable e) {
         auditController.error(PreCob, message, null, null, e);
-        setStepMessage(idCob, null, phase, message);
+        setStepMessage(idCob, phase, message);
     }
 
-    private void setStepMessage(Long idCob, CobStepStatistics step, CobPhase phase, String message) {
+    private void setStepMessage(Long idCob, CobPhase phase, String message) {
         try {
             statRepository.executeInNewTransaction(persistence ->
                     statRepository.updateStepMessage(idCob, phase.getPhaseNo(), getLogMessage(message), true));

@@ -30,7 +30,7 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
  * Created by ER18837 on 16.03.17.
  */
 public class ExecutePreCOBTaskFake extends AbstractJobHistoryAwareTask {
-    final CobStepStatus results[] = {Success, Success, Error, Skipped, Success, Halt};
+    final public static CobStepStatus results[] = {Success, Success, Error, Skipped, Success, Halt};
 
     @Inject
     private CobStatRepository statRepository;
