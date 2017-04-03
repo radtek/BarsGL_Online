@@ -1,7 +1,9 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.entity.gl.*;
+import ru.rbt.barsgl.ejb.entity.gl.GLBsaAccLock;
+import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -87,8 +89,7 @@ public class GlPdThRepositoty extends AbstractBaseEntityRepository<GlPdTh, Long>
     }
 
     private void processPdthInternal(GLOperation operation, final List<GlPdTh> pdthList, OperState targetState) throws Exception {
-        //final int count = propertiesRepository.executeInNewTransaction(persistence -> propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue()); // кол-во попыток обработки
-        final int count = 10;
+        final int count = propertiesRepository.executeInNewTransaction(persistence -> propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue()); // кол-во попыток обработки
         for (int i = 0; i < count; i++) {
             try {
                 final int finalCounter = i;
