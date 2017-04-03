@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.props;
 /**
  * Created by Ivan Sevastyanov on 13.05.2016.
  */
+@Deprecated
 public enum NodeName {
 
     NodeDnameRules("auth.dname.regexps");
