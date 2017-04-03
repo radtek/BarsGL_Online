@@ -5,7 +5,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
@@ -73,7 +72,7 @@ public class TaskUtils {
                 } else if (COB.name().equals(dateRecord.getString("PHASE"))) {
                     return dateRecord.getDate("CURDATE");
                 } else {
-                    throw new DefaultApplicationException("Illegal operday state: " + dateRecord.getString("PHASE"));
+                    throw new ValidationError(ErrorCode.TASK_ERROR, "Illegal operday state: " + dateRecord.getString("PHASE"));
                 }
             } else {
                 return operday.getCurrentDate();

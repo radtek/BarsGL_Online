@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbcore;
 
+import static java.lang.String.format;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
@@ -9,9 +10,13 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -66,7 +71,9 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             accountSpecials = accountSpecials.stream().filter(accountSpecial -> accountSpecial.matches("\\d+")).collect(Collectors.toList());
             
             if(accountSpecials.isEmpty()){
-              throw new Exception("Элемент AccountSpecials содержит некорректные данные");
+              throw new Exception(format(
+                      "Элемент AccountSpecials содержит некорректные данные. Ожидалось \\d+, получено '%s'"
+                , accountSpecials.stream().collect(Collectors.joining(";"))));
             }
 
             String glacods = "'" + StringUtils.listToString(accountSpecials, "','") + "'";
@@ -89,7 +96,9 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             accountTypes = accountTypes.stream().filter(accountType -> accountType.matches("\\d+")).collect(Collectors.toList());
             
             if(accountTypes.isEmpty()){
-              throw new Exception("Элемент AccountingType содержит некорректные данные");
+              throw new Exception(format(
+                      "Элемент AccountingType содержит некорректные данные. Ожидалось \\d{9}, получено '%s'"
+                , accountTypes.stream().collect(Collectors.joining(";"))));
             }
             
             String acctypes = StringUtils.listToString(accountTypes, ",");
