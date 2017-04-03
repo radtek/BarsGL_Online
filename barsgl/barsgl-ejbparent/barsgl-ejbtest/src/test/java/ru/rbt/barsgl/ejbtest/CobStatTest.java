@@ -6,21 +6,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
-import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
-import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -127,6 +124,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
 
     @Test
     public void testCobTaskNew() throws InterruptedException {
+/*
         String monitorName = EtlStructureMonitorTask.class.getSimpleName();
         TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", monitorName);
         if (job == null) {
@@ -135,6 +133,9 @@ public class CobStatTest extends AbstractTimerJobTest  {
         if (job.getState() != TimerJob.JobState.STARTED) {
             remoteAccess.invoke(BackgroundJobsController.class, "startupJob", job);
         }
+*/
+
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
         boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
         Assert.assertTrue(ex);
