@@ -157,7 +157,7 @@ public class GLAccountService {
                     throw new DefaultApplicationException(e);
                 }
             }).getBsaAcid();
-        }if(!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
+        } else if(!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
