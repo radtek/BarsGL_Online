@@ -58,7 +58,7 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
      */
     public List<DataRecord> getRequestForProcessing(int maxRows) {
         try {
-            return selectMaxRows("SELECT * FROM GL_ACOPENRQ WHERE STATUS = 'NEW' ORDER BY REQUEST_ID WITH UR", maxRows, null);
+            return selectMaxRows("SELECT * FROM GL_ACOPENRQ WHERE STATUS = 'NEW' ORDER BY REQUEST_ID", maxRows, null);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

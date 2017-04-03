@@ -45,7 +45,7 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
     }
 
     public void executeWork() throws Exception {
-//        if (checkOperdayState()) {
+        try {
             beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
                 // T0: читаем запросы с STATUS = 'NEW' с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
                 List<DataRecord> loadedRequests = accountRequestRepository.getRequestForProcessing(maxRequestCount);
@@ -63,7 +63,9 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
                 }
                 return null;
             }), 60 * 10);
-//        }
+        } catch (Exception e) {
+            auditController.error(Account, "Ошибка при выполнении задачи AccountRetrieve", null, e);
+        }
     }
 
     private void processRequest(GLAccountRequest request) throws Exception {
