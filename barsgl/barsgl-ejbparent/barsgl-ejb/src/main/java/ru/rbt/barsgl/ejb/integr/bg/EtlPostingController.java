@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.barsgl.ejb.security.GLErrorController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
@@ -42,11 +43,10 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
+import static ru.rbt.barsgl.ejb.integr.ValidationAwareHandler.validationErrorsToString;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
-import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -85,6 +85,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
     private AuditController auditController;
 
     @EJB
+    private GLErrorController errorController;
+
+    @EJB
     private BeanManagedProcessor beanManagedProcessor;
 
     private List<IncomingPostingProcessor> cachedPostingProcessors;
@@ -111,20 +114,23 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             GLOperation operation;
             try {
                 operation = createOperation(etlPostingProcessor, posting);
+                if (null == operation) {
+                    return null;            // ошибки валидации
+                }
                 etlPostingRepository.updatePostingStateSuccess(posting);
             } catch (Throwable e) {
-                String msg = "Ошибка при создании операции по проводке" + msgCommon;
-                auditController.error(Operation, msg, posting, e);
-                postingErrorMessage(e, msg, posting);
+                String msg = "Ошибка при создании операции по проводке";
+//                auditController.error(Operation, msg, posting, e);
+                postingErrorMessage(e, msg + msgCommon, posting, initSource());
                 return null;
             }
 
             try {
                 operation = enrichmentOperation(etlPostingProcessor, operation);
             } catch (Throwable e) {
-                String msg = "Ошибка при заполнения данных операции по проводке" + msgCommon;
-                auditController.error(Operation, msg, operation, e);
-                operationErrorMessage(e, msg, operation, ERCHK, initSource());
+                String msg = "Ошибка при заполнения данных операции по проводке";
+//                auditController.error(Operation, msg, operation, e);
+                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
                 return operation;
             }
 
@@ -134,9 +140,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                 operation = fillAccount(processor, operation, GLOperation.OperSide.D);
                 operation = fillAccount(processor, operation, GLOperation.OperSide.C);
             } catch (Throwable e) {
-                String msg = "Ошибка при поиске (создании) счетов по проводке" + msgCommon;
-                auditController.error(Operation, msg, operation, e);
-                operationErrorMessage(e, msg, operation, ERCHK, initSource());
+                String msg = "Ошибка при поиске (создании) счетов по проводке";
+//                auditController.error(Operation, msg, operation, e);
+                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
                 return operation;
             }
 
@@ -145,7 +151,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             }
             return operation;
         } catch (Exception e) {
-            auditController.error(Operation, "Ошибка при обработке проводки" + msgCommon, posting, e);
+            String msg = "Нераспознанная ошибка при обработке проводки";
+            auditController.error(Operation, msg + msgCommon, posting, e);
+            errorController.error(msg + msgCommon, posting, e);
             context.setRollbackOnly();
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -201,18 +209,20 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                     toContinue = true;
                 } else {
                     String msg = "Отложена обработка" + msgCommon;
-                    String err = operationProcessor.validationErrorsToString(errors);
-                    auditController.warning(Operation, msg, operation, err);
-                    operationRepository.updateOperationStatusError(operation, OperState.WTAC
-                            , substr(msg + ":\n" + err, 4000));
+//                    String err = operationProcessor.validationErrorsToString(errors);
+//                    auditController.warning(Operation, msg, operation, err);
+//                    operationRepository.updateOperationStatusError(operation, OperState.WTAC, msg + ":\n" + err);
+                    operationErrorMessage(errors, msg, operation, WTAC, false);
+
                 }
             }
             else {
                 String msg = "Ошибка валидации" + msgCommon;
-                String err = operationProcessor.validationErrorsToString(errors);
-                auditController.error(Operation, msg, operation, err);
-                operationRepository.updateOperationStatusError(operation, ERCHK
-                        , substr(msg + ":\n" + err, 4000));
+//                String err = operationProcessor.validationErrorsToString(errors);
+//                auditController.error(Operation, msg, operation, err);
+//                errorController.error(msg, operation, errors);
+//                operationRepository.updateOperationStatusError(operation, ERCHK, msg + ":\n" + err);
+                operationErrorMessage(errors, msg, operation, ERCHK, true);
             }
         }
         return toContinue;
@@ -246,27 +256,27 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             operationProcessor = findOperationProcessor(operation);
             toContinue = validateOperation(operationProcessor, operation, isWtacPreStage);
         } catch ( Throwable e ) {
-            String msg = "Ошибка валидации данных" + msgCommon;
-            auditController.error(Operation, msg, operation, e);
-            operationErrorMessage(e, msg, operation, ERCHK, initSource());
+            String msg = "Ошибка валидации данных";
+//            auditController.error(Operation, msg, operation, e);
+            operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
             return false;
         }
         if ( toContinue ) {
             try {
                 updateOperation(operationProcessor, operation);
             } catch ( Throwable e ) {
-                String msg = "Ошибка заполнения данных" + msgCommon;
-                auditController.error(Operation, msg, operation, e);
-                operationErrorMessage(e, msg, operation, ERCHK, initSource());
+                String msg = "Ошибка заполнения данных";
+//                auditController.error(Operation, msg, operation, e);
+                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
                 return false;
             }
             try {
                 finalOperation(operationProcessor, operation);
                 return true;
             } catch ( Throwable e ) {
-                String msg = "Ошибка обработки" + msgCommon;
-                auditController.error(Operation, msg, operation, e);
-                operationErrorMessage(e, msg, operation, OperState.ERPOST, initSource());
+                String msg = "Ошибка обработки";
+//                auditController.error(Operation, msg, operation, e);
+                operationErrorMessage(e, msg + msgCommon, operation, OperState.ERPOST, initSource());
             }
         }
         return false;
@@ -428,7 +438,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
     private GLOperation  createOperation(IncomingPostingProcessor etlPostingProcessor
             , EtlPosting posting) throws Exception {
         return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence,connection) -> {
-
+            String msgCommon = format(" АЕ: '%s', ID_PST: '%s'", posting.getId(), posting.getAePostingId());
             List<ValidationError> errors = etlPostingProcessor.validate(posting, new ValidationContext());
 
             if (errors.isEmpty()) {
@@ -438,7 +448,10 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
 
                 return operationRepository.save(operation);                            // сохранить операцию
             } else {
-                throw new DefaultApplicationException(etlPostingProcessor.validationErrorMessage(posting, errors));
+                String msg = "Ошибка при создании операции по проводке";
+                postingErrorMessage (errors, msg + msgCommon, posting);
+                return null;
+//                throw new DefaultApplicationException(etlPostingProcessor.validationErrorMessage(posting, errors));
             }
         });
     }
@@ -509,19 +522,48 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
 
 
     private void operationErrorMessage(Throwable e, String msg, GLOperation operation, OperState state, String source) throws Exception {
-        final String errorMessage = format("%s '%s': %s. Обнаружена: %s\n'", msg, operation.getId(), getErrorMessage(e), source);
+        auditController.error(Operation, msg, operation, e);
+        final String errorMessage = format("%s: \n%s Обнаружена: %s", msg, getErrorMessage(e), source);
         log.error(errorMessage, e);
         operationRepository.executeInNewTransaction(persistence -> {
-            operationRepository.updateOperationStatusError(operation, state, substr(errorMessage, 4000));
+            operationRepository.updateOperationStatusError(operation, state, errorMessage);
             return null;
         });
+        errorController.error(msg, operation, e);
     }
 
-    private void postingErrorMessage (Throwable e, String msg, EtlPosting posting) {
-        final String errorMessage = format("%s '%s'\n %s", msg
-                , posting.getAePostingId(), getErrorMessage(e));
+    private void operationErrorMessage(List<ValidationError> errors, String msg, GLOperation operation, OperState state, boolean isError) throws Exception {
+        final String errorAudit = validationErrorsToString(errors);
+        if (isError) {
+            auditController.error(Operation, msg, operation, errorAudit);
+        } else {
+            auditController.warning(Operation, msg, operation, errorAudit);
+        }
+        final String errorMessage = msg + " \n" + errorAudit;
+        log.error(errorMessage);
+        operationRepository.executeInNewTransaction(persistence -> {
+            operationRepository.updateOperationStatusError(operation, state, errorMessage);
+            return null;
+        });
+        errorController.error(msg, operation, errors);
+    }
+
+    private void postingErrorMessage (Throwable e, String msg, EtlPosting posting, String source) {
+        auditController.error(Operation, msg, posting, e);
+        errorController.error(msg, posting, e);
+        final String errorMessage = format("%s \n%s Обнаружена: %s", msg, getErrorMessage(e), source);
         log.error(errorMessage, e);
-        etlPostingRepository.updatePostingStateError(posting, substr(errorMessage, 4000));
+        etlPostingRepository.updatePostingStateError(posting, errorMessage);
+    }
+
+    private void postingErrorMessage (List<ValidationError> errors, String msg, EtlPosting posting) {
+        final String errorDescr = format("Обнаружены ошибки валидации входных данных по проводке АЕ '%s'", posting.getId());
+        String errorAudit = errorDescr + " \n" + validationErrorsToString(errors);
+        auditController.error(Operation, msg, posting, errorAudit);
+        errorController.error(msg  + " \n" + errorDescr, posting, errors);
+        String errorMessage = msg + " \n" + errorAudit;
+        log.error(errorMessage);
+        etlPostingRepository.updatePostingStateError(posting, errorMessage);
     }
 
     /**
@@ -563,7 +605,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             return true;
         } catch (Exception e) {
             String msg = format("Ошибка поиска (создания) счетов при обработке отложенной операции '%s'", operation);
-            auditController.error(Operation, msg, operation, e);
+//            auditController.error(Operation, msg, operation, e);
             operationErrorMessage(e, msg, operation, ERCHK, initSource());
             return false;
         }

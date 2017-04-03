@@ -62,7 +62,7 @@ public enum ErrorCode {
     , FAN_IS_ONLY_ONE(1009, "Найдена всего одна операция веера для PAR_RF = '%s'")
     , FAN_PARENT_NOT_EXISTS(1010, "Не найдена основная операция веера для PAR_RF = '%s'")
     , FAN_SIDE_NOT_DEFINED(1011, "Не удалось определить сторону веера для PAR_RF = '%s'")
-    , FAN_AMOUNT_NOT_DEFINED(1011, "Не удалось определить суммы веера для PAR_RF = '%s'")
+//    , FAN_AMOUNT_NOT_DEFINED(1011, "Не удалось определить суммы веера для PAR_RF = '%s'")
     , EXCH_ACCOUNT_NOT_FOUND(1012, "Не найден счет курсовой разницы '%s' для бранча: '%s'")
     , FILIAL_NOT_DEFINED(1013, "Не удалось определить филиал для счета %: '%s' (поле '%s')")
     , STORNO_POST_NOT_FOUND(1014, "Не найдена сторнируемая проводка по операции STRN_GLO = '%s', POST_TYPE = '%s'")
@@ -154,6 +154,7 @@ public enum ErrorCode {
     , OPERDAY_IN_SYNCHRO(3012, "Обработка операций невозможна. Выполняется синхронизация проводок,\n повторите попытку через несколько минут")
 
     // Авторизация и ручная обработка
+    , BAD_DATE_FORMAT(4000, "Неверный формат поля '%s': %s")
     , AUTH_LOGIN_FAILED(4001, "Ошибка авторизации пользователя '%s'. Ошибка: %s")
     , POSTING_BACK_NOT_ALLOWED(4002, "У Вас нет прав для работы в закрытом опердне")
     , POSTING_BACK_NOT_IN_DATE(4003, "Вам разрешено работать в закрытом опердне только с %s %s")
@@ -179,7 +180,7 @@ public enum ErrorCode {
     , POSTING_STATUS_WRONG(4023, "Статус запроса на операцию не соответствует ожидаемому: '%s' (%s)")
     , PACKAGE_STATUS_WRONG(4024, "Статус пакета не соответствует ожидаемому: '%s' (%s)")
 
-    , BAD_DATE_FORMAT(10000, "Неверный формат поля '%s': %s")
+//    , VALIDATION_ERROR(10000, "%s %s %s")
     ;
 
     private final int errorCode;
