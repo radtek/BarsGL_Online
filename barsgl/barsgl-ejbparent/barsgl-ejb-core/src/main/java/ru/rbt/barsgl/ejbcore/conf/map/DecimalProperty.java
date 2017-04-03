@@ -16,6 +16,13 @@ public class DecimalProperty extends AbstractConfigProperty<BigDecimal> {
     @Column(name = "DECIMAL_VALUE")
     private BigDecimal value;
 
+    public DecimalProperty() {
+    }
+
+    public DecimalProperty(BigDecimal value) {
+        this.value = value;
+    }
+
     @Override
     public BigDecimal getValue() {
         return value;
@@ -24,5 +31,9 @@ public class DecimalProperty extends AbstractConfigProperty<BigDecimal> {
     @Override
     public void setValue(BigDecimal value) {
         this.value = value;
+    }
+
+    public static DecimalProperty nullDecimalProperty() {
+        return new DecimalProperty(null);
     }
 }

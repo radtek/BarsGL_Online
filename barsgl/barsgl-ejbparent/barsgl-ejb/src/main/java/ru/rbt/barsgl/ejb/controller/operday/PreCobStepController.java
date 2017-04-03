@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.controller.operday;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.FanForwardOperationController;
@@ -19,6 +20,7 @@ import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -85,33 +87,40 @@ public class PreCobStepController {
     /**
      * Обработка вееров в preCob (основная)
      */
-    public boolean processFan() {
+    public CobStepResult processFan() {
         Date operday = new Date(operdayController.getOperday().getCurrentDate().getTime());
         return processFan(operday);
     }
 
-    public boolean processFan(Date operday) {
+    public CobStepResult processFan(Date operday) {
         try {
-            return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                String msg = format(" обработки вееров актуальных на дату '%s'"
-                        , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()));
-                auditController.info(PreCob, "Начало" + msg);
+            List<String> refs = operationRepository.getFanOperationLoad(operdayController.getOperday().getCurrentDate());
+            if (refs.size() > 0) {
+                return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+                    String msg = format(" обработки вееров актуальных на дату '%s'"
+                            , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()));
+                    auditController.info(PreCob, "Начало" + msg);
 
-                auditController.info(PreCob, "Обработка вееров СТОРНО с текущей датой");
-                processStornoOnedayOperations(operday, true);
+                    auditController.info(PreCob, "Обработка вееров СТОРНО с текущей датой");
+                    int cnt1 = processStornoOnedayOperations(operday, true);
 
-                auditController.info(PreCob, format("Обработано повторно (без учета ошибок) вееров НЕ СТОРНО %s"
-                        , processForwardOperations(operday, true)));
+                    int cnt2 = processForwardOperations(operday, true);
+                    auditController.info(PreCob, format("Обработано повторно (без учета ошибок) вееров НЕ СТОРНО %d", cnt2));
 
-                auditController.info(PreCob, "Обработка вееров СТОРНО с прошедшей датой");
-                processStornoBackvalueOperations(operday, true);
+                    auditController.info(PreCob, "Обработка вееров СТОРНО с прошедшей датой");
+                    int cnt3 = processStornoBackvalueOperations(operday, true);
 
-                auditController.info(PreCob, "Успешное завершение " + msg);
-                return true;
-            }, 60 * 60);
+                    auditController.info(PreCob, "Успешное завершение " + msg);
+
+                    List<String> res = operationRepository.getFanOperationProcessed(operdayController.getOperday().getCurrentDate(), refs);
+                    return new CobStepResult(CobStepStatus.Success, format("Найдено вееров %d. Обработано вееров %d", refs.size(), res.size()));
+                }, 60 * 60);
+            } else {
+                return new CobStepResult(CobStepStatus.Skipped, format("Нет вееров для обработки"));
+            }
         } catch (Exception e) {
             auditController.error(PreCob, "Ошибка на шаге обработки вееров: ", null, e);
-            return false;
+            return new CobStepResult(CobStepStatus.Error, "Ошибка на шаге обработки вееров", e.getMessage());
         }
     }
 
@@ -194,7 +203,7 @@ public class PreCobStepController {
     private int processStornoOnedayOperations(Date operday, boolean isWtacPreStage) throws Exception {
         return operationRepository.executeTransactionally(connection -> {
             boolean res;
-            int cntError = 0;
+            int cnt = 0;
             try (PreparedStatement query =
                          connection.prepareStatement(
 //                                 "select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and STRN = 'Y' " +
@@ -209,12 +218,12 @@ public class PreCobStepController {
                     while (rs.next()) {
                         String parentRef = rs.getString(1);
                         res = processFanOperation(parentRef, fanStornoOnedayOperationController, isWtacPreStage);
-                        if (!res)
-                            cntError++;
+                        if (res)
+                            cnt++;
                     }
                 }
             }
-            return cntError;
+            return cnt;
         });
     }
 
@@ -227,7 +236,7 @@ public class PreCobStepController {
     private int processStornoBackvalueOperations(Date operday, boolean isWtacPreStage) throws Exception {
         return operationRepository.executeTransactionally(connection -> {
             boolean res;
-            int cntError = 0;
+            int cnt = 0;
             try (PreparedStatement query =
                          connection.prepareStatement(
 //                                 "select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and STRN = 'Y' " +
@@ -242,12 +251,12 @@ public class PreCobStepController {
                     while (rs.next()) {
                         String parentRef = rs.getString(1);
                         res = processFanOperation(parentRef, fanStornoBackvalueOperationController, isWtacPreStage);
-                        if (!res)
-                            cntError++;
+                        if (res)
+                            cnt++;
                     }
                 }
             }
-            return cntError;
+            return cnt;
         });
     }
 

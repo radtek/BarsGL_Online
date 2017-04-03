@@ -13,7 +13,8 @@ public enum PropertyName {
     , AD_LDAP_URI("auth.ldapURI")
     , BATPKG_MAXROWS("batpkg.max.count")
     , MC_QUEUES_PARAM("mc.queues.param")
-    , MC_TIMEOUT("mc.timeout.sec");
+    , MC_TIMEOUT("mc.timeout.sec")
+    , COB_STAT_INC("cob.stat.increase");
 
     private String name;
 

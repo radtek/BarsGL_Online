@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbcore.repository;
 
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.conf.map.AbstractConfigProperty;
+import ru.rbt.barsgl.ejbcore.conf.map.DecimalProperty;
 import ru.rbt.barsgl.ejbcore.conf.map.NumberProperty;
 import ru.rbt.barsgl.ejbcore.conf.map.StringProperty;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
@@ -11,6 +12,7 @@ import javax.ejb.AccessTimeout;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejbcore.conf.map.DecimalProperty.nullDecimalProperty;
 import static ru.rbt.barsgl.ejbcore.conf.map.NumberProperty.nullNumberProperty;
 import static ru.rbt.barsgl.ejbcore.conf.map.StringProperty.nullStringProperty;
 
@@ -88,6 +91,24 @@ public class PropertiesRepository extends AbstractCachedRepository <AbstractConf
     public Long getNumberDef(String key, Long def) {
         try {
             return Optional.ofNullable((NumberProperty)getCachedProperty(key)).orElse(new NumberProperty(def)).getValue();
+        } catch (ExecutionException e) {
+            return def;
+        }
+    }
+
+    /**
+     * Кэшированое Long значение параметра
+     * @param key ключ
+     * @return Кэшированое Long значение параметра
+     * @throws ExecutionException
+     */
+    public BigDecimal getDecimal(String key) throws ExecutionException {
+        return Optional.ofNullable((DecimalProperty)getCachedProperty(key)).orElse(nullDecimalProperty()).getValue();
+    }
+
+    public BigDecimal getDecimalDef(String key, BigDecimal def) {
+        try {
+            return Optional.ofNullable((DecimalProperty)getCachedProperty(key)).orElse(new DecimalProperty(def)).getValue();
         } catch (ExecutionException e) {
             return def;
         }

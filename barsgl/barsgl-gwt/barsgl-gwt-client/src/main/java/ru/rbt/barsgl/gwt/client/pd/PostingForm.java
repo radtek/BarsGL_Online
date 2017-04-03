@@ -145,7 +145,7 @@ public class PostingForm extends MDForm {
         result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 60));
         result.addColumn(new Column("PBR", STRING, "Система-источник", 80, false, false));
         result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
-        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120));
+        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 160));
         result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 120, false, false));
         result.addColumn(new Column("PREF", STRING, "ИД сделки/ платежа", 120));
         result.addColumn(colProcDate = new Column("PROCDATE", DATE, "Дата опердня", 80));

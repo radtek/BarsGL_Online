@@ -35,7 +35,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
@@ -172,7 +171,7 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
                     , dateUtils.onlyDateString(operday.getCurrentDate())));
             try {
                 beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                    closeLastWorkdayBalanceTask.executeWork(); return null;
+                    closeLastWorkdayBalanceTask.executeWork(true); return null;
                 }, 60 * 60);
             } catch (Exception e) {
                 // пишем ошибку и выходим
