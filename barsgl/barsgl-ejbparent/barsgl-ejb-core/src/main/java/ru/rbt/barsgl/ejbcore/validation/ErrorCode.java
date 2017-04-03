@@ -179,6 +179,7 @@ public enum ErrorCode {
     , ACCOUNT_CHNG_NOT_ALLOWED(4022, "У Вас нет прав для изменения счетов данной категории")
     , POSTING_STATUS_WRONG(4023, "Статус запроса на операцию не соответствует ожидаемому: '%s' (%s)")
     , PACKAGE_STATUS_WRONG(4024, "Статус пакета не соответствует ожидаемому: '%s' (%s)")
+    , REPROCESS_ERROR(4025, "%s")
 
 //    , VALIDATION_ERROR(10000, "%s %s %s")
     ;

@@ -133,6 +133,21 @@ public class StringUtils {
         }
     }
 
+    public static <E>  String listToString(Collection<E> list, String delimiter, String quote) {
+        Iterator<E> it = list.iterator();
+        if (! it.hasNext())
+            return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (;;) {
+            E e = it.next();
+            sb.append(quote).append(e).append(quote);
+            if (! it.hasNext())
+                return sb.toString();
+            sb.append(delimiter);
+        }
+    }
+
     public static <E>  String arrayToString(E ar[], String delimiter, String quote) {
         if ((null == ar) || (0 == ar.length))
             return "";
