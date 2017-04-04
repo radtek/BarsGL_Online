@@ -18,10 +18,6 @@ import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.STRING;
  */
 public class NigthErrRepExportData implements IExportData {
    public String sql(){
-      /* return "select CUST_DR, CUST_CR, ID, ID_PST, ID_PKG, SRC_PST, EVT_ID, DEAL_ID, CHNL_NAME, " +
-               "PMT_REF, DEPT_ID, VDATE, OTS, NRT, RNRTL, RNRTS, STRN, STRNRF, AC_DR, CCY_DR, " +
-               "AMT_DR, AMTRU_DR, AC_CR, CCY_CR, AMT_CR, AMTRU_CR, FAN, PAR_RF, ECODE, EMSG, " +
-               "ACCKEY_DR, ACCKEY_CR, ADDKEY_DR, ADDKEY_CR, EVTP, IS_VIP from V_GLA2_ERRORS";*/
        return "ru.rbt.barsgl.ejb.rep.NightErrRep@getSql";
    }
 

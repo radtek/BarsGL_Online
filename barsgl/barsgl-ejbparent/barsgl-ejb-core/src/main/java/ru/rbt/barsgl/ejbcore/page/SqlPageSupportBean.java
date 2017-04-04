@@ -56,15 +56,15 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
-        SQL sql = prepareCommonSql(nativeSql, criterion);
-        final List<Object> params = new ArrayList<>();
-        if (null != sql.getParams()) {
-            params.addAll(Arrays.asList(sql.getParams()));
-        }
-
-        String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith, orderBy);
-
         try {
+            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            final List<Object> params = new ArrayList<>();
+            if (null != sql.getParams()) {
+                params.addAll(Arrays.asList(sql.getParams()));
+            }
+
+            String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith, orderBy);
+
             log.debug("SQL[selectRows] => " + resultSql);
             params.forEach(p -> log.debug("Param = " + p));
             DataSource dataSource = repository.getDataSource(rep);
@@ -81,9 +81,10 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
-        SQL sql = prepareCommonSql(nativeSql, criterion);
-        String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;
         try {
+            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;
+
             DataSource dataSource = repository.getDataSource(rep);
             int cnt = repository.selectFirst(dataSource, resultSql, sql.getParams()).getInteger("cnt");
             if (MAX_ROW_COUNT + 1 == cnt)

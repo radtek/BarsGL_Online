@@ -25,6 +25,8 @@ import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.User;
 import static ru.rbt.barsgl.ejbcore.util.ServerUtils.md5;
 import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
 import static ru.rbt.barsgl.shared.LoginResult.buildInvalidUsernameLoginResult;
+import static ru.rbt.barsgl.shared.enums.YesNoType.No;
+import static ru.rbt.barsgl.shared.enums.YesNoType.Yes;
 
 /**
  * Created by Ivan Sevastyanov
@@ -47,6 +49,16 @@ public class AuthorizationServiceSupport {
     @Inject
     private DateUtils dateUtils;
 
+    public String getUserSql(){
+        return  "select * from ( " +
+                "select ID_USER, USER_NAME, SURNAME, FIRSTNAME, PATRONYMIC, FILIAL, DEPID, CREATE_DT, END_DT, " +
+                "case when LOCKED = '0' then trim('" + No.getLabel() + "') " +
+                "else trim('" + Yes.getLabel() + "') " +
+                "end LOCKED, " +
+                "case when SEC_TYPE = '0' then trim('" + UserExternalType.L.name() + "') " +
+                "else trim('" + UserExternalType.E.name() + "') end SEC_TYPE, USER_PWD " +
+                "from GL_USER) v ";
+    }
 
     public LoginResult login(String username, String password) throws Exception {
         AppUser user = appUserRepository.findUserByName(username);

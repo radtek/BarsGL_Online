@@ -180,15 +180,7 @@ public class AppUserForm extends EditableDictionary<AppUserWrapper> {
                  
     @Override
     protected String prepareSql() {
-        return  "select * from ( " +
-        		"select ID_USER, USER_NAME, SURNAME, FIRSTNAME, PATRONYMIC, FILIAL, DEPID, CREATE_DT, END_DT, " +
-        		"case when LOCKED = '0' then trim('" + No.getLabel() + "') " +
-        		"else trim('" + Yes.getLabel() + "') " +
-        		"end LOCKED, " +
-                "case when SEC_TYPE = '0' then trim('" + UserExternalType.L.name() + "') " +
-                "else trim('" + UserExternalType.E.name() + "') end SEC_TYPE, USER_PWD " +
-                "from GL_USER) v ";
-
+        return "ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport@getUserSql";
     }
      
     @Override
