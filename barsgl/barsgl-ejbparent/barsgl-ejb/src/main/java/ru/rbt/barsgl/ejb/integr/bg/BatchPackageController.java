@@ -419,7 +419,7 @@ public class BatchPackageController {
             }
             checkHand12Diff(posting0);
 
-            updatePackageStateNew(pkg0, IS_SIGNEDDATE);
+            updatePackageStateNew(pkg0, IS_CLICKDATE);
             createPackageHistory(pkg0, posting0.getStatus().getStep(), wrapper.getAction());
             if (CONFIRM_NOW.equals(wrapper.getAction())) {
                 postingRepository.executeInNewTransaction(persistence -> {
@@ -427,7 +427,7 @@ public class BatchPackageController {
                     return null;
                 });
             }
-            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_SIGNEDDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
+            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты пакета, загруженного из файла";
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());

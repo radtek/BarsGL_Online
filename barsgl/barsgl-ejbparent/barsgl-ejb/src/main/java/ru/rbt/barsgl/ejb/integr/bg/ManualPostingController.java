@@ -339,7 +339,7 @@ public class ManualPostingController {
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             BatchPostStatus newStatus = SIGNEDDATE;
             // тестируем статус - что никто еще не менял
-            updatePostingStatusNew(posting0, newStatus, wrapper);
+            updatePostingStatusNew(posting0, CLICKDATE, wrapper);
             // устанавливаем статус
             Date operday = operdayController.getOperday().getCurrentDate();
             if (BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())) {
@@ -469,6 +469,7 @@ public class ManualPostingController {
                 case WAITDATE:
                     cnt = postingRepository.signedPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
                     break;
+                case CLICKDATE:
                 case SIGNEDDATE:
                     if (wrapper.getStatus().getStep().isControlStep()) {
                         cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);

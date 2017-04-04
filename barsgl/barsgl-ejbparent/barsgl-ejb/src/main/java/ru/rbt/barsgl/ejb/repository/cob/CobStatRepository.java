@@ -62,6 +62,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
         DataRecord res;
         switch (phase) {
             case CobStopEtlProc:
+                return 0L;
             case CobResetBuffer:
                 res = selectOne("select count(1) from GL_PD where PD_ID is null");
                 return res.getLong(0);
@@ -74,7 +75,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                         OperState.ERCHK.name(), curdate, lwdate, YesNo.Y.name());
                 return res.getLong(0);
             case CobCloseBalance:
-                return 1L;
+                return 0L;
             case CobFanProc:
                 res = selectOne("select count(DISTINCT PAR_RF) from GL_OPER where FAN = ? and PROCDATE = ? and STATE = ?",
                         YesNo.Y.name(), curdate, OperState.LOAD.name());
