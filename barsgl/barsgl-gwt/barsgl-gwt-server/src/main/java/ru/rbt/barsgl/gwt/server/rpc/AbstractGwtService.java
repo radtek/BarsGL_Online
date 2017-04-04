@@ -30,9 +30,14 @@ public abstract class AbstractGwtService extends RemoteServiceServlet {
     }
 
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        logger.log(Level.FINE, "setting request: " + request);
-        GwtServerUtils.setRequest(request);
-        super.service(request, response);
+        try {
+            logger.log(Level.FINE, "setting request: " + request);
+            GwtServerUtils.setRequest(request);
+            super.service(request, response);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
 }

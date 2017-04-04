@@ -226,7 +226,12 @@ public class GridWidget extends Composite implements IProviderEvents{
 					private int idx = index;
 					@Override
 					public Integer getValue(Row object) {
-						Integer res = (Integer) object.getField(idx).getValue();
+						Integer res = null;
+						try {
+							res = (Integer) object.getField(idx).getValue();
+						} catch (ClassCastException e) {
+							res = ((BigDecimal) object.getField(idx).getValue()).intValue();
+						}
 						return res;
 					}
 				};
@@ -237,7 +242,12 @@ public class GridWidget extends Composite implements IProviderEvents{
 					private int idx = index;
 					@Override
 					public Long getValue(Row object) {
-						Long res = (Long) object.getField(idx).getValue();
+						Long res = null;
+						try {
+							res = (Long) object.getField(idx).getValue();
+						} catch (ClassCastException e) {
+							res = ((BigDecimal)object.getField(idx).getValue()).longValue();
+						}
 						return res;
 					}
 				};
