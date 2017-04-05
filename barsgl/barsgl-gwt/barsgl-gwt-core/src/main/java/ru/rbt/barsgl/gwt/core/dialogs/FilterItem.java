@@ -55,7 +55,7 @@ public class FilterItem implements Serializable, IsSerializable {
             // преобразуем дату в строку для передачи на сервер (из-за возможной ошибки на 1 день)
             switch (type) {
             case DATETIME:
-                this.sqlName = "DATE(" + name + ")";
+                this.sqlName = "TRUNC(" + name + ")";
                 this.strValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
                 this.sqlValue = this.strValue;
                 break;

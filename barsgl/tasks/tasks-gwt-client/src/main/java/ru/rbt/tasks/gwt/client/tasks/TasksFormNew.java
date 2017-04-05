@@ -4,6 +4,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
+import java.math.BigDecimal;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -25,6 +26,7 @@ import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import ru.rbt.barsgl.gwt.core.datafields.Column.Sort;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import ru.rbt.tasks.gwt.client.TimerEntryPoint;
@@ -68,7 +70,8 @@ public class TasksFormNew extends GridForm {
     protected Table prepareTable() {
         Table result = new Table();
         Column col;
-        result.addColumn(new Column("ID_TASK", Column.Type.LONG, "ID", 150, false, true ));
+        //result.addColumn(new Column("ID_TASK", Column.Type.LONG, "ID", 150, false, true ));
+        result.addColumn(new Column("ID_TASK", Column.Type.DECIMAL, "ID", 150, false, true, Sort.NONE, "##########" )); // format as long
         result.addColumn(new Column("TSKNM", Column.Type.STRING, "Наименование", 250));
         result.addColumn(col = new Column("PROPS", Column.Type.STRING, "Свойства", 300));
         col.setSortable(false);
@@ -106,7 +109,7 @@ public class TasksFormNew extends GridForm {
 
                 TimerJobWrapper timerJobs = new TimerJobWrapper();
 
-                timerJobs.setId((Long) row.getField(0).getValue());
+                timerJobs.setId(((BigDecimal)row.getField(0).getValue()).longValue());
                 timerJobs.setProperties((String)row.getField(2).getValue());
 
                 timerJobs.setStartupType(JobStartupType.valueOf(row.getField(5).getValue().toString()));
@@ -156,7 +159,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.startupJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.startupJob(((BigDecimal)row.getField(0).getValue()).longValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -189,7 +192,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.shutdownJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.shutdownJob(((BigDecimal)row.getField(0).getValue()).longValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -288,7 +291,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.executeJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.executeJob(((BigDecimal)row.getField(0).getValue()).longValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();

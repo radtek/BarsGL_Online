@@ -50,8 +50,14 @@ public class BackgroundJobsStarter {
       log.info("Остановка всех фоновых задач");
       jobService.shutdownAll();
     } catch (Throwable e) {
-      auditController.error(AuditRecord.LogCode.JobControl, "Ошибка при остановке задач", null, e);
-      throw e;
+      // Correct shutdown
+      log.error("Ошибка при остановке всех фоновых задач", e);
+      try{
+        auditController.error(AuditRecord.LogCode.JobControl, "Ошибка при остановке задач", null, e);
+      }catch (Throwable t) {
+        log.error("Ошибка при записи в аудит при остановке всех фоновых задач", t);        
+      }
+      //throw e;
     }
   }
 }

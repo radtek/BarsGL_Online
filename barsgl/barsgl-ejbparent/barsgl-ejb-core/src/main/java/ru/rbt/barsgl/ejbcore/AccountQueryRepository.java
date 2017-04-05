@@ -31,7 +31,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         try {
             String acidsStr = "'" + StringUtils.listToString(acids, "','") + "'";
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT * FROM DWH.GL_ACC A WHERE "
+                "SELECT * FROM GL_ACC A WHERE "
                         + "A.BSAACID IN (" + acidsStr + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         + "AND A.DTC IS NULL "
@@ -79,11 +79,12 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             String glacods = "'" + StringUtils.listToString(accountSpecials, "','") + "'";
 
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT * FROM DWH.GL_ACC A WHERE "
+                "SELECT * FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACOD IN (" + glacods + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
-                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        + "AND MONTHS_BETWEEN(current_date, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
               return dataRecords;
         } catch (SQLException e) {
@@ -104,11 +105,12 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             String acctypes = StringUtils.listToString(accountTypes, ",");
 
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT * FROM DWH.GL_ACC A WHERE "
+                "SELECT * FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE IN (" + acctypes + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
-                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        + "AND MONTHS_BETWEEN(current_date, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
 
             return dataRecords;
@@ -121,10 +123,11 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         try {
             List<DataRecord> dataRecords = null;
             dataRecords = selectMaxRows(
-                "SELECT * FROM DWH.GL_ACC A WHERE "
+                "SELECT * FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
-                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        + "AND MONTHS_BETWEEN(current_date, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
             return dataRecords;
         } catch (SQLException e) {
@@ -134,7 +137,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public List<DataRecord> getAccrlnRecords(String inCondition, String customerNo) throws Exception {
         try {
-            String selectExpression = "SELECT * FROM DWH.ACCRLN A WHERE A.BSAACID IN (" + inCondition + ")";
+            String selectExpression = "SELECT * FROM ACCRLN A WHERE A.BSAACID IN (" + inCondition + ")";
             if(customerNo != null)
               selectExpression+=" AND CNUM = '"+customerNo+"'";
             return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
@@ -145,7 +148,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public List<DataRecord> getGlAccRecords(String inCondition, String customerNo) throws Exception {
         try {
-            String selectExpression = "SELECT * FROM DWH.GL_ACC WHERE BSAACID IN (" + inCondition + ")";
+            String selectExpression = "SELECT * FROM GL_ACC WHERE BSAACID IN (" + inCondition + ")";
             if(customerNo != null)
               selectExpression+=" AND CUSTNO = '"+customerNo+"'";
             return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
@@ -156,7 +159,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public void loadCurrency(Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap) throws Exception {
         try {
-            List<DataRecord> dataRecords = selectMaxRows("SELECT GLCCY,CBCCY,NBDP FROM DWH.CURRENCY", Integer.MAX_VALUE, null);
+            List<DataRecord> dataRecords = selectMaxRows("SELECT GLCCY,CBCCY,NBDP FROM CURRENCY", Integer.MAX_VALUE, null);
             for (DataRecord item : dataRecords) {
                 currencyMap.put(item.getString("CBCCY"), item.getString("GLCCY"));
                 currencyNBDPMap.put(item.getString("CBCCY"), item.getInteger("NBDP"));
@@ -221,8 +224,8 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     public BigDecimal[] getAccountBalance(String bsaacid) throws Exception {
         try {
             DataRecord record = selectFirst(
-                    "SELECT INCO + VALUE(INCTURN, 0) INCO, INCORUB + VALUE(INCTURNRUB, 0) INCORUB\n" +
-                    "       , OUTCO + VALUE (OUTTURN, 0) OUTCO, OUTRUB + VALUE (OUTTURNRUB,0) OUTRUB FROM (\n" +
+                    "SELECT INCO + NVL(INCTURN, 0) INCO, INCORUB + NVL(INCTURNRUB, 0) INCORUB\n" +
+                    "       , OUTCO + NVL (OUTTURN, 0) OUTCO, OUTRUB + NVL (OUTTURNRUB,0) OUTRUB FROM (\n" +
                     "    select case\n" +
                     "               when b.dat < o.curdate then  OBAC+CTAC+DTAC\n" +
                     "               else OBAC\n" +
@@ -260,9 +263,10 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     public Set<String> getCountsByAB(String condition) throws Exception {
         try {
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM DWH.ACCRLN A WHERE VALUE(A.BSAACID,'')<>'' AND " + condition + " "+
-                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID) " +
-                    "AND (CURRENT DATE - A.DRLNC) <= 1131"
+                "SELECT BSAACID FROM ACCRLN A WHERE NVL(A.BSAACID,'')<>'' AND " + condition + " "+
+                    "AND EXISTS(SELECT * FROM GL_ACC G WHERE A.BSAACID=G.BSAACID) " +
+                    //"AND (CURRENT DATE - A.DRLNC) <= 1131" 
+                    "AND MONTHS_BETWEEN(current_date, A.DRLNC) < 12 "
                 , Integer.MAX_VALUE,null);
 
             Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());

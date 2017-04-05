@@ -64,7 +64,8 @@ public class AuditForm extends GridForm {
 
         Column col;
 
-        result.addColumn(new Column("ID_RECORD", Column.Type.LONG, "ID", 80, true, false, Column.Sort.DESC, ""));
+        //result.addColumn(new Column("ID_RECORD", Column.Type.LONG, "ID", 80, true, false, Column.Sort.DESC, ""));
+        result.addColumn(new Column("ID_RECORD", Column.Type.DECIMAL, "ID", 80, true, false, Column.Sort.DESC, "##########"));
         result.addColumn(colSysTime = new Column("SYS_TIME", Column.Type.DATETIME, "Время записи", 130));
         colSysTime.setFormat("dd.MM.yyyy HH:mm:ss");
         //col.setFilterable(false);
