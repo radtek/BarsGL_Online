@@ -12,6 +12,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.ui.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -176,6 +177,18 @@ public class EditDlg extends DlgFrame{
 								Date valueDate = DatePickerBox.DATE_FORMAT.parse(DatePickerBox.DATE_FORMAT.format((Date)value, TZ_CLIENT));
 								widget.setValue(valueDate);
 								break;
+              case LONG:
+                if(value instanceof BigDecimal){
+    							widget.setValue(((BigDecimal)value).longValue());                                  
+                }else
+    							widget.setValue(value);                  
+                break;
+              case INTEGER:
+                if(value instanceof BigDecimal){
+    							widget.setValue(((BigDecimal)value).intValue());                                                    
+                }else
+  								widget.setValue(value);                  
+                break;
 							default:		// значение
 								widget.setValue(value);
 								break;

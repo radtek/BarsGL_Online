@@ -26,7 +26,6 @@ import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import ru.rbt.barsgl.gwt.core.datafields.Column.Sort;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import ru.rbt.tasks.gwt.client.TimerEntryPoint;
@@ -70,8 +69,7 @@ public class TasksFormNew extends GridForm {
     protected Table prepareTable() {
         Table result = new Table();
         Column col;
-        //result.addColumn(new Column("ID_TASK", Column.Type.LONG, "ID", 150, false, true ));
-        result.addColumn(new Column("ID_TASK", Column.Type.DECIMAL, "ID", 150, false, true, Sort.NONE, "##########" )); // format as long
+        result.addColumn(new Column("ID_TASK", Column.Type.LONG, "ID", 150, false, true ));
         result.addColumn(new Column("TSKNM", Column.Type.STRING, "Наименование", 250));
         result.addColumn(col = new Column("PROPS", Column.Type.STRING, "Свойства", 300));
         col.setSortable(false);

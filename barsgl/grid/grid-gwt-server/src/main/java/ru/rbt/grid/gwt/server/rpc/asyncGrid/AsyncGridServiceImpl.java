@@ -28,25 +28,35 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     @Override
     public Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Exception {
 //    	return 1000;
-        return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
+        try {
+            return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
     public List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
-        List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, repository, filterCriteriaAdapter(filterCriteria), pageSize,
-                start + 1, sortCriteriaAdapter(sortCriteria));
-        List<Row> result = new ArrayList<Row>();
+        try {
+            List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, repository, filterCriteriaAdapter(filterCriteria), pageSize,
+                    start + 1, sortCriteriaAdapter(sortCriteria));
+            List<Row> result = new ArrayList<Row>();
 
-        for(DataRecord r: data) {
-            Row row = new Row();
-            for( int i = 0; i < columns.getColumnCount(); i++){
-                row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+            for(DataRecord r: data) {
+                Row row = new Row();
+                for( int i = 0; i < columns.getColumnCount(); i++){
+                    row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                }
+
+                result.add(row);
             }
 
-            result.add(row);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
-
-        return result;
     }
 
     @Override
@@ -60,6 +70,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return row;
 
         }catch (Exception ex){
+            ex.printStackTrace();
             throw new RuntimeException(ex);
         }
     }
@@ -81,25 +92,35 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Exception {
-        return localInvoker.invoke(SqlPageSupport.class, "count", sql, filterCriteriaAdapter(filterCriteria));
+        try {
+            return localInvoker.invoke(SqlPageSupport.class, "count", sql, filterCriteriaAdapter(filterCriteria));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
     public List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
-        List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, filterCriteriaAdapter(filterCriteria), pageSize,
-                                                    start + 1, sortCriteriaAdapter(sortCriteria));
-        List<Row> result = new ArrayList<Row>();
+        try {
+            List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, filterCriteriaAdapter(filterCriteria), pageSize,
+                                                        start + 1, sortCriteriaAdapter(sortCriteria));
+            List<Row> result = new ArrayList<Row>();
 
-        for(DataRecord r: data) {
-            Row row = new Row();
-            for( int i = 0; i < columns.getColumnCount(); i++){
-                row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+            for(DataRecord r: data) {
+                Row row = new Row();
+                for( int i = 0; i < columns.getColumnCount(); i++){
+                    row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                }
+
+                result.add(row);
             }
 
-            result.add(row);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
-
-        return result;
     }
 
     @Override
@@ -113,6 +134,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return row;
 
         }catch (Exception ex){
+            ex.printStackTrace();
             throw new RuntimeException(ex);
         }
     }
@@ -182,17 +204,22 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
-        List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
-        for (int i = 0; i < columns.getColumnCount(); i++) {
-            Column column = columns.getColumnByIndex(i);
-            if (column.isVisible())
-                xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+        try {
+            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
+            for (int i = 0; i < columns.getColumnCount(); i++) {
+                Column column = columns.getColumnByIndex(i);
+                if (column.isVisible())
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+            }
+
+            String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, xlsColumns,
+                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
+
+            return fileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
-
-        String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, xlsColumns,
-                filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
-
-      return fileName;
     }
 
     public void Debug(String msg) {
