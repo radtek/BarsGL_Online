@@ -430,4 +430,39 @@ public class GridWidget extends Composite implements IProviderEvents{
 	public List<Row> getVisibleItems(){
 	    return grid.getVisibleItems();
 	}
+
+	public void rebuildGrid(){
+		while (grid.getColumnCount() > 0){
+			grid.removeColumn(0);
+		}
+		prepareColumns();
+	}
+
+	public void hideColumns(String... columnNames){
+		for (String columnName: columnNames){
+			table.getColumn(columnName).setWidth(0);
+		}
+		rebuildGrid();
+	}
+
+	public void hideColumns(List<String> columnNames){
+		for (String columnName: columnNames){
+			table.getColumn(columnName).setWidth(0);
+		}
+		rebuildGrid();
+	}
+
+	public void showColumns(String... columnNames){
+		for (String columnName: columnNames){
+			table.getColumn(columnName).setWidth(table.getColumn(columnName).getOrigin_width());
+		}
+		rebuildGrid();
+	}
+
+	public void showColumns(List<String> columnNames){
+		for (String columnName: columnNames){
+			table.getColumn(columnName).setWidth(table.getColumn(columnName).getOrigin_width());
+		}
+		rebuildGrid();
+	}
 }
