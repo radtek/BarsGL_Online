@@ -199,7 +199,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             if (!synchronizationController.waitStopProcessingOnly()) {
                 return new CobStepResult(CobStepStatus.Halt, msgBad, "Истекло время ожидания");
             }
-            return new CobStepResult(CobStepStatus.Success, "Остановлена обработка проводок");
+            return new CobStepResult(CobStepStatus.Success, "Обработка проводок остановлена успешно");
         } catch (Throwable t) {
             return new CobStepResult(CobStepStatus.Halt, msgBad, getErrorMessage(t));
         }
@@ -230,7 +230,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                         operdayController.swithPdMode(operdayController.getOperday().getPdMode());
                         return null;
                     });
-                    return new CobStepResult(CobStepStatus.Success, "Окончание синхронизации проводок");
+                    return new CobStepResult(CobStepStatus.Success, "Синхронизация проводок завершена успешно");
                 } else {
                     return new CobStepResult(CobStepStatus.Halt,
                             "Синхронизация проводок не завершена. Закрытие операционного дня прервано", "Превышено время обработки");
@@ -347,7 +347,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                 // устанавливаем статус ОД
                 setPreCobState(idCob, phase);
 
-                auditController.info(AuditRecord.LogCode.Operday, "Обработка вееров");
+                statInfo(idCob, phase, "Обработка вееров");
                 return beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> preCobStepController.processFan());
             });
         } catch (Exception e) {
@@ -361,17 +361,14 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
      * @return
      */
     public CobStepResult recalculateAll(Operday operday, Long idCob, CobPhase phase) {
-        List<String> msgList = new ArrayList<String>();
         try {
             beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                 // пересчет отстатков по проводкам, подавленным/перенесенным вручную
-                String msg1 = format("Пересчитано остатков по подавл/перенесенным '%s'", balturRecalculator.recalculateBaltur());
-                statInfo(idCob, phase, msg1);
-//                msgList.add(msg1);
+                int cnt1 = balturRecalculator.recalculateBaltur();
+                statInfo(idCob, phase, format("Пересчитано остатков по подавл/перенесенным '%s'", cnt1));
 
-                String msg2 = format("Подавлено дублирующихся проводок по сделкам TBO: %s", suppressDuplication.suppress());
-                statInfo(idCob, phase, msg2);
-                msgList.add(msg2);
+                int cnt2 = suppressDuplication.suppress();
+                statInfo(idCob, phase, format("Подавлено дублирующихся проводок по сделкам TBO: %s", cnt2));
                 return null;
             });
         } catch (Exception e) {
@@ -380,8 +377,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return new CobStepResult(CobStepStatus.Halt, msg, getErrorMessage(e));
         }
         try {
-            repository.executeInNewTransaction(persistence -> recalculateLocalization(idCob, phase));
-            statInfo(idCob, phase, "Выпонен пересчет локализации");
+            int cnt = (int) repository.executeInNewTransaction(persistence -> recalculateLocalization(idCob, phase));
+            statInfo(idCob, phase, format("Выпонен пересчет/локализация по %d счетам", cnt));
         } catch (Exception e) {
             String msg = "Ошибка на этапе пересчета локализации";
             auditController.warning(AuditRecord.LogCode.Operday, msg, null, e);
@@ -389,9 +386,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
         try {
             repository.executeInNewTransaction(persistence1 -> {
-                statInfo(idCob, phase, format("Установка состояния операционного дня в статус %s", COB));
                 operdayController.setCOB();
-                msgList.add(format("Операционный день установлен в статус %s", COB));
+                statInfo(idCob, phase, format("Операционный день установлен в статус %s", COB));
                 return null;
             });
         } catch (Exception e) {
@@ -402,7 +398,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         try {
             return (CobStepResult) repository.executeInNewTransaction(p -> {
                 operdayController.setProcessingStatus(ProcessingStatus.ALLOWED);
-//                msgList.add("Разрешен запуск обработки проводок");
                 return new CobStepResult(CobStepStatus.Success, "Разрешен запуск обработки проводок");
             });
         } catch (Exception e) {
@@ -412,23 +407,24 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }
     }
 
-    private boolean recalculateLocalization(Long idCob, CobPhase phase) {
+    private Integer recalculateLocalization(Long idCob, CobPhase phase) {
         String operdayString = dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate());
         try {
             log.info(format("Начало пересчета/локализации при закрытии ОД '%s'", operdayString));
-            backvalueJournalController.recalculateLocal();
+            int cnt = backvalueJournalController.recalculateLocal();
             log.info(format("Успешное окончание пересчета/локализации при закрытии ОД '%s'", operdayString));
-            return true;
+            return cnt;
         } catch (Exception e) {
             statError(idCob, phase, format("Ошибка при пересчете/локализации при закрытии ОД '%s'", operdayString), e);
-            return false;
+            return 0;
         }
     }
 
     private void setPreCobState(Long idCob, CobPhase phase) throws Exception {
         repository.executeInNewTransaction(pers-> {
-            statInfo(idCob, phase, format("Установка состояния операционного дня в статус %s", PRE_COB));
-            operdayController.setPreCOB(); return null;
+            operdayController.setPreCOB();
+            statInfo(idCob, phase, format("Операционный день установлен в статус %s", PRE_COB));
+            return null;
         });
     }
 

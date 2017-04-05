@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.repository.cob;
 
-import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
@@ -81,12 +80,13 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                         YesNo.Y.name(), curdate, OperState.LOAD.name());
                 return res.getLong(0);
             case CobRecalcBaltur:
-                res = selectOne("select count(1) from (select BSAACID, ACID from GL_BSARC where RECTED = ? group by BSAACID,ACID) T",
-                        BalturRecalculator.BalturRecalcState.NEW.getValue());
-                DataRecord res2 = selectOne("select count(1) from GL_OPER o join GL_POSTING p on o.GLOID = p.GLO_REF" +
-                        " where o.PROCDATE = ? and o.SRC_PST = ? and o.STRN = ? and o.STATE = ?",
-                        curdate, SourcesDeals.SRCPST.KTP.getValue(), YesNo.Y.name(), OperState.POST.name());
-                return res.getLong(0) + res2.getLong(0);
+                res = selectOne("select sum(cnt) from (" +
+                                "select count(1) cnt from (select BSAACID, ACID from GL_BSARC where RECTED = 0 group by BSAACID, ACID) T union all " +
+                                "select count(1) cnt from GL_OPER o join GL_POSTING p on o.GLOID = p.GLO_REF " +
+                                    "where o.PROCDATE = ? and o.SRC_PST = ? and o.STRN = 'Y' and o.STATE = 'POST' union all " +
+                                "select count(1) cnt from GL_BVJRNL where STATE = 'NEW') T1",
+                        curdate, SourcesDeals.SRCPST.KTP.getValue());
+                return res.getLong(0);
             default:
                 return null;
 //                throw new DefaultApplicationException("Неверный шаг COB:" + step);
