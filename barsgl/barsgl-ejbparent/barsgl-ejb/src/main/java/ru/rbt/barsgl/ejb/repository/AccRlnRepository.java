@@ -10,13 +10,13 @@ import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 
-import javax.persistence.NoResultException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ACCOUNT_RLN_INVALID;
 
@@ -30,7 +30,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
     public GlAccRln createAccRln(GLAccount glAccount) {
         GlAccRln accRln = new GlAccRln();
         AccRlnId id = new AccRlnId();
-        id.setAcid(glAccount.getAcid());
+        id.setAcid(ifEmpty(glAccount.getAcid(), " "));
         id.setBsaAcid(glAccount.getBsaAcid());
         accRln.setId(id);
 

@@ -18,7 +18,7 @@ public class IDGenerator {
     private CoreRepository repository;
 
     public long nextId() throws SQLException {
-        return repository.selectFirst("select (next value for pd_seq) id_seq from sysibm.sysdummy1").getLong("ID_SEQ");
+        return repository.selectFirst("select (next value for pd_seq) id_seq from DUAL").getLong("ID_SEQ");
     }
 
 }

@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejb.access;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.access.Role;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.repository.access.RoleRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -18,17 +17,14 @@ import ru.rbt.barsgl.shared.enums.RoleSys;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Role;
-
-
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Role;
+import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
 
 /**
  * Created by akichigi on 12.04.16.
@@ -246,7 +242,7 @@ public class RoleServiceSupport {
 
             if (all){
                  sql = "select  id_src,  lgnm from (\n" +
-                       "select '*'  as  id_src, 'Все'  as  lgnm from sysibm.sysdummy1\n" +
+                       "select '*'  as  id_src, 'Все'  as  lgnm from DUAL\n" +
                        "union\n" +
                        "select id_src, lgnm from GL_SRCPST) t\n" +
                        "where t. id_src not in (select id_src from V_GL_AU_USRPR where id_user=?)";
@@ -310,7 +306,7 @@ public class RoleServiceSupport {
 
             if (all){
                 sql = "select CCPCD, CCPNR, CCBBR from\n" +
-                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from sysibm.sysdummy1\n" +
+                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from DUAL\n" +
                       "union\n" +
                       "select CCPCD, CCPNR, CCBBR from IMBCBCMP) t\n" +
                       "where t.CCPCD not in (select CCPCD from  V_GL_AU_USRBR where id_user=?)";

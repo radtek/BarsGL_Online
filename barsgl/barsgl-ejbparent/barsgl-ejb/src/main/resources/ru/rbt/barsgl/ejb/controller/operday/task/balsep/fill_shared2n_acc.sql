@@ -23,7 +23,7 @@ select bb.acid,
      when bb.dat = v.dat then abs(bb.ctbc)
      when bb.dat < v.dat then 0
    end) ctrnrur
-  from baltur bb, accrln a, (select date('$1') dat from sysibm.sysdummy1) v
+  from baltur bb, accrln a, (select date('$1') dat from DUAL) v
 where bb.acid = a.acid and bb.bsaacid = a.bsaacid
   and v.dat between bb.dat and bb.datto
   and a.rlntype in ('0', '1', '2') and a.acid = ?

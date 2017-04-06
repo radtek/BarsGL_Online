@@ -4,12 +4,14 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
+import javax.ejb.Stateless;
 import java.util.Date;
 import java.util.List;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
 public class BankCalendarDayRepository extends AbstractBaseEntityRepository<BankCalendarDay,BankCalendarDayId> {
 
     private static final String BANK_CALENDAR_CODE = "RUR";

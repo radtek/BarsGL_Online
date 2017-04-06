@@ -48,7 +48,7 @@ public class StamtUnloadController {
                     "INSERT INTO GL_ETLSTMS (PARNAME, PARVALUE, PARDESC, OPERDAY, START_LOAD)\n" +
                             "    VALUES (?, ?, ?, ?, CURRENT TIMESTAMP)"
                     , params.getParamName(), DwhUnloadStatus.STARTED.getFlag(), params.getParamDesc(), operday);
-            return repository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
+            return repository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM DUAL").getLong("id");
         });
     }
 

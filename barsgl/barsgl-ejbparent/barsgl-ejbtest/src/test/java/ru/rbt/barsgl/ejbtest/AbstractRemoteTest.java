@@ -2,7 +2,6 @@ package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
@@ -752,8 +751,12 @@ public abstract class AbstractRemoteTest  {
     }
 
     public static String findBsaAccount(String bsaacidLike) throws SQLException {
+        return findBsaAccount(bsaacidLike, new Date());
+    }
+
+    public static String findBsaAccount(String bsaacidLike, Date dateClose) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst("select bsaacid from accrln r, BSAACC a where r.bsaacid like ? and r.bsaacid = a.id and a.BSAACC > ?"
-                , bsaacidLike, new Date()))
-                .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike));
+                , bsaacidLike, dateClose))
+                .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike + " " + dateClose));
     }
 }

@@ -14,7 +14,7 @@ public class WorkdayRepository extends AbstractBaseEntityRepository {
 
     public Date getWorkday() {
         try {
-            return selectOne("select w.workday from workday w with ur").getDate("workday");
+            return selectOne("select w.workday from workday w").getDate("workday");
         } catch (SQLException e) {
             throw new DefaultApplicationException("Failed getting Midas WORKDAY", e);
         }

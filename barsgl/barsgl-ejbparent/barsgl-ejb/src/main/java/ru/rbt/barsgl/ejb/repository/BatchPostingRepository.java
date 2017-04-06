@@ -157,7 +157,7 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
                 "INSERT INTO GL_BATPST (INVISIBLE, ID_PAR, " + histfields + ")" +
                 " SELECT 'H', ID, "  + histfields + " FROM GL_BATPST WHERE ID = ?",
                 postingId);
-        Long idHist = selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
+        Long idHist = selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM DUAL").getLong("id");
         executeNativeUpdate("UPDATE GL_BATPST SET OTS_CHNG = ?, USER_CHNG = ?, ID_PAR = ?, ID_PREV = ? WHERE ID = ?",
                 timestamp, userName, postingId, idHist, postingId);
         return findById(postingId);
@@ -188,7 +188,7 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
     public List<Long> getPostingsForProcessing (int postingCount, Date curdate) {
         try {
             List<DataRecord> res = selectMaxRows("select * from GL_BATPST where ID_PKG is NULL and STATE in (?, ?) and PROCDATE = ? and INVISIBLE = ? " +
-                            "ORDER BY ID WITH UR"
+                            "ORDER BY ID"
                     , postingCount, new Object[]{SIGNED.name(), SIGNEDDATE.name(), curdate, InvisibleType.N.name()});
             return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
         } catch (SQLException e) {

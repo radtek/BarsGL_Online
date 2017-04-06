@@ -37,7 +37,7 @@ public class MonitoringSupportService {
     private OperdayController operdayController;
 
     public void checkDbConnectionPool() throws SQLException {
-        repository.select("SELECT WORKDAY FROM WORKDAY WITH UR");
+        repository.select("SELECT WORKDAY FROM WORKDAY");
     }
 
     /**

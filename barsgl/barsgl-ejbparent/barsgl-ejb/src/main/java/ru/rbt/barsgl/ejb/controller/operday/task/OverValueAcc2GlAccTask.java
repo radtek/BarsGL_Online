@@ -1,10 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccountBalanceUnloadTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
@@ -52,9 +48,9 @@ public class OverValueAcc2GlAccTask implements ParamsAwareRunnable {
         try {
             if (checkRun(properties, executeDate)) {
                 headerId = taskUtils.createHeaders(DwhUnloadParams.UnloadOverValueAcc, executeDate);
-                DataRecord ret = repository.selectFirst("select GL_OVERVALUE_ACC() from sysibm.sysdummy1", new Object[]{});
+                DataRecord ret = repository.selectFirst("select GL_OVERVALUE_ACC() from DUAL", new Object[]{});
                 auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов переоценки", ret.getBigInteger(0)));
-                ret = repository.selectFirst("select GL_EXCHANGE_ACC() from sysibm.sysdummy1", new Object[]{});
+                ret = repository.selectFirst("select GL_EXCHANGE_ACC() from DUAL", new Object[]{});
                 auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов курсовой", ret.getBigInteger(0)));
 
                 taskUtils.setResultStatus(headerId, DwhUnloadStatus.SUCCEDED);

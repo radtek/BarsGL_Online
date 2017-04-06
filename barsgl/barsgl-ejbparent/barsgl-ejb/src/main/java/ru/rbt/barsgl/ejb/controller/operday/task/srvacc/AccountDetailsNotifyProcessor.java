@@ -16,6 +16,7 @@ import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -446,7 +447,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     private void createAccrlnRecord(AcDNJournal.Sources source, Map<String, String> xmlData, Short customerType, String ccodeDr, String psavDr) throws SQLException, ParseException {
         GlAccRln newAccRln = new GlAccRln();
         AccRlnId accRlnId = new AccRlnId();
-        accRlnId.setAcid(xmlData.get("AccountNo"));
+        accRlnId.setAcid(StringUtils.ifEmpty(xmlData.get("AccountNo"), " "));
 
         accRlnId.setBsaAcid(xmlData.get("CBAccountNo"));
         newAccRln.setId(accRlnId);
