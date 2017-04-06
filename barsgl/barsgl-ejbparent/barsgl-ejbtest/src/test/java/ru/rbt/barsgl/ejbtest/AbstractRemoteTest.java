@@ -91,7 +91,7 @@ public abstract class AbstractRemoteTest  {
     static {
         try {
             Context ctx = new InitialContext();
-            remoteAccessInternal = (ServerAccess) ctx.lookup("java:app/barsgl-ejbcore/ServerAccessBean!ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");
+            remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");            
             remoteAccess = new ServiceAccessSupport() {
                 @Override
                 public <T> T invoke(Class clazz, String method, Object... params) {

@@ -93,6 +93,17 @@
                                     <artifactId>barsgl-gwt-servlet</artifactId>
                                     <excluded>true</excluded>
                                 </webModule>
+
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mqjms</artifactId>
+                                  <bundleFileName>com.ibm.mqjms.jar</bundleFileName>
+                                </jarModule>
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mq.jmqi</artifactId>
+                                  <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
+                                </jarModule>
                             </modules>
 
                             <env-entries>
@@ -194,6 +205,17 @@
                                     <artifactId>barsgl-gwt-servlet</artifactId>
                                     <excluded>true</excluded>
                                 </webModule>
+
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mqjms</artifactId>
+                                  <bundleFileName>com.ibm.mqjms.jar</bundleFileName>
+                                </jarModule>
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mq.jmqi</artifactId>
+                                  <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
+                                </jarModule>
                             </modules>
 
                             <env-entries>
@@ -293,6 +315,17 @@
                                     <artifactId>barsgl-gwt-servlet</artifactId>
                                     <contextRoot>${project.build.finalName}/api</contextRoot>
                                 </webModule>
+
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mqjms</artifactId>
+                                  <bundleFileName>com.ibm.mqjms.jar</bundleFileName>
+                                </jarModule>
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mq.jmqi</artifactId>
+                                  <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
+                                </jarModule>
                             </modules>
 
                             <env-entries>
@@ -438,6 +471,17 @@
                                     <artifactId>barsgl-gwt-servlet</artifactId>
                                     <excluded>true</excluded>
                                 </webModule>
+
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mqjms</artifactId>
+                                  <bundleFileName>com.ibm.mqjms.jar</bundleFileName>
+                                </jarModule>
+                                <jarModule>
+                                  <groupId>com.ibm</groupId>
+                                  <artifactId>com.ibm.mq.jmqi</artifactId>
+                                  <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
+                                </jarModule>
                             </modules>
 
                             <env-entries>
@@ -477,7 +521,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>javax</groupId>
-                    <artifactId>javaee-web-api</artifactId>
+                    <artifactId>javaee-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -561,7 +605,24 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>barsgl-jpa</artifactId>
             <version>${project.version}</version>
-            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>com.ibm.mqjms</artifactId>
+            <version>9.0.1.0</version>
+            <systemPath>${project.basedir}/../barsgl-ejbparent/barsgl-ejbtest/lib/jmslib/com.ibm.mqjms.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm</groupId>
+            <artifactId>com.ibm.mq.jmqi</artifactId>
+            <version>9.0.1.0</version>
+            <systemPath>${project.basedir}/../barsgl-ejbparent/barsgl-ejbtest/lib/jmslib/com.ibm.mq.jmqi.jar</systemPath>
+            <scope>system</scope>
         </dependency>
     </dependencies>
 </project>

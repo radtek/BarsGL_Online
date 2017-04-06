@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
+            <artifactId>javaee-api</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -105,45 +105,12 @@
             <scope>system</scope>
         </dependency>
         <dependency>
-            <groupId>javax.jms</groupId>
-            <artifactId>jms</artifactId>
-            <version>1.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/jms-1.1.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>com.ibm</groupId>
             <artifactId>com.ibm.mqjms</artifactId>
-            <version>7.5.0.5</version>
+            <version>9.0.1.0</version>
             <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.mqjms.jar</systemPath>
             <scope>system</scope>
         </dependency>
-        <dependency>
-            <groupId>com.ibm</groupId>
-            <artifactId>com.ibm.mq</artifactId>
-            <version>7.5.0.5</version>
-            <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.mq.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
-        <dependency>
-            <groupId>ru.rbt</groupId>
-            <artifactId>barsgl-ejb-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!--        <dependency>
-                    <groupId>com.ibm</groupId>
-                    <artifactId>com.ibm.msg.client.wmq</artifactId>
-                    <version>7.5.0.5</version>
-                    <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.msg.client.wmq.jar</systemPath>
-                    <scope>system</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.ibm</groupId>
-                    <artifactId>com.ibm.msg.client.wmq.common</artifactId>
-                    <version>7.5.0.5</version>
-                    <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.msg.client.wmq.common.jar</systemPath>
-                    <scope>system</scope>
-                </dependency>-->
     </dependencies>
 
 <!--  <profiles>

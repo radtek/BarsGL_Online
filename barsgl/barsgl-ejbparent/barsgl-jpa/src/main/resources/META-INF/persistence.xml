@@ -1,75 +1,125 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
-    <persistence-unit name="GLOracleDataSource" transaction-type="JTA">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
-        <jta-data-source>jdbc/OracleGL</jta-data-source>                         
-        <mapping-file>META-INF/fix-orm.xml</mapping-file>
-
-        <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
-        <class>ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob</class>
-        <class>ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob</class>
-        <class>ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob</class>
-
-        <class>ru.rbt.barsgl.ejb.common.mapping.od.Operday</class>
-        <class>ru.rbt.barsgl.ejb.common.mapping.od.Operday</class>
-        <class>ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId</class>
-        <class>ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay</class>
-
-        <class>ru.rbt.barsgl.ejbcore.conf.map.ConfigNode</class>
-        <class>ru.rbt.barsgl.ejbcore.conf.map.AbstractConfigProperty</class>
-        <class>ru.rbt.barsgl.ejbcore.conf.map.DecimalProperty</class>
-        <class>ru.rbt.barsgl.ejbcore.conf.map.StringProperty</class>
-        <class>ru.rbt.barsgl.ejbcore.conf.map.NumberProperty</class>
-
-        <class>ru.rbt.barsgl.audit.entity.AuditRecord</class>
-        
-        <class>ru.rbt.tasks.ejb.entity.task.JobHistory</class>
-        
-        <class>ru.rbt.security.ejb.entity.AppUser</class>
-        <class>ru.rbt.security.ejb.entity.access.PrmValue</class>
-        <class>ru.rbt.security.ejb.entity.access.PrmValueHistory</class>
-        <class>ru.rbt.security.ejb.entity.access.Role</class>
-        <class>ru.rbt.security.ejb.entity.access.SecurityAction</class>
-        <class>ru.rbt.security.ejb.entity.access.SecurityActionGroup</class>
-        <class>ru.rbt.security.ejb.entity.access.SecurityRoleActionRln</class>
-        <class>ru.rbt.security.ejb.entity.access.UserMenuActionRln</class>
-        <class>ru.rbt.security.ejb.entity.access.UserMenuItem</class>
-        <class>ru.rbt.security.ejb.entity.access.UserRoleRln</class>
-        
-        <exclude-unlisted-classes>false</exclude-unlisted-classes>
-
-        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
-
-        <properties>
-            <property name="eclipselink.ddl-generation" value="none"/>
-            <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
-            <property name="eclipselink.target-database" value="Oracle"/>
-            <property name="eclipselink.target-server" value="WebLogic"/>
-            <property name="eclipselink.logging.logger" value="ServerLogger"/>
-            <property name="eclipselink.logging.session" value="true"/>
-            <property name="eclipselink.logging.level" value="FINE"/>
-            <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
-        </properties>
-    </persistence-unit>
-	<persistence-unit name="RepAS400DataSource" transaction-type="JTA">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
-        <jta-data-source>jdbc/As400Rep</jta-data-source>
-
-        <exclude-unlisted-classes>false</exclude-unlisted-classes>
-
-        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
-
-        <properties>
-            <property name="eclipselink.ddl-generation" value="none"/>
-            <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
-            <property name="eclipselink.target-database" value="Oracle"/>
-            <property name="eclipselink.target-server" value="WebLogic"/>
-            <property name="eclipselink.logging.logger" value="ServerLogger"/>
-            <property name="eclipselink.logging.session" value="true"/>
-            <property name="eclipselink.logging.level" value="FINE"/>
-            <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
-        </properties>
-    </persistence-unit>
+  <persistence-unit name="GLOracleDataSource" transaction-type="JTA">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
+    <jta-data-source>jdbc/OracleGL</jta-data-source>
+    <mapping-file>META-INF/fix-orm.xml</mapping-file>
+    
+    <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
+    <class>ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob</class>
+    <class>ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob</class>
+    <class>ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob</class>
+    
+    <class>ru.rbt.barsgl.ejb.common.mapping.od.Operday</class>
+    <class>ru.rbt.barsgl.ejb.common.mapping.od.Operday</class>
+    <class>ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId</class>
+    <class>ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay</class>
+    
+    <class>ru.rbt.barsgl.ejbcore.conf.map.ConfigNode</class>
+    <class>ru.rbt.barsgl.ejbcore.conf.map.AbstractConfigProperty</class>
+    <class>ru.rbt.barsgl.ejbcore.conf.map.DecimalProperty</class>
+    <class>ru.rbt.barsgl.ejbcore.conf.map.StringProperty</class>
+    <class>ru.rbt.barsgl.ejbcore.conf.map.NumberProperty</class>
+    
+    <class>ru.rbt.barsgl.audit.entity.AuditRecord</class>
+    
+    <class>ru.rbt.tasks.ejb.entity.task.JobHistory</class>
+    
+    <class>ru.rbt.security.ejb.entity.AppUser</class>
+    <class>ru.rbt.security.ejb.entity.access.PrmValue</class>
+    <class>ru.rbt.security.ejb.entity.access.PrmValueHistory</class>
+    <class>ru.rbt.security.ejb.entity.access.Role</class>
+    <class>ru.rbt.security.ejb.entity.access.SecurityAction</class>
+    <class>ru.rbt.security.ejb.entity.access.SecurityActionGroup</class>
+    <class>ru.rbt.security.ejb.entity.access.SecurityRoleActionRln</class>
+    <class>ru.rbt.security.ejb.entity.access.UserMenuActionRln</class>
+    <class>ru.rbt.security.ejb.entity.access.UserMenuItem</class>
+    <class>ru.rbt.security.ejb.entity.access.UserRoleRln</class>
+    
+    <!-- from barsgl-ejb-->
+    <class>ru.rbt.barsgl.ejb.entity.dict.CurrencyRate</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.AclirqJournal</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.AcDNJournal</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.AcDNJournalData</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.AcbalirqJournal</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.Acc</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.BsaAcc</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.GLAccount</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.GlAccRln</class>
+    <class>ru.rbt.barsgl.ejb.entity.acc.GlExcacRln</class>
+    <class>ru.rbt.barsgl.ejb.entity.card.CardPst</class>
+    <class>ru.rbt.barsgl.ejb.entity.card.CardXls</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.ActLog</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.ActSrc</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.Modifier</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.Product</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.Section</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccType.SubProduct</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.AccountingType</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.Acod</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.BankCurrency</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.Department</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.OperationTemplate</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.ProfitCenter</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.PropertyType</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.SourcesDeals</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam</class>
+    <class>ru.rbt.barsgl.ejb.entity.dict.TypesOfTerms</class>
+    <class>ru.rbt.barsgl.ejb.entity.etl.BatchPackage</class>
+    <class>ru.rbt.barsgl.ejb.entity.etl.BatchPosting</class>
+    <class>ru.rbt.barsgl.ejb.entity.etl.EtlAccount</class>
+    <class>ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRate</class>
+    <class>ru.rbt.barsgl.ejb.entity.etl.EtlPackage</class>
+    <class>ru.rbt.barsgl.ejb.entity.etl.EtlPosting</class>
+    <class>ru.rbt.barsgl.ejb.entity.flx.FanNdsPosting</class>
+    <class>ru.rbt.barsgl.ejb.entity.flx.NdsPosting</class>
+    <class>ru.rbt.barsgl.ejb.entity.flx.TransitNdsReference</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.GLBalanceExclude</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.GLBsaAccLock</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.GLManualOperation</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.GLOperation</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.GLPd</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.GLPosting</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.Memorder</class>
+    <class>ru.rbt.barsgl.ejb.entity.gl.Pd</class>
+    <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskPattern</class>
+    <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep</class>
+    <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepPattern</class>
+    <class>ru.rbt.barsgl.ejb.entity.loader.LoadManagement</class>
+    
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+    <properties>
+      <property name="eclipselink.ddl-generation" value="none"/>
+      <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
+      <property name="eclipselink.target-database" value="Oracle"/>
+      <property name="eclipselink.target-server" value="WebLogic"/>
+      <property name="eclipselink.logging.logger" value="ServerLogger"/>
+      <property name="eclipselink.logging.session" value="true"/>
+      <property name="eclipselink.logging.level" value="FINE"/>
+      <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
+    </properties>
+  </persistence-unit>
+  <persistence-unit name="RepAS400DataSource" transaction-type="JTA">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
+    <jta-data-source>jdbc/As400Rep</jta-data-source>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+    <properties>
+      <property name="eclipselink.ddl-generation" value="none"/>
+      <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
+      <property name="eclipselink.target-database" value="Oracle"/>
+      <property name="eclipselink.target-server" value="WebLogic"/>
+      <property name="eclipselink.logging.logger" value="ServerLogger"/>
+      <property name="eclipselink.logging.session" value="true"/>
+      <property name="eclipselink.logging.level" value="FINE"/>
+      <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
+    </properties>
+  </persistence-unit>
 </persistence>
