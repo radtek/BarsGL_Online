@@ -52,7 +52,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getCompanyCode(String bsaAcid) {
         try {
-            String sql = "select BRCA from BSAACC B where B.ID = ? with ur";
+            String sql = "select BRCA from BSAACC B where B.ID = ?";
             DataRecord res = selectFirst(sql, bsaAcid);
             return (null != res) ? res.getString("BRCA") : "";
         } catch (SQLException e) {
@@ -421,9 +421,9 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public DataRecord getAcidByAccRln(String bsaAcid, Date valDate) {
         String rln = bsaAcid.substring(0, 1).equals("7") ? "'2', '5'" : "'0', '4', '1'";   // RLNTYPE
-        String sql = "select VALUE(ACID, '') ACID, PLCODE, CTYPE from ACCRLN " +
+        String sql = "select NVL(ACID, ' ') ACID, PLCODE, CTYPE from ACCRLN " +
                          "where ? = BSAACID and ? between DRLNO and DRLNC " +
-                         "and RLNTYPE in (" + rln + ") order by RLNTYPE with UR";
+                         "and RLNTYPE in (" + rln + ") order by RLNTYPE";
         try {
             DataRecord res = selectFirst(sql, bsaAcid, valDate);
             return res;

@@ -16,6 +16,7 @@ import javax.persistence.*;
 import javax.sql.DataSource;
 import javax.transaction.TransactionSynchronizationRegistry;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -379,13 +380,13 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public Long nextId(EntityManager persistence, String sequenceName) {
-        Long id = (Long) persistence.createNativeQuery("select (next value for " + sequenceName + ") id_seq from sysibm.sysdummy1").getSingleResult();
-        return id;
+        return ((BigDecimal) persistence.createNativeQuery("select "
+                + sequenceName + ".nextval id_seq from dual").getSingleResult()).longValue();
     }
 
     @Override
     public Integer nextIntegerId(DataSource dataSource, String sequenceName) throws SQLException {
-        return selectOne(dataSource, "select (next value for " + sequenceName + ") id_seq from sysibm.sysdummy1").getInteger("id_seq");
+        return selectOne(dataSource, "select (next value for " + sequenceName + ") id_seq from DUAL").getInteger("id_seq");
     }
 
     @Override

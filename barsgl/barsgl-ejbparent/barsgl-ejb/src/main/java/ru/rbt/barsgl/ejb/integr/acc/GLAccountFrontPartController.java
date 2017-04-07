@@ -5,7 +5,6 @@ import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.Builder;
 
 import javax.ejb.EJB;
 import java.sql.SQLException;
@@ -140,9 +139,9 @@ public class GLAccountFrontPartController {
         try {
             return Optional.ofNullable(repository.selectFirst(
                     "select r.bxbicc \n" +
-                    "  from dwh.sdcustpd r\n" +
+                    "  from sdcustpd r\n" +
                     " where r.bbcust = (select t.a8bicn \n" +
-                    "                      from dwh.imbcbbrp t\n" +
+                    "                      from imbcbbrp t\n" +
                     "                     where t.br_head ='Y'\n" +
                     "                       and t.bcbbr = ?)", cbccn))
                     .orElseThrow(() -> new DefaultApplicationException(format("Не найден БИК для клиента '%s'", cbccn))).getString("bxbicc");
@@ -164,25 +163,25 @@ public class GLAccountFrontPartController {
         if (isEmpty(plCode)) {
             // блокировка
             int cnt = repository.
-                    executeNativeUpdate("update GL_ACNOCNT set COUNT = COUNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD = ?",
+                    executeNativeUpdate("update GL_ACNOCNT set COUNT = COUNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD IS NULL",
                             requiredNotEmpty(acc2, "empty acc2"), requiredNotEmpty(currencyCodeAlpha, "empty currencyCodeAlpha")
-                            , requiredNotEmpty(companyCode, "empty companyCode"), ifEmpty(plCode, ""));
+                            , requiredNotEmpty(companyCode, "empty companyCode"));
             GLAccountCounterType type = GLAccountCounterType.ASSET_LIABILITY;
             String result;
             if (0 == cnt) {
-                repository.executeNativeUpdate("insert into GL_ACNOCNT (ACC2, CCYN, CBCCN, PLCOD, COUNT) values (?,?,?,?,?)"
-                        , acc2, currencyCodeAlpha, companyCode, ifEmpty(plCode, "")
+                repository.executeNativeUpdate("insert into GL_ACNOCNT (ACC2, CCYN, CBCCN, PLCOD, COUNT) values (?,?,?,NULL,?)"
+                        , acc2, currencyCodeAlpha, companyCode
                         , Integer.toString(type.getStartNumber()));
                 result = type.getDecimalFormat().format(type.getStartNumber());
             } else {
-                DataRecord record = repository.selectOne("select * from GL_ACNOCNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD = ?",
+                DataRecord record = repository.selectOne("select * from GL_ACNOCNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD IS NULL",
                         acc2, currencyCodeAlpha
-                        , companyCode, ifEmpty(plCode, ""));
+                        , companyCode);
                 int count = getNextNumberExcludesAware(type, record.getInteger("count"));
                 cnt = repository.
-                        executeNativeUpdate("update GL_ACNOCNT set COUNT = ? where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD = ?",
+                        executeNativeUpdate("update GL_ACNOCNT set COUNT = ? where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD IS NULL",
                                 count, acc2, currencyCodeAlpha
-                                , companyCode, ifEmpty(plCode, ""));
+                                , companyCode);
                 Assert.assertThat(1 == cnt);
                 result = type.getDecimalFormat().format(count);
             }

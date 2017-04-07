@@ -58,7 +58,7 @@ public class EtlPostingRepository extends AbstractBaseEntityRepository<EtlPostin
                 "     and p.id_pst not like '%*'\n" +
                 "     and not exists (select 1 from gl_etlpst o where o.id_pst = p.id_pst || '*' and p.id_pkg = o.id_pkg)\n" +
                 "     and ( not exists (select 1 from gl_oper o where o.id_pst = p.id_pst and o.state in ('POST', 'LOAD', 'WTAC'))\n" +
-                "      or p.ecode <> '0') with ur", 10000, etlPackage.getId());
+                "      or p.ecode <> '0')", 10000, etlPackage.getId());
         List<EtlPosting> allPostings = select(EtlPosting.class, "from EtlPosting p join fetch p.etlPackage k where k.id = ?1", etlPackage.getId());
         return allPostings.stream().filter(failedPostings::contains).collect(Collectors.toList());
     }

@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 
 /**
@@ -42,7 +43,7 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
             if (id == null) {
                 id = nextId("GL_SEQ_ACC");
                 executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?1,?2,?3,'1')"
-                        , id, Acid, Bsaacid);
+                        , id, ifEmpty(Acid, " "), Bsaacid);
             }
 //            if (id == null) throw new SQLException("not found glacid for " + Acid + "; " + Bsaacid);
         } catch (SQLException e) {

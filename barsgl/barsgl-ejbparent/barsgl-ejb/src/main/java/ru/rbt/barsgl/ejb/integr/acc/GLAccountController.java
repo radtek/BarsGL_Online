@@ -786,8 +786,8 @@ public class GLAccountController {
             if (!isNewNumber)
                 log.warn("Generated BSAACID: '" + bsaAcid + "' already exists");
         } while (!isNewNumber && count++ < 100);
-        Assert.isTrue(isNewNumber, format("Не удалось сформировать номер счета по ключам: acc2='%s', ccyn='%s', cbccn='%s', plcode='%s'",
-                acc2, ccyn, cbccn, plcode));
+        Assert.isTrue(isNewNumber, format("Не удалось сформировать номер счета по ключам: acc2='%s', ccyn='%s', cbccn='%s', plcode='%s'. Счет: '%s'",
+                acc2, ccyn, cbccn, plcode, bsaAcid));
 
         return bsaAcid;
     }

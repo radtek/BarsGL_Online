@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 //        Date operday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
         Date operday = DateUtils.parseDate("2016-03-23", "yyyy-MM-dd");
         setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN);
+
+        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaaco = ? where id like '93307392%'", DateUtils.parseDate("2015-01-01", "yyyy-MM-dd"));
     }
 
     /**
@@ -148,8 +151,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
         Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
         Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
-        Assert.assertEquals("", pdDr.getPref());
-        Assert.assertEquals("", pdCr.getPref());
+        Assert.assertEquals(null, pdDr.getPref());
+        Assert.assertEquals(null, pdCr.getPref());
 
         Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
@@ -571,12 +574,13 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
     }
 
-    @Test public void testJPY() throws ParseException {
+    @Test public void testJPY() throws ParseException, SQLException {
 
         setOperday(DateUtils.parseDate("2015-02-28", "yyyy-MM-dd")
-                , DateUtils.parseDate("2015-02-29", "yyyy-MM-dd"), ONLINE, OPEN);
+                , DateUtils.parseDate("2015-02-27", "yyyy-MM-dd"), ONLINE, OPEN);
 
         long stamp = System.currentTimeMillis();
+        final BankCurrency JPY = new BankCurrency("JPY");
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -586,13 +590,22 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
 
         pst.setAccountDebit("");
-        pst.setAccountKeyDebit("001;JPY;00200147;911020201;10;03;0000001326;0001;93307;;3002;01;K+TP;992030;");
-        pst.setAmountDebit(new BigDecimal("600000000.000"));
-        pst.setCurrencyDebit(new BankCurrency("JPY"));
 
-        pst.setAccountCredit("99997810600010000001");
-        pst.setAmountCredit(new BigDecimal("313273800.000"));
-        pst.setCurrencyCredit(BankCurrency.RUB);
+        String accdt = Optional.ofNullable(baseEntityRepository
+                .selectFirst("select bsaacid from accrln r, bsaacc b" +
+                        " where r.bsaacid like '47427392%' and r.bsaacid = b.id and bsaacc > ?"
+                        , getOperday().getCurrentDate()))
+                .orElseThrow(() -> new RuntimeException("Account debit not initialized")).getString(0);
+
+        pst.setAccountDebit(accdt);
+        pst.setAmountDebit(new BigDecimal("600000000.000"));
+        pst.setCurrencyDebit(JPY);
+
+        String creditAccount = findBsaAccount("40702392%", getOperday().getCurrentDate());
+
+        pst.setAccountCredit(creditAccount);
+        pst.setAmountCredit(pst.getAmountDebit());
+        pst.setCurrencyCredit(JPY);
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
@@ -606,18 +619,18 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         List<GLPosting> postList = getPostings(operation);
         Assert.assertNotNull(postList);                 // 1 проводка
-        Assert.assertEquals(postList.size(), 1);
+        Assert.assertEquals(1, postList.size());
 
         List<Pd> pdList = getPostingPd(postList.get(0));
         Pd pdDr = pdList.get(0);
         Pd pdCr = pdList.get(1);
         Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
         Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
-        Assert.assertEquals(pdCr.getCcy(), BankCurrency.RUB);
-        Assert.assertEquals(pdDr.getCcy(), new BankCurrency("JPY"));
+        Assert.assertEquals(JPY, pdCr.getCcy());
+        Assert.assertEquals(pdDr.getCcy(), JPY);
 
-        Assert.assertTrue(pdCr.getAmount() != -pdDr.getAmount());       // сумма в валюте дебет - кредит
-        Assert.assertEquals(operation.getAmountCredit().movePointRight(2).longValue()
+        Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
+        Assert.assertEquals(operation.getAmountCredit().longValue()
                 , pdCr.getAmount().longValue());  // сумма в валюте
         Assert.assertEquals(operation.getAmountDebit().longValue()
                 , -pdDr.getAmount().longValue());  // сумма в валюте
@@ -635,6 +648,10 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         final Date longPrev = DateUtils.parseDate("18.01.2015", "dd.MM.yyyy");
         Assert.assertFalse(remoteAccess.invoke(BankCalendarDayRepository.class, "isWorkday", longPrev));
         Date prev = DateUtils.parseDate("24.01.2015", "dd.MM.yyyy");
+
+        Assert.assertEquals(1, baseEntityRepository.executeUpdate("update BankCalendarDay c set c.holiday = ' ' where c.id.calendarCode = ?1 and c.id.calendarDate = ?2", "RUR", prev));
+        baseEntityRepository.executeUpdate("delete from BankCalendarDay c where c.id.calendarCode = ?1 and c.id.calendarDate = ?2", "RUR", DateUtils.parseDate("26.01.2015", "dd.MM.yyyy"));
+
         Date hold = DateUtils.parseDate("25.01.2015", "dd.MM.yyyy");
         Date curr = DateUtils.parseDate("27.01.2015", "dd.MM.yyyy");
         List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and hol <> 'X'"
@@ -752,10 +769,11 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         operation = (GLOperation) baseEntityRepository.selectFirst(GLOperation.class
                 , "from GLOperation o where o.id = ?1", operation.getId());
 
-        Assert.assertTrue(EnumUtils.contains(new OperState[]{OperState.ERCHK, OperState.WTAC}, operation.getState()));
+        Assert.assertTrue(operation.getState().name(), EnumUtils.contains(new OperState[]{OperState.ERCHK, OperState.WTAC}, operation.getState()));
 
         // подаем ошибочную проводку на вход обработчика ошибок
-        GLOperation operationTrans = remoteAccess.invoke(EtlTechnicalPostingController.class, "processMessage", pst);
+        GLOperation operationTrans = (GLOperation) Optional.ofNullable(remoteAccess.invoke(EtlTechnicalPostingController.class, "processMessage", pst))
+                .orElseThrow(() -> new RuntimeException("Operation is not created"));
         operationTrans = (GLOperation) baseEntityRepository.findById(GLOperation.class, operationTrans.getId());
         Assert.assertNotNull(operationTrans);
         Assert.assertEquals(OperState.POST, operationTrans.getState());
@@ -768,7 +786,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertEquals(clientAccount, transitPosting.getAccountCredit());
 
         GlAccRln rln = (GlAccRln) baseEntityRepository.findById(GlAccRln.class, new AccRlnId("", transitPosting.getAccountDebit()));
-        Assert.assertNotNull(rln);
+        Assert.assertNotNull(transitPosting.getAccountDebit(), rln);
+
         Assert.assertEquals(RelationType.E, RelationType.parse(rln.getRelationType()));
         Assert.assertEquals(new Integer("0"), transitPosting.getErrorCode());
         Assert.assertEquals("SUCCESS", transitPosting.getErrorMessage());

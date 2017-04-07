@@ -244,7 +244,7 @@ public class RoleServiceSupport {
 
             if (all){
                  sql = "select  id_src,  lgnm from (\n" +
-                       "select '*'  as  id_src, 'Все'  as  lgnm from sysibm.sysdummy1\n" +
+                       "select '*'  as  id_src, 'Все'  as  lgnm from DUAL\n" +
                        "union\n" +
                        "select id_src, lgnm from GL_SRCPST) t\n" +
                        "where t. id_src not in (select id_src from V_GL_AU_USRPR where id_user=?)";
@@ -308,7 +308,7 @@ public class RoleServiceSupport {
 
             if (all){
                 sql = "select CCPCD, CCPNR, CCBBR from\n" +
-                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from sysibm.sysdummy1\n" +
+                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from DUAL\n" +
                       "union\n" +
                       "select CCPCD, CCPNR, CCBBR from IMBCBCMP) t\n" +
                       "where t.CCPCD not in (select CCPCD from  V_GL_AU_USRBR where id_user=?)";

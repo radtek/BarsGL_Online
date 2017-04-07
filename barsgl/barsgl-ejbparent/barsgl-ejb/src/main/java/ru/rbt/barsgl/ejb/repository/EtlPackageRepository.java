@@ -28,7 +28,7 @@ public class EtlPackageRepository extends AbstractBaseEntityRepository<EtlPackag
         try {
             return selectMaxRows("SELECT * FROM GL_ETLPKG WHERE STATE = ? AND DT_LOAD >= ? AND DT_LOAD < ? " +
                     "and ID_PKG not in (select ID_PKG from GL_ETLPST where VDATE > ?) " +
-                    "ORDER BY ID_PKG WITH UR"
+                    "ORDER BY ID_PKG"
                     , packageCount, new Object[]{EtlPackage.PackageState.LOADED.name(), from, to, curdate});
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -48,7 +48,7 @@ public class EtlPackageRepository extends AbstractBaseEntityRepository<EtlPackag
     public String getPackageStatistics(Date from, Date to) {
         String sql = "select G.ID_PKG, G.DT_LOAD, P.VD from GL_ETLPKG G " +
                 "join (select ID_PKG, max(VDATE) VD from GL_ETLPST group by ID_PKG, VDATE order by ID_PKG desc) P on G.ID_PKG = P.ID_PKG " +
-                "where G.STATE = 'LOADED' and DT_LOAD >= ? and DT_LOAD < ? order by ID_PKG with UR";
+                "where G.STATE = 'LOADED' and DT_LOAD >= ? and DT_LOAD < ? order by ID_PKG";
         try {
             List<DataRecord> listRec = select(sql, from, to);
             StringBuilder builder = new StringBuilder();

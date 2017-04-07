@@ -1,27 +1,29 @@
 package ru.rbt.barsgl.ejb.entity.acc;
 
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.leftSpace;
 
 /**
  * Created by ER18837 on 28.04.15.
  */
 @Embeddable
-//@MappedSuperclass
 public class AccRlnId implements Serializable {
-    @Column(name = "ACID")
+    @Column(name = "ACID", length = 20, columnDefinition = "CHAR")
     private String acid;
 
-    @Column(name = "BSAACID")
+    @Column(name = "BSAACID", length = 20, columnDefinition = "CHAR")
     private String bsaAcid;
 
     public AccRlnId() {
     }
 
     public AccRlnId(String acid, String bsaAcid) {
-        this.acid = acid;
-        this.bsaAcid = bsaAcid;
+        this.acid = leftSpace(acid, 20);
+        this.bsaAcid = leftSpace(bsaAcid, 20);
     }
 
     public String getAcid() {
@@ -33,11 +35,11 @@ public class AccRlnId implements Serializable {
     }
 
     public void setAcid(String acid) {
-        this.acid = acid;
+        this.acid = leftSpace(acid, 20);
     }
 
     public void setBsaAcid(String bsaAcid) {
-        this.bsaAcid = bsaAcid;
+        this.bsaAcid = leftSpace(bsaAcid, 20);
     }
 
     @Override

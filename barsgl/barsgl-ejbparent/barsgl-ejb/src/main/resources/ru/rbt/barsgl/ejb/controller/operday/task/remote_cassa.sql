@@ -43,7 +43,7 @@ select  v.dat
         end ctrnrur
         , bb.obac + bb.dtac + bb.ctac balout
         , bb.obbc + bb.dtbc + bb.ctbc baloutrur
-  from gl_acc ac, baltur bb, (select date('$1') dat from sysibm.sysdummy1) v
+  from gl_acc ac, baltur bb, (select date('$1') dat from DUAL) v
  where ac.acc2 = '20208' and dtc is null
    and ac.bsaacid = bb.bsaacid and bb.acid = ac.acid
    and v.dat between bb.dat and bb.datto

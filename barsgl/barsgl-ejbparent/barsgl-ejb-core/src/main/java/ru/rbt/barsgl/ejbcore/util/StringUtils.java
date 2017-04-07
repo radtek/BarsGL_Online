@@ -147,4 +147,12 @@ public class StringUtils {
         }
         return sb.toString();
     }
+
+    public static String leftPad(String string, int size, String padString) {
+        return org.apache.commons.lang3.StringUtils.leftPad(string, size, padString);
+    }
+
+    public static String leftSpace(String string, int size) {
+        return leftPad(string, size, " ");
+    }
 }

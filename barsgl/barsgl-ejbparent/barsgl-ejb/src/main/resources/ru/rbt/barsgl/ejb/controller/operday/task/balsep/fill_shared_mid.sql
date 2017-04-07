@@ -6,7 +6,7 @@ select v.acid
          end rlntype
        , sum(case when v.drcr = 0 then v.psta else 0 end) trnv_drmid
        , sum(case when v.drcr = 1 then v.psta else 0 end) trnv_crmid
-  from gl_shacod s, acc a, (select value(?, date('2029-01-01')) curdate from sysibm.sysdummy1) od,
+  from gl_shacod s, acc a, (select value(?, date('2029-01-01')) curdate from DUAL) od,
       (
          select right('00000000'||e.cnum, 8)||e.ccy||e.acod||right('00'||e.acsq, 2)||e.brca acid, e.*
            from M10MMDWH.EODPOPD e

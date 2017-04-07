@@ -14,7 +14,6 @@ import ru.rbt.barsgl.ejb.entity.flx.NdsPosting;
 import ru.rbt.barsgl.ejb.entity.flx.TransitNdsReference;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -22,7 +21,6 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -98,7 +96,7 @@ public class FanNdsPostingTest extends AbstractRemoteTest {
     }
 
     private Pd createPd(Date operday, String transBsaacid, String transAcid) throws SQLException {
-        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
+        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from DUAL").getLong(0);
         baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
                 "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", 100,100, "@@IF123", "1234");
 

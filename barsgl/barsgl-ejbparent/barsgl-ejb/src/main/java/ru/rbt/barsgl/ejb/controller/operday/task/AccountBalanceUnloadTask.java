@@ -102,7 +102,7 @@ public class AccountBalanceUnloadTask implements ParamsAwareRunnable {
                     "insert into GL_ETLDWHS (PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD,END_LOAD) values (?,?,?,?,?,?)"
                     , unloadParams.getParamName(), STARTED.getFlag(), unloadParams.getParamDesc()
                     , operdate, operdayController.getSystemDateTime(), null);
-            return repository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
+            return repository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM DUAL").getLong("id");
         });
     }
 

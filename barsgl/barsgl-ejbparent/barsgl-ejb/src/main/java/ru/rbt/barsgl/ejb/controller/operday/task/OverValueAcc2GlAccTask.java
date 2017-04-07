@@ -52,9 +52,9 @@ public class OverValueAcc2GlAccTask implements ParamsAwareRunnable {
         try {
             if (checkRun(properties, executeDate)) {
                 headerId = taskUtils.createHeaders(DwhUnloadParams.UnloadOverValueAcc, executeDate);
-                DataRecord ret = repository.selectFirst("select GL_OVERVALUE_ACC() from sysibm.sysdummy1", new Object[]{});
+                DataRecord ret = repository.selectFirst("select GL_OVERVALUE_ACC() from DUAL", new Object[]{});
                 auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов переоценки", ret.getBigInteger(0)));
-                ret = repository.selectFirst("select GL_EXCHANGE_ACC() from sysibm.sysdummy1", new Object[]{});
+                ret = repository.selectFirst("select GL_EXCHANGE_ACC() from DUAL", new Object[]{});
                 auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов курсовой", ret.getBigInteger(0)));
 
                 taskUtils.setResultStatus(headerId, DwhUnloadStatus.SUCCEDED);

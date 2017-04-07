@@ -6,7 +6,7 @@ select min(v.pod) min_pod, v.max_pod, v.acid
                 when substr(a.id, 9, 3) = 'RUR' and s.bstype = '2' then 1
                 else 0
            end cur_flag
-      from gl_oper o, (select value(?, date('2029-01-01')) curdate from sysibm.sysdummy1) od, gl_posting ps, pd d,  gl_shacod s, acc a
+      from gl_oper o, (select value(?, date('2029-01-01')) curdate from DUAL) od, gl_posting ps, pd d,  gl_shacod s, acc a
      where ps.pcid = d.pcid
        and ps.glo_ref = o.gloid
        and o.procdate = od.curdate

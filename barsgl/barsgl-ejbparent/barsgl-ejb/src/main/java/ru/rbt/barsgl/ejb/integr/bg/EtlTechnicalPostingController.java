@@ -28,11 +28,9 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -116,7 +114,7 @@ public class EtlTechnicalPostingController implements EtlMessageController<EtlPo
     }
 
     private OperSide getStamtActuality(EtlPosting posting) throws SQLException {
-        final String sql = "select GL_STMFILTER('%s') fl from sysibm.sysdummy1";
+        final String sql = "select GL_STMFILTER('%s') fl from dual";
         String isDt = etlPostingRepository.selectFirst(format(sql, posting.getAccountDebit())).getString("fl");
         String isCt = etlPostingRepository.selectFirst(format(sql, posting.getAccountCredit())).getString("fl");
         return isCt.equals("1") ? OperSide.C : (isDt.equals("1") ? OperSide.D : OperSide.N);

@@ -45,8 +45,8 @@ import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
-import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.barsgl.shared.ExceptionUtils.findException;
+import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -512,7 +512,14 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         final String errorMessage = format("%s '%s': %s. Обнаружена: %s\n'", msg, operation.getId(), getErrorMessage(e), source);
         log.error(errorMessage, e);
         operationRepository.executeInNewTransaction(persistence -> {
-            operationRepository.updateOperationStatusError(operation, state, substr(errorMessage, 4000));
+            OperState targetState;
+            if (null == findException(e, ValidationError.class) && state == ERCHK) {
+                // подавляем установку флага ошибки валидации при общих неконтролируемых ошибках
+                targetState = ERROR;
+            } else {
+                targetState = state;
+            }
+            operationRepository.updateOperationStatusError(operation, targetState, substr(errorMessage, 4000));
             return null;
         });
     }

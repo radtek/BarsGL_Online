@@ -197,7 +197,7 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
         try {
             List<DataRecord> res = selectMaxRows("SELECT * FROM GL_BATPKG WHERE STATE in (?, ?) AND PROCDATE = ?  " +
                             "and ID_PKG not in (select ID_PKG from GL_BATPST where not ID_PKG is null and POSTDATE > ?) " +
-                            "ORDER BY ID_PKG WITH UR"
+                            "ORDER BY ID_PKG"
                     , packageCount, new Object[]{ IS_SIGNED.name(), IS_SIGNEDDATE.name(), curdate, curdate});
             return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
         } catch (SQLException e) {
@@ -208,7 +208,7 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
     public String getPackagesStatistics(Date curdate) {
         try {
             List<DataRecord> listRec = select("select ID_PKG, DT_LOAD, POSTDATE from GL_BATPKG " +
-                        "where STATE in (?, ?) and PROCDATE = ? order by ID_PKG with UR"
+                        "where STATE in (?, ?) and PROCDATE = ? order by ID_PKG"
                     , IS_SIGNED.name(), IS_SIGNEDDATE.name(), curdate);
             StringBuilder builder = new StringBuilder();
             for (DataRecord rec : listRec) {
