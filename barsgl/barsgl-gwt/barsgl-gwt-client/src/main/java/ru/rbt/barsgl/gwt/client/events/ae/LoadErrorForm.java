@@ -44,15 +44,6 @@ public class LoadErrorForm extends GridForm {
     protected Table prepareTable() {
         Table result = new Table();
 
-        /*
-        ID_PKG, CR_DT, PST_REF, GLOID, INP_METHOD, STATE,
-	    ID_PST, SRC_PST, EVTP, VDATE, PROCDATE, POSTDATE,
-	    DEAL_ID, SUBDEALID, PMT_REF,
-	    AC_DR, CCY_DR, AMT_DR, AMTRU_DR, ACCKEY_DR,
-	    AC_CR, CCY_CR, AMT_CR, AMTRU_CR, ACCKEY_CR,
-	    NRT, STRN, STRNRF, FAN, PAR_RF,
-	    EMSG, CURDATE, LWD_STATUS
-        */
         result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60, false, false));
         result.addColumn(new Column("CR_DT", Column.Type.DATETIME, "Дата время обработки", 130));
         result.addColumn(colProcDate = new Column("DT_FILTER", Column.Type.DATE, "Дата обработки", 80, false, false));
@@ -87,9 +78,9 @@ public class LoadErrorForm extends GridForm {
         result.addColumn(new Column("ACCKEY_CR", Column.Type.STRING, "Ключи счета КР", 400));
 
         result.addColumn(new Column("STRN", Column.Type.STRING, "Сторно", 40));
-        result.addColumn(new Column("STRNRF", Column.Type.STRING, "Сторно операция", 80, false, false));
+        result.addColumn(new Column("STRNRF", Column.Type.STRING, "ИД сторно", 80, false, false));
         result.addColumn(new Column("FAN", Column.Type.STRING, "Веер", 40));
-        result.addColumn(new Column("PAR_RF", Column.Type.STRING, "Голова веера", 80, false, false));
+        result.addColumn(new Column("PAR_RF", Column.Type.STRING, "ИД веера", 80, false, false));
         result.addColumn(new Column("NRT", Column.Type.STRING, "Назначение", 175));
 
         result.addColumn(new Column("EMSG", Column.Type.STRING, "Описание ошибки", 1275));

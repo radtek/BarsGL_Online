@@ -123,6 +123,7 @@ public class OperationPostingForm extends MDForm {
         result.addColumn(col = new Column("FAN", STRING, "Веер", 50));
         col.setList(yesNoList);
         result.addColumn(new Column("PAR_GLO", LONG, "Голова веера", 70, false, false));
+        result.addColumn(new Column("PAR_RF", STRING, "ИД веера", 70, false, false));
         result.addColumn(col = new Column("STRN", STRING, "Сторно", 50));
         col.setList(yesNoList);
         result.addColumn(new Column("STRN_GLO", LONG, "Сторно операция", 70, false, false));
