@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
@@ -18,7 +17,9 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
+import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -869,9 +870,12 @@ public class EtlMessageTest extends AbstractTimerJobTest {
      * обработка при выполнении задачи мониторинга сообщ АЕ
      * @throws SQLException
      */
-    @Ignore // ошибка при backvalue
+    // ошибка при backvalue
     @Test public void testClientErrorsMonitor() throws Exception {
         updateOperday(ONLINE,OPEN);
+
+        Assert.assertEquals(1, baseEntityRepository.executeUpdate("update StringProperty p set p.value = ?1 where p.id = ?2", "1", ConfigProperty.ClientTransitReprocess.getValue()));
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
 
         log.info("updated = " + baseEntityRepository.executeNativeUpdate("update gl_etlpkg set dt_load = ? where dt_load > ?"
             , DateUtils.addDays(new Date(), -10), DateUtils.addDays(new Date(), -10)));
