@@ -7,7 +7,6 @@ import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
@@ -20,6 +19,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
 /**
@@ -28,7 +28,9 @@ import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 @Stateless
 @LocalBean
 public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStatistics, CobStatId> {
-    public static final String MSG_DELIMITER = "'; ' || CHR(10)";
+    public static final String MSG_DELIMITER = "; \n";
+    public static final int MSG_LEN = 1024;
+    public static final int ERR_LEN = 4000;
 
     public Long createCobStepGroup(Date curdate) {
         Long idCob = nextId("SEQ_GL_COB");
@@ -104,41 +106,60 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 newEstimate, idCob, phaseNo, Running.name(), oldEstimate);
     }
 
+/*
     private String getJointMessage(String message, boolean withDelim) {
         if (StringUtils.isEmpty(message))
             return "MESSAGE";
-        else
-            return "MESSAGE || " + (withDelim ? MSG_DELIMITER : "'; '") + " || '" + message.replace("'", "''") + "'";
+        else {
+            String delim = withDelim ? MSG_DELIMITER : "'; '";
+            return substr("MESSAGE || " + delim + " || '" + message.replace("'", "''") + "'", 1024);
+        }
+    }
+*/
+
+    private String getJointMessage(Long idCob, Integer phaseNo, String message, boolean withDelim) {
+        String msg = "";
+        String joined = withDelim ? MSG_DELIMITER : "; ";
+        try {
+            DataRecord res = selectFirst("select MESSAGE from GL_COB_STAT  where ID_COB = ? and PHASE_NO = ?", idCob, phaseNo);
+            msg = res.getString(0);
+            joined = msg + joined;
+        } catch (SQLException e) {
+            return substr(message, MSG_LEN);
+        }
+        if (joined.length() > MSG_LEN)
+            return msg;
+        return joined + substr(message, MSG_LEN - joined.length());
     }
 
     public int setStepStart(Long idCob, Integer phaseNo, Date timestamp, String message) {
         return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_START = ?, DURATION = ESTIMATED, MESSAGE = ? " +
                 " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                Running.name(), timestamp, message, idCob, phaseNo, NotStart.name());
+                Running.name(), timestamp, substr(message, 1024), idCob, phaseNo, NotStart.name());
     }
 
     public int setStepSkipped(Long idCob, Integer phaseNo, Date timestamp, String message, boolean withDelim) {
-        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, DURATION = 0, MESSAGE = " + getJointMessage(message, withDelim) +
-                        " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                Skipped.name(), timestamp, idCob, phaseNo, Running.name());
+        return executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, DURATION = 0, MESSAGE = ? " +
+                " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
+                Skipped.name(), timestamp, getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo, Running.name());
     }
 
     public int setStepSuccess(Long idCob, Integer phaseNo, Date timestamp, String message, boolean withDelim) {
-        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = " + getJointMessage(message, withDelim) +
+        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = ? " +
                 " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
-                Success.name(), timestamp, idCob, phaseNo, Running.name());
+                Success.name(), timestamp, getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo, Running.name());
         if (cnt == 1) {
             cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
-                        " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
+                    " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                     idCob, phaseNo, Success.name());
         }
         return cnt;
     }
 
     public int setStepError(Long idCob, Integer phaseNo, Date timestamp, String message, String errorMessage, CobStepStatus status, boolean withDelim) {
-        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, MESSAGE = " + getJointMessage(message, withDelim) + ", ERRORMSG = ? " +
+        int cnt = executeNativeUpdate("update GL_COB_STAT set STATUS = ?, OTS_END = ?, ERRORMSG = ?, MESSAGE = ? " +
                         " where ID_COB = ? and PHASE_NO = ?",
-                status.name(), timestamp, errorMessage, idCob, phaseNo);
+                status.name(), timestamp, substr(errorMessage, ERR_LEN), getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo);
         if (cnt == 1) {
             cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
                             " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
@@ -148,9 +169,9 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int updateStepMessage(Long idCob, Integer phaseNo, String message, boolean withDelim) {
-        return executeNativeUpdate("update GL_COB_STAT set MESSAGE = " + getJointMessage(message, withDelim) +
+        return executeNativeUpdate("update GL_COB_STAT set MESSAGE = ? " +
                         " where ID_COB = ? and PHASE_NO = ?",
-                idCob, phaseNo);
+                getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo);
     }
 
     public Long getMaxCobId() throws SQLException {

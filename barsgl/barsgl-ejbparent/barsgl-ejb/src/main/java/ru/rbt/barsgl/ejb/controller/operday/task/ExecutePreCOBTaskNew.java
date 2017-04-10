@@ -54,6 +54,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.shared.enums.CobPhase.*;
+import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
+import static ru.rbt.barsgl.shared.enums.CobStepStatus.Halt;
 
 /**
  * Created by Ivan Sevastyanov
@@ -197,11 +199,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                 , dateUtils.onlyDateString(operday.getCurrentDate()));
         try {
             if (!synchronizationController.waitStopProcessingOnly()) {
-                return new CobStepResult(CobStepStatus.Halt, msgBad, "Истекло время ожидания");
+                return new CobStepResult(Halt, msgBad, "Истекло время ожидания");
             }
             return new CobStepResult(CobStepStatus.Success, "Обработка проводок остановлена успешно");
         } catch (Throwable t) {
-            return new CobStepResult(CobStepStatus.Halt, msgBad, getErrorMessage(t));
+            return stepErrorResult(Halt, msgBad, t);
         }
     }
 
@@ -232,12 +234,12 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                     });
                     return new CobStepResult(CobStepStatus.Success, "Синхронизация проводок завершена успешно");
                 } else {
-                    return new CobStepResult(CobStepStatus.Halt,
+                    return new CobStepResult(Halt,
                             "Синхронизация проводок не завершена. Закрытие операционного дня прервано", "Превышено время обработки");
                 }
             } catch (Exception e) {
-                return new CobStepResult(CobStepStatus.Halt,
-                        "Синхронизация проводок не завершена. Закрытие операционного дня прервано", getErrorMessage(e));
+                return stepErrorResult(Halt,
+                        "Синхронизация проводок не завершена. Закрытие операционного дня прервано", e);
             }
         } else {
             return new CobStepResult(CobStepStatus.Skipped, format("Режим ввода проводок '%s'. Синхронизация не требуется", operdayController.getOperday().getPdMode()));
@@ -273,7 +275,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                 }
             });
         } catch (Throwable e) {
-            return new CobStepResult(CobStepStatus.Error, "Ошибка обработки необработанных запросов на операцию", getErrorMessage(e));
+            return stepErrorResult(Error, "Ошибка обработки необработанных запросов на операцию", e);
         }
     }
 
@@ -290,7 +292,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                         etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
             });
         } catch (Exception e) {
-            return new CobStepResult(CobStepStatus.Error, "Ошибка при повторной обработке сторно", getErrorMessage(e));
+            return stepErrorResult(Error, "Ошибка при повторной обработке сторно", e);
         }
     }
 
@@ -313,7 +315,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                 String msg = format("Ошибка запуска закрытия БАЛАНСА предыдущего ОД из задачи ЗАКРЫТИЯ ОД: '%s'"
                         , dateUtils.onlyDateString(operday.getCurrentDate()));
 //                auditController.error(AuditRecord.LogCode.Operday, msg, null, e);
-                return new CobStepResult(CobStepStatus.Halt, msg, getErrorMessage(e));
+                return stepErrorResult(Halt, msg, e);
             }
         }
         return checkCurrentState(idCob, phase);
@@ -331,7 +333,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         } catch (IllegalArgumentException e) {
             String msg = format("Невозможно закрыть ОД '%s'", dateUtils.onlyDateString(operday.getCurrentDate()));
 //            auditController.warning(AuditRecord.LogCode.Operday, msg, null, new ValidationError(CLOSE_OPERDAY_ERROR, e.getMessage()));
-            return new CobStepResult(CobStepStatus.Halt, msg, new ValidationError(CLOSE_OPERDAY_ERROR, e.getMessage()).getMessage());
+            return stepErrorResult(Halt, msg, new ValidationError(CLOSE_OPERDAY_ERROR, e.getMessage()));
         }
         return new CobStepResult(CobStepStatus.Success, "Баланс предыдущего дня закрыт");
     }
@@ -342,16 +344,21 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
      * @return
      */
     public CobStepResult processFan(Operday operday, Long idCob, CobPhase phase) {
+        // устанавливаем статус ОД
+        try {
+            // устанавливаем статус ОД
+            setPreCobState(idCob, phase);
+        } catch (Exception e) {
+            statError(idCob, phase, format("Ошибка установки операционного дня в статус %s", PRE_COB), e);
+        }
         try {
             return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
-                // устанавливаем статус ОД
-                setPreCobState(idCob, phase);
 
                 statInfo(idCob, phase, "Обработка вееров");
                 return beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> preCobStepController.processFan());
             });
         } catch (Exception e) {
-            return new CobStepResult(CobStepStatus.Error, "Ошибка при обработке вееров", getErrorMessage(e));
+            return stepErrorResult(Error, "Ошибка при обработке вееров", e);
         }
     }
 
@@ -374,7 +381,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         } catch (Exception e) {
             String msg = "Ошибка на этапе пересчета остатков / подавления дублей TBO";
             auditController.warning(AuditRecord.LogCode.Operday, msg, null, e);
-            return new CobStepResult(CobStepStatus.Halt, msg, getErrorMessage(e));
+            return stepErrorResult(Error, msg, e);
         }
         try {
             int cnt = (int) repository.executeInNewTransaction(persistence -> recalculateLocalization(idCob, phase));
@@ -382,7 +389,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         } catch (Exception e) {
             String msg = "Ошибка на этапе пересчета локализации";
             auditController.warning(AuditRecord.LogCode.Operday, msg, null, e);
-            return new CobStepResult(CobStepStatus.Halt, msg, getErrorMessage(e));
+            return stepErrorResult(Error, msg, e);
         }
         try {
             repository.executeInNewTransaction(persistence1 -> {
@@ -393,7 +400,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         } catch (Exception e) {
             String msg = format("Ошибка при установке состояния операционного дняв статус %s", COB);
             auditController.warning(AuditRecord.LogCode.Operday, msg, null, e);
-            return new CobStepResult(CobStepStatus.Halt, msg, getErrorMessage(e));
+            return stepErrorResult(Halt, msg, e);
         }
         try {
             return (CobStepResult) repository.executeInNewTransaction(p -> {
@@ -403,7 +410,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         } catch (Exception e) {
             String msg = "Ошибка разрешения запуска обработки проводок. Статус не изменен";
             auditController.warning(AuditRecord.LogCode.Operday, msg, null, e);
-            return new CobStepResult(CobStepStatus.Halt, msg, getErrorMessage(e));
+            return stepErrorResult(Halt, msg, e);
         }
     }
 
@@ -537,4 +544,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         statRecalculator.addStepError(idCob, phase, message, e);
     };
 
+    private CobStepResult stepErrorResult(CobStepStatus result, String message, Throwable e) {
+        auditController.error(PreCob, message, null, null, e);
+        return new CobStepResult(result, message, getErrorMessage(e));
+    };
 }

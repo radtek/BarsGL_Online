@@ -90,7 +90,7 @@ public class COBMonitoringDlg extends DlgFrame {
         AreaBox box = new AreaBox();
         box.setReadOnly(true);
         box.setHeight("50px");
-        box.setWidth("300px");
+        box.setWidth("400px");
         return box;
     }
 
@@ -120,7 +120,7 @@ public class COBMonitoringDlg extends DlgFrame {
         phaseTotalMsg = new AreaBox();
         phaseTotalMsg.setReadOnly(true);
         phaseTotalMsg.setHeight("50px");
-        phaseTotalMsg.setWidth("840px");
+        phaseTotalMsg.setWidth("940px");
         phaseTotalMsg.getElement().getStyle().setMarginBottom(10, Style.Unit.PX);
 
         VerticalPanel vp = new VerticalPanel();

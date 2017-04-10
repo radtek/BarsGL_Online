@@ -2,6 +2,8 @@ package ru.rbt.barsgl.shared.enums;
 
 import ru.rbt.barsgl.shared.HasLabel;
 
+import java.io.Serializable;
+
 /**
  * Created by ER18837 on 10.03.17.
  */

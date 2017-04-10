@@ -93,8 +93,13 @@ public class CobStatTest extends AbstractTimerJobTest  {
         Thread.sleep(2000L);
         checkGetInfo(wrapper, phaseLast, Running, Running);
 
-        remoteAccess.invoke(CobStatRecalculator.class, "setStepError", wrapper.getIdCob(), stepLast, phaseLast, "Шаг завершен с ошибкой",
-            "Ошибка при выполнении шага " + CobPhase.values()[0].name(), CobStepStatus.Error);
+        String longMsg = " 123456789";
+        for (int i = 0; i < 8; i++)
+            longMsg += longMsg;     // 10 * 2 ^ 8
+        remoteAccess.invoke(CobStatRecalculator.class, "addStepInfo", wrapper.getIdCob(), phaseFirst, longMsg);
+        remoteAccess.invoke(CobStatRecalculator.class, "setStepError", wrapper.getIdCob(), stepLast, phaseLast,
+                "Шаг завершен с ошибкой " + longMsg,
+                "Ошибка при выполнении шага " + CobPhase.values()[0].name(), CobStepStatus.Error);
         CobWrapper wrapper1 = checkGetInfo(wrapper, phaseLast, Error, Error);
         Assert.assertNotNull(wrapper1.getErrorMessage());
         System.out.println("ErrorMessage: " + wrapper1.getErrorMessage());

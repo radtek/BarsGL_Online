@@ -220,7 +220,7 @@ public class CobStatService {
             if (0 == BigDecimal.ZERO.compareTo(whole))
                 return ALL;
             else
-                return value.scaleByPowerOfTen(2).divide(whole, 6, BigDecimal.ROUND_CEILING);  // percent
+                return value.scaleByPowerOfTen(2).divide(whole, 6, BigDecimal.ROUND_CEILING).min(ALL);  // percent
         } catch (Throwable t) {
             auditController.error(AuditRecord.LogCode.PreCob,
                     String.format("Ошибка вычисления процента в интерфейс СОВ value = %s, whole = %s", value.toString(), whole.toString()),

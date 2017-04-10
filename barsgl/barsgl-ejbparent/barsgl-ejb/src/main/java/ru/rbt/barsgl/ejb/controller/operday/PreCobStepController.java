@@ -15,6 +15,7 @@ import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.JpaAccessCallback;
+import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
@@ -40,6 +41,7 @@ import static com.google.common.collect.Iterables.all;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PreCob;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by Ivan Sevastyanov
@@ -297,6 +299,17 @@ public class PreCobStepController {
      */
     private boolean validateFanOperation(String parentRef, FanOperationController fanOperationController, boolean isWtacPreStage) {
         boolean toContinue = false;
+        YesNo storno = fanOperationController.getStorno();
+        // получить все операции по вееру
+        List<GLOperation> fans;
+        try {
+            // получить все операции по вееру
+            fans = operationRepository.getFanOperationByRef(parentRef, storno);
+        } catch (Throwable e) {
+            fanOperationController.operationFanErrorMessage(e, format("Ошибка обработки веерных операций по референсу '%s'", parentRef),
+                    null, parentRef, storno, OperState.ERPROC, initSource());
+            return false;
+        }
         try {
             // получить все входные сообщения по вееру
             List<EtlPosting> etl = operationRepository.getFanPostingByRef(parentRef, fanOperationController.getStorno());
@@ -305,7 +318,7 @@ public class PreCobStepController {
                     , format("Для референса '%s' найдены веерные проводки, загруженные с ошибкой", parentRef));
 
             // получить все операции по вееру
-            List<GLOperation> fans = operationRepository.getFanOperationByRef(parentRef, fanOperationController.getStorno());
+//            List<GLOperation> fans = operationRepository.getFanOperationByRef(parentRef, fanOperationController.getStorno());
             auditController.info(PreCob, format("Для референса '%s' найдено '%s' частичных операций", parentRef, fans.size()));
             // Убедиться, что одинаковое число операций
             Assert.isTrue(etl.size() == fans.size()
@@ -328,8 +341,10 @@ public class PreCobStepController {
             }
 
         } catch (Throwable e) {
-            auditController.error(PreCob, format("Ошибка обработки веерных операций по референсу '%s'", parentRef), null, e);
-            // TODO надо ли писать ошибку в GL_ERRORS ?
+//            auditController.error(PreCob, format("Ошибка обработки веерных операций по референсу '%s'", parentRef), null, e);
+            fanOperationController.operationFanErrorMessage(e, format("Ошибка обработки веерных операций по референсу '%s'", parentRef),
+                    fans, parentRef, storno, OperState.ERPROC, initSource());
+            return false;
         }
 
         return toContinue;
