@@ -53,7 +53,7 @@ public class QueueProperties {
         this.mqPort = Integer.parseInt(Optional.ofNullable(properties.getProperty("mq.port")).orElse("1414"));
         this.mqQueueManager = Optional.ofNullable(properties.getProperty("mq.queueManager")).orElse("QM_MBROKER");
         this.mqChannel = Optional.ofNullable(properties.getProperty("mq.channel")).orElse("###");
-        this.mqBatchSize = Integer.parseInt(Optional.ofNullable(properties.getProperty("mq.batchSize ")).orElse("50"));
+        this.mqBatchSize = Integer.parseInt(Optional.ofNullable(properties.getProperty("mq.batchSize")).orElse("50"));
         this.mqTopics = Optional.ofNullable(properties.getProperty("mq.topics")).orElse("###");
         this.unspents = Optional.ofNullable(properties.getProperty("unspents")).orElse("hide");
         this.writeOut = Optional.ofNullable(properties.getProperty("writeOut")).orElse("false");        

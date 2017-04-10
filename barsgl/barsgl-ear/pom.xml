@@ -533,7 +533,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>javax</groupId>
-                    <artifactId>javaee-web-api</artifactId>
+                    <artifactId>javaee-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

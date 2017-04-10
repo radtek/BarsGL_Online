@@ -426,6 +426,17 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         }
     }
 
+    public <V> Future<V> invoke(JpaAccessCallback<V> callback) throws Exception {
+        try {
+            log.debug("Executing asynchronous by thread, TX: " + getTransactionKey());
+            return new AsyncResult<>(callback.call(persistence));
+        } catch (Exception e) {
+            e.printStackTrace();
+            setRollbackOnly();
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+    
     @Override
     public void flush(EntityManager persistence) {
         persistence.flush();
