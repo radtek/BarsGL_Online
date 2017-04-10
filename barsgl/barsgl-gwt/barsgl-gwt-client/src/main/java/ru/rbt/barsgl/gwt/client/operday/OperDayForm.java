@@ -12,8 +12,10 @@ import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -85,6 +87,10 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
+        abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
+
+//        abw.addSecureAction(createFakeCOB(), SecurityActionCode.TskOdPreCobRun);
+
 
         refreshAction.execute();
 
@@ -129,7 +135,7 @@ public class OperDayForm extends BaseForm {
 
                     @Override
                     public void onSuccess(RpcRes_Base<OperDayWrapper> res) {
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             operDateRefresh(res.getResult());
@@ -158,12 +164,12 @@ public class OperDayForm extends BaseForm {
                     public void onSuccess(RpcRes_Base<Boolean> res) {
                         WaitingManager.hide();
 
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             open_OD.setEnable(false);
-                            DialogManager.message("Инфо","Задание 'Открытие ОД' выполнено.\n" +
-                                                  "Для обновления информации нажмите 'Обновить'.");
+                            DialogManager.message("Инфо", "Задание 'Открытие ОД' выполнено.\n" +
+                                    "Для обновления информации нажмите 'Обновить'.");
                         }
                     }
                 });
@@ -188,7 +194,7 @@ public class OperDayForm extends BaseForm {
                     public void onSuccess(RpcRes_Base<Boolean> res) {
                         WaitingManager.hide();
 
-                        if (res.isError()){
+                        if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             close_Balance_Previous_OD.setEnable(false);
@@ -206,7 +212,7 @@ public class OperDayForm extends BaseForm {
             @Override
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                BarsGLEntryPoint.operDayService.runExecutePreCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                BarsGLEntryPoint.operDayService.runExecutePreCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();
@@ -215,15 +221,16 @@ public class OperDayForm extends BaseForm {
                     }
 
                     @Override
-                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                    public void onSuccess(RpcRes_Base<TimerJobHistoryWrapper> res) {
                         WaitingManager.hide();
 
                         if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
                             change_Phase_To_PRE_COB.setEnable(false);
-                            DialogManager.message("Инфо", "Задание 'Перевод фазы в PRE_COB' выполнено.\n" +
-                                    "Для обновления информации нажмите 'Обновить'.");
+//                            DialogManager.message("Инфо", "Задание 'Перевод фазы в PRE_COB' выполнено.\n" +
+//                                    "Для обновления информации нажмите 'Обновить'.");
+                            DialogManager.message("Инфо", res.getMessage());
                         }
                     }
                 });
@@ -249,6 +256,52 @@ public class OperDayForm extends BaseForm {
                             DialogManager.message("Инфо", "Режим обработки проводок изменен.\n" +
                                     "Для обновления информации нажмите 'Обновить'.");
                         }
+                    }
+                });
+            }
+        };
+    }
+
+   private Action createMonitoring(){
+       return new Action(null, "Мониторинг COB", new Image(ImageConstants.INSTANCE.display()), 5){
+           COBMonitoringDlg dlg = null;
+           @Override
+           public void execute() {
+               WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+               BarsGLEntryPoint.operDayService.getCobInfo(null, new AuthCheckAsyncCallback<RpcRes_Base<CobWrapper>>() {
+                   @Override
+                   public void onSuccess(RpcRes_Base<CobWrapper> result) {
+                       if (result.isError()) {
+                           DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                       } else {
+                           (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(result.getResult());
+                       }
+                       WaitingManager.hide();
+                   }
+               });
+           }
+       };
+   }
+
+
+
+    private Action createFakeCOB(){
+        return new Action("Fake COB", "", null, 5){
+            @Override
+            public void execute() {
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                BarsGLEntryPoint.operDayService.runExecuteFakeCOBTask(new AuthCheckAsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<TimerJobHistoryWrapper> result) {
+                        if (result.isError()) {
+                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
+                        } else {
+                            //Window.alert(result.getResult().toString());
+                            Window.alert(result.getMessage());
+                        }
+                        WaitingManager.hide();
                     }
                 });
             }

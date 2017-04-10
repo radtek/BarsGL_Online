@@ -15,6 +15,7 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -26,7 +27,7 @@ public abstract class QuickFilterAction extends GridAction {
 
     protected DlgFrame dlg;
     protected IQuickFilterParams filterParams = null;
-
+    private List<FilterItem> initFilterItems = null;
     public QuickFilterAction(GridWidget grid, String name, String hint, Image image, double separator) {
         super(grid, name, hint, image, separator);
     }
@@ -60,6 +61,7 @@ public abstract class QuickFilterAction extends GridAction {
         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
         filterParams = (IQuickFilterParams) prms;
         ArrayList<FilterItem> filterCriteria = filterParams.getFilter();
+        if (initFilterItems != null) filterCriteria.addAll(initFilterItems);
         dlg.hide();
         beforeFireFilterEvent(filterParams);
         LocalEventBus.fireEvent(new GridEvents(grid.getId(), GridEvents.EventType.FILTER, filterCriteria));
@@ -73,5 +75,9 @@ public abstract class QuickFilterAction extends GridAction {
         IQuickFilterParams filterParams = getFilterParams();
         filterParams.setInitialFilterParams(getInitialFilterParams(operday, prevday));
         return filterParams;
+    }
+
+    public void setInitFilterItems(List<FilterItem> initFilterItems) {
+        this.initFilterItems = initFilterItems;
     }
 }

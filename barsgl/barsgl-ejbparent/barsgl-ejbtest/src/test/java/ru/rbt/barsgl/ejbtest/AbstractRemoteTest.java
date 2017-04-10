@@ -2,7 +2,6 @@ package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
@@ -343,6 +342,10 @@ public abstract class AbstractRemoteTest  {
      * @return
      */
     public static EtlPosting newPosting(long stamp, EtlPackage pkg) {
+        return newPosting(stamp, pkg, "PH");
+    }
+
+    public static EtlPosting newPosting(long stamp, EtlPackage pkg, String src) {
         EtlPosting pst = new EtlPosting();
         String st = ("" + System.currentTimeMillis()).substring(3);
         pst.setAePostingId("id_" + st);
@@ -358,7 +361,7 @@ public abstract class AbstractRemoteTest  {
         pst.setOperationTimestamp(new Date());
         pst.setRusNarrativeLong("nrt" + stamp);
         pst.setRusNarrativeShort("nrt" + stamp);
-        pst.setSourcePosting("srcpst");
+        pst.setSourcePosting(src);
 
         // могут стать значимыми
         pst.setFan(YesNo.N);

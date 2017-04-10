@@ -94,7 +94,8 @@ public class LoadErrorForm extends GridForm {
 
         result.addColumn(new Column("EMSG", Column.Type.STRING, "Описание ошибки", 1275));
 
-        return result;    }
+        return result;
+    }
 
     @Override
     protected ArrayList<SortItem> getInitialSortCriteria() {
@@ -102,5 +103,4 @@ public class LoadErrorForm extends GridForm {
         list.add(new SortItem("CR_DT", Column.Sort.DESC));
         return list;
     }
-
 }

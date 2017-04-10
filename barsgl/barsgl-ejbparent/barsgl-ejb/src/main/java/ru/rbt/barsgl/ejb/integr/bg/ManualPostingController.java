@@ -339,7 +339,7 @@ public class ManualPostingController {
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             BatchPostStatus newStatus = SIGNEDDATE;
             // тестируем статус - что никто еще не менял
-            updatePostingStatusNew(posting0, newStatus, wrapper);
+            updatePostingStatusNew(posting0, CLICKDATE, wrapper);
             // устанавливаем статус
             Date operday = operdayController.getOperday().getCurrentDate();
             if (BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())) {
@@ -469,6 +469,7 @@ public class ManualPostingController {
                 case WAITDATE:
                     cnt = postingRepository.signedPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
                     break;
+                case CLICKDATE:
                 case SIGNEDDATE:
                     if (wrapper.getStatus().getStep().isControlStep()) {
                         cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
@@ -488,7 +489,7 @@ public class ManualPostingController {
             throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
         wrapper.setStatus(newStatus);
         String msg = result.getPostSignedMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -508,7 +509,7 @@ public class ManualPostingController {
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), nextStatus);
         result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
         String msg = result.getPostSendMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -528,7 +529,7 @@ public class ManualPostingController {
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
         String msg = result.getPostSignedMessage();
 
-        wrapper.getErrorList().addErrorDescription("", "", msg + errorMessage, null);
+        wrapper.getErrorList().addErrorDescription(msg + errorMessage, null);
         if (errorCode == 0) {
             auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         } else {
@@ -622,13 +623,13 @@ public class ManualPostingController {
             String msg = String.format("Запрос на операцию ID = %d изменен, статус: '%s' ('%s')." +
                     "\n Обновите информацию и выполните операцию повторно"
                     , posting.getId(), posting.getStatus().name(), posting.getStatus().getLabel());
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
             String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')\n Обновите информацию",
                     posting.getId(), posting.getInvisible().name(), posting.getInvisible().getLabel() );
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(msg);
         }
         if (enabledStatus.length == 0)
@@ -640,7 +641,7 @@ public class ManualPostingController {
         }
         String msg = String.format("Запрос на операцию ID = '%d': нельзя '%s' запрос в статусе: '%s' ('%s')", posting.getId(),
                 wrapper.getAction().getLabel(), posting.getStatus().name(), posting.getStatus().getLabel());
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         throw new DefaultApplicationException(msg);
     }
 
@@ -704,7 +705,7 @@ public class ManualPostingController {
             errCode = ValidationError.getErrorCode(errMessage);
             errMessage = ValidationError.getErrorText(errMessage);
             if (!errMessage.isEmpty()) {
-                errorList.addNewErrorDescription("", "", errMessage, errCode);
+                errorList.addNewErrorDescription(errMessage, errCode);
             }
         }
         return errMessage;

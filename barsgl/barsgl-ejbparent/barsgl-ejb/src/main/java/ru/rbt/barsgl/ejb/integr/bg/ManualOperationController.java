@@ -319,7 +319,7 @@ public class ManualOperationController {
     private boolean processOperation(GLManualOperation operation) throws Exception {
         final Long operationId = operation.getId();
         GLOperationProcessor operationProcessor = etlPostingController.findOperationProcessor(operation);
-        String msgCommon = format(" операцию ID = %s", operation.getId());
+        String msgCommon = format(" операции ID = %s", operation.getId());
         boolean toContinue = true;
 /*
       // TODO исключаю как лишнее действие
@@ -354,7 +354,7 @@ public class ManualOperationController {
         List<ValidationError> errors = operationProcessor.validate(operation, new ValidationContext());
         boolean toContinue = errors.isEmpty();
         if (!toContinue) {
-            String msg = "Ошибка валидации" + format(" операции '%s'", operation.getId());
+            String msg = format("Ошибка валидации операции '%s'", operation.getId());
             String err = operationProcessor.validationErrorsToString(errors);
             auditController.error(ManualOperation, msg, operation, err);
             throw new DefaultApplicationException(err);

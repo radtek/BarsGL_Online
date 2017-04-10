@@ -798,11 +798,11 @@ public class GLOperation extends BaseEntity<Long> {
     }
 
     public boolean isInterFilial() {
-        return !filialDebit.equals(filialCredit);                   // разные филиалы
+        return (null != filialDebit) && !filialDebit.equals(filialCredit);                   // разные филиалы
     }
 
     public boolean isExchangeDifferenceA() {
-        return exchangeDifference.compareTo(ZERO) != 0              // есть курсовая разницы
+        return (null != exchangeDifference) && exchangeDifference.compareTo(ZERO) != 0              // есть курсовая разницы
                 && BalanceChapter.A.name().equals(bsChapter);       // глава А
     }
 
