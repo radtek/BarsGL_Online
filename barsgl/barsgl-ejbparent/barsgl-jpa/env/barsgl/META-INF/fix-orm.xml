@@ -8,5 +8,14 @@
   <entity class="ru.rbt.barsgl.ejbcore.mapping.job.TimerJob">
     <table name="GL_SCHED"/>
   </entity>  
+  <entity class="ru.rbt.barsgl.audit.entity.AuditRecord">
+    <attributes>
+      <id name="id">
+        <column name="ID_RECORD" unique="true" nullable="false" precision="22"/>
+        <generated-value strategy="AUTO" generator="auditRecordIdSeq"/>
+        <sequence-generator name="auditRecordIdSeq" sequence-name="SEQ_GEN_IDENTITY" allocation-size="1"/>
+      </id>
+    </attributes>
+  </entity>  
 </entity-mappings>
 

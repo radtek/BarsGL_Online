@@ -64,7 +64,7 @@ public class AccessServiceSupport {
 
             PrmValueWrapper wrapper = new PrmValueWrapper();
 
-            AppUser user = appUserRepository.selectFirst(AppUser.class, "from AppUser u where u.id = ?1", userId);
+            AppUser user = appUserRepository.selectFirst(AppUser.class, "from AppUser u where u.id = ?1", Long.valueOf(userId));
             if (null == user) {
                 return new RpcRes_Base<PrmValueWrapper>(wrapper, true, "Пользователь не существует!");
             }

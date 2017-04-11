@@ -7,8 +7,8 @@ import java.util.HashMap;
 public class Column implements Serializable {
 	private static final long serialVersionUID = 5037406166721682635L;
 
-	public enum Type {STRING, BOOLEAN, INTEGER, DECIMAL, DATE, DATETIME, LONG};
-    public enum Sort {NONE, ASC, DESC};
+	public enum Type implements Serializable {STRING, BOOLEAN, INTEGER, DECIMAL, DATE, DATETIME, LONG};
+    public enum Sort implements Serializable {NONE, ASC, DESC};
 
     // Видимый заголовок
     private String caption;

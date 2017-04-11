@@ -15,5 +15,6 @@ public interface MQPropertiesConst {
   final static String MQ_QUEUE_INC = "mq.queue.inc";
   final static String MQ_QUEUE_OUT = "mq.queue.out";
   final static String MQ_USER = "mq.user";
-  final static String MQ_PASSWORD = "mq.user";
+  final static String MQ_PASSWORD = "mq.password";
+  final static String MQ_TOPICS = "mq.topics";
 }

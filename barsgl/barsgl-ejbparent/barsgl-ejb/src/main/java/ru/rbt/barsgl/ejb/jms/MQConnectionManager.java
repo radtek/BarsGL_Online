@@ -20,9 +20,10 @@ public class MQConnectionManager {
   private final static Logger logger = Logger.getLogger("ru.rbt.barsgl.ejb.jms.MQConnectionManager");
 
   private MessageContext messageContext;
+  private MessageContext messageContextOut;
   private MessageConsumer messageConsumer;
 
-  public void start(Properties properties, MessageListener messageListener, ExceptionListener listener) throws Exception {
+  public void start(Properties properties, MessageListener messageListener, ExceptionListener exceptionListener) throws Exception {
     String mqHost = Optional.ofNullable(properties.getProperty(MQPropertiesConst.MQ_HOST)).orElse("###");
     String mqPortStr = Optional.ofNullable(properties.getProperty(MQPropertiesConst.MQ_PORT)).orElse("###");
     String mqQueueManager = Optional.ofNullable(properties.getProperty(MQPropertiesConst.MQ_QUEUE_MANAGER)).orElse("###");
@@ -30,35 +31,39 @@ public class MQConnectionManager {
     String mqQueue = Optional.ofNullable(properties.getProperty(MQPropertiesConst.MQ_QUEUE_INC)).orElse("###");
     String mqUser = Optional.ofNullable(properties.getProperty("mq.user")).orElse("###");
     String mqPassword = Optional.ofNullable(properties.getProperty("mq.password")).orElse("###");
+    String mqTopics = Optional.ofNullable(properties.getProperty(MQPropertiesConst.MQ_TOPICS)).orElse(null);
 
-    String queuePropertiesStr = "QueueProperties{"
-            + "mqHost='" + mqHost + '\''
-            + ", mqPortStr='" + mqPortStr + '\''
-            // + ", mqQueueManager='" + mqQueueManager + '\'' +
-            + ", mqChannel='" + mqChannel + '\''
-            + ", mqQueueInc='" + mqQueue + '\''
-            //+ ", mqQueueOut='" + mqQueueOut + '\'' +
-            + '}';
-
-    if (queuePropertiesStr.contains("###")) {
-      logger.log(Level.SEVERE, "Ошибка в параметрах подключения к серверу очередей (без user и password). {0}", queuePropertiesStr);
-      return;
+    if(mqTopics != null){
+        String[] params = mqTopics.split(":");
+        mqQueue = params[1];      
     }
+//    String queuePropertiesStr = "QueueProperties{"
+//            + "mqHost='" + mqHost + '\''
+//            + ", mqPortStr='" + mqPortStr + '\''
+//            // + ", mqQueueManager='" + mqQueueManager + '\'' +
+//            + ", mqChannel='" + mqChannel + '\''
+//            + ", mqQueueInc='" + mqQueue + '\''
+//            //+ ", mqQueueOut='" + mqQueueOut + '\'' +
+//            + '}';
+
+//    if (queuePropertiesStr.contains("###")) {
+//      logger.log(Level.SEVERE, "Ошибка в параметрах подключения к серверу очередей (без user и password). {0}", queuePropertiesStr);
+//      return;
+//    }
 
     if (messageContext == null) {
       messageContext = new MessageContext(mqHost, Integer.valueOf(mqPortStr), mqQueueManager, mqChannel, mqUser, mqPassword);
-      messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-      if (listener != null) {
-        messageContext.setExceptionListener(listener);
+      QueueSession session = messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+      if (exceptionListener != null) {
+        messageContext.setExceptionListener(exceptionListener);
       }
       Queue queue = messageContext.createQueue("queue:///" + mqQueue);
       messageConsumer = messageContext.createConsumer(queue);
-      if (messageListener != null) {
-        messageConsumer.setMessageListener(messageListener);
-      }
-
-      messageContext.start();
-      logger.log(Level.INFO, "Start MQ");
+      setMessageListener(messageListener);
+    }
+    
+    if(messageContextOut == null){
+      messageContextOut = new MessageContext(mqHost, Integer.valueOf(mqPortStr), mqQueueManager, mqChannel, mqUser, mqPassword);      
     }
   }
 
@@ -82,5 +87,17 @@ public class MQConnectionManager {
     }
     messageContext = null;
   }
-
+  
+  public void setMessageListener(MessageListener messageListener) throws JMSException{
+    if (messageListener != null) {
+      messageConsumer.setMessageListener(messageListener);
+      messageContext.start();    
+      logger.log(Level.INFO, "Start MQ");
+    }    
+  }
+  
+  public QueueSession createOutgouingSession() throws JMSException{
+    QueueSession session = messageContextOut.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+    return session;
+  }
 }

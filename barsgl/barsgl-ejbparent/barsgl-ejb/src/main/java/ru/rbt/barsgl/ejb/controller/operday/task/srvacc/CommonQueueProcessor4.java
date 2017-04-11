@@ -1,10 +1,18 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 
-import com.ibm.jms.JMSBytesMessage;
-import com.ibm.jms.JMSMessage;
-import com.ibm.jms.JMSTextMessage;
-import com.ibm.mq.jms.*;
+import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
+import javax.jms.BytesMessage;
+import javax.jms.TextMessage;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueConnection;
+import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
+import javax.jms.QueueSession;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
@@ -19,7 +27,6 @@ import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -44,7 +51,7 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 @SuppressWarnings("ALL")
 @Stateless
 @LocalBean
-public class CommonQueueProcessor4 {
+public class CommonQueueProcessor4 implements MessageListener {
     private static final Logger log = Logger.getLogger(CommonQueueProcessor4.class);
     private static final String SCHEDULED_TASK_NAME = "AccountQuery";
 
@@ -57,15 +64,12 @@ public class CommonQueueProcessor4 {
     @EJB
     private CoreRepository coreRepository;
 
-    //@Inject
     @EJB
     private AccountQueryProcessor queryProcessor;
 
-    //@Inject
     @EJB
     private AccountQueryBAProcessor queryProcessorBA;
 
-    //@Inject
     @EJB
     private MasterAccountProcessor queryProcessorMAPB;
 
@@ -83,8 +87,8 @@ public class CommonQueueProcessor4 {
 
     private QueueProperties queueProperties;
 
-    MQQueueConnection connection = null;
-    MQQueueSession session = null;
+    QueueConnection connection = null;
+    QueueSession session = null;
 
     private int defaultBatchSize = 50;
     private int batchSize;
@@ -98,8 +102,8 @@ public class CommonQueueProcessor4 {
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
             cf.setQueueManager(queueProperties.mqQueueManager);
             cf.setChannel(queueProperties.mqChannel);
-            connection = (MQQueueConnection) cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
-            session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            connection = cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
+            setSession(connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE));
 
             connection.setExceptionListener(new ExceptionListener() {
                 @Override
@@ -148,11 +152,11 @@ public class CommonQueueProcessor4 {
 
     public void process(Properties properties) throws Exception {
         try {
-            queueProperties = new QueueProperties(properties);
+            setQueueProperties(properties);
             startConnection();
             batchSize = queueProperties.mqBatchSize;
             loadCurrency();
-            processSources(queueProperties);
+            processSources();
 //        log.info("Сессия обработки одной очереди завершена");
         } catch (Exception e) {
             log.error("Ошибка в методе process", e);
@@ -160,18 +164,30 @@ public class CommonQueueProcessor4 {
         }
     }
 
-    private String[] readFromJMS(MQMessageConsumer receiver) throws JMSException {
-        JMSMessage receivedMessage = (JMSMessage) receiver.receiveNoWait();
+    public void setQueueProperties(Properties properties) throws Exception {
+      this.queueProperties = new QueueProperties(properties);
+    }
+
+    public void setSession(QueueSession session) {
+      this.session = session;
+    }
+    
+    private String[] readFromJMS(MessageConsumer receiver) throws JMSException {
+        Message receivedMessage = receiver.receiveNoWait();
         if (receivedMessage == null) {
             return null;
         }
+        return readJMS(receivedMessage);
+    }
+    
+    private String[] readJMS(Message receivedMessage) throws JMSException {
 //        log.info(receivedMessage.toString());
 
         String textMessage = null;
-        if (receivedMessage instanceof JMSTextMessage) {
-            textMessage = ((JMSTextMessage) receivedMessage).getText();
-        } else if (receivedMessage instanceof JMSBytesMessage) {
-            JMSBytesMessage bytesMessage = (JMSBytesMessage) receivedMessage;
+        if (receivedMessage instanceof TextMessage) {
+            textMessage = ((TextMessage) receivedMessage).getText();
+        } else if (receivedMessage instanceof BytesMessage) {
+            BytesMessage bytesMessage = (BytesMessage) receivedMessage;
 
             int length = (int) bytesMessage.getBodyLength();
             byte[] incomingBytes = new byte[length];
@@ -198,10 +214,10 @@ public class CommonQueueProcessor4 {
             receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString()};
     }
 
-    private void processSources(QueueProperties queueProperties) throws Exception {
+    private void processSources() throws Exception {
         String[] params = queueProperties.mqTopics.split(":");
-        MQQueue queueIn = (MQQueue) session.createQueue("queue:///" + params[1]);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queueIn);
+        Queue queueIn = session.createQueue("queue:///" + params[1]);
+        QueueReceiver receiver = session.createReceiver(queueIn);
 
         connection.start();
 
@@ -222,7 +238,7 @@ public class CommonQueueProcessor4 {
                 callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2]));
             } catch (JMSException e) {
                 reConnect();
-                auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
+                auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
             }
         }
 
@@ -233,6 +249,29 @@ public class CommonQueueProcessor4 {
         }
 
         receiver.close();
+    }
+
+    @Override
+    public void onMessage(Message message) {
+      Long jId = 0L;
+      String[] params = queueProperties.mqTopics.split(":");
+      try {
+        String[] incMessage = readJMS(message);
+        String textMessage = incMessage[0].trim();
+
+        jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
+          return journalRepository.createJournalEntry(params[0], textMessage);
+        });
+
+        asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2]),
+                propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue());
+        
+      } catch (JMSException e) {
+        //reConnect();
+        auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
+      } catch (Exception ex) {
+        log.error("Ошибка при обработке сообщения", ex);
+      }
     }
 
     private class CommonRqCallback implements JpaAccessCallback<Void> {
@@ -266,10 +305,10 @@ public class CommonQueueProcessor4 {
                     }
                 } catch (JMSException e) {
                     reConnect();
-                    auditController.warning(AccountQuery, "Ошибка при отправке сообщения / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
+                    auditController.warning(AccountQuery, "Ошибка при отправке сообщения / Таблица GL_ACLIRQ / id=" + jId, null, e);
                 } catch (Exception e) {
                     log.error("Ошибка при подготовке ответа. ", e);
-                    auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
+                    auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица GL_ACLIRQ / id=" + jId, null, e);
                     return journalRepository.executeInNewTransaction(persistence2 -> {
                         AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
                         return getErrorMessage(aclirqJournal.getComment());
@@ -303,10 +342,11 @@ public class CommonQueueProcessor4 {
         }
 
         public void sendToQueue(String outMessage, QueueProperties queueProperties, String[] incMessage, String queue) throws JMSException {
-            JMSTextMessage message = (JMSTextMessage) session.createTextMessage(outMessage);
+            TextMessage message = session.createTextMessage(outMessage);
             message.setJMSCorrelationID(incMessage[1]);
-            MQQueue queueOut = (MQQueue) session.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue);
-            MQQueueSender sender = (MQQueueSender) session.createSender(queueOut);
+            Queue queueOut = session.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue);
+//            QueueSender sender = session.createSender(queueOut);
+            MessageProducer sender = session.createProducer(queueOut);            
             sender.send(message);
             sender.close();
 //            log.info("Отправка сообщения завершена");

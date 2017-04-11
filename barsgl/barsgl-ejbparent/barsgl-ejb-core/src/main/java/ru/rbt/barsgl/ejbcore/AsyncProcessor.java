@@ -47,6 +47,8 @@ public class AsyncProcessor {
     @Resource
     private ManagedThreadFactory managedThreadFactory;    
     
+    private ThreadPoolExecutor defaultThreadPoolExecutor;
+    
     /**
      * Обрабатываем асинхронно с таймаутом на обработку всех заданий
      * @param callbacks задания
@@ -129,6 +131,31 @@ public class AsyncProcessor {
           throw new TimeoutException(format("Async operation is timed out. Current time '%s' greater than '%s'"
                   , dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));          
         }
+    }
+    
+    public <T> void submitToDefaultExecutor(JpaAccessCallback<T> callback, int maxConcurrency){
+      ExecutorService executorService = getDefaultThreadPoolExecutor(maxConcurrency);
+     
+      executorService.submit(() -> {
+                  return repository.invoke((persistence) -> {
+                    return callback.call(persistence);
+                  }).get();
+                });
+    }
+    
+    public ExecutorService getDefaultThreadPoolExecutor(int corePoolSize){
+      if(defaultThreadPoolExecutor == null){
+        defaultThreadPoolExecutor = new ThreadPoolExecutor(
+              corePoolSize,
+              5000,
+              OFFER_DEFAULT_TIMEOUT_MS, 
+              MILLISECONDS,
+              new LinkedBlockingQueue<>(), 
+              managedThreadFactory);
+        
+      }
+      defaultThreadPoolExecutor.setCorePoolSize(corePoolSize);
+      return defaultThreadPoolExecutor;
     }
     
     /**
