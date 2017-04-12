@@ -8,6 +8,7 @@
   <entity class="ru.rbt.barsgl.ejbcore.mapping.job.TimerJob">
     <table name="GL_SCHED_S"/>
   </entity>  
+  
   <entity class="ru.rbt.barsgl.audit.entity.AuditRecord">
     <attributes>
       <id name="id">
@@ -17,5 +18,16 @@
       </id>
     </attributes>
   </entity>  
+
+  <entity class="ru.rbt.barsgl.ejb.entity.acc.AclirqJournal">
+    <attributes>
+      <id name="id">
+        <column name="ID" unique="true" nullable="false" precision="22"/>
+        <generated-value strategy="AUTO" generator="aclirqJournalIdSeq"/>
+        <sequence-generator name="aclirqJournalIdSeq" sequence-name="SEQ_GEN_IDENTITY" allocation-size="1"/>
+      </id>
+    </attributes>
+  </entity>  
+      
 </entity-mappings>
 

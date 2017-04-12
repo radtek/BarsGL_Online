@@ -37,19 +37,11 @@ public class AsyncAccountQueryTaskMT implements ParamsAwareRunnable, ExceptionLi
     public void run(String jobName, Properties properties) throws Exception {
       try {
         this.properties = properties;
-
         startJMS();        
       } catch (Exception e) {
         log.info(jobName, e);
         auditController.error(AccountQuery, "Ошибка при выполнении задачи AccountQueryTask", null, e);
       }
-
-  //        try {
-  //            queueProcessor.process(properties);
-  //        } catch (Exception e) {
-  //            log.info(jobName,e);
-  //            auditController.error(AccountQuery, "Ошибка при выполнении задачи AccountQueryTask", null, e);
-  //        }
     }
 
   private void startJMS() throws Exception, JMSException {
@@ -66,9 +58,13 @@ public class AsyncAccountQueryTaskMT implements ParamsAwareRunnable, ExceptionLi
       log.info("\n\nonException calling");
       try {
         connectionManager.stop();
-        startJMS();
+        reconnect();
       } catch (Exception ex) {
         log.error(ex);
       }
     }        
+
+    private void reconnect() {
+      // Restore connection by timer?
+    }
 }

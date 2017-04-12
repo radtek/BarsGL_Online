@@ -16,6 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
+import javax.annotation.PostConstruct;
+import javax.naming.InitialContext;
 
 /**
  * Created by Ivan Sevastyanov
@@ -39,13 +41,16 @@ public class BeanManagedProcessor {
     @PersistenceContext(unitName="GLOracleDataSource")
     protected EntityManager persistence;
 
-    @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
-    private TransactionSynchronizationRegistry trx;
+//    @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
+//    private TransactionSynchronizationRegistry trx;
 
 //    @Resource(mappedName="/jdbc/As400GL")
-    @Resource(mappedName="jdbc/OracleGL")
+    //@Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
-
+    
+    @Resource(lookup = "java:app/env/BarsglDataSourceName")
+    private String barsglDataSourceName;
+    
     /**
      * Выполнить транзакционную работу в новой транзакции с установкой таймаута
      * @param callback обработчик
@@ -126,4 +131,17 @@ public class BeanManagedProcessor {
         }
     }
 
+    @PostConstruct
+    public void init() {
+        dataSource = findConnection(barsglDataSourceName);
+    }
+
+    private DataSource findConnection(String jndiName) {
+        try {
+            InitialContext c = new InitialContext();
+            return  (DataSource) c.lookup(jndiName);
+        } catch (Throwable e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 }

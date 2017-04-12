@@ -7,11 +7,8 @@ import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
-import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -32,6 +29,8 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static java.lang.String.format;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import static ru.rbt.barsgl.ejb.entity.acc.AclirqJournal.Status.ERROR;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
 
@@ -66,7 +65,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     private enum AccountMap {EXISTS, NOT_EXISTS};
     
     private ThreadLocal<Boolean> isAccRst = new ThreadLocal<>();
-
+    
     public String process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
         isAccRst.set(false);
         if (!fullTopic.startsWith("<?xml")) {
@@ -86,7 +85,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     }
 
     private Map<AccountMap, Object> readFromXML(String bodyXML, Long jId) throws Exception {
-        org.w3c.dom.Document doc = null;
+        Document doc = null;
         try {
             DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes("UTF8")));
@@ -103,9 +102,10 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         NodeList nodes = null;
         XPath xPath = XPathFactory.newInstance().newXPath();
         try {
-            nodes = (NodeList) xPath.evaluate("/AccountListQuery", doc.getDocumentElement(), XPathConstants.NODESET);
+            Element element = doc.getDocumentElement();
+            nodes = (NodeList) xPath.evaluate("/AccountListQuery", element, XPathConstants.NODESET);
             if (nodes == null || nodes.getLength() != 1) {
-                nodes = (NodeList) xPath.evaluate("Body/AccountListQuery", doc.getDocumentElement(), XPathConstants.NODESET);
+                nodes = (NodeList) xPath.evaluate("Body/AccountListQuery", element, XPathConstants.NODESET);
                 if (nodes == null || nodes.getLength() != 1) {
                     //Ошибка XML
                     journalRepository.updateLogStatus(jId, ERROR, "Отсутствуют неоходимые данные /AccountList/AccountDetails");
@@ -128,9 +128,10 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
             Set<String> queryAccounts = new HashSet<>();
             List<String> specs = new ArrayList<>();
             List<String> accTypes = new ArrayList<>();//AccountingType
-            for (int j = 0; j < queries.item(i).getChildNodes().getLength(); j++) {
-                String name = queries.item(i).getChildNodes().item(j).getNodeName();
-                String value = queries.item(i).getChildNodes().item(j).getTextContent();
+            NodeList nodeList = queries.item(i).getChildNodes();
+            for (int j = 0; j < nodeList.getLength(); j++) {
+                String name = nodeList.item(j).getNodeName();
+                String value = nodeList.item(j).getTextContent();
                 if (name.endsWith("AccountNumber")) {
                     if (value.length() == 20) {
                         queryAccounts.add(value);

@@ -112,8 +112,20 @@
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
                               </env-entry>                              
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/OracleGL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/As400Rep</env-entry-value>
+                              </env-entry>
                             </env-entries>
-
+                            
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
@@ -224,6 +236,18 @@
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
                               </env-entry>
+
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/OracleGL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/As400Rep</env-entry-value>
+                              </env-entry>
                             </env-entries>
 
                             <ejbRefs>
@@ -333,6 +357,18 @@
                                   <env-entry-name>java:app/env/SchedTableName</env-entry-name>
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/OracleGL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/As400Rep</env-entry-value>
                               </env-entry>
                             </env-entries>
 
@@ -490,6 +526,18 @@
                                     <env-entry-type>java.lang.String</env-entry-type>
                                     <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
                                 </env-entry>
+
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/OracleGL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>jdbc/As400Rep</env-entry-value>
+                              </env-entry>                                                                
                             </env-entries>
 
                             <ejbRefs>

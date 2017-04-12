@@ -22,6 +22,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
+import javax.annotation.PostConstruct;
+import javax.naming.InitialContext;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -41,17 +43,24 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
 //    @Resource(mappedName="/jdbc/As400GL")
 //    @Resource(mappedName="/jdbc/OracleGL")
-    @Resource(mappedName="jdbc/OracleGL")
+//    @Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
 
 //    @Resource(mappedName="/jdbc/As400Rep")
-    @Resource(mappedName="jdbc/As400Rep")
+//    @Resource(mappedName="jdbc/As400Rep")
     private DataSource  barsrepDataSource;
 
+    @Resource(lookup = "java:app/env/BarsglDataSourceName")
+    private String barsglDataSourceName;
+
+    @Resource(lookup = "java:app/env/BarsrepDataSourceName")
+    private String barsrepDataSourceName;
+    
     @Resource
     EJBContext context;
 
-    @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
+    //@Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")                             
+    @Resource
     private TransactionSynchronizationRegistry trx;
 
     @Resource
@@ -504,11 +513,10 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         }
     }
 
-    /*
     @PostConstruct
     public void init() {
-        dataSource = findConnection("jdbc/OracleGL");
-        barsrepDataSource = findConnection("jdbc/OracleGL");
+        dataSource = findConnection(barsglDataSourceName);
+        barsrepDataSource = findConnection(barsrepDataSourceName);
     }
 
     private DataSource findConnection(String jndiName) {
@@ -519,6 +527,4 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
-    //*/
-
 }

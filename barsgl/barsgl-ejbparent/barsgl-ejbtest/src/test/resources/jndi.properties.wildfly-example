@@ -1,0 +1,4 @@
+java.naming.factory.initial=org.jboss.naming.remote.client.InitialContextFactory
+java.naming.provider.url=http-remoting://localhost:8080
+java.naming.security.principal=user
+java.naming.security.credentials=userpass

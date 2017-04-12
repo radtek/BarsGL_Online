@@ -114,6 +114,13 @@
             <systemPath>${project.basedir}/lib/wlthint3client.jar</systemPath>
             <scope>system</scope>
         </dependency>
+        <dependency>
+            <groupId>wildfly10</groupId>
+            <artifactId>wildfly10client</artifactId>
+            <version>12c</version>
+            <systemPath>${project.basedir}/lib/jboss-client.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
 <!--        <dependency>
             <groupId>weblogic12</groupId>
             <artifactId>eclipselink</artifactId>

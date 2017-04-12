@@ -6,6 +6,9 @@ import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.annotation.PostConstruct;
+import javax.naming.InitialContext;
+import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 
 /**
  * Created by Ivan Sevastyanov
@@ -14,9 +17,12 @@ import java.sql.SQLException;
 public abstract class AbstractBankjarBean {
 
 //    @Resource(mappedName="/jdbc/As400GL")
-    @Resource(mappedName="jdbc/OracleGL")
+//    @Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
 
+    @Resource(lookup = "java:app/env/BarsglDataSourceName")
+    private String barsglDataSourceName;
+    
     @Inject
     private PropertiesBean properties;
 
@@ -36,4 +42,17 @@ public abstract class AbstractBankjarBean {
         return properties.getOption("pd");
     }
 
+    @PostConstruct
+    public void init() {
+        dataSource = findConnection(barsglDataSourceName);
+    }
+
+    private DataSource findConnection(String jndiName) {
+        try {
+            InitialContext c = new InitialContext();
+            return  (DataSource) c.lookup(jndiName);
+        } catch (Throwable e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 }

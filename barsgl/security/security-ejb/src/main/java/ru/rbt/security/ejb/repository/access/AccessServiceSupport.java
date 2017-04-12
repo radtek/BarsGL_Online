@@ -74,13 +74,13 @@ public class AccessServiceSupport {
 
             PrmValue prm = prmValueRepository.selectFirst(PrmValue.class,
                     "from PrmValue p where p.userId = ?1 and p.prmCode = ?2",
-                    userId, prmCode);
+                    Long.valueOf(userId), prmCode);
             Date currentDate = operdayController.getOperday().getCurrentDate();
 
             if (prm == null){
                 wrapper.setAction(FormAction.CREATE);
                 wrapper.setId(-1L);
-                wrapper.setUserId(userId);
+                wrapper.setUserId(Long.valueOf(userId));
                 wrapper.setPrmCode(prmCode);
                 wrapper.setDateBeginStr(currentDate == null ? null : dateUtils.onlyDateString(currentDate));
                 wrapper.setDateEndStr(currentDate == null ? null : dateUtils.onlyDateString(currentDate));

@@ -19,7 +19,7 @@ public class PrmValue  extends BaseEntity<Long> {
     private Long id;
 
     @Column(name = "ID_USER")
-    private int userId;
+    private Long userId;
 
     @Column(name = "PRM_CODE")
     @Enumerated(EnumType.STRING)
@@ -53,11 +53,11 @@ public class PrmValue  extends BaseEntity<Long> {
         this.id = id;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

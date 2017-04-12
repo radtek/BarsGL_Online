@@ -22,7 +22,7 @@ public class PrmValueHistory  extends BaseEntity<Long> {
     private Long prmId;
 
     @Column(name = "ID_USER")
-    private int userId;
+    private Long userId;
 
     @Column(name = "PRM_CODE")
     @Enumerated(EnumType.STRING)
@@ -75,11 +75,11 @@ public class PrmValueHistory  extends BaseEntity<Long> {
         this.prmId = prmId;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

@@ -37,15 +37,6 @@ public class MQConnectionManager {
         String[] params = mqTopics.split(":");
         mqQueue = params[1];      
     }
-//    String queuePropertiesStr = "QueueProperties{"
-//            + "mqHost='" + mqHost + '\''
-//            + ", mqPortStr='" + mqPortStr + '\''
-//            // + ", mqQueueManager='" + mqQueueManager + '\'' +
-//            + ", mqChannel='" + mqChannel + '\''
-//            + ", mqQueueInc='" + mqQueue + '\''
-//            //+ ", mqQueueOut='" + mqQueueOut + '\'' +
-//            + '}';
-
 //    if (queuePropertiesStr.contains("###")) {
 //      logger.log(Level.SEVERE, "Ошибка в параметрах подключения к серверу очередей (без user и password). {0}", queuePropertiesStr);
 //      return;

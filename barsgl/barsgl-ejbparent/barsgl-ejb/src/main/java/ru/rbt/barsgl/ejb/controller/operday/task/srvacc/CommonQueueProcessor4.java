@@ -11,7 +11,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;

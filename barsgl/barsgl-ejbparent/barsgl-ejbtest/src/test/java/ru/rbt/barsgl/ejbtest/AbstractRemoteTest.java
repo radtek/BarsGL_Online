@@ -49,6 +49,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
+import java.io.IOException;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
@@ -90,7 +91,10 @@ public abstract class AbstractRemoteTest  {
     static {
         try {
             Context ctx = new InitialContext();
-            remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");            
+            Properties prop = new Properties();
+            prop.load(AbstractRemoteTest.class.getResourceAsStream("/ejbname.properties"));
+            //remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");            
+            remoteAccessInternal = (ServerAccess) ctx.lookup(prop.getProperty("ejbname"));            
             remoteAccess = new ServiceAccessSupport() {
                 @Override
                 public <T> T invoke(Class clazz, String method, Object... params) {
@@ -112,7 +116,7 @@ public abstract class AbstractRemoteTest  {
             };
             init();
 
-        } catch (NamingException e) {
+        } catch (NamingException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }

@@ -14,7 +14,7 @@ import java.util.Date;
 public class PrmValueWrapper implements Serializable,IsSerializable {
 
     private Long id;
-    private int userId;
+    private Long userId;
     private PrmValueEnum prmCode;
     private String prmValue;
     private String dateBeginStr; //Date
@@ -33,11 +33,11 @@ public class PrmValueWrapper implements Serializable,IsSerializable {
         this.id = id;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
