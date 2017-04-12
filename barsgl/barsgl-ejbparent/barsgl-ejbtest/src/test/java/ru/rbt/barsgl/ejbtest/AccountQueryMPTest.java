@@ -104,7 +104,7 @@ mq.password=UsATi8hU
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void testLocal() throws Exception {
         // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
         // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
@@ -115,12 +115,10 @@ mq.password=UsATi8hU
 
         // Config
 
-        cf.setHostName("localhost");
-        //cf.setHostName("vs338");
+        cf.setHostName("vs338");
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-//        cf.setQueueManager("QM_MBROKER10_TEST");
-        cf.setQueueManager("QM_MBROKER4_T4");
+        cf.setQueueManager("QM_MBROKER10_TEST");
         cf.setChannel("SYSTEM.DEF.SVRCONN");
 /*
 mq.type = queue
@@ -138,24 +136,10 @@ mq.password=UsATi8hU
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\AccountBalanceListQuery-B4.xml"), "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", "er22228", vugluskr9);
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\AccountListQueryFull.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\test\\lirq1.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-
-        sendToQueue(cf, 
-//@@@                "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
-//                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
-//                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-                "UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST",
-                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
-                "UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE","","");
-
-//                "UCBRU.ADP.BARSGL.ACLIQU.REQUEST",
-//                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
-//                "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE","","");
-
-                //"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-        
-//                new File(this.getClass().getResource("/AccountBalanceListQuery-B4.xml").getFile()),
-//                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-        
+        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
+                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), 
+//                new File("C:\\Projects\\task53\\test\\ma1.xml"),
+                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\newRequests\\AccountListQuery_01_req.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
@@ -174,47 +158,99 @@ mq.password=UsATi8hU
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\AccountBalanceListQuery-B3.txt"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF",new File("C:\\Projects\\task53\\AccountListQuery-Over100000.xml"));
 
-//* //@@@
         SingleActionJob job =
             SingleActionJobBuilder.create()
                 .withClass(AccountQueryTaskMT.class)
                 .withName("AccountQuery5")
                 .withProps(
                     "mq.batchSize = 30\n" + //todo
-//                        "mq.host = vs338\n" +
-                        "mq.host = localhost\n" +
+                        "mq.host = vs338\n" +
                         "mq.port = 1414\n" +
-//                        "mq.queueManager = QM_MBROKER10_TEST\n" +
-                        "mq.queueManager = QM_MBROKER4_T4\n" +
+                        "mq.queueManager = QM_MBROKER10_TEST\n" +
                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                         "mq.topics = " +
 //                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-//                        "LIRQ:UCBRU.ADP.BARSGL.ACLIQU.REQUEST:UCBRU.ADP.BARSGL.ACLIQU.RESPONSE\n" +
-                        "MAPBRQ:UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST:UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE\n" +
-
 //                        "BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-//@@@                        "MAPBRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                        "MAPBRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
 //                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF" +
 //                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
 //                        ";MAPBRQ:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF\n" +
 //                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF\n" +
-                        "mq.user=\n" +
-                        "mq.password=\n"+
-//                        "mq.user=er22228\n" +
-//                        "mq.password="+vugluskr9+"\n"+
+                        "mq.user=er22228\n" +
+                        "mq.password="+vugluskr9+"\n"+
                         "unspents=show"
                 )
                 .build();
         jobService.executeJob(job);
-        //receiveFromQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", "er22228", vugluskr9);
-//        receiveFromQueue(cf, "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE", "", "");
-        receiveFromQueue(cf, "UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE", "", "");
-//*/
+
+        receiveFromQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", "er22228", vugluskr9);
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF","er22228","Vugluskr7");
         System.out.println();
 
     }
+    
+    @Test
+    @Ignore
+    public void testLocalStress() throws Exception {
 
+        MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
+
+        // Config
+        cf.setHostName("localhost");
+        cf.setPort(1414);
+        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+        cf.setQueueManager("QM_MBROKER4_T4");
+        cf.setChannel("SYSTEM.DEF.SVRCONN");
+        
+        int count = 1000;
+        //*
+        for (int i = 0; i < count; i++) {        
+        sendToQueue(cf, 
+//                "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
+//                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
+//                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
+                
+//                "UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST",
+//                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
+//                "UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE","","");
+
+                "UCBRU.ADP.BARSGL.ACLIQU.REQUEST",
+                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
+                "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE","","");
+        }
+        
+/*
+     SingleActionJob job =
+            SingleActionJobBuilder.create()
+                .withClass(AccountQueryTaskMT.class)
+                .withName("AccountQuery5")
+                .withProps(                        
+                    "mq.batchSize = 100\n" + //todo
+                        "mq.host = localhost\n" +
+                        "mq.port = 1414\n" +
+                        "mq.queueManager = QM_MBROKER4_T4\n" +
+                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
+                        "mq.topics = " +
+//                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                        "LIRQ:UCBRU.ADP.BARSGL.ACLIQU.REQUEST:UCBRU.ADP.BARSGL.ACLIQU.RESPONSE\n" +
+//                        "MAPBRQ:UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST:UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE\n" +
+//                        "BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                        "mq.user=\n" +
+                        "mq.password=\n"+ 
+//                        "writeOut=true\n"+
+                        "unspents=show"
+                )
+                .build();
+        jobService.executeJob(job);
+        for (int i = 0; i < count; i++) {        
+          receiveFromQueue(cf, "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE", "", "");
+//        receiveFromQueue(cf, "UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE", "", "");
+        }
+//*/
+        System.out.println();
+
+    }
+    
     private void receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
