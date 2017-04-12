@@ -32,7 +32,7 @@ import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
  */
 @Stateless
 @LocalBean
-public class GlPdThRepositoty extends AbstractBaseEntityRepository<GlPdTh, Long>
+public class GlPdThRepository extends AbstractBaseEntityRepository<GlPdTh, Long>
 {
     private static final Logger log = Logger.getLogger(PdRepository.class.getName());
 
