@@ -363,7 +363,7 @@ public class OperDayForm extends BaseForm {
    }
 
    private Action export2ExcelActtion(){
-       return new Action(null, "Ночной отчет об ошибках", new Image(ImageConstants.INSTANCE.excel()), 5) {
+       return new Action(null, "Ночной отчет об ошибках", new Image(ImageConstants.INSTANCE.report()), 5) {
            @Override
            public void execute() {
                setEnable(false);
