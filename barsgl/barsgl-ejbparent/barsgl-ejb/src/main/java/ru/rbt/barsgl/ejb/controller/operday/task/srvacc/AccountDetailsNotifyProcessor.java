@@ -219,7 +219,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     private Map<String, String> readFromXML(String bodyXML, Long jId, String[] paramNames) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
         org.w3c.dom.Document doc = null;
         try {
-            DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder b = XmlUtilityLocator.getInstance().newDocumentBuilder();
             doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes("UTF-8")));
             if (doc == null) {
                 //Ошибка XML
@@ -232,7 +232,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
         }
 
         NodeList nodes = null;
-        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPath xPath = XmlUtilityLocator.getInstance().newXPath();
         try {
             nodes = (NodeList) xPath.evaluate("Body/AccountList/AccountDetails", doc.getDocumentElement(), XPathConstants.NODESET);
             if (nodes == null || nodes.getLength() != 1) {

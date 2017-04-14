@@ -87,7 +87,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     private Set<String> readFromXML(String bodyXML, Long jId) throws Exception {
         org.w3c.dom.Document doc = null;
         try {
-            DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder b = XmlUtilityLocator.getInstance().newDocumentBuilder();
             doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes("UTF8")));
             if (doc == null) {
                 //Ошибка XML
@@ -100,7 +100,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         }
 
         Set<String> accounts = new HashSet<>();
-        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPath xPath = XmlUtilityLocator.getInstance().newXPath();
         NodeList queries = ((NodeList) xPath.evaluate("/AccountBalanceListQuery/AccountBalanceQuery", doc.getDocumentElement(), XPathConstants.NODESET));
         if (queries == null || queries.getLength() == 0) {
             //Ошибка XML

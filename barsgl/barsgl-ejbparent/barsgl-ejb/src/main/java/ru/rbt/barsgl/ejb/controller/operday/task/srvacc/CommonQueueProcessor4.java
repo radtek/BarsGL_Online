@@ -95,7 +95,6 @@ public class CommonQueueProcessor4 implements MessageListener {
     public void startConnection() throws JMSException {
         if (session == null) {
             MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
-
             cf.setHostName(queueProperties.mqHost);
             cf.setPort(queueProperties.mqPort);
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
@@ -243,7 +242,8 @@ public class CommonQueueProcessor4 implements MessageListener {
 
         if (callbacks.size() > 0) {
 //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов");
-            asyncProcessor.asyncProcessPooled(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
+            //asyncProcessor.asyncProcessPooled(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
+            asyncProcessor.asyncProcessPooledByExecutor(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
 //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов. Обработка завершена");
         }
 

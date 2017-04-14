@@ -84,7 +84,7 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
     private Set<String> readFromXML(String bodyXML, Long jId) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
         org.w3c.dom.Document doc = null;
         try {
-            DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder b = XmlUtilityLocator.getInstance().newDocumentBuilder();
             doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes("UTF8")));
             if (doc == null) {
                 //Ошибка XML
@@ -96,7 +96,7 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
             throw e;
         }
 
-        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPath xPath = XmlUtilityLocator.getInstance().newXPath();
         Set<String> accounts = new HashSet<>();
 /*
 <asbo:MasterAccountPositioningBatchQuery xmlns:asbo="urn:asbo:barsgl">

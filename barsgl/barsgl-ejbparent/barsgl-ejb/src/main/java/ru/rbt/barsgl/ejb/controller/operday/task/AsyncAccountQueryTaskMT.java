@@ -66,5 +66,5 @@ public class AsyncAccountQueryTaskMT implements ParamsAwareRunnable, ExceptionLi
 
     private void reconnect() {
       // Restore connection by timer?
-    }
+    }    
 }

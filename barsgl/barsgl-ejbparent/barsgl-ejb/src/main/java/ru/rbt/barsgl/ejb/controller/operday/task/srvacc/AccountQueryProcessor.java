@@ -87,7 +87,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     private Map<AccountMap, Object> readFromXML(String bodyXML, Long jId) throws Exception {
         Document doc = null;
         try {
-            DocumentBuilder b = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder b = XmlUtilityLocator.getInstance().newDocumentBuilder();
             doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes("UTF8")));
             if (doc == null) {
                 //Ошибка XML
@@ -100,7 +100,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         }
 
         NodeList nodes = null;
-        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPath xPath = XmlUtilityLocator.getInstance().newXPath();
         try {
             Element element = doc.getDocumentElement();
             nodes = (NodeList) xPath.evaluate("/AccountListQuery", element, XPathConstants.NODESET);
