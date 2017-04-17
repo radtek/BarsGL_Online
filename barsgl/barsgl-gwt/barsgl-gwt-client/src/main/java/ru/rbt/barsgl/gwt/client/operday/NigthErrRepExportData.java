@@ -56,7 +56,8 @@ public class NigthErrRepExportData implements IExportData {
        result.addColumn(new Column("CHNL_NAME", STRING, "CHNL_NAME", 100));
        result.addColumn(new Column("PMT_REF", STRING, "PMT_REF", 100));
        result.addColumn(new Column("DEPT_ID", STRING, "DEPT_ID", 100));
-       result.addColumn(new Column("VDATE", DATE, "VDATE", 100));
+       result.addColumn(col = new Column("VDATE", DATE, "VDATE", 100));
+       col.setFormat("dd.MM.yyyy");
        result.addColumn(col = new Column("OTS", Column.Type.DATETIME, "OTS", 100));
        col.setFormat("dd.MM.yyyy HH:mm:ss");
        result.addColumn(new Column("NRT", STRING, "NRT", 100));
