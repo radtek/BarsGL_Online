@@ -187,7 +187,13 @@ public class AccountDetailsNotifyProcessor implements Serializable {
 
         String bsaacid = xmlData.get("CBAccountNo");
         if (!isEmpty(bsaacid)) {
+            if( bsaacid.startsWith("423") || bsaacid.startsWith("426") ){
+                journalRepository.updateLogStatus(jId, ERROR, "Депозитный счет " + bsaacid + " не открывается через сервис");
+                return;              
+            }
+              
             DataRecord accRln = accRlnRepository.findByBsaacid(bsaacid);
+            
             if (accRln != null && (accRln.getDate("drlnc") == null || ifEmpty(xmlData.get("OpenDate"), "").compareTo(sdf.format(accRln.getDate("drlnc"))) <= 0)) {
                 journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " уже существует в ACCRLN");
                 return;
@@ -302,6 +308,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
                 xmlData.put("Branch", midasBranch);
                 if (!isEmpty(midasBranch)) {
                     String pseudoAcid = null;
+                    
                     for (int i = 99; i > 9; i--) {
                         pseudoAcid = xmlData.get("CustomerNo") + xmlData.get("Ccy") + "0000" + i + midasBranch;
                         if (isEmpty(journalDataRepository.existsAcid(pseudoAcid))) {
@@ -309,9 +316,12 @@ public class AccountDetailsNotifyProcessor implements Serializable {
                         }
                         pseudoAcid = null;
                     }
-                    if (pseudoAcid != null) {
-                        xmlData.put("AccountNo", pseudoAcid);
+                    
+                    if (pseudoAcid == null) {
+                        pseudoAcid =  xmlData.get("CustomerNo") + xmlData.get("Ccy") + "0000" + "90" + midasBranch;
                     }
+                    
+                    xmlData.put("AccountNo", pseudoAcid);
                 } else {
                     journalRepository.updateLogStatus(jId, ERROR, "Параметр Midas Branch не вычислен. SELECT MIDAS_BRANCH FROM DWH.DH_BR_MAP WHERE FCC_BRANCH=? :" + xmlData.get("Branch"));
                     return false;
