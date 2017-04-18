@@ -6,11 +6,13 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.info.SystemInfoForm;
 import ru.rbt.barsgl.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
@@ -51,6 +53,8 @@ public class FormManagerUI extends Composite {
     private Label operdayLabel;
     private Label operdayDate;
     private MenuBuilder menuBuilder;
+
+
 
     public static FormManagerUI getFormManager(final UserMenuWrapper menuWrapper){
         return formManager == null ? new FormManagerUI(menuWrapper) : formManager;
@@ -145,6 +149,8 @@ public class FormManagerUI extends Composite {
             public void accept(OperDayWrapper operDayWrapper) {
                 operdayDate.setText(operDayWrapper.getCurrentOD());
                 BarsGLEntryPoint.CURRENT_WORKDAY = operDayWrapper.getPreviosODDate();
+                BarsGLEntryPoint.CURRENT_OPER_DAY = operDayWrapper.getCurrentODDate();
+                LocalDataStorage.putParam("current_od_date", operDayWrapper.getCurrentODDate());
             }
         });
     }
