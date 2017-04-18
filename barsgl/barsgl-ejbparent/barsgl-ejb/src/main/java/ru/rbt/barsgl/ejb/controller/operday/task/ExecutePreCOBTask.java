@@ -48,6 +48,7 @@ import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
  * Created by Ivan Sevastyanov
  * Перевод опердня в состояние PRE_COB
  */
+@Deprecated
 public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
 
     public static final String TIME_LOAD_BEFORE_KEY = "timeLoadBefore";
