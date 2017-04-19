@@ -12,14 +12,14 @@ import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.annotation.PostConstruct;
@@ -41,11 +41,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.ExceptionUtils.findException;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.shared.ExceptionUtils.findException;
 import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**

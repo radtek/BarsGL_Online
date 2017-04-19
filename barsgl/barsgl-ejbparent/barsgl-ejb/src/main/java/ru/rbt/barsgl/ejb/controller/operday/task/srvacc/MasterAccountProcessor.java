@@ -7,11 +7,11 @@ import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -30,8 +30,8 @@ import java.io.Serializable;
 import java.util.*;
 
 import static ru.rbt.barsgl.ejb.entity.acc.AclirqJournal.Status.ERROR;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 
 /**

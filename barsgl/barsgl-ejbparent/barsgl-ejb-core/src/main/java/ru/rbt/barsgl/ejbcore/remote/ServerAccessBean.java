@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejbcore.remote;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.remote.http.ExceptionInfo;
 import ru.rbt.barsgl.ejbcore.remote.http.Serializer;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceRequest;

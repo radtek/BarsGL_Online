@@ -13,7 +13,7 @@ import ru.rbt.barsgl.gwt.core.events.ActionEvent;
 import ru.rbt.barsgl.gwt.core.events.ActionEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
 import java.util.HashMap;

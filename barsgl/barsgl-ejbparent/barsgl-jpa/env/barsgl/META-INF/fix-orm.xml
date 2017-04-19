@@ -9,7 +9,7 @@
     <table name="GL_SCHED"/>
   </entity>  
   
-  <entity class="ru.rbt.barsgl.audit.entity.AuditRecord">
+  <entity class="ru.rbt.audit.entity.AuditRecord">
     <attributes>
       <id name="id">
         <column name="ID_RECORD" unique="true" nullable="false" precision="22"/>

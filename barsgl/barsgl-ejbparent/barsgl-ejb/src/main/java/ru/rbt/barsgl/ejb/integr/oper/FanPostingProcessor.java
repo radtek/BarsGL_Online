@@ -15,7 +15,7 @@ public class FanPostingProcessor extends IncomingPostingProcessor {
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     //@Override
     /**

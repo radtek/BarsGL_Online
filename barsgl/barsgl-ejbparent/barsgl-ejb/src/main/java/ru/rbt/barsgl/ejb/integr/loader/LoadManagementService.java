@@ -1,21 +1,14 @@
 package ru.rbt.barsgl.ejb.integr.loader;
 
-import ru.rbt.barsgl.ejb.entity.loader.LoadManagement;
-import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.LoadManagementAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**

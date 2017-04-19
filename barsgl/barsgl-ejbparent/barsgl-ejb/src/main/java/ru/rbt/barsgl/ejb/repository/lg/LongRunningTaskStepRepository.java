@@ -7,7 +7,7 @@ import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepId;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepPattern;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;

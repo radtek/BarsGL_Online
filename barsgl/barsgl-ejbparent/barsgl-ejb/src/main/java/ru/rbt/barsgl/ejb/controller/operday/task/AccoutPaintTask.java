@@ -1,17 +1,17 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.audit.entity.AuditRecord;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.datarec.DefaultJdbcAdapter;
-import ru.rbt.barsgl.ejbcore.datarec.JdbcAdapter;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
+import ru.rbt.ejbcore.datarec.JdbcAdapter;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.shared.Assert;
+import ru.rbt.shared.ExceptionUtils;
 
 import javax.ejb.EJB;
 import java.sql.PreparedStatement;
@@ -21,7 +21,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 
 /**
  * Created by Ivan Sevastyanov

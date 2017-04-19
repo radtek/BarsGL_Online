@@ -21,7 +21,7 @@ import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
 

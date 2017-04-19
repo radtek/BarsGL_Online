@@ -22,7 +22,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.ActParmWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
 

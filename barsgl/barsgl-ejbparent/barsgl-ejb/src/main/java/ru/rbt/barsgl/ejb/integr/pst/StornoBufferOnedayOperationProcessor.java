@@ -6,8 +6,8 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLPdRepository;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STORNO_REF_NOT_VALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.STORNO_REF_NOT_VALID;
 
 /**
  * Created by Ivan Sevastyanov on 11.02.2016.

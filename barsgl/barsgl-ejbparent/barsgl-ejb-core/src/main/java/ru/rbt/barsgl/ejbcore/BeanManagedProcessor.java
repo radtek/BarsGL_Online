@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbcore;
 
+import ru.rbt.ejbcore.DefaultApplicationException;
 import javax.annotation.Resource;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;

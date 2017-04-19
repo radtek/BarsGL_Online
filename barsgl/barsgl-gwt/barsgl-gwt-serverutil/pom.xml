@@ -5,7 +5,7 @@
 
     <artifactId>barsgl-gwt-serverutil</artifactId>
     <packaging>jar</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <parent>
         <groupId>ru.rbt</groupId>

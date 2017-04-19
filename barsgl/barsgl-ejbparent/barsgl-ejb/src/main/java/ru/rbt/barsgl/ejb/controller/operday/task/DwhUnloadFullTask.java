@@ -6,13 +6,13 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 
 import javax.ejb.EJB;
@@ -27,10 +27,10 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.DwhUnloadPosting;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.DwhUnloadPosting;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
 
 /**
  * Created by ER18837 on 18.06.15.
@@ -50,7 +50,7 @@ public class DwhUnloadFullTask implements ParamsAwareRunnable {
     private AuditController auditController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;

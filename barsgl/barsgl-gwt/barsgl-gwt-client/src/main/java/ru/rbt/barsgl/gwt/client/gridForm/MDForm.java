@@ -17,7 +17,7 @@ import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.*;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.io.Serializable;
 import java.util.ArrayList;

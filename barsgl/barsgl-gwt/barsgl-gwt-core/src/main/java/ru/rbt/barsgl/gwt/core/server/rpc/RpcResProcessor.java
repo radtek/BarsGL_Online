@@ -1,13 +1,13 @@
 package ru.rbt.barsgl.gwt.core.server.rpc;
 
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 
 import java.io.Serializable;
 import java.sql.SQLException;
 
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
 /**
  * Created by Ivan Sevastyanov

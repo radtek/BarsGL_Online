@@ -15,7 +15,7 @@ import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;

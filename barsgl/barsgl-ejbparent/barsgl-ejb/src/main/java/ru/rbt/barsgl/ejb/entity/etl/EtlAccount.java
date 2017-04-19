@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.etl;
 
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
 import java.util.Date;

@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateIntervalQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;

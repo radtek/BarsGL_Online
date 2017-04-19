@@ -7,18 +7,24 @@
         <version>3.0.18-SNAPSHOT</version>
     </parent>
     <artifactId>security-gwt-server</artifactId>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
     <packaging>jar</packaging>
     <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-gwt-ejb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>barsgl-shared</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>security-ejb</artifactId>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-ejb-common</artifactId>
             <version>${project.version}</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>ru.rbt</groupId>

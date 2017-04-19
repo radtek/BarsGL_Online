@@ -3,16 +3,16 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -23,8 +23,8 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.parseDate;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtUnload;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtUnloadBalDelta;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnload;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnloadBalDelta;
 
 /**
  * Created by Ivan Sevastyanov on 27.01.2016.

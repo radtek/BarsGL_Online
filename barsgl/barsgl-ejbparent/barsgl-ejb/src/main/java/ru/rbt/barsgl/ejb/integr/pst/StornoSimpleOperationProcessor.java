@@ -5,15 +5,15 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.inject.Inject;
 import java.util.List;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STORNO_POST_NOT_FOUND;
+import static ru.rbt.ejbcore.validation.ErrorCode.STORNO_POST_NOT_FOUND;
 
 /**
  * Created by ER18837 on 07.04.15.

@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 
 import java.util.List;

@@ -16,7 +16,7 @@ import ru.rbt.barsgl.gwt.core.ui.PasswordTextField;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.Date;
 
@@ -24,10 +24,10 @@ import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDepartmentListBox
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createFilialListBox;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
-import static ru.rbt.barsgl.shared.enums.UserExternalType.E;
-import static ru.rbt.barsgl.shared.enums.UserExternalType.L;
-import static ru.rbt.barsgl.shared.enums.UserLocked.N;
-import static ru.rbt.barsgl.shared.enums.UserLocked.Y;
+import static ru.rbt.shared.enums.UserExternalType.E;
+import static ru.rbt.shared.enums.UserExternalType.L;
+import static ru.rbt.shared.enums.UserLocked.N;
+import static ru.rbt.shared.enums.UserLocked.Y;
 import static ru.rbt.barsgl.shared.enums.YesNoType.Yes;
 
 

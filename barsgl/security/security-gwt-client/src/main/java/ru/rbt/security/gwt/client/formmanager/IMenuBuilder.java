@@ -6,7 +6,7 @@ package ru.rbt.security.gwt.client.formmanager;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
 
 /**
  *

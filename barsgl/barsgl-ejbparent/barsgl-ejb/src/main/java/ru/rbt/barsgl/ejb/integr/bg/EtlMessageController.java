@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 /**
  * Created by Ivan Sevastyanov

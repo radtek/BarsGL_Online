@@ -1,15 +1,15 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.datarec.DefaultJdbcAdapter;
-import ru.rbt.barsgl.ejbcore.datarec.JdbcAdapter;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
+import ru.rbt.ejbcore.datarec.JdbcAdapter;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -24,9 +24,9 @@ import java.util.Date;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.GLVD_BAL4;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.GLVD_PST_DU;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.trim;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.GLVD_BAL4;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.GLVD_PST_DU;
+import static ru.rbt.ejbcore.util.StringUtils.trim;
 
 /**
  * Created by ER22317 on 18.04.2016.

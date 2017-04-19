@@ -1,8 +1,8 @@
 package ru.rbt.barsgl.ejb.repository;
 
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.shared.enums.Repository;
 
 import java.sql.SQLException;
 import java.util.Date;

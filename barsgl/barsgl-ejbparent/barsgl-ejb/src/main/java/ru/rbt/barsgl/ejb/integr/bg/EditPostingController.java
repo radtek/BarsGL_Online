@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
-import ru.rbt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
@@ -13,16 +13,16 @@ import ru.rbt.barsgl.ejb.integr.oper.EditPostingPdProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.EditPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.ejb.EJB;
@@ -32,10 +32,10 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
+import static ru.rbt.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ALL;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ONE_OF;
 

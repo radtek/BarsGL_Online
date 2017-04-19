@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.repository;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.BsaAcc;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.Optional;
 
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ACCOUNT_BSA_INVALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_BSA_INVALID;
 
 /**
  * Created by ER18837 on 05.05.15.

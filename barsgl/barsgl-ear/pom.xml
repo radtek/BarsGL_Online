@@ -9,7 +9,7 @@
 
     <artifactId>barsgl-ear</artifactId>
     <packaging>ear</packaging>
-    <name>${artifactId}:${project.packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <properties>
         <oracleMiddlewareHome>C:/dev/tools/wls12130/user_projects/domains/mydomain</oracleMiddlewareHome>
@@ -43,8 +43,12 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>security-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -54,9 +58,8 @@
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-audit</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
-                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -160,8 +163,12 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>security-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -171,9 +178,8 @@
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-audit</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
-                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -289,15 +295,19 @@
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>tasks-ejb</artifactId>
 <!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-audit</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
-                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -401,7 +411,7 @@
                                 <phase>install</phase>
                                 <configuration>
                                     <target>
-                                        <property name="tagname" value="${parent.artifactId}-${project.version}" />
+                                        <property name="tagname" value="${project.parent.artifactId}-${project.version}" />
                                         <property name="branch_name" value="branch_${tagname}" />
 
                                         <property name="current_dir" location="../.." />
@@ -450,8 +460,12 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>security-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -461,9 +475,8 @@
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-audit</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
-                                    <bundleFileName>barsgl-audit.jar</bundleFileName>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -633,13 +646,29 @@
         </dependency>        
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>barsgl-audit</artifactId>
-            <version>${project.version}</version>
+            <artifactId>rbt-audit</artifactId>
             <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-shared</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-ejbcore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>security-ejb</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-gwt-ejb</artifactId>
             <version>${project.version}</version>
             <type>ejb</type>
         </dependency>

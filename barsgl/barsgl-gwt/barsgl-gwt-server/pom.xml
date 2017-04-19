@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>barsgl-gwt-server</artifactId>
     <packaging>jar</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <parent>
         <groupId>ru.rbt</groupId>
@@ -17,7 +17,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <phase>verify</phase>
@@ -63,8 +63,7 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>security-ejb</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
+            <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLBalanceExclude;
 import ru.rbt.barsgl.ejb.entity.gl.GLBalanceExcludeId;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.util.Date;
 

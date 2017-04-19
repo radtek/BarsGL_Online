@@ -2,13 +2,13 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueProcessor4;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 
 
 /**

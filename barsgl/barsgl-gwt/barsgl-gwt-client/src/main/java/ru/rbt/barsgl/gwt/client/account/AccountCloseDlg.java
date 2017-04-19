@@ -15,7 +15,7 @@ import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.Date;
 

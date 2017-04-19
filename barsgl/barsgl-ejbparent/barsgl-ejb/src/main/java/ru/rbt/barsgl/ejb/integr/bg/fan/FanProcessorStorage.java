@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.integr.bg.fan;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.fan.FanOperationProcessor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.LocalBean;

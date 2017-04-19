@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbcore.validation;
 
+import ru.rbt.ejbcore.validation.ValidationError;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
@@ -23,7 +23,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.SIGNED;
@@ -47,7 +47,7 @@ public class ProcessBatchOperationsTask implements ParamsAwareRunnable {
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Inject
     private BatchPostingRepository postingRepository;

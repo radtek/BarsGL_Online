@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.dem;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 
@@ -18,7 +18,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AcccountBalanceOndemandUnload;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AcccountBalanceOndemandUnload;
 
 /**
  * Created by Ivan Sevastyanov on 25.01.2016.
@@ -40,7 +40,7 @@ public class UniAccountBalanceUnloadTaskSupport {
     private CoreRepository repository;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Inject
     private StamtUnloadController unloadController;

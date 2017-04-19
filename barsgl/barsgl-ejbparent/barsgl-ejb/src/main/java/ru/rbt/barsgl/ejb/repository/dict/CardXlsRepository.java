@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.repository.dict;
 
 import ru.rbt.barsgl.ejb.entity.card.CardXls;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.util.Date;
 import java.util.List;

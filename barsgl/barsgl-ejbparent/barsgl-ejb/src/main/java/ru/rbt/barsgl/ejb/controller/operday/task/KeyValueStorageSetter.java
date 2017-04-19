@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.barsgl.audit.entity.AuditRecord;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;

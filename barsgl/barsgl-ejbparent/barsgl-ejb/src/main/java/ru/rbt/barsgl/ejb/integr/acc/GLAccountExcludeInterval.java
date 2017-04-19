@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import java.io.Serializable;
 

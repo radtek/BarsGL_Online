@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejb.repository.dict.AccType.*;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.dict.AccTypeWrapper;
 import ru.rbt.barsgl.shared.enums.AccLogTarget;
 import ru.rbt.barsgl.shared.enums.BoolType;
@@ -19,7 +19,8 @@ import javax.inject.Inject;
 import java.util.Date;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
+import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by akichigi on 24.08.16.
@@ -35,7 +36,8 @@ public class AccTypeController extends BaseDictionaryController<AccTypeWrapper, 
     private ActLogRepository actLogRepository;
 
     @Inject
-    private RequestContextBean contextBean;
+    private RequestContext contextBean;
+    //private RequestContextBean contextBean;
 
     @Inject
     private OperdayController operdayController;

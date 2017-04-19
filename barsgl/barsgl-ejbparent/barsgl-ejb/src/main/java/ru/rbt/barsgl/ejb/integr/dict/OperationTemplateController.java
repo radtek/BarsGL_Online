@@ -4,20 +4,21 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.OperationTemplate;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.dict.OperationTemplateRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by ER18837 on 17.03.16.
@@ -31,7 +32,8 @@ public class OperationTemplateController extends BaseDictionaryController<Manual
     private BankCurrencyRepository bankCurrencyRepository;
 
     @Inject
-    private RequestContextBean contextBean;
+    private RequestContext contextBean;
+    //private RequestContextBean contextBean;
 
     @Override
     public RpcRes_Base<ManualOperationWrapper> create(ManualOperationWrapper wrapper) {

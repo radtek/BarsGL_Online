@@ -8,7 +8,7 @@
     </parent>
     <artifactId>security-gwt-client</artifactId>
     <packaging>jar</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
     <dependencies>
         <dependency>
             <groupId>ru.rbt</groupId>

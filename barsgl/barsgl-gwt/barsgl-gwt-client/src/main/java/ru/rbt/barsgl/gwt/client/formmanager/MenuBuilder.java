@@ -37,10 +37,10 @@ import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.access.UserMenuItemWrapper;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
-import ru.rbt.barsgl.shared.enums.UserMenuCode;
-import ru.rbt.barsgl.shared.enums.UserMenuType;
+import ru.rbt.shared.access.UserMenuItemWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
+import ru.rbt.shared.enums.UserMenuCode;
+import ru.rbt.shared.enums.UserMenuType;
 
 import java.util.ArrayList;
 import java.util.List;

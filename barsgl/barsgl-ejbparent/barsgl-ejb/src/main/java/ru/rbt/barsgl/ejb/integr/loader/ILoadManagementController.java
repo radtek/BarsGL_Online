@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.integr.loader;
 
 import ru.rbt.barsgl.ejb.integr.dict.DictionaryController;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import java.io.Serializable;

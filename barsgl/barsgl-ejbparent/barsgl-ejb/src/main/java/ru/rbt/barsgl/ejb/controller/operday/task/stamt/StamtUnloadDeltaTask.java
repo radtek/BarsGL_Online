@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.barsgl.audit.entity.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.shared.criteria.Criteria;
 import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
 

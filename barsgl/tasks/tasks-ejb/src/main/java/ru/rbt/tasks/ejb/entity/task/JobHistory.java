@@ -1,7 +1,7 @@
 package ru.rbt.tasks.ejb.entity.task;
 
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 
 import javax.persistence.*;

@@ -1,13 +1,13 @@
 package ru.rbt.barsgl.ejbcore.job;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.JobStartupType;
 
 import javax.annotation.Resource;
@@ -24,8 +24,8 @@ import static java.lang.String.format;
 import javax.annotation.security.PermitAll;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.*;
-import static ru.rbt.barsgl.shared.Assert.assertThat;
-import static ru.rbt.barsgl.shared.Assert.notNull;
+import static ru.rbt.shared.Assert.assertThat;
+import static ru.rbt.shared.Assert.notNull;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.AUTO;
 
 /**

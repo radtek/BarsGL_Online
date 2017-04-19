@@ -21,7 +21,7 @@ import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.enums.JobSchedulingType;
 import ru.rbt.barsgl.shared.enums.JobStartupType;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
 
 import java.util.ArrayList;

@@ -2,12 +2,12 @@ package ru.rbt.security.gwt.server.rpc.auth;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
-import ru.rbt.barsgl.shared.LoginResult;
+import ru.rbt.shared.LoginResult;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.shared.user.AppUserWrapper;
 
 /**
  * Created by ER21006 on 13.01.2015.

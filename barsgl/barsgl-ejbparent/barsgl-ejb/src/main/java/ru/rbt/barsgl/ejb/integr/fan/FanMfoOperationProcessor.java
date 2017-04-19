@@ -5,8 +5,8 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -17,8 +17,8 @@ import java.util.List;
 import static com.google.common.collect.Iterables.find;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLPosting.PostingType.*;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.MFO_ACCOUNT_NOT_FOUND;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.MFO_ACCOUNT_NOT_FOUND;
 
 /**
  * Created by Ivan Sevastyanov

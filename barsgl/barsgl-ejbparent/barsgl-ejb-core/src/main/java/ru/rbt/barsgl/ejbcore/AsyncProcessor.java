@@ -1,7 +1,8 @@
 package ru.rbt.barsgl.ejbcore;
 
+import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.*;

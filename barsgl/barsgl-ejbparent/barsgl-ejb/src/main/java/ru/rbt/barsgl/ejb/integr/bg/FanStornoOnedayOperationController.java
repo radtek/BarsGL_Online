@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.integr.bg;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.audit.entity.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.fan.FanOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.fan.FanStornoOnedayOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.annotation.Resource;
@@ -24,9 +24,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.FanOperation;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.FanOperation;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by ER18837 on 18.05.15.

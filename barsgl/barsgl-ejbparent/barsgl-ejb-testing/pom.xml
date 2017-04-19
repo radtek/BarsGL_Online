@@ -9,7 +9,7 @@
 
     <artifactId>barsgl-ejb-testing</artifactId>
     <packaging>ejb</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <dependencies>
         <dependency>
@@ -28,9 +28,8 @@
         </dependency>
         <dependency>
             <groupId>ru.rbt</groupId>
-            <artifactId>barsgl-audit</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

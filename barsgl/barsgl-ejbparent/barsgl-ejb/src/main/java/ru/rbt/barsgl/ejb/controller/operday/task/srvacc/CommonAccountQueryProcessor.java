@@ -23,7 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.*;
 
 /**
  * Created by ER22228 on 16.05.2016.

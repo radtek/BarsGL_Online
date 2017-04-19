@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -32,7 +32,7 @@ import static java.lang.String.format;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import static ru.rbt.barsgl.ejb.entity.acc.AclirqJournal.Status.ERROR;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.*;
 
 
 /**

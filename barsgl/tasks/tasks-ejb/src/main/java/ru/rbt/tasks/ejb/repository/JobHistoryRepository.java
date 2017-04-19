@@ -3,7 +3,7 @@ package ru.rbt.tasks.ejb.repository;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;

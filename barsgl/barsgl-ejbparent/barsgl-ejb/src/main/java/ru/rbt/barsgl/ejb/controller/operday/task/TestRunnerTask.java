@@ -5,7 +5,7 @@ import com.ibm.jms.JMSMessage;
 import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -17,7 +17,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.TestRunner;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.TestRunner;
 
 /**
  * Created by ER22228 on 28.06.2016.

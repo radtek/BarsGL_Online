@@ -2,7 +2,7 @@ package ru.rbt.barsgl.shared.loader;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 
 import java.io.Serializable;
 import java.util.Date;

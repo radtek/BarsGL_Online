@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbcore;
 
+import ru.rbt.ejbcore.JpaAccessCallback;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.*;

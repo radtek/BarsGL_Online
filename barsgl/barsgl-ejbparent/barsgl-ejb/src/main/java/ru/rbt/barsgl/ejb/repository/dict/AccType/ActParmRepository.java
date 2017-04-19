@@ -6,10 +6,10 @@ import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParmId;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.Acod;
 import ru.rbt.barsgl.ejb.repository.dict.AcodRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.dict.ActParmWrapper;
 
 import javax.inject.Inject;
