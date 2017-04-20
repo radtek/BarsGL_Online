@@ -7,6 +7,7 @@ import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
+import ru.rbt.barsgl.ejb.rep.PostingBackValueRep;
 import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -165,6 +166,19 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
                 RpcRes_Base<Integer> res = localInvoker.invoke(ReprocessPostingService.class, "correctErrors",
                         errorIdList, comment, idPstCorr, type);
                 if (res == null) throw new Throwable("Не удалось скорректировать ошибки");
+                return res;
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> operExists(String date) throws Exception {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                RpcRes_Base<Boolean> res = localInvoker.invoke(PostingBackValueRep.class, "operExists", date);
+                if (res == null) throw new Throwable("Не удалось проверить наличие данных для отчета");
                 return res;
             }
         }.process();

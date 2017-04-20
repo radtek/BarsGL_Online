@@ -447,15 +447,16 @@ public class OperationDlg extends OperationDlgBase {
     }
 
     protected void checkSide(BigDecimal sum, BigDecimal sumRu, String currency, String bsaSecond, String side) {
-    	boolean trueSum = true;
+    	boolean trueSum;
     	if ("RUR".equals(currency)) {
     		trueSum = (sum.signum() > 0);
     	} else {
-    		trueSum = (sum.signum() > 0) || (null != sumRu && sumRu.signum() > 0 && bsaSecond.startsWith("706"));
+    		trueSum = (sum.signum() > 0) || (null != sumRu && sumRu.signum() > 0 &&
+                      (bsaSecond.startsWith("706") || bsaSecond.startsWith("526")));
     	}
     	if (!trueSum) {
-            showInfo("Ошибка", side + " сумма может быть равна 0 только для операций по курсовой разнице,\n" +
-                    "с установленным признаком 'без расчета курсовой разницы'");
+            showInfo("Ошибка", side + " сумма по валютному счету может равняться 0 только при условии\nотражения курсовой разницы (или финансового результата по сделке) и\n\n" +
+                     "установленном признаке 'Без проводки по курсовой разнице'");
             throw new IllegalArgumentException("column");
         }
     }

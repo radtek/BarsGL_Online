@@ -62,6 +62,7 @@ public class BarsGLEntryPoint implements EntryPoint {
     public static MonitorServiceAsync monitorService;
     private static String DATABASE_VERSION;
     public static Date CURRENT_WORKDAY;
+    public static Date CURRENT_OPER_DAY;
     
     @Override
     public void onModuleLoad() {

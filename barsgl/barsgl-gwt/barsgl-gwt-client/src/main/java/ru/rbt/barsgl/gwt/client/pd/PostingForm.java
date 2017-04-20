@@ -1,31 +1,40 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
+import ru.rbt.barsgl.gwt.client.Export.Export2ExcelHead;
+import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
+import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemFilterDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
+import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -71,6 +80,7 @@ public class PostingForm extends MDForm {
         masterActionBar.addAction(createPreview());
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
+        masterActionBar.addAction(BackValuePostingReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
@@ -442,4 +452,59 @@ public class PostingForm extends MDForm {
             }
             WaitingManager.hide();
         }
-    }}
+    }
+
+
+    private GridAction BackValuePostingReport() {
+        return new GridAction(masterGrid, null, "Отчет по Back Value", new Image(ImageConstants.INSTANCE.report()), 5) {
+
+            DateDlg dlg = null;
+            GridAction act = this;
+
+            @Override
+            public void execute() {
+                if (dlg == null) dlg = new DateDlg();
+                dlg.setDlgEvents(this);
+                dlg.setCaption("Выбор даты создания операций Back Value");
+                dlg.setDateLabel("Дата опердня создания операций Back Value");
+                dlg.show(null);
+            }
+
+            public void onDlgOkClick(Object prms){
+                dlg.hide();
+                final String data = (String) prms;
+                WaitingManager.show("Проверка наличия данных...");
+
+                BarsGLEntryPoint.operationService.operExists(data, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                        if (res.isError()) {
+                            WaitingManager.hide();
+                            DialogManager.message("Отчет", res.getMessage());
+                        } else {
+                            dlg.hide();
+                            WaitingManager.hide();
+                            setEnable(false);
+
+                            String user = "";
+                            AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+                            if (current_user != null){
+                                user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
+                            }
+
+                            ExcelExportHead head = new ExcelExportHead(Utils.Fmt("ОТЧЕТ по операциям BACK VALUE за {0}", data),
+                                    user, Utils.Fmt("дата проводки меньше {0}", data));
+
+                            Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(data), head,
+                                    new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
+                            e2e.export();
+                        }
+                    }
+                });
+            }
+        };
+    }
+
+}
+

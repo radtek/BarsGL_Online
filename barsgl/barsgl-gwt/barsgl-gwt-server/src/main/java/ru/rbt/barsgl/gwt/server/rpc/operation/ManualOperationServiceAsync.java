@@ -29,4 +29,6 @@ public interface ManualOperationServiceAsync {
     void exchangeCurrency(CurExchangeWrapper wrapper, AsyncCallback<RpcRes_Base<CurExchangeWrapper>> callback);
 
     void correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type, AsyncCallback<RpcRes_Base<Integer>> callback);
+
+    void operExists(String date, AsyncCallback<RpcRes_Base<Boolean>> callback);
 }

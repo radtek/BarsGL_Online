@@ -5,17 +5,23 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
+import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
+import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
+import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -38,6 +44,12 @@ public class OperDayForm extends BaseForm {
     private Label previousOD;
     private Label previousODBalanceStatus;
     private Label pdMode;
+
+    private Label reason;
+    private Grid vip_errors;
+    private Label vip;
+    private Label not_vip;
+
 
     public OperDayForm(){
         super();
@@ -82,6 +94,7 @@ public class OperDayForm extends BaseForm {
 
         ActionBarWidget abw = new ActionBarWidget();
         abw.addAction(createRefreshAction());
+        abw.addAction(export2ExcelActtion());
 
         abw.addSecureAction(createOpenODAction(), SecurityActionCode.TskOdOpenRun);
         abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
@@ -89,17 +102,70 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
 
-//        abw.addSecureAction(createFakeCOB(), SecurityActionCode.TskOdPreCobRun);
-
 
         refreshAction.execute();
 
         DockLayoutPanel panel = new DockLayoutPanel(Style.Unit.MM);
 
         panel.addNorth(abw, 10);
-        panel.add(grid);
+        VerticalPanel vp = new VerticalPanel();
 
+        vp.add(grid);
+        vp.add(createCOB_OKInfo());
+        vp.add(vip_errors = createVipErrorInfo());
+        panel.add(vp);
         return panel;
+    }
+
+    private Grid createVipErrorInfo(){
+        Grid grid = new Grid(2,2);
+        Label label;
+        grid.getElement().getStyle().setMarginLeft(5, Style.Unit.PX);
+
+        grid.setWidget(0, 0, label = new Label("Ошибки обработки по VIP-клиентам:"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.setWidget(1, 0, label = new Label("Ошибки обработки по не VIP-клиентам:"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+
+        grid.setWidget(0, 1, vip = new Label(""));
+        grid.setWidget(1, 1, not_vip = new Label(""));
+        grid.getCellFormatter().setWidth(0, 0, "285px");
+        grid.setVisible(false);
+
+        return grid;
+    }
+
+    private Grid createCOB_OKInfo(){
+        Grid grid = new Grid(1,2);
+        Label label;
+        grid.getElement().getStyle().setMarginLeft(5, Style.Unit.PX);
+        grid.getElement().getStyle().setMarginTop(10, Style.Unit.PX);
+
+        grid.setWidget(0, 0, label = new Label("Состояние GL Online"));label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+
+        grid.setWidget(0, 1, reason = new Label(""));
+        grid.getCellFormatter().setWidth(0, 0, "285px");
+
+        return grid;
+    }
+
+    private void setCOB_OKInfo(OperDayWrapper operDayWrapper){
+        reason.setText("");
+        vip.setText("");
+        not_vip.setText("");
+        vip_errors.setVisible(false);
+
+        COB_OKWrapper wrapper = operDayWrapper.getCobOkWrapper();
+        if (wrapper == null) return;
+
+        reason.setText(wrapper.getReason() == null ? "" : wrapper.getReason().toString());
+        vip.setText(wrapper.getVipCount() == null ? "" :
+                (wrapper.getVipCount() == 0 ? "0 (OK)" : wrapper.getVipCount().toString()));
+
+        not_vip.setText(wrapper.getNotVipCount() == null ? "" :
+                (wrapper.getNotVipCount() <= 10 ? Utils.Fmt("{0} (OK)", wrapper.getNotVipCount()) : wrapper.getNotVipCount().toString()));
+
+        vip_errors.setVisible(wrapper.getState() != null && wrapper.getState() == 0);
     }
 
     private void operDateRefresh(OperDayWrapper operDayWrapper){
@@ -110,6 +176,7 @@ public class OperDayForm extends BaseForm {
         pdMode.setText(operDayWrapper.getPdMode());
 
         setButtonsEnabled(operDayWrapper.getEnabledButton());
+        setCOB_OKInfo(operDayWrapper);
     }
 
     private void setButtonsEnabled(OperDayButtons button){
@@ -167,7 +234,9 @@ public class OperDayForm extends BaseForm {
                         if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
+                            refreshAction.execute();
                             open_OD.setEnable(false);
+
                             DialogManager.message("Инфо", "Задание 'Открытие ОД' выполнено.\n" +
                                     "Для обновления информации нажмите 'Обновить'.");
                         }
@@ -197,6 +266,7 @@ public class OperDayForm extends BaseForm {
                         if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
+                            refreshAction.execute();
                             close_Balance_Previous_OD.setEnable(false);
                             DialogManager.message("Инфо", "Задание 'Закрытие баланса предыдущего ОД' выполнено.\n" +
                                     "Для обновления информации нажмите 'Обновить'. ");
@@ -227,6 +297,7 @@ public class OperDayForm extends BaseForm {
                         if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
+                            refreshAction.execute();
                             change_Phase_To_PRE_COB.setEnable(false);
 //                            DialogManager.message("Инфо", "Задание 'Перевод фазы в PRE_COB' выполнено.\n" +
 //                                    "Для обновления информации нажмите 'Обновить'.");
@@ -252,6 +323,7 @@ public class OperDayForm extends BaseForm {
                         if (res.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                         } else {
+                            refreshAction.execute();
                             pdMode.setText(res.getResult().getPdMode());
                             DialogManager.message("Инфо", "Режим обработки проводок изменен.\n" +
                                     "Для обновления информации нажмите 'Обновить'.");
@@ -276,6 +348,12 @@ public class OperDayForm extends BaseForm {
                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                        } else {
                            (dlg = dlg == null ? new COBMonitoringDlg() : dlg).show(result.getResult());
+                            dlg.setAfterCancelEvent(new IAfterCancelEvent() {
+                               @Override
+                               public void afterCancel() {
+                                   refreshAction.execute();
+                               }
+                           });
                        }
                        WaitingManager.hide();
                    }
@@ -284,7 +362,17 @@ public class OperDayForm extends BaseForm {
        };
    }
 
-
+   private Action export2ExcelActtion(){
+       return new Action(null, "Ночной отчет об ошибках", new Image(ImageConstants.INSTANCE.report()), 5) {
+           @Override
+           public void execute() {
+               setEnable(false);
+               Export2Excel e2e = new Export2Excel(new NigthErrRepExportData(), null,
+                                                   new ExportActionCallback(this, UUID.randomUUID().replace("-", "")));
+               e2e.export();
+           }
+       };
+   }
 
     private Action createFakeCOB(){
         return new Action("Fake COB", "", null, 5){

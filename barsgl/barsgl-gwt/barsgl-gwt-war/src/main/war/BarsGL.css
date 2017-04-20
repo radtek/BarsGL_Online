@@ -303,3 +303,14 @@
 .progressbar-66 {
   background: blue;
 }
+
+/*
+Menu
+*/
+.gwt-MenuBar .gwt-MenuItem {
+   cursor: pointer !important;
+}
+
+.gwt-MenuBar .gwt-MenuItem-selected {
+   cursor: pointer !important;
+}

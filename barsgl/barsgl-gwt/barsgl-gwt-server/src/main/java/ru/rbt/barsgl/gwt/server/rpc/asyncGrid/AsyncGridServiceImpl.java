@@ -69,7 +69,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
         for (int i = 0; i < columns.getColumnCount(); i++) {
             Column column = columns.getColumnByIndex(i);
-            if (column.isVisible())
+            if (column.isVisible() && column.getWidth() > 0)
                 xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
         }
 
@@ -185,7 +185,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
         for (int i = 0; i < columns.getColumnCount(); i++) {
             Column column = columns.getColumnByIndex(i);
-            if (column.isVisible())
+            if (column.isVisible() && column.getWidth() > 0)
                 xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
         }
 
