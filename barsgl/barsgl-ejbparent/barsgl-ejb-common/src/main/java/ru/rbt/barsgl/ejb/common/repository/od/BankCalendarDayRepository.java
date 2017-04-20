@@ -20,7 +20,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 " where c1.dat = (\n" +
                 "   select max(dat) from cal\n" +
                 "   where dat < ?1 and ccy = ?2\n" +
-                "     and hol <> 'X') " +
+                "     and hol <> 'X' and hol <> 'T') " +
                 "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
     }
 
@@ -30,7 +30,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 " where c1.dat = (\n" +
                 "   select min(dat) from cal\n" +
                 "   where dat > ?1 and ccy = ?2\n" +
-                "     and hol <> 'X') " +
+                "     and hol <> 'X' and hol <> 'T') " +
                 "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
     }
 
@@ -45,7 +45,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 "select * from cal " +
                         "where ccy = ?1 and dat >= ?2 " +
                         "  and dat <= ?3 " +
-                        "  and hol <> 'X' order by dat", 100, BANK_CALENDAR_CODE, fromDay, toDay);
+                        "  and hol <> 'X' and hol <> 'T' order by dat", 100, BANK_CALENDAR_CODE, fromDay, toDay);
     }
 
     /**
@@ -61,12 +61,28 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 "  and dat <= ?3 \n" +
                 "order by dat", 100, BANK_CALENDAR_CODE, fromDay, toDay);
     }
+
     /**
      * является ли день рабочим
      * @param date
      * @return
      */
     public boolean isWorkday(Date date) {
+        return null != findNativeFirst(BankCalendarDay.class,
+                "select * from cal c1 \n" +
+                        " where c1.dat = (\n" +
+                        "   select min(dat) from cal\n" +
+                        "   where dat = ?1 and ccy = ?2\n" +
+                        "     and hol <> 'X' and hol <> 'T') " +
+                        "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
+    }
+
+    /**
+     * является ли день рабочим (включая технический раб день)
+     * @param date
+     * @return
+     */
+    public boolean isWorkdayWithTech(Date date) {
         return null != findNativeFirst(BankCalendarDay.class,
                 "select * from cal c1 \n" +
                         " where c1.dat = (\n" +

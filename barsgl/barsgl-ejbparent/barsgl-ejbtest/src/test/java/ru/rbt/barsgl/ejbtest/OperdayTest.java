@@ -258,7 +258,7 @@ public class OperdayTest extends AbstractTimerJobTest {
      * @throws Exception
      */
     @Test public void testPreCOBOnOpenedLWD() throws Exception {
-
+        // TODO чтобы тест прошел, надо запустить вручную Мониторинг АЕ (на тесте он не всегда сам запускается)
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, OPEN);
 
