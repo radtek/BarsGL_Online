@@ -114,6 +114,7 @@ public class BarsGLEntryPoint implements EntryPoint {
         LoginForm loginForm = new LoginForm();
         loginForm.setEnterHandler(new LoginFormHandler(loginForm));
         loginForm.show();
+        loginForm.focus();
     }
 
     public class DefaultAppUncaughtExceptionHandler implements GWT.UncaughtExceptionHandler {

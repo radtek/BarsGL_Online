@@ -123,25 +123,25 @@ public class MenuBuilder {
                 public void execute() {
                     //formLoad(new TasksForm());
                     BarsGLEntryPoint.propertiesService.getEnvProperty("java:app/env/SchedTableName", new AsyncCallback<RpcRes_Base<String>>() {
-                          @Override
-                          public void onSuccess(RpcRes_Base<String> result) {
-                              final String schedTableName = result.getResult();
-                              formLoad(new TasksFormNew(){
+                        @Override
+                        public void onSuccess(RpcRes_Base<String> result) {
+                            final String schedTableName = result.getResult();
+                            formLoad(new TasksFormNew() {
                                 @Override
                                 protected String prepareSql() {
-                                  return "SELECT * FROM " + schedTableName;
+                                    return "SELECT * FROM " + schedTableName;
                                 }
-                                
-                              });
-                          }
 
-                          @Override
-                          public void onFailure(Throwable caught) {
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(Throwable caught) {
                             throw new RuntimeException(caught);
-                          }
-                      });      
+                        }
+                    });
                 }
-            });            
+            });
 
             case LoaderControl: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
@@ -216,10 +216,16 @@ public class MenuBuilder {
                     formLoad(new PDForm());
                 }
             });
-            case ErrorOper: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+            case ErrorView: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
                     formLoad(new LoadErrorForm());
+                }
+            });
+            case ErrorHandling: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new LoadErrorHandlingForm());
                 }
             });
             case UnloadAccountBalance: return new MenuItem(wrapper.getMenuName(), false, new Command() {

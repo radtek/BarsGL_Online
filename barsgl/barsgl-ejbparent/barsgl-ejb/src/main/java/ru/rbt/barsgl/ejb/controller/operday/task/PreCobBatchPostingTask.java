@@ -33,6 +33,7 @@ import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
  */
 public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
     private static final Logger logger = Logger.getLogger(PreCobBatchPostingTask.class.getName());
+    private static final String DELIM = "; \n";
 
     @Inject
     private OperdayController operdayController;
@@ -61,7 +62,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
         executeWork();
     }
 
-    public void executeWork() {
+    public String executeWork() {
         final Operday operday = operdayController.getOperday();
         Date curdate = operday.getCurrentDate();
         try {
@@ -72,27 +73,31 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
 //            checkOperdayStatus(operday);
 
             // установить таймауты и статусы пакетов, ожидающих ответы
-            processPostingsTimeout(operday);
+            String msg = processPostingsTimeout(operday);
 
             // обработать ручные запросы со статусом WAITDATE
-            processManualWaitdate(operday);
+            msg += processManualWaitdate(operday);
             // обработать ручные запросы со статусом SIGNED, SIGNEDDATE
-            processManualSigned(operday);
+            msg += processManualSigned(operday);
             // обработать пекетные запросы со статусом WAITDATE
-            processPackagesWaitdate(operday);
+            msg += processPackagesWaitdate(operday);
             // обработать пекетные запросы со статусом SIGNED, SIGNEDDATE
-            processPackagesSigned(operday);
+            msg += processPackagesSigned(operday);
             // обработать запросы со статусами WORKING
-            processPostingsUnknown(operday);
+            msg += processPostingsUnknown(operday);
             // сделать все остальные запросы невидимыми
-            setPostingsInvisible(operday);
+            msg += setPostingsInvisible(operday);
 
-            auditController.info(AuditRecord.LogCode.PreCob, format("Успешное завершение обработки запросов на операцию с неподтвержденной датой за текущий ОД '%s'",
+            String msg1;
+            auditController.info(AuditRecord.LogCode.PreCob, msg1 = format("Успешное завершение обработки запросов на операцию с неподтвержденной датой за текущий ОД '%s'",
                     dateUtils.onlyDateString(curdate)));
+            return msg + msg1;
         } catch (Throwable e) {
+            String msg;
             auditController.error(AuditRecord.LogCode.PreCob
-                    , format("Ошибка обработки запросов на операцию с неподтвержденной датой за текущий ОД '%s'",
+                    , msg = format("Ошибка обработки запросов на операцию с неподтвержденной датой за текущий ОД '%s'",
                     dateUtils.onlyDateString(curdate)), null, e);
+            return msg;
         }
     }
 
@@ -102,19 +107,21 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @return
      * @throws Exception
      */
-    private int processPostingsTimeout(Operday operday) throws Exception {
+    private String processPostingsTimeout(Operday operday) throws Exception {
         return postingRepository.executeInNewTransaction(persistence -> {
+            String msg1 = "";
             // найти запросы с таймаутом, изменить статус
-            int cnt = movementReceiveTask.updatePostingsTimeout(operday.getCurrentDate(), 0);
+            int cnt1 = movementReceiveTask.updatePostingsTimeout(operday.getCurrentDate(), 0);
             auditController.info(AuditRecord.LogCode.PreCob,
-                    format("Установлен таймаут по запросам на операцию : %d", cnt));
+                    msg1 = format("Установлен таймаут по запросам на операцию : %d", cnt1));
 
             // найти пакеты, получившие все ответы, изменить статус
-            cnt = movementReceiveTask.updatePackagesReceiveSrv(operday.getCurrentDate());
+            String msg2 = "";
+            int cnt2 = movementReceiveTask.updatePackagesReceiveSrv(operday.getCurrentDate());
             auditController.info(AuditRecord.LogCode.PreCob,
-                    format("Отправлены на обработку пакеты с запросами без ответов: %d", cnt));
+                    msg2 = format("Отправлены на обработку пакеты с запросами без ответов: %d", cnt2));
 
-            return cnt;
+            return cnt1+cnt2 > 0 ? msg1 + DELIM + msg2 + DELIM : "";
         });
     }
 
@@ -125,18 +132,19 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @return
      * @throws Exception
      */
-    private int processManualWaitdate(Operday operday) throws Exception {
+    private String processManualWaitdate(Operday operday) throws Exception {
         postingRepository.executeInNewTransaction(persistence ->
                     postingRepository.setPostingsWaitDate(operday.getCurrentDate())
         );
         return postingRepository.executeInNewTransaction(persistence -> {
             List<BatchPosting> postings = postingRepository.getPostingsWaitDate(operday.getCurrentDate());
             int errorCount = operationController.processPostings(postings);
+            String msg;
             auditController.info(AuditRecord.LogCode.PreCob,
-                    format("Обработано запросов на операцию (ручных) с неподтвержденной датой в текущий ОД: %d, из них с ошибкой: %d",
+                    msg = format("Обработано запросов на операцию (ручных) с неподтвержденной датой в текущий ОД: %d, из них с ошибкой: %d",
                     postings.size(), errorCount));
 
-            return errorCount;
+            return postings.size() > 0 ? msg + DELIM : "";
         });
     }
 
@@ -146,15 +154,16 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @return
      * @throws Exception
      */
-    private int processManualSigned(Operday operday) throws Exception {
+    private String processManualSigned(Operday operday) throws Exception {
         return postingRepository.executeInNewTransaction(persistence -> {
             List<BatchPosting> postings = postingRepository.getPostingsSigned(operday.getCurrentDate());
             int errorCount = operationController.processPostings(postings);
+            String msg;
             auditController.info(AuditRecord.LogCode.PreCob,
-                    format("Дообработано подтвержденных запросов на операцию (ручных): %d, из них с ошибкой: %d",
+                    msg = format("Дообработано подтвержденных запросов на операцию (ручных): %d, из них с ошибкой: %d",
                             postings.size(), errorCount));
 
-            return errorCount;
+            return postings.size() > 0 ? msg + DELIM : "";
         });
     }
 
@@ -164,7 +173,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @return
      * @throws Exception
      */
-    private int processPackagesWaitdate(Operday operday) throws Exception {
+    private String processPackagesWaitdate(Operday operday) throws Exception {
         Date curdate = operday.getCurrentDate();
         List<Long> packages = packageRepository.getPackagesWaitdate(curdate);
         int totalCount = 0;
@@ -179,10 +188,11 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
             totalCount += result.getTotalCount();
             errorCount += result.getErrorCount();
         }
+        String msg;
         auditController.info(AuditRecord.LogCode.PreCob,
-                format("Обработано запросов на операцию с неподтвержденной датой из %d пакетов в текущий ОД: %d, из них с ошибкой: %d",
+                msg = format("Обработано запросов на операцию с неподтвержденной датой из %d пакетов в текущий ОД: %d, из них с ошибкой: %d",
                         packages.size(), totalCount, errorCount));
-        return errorCount;
+        return totalCount > 0 ? msg + DELIM : "";
     }
 
     /**
@@ -191,7 +201,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @return
      * @throws Exception
      */
-    private int processPackagesSigned(Operday operday) throws Exception {
+    private String processPackagesSigned(Operday operday) throws Exception {
         Date curdate = operday.getCurrentDate();
         List<Long> packages = packageRepository.getPackagesSigned(curdate);
         int totalCount = 0;
@@ -207,10 +217,11 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
             totalCount += result.getTotalCount();
             errorCount += result.getErrorCount();
         }
+        String msg;
         auditController.info(AuditRecord.LogCode.PreCob,
-                format("Обработано запросов на операцию с подтвержденной датой из %d пакетов в текущий ОД: %d, из них с ошибкой: %d",
+                msg = format("Обработано запросов на операцию с подтвержденной датой из %d пакетов в текущий ОД: %d, из них с ошибкой: %d",
                         packages.size(), totalCount, errorCount));
-        return errorCount;
+        return totalCount > 0 ? msg + DELIM : "";
     }
 
     /**
@@ -218,7 +229,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @param operday
      * @return
      */
-    private int processPostingsUnknown(Operday operday) throws Exception {
+    private String processPostingsUnknown(Operday operday) throws Exception {
         final BatchPostStatus statusOld = WORKING;
         List<DataRecord> postingsList = postingRepository.select("select ID, STATE from GL_BATPST b " +
                 " where b.PROCDATE = ? and b.STATE = ? and b.INVISIBLE = ? and exists" +
@@ -226,7 +237,7 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
                 " o.INP_METHOD in ('F', 'M') and o.PST_REF = b.ID and o.PROCDATE = ? and o.STATE = 'POST')",
                 operday.getCurrentDate(), statusOld.name(), InvisibleType.N.name(), operday.getCurrentDate());
         if (null == postingsList)
-            return 0;
+            return "";
 
         int count = 0;
         for (DataRecord data : postingsList) {
@@ -238,9 +249,10 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
                         "Изменен статус процедурой закрытия дня – найдены проводки по данному сообщению");
                 });
         }
+        String msg;
         auditController.info(AuditRecord.LogCode.PreCob,
-                format("Изменен статус запросов на операцию '%s' на '%s': %d", statusOld.name(), COMPLETED.name(), count));
-        return postingsList.size();
+                msg = format("Изменен статус запросов на операцию '%s' на '%s': %d", statusOld.name(), COMPLETED.name(), count));
+        return count > 0 ? msg + DELIM : "";
     }
 
     /**
@@ -248,11 +260,12 @@ public class PreCobBatchPostingTask  implements ParamsAwareRunnable {
      * @param operday
      * @return
      */
-    private int setPostingsInvisible(Operday operday) throws Exception {
+    private String setPostingsInvisible(Operday operday) throws Exception {
         int count = postingRepository.executeInNewTransaction(persistence ->
             postingRepository.setUnprocessedPostingsInvisible(operdayController.getSystemDateTime(), operday.getCurrentDate()));
+        String msg;
         auditController.info(AuditRecord.LogCode.PreCob,
-                format("Для необработанных запросов на операцию установлен признак 'INVISIBLE' в 'S': %d", count));
-        return count;
+                msg = format("Для необработанных запросов на операцию установлен признак 'INVISIBLE' в 'S': %d", count));
+        return count > 0 ? msg + DELIM : "";
     }
 }

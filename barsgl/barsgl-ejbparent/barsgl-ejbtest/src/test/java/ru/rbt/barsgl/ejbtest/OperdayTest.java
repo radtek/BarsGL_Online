@@ -11,10 +11,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -33,10 +30,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
@@ -196,8 +190,8 @@ public class OperdayTest extends AbstractTimerJobTest {
                 , EtlPackage.PackageState.PROCESSED, loadDateCalendar.getTime());
 
         SingleActionJob job = SingleActionJobBuilder.create()
-                .withClass(ExecutePreCOBTask.class).withName(System.currentTimeMillis() + "")
-                .withProps(ExecutePreCOBTask.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
+                .withClass(ExecutePreCOBTaskNew.class).withName(System.currentTimeMillis() + "")
+                .withProps(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
 
         jobService.executeJob(job);
@@ -247,8 +241,8 @@ public class OperdayTest extends AbstractTimerJobTest {
 
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
         SingleActionJob calendarJob = SingleActionJobBuilder.create()
-                .withClass(ExecutePreCOBTask.class)
-                .withProps(ExecutePreCOBTask.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
+                .withClass(ExecutePreCOBTaskNew.class)
+                .withProps(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
 
         jobService.executeJob(calendarJob);
 
@@ -298,12 +292,12 @@ public class OperdayTest extends AbstractTimerJobTest {
         CalendarJob calendarJob = new CalendarJob();
         calendarJob.setDelay(0L);
         calendarJob.setDescription("test calendar job");
-        calendarJob.setRunnableClass(ExecutePreCOBTask.class.getName());
+        calendarJob.setRunnableClass(ExecutePreCOBTaskNew.class.getName());
         calendarJob.setStartupType(MANUAL);
         calendarJob.setState(STOPPED);
         calendarJob.setName(System.currentTimeMillis() + "");
         calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
-        calendarJob.setProperties(ExecutePreCOBTask.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
+        calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
 
         jobService.executeJob(calendarJob);
 
@@ -317,37 +311,39 @@ public class OperdayTest extends AbstractTimerJobTest {
     public void testChronology() throws ParseException, IOException {
         Date operday = DateUtils.parseDate("01.01.2016", "dd.MM.yyyy");
         Date sysdate = DateUtils.parseDate("01.01.2016 02:00", "dd.MM.yyyy HH:mm");
+        List<String> errList = new ArrayList<>();
         Properties properties = new Properties();
-        properties.load(new StringReader(ExecutePreCOBTask.CHECK_CHRONOLOGY_KEY+"=true"));
-        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTask.class, "checkChronology", operday, sysdate, properties));
+        properties.load(new StringReader(ExecutePreCOBTaskNew.CHECK_CHRONOLOGY_KEY+"=true"));
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkChronology", operday, sysdate, properties, errList));
 
         properties = new Properties();
-        properties.load(new StringReader(ExecutePreCOBTask.CHECK_CHRONOLOGY_KEY+"=false"));
-        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTask.class, "checkChronology", operday, sysdate, properties));
+        properties.load(new StringReader(ExecutePreCOBTaskNew.CHECK_CHRONOLOGY_KEY+"=false"));
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkChronology", operday, sysdate, properties, errList));
 
         properties = new Properties();
-        properties.load(new StringReader("#" + ExecutePreCOBTask.CHECK_CHRONOLOGY_KEY+"=true"));
-        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTask.class, "checkChronology", operday, sysdate, properties));
+        properties.load(new StringReader("#" + ExecutePreCOBTaskNew.CHECK_CHRONOLOGY_KEY+"=true"));
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkChronology", operday, sysdate, properties, errList));
 
-        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTask.class, "checkChronology", operday, sysdate, new Properties()));
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkChronology", operday, sysdate, new Properties(), errList));
 
         properties = new Properties();
-        properties.load(new StringReader(ExecutePreCOBTask.CHECK_CHRONOLOGY_KEY+"=true"));
+        properties.load(new StringReader(ExecutePreCOBTaskNew.CHECK_CHRONOLOGY_KEY+"=true"));
         sysdate = DateUtils.parseDate("02.01.2016 02:00", "dd.MM.yyyy HH:mm");
-        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTask.class, "checkChronology", operday, sysdate, properties));
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkChronology", operday, sysdate, properties, errList));
 
         properties = new Properties();
-        properties.load(new StringReader(ExecutePreCOBTask.CHECK_CHRONOLOGY_KEY+"=true"));
+        properties.load(new StringReader(ExecutePreCOBTaskNew.CHECK_CHRONOLOGY_KEY+"=true"));
         sysdate = DateUtils.parseDate("02.01.2016 00:00", "dd.MM.yyyy HH:mm");
-        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTask.class, "checkChronology", operday, sysdate, properties));
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkChronology", operday, sysdate, properties, errList));
     }
 
     /**
      * проверка наличия необработанных пакетов при закрытии ОД
      */
     @Test public void testCheckPackages() {
+        List<String> errList = new ArrayList<>();
         baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1", EtlPackage.PackageState.PROCESSED);
-        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTask.class, "checkPackagesToloadExists", new Properties()));
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkPackagesToloadExists", new Properties(), errList));
 
         Long stamp = System.currentTimeMillis();
         EtlPackage pkg1 = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
@@ -361,11 +357,11 @@ public class OperdayTest extends AbstractTimerJobTest {
                 , EtlPackage.PackageState.LOADED, pkg1.getId());
         baseEntityRepository.executeUpdate("update EtlPosting p set p.valueDate = ?1 where p.etlPackage = ?2"
                 , getOperday().getCurrentDate(), pkg1);
-        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTask.class, "checkPackagesToloadExists", new Properties()));
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkPackagesToloadExists", new Properties(), errList));
 
         Properties properties = new Properties();
-        properties.setProperty(ExecutePreCOBTask.CHECK_PACKAGES_KEY, "false");
-        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTask.class, "checkPackagesToloadExists", properties));
+        properties.setProperty(ExecutePreCOBTaskNew.CHECK_PACKAGES_KEY, "false");
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkPackagesToloadExists", properties, errList));
 
     }
 

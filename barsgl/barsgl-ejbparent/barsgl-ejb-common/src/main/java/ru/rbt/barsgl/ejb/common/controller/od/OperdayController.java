@@ -6,7 +6,6 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.Assert;
@@ -92,7 +91,7 @@ public class OperdayController {
 
     @Lock(WRITE)
     public void setPreCOB() throws Exception {
-        Assert.isTrue(ONLINE == operday.getPhase());
+        Assert.isTrue(ONLINE == operday.getPhase(), "Операционный день не в статусе 'ONLINE'!");
         repository.updateOperdayPhase(PRE_COB);
         init();
     }

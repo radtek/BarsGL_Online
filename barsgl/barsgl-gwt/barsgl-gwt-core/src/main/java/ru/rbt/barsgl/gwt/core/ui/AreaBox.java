@@ -3,7 +3,6 @@ package ru.rbt.barsgl.gwt.core.ui;
 /**
  * Created by akichigi on 29.04.15.
  */
-import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.event.dom.client.*;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.TextArea;
