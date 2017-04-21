@@ -61,11 +61,11 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
     @Inject
     private RateRepository rateRepository;
 
-    @Inject
-    private OperdayController operdayController;
-
-    @Inject
-    private DateUtils dateUtils;
+//    @Inject
+//    private OperdayController operdayController;
+//
+//    @Inject
+//    private DateUtils dateUtils;
 
     @Inject
     private BankCalendarDayRepository calendarDayRepository;
@@ -73,14 +73,14 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
     @Inject
     private OperdayRepository operdayRepository;
 
-    @EJB
-    private EtlPostingController etlPostingController;
-
-    @EJB
-    private PreCobStepController preCobStepController;
-
-    @EJB
-    private AuditController auditController;
+//    @EJB
+//    private EtlPostingController etlPostingController;
+//
+//    @EJB
+//    private PreCobStepController preCobStepController;
+//
+//    @EJB
+//    private AuditController auditController;
 
     @EJB
     private BackgroundJobService backgroundJobService;

@@ -42,11 +42,11 @@ public class LoadCurratesTask extends AbstractJobHistoryAwareTask {
 
     public static final Logger log = Logger.getLogger(LoadCurratesTask.class.getName());
 
-    @Inject
-    private OperdayController operdayController;
+//    @Inject
+//    private OperdayController operdayController;
 
-    @Inject
-    private DateUtils dateUtils;
+//    @Inject
+//    private DateUtils dateUtils;
 
     @Inject
     private BankCalendarDayRepository calendarDayRepository;
@@ -57,8 +57,8 @@ public class LoadCurratesTask extends AbstractJobHistoryAwareTask {
     @Inject
     private BankCurrencyRepository currencyRepository;
 
-    @EJB
-    private AuditController auditController;
+//    @EJB
+//    private AuditController auditController;
 
     @Inject
     private TextResourceController textResourceController;
@@ -213,7 +213,8 @@ public class LoadCurratesTask extends AbstractJobHistoryAwareTask {
     private void loadPreviousCurrates(Date date, Date workdayBefore) {
         rateRepository.executeNativeUpdate(
                 "insert into currates (" +
-                        "select date('" + dateUtils.dbDateString(date) + "'),c.CCY,c.RATE,c.AMNT,c.RATE\n" +
+                        //"select date('" + dateUtils.dbDateString(date) + "'),c.CCY,c.RATE,c.AMNT,c.RATE\n" +
+                        "select to_date('" + dateUtils.dbDateString(date)+ "', 'yyyy-MM-dd'),c.CCY,c.RATE,c.AMNT,c.RATE\n" +
                         "  from currates c\n" +
                         " where c.dat = ?\n" +
                         "   and not exists (select 1 from currates c2 where c2.dat = ? and c2.ccy = c.ccy))", workdayBefore, date);

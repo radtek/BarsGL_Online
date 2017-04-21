@@ -35,7 +35,7 @@ public class AcDNJournal extends BaseEntity<Long> {
     @Temporal(TemporalType.TIMESTAMP)
     private Date statusDate;
 
-    @Column(name = "COMMENT")
+    @Column(name = "\"COMMENT\"") // COMMENT is oracle db reserved word
     private String comment;
 
     @Override

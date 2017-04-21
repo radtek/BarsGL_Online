@@ -13,7 +13,6 @@ import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AcodRepository;
 import ru.rbt.barsgl.ejb.repository.dict.PropertyTypeRepository;
 import ru.rbt.barsgl.ejb.repository.dict.TypesOfTermsRepository;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.shared.ctx.UserRequestHolder;
@@ -53,7 +52,6 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Inject
     private OperdayController operdayController;

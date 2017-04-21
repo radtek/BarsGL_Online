@@ -5,15 +5,11 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -23,12 +19,10 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -56,12 +50,6 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 public class AccountDetailsNotifyProcessor implements Serializable {
     private static final Logger log = Logger.getLogger(AccountDetailsNotifyProcessor.class);
 
-    @EJB
-    private BeanManagedProcessor beanManagedProcessor;
-
-    @EJB
-    private GLAccountRequestRepository accountRequestRepository;
-
     @Inject
     private AccRlnRepository accRlnRepository;
 
@@ -77,20 +65,11 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     @EJB
     private AcDNJournalDataRepository journalDataRepository;
 
-    @Inject
-    private GLAccountService glAccountService;
-
-    @Inject
-    private OperdayRepository operdayRepository;
-
     @EJB
     private AuditController auditController;
 
     @EJB
     private CoreRepository coreRepository;
-
-    @Inject
-    private OperdayController operdayController;
 
     static String[] paramNamesOpen = {"AccountNo", "Branch", "CBAccountNo", "Ccy", "CcyDigital", "Description", "Status",
             "CustomerNo", "Special", "OpenDate", "Positioning/HostABS"};
@@ -146,7 +125,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
                 return;
             }
         } else if (!isEmpty(branch)){
-            DataRecord recMidas = coreRepository.selectFirst("SELECT midas_branch FROM DWH.DH_BR_MAP where fcc_branch=?", branch);
+            DataRecord recMidas = coreRepository.selectFirst("SELECT midas_branch FROM DH_BR_MAP where fcc_branch=?", branch);
             DataRecord recGlacc = coreRepository.selectFirst("SELECT branch from gl_acc where bsaacid=?", bsaacid);
 
             if (recMidas == null){
@@ -314,7 +293,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
                         xmlData.put("AccountNo", pseudoAcid);
                     }
                 } else {
-                    journalRepository.updateLogStatus(jId, ERROR, "Параметр Midas Branch не вычислен. SELECT MIDAS_BRANCH FROM DWH.DH_BR_MAP WHERE FCC_BRANCH=? :" + xmlData.get("Branch"));
+                    journalRepository.updateLogStatus(jId, ERROR, "Параметр Midas Branch не вычислен. SELECT MIDAS_BRANCH FROM DH_BR_MAP WHERE FCC_BRANCH=? :" + xmlData.get("Branch"));
                     return false;
                 }
                 journalRepository.updateLogStatus(jId, ENRICHED, "");

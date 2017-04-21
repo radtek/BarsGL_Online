@@ -310,7 +310,7 @@ public class AccountQueryTask implements ParamsAwareRunnable {
                     jId = 0L;
                 }
             } catch (JMSException e) {
-                auditController.error(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
+                auditController.error(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
             }
 
             if (jId > 0) {

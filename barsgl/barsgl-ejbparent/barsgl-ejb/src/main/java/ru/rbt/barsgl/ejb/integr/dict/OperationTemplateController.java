@@ -6,7 +6,6 @@ import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.dict.OperationTemplateRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.shared.ctx.UserRequestHolder;
@@ -33,7 +32,6 @@ public class OperationTemplateController extends BaseDictionaryController<Manual
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Override
     public RpcRes_Base<ManualOperationWrapper> create(ManualOperationWrapper wrapper) {

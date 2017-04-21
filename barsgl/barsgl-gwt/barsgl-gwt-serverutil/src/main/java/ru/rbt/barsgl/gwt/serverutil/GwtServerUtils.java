@@ -3,7 +3,6 @@ package ru.rbt.barsgl.gwt.serverutil;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.ejbcore.remote.http.HttpServiceInvokerFactory;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceInvokerFactory;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.shared.ctx.UserRequestHolder;
 
 import javax.naming.Context;

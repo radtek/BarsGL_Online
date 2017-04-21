@@ -45,11 +45,11 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
     @EJB
     private CoreRepository coreRepository;
 
-    @EJB
-    private AuditController auditController;
-
-    @EJB
-    private OperdayController operdayController;
+//    @EJB
+//    private AuditController auditController;
+//
+//    @EJB
+//    private OperdayController operdayController;
 
     @Inject
     private WorkprocRepository workprocRepository;

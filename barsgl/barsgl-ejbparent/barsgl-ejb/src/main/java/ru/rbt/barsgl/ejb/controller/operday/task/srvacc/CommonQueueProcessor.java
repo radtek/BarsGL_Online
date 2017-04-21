@@ -230,7 +230,7 @@ public class CommonQueueProcessor implements javax.jms.MessageListener {
                     });
                     callbacks.add(new CommonRqCallback(params[0], textMessage, currencyMap, currencyNBDPMap, jId, incMessage, params[2], queueProperties));
                 } catch (JMSException e) {
-                    auditController.error(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица DWH.GL_ACLIRQ / id=" + jId, null, e);
+                    auditController.error(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
                 }
             }
 

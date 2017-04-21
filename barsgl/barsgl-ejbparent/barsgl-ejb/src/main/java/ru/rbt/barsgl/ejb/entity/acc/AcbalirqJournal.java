@@ -35,7 +35,7 @@ public class AcbalirqJournal extends BaseEntity<Long> {
 //    @Temporal(TemporalType.TIMESTAMP)
     private Timestamp statusDate;
 
-    @Column(name = "COMMENT")
+    @Column(name = "\"COMMENT\"") // COMMENT is oracle db reserved word
     private String comment;
 
     @Override

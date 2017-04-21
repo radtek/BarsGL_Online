@@ -45,17 +45,8 @@ public class AccountDetailsNotifyTask implements ParamsAwareRunnable {
     private static final String SCHEDULED_TASK_NAME = "AccountDetailsNotify";
     private static final int defaultQueueBachSize = 5;
 
-    @EJB
-    private BeanManagedProcessor beanManagedProcessor;
-
-    @EJB
-    private GLAccountRequestRepository accountRequestRepository;
-
     @Inject
     private AccountDetailsNotifyProcessor messageProcessor;
-
-    @Inject
-    private GLAccountService glAccountService;
 
     @Inject
     private OperdayRepository operdayRepository;

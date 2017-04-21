@@ -25,6 +25,16 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 
     public static final Logger logger = Logger.getLogger(AccountDetailsNotifyTest.class.getName());
 
+    public static final String MBROKER = "QM_MBROKER10_TEST";
+    
+    public static final String HOST_NAME = "vs338";
+    public static final String USERNAME = "er22228";
+    public static final String PASSWORD = "Vugluskr4";
+    
+//    public static final String HOST_NAME = "localhost";
+//    public static final String USERNAME = "";
+//    public static final String PASSWORD = "";
+
     @Test
     @Ignore
     public void testNotifyClose() throws Exception {
@@ -32,9 +42,9 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
         // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
         // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
 
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='00695430RUR401102097'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
 
 
         putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", notifyClose);
@@ -46,14 +56,14 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 //                     queue|topic
                                 "mq.type = queue\n" +
                                         "mq.algo = simple\n" +
-                                        "mq.host = vs338\n" +
+                                        "mq.host = " + HOST_NAME + "\n" +
                                         "mq.port = 1414\n" +
-                                        "mq.queueManager = QM_MBROKER10_TEST\n" +
+                                        "mq.queueManager = " + MBROKER + "\n" +
                                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                                         "mq.batchSize = 7\n" +
                                         "mq.topics = FCC_CLOSE:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF;MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-                                        "mq.user=er22228\n" +
-                                        "mq.password=Vugluskr4"
+                                        "mq.user=" + USERNAME + "\n" +
+                                        "mq.password=" + PASSWORD + ""
                         )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
                         .build();
         jobService.executeJob(job);
@@ -68,9 +78,9 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
         // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
         // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
 
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='00695430RUR401102097'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
 
 
         putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", fullTopicTestMidasOld);
@@ -82,14 +92,14 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 //                     queue|topic
                                 "mq.type = queue\n" +
                                         "mq.algo = simple\n" +
-                                        "mq.host = vs338\n" +
+                                        "mq.host = " + HOST_NAME + "\n" +
                                         "mq.port = 1414\n" +
-                                        "mq.queueManager = QM_MBROKER10_TEST\n" +
+                                        "mq.queueManager = " + MBROKER + "\n" +
                                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                                         "mq.batchSize = 7\n" +
                                         "mq.topics = FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF;MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-                                        "mq.user=er22228\n" +
-                                        "mq.password=Vugluskr8"
+                                        "mq.user=" + USERNAME + "\n" +
+                                        "mq.password=" + PASSWORD + ""
                         )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
                         .build();
         jobService.executeJob(job);
@@ -100,47 +110,47 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 
     @Test
     public void testFCCnoCustomer() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40817810250300081806'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40817810250300081806'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='02263713RUR000099030'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817810250300081806'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817810250300081806'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='02263713RUR000099030'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessor.messageFCCNoCustomer, null);
 
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.accrln where bsaacid=?", "40817810250300081806"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.bsaacc where id=?", "40817810250300081806"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.acc where id=?", "02263713RUR000099030"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40817810250300081806"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40817810250300081806"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from acc where id=?", "02263713RUR000099030"));
     }
 
     @Test
     public void testFCCShadow() throws Exception {
 
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40817840250010046747'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40817840250010046747'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='02263713RUR000099030'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817840250010046747'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817840250010046747'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='02263713RUR000099030'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessor.messageFCCShadow, null);
 
-        assertTrue(null == baseEntityRepository.selectFirst("select * from dwh.accrln where bsaacid=?", "40817840250010046747"));
+        assertTrue(null == baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40817840250010046747"));
 
     }
 
     @Test
     public void testMidas() throws Exception {
 
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='00695430RUR401102097'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, AccountDetailsNotifyProcessor.messageMidas, null);
 
         // С проверкой заполнения ключевых полей
         assertTrue(null != baseEntityRepository.selectFirst(
-                "select * from dwh.accrln where " +
+                "select * from accrln where " +
                         "ACID='00695430RUR401102097' AND " +
                         "BSAACID='40702810400154748352' AND " +
                         "RLNTYPE='0' AND " +
-                        "DRLNO='2014-12-22' AND " +
-                        "DRLNC='2029-01-01' AND " +
+                        "DRLNO=date '2014-12-22' AND " +
+                        "DRLNC=date '2029-01-01' AND " +
                         "CTYPE=18 AND " +
                         "CNUM='00695430' AND " +
                         "CCODE='0015' AND " +
@@ -151,59 +161,59 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
         ));
 
         assertTrue(null != baseEntityRepository.selectFirst(
-                "select * from dwh.bsaacc where " +
+                "select * from bsaacc where " +
                         "ID='40702810400154748352' AND " +
                         "BSSAC= '40702' AND " +
                         "CCY='810' AND " +
                         "BSAKEY='4' AND " +
                         "BRCA='0015' AND " +
                         "BSACODE='4748352' AND " +
-                        "BSAACO='2014-12-22' AND " +
-                        "BSAACC='2029-01-01' AND " +
+                        "BSAACO=date '2014-12-22' AND " +
+                        "BSAACC=date '2029-01-01' AND " +
                         "BSATYPE='П' AND " +
                         "BSAGRP='0' AND " +
-                        "BSAACNDAT='2014-12-22' AND " +
+                        "BSAACNDAT=date '2014-12-22' AND " +
                         "BSAACNNUM='00695430    ' AND " +
-                        "BSAACTAX='2014-12-25'"
+                        "BSAACTAX=date '2014-12-25'"
         ));
 
         assertTrue(null != baseEntityRepository.selectFirst(
-                "select * from dwh.acc where " +
+                "select * from acc where " +
                         "ID='00695430RUR401102097' AND " +
                         "BRCA='097' AND " +
                         "CNUM=695430 AND " +
                         "CCY='RUR' AND " +
                         "ACOD=4011 AND " +
                         "ACSQ=2 AND " +
-                        "DACO='2014-12-22' AND " +
-                        "DACC='2029-01-01' AND " +
+                        "DACO=date '2014-12-22' AND " +
+                        "DACC=date '2029-01-01' AND " +
                         "ANAM='ROSTENERGORESURS'"));
     }
 
     @Test
     public void testFCC() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40817810000010696538'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40817810000010696538'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='00516770RUR000088001'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817810000010696538'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817810000010696538'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='00516770RUR000088001'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessor.messageFCC, null);
 
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.accrln where bsaacid=?", "40817810000010696538"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.bsaacc where id=?", "40817810000010696538"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.acc where id=?", "00516770RUR000088001"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40817810000010696538"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40817810000010696538"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from acc where id=?", "00516770RUR000088001"));
     }
 
     @Test
     public void testErrorfromProd() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from dwh.accrln where bsaacid='40802810500014908835'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.bsaacc where id='40802810500014908835'");
-        baseEntityRepository.executeNativeUpdate("delete from dwh.acc where id='00800458RUR400902065'");
+        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40802810500014908835'");
+        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40802810500014908835'");
+        baseEntityRepository.executeNativeUpdate("delete from acc where id='00800458RUR400902065'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, error1, null);
 
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.accrln where bsaacid=?", "40802810500014908835"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.bsaacc where id=?", "40802810500014908835"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from dwh.acc where id=?", "00800458RUR400902065"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40802810500014908835"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40802810500014908835"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from acc where id=?", "00800458RUR400902065"));
     }
 
     @Test
@@ -245,10 +255,10 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 
 
         // Config
-        cf.setHostName("vs338");
+        cf.setHostName(HOST_NAME);
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-        cf.setQueueManager("QM_MBROKER10_TEST");
+        cf.setQueueManager(MBROKER);
         cf.setChannel("SYSTEM.ADMIN.SVRCONN");
 
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();

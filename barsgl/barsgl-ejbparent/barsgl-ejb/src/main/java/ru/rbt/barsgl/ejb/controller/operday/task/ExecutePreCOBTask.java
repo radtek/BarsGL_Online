@@ -60,17 +60,17 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
     private static final Logger log = Logger.getLogger(ExecutePreCOBTask.class);
 
 
-    @Inject
-    private OperdayController operdayController;
-
-    @Inject
-    private DateUtils dateUtils;
+//    @Inject
+//    private OperdayController operdayController;
+//
+//    @Inject
+//    private DateUtils dateUtils;
 
     @Inject
     private EtlPackageRepository packageRepository;
 
-    @Inject
-    private BatchPostingRepository postingRepository;
+//    @Inject
+//    private BatchPostingRepository postingRepository;
 
     @EJB
     private PreCobStepController preCobStepController;
@@ -81,8 +81,8 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
     @EJB
     BalturRecalculator balturRecalculator;
 
-    @EJB
-    private AuditController auditController;
+//    @EJB
+//    private AuditController auditController;
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
@@ -90,8 +90,8 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
     @Inject
     private CloseLastWorkdayBalanceTask closeLastWorkdayBalanceTask;
 
-    @Inject
-    private EtlStructureMonitorTask monitorTask;
+//    @Inject
+//    private EtlStructureMonitorTask monitorTask;
 
     @Inject
     private PreCobBatchPostingTask preCobBatchPostingTask;
@@ -108,8 +108,8 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
     @EJB
     private CoreRepository repository;
 
-    @EJB
-    private JobHistoryRepository jobHistoryRepository;
+//    @EJB
+//    private JobHistoryRepository jobHistoryRepository;
 
     @Inject
     private TimerJobRepository jobRepository;

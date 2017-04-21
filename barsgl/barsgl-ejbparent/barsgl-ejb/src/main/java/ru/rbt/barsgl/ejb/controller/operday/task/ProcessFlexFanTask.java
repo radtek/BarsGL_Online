@@ -32,14 +32,14 @@ public class ProcessFlexFanTask extends AbstractJobHistoryAwareTask {
     @Inject
     private WorkprocRepository workprocRepository;
 
-    @EJB
-    private OperdayController operdayController;
-
-    @EJB
-    private AuditController auditController;
-
-    @Inject
-    private DateUtils dateUtils;
+//    @EJB
+//    private OperdayController operdayController;
+//
+//    @EJB
+//    private AuditController auditController;
+//
+//    @Inject
+//    private DateUtils dateUtils;
 
     private enum FlexFanContext {
         WORKDAY

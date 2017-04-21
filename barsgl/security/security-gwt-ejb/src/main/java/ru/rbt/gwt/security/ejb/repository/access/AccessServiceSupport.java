@@ -8,7 +8,6 @@ import ru.rbt.security.entity.access.PrmValueHistory;
 import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -17,14 +16,11 @@ import ru.rbt.barsgl.shared.access.PrmValueWrapper;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.shared.enums.PrmValueEnum;
-import ru.rbt.shared.user.AppUserWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 
@@ -52,7 +48,6 @@ public class AccessServiceSupport {
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Inject
     private PrmValueHistoryRepository historyRepository;

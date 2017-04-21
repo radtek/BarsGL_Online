@@ -6,7 +6,6 @@ import ru.rbt.security.entity.access.Role;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.*;
 import ru.rbt.shared.ctx.UserRequestHolder;
@@ -45,7 +44,6 @@ public class RoleServiceSupport {
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Inject
     private OperdayController operdayController;
