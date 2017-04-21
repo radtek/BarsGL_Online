@@ -473,7 +473,7 @@ public class OperdayTest extends AbstractTimerJobTest {
 
     private void insertWorkday(Date date) {
         try {
-            baseEntityRepository.executeNativeUpdate("insert into cal values (?1, '', 'RUR')", date);
+            baseEntityRepository.executeNativeUpdate("insert into cal values (?1, '', 'RUR', '')", date);
         } catch (Exception e) {
             e.printStackTrace();
         }

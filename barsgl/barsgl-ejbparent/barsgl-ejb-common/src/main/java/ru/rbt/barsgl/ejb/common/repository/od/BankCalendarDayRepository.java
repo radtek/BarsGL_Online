@@ -2,8 +2,10 @@ package ru.rbt.barsgl.ejb.common.repository.od;
 
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId;
+import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
 
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -20,7 +22,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 " where c1.dat = (\n" +
                 "   select max(dat) from cal\n" +
                 "   where dat < ?1 and ccy = ?2\n" +
-                "     and hol <> 'X' and hol <> 'T') " +
+                "     and thol not in ('X', 'T') ) " +
                 "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
     }
 
@@ -30,7 +32,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 " where c1.dat = (\n" +
                 "   select min(dat) from cal\n" +
                 "   where dat > ?1 and ccy = ?2\n" +
-                "     and hol <> 'X' and hol <> 'T') " +
+                "     and thol not in ('X', 'T') ) " +
                 "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
     }
 
@@ -45,7 +47,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 "select * from cal " +
                         "where ccy = ?1 and dat >= ?2 " +
                         "  and dat <= ?3 " +
-                        "  and hol <> 'X' and hol <> 'T' order by dat", 100, BANK_CALENDAR_CODE, fromDay, toDay);
+                        "  and thol not in ('X', 'T')  order by dat", 100, BANK_CALENDAR_CODE, fromDay, toDay);
     }
 
     /**
@@ -68,13 +70,13 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
      * @return
      */
     public boolean isWorkday(Date date) {
-        return null != findNativeFirst(BankCalendarDay.class,
-                "select * from cal c1 \n" +
-                        " where c1.dat = (\n" +
-                        "   select min(dat) from cal\n" +
-                        "   where dat = ?1 and ccy = ?2\n" +
-                        "     and hol <> 'X' and hol <> 'T') " +
-                        "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
+        try {
+            return null != selectFirst(
+                    "select * from cal where dat = ? and ccy = ?  and thol not in ('X', 'T') "
+                        , date, BANK_CALENDAR_CODE);
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
     /**
@@ -83,13 +85,29 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
      * @return
      */
     public boolean isWorkdayWithTech(Date date) {
-        return null != findNativeFirst(BankCalendarDay.class,
-                "select * from cal c1 \n" +
-                        " where c1.dat = (\n" +
-                        "   select min(dat) from cal\n" +
-                        "   where dat = ?1 and ccy = ?2\n" +
-                        "     and hol <> 'X') " +
-                        "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
+        try {
+            return null != selectFirst(
+                    "select * from cal where dat = ? and ccy = ? and thol <> 'X'"
+                        , date, BANK_CALENDAR_CODE);
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /**
+     * является ли день рабочим
+     * @param date
+     * @return
+     */
+    public String getDayType(Date date) {
+        try {
+            DataRecord data = selectFirst(
+                    "select THOL from cal where dat = ? and ccy = ?"
+                        , date, BANK_CALENDAR_CODE);
+            return (null == data ? "" : data.getString(0));
+        } catch (SQLException e) {
+            return "";
+        }
     }
 
 }
