@@ -146,16 +146,16 @@ public class PostingForm extends MDForm {
 
         result.addColumn(col = new Column("POST_TYPE", STRING, "Тип проводки", 40, false, false));
         col.setList(getPostingTypeList());
-        result.addColumn(new Column("PCID", LONG, "ID проводки", 80));
+        result.addColumn(new Column("PCID", LONG, "ID проводки", 100));
         idDrIndex = result.addColumn(new Column("ID_DR", LONG, "ID полупроводки ДБ", 80, false, false));
         idCrIndex = result.addColumn(new Column("ID_CR", LONG, "ID полупроводки КР", 80, false, false));
 
         invisibleIndex = result.addColumn(col = new Column("INVISIBLE", STRING, "Отменена", 40));
         col.setList(yesNoList);
-        result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 60));
-        result.addColumn(new Column("PBR", STRING, "Система-источник", 80, false, false));
+        result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 80));
+        result.addColumn(new Column("PBR", STRING, "Система-источник", 100, false, false));
         result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
-        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 160));
+        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 180));
         result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 120, false, false));
         result.addColumn(new Column("PREF", STRING, "ИД сделки/ платежа", 120));
         result.addColumn(colProcDate = new Column("PROCDATE", DATE, "Дата опердня", 80));
@@ -165,7 +165,7 @@ public class PostingForm extends MDForm {
         podIndex = result.addColumn(colPostDate = new Column("POSTDATE", DATE, "Дата проводки", 80));
         colPostDate.setFormat("dd.MM.yyyy");
 
-        result.addColumn(new Column("ACID_DR", STRING, "Счет Midas ДБ", 160));
+        result.addColumn(new Column("ACID_DR", STRING, "Счет Midas ДБ", 170));
         result.addColumn(new Column("BSAACID_DR", STRING, "Счет ДБ", 160));
         result.addColumn(new Column("CBCC_DR", STRING, "Филиал ДБ (счет)", 60, false, false));
         result.addColumn(new Column("FILIAL_DR", STRING, "Филиал ДБ (опер)", 60, false, false));
@@ -173,7 +173,7 @@ public class PostingForm extends MDForm {
         result.addColumn(new Column("AMT_DR", DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("AMTRU_DR", DECIMAL, "Сумма в руб. ДБ", 100));
 
-        result.addColumn(new Column("ACID_CR", STRING, "Счет Midas КР", 160));
+        result.addColumn(new Column("ACID_CR", STRING, "Счет Midas КР", 170));
         result.addColumn(new Column("BSAACID_CR", STRING, "Счет КР", 160));
         result.addColumn(new Column("CBCC_CR", STRING, "Филиал КР (счет)", 60, false, false));
         result.addColumn(new Column("FILIAL_CR", STRING, "Филиал КР (опер)", 60, false, false));

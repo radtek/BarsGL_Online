@@ -85,8 +85,8 @@ public class MonitoringController {
 
            ret.put("moniOldBuffDate", newDate);
            ret.put("strNewDate", dateTimeString(newDate));
-           ret.put("strPdSpeed", intervalMillisec == 0 ? "?" :String.format("%1$,.2f", (double)(Math.abs(oldPdMoved - newPdMoved) / intervalMillisec * 1000)  ));
-           ret.put("strBltSpeed", intervalMillisec == 0 ? "?" :String.format("%1$,.2f", (double) (Math.abs(oldBltMoved - newBltMoved) / intervalMillisec * 1000)));
+           ret.put("strPdSpeed", intervalMillisec == 0 ? "?" :String.format("%1$,.0f", (double)(Math.abs(oldPdMoved - newPdMoved) / intervalMillisec * 1000)  ));
+           ret.put("strBltSpeed", intervalMillisec == 0 ? "?" :String.format("%1$,.0f", (double) (Math.abs(oldBltMoved - newBltMoved) / intervalMillisec * 1000)));
            ret.put("strPdRest", intervalMillisec == 0 ? "?" : DateUtils.formatElapsedTimeOver24h( (long) (newPdWait * Math.abs(oldPdMoved - newPdMoved) * 1000/ intervalMillisec)) );
            ret.put("strBltRest", intervalMillisec == 0 ? "?" : DateUtils.formatElapsedTimeOver24h( (long) (newBltWait * Math.abs(oldBltMoved - newBltMoved) * 1000/ intervalMillisec)) );
 //           if (!oldDate.equals( newDate )){
