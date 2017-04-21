@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.security;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.user.AppUserWrapper;
 
@@ -16,7 +15,6 @@ public class UserContext {
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Inject
     OperdayController operdayController;

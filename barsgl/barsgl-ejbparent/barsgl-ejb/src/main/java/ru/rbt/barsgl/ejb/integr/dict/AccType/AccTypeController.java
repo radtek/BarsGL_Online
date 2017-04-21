@@ -6,7 +6,6 @@ import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.integr.dict.BaseDictionaryController;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.*;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.dict.AccTypeWrapper;
@@ -37,7 +36,6 @@ public class AccTypeController extends BaseDictionaryController<AccTypeWrapper, 
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Inject
     private OperdayController operdayController;

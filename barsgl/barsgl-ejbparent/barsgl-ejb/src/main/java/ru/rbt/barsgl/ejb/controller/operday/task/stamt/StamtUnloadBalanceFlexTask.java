@@ -33,20 +33,20 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnloadBalStep3;
  */
 public class StamtUnloadBalanceFlexTask extends AbstractJobHistoryAwareTask {
 
-    @EJB
-    private AuditController auditController;
+//    @EJB
+//    private AuditController auditController;
 
     @Inject
     private StamtUnloadController unloadController;
 
-    @Inject
-    private DateUtils dateUtils;
+//    @Inject
+//    private DateUtils dateUtils;
 
     @Inject
     private WorkprocRepository workprocRepository;
 
-    @EJB
-    private OperdayController operdayController;
+//    @EJB
+//    private OperdayController operdayController;
 
     @EJB
     private CoreRepository coreRepository;

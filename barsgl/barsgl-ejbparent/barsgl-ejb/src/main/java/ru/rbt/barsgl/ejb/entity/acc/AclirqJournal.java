@@ -34,8 +34,8 @@ public class AclirqJournal extends BaseEntity<Long> {
     @Column(name = "STATUS_DATE")
     private Timestamp statusDate;
 
-    @Column(name = "\"COMMENT\"")
-    private String comment;// COMMENT is oracle db reserved word
+    @Column(name = "\"COMMENT\"") // COMMENT is oracle db reserved word
+    private String comment;
 
     @Basic(fetch = FetchType.LAZY)
     @Lob    

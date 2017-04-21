@@ -68,7 +68,7 @@ public class EtlRateTest extends AbstractTimerJobTest {
                 "delete from currates where dat = ?", BGN_RATE_ID.getRateDt()));
 
         CurrencyRate rate = findRate(BGN, BGN_RATE_ID.getRateDt());
-        if (rate != null) {
+        if (rate != null) {          
             baseEntityRepository.executeUpdate("delete from CurrencyRate c where c.id = ?1"
                     , new CurrencyRateId(BGN.getCurrencyCode(), BGN_RATE_ID.getRateDt()));
         }
@@ -165,7 +165,7 @@ public class EtlRateTest extends AbstractTimerJobTest {
 
         // BDT	050	TAKA          	Така Бангладеш
         CurrencyRate rate = findRate(new BankCurrency("BDT"), BDT_RATE_ID.getRateDt());
-        if (rate != null) {
+        if (rate != null) {          
             baseEntityRepository.executeUpdate("delete from CurrencyRate c where c.id = ?1"
                     , new CurrencyRateId(BDT.getCurrencyCode(), BDT_RATE_ID.getRateDt()));
         }
@@ -237,7 +237,7 @@ public class EtlRateTest extends AbstractTimerJobTest {
         // 'HKD' мягкая валюта
         baseEntityRepository.executeNativeUpdate(
                 "insert into currates (" +
-                        "select date('" + Utl4Tests.toString(currentOperdayCOB, "yyyy-MM-dd") + "'),c.CCY,c.RATE,c.AMNT,c.RATE0\n" +
+                        "select date '" + Utl4Tests.toString(currentOperdayCOB, "yyyy-MM-dd") + "',c.CCY,c.RATE,c.AMNT,c.RATE0\n" +
                 "  from currates c\n" +
                 " where c.dat = (select max(c0.dat) from currates c0 where c0.ccy = ?))", HONG_USD);
 
@@ -290,7 +290,7 @@ public class EtlRateTest extends AbstractTimerJobTest {
 
         CurrencyRate rateHKD = findRate(HONG_USD, nextOperday);
         Assert.assertNotNull(rateHKD);
-        Assert.assertEquals(newRateSoft, rateHKD.getRate());
+        Assert.assertEquals(newRateSoft, rateHKD.getRate().setScale(9, ROUND_HALF_UP));
 
         // курс для валюты равен присутствующей в витрине
         CurrencyRate rateUSD = findRate(BankCurrency.USD.getId(), nextOperday);
@@ -301,11 +301,11 @@ public class EtlRateTest extends AbstractTimerJobTest {
 
         CurrencyRate rateBur = findRate(BYR, nextOperday);
         Assert.assertNotNull(rateBur);
-        Assert.assertEquals(newByr.divide(new BigDecimal(10000)).setScale(9, ROUND_HALF_UP), rateBur.getRate());
+        Assert.assertEquals(newByr.divide(new BigDecimal(10000)).setScale(9, ROUND_HALF_UP), rateBur.getRate().setScale(9, ROUND_HALF_UP));
 
         CurrencyRate rateBuB = findRate(BYB, nextOperday);
         Assert.assertNotNull(rateBuB);
-        Assert.assertEquals(newByr.divide(new BigDecimal(10000)).setScale(9, ROUND_HALF_UP), rateBuB.getRate());
+        Assert.assertEquals(newByr.divide(new BigDecimal(10000)).setScale(9, ROUND_HALF_UP), rateBuB.getRate().setScale(9, ROUND_HALF_UP));
 
         // повторная загрузка курсов на след раб день не производится
         etlRateHard = (EtlCurrencyRate) baseEntityRepository.findById(EtlCurrencyRate.class, etlRateHard.getId());

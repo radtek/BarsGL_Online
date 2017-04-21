@@ -13,7 +13,6 @@ import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
@@ -73,7 +72,6 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @EJB
     private AuditController auditController;

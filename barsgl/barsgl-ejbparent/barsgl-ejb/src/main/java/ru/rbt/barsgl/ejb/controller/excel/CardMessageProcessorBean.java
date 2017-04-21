@@ -20,7 +20,6 @@ import ru.rbt.barsgl.ejb.repository.dict.CardXlsRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
@@ -59,7 +58,6 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
 
     @Inject
     private RequestContext contextBean;
-    //private RequestContextBean contextBean;
 
     @Inject
     private RateRepository rateRepository;

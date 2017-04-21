@@ -51,8 +51,8 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
     @Inject
     private TextResourceController textResourceController;
 
-    @Inject
-    private ExecutePreCOBTask preCOBTask;
+//    @Inject
+//    private ExecutePreCOBTask preCOBTask;
 
     @EJB
     private OperdaySynchronizationController synchronizationController;
@@ -60,8 +60,8 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
     @Inject
     private StamtUnloadPstIncrementTask incrementTask;
 
-    @Inject
-    private DateUtils dateUtils;
+//    @Inject
+//    private DateUtils dateUtils;
 
     @EJB
     private BackvalueJournalController backvalueJournalController;
