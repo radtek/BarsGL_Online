@@ -79,8 +79,6 @@ public class NigthErrRepExportData implements IExportData {
        result.addColumn(new Column("EMSG", STRING, "EMSG", 100));
        result.addColumn(new Column("ACCKEY_DR", STRING, "ACCKEY_DR", 100));
        result.addColumn(new Column("ACCKEY_CR", STRING, "ACCKEY_CR", 100));
-       result.addColumn(new Column("ADDKEY_DR", STRING, "ADDKEY_DR", 100));
-       result.addColumn(new Column("ADDKEY_CR", STRING, "ADDKEY_CR", 100));
        result.addColumn(new Column("EVTP", STRING, "EVTP", 100));
        result.addColumn(new Column("IS_VIP", Column.Type.INTEGER, "IS_VIP", 100));
 

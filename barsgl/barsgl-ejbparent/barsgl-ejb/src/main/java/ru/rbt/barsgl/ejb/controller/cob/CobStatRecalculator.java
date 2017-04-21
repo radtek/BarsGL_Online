@@ -61,6 +61,7 @@ public class CobStatRecalculator {
                 throw new ValidationError(ErrorCode.COB_IS_RUNNING, dateUtils.onlyDateString(curdate));
             }
 
+            auditController.info(PreCob, "Расчет длительности COB");
             Long idCob = statRepository.createCobStepGroup(curdate);
             for (CobPhase phase : CobPhase.values()) {
                 Long parameter = statRepository.getStepParameter(phase, curdate, operday.getLastWorkingDay());

@@ -80,7 +80,7 @@ public class PostingForm extends MDForm {
         masterActionBar.addAction(createPreview());
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
-        masterActionBar.addAction(BackValuePostingReport());
+//        masterActionBar.addAction(BackValuePostingReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
