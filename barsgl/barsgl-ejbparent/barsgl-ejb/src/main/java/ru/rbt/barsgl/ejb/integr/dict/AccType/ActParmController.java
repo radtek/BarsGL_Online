@@ -14,9 +14,9 @@ import ru.rbt.barsgl.ejb.repository.dict.AcodRepository;
 import ru.rbt.barsgl.ejb.repository.dict.PropertyTypeRepository;
 import ru.rbt.barsgl.ejb.repository.dict.TypesOfTermsRepository;
 import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.dict.ActParmWrapper;
 import ru.rbt.barsgl.shared.enums.AccLogTarget;
 import ru.rbt.barsgl.shared.enums.LogRowAction;
@@ -27,6 +27,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 import static java.lang.String.format;
+import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by akichigi on 25.08.16.
@@ -51,7 +52,8 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
     private ActLogRepository actLogRepository;
 
     @Inject
-    private RequestContextBean contextBean;
+    private RequestContext contextBean;
+    //private RequestContextBean contextBean;
 
     @Inject
     private OperdayController operdayController;

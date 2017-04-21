@@ -17,7 +17,7 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.OperState;
 

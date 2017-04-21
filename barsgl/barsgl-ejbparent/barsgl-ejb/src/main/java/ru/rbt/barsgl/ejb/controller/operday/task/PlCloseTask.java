@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.inject.Inject;
 import javax.xml.bind.ValidationException;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.PlClose707Del;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.PlClose707Create;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.PlClose707Del;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.PlClose707Create;
 
 import java.util.Date;
 import java.util.Properties;

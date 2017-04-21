@@ -2,9 +2,9 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -13,8 +13,8 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 16.10.15.

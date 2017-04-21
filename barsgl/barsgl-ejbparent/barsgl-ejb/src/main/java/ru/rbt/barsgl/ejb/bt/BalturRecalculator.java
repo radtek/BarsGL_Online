@@ -1,15 +1,15 @@
 package ru.rbt.barsgl.ejb.bt;
 
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.datarec.DefaultJdbcAdapter;
-import ru.rbt.barsgl.ejbcore.datarec.JdbcAdapter;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
+import ru.rbt.ejbcore.datarec.JdbcAdapter;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.BalturRecalc;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BalturRecalc;
 
 /**
  * Created by Ivan Sevastyanov on 11.08.2016.

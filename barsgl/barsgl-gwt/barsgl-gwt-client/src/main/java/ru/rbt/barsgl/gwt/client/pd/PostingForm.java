@@ -40,7 +40,7 @@ import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.*;
-import static ru.rbt.barsgl.shared.enums.SecurityActionCode.*;
+import static ru.rbt.shared.enums.SecurityActionCode.*;
 
 /**
  * Created by ER18837 on 04.04.16.

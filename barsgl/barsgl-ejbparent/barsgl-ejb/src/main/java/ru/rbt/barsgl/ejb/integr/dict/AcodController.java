@@ -2,13 +2,13 @@ package ru.rbt.barsgl.ejb.integr.dict;
 
 import ru.rbt.barsgl.ejb.entity.dict.Acod;
 import ru.rbt.barsgl.ejb.repository.dict.AcodRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.AcodWrapper;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.FreeAcod;
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.FreeAcod;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
 import javax.inject.Inject;
 import java.sql.SQLException;

@@ -2,7 +2,7 @@ package ru.rbt.barsgl.common.xml;
 
 import org.apache.log4j.Logger;
 import org.w3c.dom.*;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;

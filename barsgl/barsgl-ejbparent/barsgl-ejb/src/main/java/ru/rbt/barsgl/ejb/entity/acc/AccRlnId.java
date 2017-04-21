@@ -5,7 +5,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.leftSpace;
+import static ru.rbt.ejbcore.util.StringUtils.leftSpace;
 
 /**
  * Created by ER18837 on 28.04.15.

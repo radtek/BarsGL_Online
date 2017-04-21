@@ -4,16 +4,16 @@ import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StartLoaderTask;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.StartLoaderTask;
 
 /**
  * Created by ER22317 on 29.11.2016.

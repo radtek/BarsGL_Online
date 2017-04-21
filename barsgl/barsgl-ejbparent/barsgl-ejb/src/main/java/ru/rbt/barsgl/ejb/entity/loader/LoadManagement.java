@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.entity.loader;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.enums.LoadManagementAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
 

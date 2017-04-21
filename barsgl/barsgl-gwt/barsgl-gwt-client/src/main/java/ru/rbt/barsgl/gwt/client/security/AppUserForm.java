@@ -20,10 +20,10 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.AccessRightsWrapper;
 import ru.rbt.barsgl.shared.access.PrmValueWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
-import ru.rbt.barsgl.shared.enums.UserExternalType;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.UserExternalType;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
 //import ru.rbt.barsgl.gwt.client.security.AccessRightsDlg;

@@ -2,9 +2,9 @@ package ru.rbt.barsgl.gwt.serverutil;
 
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.shared.LoginParams;
-import ru.rbt.barsgl.shared.LoginResult;
+import ru.rbt.shared.LoginResult;
 import ru.rbt.barsgl.shared.NotAuthorizedUserException;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.ctx.UserRequestHolder;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +18,7 @@ import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_NAME;
  */
 public abstract class AbstractLocalServerAccess implements ServerAccess {
 
-    public static final String LOGIN_BEAN_NAME = "AuthorizationServiceSupport";
+    public static final String LOGIN_BEAN_NAME = "AuthorizationServiceGwtSupport";
     public static final String LOGIN_BEAN_METHOD = "login";
     public static final String LOGOFF_BEAN_METHOD = "logoff";
 

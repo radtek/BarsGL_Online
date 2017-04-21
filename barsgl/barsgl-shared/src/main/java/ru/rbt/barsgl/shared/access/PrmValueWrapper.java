@@ -3,7 +3,7 @@ package ru.rbt.barsgl.shared.access;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.shared.DatePartsContainer;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.PrmValueEnum;
 
 import java.io.Serializable;
 import java.util.Date;

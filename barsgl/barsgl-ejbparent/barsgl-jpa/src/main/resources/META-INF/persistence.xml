@@ -2,11 +2,26 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
   <persistence-unit name="GLOracleDataSource" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-<!--    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>-->
-    <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
     <jta-data-source>jdbc/OracleGL</jta-data-source>
+    <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
+<!--    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <jta-data-source>java:/jdbc/OracleGL</jta-data-source>-->
+
     <mapping-file>META-INF/fix-orm.xml</mapping-file>
     
+    <class>ru.rbt.audit.entity.AuditRecord</class>
+
+    <class>ru.rbt.security.entity.AppUser</class>
+    <class>ru.rbt.security.entity.access.PrmValue</class>
+    <class>ru.rbt.security.entity.access.PrmValueHistory</class>
+    <class>ru.rbt.security.entity.access.Role</class>
+    <class>ru.rbt.security.entity.access.SecurityAction</class>
+    <class>ru.rbt.security.entity.access.SecurityActionGroup</class>
+    <class>ru.rbt.security.entity.access.SecurityRoleActionRln</class>
+    <class>ru.rbt.security.entity.access.UserMenuActionRln</class>
+    <class>ru.rbt.security.entity.access.UserMenuItem</class>
+    <class>ru.rbt.security.entity.access.UserRoleRln</class>
+
     <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
     <class>ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob</class>
     <class>ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob</class>
@@ -22,22 +37,9 @@
     <class>ru.rbt.barsgl.ejbcore.conf.map.DecimalProperty</class>
     <class>ru.rbt.barsgl.ejbcore.conf.map.StringProperty</class>
     <class>ru.rbt.barsgl.ejbcore.conf.map.NumberProperty</class>
-    
-    <class>ru.rbt.barsgl.audit.entity.AuditRecord</class>
-    
+        
     <class>ru.rbt.tasks.ejb.entity.task.JobHistory</class>
-    
-    <class>ru.rbt.security.ejb.entity.AppUser</class>
-    <class>ru.rbt.security.ejb.entity.access.PrmValue</class>
-    <class>ru.rbt.security.ejb.entity.access.PrmValueHistory</class>
-    <class>ru.rbt.security.ejb.entity.access.Role</class>
-    <class>ru.rbt.security.ejb.entity.access.SecurityAction</class>
-    <class>ru.rbt.security.ejb.entity.access.SecurityActionGroup</class>
-    <class>ru.rbt.security.ejb.entity.access.SecurityRoleActionRln</class>
-    <class>ru.rbt.security.ejb.entity.access.UserMenuActionRln</class>
-    <class>ru.rbt.security.ejb.entity.access.UserMenuItem</class>
-    <class>ru.rbt.security.ejb.entity.access.UserRoleRln</class>
-    
+        
     <!-- from barsgl-ejb-->
     <class>ru.rbt.barsgl.ejb.entity.dict.CurrencyRate</class>
     <class>ru.rbt.barsgl.ejb.entity.acc.AclirqJournal</class>
@@ -123,9 +125,11 @@
   </persistence-unit>
   <persistence-unit name="RepAS400DataSource" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-<!--    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>-->
-    <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
     <jta-data-source>jdbc/As400Rep</jta-data-source>
+    <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
+<!--    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+    <jta-data-source>java:/jdbc/As400Rep</jta-data-source>-->
+
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
     <properties>

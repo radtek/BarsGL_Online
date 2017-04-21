@@ -14,16 +14,16 @@ import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.TimerJobRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
@@ -42,8 +42,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOS
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
 
 /**
  * Created by Ivan Sevastyanov

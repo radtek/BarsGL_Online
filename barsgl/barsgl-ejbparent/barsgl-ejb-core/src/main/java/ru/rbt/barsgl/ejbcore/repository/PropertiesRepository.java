@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejbcore.repository;
 
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.conf.map.AbstractConfigProperty;
 import ru.rbt.barsgl.ejbcore.conf.map.NumberProperty;
 import ru.rbt.barsgl.ejbcore.conf.map.StringProperty;

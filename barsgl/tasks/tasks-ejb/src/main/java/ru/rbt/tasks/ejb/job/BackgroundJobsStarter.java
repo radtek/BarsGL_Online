@@ -11,8 +11,8 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.audit.entity.AuditRecord;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 
 /**
  * Created by Ivan Sevastyanov

@@ -2,7 +2,7 @@ package ru.rbt.tasks.ejb.job;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.job.TimerJobRepository;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import javax.inject.Inject;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.JobControl;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.JobControl;
 
 /**
  * Created by ER21006 on 07.04.2016.
@@ -39,9 +39,6 @@ public class BackgroundJobsController {
 
     @EJB
     private AuditController auditController;
-
-//    @EJB
-//    private RequestContextBean contextBean;
 
     @Inject
     private TimerJobRepository timerJobRepository;

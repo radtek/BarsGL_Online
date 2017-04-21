@@ -15,10 +15,10 @@ import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountQueryProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.MasterAccountProcessor;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -36,8 +36,8 @@ import java.text.ParseException;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountQuery;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 
 /**
@@ -71,7 +71,7 @@ public class AccountQueryTask implements ParamsAwareRunnable {
     private MasterAccountProcessor queryProcessorMAPB;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
     private AccountQueryRepository queryRepository;

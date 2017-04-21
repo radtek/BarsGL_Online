@@ -1,7 +1,7 @@
 package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
@@ -13,7 +13,7 @@ import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
 import ru.rbt.barsgl.shared.criteria.*;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 
 import java.io.Serializable;
 import java.util.ArrayList;

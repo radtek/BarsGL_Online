@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.PostConstruct;
 import javax.naming.InitialContext;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 /**
  * Created by Ivan Sevastyanov

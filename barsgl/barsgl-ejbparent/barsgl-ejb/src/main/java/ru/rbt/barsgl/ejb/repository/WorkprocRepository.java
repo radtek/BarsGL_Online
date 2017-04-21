@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.repository;
 
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;

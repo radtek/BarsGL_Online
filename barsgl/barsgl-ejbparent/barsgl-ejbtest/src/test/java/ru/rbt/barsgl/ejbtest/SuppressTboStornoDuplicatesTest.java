@@ -13,7 +13,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;

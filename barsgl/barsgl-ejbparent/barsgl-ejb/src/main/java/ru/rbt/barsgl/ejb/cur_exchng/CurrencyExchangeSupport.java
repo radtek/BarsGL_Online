@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 
@@ -15,8 +15,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.CurrencyExchange;
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.CurrencyExchange;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
 /**
  * Created by akichigi on 23.01.17.

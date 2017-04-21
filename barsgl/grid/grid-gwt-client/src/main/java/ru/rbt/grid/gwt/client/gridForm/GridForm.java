@@ -20,7 +20,7 @@ import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.gwt.core.widgets.GridDataProvider;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.io.Serializable;
 import java.util.List;

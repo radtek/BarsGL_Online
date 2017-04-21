@@ -11,15 +11,15 @@ import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
@@ -38,7 +38,8 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rb.ucb.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
+import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by ER18837 on 29.02.16.
@@ -71,7 +72,8 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
     private BatchPostingProcessor postingProcessor;
 
     @Inject
-    private RequestContextBean contextBean;
+    private RequestContext contextBean;
+    //private RequestContextBean contextBean;
 
     @EJB
     private AuditController auditController;

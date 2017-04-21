@@ -6,7 +6,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;

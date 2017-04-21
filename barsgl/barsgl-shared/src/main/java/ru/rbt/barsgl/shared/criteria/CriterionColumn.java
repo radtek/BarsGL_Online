@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.shared.criteria;
 
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

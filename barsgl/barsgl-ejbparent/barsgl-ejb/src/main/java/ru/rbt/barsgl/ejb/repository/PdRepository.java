@@ -10,13 +10,13 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -34,9 +34,9 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Operation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.*;
 
 /**
  * Created by Ivan Sevastyanov

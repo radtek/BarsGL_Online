@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
-import ru.rbt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.security.ejb.entity.access.PrmValue;
+import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
@@ -15,12 +17,12 @@ import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -36,8 +38,8 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
  * Created by ER18837 on 13.08.15.

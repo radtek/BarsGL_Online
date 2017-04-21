@@ -7,13 +7,13 @@
         <version>3.0.18-SNAPSHOT</version>
     </parent>
     <artifactId>security</artifactId>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
     <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
   <modules>
-    <module>security-ejb</module>
+    <module>security-gwt-ejb</module>
     <module>security-gwt-server</module>
     <module>security-gwt-client</module>
   </modules>

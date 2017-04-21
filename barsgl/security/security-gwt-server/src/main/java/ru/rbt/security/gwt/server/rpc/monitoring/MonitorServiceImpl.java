@@ -4,7 +4,7 @@ import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.monitoring.MonitoringWrapper;
-import ru.rbt.security.ejb.monitoring.MonitoringController;
+import ru.rbt.gwt.security.ejb.monitoring.MonitoringController;
 
 /**
  * Created by akichigi on 06.12.16.

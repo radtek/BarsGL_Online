@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.common.controller.od;
 
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.inject.Inject;
 import java.sql.SQLException;

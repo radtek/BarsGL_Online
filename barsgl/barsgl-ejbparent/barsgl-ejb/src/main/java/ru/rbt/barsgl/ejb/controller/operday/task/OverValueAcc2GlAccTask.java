@@ -6,14 +6,14 @@ import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
 
 /**

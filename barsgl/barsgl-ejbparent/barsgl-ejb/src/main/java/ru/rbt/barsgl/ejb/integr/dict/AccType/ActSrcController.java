@@ -4,7 +4,7 @@ import ru.rbt.barsgl.ejb.entity.dict.AccType.ActSrc;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActSrcRepository;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.UserProductsWrapper;
 import ru.rbt.barsgl.shared.dict.AccTypeSourceWrapper;
@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.ActSrc;
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ActSrc;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 /**
  * Created by akichigi on 30.09.16.
  */

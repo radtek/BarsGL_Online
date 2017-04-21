@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejbtest.utl;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.Builder;
 import ru.rbt.barsgl.shared.enums.JobStartupType;
 

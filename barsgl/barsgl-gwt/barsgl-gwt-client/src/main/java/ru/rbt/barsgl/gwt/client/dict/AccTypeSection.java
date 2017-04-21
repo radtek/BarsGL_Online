@@ -14,7 +14,7 @@ import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.AccTypeSectionWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
 

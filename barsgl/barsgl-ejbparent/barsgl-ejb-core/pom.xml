@@ -4,7 +4,7 @@
 
     <artifactId>barsgl-ejb-core</artifactId>
     <packaging>ejb</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <parent>
         <groupId>ru.rbt</groupId>
@@ -17,6 +17,10 @@
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-shared</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-ejbcore</artifactId>
         </dependency>
         <dependency>
             <groupId>javax</groupId>

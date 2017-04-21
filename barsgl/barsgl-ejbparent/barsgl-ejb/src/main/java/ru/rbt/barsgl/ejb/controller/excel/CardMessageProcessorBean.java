@@ -7,7 +7,7 @@ import ru.rbt.barsgl.ejb.entity.card.CardXls;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.barsgl.audit.entity.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
@@ -17,16 +17,16 @@ import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.dict.CardPostingRepository;
 import ru.rbt.barsgl.ejb.repository.dict.CardXlsRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
@@ -45,8 +45,9 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import ru.rbt.shared.security.RequestContext;
 /**
  * Created by ER22317 on 21.09.2016.
  */
@@ -57,7 +58,8 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
     private static String LIST_DELIMITER = "#";
 
     @Inject
-    private RequestContextBean contextBean;
+    private RequestContext contextBean;
+    //private RequestContextBean contextBean;
 
     @Inject
     private RateRepository rateRepository;

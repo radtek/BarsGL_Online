@@ -9,7 +9,7 @@
     </parent>
 
     <packaging>war</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <artifactId>barsgl-gwt-servlet</artifactId>
 
@@ -18,7 +18,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
+                <version>3.0.0</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                     <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>

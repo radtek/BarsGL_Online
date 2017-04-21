@@ -2,8 +2,8 @@ package ru.rbt.barsgl.ejbcore;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.shared.enums.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;

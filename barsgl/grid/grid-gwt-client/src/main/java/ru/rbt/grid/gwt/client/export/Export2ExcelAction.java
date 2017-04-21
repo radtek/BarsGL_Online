@@ -18,7 +18,7 @@ import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Utils;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
 import java.util.List;

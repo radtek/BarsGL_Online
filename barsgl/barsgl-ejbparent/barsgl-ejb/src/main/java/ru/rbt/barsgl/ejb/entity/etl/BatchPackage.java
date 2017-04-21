@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.entity.etl;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 

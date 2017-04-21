@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.rsubstr;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 05.06.15.

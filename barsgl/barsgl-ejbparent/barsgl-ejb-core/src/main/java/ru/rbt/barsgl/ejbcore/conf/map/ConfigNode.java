@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejbcore.conf.map;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
 

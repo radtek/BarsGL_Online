@@ -16,7 +16,7 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.PrmValueWrapper;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.PrmValueEnum;
 
 import java.util.ArrayList;
 

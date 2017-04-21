@@ -6,11 +6,11 @@ import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejb.repository.loader.LoadManagementRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.shared.enums.LoadManagementAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;

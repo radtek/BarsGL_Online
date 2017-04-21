@@ -11,7 +11,7 @@
     <artifactId>tasks-ejb</artifactId>
     <packaging>ejb</packaging>
 
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
@@ -31,8 +31,8 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>barsgl-audit</artifactId>
-            <version>${project.version}</version>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>javax</groupId>

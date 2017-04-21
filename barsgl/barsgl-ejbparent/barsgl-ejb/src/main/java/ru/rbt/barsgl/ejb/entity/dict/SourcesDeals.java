@@ -4,7 +4,7 @@
  */
 package ru.rbt.barsgl.ejb.entity.dict;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.HasValue;
 
 import javax.persistence.Column;

@@ -1,11 +1,12 @@
 package ru.rbt.barsgl.ejbcore.repository;
 
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import com.google.common.base.Supplier;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Lock;

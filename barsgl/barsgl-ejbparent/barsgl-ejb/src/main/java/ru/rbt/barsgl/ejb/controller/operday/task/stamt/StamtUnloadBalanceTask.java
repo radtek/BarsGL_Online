@@ -4,14 +4,14 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.audit.entity.AuditRecord;
-import ru.rbt.barsgl.ejbcore.controller.etc.TextResourceController;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 
 import javax.ejb.EJB;
@@ -28,9 +28,9 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.parseDate;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
 
 /**
  * Created by Ivan Sevastyanov on 27.01.2016.

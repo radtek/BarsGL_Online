@@ -7,7 +7,7 @@ import ru.rbt.barsgl.ejbtesting.test.AuditControllerTest;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
-import ru.rbt.barsgl.audit.entity.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 
 /**
  * Created by Ivan Sevastyanov

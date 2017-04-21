@@ -7,7 +7,7 @@
         <version>3.0.18-SNAPSHOT</version>
     </parent>
     <artifactId>grid-gwt-client</artifactId>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>

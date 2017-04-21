@@ -5,7 +5,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
 //import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
-import ru.rbt.barsgl.shared.LoginResult;
+import ru.rbt.shared.LoginResult;
 
 
 /**

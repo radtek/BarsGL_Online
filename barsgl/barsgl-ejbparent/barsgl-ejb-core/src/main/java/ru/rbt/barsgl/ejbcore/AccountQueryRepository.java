@@ -2,9 +2,9 @@ package ru.rbt.barsgl.ejbcore;
 
 import static java.lang.String.format;
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by ER22228

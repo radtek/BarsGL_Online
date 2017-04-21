@@ -5,7 +5,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.OverValueAcc2GlAccTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 
 import java.io.StringReader;

@@ -45,13 +45,17 @@
         </dependency>
         <dependency>
             <groupId>ru.rbt</groupId>
-            <artifactId>barsgl-audit</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>security-ejb</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>security-gwt-ejb</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
@@ -59,6 +63,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>tasks-ejb</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>javax</groupId>

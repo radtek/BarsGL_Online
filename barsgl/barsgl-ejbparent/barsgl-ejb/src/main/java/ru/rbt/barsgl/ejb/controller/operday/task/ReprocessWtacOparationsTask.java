@@ -8,12 +8,12 @@ import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -25,11 +25,11 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.RecalcWTAC;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_LDR_STEP_ERR;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.RecalcWTAC;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_LDR_STEP_ERR;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 
 /**
  * Created by Ivan Sevastyanov on 17.02.2016.

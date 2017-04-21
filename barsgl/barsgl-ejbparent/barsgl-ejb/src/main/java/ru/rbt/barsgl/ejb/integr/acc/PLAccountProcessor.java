@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.integr.acc;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 
 import javax.inject.Inject;
 
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ACCOUNT_707_BAD_BRANCH;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_707_BAD_BRANCH;
 
 /**
  * Created by ER18837 on 03.12.16.

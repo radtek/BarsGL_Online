@@ -18,13 +18,13 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountCounterType;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountExcludeInterval;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountFrontPartController;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;

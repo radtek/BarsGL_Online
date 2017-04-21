@@ -5,11 +5,11 @@ import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.BaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.BaseEntityRepository;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.time.DateUtils.parseDate;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by Ivan Sevastyanov on 18.02.2016.

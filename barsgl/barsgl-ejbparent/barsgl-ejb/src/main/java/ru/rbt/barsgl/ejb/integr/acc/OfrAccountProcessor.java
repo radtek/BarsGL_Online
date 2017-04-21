@@ -9,10 +9,10 @@ import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 
@@ -25,8 +25,8 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
  * Created by ER18837 on 19.11.15.
@@ -45,7 +45,7 @@ public class OfrAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
     private AuditController auditController;

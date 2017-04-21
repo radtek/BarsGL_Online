@@ -1,13 +1,13 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 
 import javax.ejb.EJB;
 import java.util.Optional;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 
 /**
  * Created by ER22228 on 12.07.2016.

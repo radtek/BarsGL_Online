@@ -1,16 +1,16 @@
 package ru.rbt.security.gwt.server.rpc.auth;
 
 
-import ru.rbt.security.AuthorizationServiceSupport;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.LoginParams;
-import ru.rbt.barsgl.shared.LoginResult;
+import ru.rbt.shared.LoginResult;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -31,7 +31,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
         HttpServletRequest request = getThreadLocalRequest();
         GwtServerUtils.setUserRequest(new UserRequestHolder(user, null != request ? request.getRemoteAddr() : ""));
         try {
-            LoginResult result = localInvoker.invoke(AuthorizationServiceSupport.class, "login", user, password);
+            LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "login", user, password);
             if (null != request){
                 HttpSession httpSession = request.getSession(true);
                 LoginParams params = new LoginParams(result.getUserName(), result.getUserType(), request.getRemoteAddr());
@@ -69,7 +69,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
             params = new LoginParams("Not authorized user", "no type", "no host");
         }
         
-        LoginResult result = localInvoker.invoke(AuthorizationServiceSupport.class, "logoff", params.getUserName());
+        LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "logoff", params.getUserName());
 //        log.info(result.getMessage());
         params.setUserName("");
         httpSession.setAttribute(USER_NAME.getPath(), params);  // user
@@ -91,7 +91,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
                     default:
                         throw new Throwable("Недопустимое действие!");
                 }
-                RpcRes_Base<AppUserWrapper> res = localInvoker.invoke(AuthorizationServiceSupport.class, method, wrapper);
+                RpcRes_Base<AppUserWrapper> res = localInvoker.invoke(AuthorizationServiceGwtSupport.class, method, wrapper);
                 if (res == null) throw new Throwable("Не удалось выполнить действие!");
                 return res;
             }
@@ -100,12 +100,12 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
 
     @Override
     public RpcRes_Base<String> getDatabaseVersion() throws Exception {
-        return new RpcRes_Base<String>((String)localInvoker.invoke(AuthorizationServiceSupport.class, "getDatabaseVersion"), false, "");
+        return new RpcRes_Base<String>((String)localInvoker.invoke(AuthorizationServiceGwtSupport.class, "getDatabaseVersion"), false, "");
     }
 
     @Override
     public UserMenuWrapper getUserMenu(String userName) throws Exception {
-        return localInvoker.invoke(AuthorizationServiceSupport.class, "getUserMenu", userName);
+        return localInvoker.invoke(AuthorizationServiceGwtSupport.class, "getUserMenu", userName);
     }
 
     @Override

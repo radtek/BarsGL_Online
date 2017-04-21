@@ -5,9 +5,9 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.datarec.DefaultJdbcAdapter;
-import ru.rbt.barsgl.ejbcore.datarec.JdbcAdapter;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
+import ru.rbt.ejbcore.datarec.JdbcAdapter;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 
@@ -44,7 +44,7 @@ public class ReconcilationTask implements ParamsAwareRunnable {
     private GLOperationRepository operationRepository;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {

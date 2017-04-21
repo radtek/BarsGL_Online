@@ -1,13 +1,13 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.barsgl.audit.entity.AuditRecord.LogCode;
+import ru.rbt.audit.entity.AuditRecord.LogCode;
 import ru.rbt.barsgl.shared.criteria.Criteria;
 import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
 import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
 
 import java.util.Date;
 
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.StamtUnloadFull;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnloadFull;
 
 /**
  * Created by ER18837 on 19.03.15.

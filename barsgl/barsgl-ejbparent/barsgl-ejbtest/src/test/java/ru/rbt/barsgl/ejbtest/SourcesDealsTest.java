@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import java.util.List;
 

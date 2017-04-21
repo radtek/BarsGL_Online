@@ -1,13 +1,19 @@
 package ru.rbt.barsgl.ejbtest;
 
+import ru.rbt.shared.enums.RoleSys;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.UserMenuType;
+import ru.rbt.shared.enums.UserMenuCode;
+import ru.rbt.shared.enums.UserExternalType;
+import ru.rbt.shared.enums.UserLocked;
 import org.junit.*;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
-import ru.rbt.barsgl.ejbcore.util.ServerUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.util.ServerUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.Builder;
-import ru.rbt.barsgl.shared.LoginResult;
-import ru.rbt.barsgl.shared.access.UserMenuItemWrapper;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
+import ru.rbt.shared.LoginResult;
+import ru.rbt.shared.access.UserMenuItemWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
 import ru.rbt.barsgl.shared.enums.*;
 
 import javax.naming.Context;
@@ -20,17 +26,17 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import ru.rbt.security.AuthorizationServiceSupport;
-import ru.rbt.security.ejb.entity.AppUser;
-import ru.rbt.security.ejb.entity.access.Role;
-import ru.rbt.security.ejb.entity.access.SecurityAction;
-import ru.rbt.security.ejb.entity.access.SecurityActionGroup;
-import ru.rbt.security.ejb.entity.access.SecurityRoleActionRln;
-import ru.rbt.security.ejb.entity.access.SecurityRoleActionRlnId;
-import ru.rbt.security.ejb.entity.access.UserMenuActionRln;
-import ru.rbt.security.ejb.entity.access.UserMenuItem;
-import ru.rbt.security.ejb.entity.access.UserMenuNode;
-import ru.rbt.security.ejb.entity.access.UserRoleRln;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.entity.access.Role;
+import ru.rbt.security.entity.access.SecurityAction;
+import ru.rbt.security.entity.access.SecurityActionGroup;
+import ru.rbt.security.entity.access.SecurityRoleActionRln;
+import ru.rbt.security.entity.access.SecurityRoleActionRlnId;
+import ru.rbt.security.entity.access.UserMenuActionRln;
+import ru.rbt.security.entity.access.UserMenuItem;
+import ru.rbt.security.entity.access.UserMenuNode;
+import ru.rbt.security.entity.access.UserRoleRln;
 
 
 /**
@@ -128,7 +134,7 @@ public class AuthTest extends AbstractRemoteTest{
         menuActionRln1 = createMenuActIfAbsent(menuActionRln1);
 
         // залогиница
-        LoginResult result = remoteAccess.invoke(AuthorizationServiceSupport.class, "login", user.getUserName(), "123");
+        LoginResult result = remoteAccess.invoke(AuthorizationServiceGwtSupport.class, "login", user.getUserName(), "123");
         Assert.assertEquals(result.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
 
         Assert.assertEquals(1, result.getAvailableActions().size());
@@ -154,7 +160,7 @@ public class AuthTest extends AbstractRemoteTest{
         baseEntityRepository.executeUpdate("delete from UserRoleRln r where r.id = ?1", userRoleRln.getId());
         objects.remove(userRoleRln);
 
-        LoginResult result2 = remoteAccess.invoke(AuthorizationServiceSupport.class, "login", user.getUserName(), "123");
+        LoginResult result2 = remoteAccess.invoke(AuthorizationServiceGwtSupport.class, "login", user.getUserName(), "123");
         Assert.assertEquals(result2.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
         Assert.assertTrue(result2.getUserMenu().getRootElements().isEmpty());
     }

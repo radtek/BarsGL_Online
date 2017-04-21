@@ -13,16 +13,16 @@ import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
-import ru.rbt.barsgl.audit.controller.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.JpaAccessCallback;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.JpaAccessCallback;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
@@ -42,9 +42,9 @@ import static org.apache.commons.lang3.time.DateUtils.truncate;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Package;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.Task;
-import static ru.rbt.barsgl.audit.entity.AuditRecord.LogCode.TechnicalPosting;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.TechnicalPosting;
 import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
 
@@ -70,7 +70,7 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Inject
     private GLOperationRepository operationRepository;

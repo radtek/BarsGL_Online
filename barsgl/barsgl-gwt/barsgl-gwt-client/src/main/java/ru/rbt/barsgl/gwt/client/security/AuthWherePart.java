@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.security;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder;
 import ru.rbt.barsgl.shared.Utils;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.List;
 

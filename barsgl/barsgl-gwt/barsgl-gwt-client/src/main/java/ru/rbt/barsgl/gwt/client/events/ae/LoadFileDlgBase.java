@@ -29,7 +29,7 @@ import ru.rbt.barsgl.gwt.core.ui.RichAreaBox;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.HashMap;
 

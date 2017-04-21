@@ -26,8 +26,8 @@ import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.access.UserMenuWrapper;
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 //import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;

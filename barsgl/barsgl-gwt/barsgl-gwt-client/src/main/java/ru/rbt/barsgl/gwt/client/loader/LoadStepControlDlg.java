@@ -13,7 +13,7 @@ import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementAction;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import java.util.Date;
