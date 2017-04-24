@@ -1,5 +1,7 @@
 package ru.rbt.ejbcore.datarec;
 
+import oracle.jdbc.OraclePreparedStatement;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,20 +16,29 @@ public class DefaultJdbcAdapter implements JdbcAdapter {
 
     public void setParameterValue(PreparedStatement ps, int index, Object value) throws SQLException {
         if (value == null) {
-            // обход ораклового бага
-            ps.setString(index, null);
-            return;
-        }
-        if (value instanceof Date) {
-            // сохраняем дату вместе со временем
-            ps.setTimestamp(index, new Timestamp( ((Date)value).getTime() ));
-        } else if (value.getClass().equals(byte[].class)) {
-            // записываем бинарные данные через поток
-            byte[] bytes = (byte[])value;
-            ps.setBinaryStream(index, new ByteArrayInputStream(bytes), bytes.length);
+            ps.setNull(index, Types.VARCHAR);
         } else {
-            // остальное отдаем на откуп драйверу
-            ps.setObject(index, value);
+            if (value instanceof Date) {
+                // сохраняем дату вместе со временем
+                ps.setTimestamp(index, new Timestamp( ((Date)value).getTime() ));
+            } else if (value.getClass().equals(byte[].class)) {
+                // записываем бинарные данные через поток
+                byte[] bytes = (byte[]) value;
+                ps.setBinaryStream(index, new ByteArrayInputStream(bytes), bytes.length);
+            } else if (value instanceof String) {
+                ParameterMetaData metaData = ps.getParameterMetaData();
+                int sqlType = metaData.getParameterType(index);
+                if (Types.CHAR == sqlType) {
+                    if (ps instanceof OraclePreparedStatement) {
+                        ((OraclePreparedStatement)ps).setFixedCHAR(index, (String) value);
+                    }
+                } else {
+                    ps.setString(index, (String) value);
+                }
+            } else {
+                // остальное отдаем на откуп драйверу
+                ps.setObject(index, value);
+            }
         }
     }
 
