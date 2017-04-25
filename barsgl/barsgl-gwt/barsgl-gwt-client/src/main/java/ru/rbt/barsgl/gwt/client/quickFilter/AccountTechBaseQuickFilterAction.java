@@ -8,12 +8,12 @@ import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 /**
  * Created by ER18837 on 20.07.16.
  */
-public abstract class AccountBaseQuickFilterAction extends QuickFilterAction {
+public abstract class AccountTechBaseQuickFilterAction extends QuickFilterAction {
 
-    protected AccountQuickFilterParams quickFilterParams;
+    protected AccountTechQuickFilterParams quickFilterParams;
     protected DlgFrame quickFilterDlg;
 
-    public AccountBaseQuickFilterAction(GridWidget grid, AccountQuickFilterParams quickFilterParams) {
+    public AccountTechBaseQuickFilterAction(GridWidget grid, AccountTechQuickFilterParams quickFilterParams) {
         super(grid, null, "Быстрый фильтр", new Image(ImageConstants.INSTANCE.quickfilter()), 10);
         this.quickFilterParams = quickFilterParams;
     }
@@ -21,7 +21,7 @@ public abstract class AccountBaseQuickFilterAction extends QuickFilterAction {
     @Override
     public DlgFrame getFilterDialog() {
         if (quickFilterDlg == null)
-            quickFilterDlg = new AccountQuickFilterDlg();
+            quickFilterDlg = new AccountTechQuickFilterDlg();
         return quickFilterDlg;
     }
 

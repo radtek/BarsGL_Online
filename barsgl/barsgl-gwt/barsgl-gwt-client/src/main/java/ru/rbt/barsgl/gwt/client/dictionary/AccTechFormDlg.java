@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
-import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -23,9 +23,10 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 /**
  * Created by ER18837 on 05.02.16.
  */
-public abstract class AccCustomerFormDlg extends GridFormDlgBase {
+public abstract class AccTechFormDlg extends GridFormDlgBase {
 
     private Column colBsaAcid;
+    private Column colAccType;
     private Column colAcc2;
     private Column colAcid;
     private Column colDealSrc;
@@ -39,10 +40,10 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
     private Column colRlnType;
 
     protected AccCustomerQuickFilterAction quickFilterAction;
-    protected AccountQuickFilterParams quickFilterParams; 
+    protected AccountQuickFilterParams quickFilterParams;
 
-    public AccCustomerFormDlg(boolean preview) {
-        super("Выбор счета");
+    public AccTechFormDlg(boolean preview) {
+        super("Выбор счета (технические счета)");
         setInitialFilter();
         ok.setVisible(!preview);
     }
@@ -69,20 +70,6 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
             return;
         AccountQuickFilterParams filterParams = (AccountQuickFilterParams)quickFilterAction.getFilterParams();
         filterParams.setInitialFilterParams(getInitialFilterParams());
-        String ccyN = filterParams.getCurrencyN();
-        String bsaAcid = filterParams.getAccount();
-
-        boolean needDlg = (isEmpty(ccyN) || isEmpty(filterParams.getFilial())
-                || isEmpty(bsaAcid) || bsaAcid.length() < 5);
-        if (needDlg) {
-            quickFilterAction.execute();
-        } else {
-            ArrayList<FilterItem> filterCriteria = filterParams.getFilter();
-            if ("810".equals(ccyN) && (bsaAcid.equals("99999") || bsaAcid.equals("99998")) ) {
-            	filterCriteria.add(new FilterItem(colRlnType, FilterCriteria.EQ, "T"));
-            }
-            LocalEventBus.fireEvent(new GridEvents(gridForm.getGrid().getId(), GridEvents.EventType.FILTER, filterCriteria));
-        }
     }
 
     class AccCustomerGridForm extends GridForm {
@@ -96,7 +83,7 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select * from V_GL_ACCRLN";
+            return "select * from V_GL_ACC_TH";
         }
 
         @Override
@@ -104,25 +91,28 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
             Table result = new Table();
             Column col;
 
+            result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.DECIMAL, "Account Type", 80,true, false, Column.Sort.ASC, "000000000"));
             result.addColumn(colBsaAcid = new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 80));
             result.addColumn(colAcid = new Column("ACID", Column.Type.STRING, "Счет Midas", 80));
             result.addColumn(colAcc2 = new Column("ACC2", Column.Type.STRING, "Балансовый счет", 60, false, false));
             result.addColumn(colCustNo = new Column("CUSTNO", Column.Type.STRING, "Номер клиента", 40));
             result.addColumn(colCustName = new Column("CUSTNAME", Column.Type.STRING, "Имя клиента", 180));
-            result.addColumn(colFilial = new Column("CBCCN", Column.Type.STRING, "Филиал", 30, false, false));
-            result.addColumn(colCurrency = new Column("CCYN", Column.Type.STRING, "Валюта", 20));
-            result.addColumn(colDateOpen = new Column("DRLNO", Column.Type.DATE, "Дата открытия", 40));
-            result.addColumn(colDateClose = new Column("DRLNC", Column.Type.DATE, "Дата закрытия", 40, false, false));
+            result.addColumn(colFilial = new Column("CBCC", Column.Type.STRING, "Филиал", 30, false, false));
+            result.addColumn(colCurrency = new Column("CCY", Column.Type.STRING, "Валюта", 20));
+            result.addColumn(colDateOpen = new Column("DTO", Column.Type.DATE, "Дата открытия", 40));
+            result.addColumn(colDateClose = new Column("DTC", Column.Type.DATE, "Дата закрытия", 40, false, false));
             result.addColumn(colDealSrc = new Column("DEALSRS", Column.Type.STRING, "Источник сделки", 40, false, false));
             result.addColumn(colDealId = new Column("DEALID", Column.Type.STRING, "Номер сделки", 60));
             result.addColumn(colRlnType = new Column("RLNTYPE", Column.Type.STRING, "Тип счета", 30, false, false));
+            result.addColumn(colCustName = new Column("DESCRIPTION", Column.Type.STRING, "Описание", 180));
+
             return result;
         }
 
         @Override
         public ArrayList<SortItem> getInitialSortCriteria() {
             ArrayList<SortItem> list = new ArrayList<SortItem>();
-            list.add(new SortItem("BSAACID", Column.Sort.ASC));
+            list.add(new SortItem("ACCTYPE", Column.Sort.ASC));
             return list;
         }
 
@@ -138,31 +128,18 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
             list.add(new FilterItem(colDateOpen, FilterCriteria.LE, currentDate, true));
             list.add(new FilterItem(colDateClose, FilterCriteria.GE, currentDate, true));
-            list.add(new FilterItem(colCurrency, FilterCriteria.EQ, ccyN, true));
-            list.add(new FilterItem(colFilial, FilterCriteria.EQ, filialN, true));
-            if (!isEmpty(bsaAcid)) {
-                if (bsaAcid.contains("%"))
-                    list.add(new FilterItem(colBsaAcid, FilterCriteria.LIKE, bsaAcid));
-                else if (bsaAcid.length() == 5)
-                    list.add(new FilterItem(colAcc2, FilterCriteria.EQ, bsaAcid));
-                else
-                    list.add(new FilterItem(colBsaAcid, FilterCriteria.START_WITH, bsaAcid));
-                if ("810".equals(ccyN) && (bsaAcid.equals("99999") || bsaAcid.equals("99998")) ) {
-                    list.add(new FilterItem(colRlnType, FilterCriteria.EQ, "T"));
-                }
-            }
 
             return list;
         }
 
         @Override
         protected Object[] getInitialFilterParams() {
-            return AccCustomerFormDlg.this.getInitialFilterParams();
+            return AccTechFormDlg.this.getInitialFilterParams();
         }
     }
 
     private AccountQuickFilterParams createQuickFilterParams() {
-        return new AccountQuickFilterParams(colFilial, colCurrency, colBsaAcid, colAcc2, colCustNo, colDealSrc, colDealId, colDateOpen, colDateClose) {
+        return new AccountQuickFilterParams(colFilial, colCurrency, colAccType, colAcc2, colCustNo, colDealSrc, colDealId, colDateOpen, colDateClose) {
             @Override
             protected boolean isNumberCodeFilial() {
                 return true;
@@ -182,7 +159,7 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
 
         @Override
         public Object[] getInitialFilterParams(Date operday, Date prevday) {
-            return AccCustomerFormDlg.this.getInitialFilterParams();
+            return AccTechFormDlg.this.getInitialFilterParams();
         }
 
     }

@@ -24,6 +24,7 @@ import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -42,7 +43,7 @@ import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 /**
  * Created by ER18837 on 13.08.15.
  */
-public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOperationWrapper> {
+public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualTechOperationWrapper> {
 
     @Inject
     private BankCurrencyRepository bankCurrencyRepository;
@@ -78,7 +79,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
     private BankCalendarDayRepository calendarDayRepository;
 
     @Override
-    public void fillValidationContext(ManualOperationWrapper target, ValidationContext context) {
+    public void fillValidationContext(ManualTechOperationWrapper target, ValidationContext context) {
         final BalanceChapter bchDt = glOperationRepository.getBalanceChapter(target.getAccountDebit());
         final BalanceChapter bchCt = glOperationRepository.getBalanceChapter(target.getAccountCredit());
         // ============== Дата ===============
@@ -110,6 +111,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
             }
         });
 
+/*
         // ============= Счета ==============
         // Формат счета дебета
         context.addValidator(() -> {
@@ -121,8 +123,9 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
             checkAccount(target, GLOperation.OperSide.C, target.getAccountCredit(), "Кредит / Счет");
             checkAccount9999(target.getAccountCredit(), target.getAccountDebit(), GLOperation.OperSide.C);
         });
+*/
 
-        // ====== Филиалы и глава ===========
+/*        // ====== Филиалы и глава ===========
         // Глава баланса по дебету
         context.addValidator(() -> {
             if (null == bchDt)
@@ -133,9 +136,9 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
         context.addValidator(() -> {
             if (null == bchCt)
                 throw new ValidationError(BALANSE_SECOND_NOT_EXISTS, "по кредиту", substr(target.getAccountCredit(), 5));
-        });
+        });*/
 
-        // Сравнение глав баланса
+/*        // Сравнение глав баланса
         context.addValidator(() -> {
             if (null == bchDt || null == bchCt)
                 return;
@@ -151,7 +154,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
                     && !BalanceChapter.A.getRuLetter().equals(bsChapterDebit)) {   // глава не А
                 throw new ValidationError(MFO_CHAPTER_NOT_A, target.getAccountDebit(), "Дебет / Счет", target.getAccountCredit(), "Кредит / Счет");
             }
-        });
+        });*/
 
         // ============ Валюта ==============
         // Валюта дебета
@@ -303,20 +306,20 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
         }
 
         // счет существует и открыт
-        int flag = glAccountRepository.checkBsaAccount(account, checkDateFormat(target.getValueDateStr(), "Дата валютирования"));
+        /*int flag = glAccountRepository.checkBsaAccount(account, checkDateFormat(target.getValueDateStr(), "Дата валютирования"));
         if (flag == -1) {
             throw new ValidationError(ACCOUNT_NOT_FOUND, sideRus, account, accountField);
         } else if (flag == 0) {
             throw new ValidationError(ACCOUNT_IS_CLOSED, sideRus, account, accountField);
-        }
+        }*/
 
         // счета доходов - расходов
-        if (!account.startsWith("706"))
+        /*if (!account.startsWith("706"))
             return;
         if (!"810".equals(substr(account, 5, 8)))
             throw new ValidationError(ACCOUNT_706_NOT_RUR, sideRus, account, accountField);
         if (!glAccountRepository.checkAccountRlnNotPseudo(account))
-            throw new ValidationError(ACCOUNT_706_PSEUDO, sideRus, account, accountField);
+            throw new ValidationError(ACCOUNT_706_PSEUDO, sideRus, account, accountField);*/
     }
 
     private void checkAccount9999(String account1, String account2, GLOperation.OperSide operSide){
@@ -328,7 +331,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
 
     private  void checkFilial(ManualOperationWrapper target, GLOperation.OperSide operSide,
                               String filial, String bsaAsid, String filialField) {
-        String accountFilial = "";
+        /*String accountFilial = "";
         try {
             accountFilial = glOperationRepository.getFilialByAccount(bsaAsid);
         } catch (Exception e) {
@@ -337,7 +340,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
         filial = ifEmpty(filial, "");
         if (!filial.equals(accountFilial)){
             throw new ValidationError(FILIAL_NOT_VALID, operSide.getMsgName(), filial, accountFilial);
-        }
+        }*/
     }
 
     public String getFilial(String bsaAsid) {
@@ -374,7 +377,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
         }
     }
 
-    public Date checkDate(ManualOperationWrapper target, String checkDateStr, String fieldName, boolean checkHoliday) {
+    public Date checkDate(ManualTechOperationWrapper target, String checkDateStr, String fieldName, boolean checkHoliday) {
         Date currentDate = userContext.getCurrentDate();     // текущий опердень
         Date checkDate = null;
         try {
@@ -425,6 +428,7 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
         // опердень создания
         posting.setProcDate(userContext.getCurrentDate());
         posting.setInvisible(InvisibleType.N);
+        posting.setInputMethod(wrapper.getInputMethod());
         // текущее системное время
         posting.setCreateTimestamp(userContext.getTimestamp());
         // создатель
@@ -491,20 +495,22 @@ public class BatchTechPostingProcessor extends ValidationAwareHandler<ManualOper
 
             // Дебет
         posting.setAccountDebit(wrapper.getAccountDebit());
-        posting.setFilialDebit(getFilial(wrapper.getFilialDebit(), wrapper.getAccountDebit(), GLOperation.OperSide.D));
+        //posting.setFilialDebit(getFilial(wrapper.getFilialDebit(), wrapper.getAccountDebit(), GLOperation.OperSide.D));
+        posting.setFilialDebit(wrapper.getFilialDebit());
         BankCurrency ccyDebit = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
         posting.setCurrencyDebit(ccyDebit);
         posting.setAmountDebit(wrapper.getAmountDebit());
 
         // Кредит
         posting.setAccountCredit(wrapper.getAccountCredit());
-        posting.setFilialCredit(getFilial(wrapper.getFilialCredit(), wrapper.getAccountCredit(), GLOperation.OperSide.C));
+        //posting.setFilialCredit(getFilial(wrapper.getFilialCredit(), wrapper.getAccountCredit(), GLOperation.OperSide.C));
+        posting.setFilialCredit(wrapper.getFilialCredit());
         BankCurrency ccyCredit = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
         posting.setCurrencyCredit(ccyCredit);
         posting.setAmountCredit(wrapper.getAmountCredit());
 
         // Сумма в рублях
-        posting.setAmountRu(wrapper.getAmountRu());
+        //posting.setAmountRu(wrapper.getAmountRu());
 
         return posting;
     }

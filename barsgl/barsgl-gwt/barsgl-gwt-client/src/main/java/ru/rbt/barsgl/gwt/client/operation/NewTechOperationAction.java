@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -14,6 +15,7 @@ import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
@@ -21,21 +23,17 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 /**
  * Created by ER18837 on 17.02.16.
  */
-public class NewOperationAction extends GridAction {
+public class NewTechOperationAction extends GridAction {
 
-    private OperationHandsDlg dlg;
+    private OperationTechHandsDlg dlg;
     private boolean isExtended;
 
-    public NewOperationAction(GridWidget grid, ImageResource imageRecource) {
-        this(grid, imageRecource, false);
-    }
-
-    public NewOperationAction(GridWidget grid, ImageResource imageRecource, boolean isExtended) {
+    public NewTechOperationAction(GridWidget grid, ImageResource imageRecource) {
         this(grid, null, "Ввести операцию", new Image(imageRecource), 10);
         this.isExtended = isExtended;
     }
 
-    public NewOperationAction(GridWidget grid, String name, String hint, Image image, double separator) {
+    public NewTechOperationAction(GridWidget grid, String name, String hint, Image image, double separator) {
         super(grid, name, hint, image, separator);
     }
 
@@ -43,12 +41,7 @@ public class NewOperationAction extends GridAction {
     
     @Override
     public void execute() {
-        if (isExtended) {
-            dlg = new OperationExtDlg("Ввод операции GL по шаблону", FormAction.CREATE, grid.getTable().getColumns(), BatchPostStep.HAND1);
-        }
-        else {
-            dlg = new OperationHandsDlg("Ввод бухгалтерской операции GL", FormAction.CREATE, grid.getTable().getColumns(), BatchPostStep.HAND1);
-        }
+        dlg = new OperationTechHandsDlg("Ввод бухгалтерской операции по техсчетам", FormAction.CREATE, grid.getTable().getColumns(), BatchPostStep.HAND1);
         dlg.setDlgEvents(this);
         dlg.setAfterCancelEvent(new IAfterCancelEvent() {
             @Override
@@ -63,23 +56,23 @@ public class NewOperationAction extends GridAction {
 
     @Override
     public void onDlgOkClick(Object prms){
+
         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-        ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
+        ManualTechOperationWrapper operationWrapper = (ManualTechOperationWrapper) prms;
 
         operationWrapper.setStatus(BatchPostStatus.NONE);
-        operationWrapper.setAction( dlg.getOperationAction() == OperationHandsDlg.ButtonOperAction.OK ?
+        operationWrapper.setAction( dlg.getOperationAction() == OperationTechHandsDlg.ButtonOperAction.OK ?
                 BatchPostAction.SAVE : BatchPostAction.SAVE_CONTROL);
 
-        BarsGLEntryPoint.operationService.processOperationRq(operationWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+        BarsGLEntryPoint.operationService.processTechOperationRq(operationWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualTechOperationWrapper>>() {
             @Override
             public void onFailureOthers(Throwable throwable) {
                 WaitingManager.hide();
-
                 showInfo("Системная ошибка", "Возможено, операция не сохранена\nПроверьте наличие проводок по операции в нижней части окна" + throwable.getLocalizedMessage());
             }
 
             @Override
-            public void onSuccess(RpcRes_Base<ManualOperationWrapper> operationWrappers) {
+            public void onSuccess(RpcRes_Base<ManualTechOperationWrapper> operationWrappers) {
                 if (operationWrappers.isError()) {
                     showInfo("Ошибка", operationWrappers.getMessage());
                 } else {

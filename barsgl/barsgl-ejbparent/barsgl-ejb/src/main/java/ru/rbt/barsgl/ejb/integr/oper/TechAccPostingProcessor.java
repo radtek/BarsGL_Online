@@ -1,18 +1,26 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
+import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.enums.PrmValueEnum;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
+import static java.lang.String.format;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
@@ -25,6 +33,12 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
 
     @Inject
     private AccountingTypeRepository accountingTypeRepository;
+
+    @Inject
+    private PrmValueRepository prmValueRepository;
+
+    @Inject
+    private AccessServiceSupport accessServiceSupport;
 
     @Override
     public boolean isSupported(EtlPosting posting) {
@@ -139,6 +153,14 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
             }
         });
 
+        // Идентификатор проводки хотя бы один
+        context.addValidator(() -> {
+            if (isEmpty(target.getDealId()) && isEmpty(target.getPaymentRefernce())) {
+                throw new ValidationError(DEALID_PYMANTREF_IS_EMPTY,
+                        target.getColumnName("dealId"), target.getColumnName("paymentRefernce"));
+            }
+        });
+
         // ============= Счета ==============
         // Формат счета дебета
         /*
@@ -240,7 +262,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
 
         // ============== Ссылки ===============
         // ссылка на сторно
-        context.addValidator(() -> {
+        /*context.addValidator(() -> {
             String fieldName = target.getColumnName("stornoReference");
             String fieldValue = target.getStornoReference();
             int maxLen = 20;
@@ -251,9 +273,9 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
                     throw new ValidationError(STRING_FIELD_IS_TOO_LONG, fieldValue, fieldName, Integer.toString(maxLen));
                 }
             }
-        });
+        });*/
         // Ссылка на родительскую операцию в продуктовой системе
-        context.addValidator(() -> {
+        /*context.addValidator(() -> {
             String fieldName = target.getColumnName("parentReference");
             String fieldValue = target.getParentReference();
             int maxLen = 20;
@@ -264,7 +286,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
             else if (maxLen < fieldValue.length()) {
                 throw new ValidationError(STRING_FIELD_IS_TOO_LONG, fieldValue, fieldName, Integer.toString(maxLen));
             }
-        });
+        });*/
 
         //Проверки для технических счетов
 
@@ -392,10 +414,28 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
             }
 
         });
+    }
 
+    public void checkFilialPermission(String filialDebit, String filialCredit, Long userId) throws Exception {
+        List<PrmValue> prm = prmValueRepository.select(PrmValue.class, "from PrmValue p where p.userId = ?1 and p.prmCode = ?2",
+                userId, PrmValueEnum.HeadBranch);
 
+        if (prm == null || prm.isEmpty() || prm.stream().filter(x ->
+                x.getPrmValue().equals(filialCredit) ||
+                        x.getPrmValue().equals(filialDebit) ||
+                        x.getPrmValue().equals("*")).count() == 0){
+            throw new ValidationError(POSTING_FILIAL_NOT_ALLOWED, filialDebit, filialCredit);
+        }
+    }
 
+    public void checkBackvaluePermission(Date postDate, Long userId) throws Exception {
+        accessServiceSupport.checkUserAccessToBackValueDate(postDate, userId);
+    }
 
+    public String validationErrorMessage(List<ValidationError> errors, ErrorList descriptors) {
+        StringBuilder result = new StringBuilder(format("Обнаружены ошибки валидации входных данных\n"));
+        result.append(validationErrorsToString(errors, descriptors));
+        return result.toString();
     }
 
 }

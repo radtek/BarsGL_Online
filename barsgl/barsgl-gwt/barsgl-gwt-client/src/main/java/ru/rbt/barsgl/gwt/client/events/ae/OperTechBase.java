@@ -21,7 +21,7 @@ import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 /**
  * Created by akichigi on 20.06.16.
  */
-public abstract class OperBase extends OperSuperBase {
+public abstract class OperTechBase extends OperTechSuperBase {
     protected GridAction _stepChoiceAction;
     protected GridAction _packageStatAction;
 
@@ -35,7 +35,7 @@ public abstract class OperBase extends OperSuperBase {
     private String _where_ownMessages = "";
     private String _where_message_type = "";
 
-    public OperBase(String title) {
+    public OperTechBase(String title) {
         super(title, true);
         _select = getSelectClause();
         _where_base = Utils.Fmt(_where_base, getInputMethod().name());
@@ -64,7 +64,7 @@ public abstract class OperBase extends OperSuperBase {
 
             @Override
             public void execute() {
-                dlg = new StepChoiceDlg(getInputMethod());
+                dlg = new StepChoiceDlg(getInputMethod(), StepChoiceDlg.ChoiseType.TECH);
                 dlg.setDlgEvents(this);
                 Object[] prms = new Object[] {_step, _ownMessages, _type};
                 dlg.show(prms);

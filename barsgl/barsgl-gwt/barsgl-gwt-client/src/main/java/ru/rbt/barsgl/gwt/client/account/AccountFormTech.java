@@ -9,6 +9,8 @@ import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
+import ru.rbt.barsgl.gwt.client.quickFilter.AccountTechBaseQuickFilterAction;
+import ru.rbt.barsgl.gwt.client.quickFilter.AccountTechQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -51,8 +53,9 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     private Column colDealId;
     private Column colDateOpen;
     private Column colDateClose;
+    private Column colAccType;
 
-    AccountQuickFilterParams quickFilterParams;
+    AccountTechQuickFilterParams quickFilterParams;
     GridAction quickFilterAction;
 
     public AccountFormTech() {
@@ -63,12 +66,12 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     private void reconfigure() {
 
     	quickFilterParams = createQuickFilterParams();
-        abw.addAction(quickFilterAction = new AccountQuickFilterAction(grid, quickFilterParams) );
+        abw.addAction(quickFilterAction = new AccountTechQuickFilterAction(grid, quickFilterParams) );
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
-        //abw.addSecureAction(editAccount(), SecurityActionCode.AccChng);
-        //abw.addSecureAction(createAccount(), SecurityActionCode.AccInp);
-        //abw.addSecureAction(closeAccount(), SecurityActionCode.AccClose);
-        //abw.addSecureAction(createNewOperation(), SecurityActionCode.AccOperInp);
+        abw.addSecureAction(editAccount(), SecurityActionCode.TechAccChng);
+        abw.addSecureAction(createAccount(), SecurityActionCode.TechAccInp);
+        abw.addSecureAction(closeAccount(), SecurityActionCode.TechAccClose);
+        abw.addSecureAction(createNewOperation(), SecurityActionCode.TechAccOperInp);
         quickFilterAction.execute();
     }
 
@@ -91,54 +94,57 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     protected Table prepareTable() {
         Table result = new Table();
 
-        result.addColumn(new Column("ACCTYPE", DECIMAL, "Accounting Type", 80, true, false, Column.Sort.ASC, "000000000"));// No Space
-        result.addColumn(colCurrency = new Column("CCY", STRING, "Валюта", 60));
-        result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 60));
+        result.addColumn(colAccType = new Column("ACCTYPE", DECIMAL, "Accounting Type", 80, true, false, Column.Sort.ASC, "000000000"));// No Space
         result.addColumn(colAccount = new Column("BSAACID", STRING, "Псевдосчёт", 160));
+        result.addColumn(colCurrency = new Column("CCY", STRING, "Валюта", 60));
         result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 120));
+        result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 60));
+        Column colCBCCN;
+        result.addColumn(colCBCCN = new Column("CBCC", STRING, "Код филиала (цифровой)", 60));
+        colCBCCN.setVisible(false);
+        result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 60));
         result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
-        result.addColumn(colCustomer = new Column("CUSTNO", STRING, "Номер клиента", 70));
+        Column colAcod;
+        result.addColumn(colAcod = new Column("ACOD", STRING, "ACOD", 380));
+        colAcod.setVisible(false);
+        Column colSQ;
+        result.addColumn(colSQ = new Column("SQ", STRING, "SQ", 380));
+        colSQ.setVisible(false);
         result.addColumn(new Column("DESCRIPTION", STRING, "Название счета", 380));
+        result.addColumn(colCustomer = new Column("CUSTNO", STRING, "Номер клиента", 70));
+        colCustomer.setVisible(false);
         result.addColumn(colDateOpen = new Column("DTO", DATE, "Дата открытия", 80));
         result.addColumn(colDateClose = new Column("DTC", DATE, "Дата закрытия", 80));
-        result.addColumn(new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.NONE, ""));
-
-/*
-        result.addColumn(new Column("ID", STRING, "ID Счета", 160));
-        result.addColumn(new Column("PSAV", STRING, "А/ П", 25));
-        result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 70));
-        result.addColumn(colDealId = new Column("DEALID", STRING, "ИД сделки", 120));
-        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120));
-        result.addColumn(new Column("CBCCN", STRING, "Код филиала", 60, false, false));
-        result.addColumn(new Column("CBCUSTTYPE", DECIMAL, "Тип соб", 40, true, true, Column.Sort.NONE, "#,##"));
-        result.addColumn(new Column("TERM", DECIMAL, "Код срока", 40, true, true, Column.Sort.NONE, "#,##"));
-        result.addColumn(colAcc2 = new Column("ACC2", STRING, "Счет 2-го порядка", 60, false, false));
-        result.addColumn(new Column("PLCODE", STRING, "Символ ОФР", 30, false, false));
-        result.addColumn(new Column("ACOD", DECIMAL, "Midas Acod", 50, false, false));
-        result.addColumn(new Column("SQ", DECIMAL, "Midas SQ", 40, false, false));
-        result.addColumn(new Column("DTR", DATE, "Дата регистрации", 80, false, false));
-        result.addColumn(new Column("DTM", DATE, "Дата изменения", 80, false, false));
-        result.addColumn(new Column("OPENTYPE", STRING, "Способ открытия", 70, false, false));
-        result.addColumn(new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.DESC, ""));*/
-
+        Column colID;
+        result.addColumn(colID = new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.NONE, ""));
+        colID.setVisible(false);
+        Column colDTR;
+        result.addColumn(colDTR = new Column("DTR", DATE, "Дата регистрации", 80));
+        colDTR.setVisible(false);
+        Column colDTM;
+        result.addColumn(colDTM = new Column("DTM", DATE, "Дата изменения", 80));
+        colDTM.setVisible(false);
+        Column colOpenType;
+        result.addColumn(colOpenType = new Column("OPENTYPE", STRING, "Способ открытия", 380));
+        colOpenType.setVisible(false);
         return result;
     }
 
     private GridAction createAccount() {
-        return (GridAction) commonLazyAction("AccountDlg", "Открытие счета GL", CREATE, table.getColumns(),
+        return (GridAction) commonLazyAction("AccountTechDlg", "Открытие технического счета GL", CREATE, table.getColumns(),
                 "Счет не создан",
                 "Ошибка создания счета",
                 "Счет создан успешно");
     }
     private GridAction editAccount() {
-        return (GridAction) commonLazyAction("AccountDlg", "Редактирование счета GL", UPDATE, table.getColumns(),
+        return (GridAction) commonLazyAction("AccountTechDlg", "Редактирование технического счета GL", UPDATE, grid.getTable().getColumns(),
                 "Счет не изменен",
                 "Ошибка изменения счета",
                 "Счет изменен успешно");
     }
 
     private GridAction closeAccount() {
-        return (GridAction) otherAction(new AccountCloseDlg("Закрытие счета GL", OTHER, grid.getTable().getColumns()),
+        return (GridAction) otherAction(new AccountCloseDlg("Закрытие технического счета GL", OTHER, grid.getTable().getColumns()),
                 "Счет не изменен",
                 "Ошибка изменения счета",
                 "Счет изменен успешно",
@@ -149,13 +155,13 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     protected void save(ManualAccountWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> asyncCallbackImpl) throws Exception {
         switch(action) {
             case CREATE:
-                BarsGLEntryPoint.operationService.saveAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.operationService.saveTechAccount(cnw, asyncCallbackImpl);
                 break;
             case UPDATE:
-                BarsGLEntryPoint.operationService.updateAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.operationService.updateTechAccount (cnw, asyncCallbackImpl);
                 break;
             case OTHER:
-                BarsGLEntryPoint.operationService.closeAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.operationService.closeTechAccount(cnw, asyncCallbackImpl);
                 break;
         }
     }
@@ -165,7 +171,6 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         switch(action) {
             case CREATE:
                 return "<pre>Счет ЦБ:      " + wrapper.getBsaAcid() + "</pre>"
-                    + "<pre>Счет Midas:   " + wrapper.getAcid() + "</pre>"
                     + (isEmpty(wrapper.getDealId()) ? "" :
                     "<pre>Номер сделки: " + wrapper.getDealId() + "</pre>");
             case OTHER:
@@ -258,8 +263,8 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         }
     }
 
-    private AccountQuickFilterParams createQuickFilterParams() {
-        return new AccountQuickFilterParams(colFilial, colCurrency, colAccount, colAcc2, colCustomer, colDealSource, colDealId, colDateOpen, colDateClose) {
+    private AccountTechQuickFilterParams createQuickFilterParams() {
+        return new AccountTechQuickFilterParams(colFilial, colCurrency, colAccType) {
             @Override
             protected boolean isNumberCodeFilial() {
                 return false;
@@ -272,8 +277,8 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         };
     }
 
-    class AccountQuickFilterAction extends AccountBaseQuickFilterAction {
-        public AccountQuickFilterAction(GridWidget grid, AccountQuickFilterParams params) {
+    class AccountTechQuickFilterAction extends AccountTechBaseQuickFilterAction {
+        public AccountTechQuickFilterAction(GridWidget grid, AccountTechQuickFilterParams params) {
             super(grid, params);
         }
 

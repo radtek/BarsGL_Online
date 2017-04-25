@@ -1,20 +1,18 @@
 package ru.rbt.barsgl.ejb.integr.pst;
 
-import org.apache.poi.util.StringUtil;
-import ru.rbt.barsgl.ejb.entity.acc.Acc;
-import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
+import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
-import ru.rbt.barsgl.ejb.repository.GlPdThRepositoty;
+import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
+import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,7 +24,10 @@ public class TechOperationProcessor extends GLOperationProcessor
     private GLPostingRepository glPostingRepository;
 
     @Inject
-    private GlPdThRepositoty glPdThRepositoty;
+    private GlPdThRepository glPdThRepository;
+
+    @Inject
+    private SourcesDealsRepository sourcesDealsRepository;
 
     @Override
     public boolean isSupported(GLOperation operation) {
@@ -89,18 +90,26 @@ public class TechOperationProcessor extends GLOperationProcessor
     public GlPdTh getPdTh(GLOperation operation, GLOperation.OperSide operSide) throws SQLException {
 
         GlPdTh pdth = new GlPdTh(operSide);
-        Long id = glPdThRepositoty.getID();
+        Long id = glPdThRepository.getID();
         pdth.setId(id);
         pdth.setPod(operation.getPostDate());
         pdth.setVald(operation.getValueDate());
-        pdth.setPbr("@@GL-"+StringUtils.substr(operation.getSourcePosting(),2));
+
+        SourcesDeals dealSrc = sourcesDealsRepository.findCached(operation.getSourcePosting());
+
+        if (dealSrc!=null) {
+            pdth.setPbr("@@GL" + dealSrc.getShortName());
+        }
+        else {
+            pdth.setPbr("@@GL-" + StringUtils.substr(operation.getSourcePosting(), 2));
+        }
         pdth.setInvisible("0");
 
         if (operSide == GLOperation.OperSide.D) {
             pdth.setId(id);
             pdth.setBsaAcid(operation.getAccountDebit());
             pdth.setCcy(operation.getCurrencyDebit());
-            pdth.setGlAcID(glPdThRepositoty.getAccID(operation.getAccountDebit()));
+            pdth.setGlAcID(glPdThRepository.getAccID(operation.getAccountDebit()));
 
             BigDecimal amnt = BigDecimal.valueOf(-1).multiply(operation.getAmountDebit().movePointRight(operation.getCurrencyDebit().getScale().intValue()));
             pdth.setAmount(amnt);
@@ -112,7 +121,7 @@ public class TechOperationProcessor extends GLOperationProcessor
         {
             pdth.setBsaAcid(operation.getAccountCredit());
             pdth.setCcy(operation.getCurrencyCredit());
-            pdth.setGlAcID(glPdThRepositoty.getAccID(operation.getAccountCredit()));
+            pdth.setGlAcID(glPdThRepository.getAccID(operation.getAccountCredit()));
 
             BigDecimal amnt = operation.getAmountCredit().movePointRight(operation.getCurrencyCredit().getScale().intValue());
             pdth.setAmount(amnt);
@@ -121,7 +130,7 @@ public class TechOperationProcessor extends GLOperationProcessor
             pdth.setAmountBC(amntс);
         }
 
-        pdth.setPnar(operation.getNarrative().substring(0,operation.getNarrative().length()>30?29:operation.getNarrative().length()-1));
+        pdth.setPnar(operation.getNarrative().length()>30?operation.getNarrative().substring(0,29):operation.getNarrative());
         pdth.setDepartment(operation.getDeptId());
         pdth.setRusNarrLong(operation.getRusNarrativeLong());
         pdth.setRusNarrShort(operation.getRusNarrativeShort());

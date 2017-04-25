@@ -59,11 +59,12 @@ public class AccountingType extends BaseEntity<String> {
         this.accountName = accountName;
     }
 
-    public AccountingType(String id, String accountName, YesNo barsAllowed, YesNo checkedAccount) {
+    public AccountingType(String id, String accountName, YesNo barsAllowed, YesNo checkedAccount, YesNo techAct) {
         this.id = id;
         this.accountName = accountName;
         this.barsAllowed = barsAllowed;
         this.checkedAccount = checkedAccount;
+        this.techAct = techAct;
     }
 
     public YesNo getBarsAllowed() {

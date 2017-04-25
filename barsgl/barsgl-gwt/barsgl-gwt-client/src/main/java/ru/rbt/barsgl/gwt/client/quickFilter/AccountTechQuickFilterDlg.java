@@ -22,7 +22,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 /**
  * Created by ER18837 on 24.05.16.
  */
-public class AccountQuickFilterDlg extends DlgFrame {
+public class AccountTechQuickFilterDlg extends DlgFrame {
 
     private final String hint = " может содержать начальные символы " +
             "\nи спецсимволы:" +
@@ -33,27 +33,22 @@ public class AccountQuickFilterDlg extends DlgFrame {
     protected final String FIELD_WIDTH = "70px";
     protected final String ACCOUNT_WIDTH = "145px";
 
-    protected DataListBox mDealSource;
-    protected TxtBox mDealId;
+    protected TxtBox mAccType;
     protected DataListBoxEx mCurrency;
     protected DataListBoxEx mFilial;
-    protected TxtBox mAccount;
-    protected TxtBox mCustomerNumber;
-    protected DatePickerBox mDateFrom;
-    protected DatePickerBox mDateTo;
 
-    protected AccountQuickFilterParams filterParams;
+    protected AccountTechQuickFilterParams filterParams;
 
-    private int asyncListCount = 3; /*count async lists: mDealSource; mCurrency; mFilial*/
+    private int asyncListCount = 2; /*count async lists: mDealSource; mCurrency; mFilial*/
     private HandlerRegistration registration;
     private Timer timer;
 
 
-    public AccountQuickFilterDlg() {
+    public AccountTechQuickFilterDlg() {
         super();
         ok.setText(TEXT_CONSTANTS.applyBtn_caption());
         cancel.setText(TEXT_CONSTANTS.btn_cancel());
-        setCaption("Выбор параметров счета");
+        setCaption("Выбор параметров технического счета");
     }
 
     @Override
@@ -82,19 +77,11 @@ public class AccountQuickFilterDlg extends DlgFrame {
         VerticalPanel mainVP = new VerticalPanel();
         Label lAccount, lCustomerNumber;
 
-        Grid grid = new Grid(8, 2);
+        Grid grid = new Grid(3, 2);
         int row = 0;
 
-        grid.setWidget(row, 0, createLabel("Источник сделки", LABEL_WIDTH));
-        grid.setWidget(row++, 1, mDealSource = createDealSourceListBox("", FIELD_WIDTH));
-
-        grid.setWidget(row, 0, createLabel("Номер сделки"));
-        grid.setWidget(row++, 1, mDealId = createTxtBox(20, ACCOUNT_WIDTH));
-
-        grid.setWidget(row, 0, lCustomerNumber = createLabel("Номер клиента"));
-        grid.setWidget(row++, 1, mCustomerNumber = createTxtBox(8, FIELD_WIDTH));
-        lCustomerNumber.setTitle("Номер клиента" + hint);
-        mCustomerNumber.setTitle("Номер клиента" + hint);
+        grid.setWidget(row, 0, createLabel("Accounting Type", LABEL_WIDTH));
+        grid.setWidget(row++, 1, mAccType = createTxtBox(20, FIELD_WIDTH));
 
         grid.setWidget(row, 0, createLabel("Филиал"));
         grid.setWidget(row++, 1, mFilial = createFilialAuthListBox("", FIELD_WIDTH, false, true));
@@ -102,32 +89,17 @@ public class AccountQuickFilterDlg extends DlgFrame {
         grid.setWidget(row, 0, createLabel("Валюта", LABEL_WIDTH));
         grid.setWidget(row++, 1, mCurrency = createCurrencyListBox("", FIELD_WIDTH, false, true));
 
-        grid.setWidget(row, 0, lAccount = createLabel("Маска счета"));
-        grid.setWidget(row++, 1, mAccount = createTxtBox(20, ACCOUNT_WIDTH));
-        lAccount.setTitle("Маска счета" + hint);
-        mAccount.setTitle("Маска счета" + hint);
-
-        grid.setWidget(row, 0, createLabel("Дата открытия с"));
-        grid.setWidget(row++, 1, mDateFrom = createDateBox());
-        grid.setWidget(row, 0, createLabel("Дата открытия по"));
-        grid.setWidget(row++, 1, mDateTo = createDateBox());
-
         mainVP.add(grid);
         
         return mainVP;
     }
 
     protected void fillUp(){
-        filterParams = (AccountQuickFilterParams)params;
+        filterParams = (AccountTechQuickFilterParams)params;
         if (null != filterParams) {
-            mDealSource.setSelectValue(ifEmpty(filterParams.getDealSource(), ""));
-            mDealId.setValue(ifEmpty(filterParams.getDealId(), ""));
             mCurrency.setSelectValue(ifEmpty(filterParams.getCurrency(), ""));
             mFilial.setSelectValue(ifEmpty(filterParams.getFilial(), ""));
-            mAccount.setValue(ifEmpty(filterParams.getAccount(), ""));
-            mCustomerNumber.setValue(ifEmpty(filterParams.getCustomerNumber(), ""));
-            mDateFrom.setValue(filterParams.getDateFrom());
-            mDateTo.setValue(filterParams.getDateTo());
+            mAccType.setValue(filterParams.getAcctype());
         }
     }
     
@@ -156,16 +128,11 @@ public class AccountQuickFilterDlg extends DlgFrame {
     @Override
     protected boolean onClickOK() throws Exception {
         if (null != filterParams) {
-            filterParams.setDealSource((String)mDealSource.getValue());
-            filterParams.setDealId(mDealId.getValue());
             filterParams.setFilial((String)mFilial.getValue());
             filterParams.setFilialN((String)mFilial.getParam("CBCCN"));
             filterParams.setCurrency((String)mCurrency.getValue());
             filterParams.setCurrencyN((String)mCurrency.getParam("CCYN"));
-            filterParams.setAccount(mAccount.getValue());
-            filterParams.setCustomerNumber(mCustomerNumber.getValue());
-            filterParams.setDateFrom(mDateFrom.getValue());
-            filterParams.setDateTo(mDateTo.getValue());
+            filterParams.setAcctype(mAccType.getValue());
         }
         params = filterParams;
         return true;

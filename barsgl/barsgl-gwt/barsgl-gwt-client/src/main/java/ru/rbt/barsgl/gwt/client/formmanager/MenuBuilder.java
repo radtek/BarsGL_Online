@@ -29,7 +29,7 @@ import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
 import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
-import ru.rbt.barsgl.gwt.client.pd.PostingFormTech2;
+import ru.rbt.barsgl.gwt.client.pd.PostingFormTech;
 import ru.rbt.barsgl.gwt.client.security.AppUserForm;
 import ru.rbt.barsgl.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
@@ -200,10 +200,16 @@ public class MenuBuilder {
                     formLoad(new AccountForm());
                 }
             });
-            case CBAccountTH: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+            case TechAccount: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
                     formLoad(new AccountFormTech());
+                }
+            });
+            case TechOperInpConfirm: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperTechInpConfirmForm());
                 }
             });
             case Operation: return new MenuItem(wrapper.getMenuName(), false, new Command() {
@@ -218,10 +224,10 @@ public class MenuBuilder {
                     formLoad(new PostingForm());
                 }
             });
-            case PostingTH: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+            case TechPosting: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
-                    formLoad(new PostingFormTech2());
+                    formLoad(new PostingFormTech());
                 }
             });
             case OperSemiposting: return new MenuItem(wrapper.getMenuName(), false, new Command() {

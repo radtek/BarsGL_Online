@@ -16,6 +16,7 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +25,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
 
 /**
  * Created by er23851 on 06.03.2017.
@@ -149,5 +150,39 @@ public class GlPdThRepository extends AbstractBaseEntityRepository<GlPdTh, Long>
     public void processGlPdTh(GLOperation operation, final List<GlPdTh> pdthList, OperState targetState) throws Exception {
 
         this.processPdthInternal(operation,pdthList,targetState);
+    }
+
+    public List<Long> getOperationPdThIdList(long operId) {
+        String sql = "select ID from GL_PDTH where GLO_REF = ?";
+        try {
+            List<DataRecord> res = select(sql, operId);
+            if (null == res)
+                return null;
+            List<Long> pdIdList = new ArrayList<>();
+            res.forEach(dataRecord -> pdIdList.add(dataRecord.getLong(0)));
+            return pdIdList;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+
+    }
+
+    public List<GlPdTh> getOperationPdThList(List<Long> pdIdList) {
+        String idList = listToString(pdIdList, ",");
+        List<GlPdTh> res = select(GlPdTh.class, "from GlPdTh p where p.id in (" + idList + ")");
+        return res;
+    }
+
+    public String getPrefManual(String dealId, String subDealId, String paymentRef, boolean fromPaymentHub) {
+        if (fromPaymentHub) {                   // источник операция - PaymentHub
+            return rsubstr(paymentRef, 15);         // другое
+        } else {
+            return isEmpty(dealId) ? paymentRef : dealId;
+        }
+    }
+
+    public String getPnarManual(String dealId, String subDealId, String paymentRef) {
+        String pnar = isEmpty(dealId) ? paymentRef : (dealId + (isEmpty(subDealId) ? "" : ";" + subDealId));
+        return substr(pnar, 30);
     }
 }

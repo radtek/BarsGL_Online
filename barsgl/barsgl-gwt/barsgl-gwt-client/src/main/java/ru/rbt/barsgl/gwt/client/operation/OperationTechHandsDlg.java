@@ -2,26 +2,35 @@ package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
+import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
+import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.barsgl.gwt.client.pd.PostingTechDlg;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.dialogs.ReasonDlg;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
+import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+
+import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
 
 /**
  * Created by akichigi on 10.06.16.
  */
-public class OperationHandsDlg extends OperationDlg {
+public class OperationTechHandsDlg extends PostingTechDlg {
     public enum ButtonOperAction {NONE, OK, OTHER}
     private ButtonOperAction operationAction;
 
-    public OperationHandsDlg(String title, FormAction action, Columns columns, BatchPostStep step) {
+    public OperationTechHandsDlg(String title, FormAction action, Columns columns, BatchPostStep step) {
         super(title, action, columns);
-
+        inputMethod = "Manual";
         operationAction = ButtonOperAction.NONE;
         if ((action == FormAction.CREATE || action == FormAction.UPDATE) &&
             (step.isInputStep() || step.isControlStep())){
@@ -43,6 +52,20 @@ public class OperationHandsDlg extends OperationDlg {
         else if (action == FormAction.PREVIEW){
             ok.setVisible(false);
         }
+
+        getOperDay();
+    }
+
+    @Override
+    protected void getOperDay() {
+        getOperday(new IDataConsumer<OperDayWrapper>() {
+            @Override
+            public void accept(OperDayWrapper wrapper) {
+                String operDayStr = wrapper.getCurrentOD();
+                mDateOperDay.setValue(operDayStr);
+                operday = DateTimeFormat.getFormat(OperDayGetter.dateFormat).parse(operDayStr);
+            }
+        });
     }
 
     private Button createSignButton(String caption){
@@ -53,7 +76,7 @@ public class OperationHandsDlg extends OperationDlg {
             public void onClick(ClickEvent clickEvent) {
                 operationAction = ButtonOperAction.OTHER;
                 try {
-                    if (OperationHandsDlg.super.onClickOK()){
+                    if (OperationTechHandsDlg.super.onClickOK()){
                         doOnOkClick();
                     }
                 } catch (Exception e) {
@@ -87,7 +110,7 @@ public class OperationHandsDlg extends OperationDlg {
     //private String _reasonOfDeny;
     @Override
     protected Boolean beforeReturn(final Object prm){
-        ManualOperationWrapper wrapper = (ManualOperationWrapper) prm;
+        ManualTechOperationWrapper wrapper = (ManualTechOperationWrapper) prm;
         wrapper.setReasonOfDeny(_reasonOfDeny);
 
         if (action == FormAction.RETURN && !_exitFlag){

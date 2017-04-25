@@ -48,6 +48,7 @@ public class ActParm extends GridForm {
     public final static String FIELD_DTE = "Дата конца";
     public final static String FIELD_ACCNAME = "Наименование AccType";
     public final static String FIELD_FL_CTRL = "Контролируемый";
+    public final static String FIELD_TECH_ACT = "Технический";
 
     private String  initSection = null;
     private String  initProduct = null;
@@ -201,6 +202,9 @@ public class ActParm extends GridForm {
         result.addColumn(new Column("DTB", Column.Type.DATE, FIELD_DTB, 25));
         result.addColumn(new Column("DTE", Column.Type.DATE, FIELD_DTE, 25));
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, FIELD_ACCNAME, 240));
+        Column colTechAct;
+        result.addColumn(colTechAct = new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 20,false,false));
+        colTechAct.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));
         Column col;
         result.addColumn(col = new Column("FL_CTRL", Column.Type.STRING, FIELD_FL_CTRL, 20, false, false));
         col.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));
@@ -213,7 +217,8 @@ public class ActParm extends GridForm {
                         "select PARM.ACCTYPE, PARM.CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, " +
                         "case when NM.FL_CTRL = 'N' then trim('" + No.getLabel() + "') " +
                         "else trim('" + Yes.getLabel() + "') " +
-                        "end FL_CTRL " +
+                        "end FL_CTRL, " +
+                        "case when NM.TECH_ACT='Y' then trim('" + Yes.getLabel() + "') else trim('" + No.getLabel() + "') end TECH_ACT "+
                         "from GL_ACTPARM PARM join GL_ACTNAME NM on NM.ACCTYPE = PARM.ACCTYPE" +
                         " )v";
     }

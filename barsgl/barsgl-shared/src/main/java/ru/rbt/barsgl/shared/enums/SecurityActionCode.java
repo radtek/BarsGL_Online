@@ -5,7 +5,7 @@ package ru.rbt.barsgl.shared.enums;
  */
 public enum SecurityActionCode {
 
-    AccOFRLook("Просмотр списка счетов ОФР")
+      AccOFRLook("Просмотр списка счетов ОФР")
     , AccOFRInp("Ввод счета ОФР")
     , AccOFRChng("Изменение счета ОФР")
     , AccLook("Просмотр списка счетов")
@@ -65,6 +65,20 @@ public enum SecurityActionCode {
     , OperManualLook("Просмотр списка запросов ручного ввода")
     , Acc707Inp("Ввод счета ОФР прошлых лет")
     , Acc707Chng("Изменение счета ОФР прошлых лет")
+    , TechAccLook("Просмотр списка техсчетов")
+    , TechAccInp("Открытие техсчета")
+    , TechAccChng("Редактирование реквизитов техсчета")
+    , TechAccClose("Закрытие техсчета")
+    , TechAccOperInp("Ввод операции из списка технических счетов")
+    , TechOperLook("Просмотр проводок по техсчетам")
+    , TechOperPstChng("Изменение реквизитов проводки по техсчету")
+    , TechOperPstMakeInvisible("Подавление проводки по техсчету")
+    , TechOperManualLook("Просмотр ручных операций тек.дня по техсчетам")
+    , TechOperInp("Ввод операции по техсчету")
+    , TechOperHand2("Авторизация текущих операций по техсчетам (2 рука)")
+    , TechOperHand3("Авторизация операций backvalue по техсчетам (3 рука)")
+    , TechOperHistory("История создания операций по техсчетам для admin")
+    , TechOperHistoryUser("История создания операций по техсчетам для user")
     ;
 
     private final String desc;

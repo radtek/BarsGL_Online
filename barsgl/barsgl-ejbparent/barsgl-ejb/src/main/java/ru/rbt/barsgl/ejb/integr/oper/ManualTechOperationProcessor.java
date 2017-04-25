@@ -35,7 +35,7 @@ import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 /**
  * Created by ER18837 on 13.08.15.
  */
-public class ManualOperationProcessor extends ValidationAwareHandler<BatchPosting> {
+public class ManualTechOperationProcessor extends ValidationAwareHandler<BatchPosting> {
     @Inject
     private BankCurrencyRepository currencyRepository;
 

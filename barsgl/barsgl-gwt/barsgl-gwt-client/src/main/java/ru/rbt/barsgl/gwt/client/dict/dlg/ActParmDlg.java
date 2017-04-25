@@ -6,6 +6,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.*;
+import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
@@ -31,6 +32,9 @@ import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.ActParmWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -50,6 +54,7 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
     private final static String OK_CAPTION = "Выбрать";
 
     private BtnTxtBox accType;
+    private boolean _isTech;
     private BtnTxtBox cusType;
     private BtnTxtBox term;
     private LookupBoxBase acc2;
@@ -85,7 +90,7 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
 
     @Override
     public Widget createContent() {
-        Grid grid = new Grid(9, 2);
+        Grid grid = new Grid(10, 2);
         grid.setWidget(0, 0, new Label(ActParm.FIELD_ACCTYPE));
         grid.setWidget(0, 1, accType = new BtnTxtBox() {
             @Override
@@ -226,7 +231,9 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
             protected boolean setResultList(HashMap<String, Object> result) {
                 if (null != result) {
                     accType.setValue(Utils.value((String) result.get("ACCTYPE")));
+                    _isTech  = result.get("TECH_ACT").equals("Y");
                     cusType.setFocus(true);
+                    setTechFields(_isTech);
                 }
                 return true;
             }
@@ -238,6 +245,17 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         };
         dlg.setOkButtonCaption(OK_CAPTION);
         dlg.show();
+    }
+
+    private void setTechFields(boolean isTech) {
+        if (isTech) cusType.setValue("00");
+        cusType.setEnabled(!isTech);
+        if (isTech) term.setValue("00");
+        term.setEnabled(!isTech);
+        Date defDate = new Date(117,1,22);
+        if (isTech) acc2.setValue(accType.getValue().substring(0,4));
+        acc2.setEnabled(!isTech);
+        if (isTech) dtb.setValue(defDate);
     }
 
     private void lookUpTerm(){
@@ -508,8 +526,8 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         checkAcc70(wrapper.getAcc2(), wrapper.getPlcode());
         checkAcc706(wrapper.getAcc2(), wrapper.getPlcode());
 
-        wrapper.setAcod(checkLength(checkRequeredString(acod.getValue(), ActParm.FIELD_ACOD), 4, ActParm.FIELD_ACOD));
-        wrapper.setAc_sq(checkAcod_sq(checkLength(checkRequeredString(ac_sq.getValue(), ActParm.FIELD_AC_SQ), 2, ActParm.FIELD_AC_SQ)));
+        wrapper.setAcod(!_isTech ? checkLength(checkRequeredString(acod.getValue(), ActParm.FIELD_ACOD), 4, ActParm.FIELD_ACOD) : acod.getValue());
+        wrapper.setAc_sq(!_isTech ? checkAcod_sq(checkLength(checkRequeredString(ac_sq.getValue(), ActParm.FIELD_AC_SQ), 2, ActParm.FIELD_AC_SQ)) : ac_sq.getValue());
 
 
 

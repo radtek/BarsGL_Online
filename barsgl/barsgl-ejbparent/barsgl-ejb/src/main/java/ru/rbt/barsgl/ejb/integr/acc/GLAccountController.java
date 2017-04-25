@@ -69,6 +69,9 @@ public class GLAccountController {
     private GLAccountProcessor glAccountProcessor;
 
     @Inject
+    private GLAccountProcessorTech glAccountProcessorTech;
+
+    @Inject
     private PLAccountProcessor plAccountProcessor;
 
     @Inject
@@ -295,6 +298,7 @@ public class GLAccountController {
      * Генерация номера для технического счёта
      * @param operation
      * @param operSide
+     * @param keys
      * @return
      */
     @Lock(LockType.READ)
@@ -310,6 +314,30 @@ public class GLAccountController {
         Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));
         return bsaacid;
     }
+
+    /**
+     * Генерация номера для технического счёта
+     * @param operSide
+     * @param keys
+     * @return
+     */
+    @Lock(LockType.READ)
+    public String getGlAccountNumberTHWithKeys(GLOperation.OperSide operSide, AccountKeys keys) {
+
+        return getGlAccountNumberTHWithKeys(null, operSide, keys);
+    }
+
+    /**
+     * Генерация номера для технического счёта
+     * @param keys
+     * @return
+     */
+    @Lock(LockType.READ)
+    public String getGlAccountNumberTHWithKeys(AccountKeys keys) {
+
+        return getGlAccountNumberTHWithKeys(null, GLOperation.OperSide.N, keys);
+    }
+
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -354,10 +382,41 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount updateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
+                                        AccountKeys keys, ErrorList descriptors) throws Exception {
+
+        List<ValidationError> errors = glAccountProcessorTech.validate(keys, new ValidationContext());
+        if (!errors.isEmpty()) {
+            throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(N, errors, descriptors));
+        }
+        // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
+//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
+        glAccountProcessorTech.setDateOpen(glAccount, dateOpen);
+        glAccountProcessorTech.setDateClose(glAccount, dateOpen, dateClose);
+        //glAccount.setDealId(keys.getDealId());
+        //glAccount.setSubdealId(keys.getSubDealId());
+        //glAccount.setDescription(keys.getDescription());
+
+        return glAccountRepository.update(glAccount);
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnl(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
             glAccountProcessor.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
+
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount closeGLAccountMnlTech(GLAccount glAccount, Date dateClose,
+                                       ErrorList descriptors) throws Exception {
+        return glAccountRepository.executeInNewTransaction(persistence -> {
+            glAccountProcessorTech.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
 
             return glAccountRepository.update(glAccount);
         });
@@ -463,7 +522,7 @@ public class GLAccountController {
         return glAccountRepository.save(glAccount);
     }
 
-    private GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
+    public GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.OpenType openType) {
 
         // создать счет GL

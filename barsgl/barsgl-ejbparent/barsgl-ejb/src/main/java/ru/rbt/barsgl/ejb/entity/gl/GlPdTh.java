@@ -284,7 +284,13 @@ public class GlPdTh extends BaseEntity<Long> {
     }
 
     public void setRusNarrLong(String rusNarrLong) {
-        this.rusNarrLong = rusNarrLong;
+        if (rusNarrLong!=null) {
+            int len = rusNarrLong.length();
+            this.rusNarrLong = rusNarrLong.substring(0, Math.min(len, 300) - 1);
+        }
+        else{
+            this.rusNarrLong = rusNarrLong;
+        }
     }
 
     public String getRusNarrShort() {
@@ -292,7 +298,13 @@ public class GlPdTh extends BaseEntity<Long> {
     }
 
     public void setRusNarrShort(String rusNarrShort) {
-        this.rusNarrShort = rusNarrShort;
+        if (rusNarrShort!=null) {
+            int len = rusNarrShort.length();
+            this.rusNarrShort = rusNarrShort.substring(0, Math.min(len, 100) - 1);
+        }
+        else {
+            this.rusNarrShort = rusNarrShort;
+        }
     }
 
     public Long getGlOperationId() {
@@ -372,7 +384,13 @@ public class GlPdTh extends BaseEntity<Long> {
     }
 
     public void setNarrative(String narrative) {
-        this.narrative = narrative;
+        if (narrative!=null) {
+            int len = narrative.length();
+            this.narrative = narrative.substring(0, Math.min(len, 300) - 1);
+        }
+        else {
+            this.narrative = narrative;
+        }
     }
 
     public Long getGlAcID() {

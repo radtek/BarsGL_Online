@@ -1,12 +1,15 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
+import ru.rbt.barsgl.gwt.client.operation.NewTechOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
+import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsDlg;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateFormDlg;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -23,6 +26,7 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
 import java.util.ArrayList;
 
@@ -35,8 +39,9 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 /**
  * Created by akichigi on 06.06.16.
  */
-public class OperInpConfirmForm extends OperBase {
-    public static final String FORM_NAME = "Ввод и авторизация операций";
+public class OperTechInpConfirmForm extends OperTechBase{
+
+    public static final String FORM_NAME = "Ввод и авторизация операций - техсчета";
     private GridAction _modify;
     private GridAction _create;
     private GridAction _createFromTemplate;
@@ -46,7 +51,7 @@ public class OperInpConfirmForm extends OperBase {
     private GridAction _sign;
     private GridAction _confirmDate;
 
-    public OperInpConfirmForm() {
+    public OperTechInpConfirmForm() {
         super(FORM_NAME);
     }
 
@@ -56,7 +61,7 @@ public class OperInpConfirmForm extends OperBase {
 
         abw.addAction(_modify = createModify());
         abw.addAction(_create = createNewOperation());
-        abw.addAction(_createFromTemplate = createTemplateOperation());
+        //abw.addAction(_createFromTemplate = createTemplateOperation());
         abw.addAction(_delete = createDelete());
         abw.addAction(_forward = createForward());
         abw.addAction(_backward = createBackward());
@@ -78,14 +83,14 @@ public class OperInpConfirmForm extends OperBase {
                 "PST.AMTRU, PST.NRT, PST.RNRTL, PST.RNRTS, PST.DEPT_ID, PST.PRFCNTR, PST.FCHNG, PST.EMSG, " +
                 "PST.USER_NAME, PST.OTS, PST.HEADBRANCH, PST.USER_AU2, PST.OTS_AU2, PST.USER_AU3, PST.OTS_AU3, " +
                 "PST.USER_CHNG, PST.OTS_CHNG, PST.DESCRDENY, PST.FIO " +
-                "from V_GL_BATPST PST ";
+                "from V_GL_BATPST_TH PST ";
     }
 
     @Override
     protected void doActionVisibility(){
         _modify.setVisible(_step.isInputStep()/* || _step.isControlStep()*/);
         _create.setVisible(_step.isInputStep());
-        _createFromTemplate.setVisible(_step.isInputStep());
+        //_createFromTemplate.setVisible(_step.isInputStep());
         _delete.setVisible(_step.isInputStep());
         _forward.setVisible(_step.isInputStep());
         _backward.setVisible(_step.isControlStep() || _step.isConfirmStep());
@@ -95,7 +100,7 @@ public class OperInpConfirmForm extends OperBase {
     }
 
     private GridAction createNewOperation() {
-        return new NewOperationAction(grid, ImageConstants.INSTANCE.new24());
+        return new NewTechOperationAction(grid, ImageConstants.INSTANCE.new24());
     }
 
     private GridAction createTemplateOperation() {
@@ -132,7 +137,7 @@ public class OperInpConfirmForm extends OperBase {
     private GridAction createModify(){
         return commonAction("Редактировать",
                 ImageConstants.INSTANCE.edit24(),
-                "Редактирование бухгалтерской операции GL",
+                "Редактирование бухгалтерской операции по техсчетам",
                 FormAction.UPDATE);
     }
 
@@ -159,9 +164,9 @@ public class OperInpConfirmForm extends OperBase {
 
     public GridAction commonAction(String hint, ImageResource image, final String title, final FormAction formAction){
         return new GridAction (grid, null, hint, new Image(image), 10, true)  {
-            OperationHandsDlg dlg;
+            OperationTechHandsDlg dlg;
 
-            private BatchPostAction calcAction(final OperationHandsDlg.ButtonOperAction operAction){
+            private BatchPostAction calcAction(final OperationTechHandsDlg.ButtonOperAction operAction){
                 BatchPostAction action;
                 if (formAction == FormAction.DELETE){
                     //удалить
@@ -170,12 +175,12 @@ public class OperInpConfirmForm extends OperBase {
                 else if (formAction == FormAction.UPDATE) {
                     //править
                     if (_step == BatchPostStep.HAND1){
-                        action = operAction == OperationHandsDlg.ButtonOperAction.OK
+                        action = operAction == OperationTechHandsDlg.ButtonOperAction.OK
                                 ? BatchPostAction.UPDATE
                                 : BatchPostAction.UPDATE_CONTROL;
                     }else{
                         //BatchPostStep.HAND2
-                        action = operAction == OperationHandsDlg.ButtonOperAction.OK
+                        action = operAction == OperationTechHandsDlg.ButtonOperAction.OK
                                 ? BatchPostAction.UPDATE_CONTROL
                                 : BatchPostAction.UPDATE_SIGN;
                     }
@@ -190,7 +195,7 @@ public class OperInpConfirmForm extends OperBase {
                 }
                 else if (formAction == FormAction.CONFIRM){
                     //подтвердить дату
-                    action = operAction == OperationHandsDlg.ButtonOperAction.OK
+                    action = operAction == OperationTechHandsDlg.ButtonOperAction.OK
                             ? BatchPostAction.CONFIRM_NOW
                             : BatchPostAction.CONFIRM;
                 }else{
@@ -205,7 +210,7 @@ public class OperInpConfirmForm extends OperBase {
                 final Row row = grid.getCurrentRow();
                 if (row == null) return;
 
-                dlg = new OperationHandsDlg(title, formAction, grid.getTable().getColumns(), _step);
+                dlg = new OperationTechHandsDlg(title, formAction, grid.getTable().getColumns(), _step);
                 dlg.setDlgEvents(this);
                 dlg.setAfterCancelEvent(new IAfterCancelEvent() {
                     @Override
@@ -213,8 +218,7 @@ public class OperInpConfirmForm extends OperBase {
                         grid.refresh();
                     }
                 });
-
-                ManualOperationWrapper wrapper = rowToWrapper();
+                ManualTechOperationWrapper wrapper = rowToWrapper();
 
                 dlg.show(wrapper);
             }
@@ -222,7 +226,10 @@ public class OperInpConfirmForm extends OperBase {
             @Override
             public void onDlgOkClick(Object prms){
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                ManualOperationWrapper wrapper = (ManualOperationWrapper) prms;
+
+                Window.alert("onDlgOkClick");
+
+                ManualTechOperationWrapper wrapper = (ManualTechOperationWrapper) prms;
 
                 BatchPostStatus status = BatchPostStatus.valueOf((String) getValue("STATE"));
                 wrapper.setStatus(status);
@@ -237,9 +244,9 @@ public class OperInpConfirmForm extends OperBase {
                     return;
                 }*/
 
-                BarsGLEntryPoint.operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+                BarsGLEntryPoint.operationService.processTechOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualTechOperationWrapper>>() {
                     @Override
-                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
+                    public void onSuccess(RpcRes_Base<ManualTechOperationWrapper> wrapper) {
                         if (wrapper.isError()) {
                             showInfo("Ошибка", wrapper.getMessage());
                         } else {
@@ -317,9 +324,9 @@ public class OperInpConfirmForm extends OperBase {
         result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130, false, false));
         result.addColumn(new Column("USER_CHNG", Column.Type.STRING, "Логин изменения", 100, false, false));
         result.addColumn(new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130, false, false));
-        result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 150));
-        result.addColumn(new Column("SEND_SRV", Column.Type.DATETIME, "Запрос в АБС", 120, false, false));
-        result.addColumn(new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 120));
+        //result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 150));
+        //result.addColumn(new Column("SEND_SRV", Column.Type.DATETIME, "Запрос в АБС", 120, false, false));
+        //result.addColumn(new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 120));
 
         result.addColumn(new Column("DESCRDENY", Column.Type.STRING, "Причина возврата", 300, false, false));
 

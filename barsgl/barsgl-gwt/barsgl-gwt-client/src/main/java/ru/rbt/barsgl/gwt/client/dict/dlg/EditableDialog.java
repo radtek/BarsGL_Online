@@ -12,6 +12,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.utils.AppPredicate;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 
 import java.io.Serializable;
@@ -95,6 +96,7 @@ public abstract class EditableDialog<T extends Serializable> extends DlgFrame {
     }
 
     protected String checkRequeredString(String value, String columnCaption) {
+        DialogUtils.showInfo("EditableDialog: checkRequeredString");
         return check(value, columnCaption, REQUIRED, new AppPredicate<String>() {
             @Override
             public boolean check(String target) {

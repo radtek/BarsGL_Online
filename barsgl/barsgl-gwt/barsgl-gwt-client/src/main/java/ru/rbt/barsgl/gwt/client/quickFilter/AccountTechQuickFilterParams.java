@@ -12,53 +12,30 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 /**
  * Created by ER18837 on 24.05.16.
  */
-public abstract class AccountQuickFilterParams implements IQuickFilterParams {
+public abstract class AccountTechQuickFilterParams implements IQuickFilterParams {
     private Column colFilial;
     private Column colCurrency;
-    private Column colAccount;
-    private Column colAcc2;
-    private Column colCustomer;
-    private Column colDealSource;
-    private Column colDealId;
-    private Column colDateOpen;
-    private Column colDateClose;
+    private Column colAccType;
 
     private String filial;
     private String currency;
-    private String account;
-    private String customerNumber;
-    private String dealSource;
-    private String dealId;
-    private Date dateFrom;
-    private Date dateTo;
-    private Date dateClose;
+    private String acctype;
     private String filialN;
     private String currencyN;
 
-    public AccountQuickFilterParams(Column colFilial, Column colCurrency, Column colAccount, Column colAcc2,
-                                    Column colCustomer, Column colDealSource, Column colDealId, Column colDateOpen, Column colDateClose) {
+    public AccountTechQuickFilterParams(Column colFilial, Column colCurrency, Column colAccType) {
         this.colFilial = colFilial;
         this.colCurrency = colCurrency;
-        this.colAccount = colAccount;
-        this.colAcc2 = colAcc2;
-        this.colCustomer = colCustomer;
-        this.colDealSource = colDealSource;
-        this.colDealId = colDealId;
-        this.colDateOpen = colDateOpen;
-        this.colDateClose = colDateClose;
+        this.colAccType = colAccType;
     }
 
     @Override
     public void setInitialFilterParams(Object[] params) {
         if (null == params)
             return;
-        this.currency = (String)params[0];
-        this.currencyN = (String)params[1];
-        this.filial = (String)params[2];
-        this.filialN = (String)params[3];
-        this.account = (String)params[4];
-        this.dateTo = (Date)params[5];
-        this.dateClose = (Date)params[5];
+        this.filial = (String)params[0];
+        this.currency = (String)params[1];
+        this.acctype = (String)params[2];
     }
 
     protected abstract boolean isNumberCodeFilial();
@@ -68,40 +45,22 @@ public abstract class AccountQuickFilterParams implements IQuickFilterParams {
     @Override
     public ArrayList<FilterItem> getFilter() {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-        String filialFltr = isNumberCodeFilial() ? filialN : filial;
-        if (!isEmpty(filialFltr))
-            list.add(new FilterItem(colFilial, FilterCriteria.EQ, filialFltr));
-        String currencyFltr = isNumberCodeCurrency() ? currencyN : currency;
-        if (!isEmpty(currencyFltr))
-            list.add(new FilterItem(colCurrency, FilterCriteria.EQ, currencyFltr));
-        if (!isEmpty(account)) {
-            if (account.length() >= 5) {
-                String acc2 = account.substring(0, 5);
-                if (!(acc2.contains("%") || acc2.contains("_")))
-                    list.add(new FilterItem(colAcc2, FilterCriteria.EQ, acc2));
-            }
-            boolean isPattern = account.contains("%") || account.contains("_");
-            if ((account.length() != 5) || isPattern) {
+        if (!isEmpty(filial))
+            list.add(new FilterItem(colFilial, FilterCriteria.EQ, filial));
+        if (!isEmpty(currency))
+            list.add(new FilterItem(colCurrency, FilterCriteria.EQ, currency));
+
+        if (!isEmpty(acctype)) {
+            boolean isPattern = acctype.contains("%") || acctype.contains("_");
+            if ((acctype.length() != 9) || isPattern) {
                 FilterCriteria accCriteria = (isPattern) ? FilterCriteria.LIKE : FilterCriteria.START_WITH;
-                list.add(new FilterItem(colAccount, accCriteria, account));
+                list.add(new FilterItem(colAccType, accCriteria, acctype));
+            }
+            else {
+                FilterCriteria accCriteria = FilterCriteria.EQ;
+                list.add(new FilterItem(colAccType,accCriteria,acctype));
             }
         }
-        if (!isEmpty(dealSource))
-            list.add(new FilterItem(colDealSource, FilterCriteria.EQ, dealSource));
-        if (!isEmpty(dealId)) {
-            list.add(new FilterItem(colDealId, FilterCriteria.START_WITH, dealId));
-        }
-        if (!isEmpty(customerNumber)) {
-            FilterCriteria custCriteria = (customerNumber.contains("%") || customerNumber.contains("_"))
-                    ? FilterCriteria.LIKE : FilterCriteria.START_WITH;
-            list.add(new FilterItem(colCustomer, custCriteria, customerNumber));
-        }
-        if (null != dateFrom)
-            list.add(new FilterItem(colDateOpen, FilterCriteria.GE, dateFrom));
-        if (null != dateTo)
-            list.add(new FilterItem(colDateOpen, FilterCriteria.LE, dateTo));
-        if (null != dateClose)
-            list.add(new FilterItem(colDateClose, FilterCriteria.GE, dateTo));
         return list;
     }
 
@@ -121,54 +80,6 @@ public abstract class AccountQuickFilterParams implements IQuickFilterParams {
         this.currency = currency;
     }
 
-    public String getAccount() {
-        return account;
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
-    public String getCustomerNumber() {
-        return customerNumber;
-    }
-
-    public void setCustomerNumber(String customerNumber) {
-        this.customerNumber = customerNumber;
-    }
-
-    public String getDealSource() {
-        return dealSource;
-    }
-
-    public void setDealSource(String dealSource) {
-        this.dealSource = dealSource;
-    }
-
-    public String getDealId() {
-        return dealId;
-    }
-
-    public void setDealId(String dealId) {
-        this.dealId = dealId;
-    }
-
-    public Date getDateFrom() {
-        return dateFrom;
-    }
-
-    public void setDateFrom(Date dateFrom) {
-        this.dateFrom = dateFrom;
-    }
-
-    public Date getDateTo() {
-        return dateTo;
-    }
-
-    public void setDateTo(Date dateTo) {
-        this.dateTo = dateTo;
-    }
-
     public String getFilialN() {
         return filialN;
     }
@@ -183,5 +94,13 @@ public abstract class AccountQuickFilterParams implements IQuickFilterParams {
 
     public void setCurrencyN(String currencyN) {
         this.currencyN = currencyN;
+    }
+
+    public String getAcctype() {
+        return acctype;
+    }
+
+    public void setAcctype(String acctype) {
+        this.acctype = acctype;
     }
 }

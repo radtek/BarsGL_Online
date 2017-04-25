@@ -94,6 +94,7 @@ public enum ErrorCode {
     , ACCOUNT_TYPE_IS_NOT_NUMBER(2012, "Ключи счета %s: Неверный формат типа счета (не число): '%s' (поле '%s')")
     , ACCOUNT_TYPE_INVALID(2013, "Ключи счета %s: Тип счета не задан в системе: '%s' (поле '%s')")
     , ACCOUNTGL_ALREADY_EXISTS(2014, "Счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre><pre>Счет Midas:   %s</pre>")
+    , ACCOUNTGLTH_ALREADY_EXISTS(2060, "Технический счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre>")
     , CLOSEDATE_NOT_VALID(2015, "Дата закрытия счета '%s' < даты открытия '%s'")
     , ACCOUNT_RLN_INVALID(2016, "Не найдена запись в таблице ACCRLN для BSAACID = '%s', ACID = '%s'")
     , ACCOUNT_BSA_INVALID(2017, "Не найдена запись в таблице BSAACC для ID (BSAACID) = '%s'")

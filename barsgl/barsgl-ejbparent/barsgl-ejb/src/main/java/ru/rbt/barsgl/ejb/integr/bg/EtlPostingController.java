@@ -7,7 +7,6 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
-import ru.rbt.barsgl.ejb.integr.oper.TechAccPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.SimpleOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
@@ -95,7 +94,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
     private GLAccountRepository glAccountRepository;
 
     @EJB
-    private GlPdThRepositoty glPdThRepositoty;
+    private GlPdThRepository glPdThRepository;
 
     /**
      * Обрабатывает входящую проводку
@@ -506,7 +505,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
 
                 TechOperationProcessor techOperationProcessor = (TechOperationProcessor) operationProcessor;
                 List<GlPdTh> pdthList = techOperationProcessor.createPdTh(operation);
-                glPdThRepositoty.processGlPdTh(operation,pdthList,OperState.POST);
+                glPdThRepository.processGlPdTh(operation,pdthList,OperState.POST);
             }
             else {
                 List<GLPosting> pstList = operationProcessor.createPosting(operation);      // обработать операцию
