@@ -75,10 +75,8 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
      */
     @Test
     public void testFrontPart() {
-
         int cntDeleted = baseEntityRepository.executeNativeUpdate(
                 "delete from GL_ACNOCNT");
-
         ru.rb.ucb.util.GLAccountCounterType type1 = ru.rb.ucb.util.GLAccountCounterType.PROFIT_LOSS;
         AccountKeys keys1 = AccountKeysBuilder.create()
                 .withAcc2("47023")
@@ -251,11 +249,12 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
                 .withCustomerNumber("00012345")
                 .withAccountType("643010101")
                 .withCustomerType("00")
-                .withTerm("05")
+                .withTerm("00") //05
                 .withGlSequence("123457")
                 .withAcc2("70613")
                 .withAccountCode("7301")
                 .withAccSequence("01")
+              //  .withPlCode("25102")
                 .build().toString();
 //                "046.AUD.00012345.643010101.100.05.123457..70613..7301.01...";
         AccountKeys keys = new AccountKeys(keyString);
@@ -519,13 +518,13 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         final AccountKeys acCt
                 = AccountKeysBuilder.create()
                 .withBranch("001").withCurrency(pst.getCurrencyCredit().getCurrencyCode()).withCustomerNumber("00000018")
-                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("05").withPlCode(record.getString("PLCODE").trim())
+                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00").withPlCode(record.getString("PLCODE").trim())
                 .withGlSequence("PL").withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim()).withAccSequence(record.getString("ac_sq").trim())
                 .build();
         final AccountKeys acDt
                 = AccountKeysBuilder.create()
                 .withBranch("001").withCurrency(pst.getCurrencyDebit().getCurrencyCode()).withCustomerNumber("00000018")
-                .withAccountType(acctype).withCustomerType(acCt.getCustomerType()).withTerm("05").withPlCode(acCt.getPlCode())
+                .withAccountType(acctype).withCustomerType(acCt.getCustomerType()).withTerm("00").withPlCode(acCt.getPlCode())
                 .withGlSequence("XX").withAcc2(acCt.getAccount2()).withAccountCode(acCt.getAccountCode()).withAccSequence(acCt.getAccSequence())
                 .build();
         String accountKeyCt = acCt.toString();
@@ -937,7 +936,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         AccountKeys acCt
                 = AccountKeysBuilder.create()
                 .withBranch("001").withCurrency("RUR").withCustomerNumber("00000018")
-                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("05").withPlCode(record.getString("PLCODE").trim())
+                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00").withPlCode(record.getString("PLCODE").trim())
                 .withGlSequence("PL").withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim()).withAccSequence(record.getString("ac_sq").trim())
                 .build();
         acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeysMidas"
@@ -985,7 +984,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         AccountKeys acCt
                 = AccountKeysBuilder.create()
                 .withBranch("001").withCurrency("RUR").withCustomerNumber("00000018")
-                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("05")
+                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00")
                 .withPlCode(record.getString("PLCODE").trim()).withGlSequence("PL")
                 .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
                 .withAccSequence(record.getString("ac_sq").trim())

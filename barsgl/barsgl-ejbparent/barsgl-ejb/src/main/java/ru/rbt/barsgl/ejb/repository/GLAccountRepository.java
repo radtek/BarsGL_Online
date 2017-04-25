@@ -360,7 +360,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     }
 
     private static String normalizeString(String number) {
-        if (!isEmpty(number) && !"0".equalsIgnoreCase(number)) {
+        if (!isEmpty(number) && !"0".equalsIgnoreCase(number) && !"00".equalsIgnoreCase(number)) {
             return Long.toString(Long.parseLong(number));
         } else if ("0".equalsIgnoreCase(number)) {
             return "00";
