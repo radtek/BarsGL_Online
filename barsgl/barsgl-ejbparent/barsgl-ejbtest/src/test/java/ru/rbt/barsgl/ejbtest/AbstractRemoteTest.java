@@ -25,13 +25,10 @@ import ru.rbt.barsgl.ejb.integr.loader.LoadManagementController;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
-import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -39,17 +36,20 @@ import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.BaseEntityRepository;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
-import java.io.IOException;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
@@ -759,7 +759,9 @@ public abstract class AbstractRemoteTest  {
     }
 
     public static String findBsaAccount(String bsaacidLike, Date dateClose) throws SQLException {
-        return Optional.ofNullable(baseEntityRepository.selectFirst("select bsaacid from accrln r, BSAACC a where r.bsaacid like ? and r.bsaacid = a.id and a.BSAACC > ?"
+        return Optional.ofNullable(baseEntityRepository.selectFirst(
+                "SELECT \"BSAACID\" FROM \"ACCRLN\" \"R\", \"BSAACC\" \"A\" " +
+                        "WHERE \"R\".\"BSAACID\" LIKE ? AND \"R\".\"BSAACID\" = \"A\".\"ID\" AND \"A\".\"BSAACC\" > ?"
                 , bsaacidLike, dateClose))
                 .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike + " " + dateClose));
     }

@@ -18,10 +18,10 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -592,8 +592,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAccountDebit("");
 
         String accdt = Optional.ofNullable(baseEntityRepository
-                .selectFirst("select bsaacid from accrln r, bsaacc b" +
-                        " where r.bsaacid like '47427392%' and r.bsaacid = b.id and bsaacc > ?"
+                .selectFirst("SELECT BSAACID FROM ACCRLN R, BSAACC b\n" +
+                             " WHERE \"R\".\"BSAACID\" LIKE '47427392%' AND R.BSAACID = B.ID AND B.BSAACC > ?"
                         , getOperday().getCurrentDate()))
                 .orElseThrow(() -> new RuntimeException("Account debit not initialized")).getString(0);
 
