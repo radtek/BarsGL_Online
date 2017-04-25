@@ -11,10 +11,11 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_EXLCARD")
+@SequenceGenerator(name = "CardXlsIdSeq", sequenceName = "GL_EXLCARD_SEQ", allocationSize = 1)
 public class CardXls  extends BaseEntity<Long> {
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "CardXlsIdSeq")
     private Long id;
 
     @Column(name = "ID_PKG")

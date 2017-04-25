@@ -16,6 +16,7 @@ import static javax.persistence.InheritanceType.SINGLE_TABLE;
 @Table(name = "GL_SCHED")
 @Inheritance(strategy = SINGLE_TABLE)
 @DiscriminatorColumn(name = "SCH_TYPE")
+@SequenceGenerator(name = "TimerJobIdSeq", sequenceName = "GL_SCHED_SEQ", allocationSize = 1)
 public abstract class TimerJob extends BaseEntity<Long> {
 
     public enum JobState implements HasLabel {
@@ -45,7 +46,7 @@ public abstract class TimerJob extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID_TASK", nullable = false, updatable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "TimerJobIdSeq")
     private Long id;
 
     @Column(name = "TSKNM", nullable = false)

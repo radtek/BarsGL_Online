@@ -12,10 +12,11 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_CARDPST")
+@SequenceGenerator(name = "CardPstIdSeq", sequenceName = "GL_CARDPST_SEQ", allocationSize = 1)
 public class CardPst extends BaseEntity<Long> {
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "CardPstIdSeq")
     private Long id;
 
     @Column(name = "ID_PKG")

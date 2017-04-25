@@ -12,11 +12,12 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_SCHED_H")
+@SequenceGenerator(name = "JobHistoryIdSeq", sequenceName = "GL_SCHED_H_SEQ", allocationSize = 1)
 public class JobHistory extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID_HIST")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "JobHistoryIdSeq")
     private Long id;
 
     @Column(name = "SCHED_NAME")

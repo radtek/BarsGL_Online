@@ -12,11 +12,12 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "LOAD_MANAGEMENT")
+@SequenceGenerator(name = "LoadManagementIdSeq", sequenceName = "LOAD_MANAGEMENT_SEQ", allocationSize = 1)
 public class LoadManagement extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "LoadManagementIdSeq")
     private Long id;
 
     @Column(name = "ORDID", nullable = false)

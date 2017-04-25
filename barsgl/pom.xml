@@ -14,6 +14,10 @@
         <module>grid</module>
     </modules>
 
+    <properties>
+      <version.org.hibernate>5.2.10.Final</version.org.hibernate>
+    </properties>
+
     <!-- TODO слить что ли профили ???-->
     <profiles>
         <profile>

@@ -10,6 +10,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_ACDENO")
+@SequenceGenerator(name = "AcDNJournalIdSeq", sequenceName = "GL_ACDENO_SEQ", allocationSize = 1)
 public class AcDNJournal extends BaseEntity<Long> {
 
     public enum Sources {MIDAS_OPEN, FCC, FCC_CLOSE}
@@ -17,7 +18,7 @@ public class AcDNJournal extends BaseEntity<Long> {
 
     @Id
     @Column(name = "MESSAGE_ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AcDNJournalIdSeq")
     private Long id;
 
     @Enumerated(EnumType.STRING)

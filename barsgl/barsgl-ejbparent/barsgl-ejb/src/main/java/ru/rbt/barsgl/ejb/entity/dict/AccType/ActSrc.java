@@ -10,10 +10,11 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "GL_ACTSRC")
+@SequenceGenerator(name = "ActSrcIdSeq", sequenceName = "GL_ACTSRC_SEQ", allocationSize = 1)
 public class ActSrc  extends BaseEntity<Long> {
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "ActSrcIdSeq")
     private Long id;
 
     @Column(name = "ACCTYPE")

@@ -11,13 +11,14 @@ import java.math.BigDecimal;
  */
 @Entity
 @Table(name = "GL_OPRTMPL")
+@SequenceGenerator(name = "OperationTemplateIdSeq", sequenceName = "GL_OPRTMPL_SEQ", allocationSize = 1)
 public class OperationTemplate extends BaseEntity<Long> {
 
     public enum TemplateType {S, E};
 
     @Id
     @Column(name = "ID_TMPL")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "OperationTemplateIdSeq")
     private Long id;
 
     @Column(name = "TMPL_NAME")
