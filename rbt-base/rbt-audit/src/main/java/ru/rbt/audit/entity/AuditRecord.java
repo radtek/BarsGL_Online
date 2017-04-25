@@ -10,6 +10,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_AUDIT")
+@SequenceGenerator(name = "AuditRecordIdSeq", sequenceName = "GL_AUDIT_SEQ", allocationSize = 1)
 public class AuditRecord extends BaseEntity<Long> {
 
     public enum LogCode {
@@ -89,7 +90,7 @@ public class AuditRecord extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID_RECORD")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AuditRecordIdSeq")
     private Long id;
 
     @Column(name = "SYS_TIME")

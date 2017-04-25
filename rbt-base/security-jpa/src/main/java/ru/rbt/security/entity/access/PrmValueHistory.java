@@ -12,10 +12,11 @@ import java.util.Date;
 
 @Entity
 @Table(name = "GL_AU_PRMVALH")
+@SequenceGenerator(name = "PrmValueHistoryIdSeq", sequenceName = "GL_AU_PRMVALH_SEQ", allocationSize = 1)
 public class PrmValueHistory  extends BaseEntity<Long> {
     @Id
     @Column(name = "ID_HIST")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "PrmValueHistoryIdSeq")
     private Long id;
 
     @Column(name = "ID_PRM")

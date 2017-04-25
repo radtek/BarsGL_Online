@@ -14,11 +14,12 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_USER")
+@SequenceGenerator(name = "AppUserIdSeq", sequenceName = "GL_USER_SEQ", allocationSize = 1)
 public class AppUser extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID_USER")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AppUserIdSeq")
     private Long id;
 
     @Column(name = "USER_NAME")
