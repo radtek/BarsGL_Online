@@ -10,10 +10,11 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "GL_ACOD")
+@SequenceGenerator(name = "AcodIdSeq", sequenceName = "GL_ACOD_SEQ", allocationSize = 1)
 public class Acod extends BaseEntity<Long> {
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AcodIdSeq")
     private Long id;
 
     @Column(name = "ACOD")

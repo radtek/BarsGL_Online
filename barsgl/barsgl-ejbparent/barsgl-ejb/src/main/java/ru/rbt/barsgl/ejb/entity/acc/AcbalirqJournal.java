@@ -12,13 +12,14 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "GL_ACBALIRQ")
+@SequenceGenerator(name = "AcbalirqJournalIdSeq", sequenceName = "GL_ACBALIRQ_SEQ", allocationSize = 1)
 public class AcbalirqJournal extends BaseEntity<Long> {
 
     public enum Status {RAW, PARSED, VALIDATED, ENRICHED, PROCESSED, ERROR}
 
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AcbalirqJournalIdSeq")
     private Long id;
 
     @Column(name = "REQUEST_ID")

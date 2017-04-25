@@ -23,6 +23,7 @@ import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "OPER_CLASS")
 @DiscriminatorValue("AUTOMATIC")
+@SequenceGenerator(name = "GLOperationIdSeq", sequenceName = "GL_OPER_SEQ", allocationSize = 1)
 public class GLOperation extends BaseEntity<Long> {
 
     public static final String srcPaymentHub = "PH";
@@ -85,7 +86,7 @@ public class GLOperation extends BaseEntity<Long> {
     // Внутренный идентификатор ---------------------------
     @Id
     @Column(name = "GLOID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "GLOperationIdSeq")
     private Long id;
 
     // Внешние идентификаторы проводки --------------------

@@ -10,13 +10,14 @@ import java.sql.Timestamp;
  */
 @Entity
 @Table(name = "GL_ACLIRQ")
+@SequenceGenerator(name = "AclirqJournalIdSeq", sequenceName = "GL_ACLIRQ_SEQ", allocationSize = 1)
 public class AclirqJournal extends BaseEntity<Long> {
 
     public enum Status {RAW, PARSED, VALIDATED, ENRICHED, PROCESSED, ERROR}
 
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AclirqJournalIdSeq")
     private Long id;
 
     @Column(name = "REQUEST_ID")

@@ -17,11 +17,12 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_BATPST")
+@SequenceGenerator(name = "BatchPostingIdSeq", sequenceName = "GL_BATPST_SEQ", allocationSize = 1)
 public class BatchPosting extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "BatchPostingIdSeq")
     private Long id;
 
 /*

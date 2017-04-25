@@ -12,11 +12,12 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_BATPKG")
+@SequenceGenerator(name = "BatchPackageIdSeq", sequenceName = "GL_BATPKG_SEQ", allocationSize = 1)
 public class BatchPackage extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID_PKG")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "BatchPackageIdSeq")
     private Long id;
 
     @Temporal(TemporalType.TIMESTAMP)
