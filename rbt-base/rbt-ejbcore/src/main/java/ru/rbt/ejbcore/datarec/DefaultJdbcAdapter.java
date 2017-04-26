@@ -8,11 +8,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Адаптер JDBC, используемый по умолчанию
  */
 public class DefaultJdbcAdapter implements JdbcAdapter {
+
+    private static final Logger log = Logger.getLogger(DefaultJdbcAdapter.class.getName());
+
+    private static final int UNSUPPORTED_FEATURE = -10101010;
+
+    private ParameterMetaData parameterMetaData;
+
+    public DefaultJdbcAdapter(PreparedStatement preparedStatement) {
+        try {
+            parameterMetaData = preparedStatement.getParameterMetaData();
+        } catch (SQLException e) {
+            log.log(Level.WARNING, "Error on get parameter meta data: " + e.getMessage(), e);
+            parameterMetaData = null;
+        }
+    }
+
+    public DefaultJdbcAdapter() {
+        parameterMetaData = null;
+    }
 
     public void setParameterValue(PreparedStatement ps, int index, Object value) throws SQLException {
         if (value == null) {
@@ -26,15 +47,14 @@ public class DefaultJdbcAdapter implements JdbcAdapter {
                 byte[] bytes = (byte[]) value;
                 ps.setBinaryStream(index, new ByteArrayInputStream(bytes), bytes.length);
             } else if (value instanceof String) {
-                ParameterMetaData metaData = ps.getParameterMetaData();
-                int sqlType = metaData.getParameterType(index);
+                int sqlType = getParameterType(parameterMetaData, index);
                 if (Types.CHAR == sqlType) {
                     if (ps instanceof OraclePreparedStatement) {
                         ((OraclePreparedStatement)ps).setFixedCHAR(index, (String) value);
+                        return;
                     }
-                } else {
-                    ps.setString(index, (String) value);
                 }
+                ps.setString(index, (String) value);
             } else {
                 // остальное отдаем на откуп драйверу
                 ps.setObject(index, value);
@@ -110,5 +130,16 @@ public class DefaultJdbcAdapter implements JdbcAdapter {
             default:
                 return value;
         }
+    }
+
+    private int getParameterType(ParameterMetaData parameterMetaData, int index) throws SQLException {
+        try {
+            if (null != parameterMetaData){
+                return parameterMetaData.getParameterType(index);
+            }
+        } catch (SQLException e) {
+            return UNSUPPORTED_FEATURE;
+        }
+        return UNSUPPORTED_FEATURE;
     }
 }

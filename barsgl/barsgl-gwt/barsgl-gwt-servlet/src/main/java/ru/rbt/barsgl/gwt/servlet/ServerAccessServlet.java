@@ -2,6 +2,8 @@ package ru.rbt.barsgl.gwt.servlet;
 
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -9,19 +11,21 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import javax.ejb.*;
 
 /**
  * сервлет обслуживает вызовы EJB по HTTP
  */
 public final class ServerAccessServlet extends HttpServlet {
 
-//    private static final String SERVICE_EJB_JNDI_NAME = "java:app/barsgl-ejbcore/ServerAccessBean";
+    private static final String SERVICE_EJB_JNDI_NAME = "java:global.barsgl.barsgl-ejbcore.ServerAccessBean!ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBLocal";
 
-//    private Object service = null;
-
-    @EJB(mappedName = "ServerAccessBean")
     private ServerAccess service;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        service = getService();
+    }
 
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 
@@ -63,14 +67,23 @@ public final class ServerAccessServlet extends HttpServlet {
         return method.invoke(ejb, arg);
     }
 
-/*
-    private synchronized Object getService() throws NamingException {
+    private ServerAccess getService() {
         if (service == null) {
-            InitialContext context = new InitialContext();
-            service = context.lookup(SERVICE_EJB_JNDI_NAME);
+            InitialContext context = null;
+            try {
+                context = new InitialContext();
+                service = (ServerAccess) context.lookup(SERVICE_EJB_JNDI_NAME);
+            } catch (NamingException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            } finally {
+                try {
+                    if (context != null) context.close();
+                } catch (NamingException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return service;
     }
-*/
 
 }

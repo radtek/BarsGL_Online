@@ -96,7 +96,6 @@
     <class>ru.rbt.barsgl.ejb.entity.loader.LoadManagement</class>
     
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
-    <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="eclipselink.ddl-generation" value="none"/>
       <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
@@ -114,19 +113,13 @@
       <property name = "hibernate.integration.envers.enabled" value = "false"/>
       <property name = "hibernate.listeners.envers.autoRegister" value = "false"/>
       <property name = "hibernate.enable_specj_proprietary_syntax" value = "true"/>
-      <property name = "hibernate.show_sql" value = "true"/>
-      <property name = "hibernate.format_sql" value = "true"/>
+      <!--<property name = "hibernate.show_sql" value = "true"/>-->
+      <!--<property name = "hibernate.format_sql" value = "true"/>-->
       <property name = "hibernate.max_fetch_depth" value = "3"/>
       <property name = "hibernate.default_batch_fetch_size" value = "8"/>
 
-      <property name = "hibernate.cache.default_cache_concurrency_strategy" value = "transactional"/>
-      <property name = "hibernate.cache.use_second_level_cache" value = "true"/>
-      <property name = "hibernate.cache.use_query_cache" value = "true"/>
-      <property name = "hibernate.cache.use_minimal_puts" value = "true"/>
-
       <property name = "hibernate.transaction.jta.platform" value = "Weblogic"/>
-      <property name = "hibernate.cache.region.factory_class" value = "org.hibernate.cache.infinispan.InfinispanRegionFactory"/>
-      
+
     </properties>
   </persistence-unit>
   <persistence-unit name="RepAS400DataSource" transaction-type="JTA">
@@ -137,7 +130,6 @@
     <!--<jta-data-source>java:/app/jdbc/AS400DataSource</jta-data-source>-->
 
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
-    <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
     <properties>
       <property name="eclipselink.ddl-generation" value="none"/>
       <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
@@ -155,18 +147,12 @@
       <property name = "hibernate.integration.envers.enabled" value = "false"/>
       <property name = "hibernate.listeners.envers.autoRegister" value = "false"/>
       <property name = "hibernate.enable_specj_proprietary_syntax" value = "true"/>
-      <property name = "hibernate.show_sql" value = "true"/>
-      <property name = "hibernate.format_sql" value = "true"/>
+      <!--<property name = "hibernate.show_sql" value = "true"/>-->
+      <!--<property name = "hibernate.format_sql" value = "true"/>-->
       <property name = "hibernate.max_fetch_depth" value = "3"/>
       <property name = "hibernate.default_batch_fetch_size" value = "8"/>
 
-      <property name = "hibernate.cache.default_cache_concurrency_strategy" value = "transactional"/>
-      <property name = "hibernate.cache.use_second_level_cache" value = "true"/>
-      <property name = "hibernate.cache.use_query_cache" value = "true"/>
-      <property name = "hibernate.cache.use_minimal_puts" value = "true"/>
-
       <property name = "hibernate.transaction.jta.platform" value = "Weblogic"/>
-      <property name = "hibernate.cache.region.factory_class" value = "org.hibernate.cache.infinispan.InfinispanRegionFactory"/>
 
     </properties>
   </persistence-unit>

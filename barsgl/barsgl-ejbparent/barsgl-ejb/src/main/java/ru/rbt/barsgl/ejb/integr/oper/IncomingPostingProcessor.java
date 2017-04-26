@@ -9,13 +9,13 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.*;
+import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.enums.InputMethod;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -123,7 +123,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             String fieldName = target.getColumnName("deptId");
             String fieldValue = target.getDeptId();
             int maxLen = 4;
-            if (null != fieldValue &&  maxLen < fieldValue.length()) {
+            if (null != fieldValue &&  maxLen < fieldValue.trim().length()) {
                 throw new ValidationError(STRING_FIELD_IS_TOO_LONG, fieldValue, fieldName, Integer.toString(maxLen));
             }
         });

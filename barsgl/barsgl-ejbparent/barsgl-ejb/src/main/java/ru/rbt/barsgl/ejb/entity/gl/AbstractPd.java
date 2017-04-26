@@ -1,8 +1,9 @@
 package ru.rbt.barsgl.ejb.entity.gl;
 
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -29,7 +30,7 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     private Date vald;
 
     @Column(name = "ACID")
-    private String acid;        // 20
+    private String acid = " ";        // 20
 
     @Column(name = "BSAACID")
     private String bsaAcid;     // 200
@@ -220,7 +221,7 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     }
 
     public void setAcid(String acid) {
-        this.acid = acid;
+        this.acid = StringUtils.ifEmpty(acid, " ");
     }
 
     public void setBsaAcid(String bsaAcid) {
@@ -466,7 +467,7 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
 
     private void init() {
         // PD
-        this.acid = "";
+        this.acid = " ";
         this.ctype = "";
         this.amountUC = 0L;
         this.pdrf = 0L;

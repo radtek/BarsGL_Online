@@ -1,12 +1,12 @@
 package ru.rbt.barsgl.ejbcore.remote;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.remote.http.ExceptionInfo;
 import ru.rbt.barsgl.ejbcore.remote.http.Serializer;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceRequest;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceResponse;
 import ru.rbt.barsgl.ejbcore.util.reflection.TypedValue;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
@@ -23,7 +23,7 @@ import static java.lang.String.format;
  * Created by Ivan Sevastyanov
  */
 @Stateless(mappedName = "ServerAccessBean")
-public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, ServerAccessEJBRemote {
+public class ServerAccessBean implements ServerAccessEJBLocal, ServerAccessEJBRemote {
 
     private static final Logger logger = Logger.getLogger(ServerAccessBean.class.getName());
 
@@ -103,7 +103,8 @@ public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, Ser
             return Serializer.writeObject(new ServiceResponse(result == null ? null : result));
         } catch (Throwable th) {
             // откатываем все изменения
-            sessionContext.setRollbackOnly();
+            if (!sessionContext.getRollbackOnly())
+                sessionContext.setRollbackOnly();
             // transmit error info to the caller
             ExceptionInfo info = new ExceptionInfo(th);
             try {

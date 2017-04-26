@@ -79,9 +79,9 @@ public class DataRecordUtils {
      * @throws SQLException
      */
     public static List<DataRecord> select(Connection conn, String query, Object[] params, int max, int timeout) throws SQLException {
-        JdbcAdapter adapter = new DefaultJdbcAdapter();
         List result = new ArrayList();
         try (PreparedStatement ps = conn.prepareStatement(query)){
+            JdbcAdapter adapter = new DefaultJdbcAdapter(ps);
             if (0 < timeout) {
                 // если установлен таймаут в параметрах
                 ps.setQueryTimeout(timeout);
