@@ -143,7 +143,7 @@ public class MonitoringController {
                     double speed = intervalMillisec == 0 ? -1 :Math.abs(oldItem.getCntProc() - repl.get(i).getCntProc()) * 1000/ intervalMillisec;
 //                    repl.get(i).setStrSpeed(speed == -1 ? "?" : String.format("%1$,.2f",speed));
                     repl.get(i).setStrSpeed(speed == -1 ? "?" : String.valueOf(speed));
-                    repl.get(i).setStrRestTime(speed == -1 || speed == 0 ? "?": DateUtils.formatElapsedTimeOver24h( (long) (repl.get(i).getCntWait() / speed) ));
+                    repl.get(i).setStrRestTime(speed == -1 || speed == 0 ? "?": DateUtils.formatElapsedTimeOver24h( (long) (repl.get(i).getCntWait() / speed * 1000) ));
                 }
             }
             ret.put("repl", repl);

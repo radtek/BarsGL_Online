@@ -18,12 +18,12 @@ public class OperDayGetter {
     public static final String dateFormat = "dd.MM.yyyy";
 
     public static void getOperday(final IDataConsumer<OperDayWrapper> consumer) {
-        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
         BarsGLEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
             @Override
             public void onFailureOthers(Throwable throwable) {
-                WaitingManager.hide();
+//                WaitingManager.hide();
 
                 Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
             }
@@ -36,7 +36,7 @@ public class OperDayGetter {
 //                	final String od = res.getResult().getCurrentOD();
                     consumer.accept(res.getResult());
                 }
-                WaitingManager.hide();
+//                WaitingManager.hide();
             }
         });
 
