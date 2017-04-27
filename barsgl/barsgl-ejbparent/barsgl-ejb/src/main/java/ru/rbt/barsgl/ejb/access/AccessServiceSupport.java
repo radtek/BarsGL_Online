@@ -209,7 +209,7 @@ public class AccessServiceSupport {
                 "from (\n" +
                 "\tselect dat \n" +
                 "\tfrom dwh.cal\n" +
-                "\twhere ccy='RUR' and hol='' and dat< (select curdate from dwh.gl_od)\n" +
+                "\twhere ccy='RUR' and thol not in ('X', 'T') and dat< (select curdate from dwh.gl_od)\n" +
                 "\torder by 1 desc\n" +
                 "\tfetch first %s rows only) d", prm.getPrmValue()));
         Date bvDate = rec.getDate("dat");

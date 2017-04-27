@@ -12,9 +12,11 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 
 import javax.ejb.EJB;
@@ -26,6 +28,7 @@ import java.util.Date;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay.HolidayFlag.T;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
@@ -582,9 +585,11 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
     public final Date calculatePostingDate(GLOperation operation) {
         try {
             Operday operday = operdayController.getOperday();
-            // попали в выходной день
-            if ((InputMethod.AE == operation.getInputMethod()) && !calendarDayRepository.isWorkday(operation.getValueDate())) {
-                return processHoliday(operation);
+            String dayType = "";
+            if ((InputMethod.AE == operation.getInputMethod())
+                    && !isEmpty(dayType = calendarDayRepository.getDayType(operation.getValueDate()))) {
+                // попали в выходной день
+                return processHoliday(operation, dayType);
             } else {
                 final DataRecord record = glOperationRepository.selectOne("select * from V_GL_OPER_POD where GLOID = ?", operation.getId());
                 final PostingDateType podType = PostingDateType.valueOf(record.getString("POD_TYPE"));
@@ -638,8 +643,14 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
      * Если дата валютирования попала на выходной
      * @return дата postdate
      */
-    private Date processHoliday(GLOperation operation) {
+    private Date processHoliday(GLOperation operation, String dayType) {
         Operday operday = operdayController.getOperday();
+
+        // Для ARMPRO разрешен технический опердень, но не ранее 14 лней назад
+        if (DealSource.ARMPRO.name().equals(operation.getSourcePosting()) && T.name().equals(dayType)
+                && operation.getValueDate().after(DateUtils.addDay(operday.getCurrentDate(), -14))) { // технический опердень
+            return operation.getValueDate();
+        }
         // после предыд ОД
         Calendar vdatecal = Calendar.getInstance();
         vdatecal.setTime(operation.getValueDate());
