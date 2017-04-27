@@ -7,7 +7,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import java.util.TimeZone;

@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
+import ru.rbt.ejbcore.JpaAccessCallback;
 
 /**
  * Created by Ivan Sevastyanov on 24.05.2016.

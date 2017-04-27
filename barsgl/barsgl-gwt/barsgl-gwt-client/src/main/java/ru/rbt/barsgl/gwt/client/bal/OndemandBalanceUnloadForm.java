@@ -8,7 +8,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
@@ -21,6 +21,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
+import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 
 /**
  * Created by Ivan Sevastyanov on 25.01.2016.
@@ -68,7 +70,7 @@ public class OndemandBalanceUnloadForm extends BaseForm {
                     WaitingManager.show();
                     Map<String,String> map = new HashMap<>();
                     map.put("operday", format.format(dateUnloadPicker.getValue()));
-                    BarsGLEntryPoint.timerJobService.executeJob(UNLOAD_JOB_NAME, map, new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                    TimerEntryPoint.timerJobService.executeJob(UNLOAD_JOB_NAME, map, new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                         @Override
                         public void onSuccess(List<TimerJobWrapper> result) {
                             WaitingManager.hide();
@@ -80,7 +82,7 @@ public class OndemandBalanceUnloadForm extends BaseForm {
             };
         });
 
-        BarsGLEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
+        CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
             @Override
             public void onSuccess(RpcRes_Base<OperDayWrapper> result) {
                 lastWorkingDate = format.parse(result.getResult().getPreviousOD());

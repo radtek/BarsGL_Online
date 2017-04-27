@@ -1,15 +1,19 @@
 package ru.rbt.barsgl.ejb.repository.dict;
 
 import ru.rbt.barsgl.ejb.entity.dict.OperationTemplate;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.sql.SQLException;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 /**
  * Created by ER18837 on 17.03.16.
  */
+@Stateless
+@LocalBean
 public class OperationTemplateRepository extends AbstractBaseEntityRepository<OperationTemplate, Long> {
 
     public boolean checkTemplateNameExists(String name, Long id) {

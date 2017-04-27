@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejb.controller.lg;
 
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.lg.LongRunningTaskStepRepository;
 
 import javax.ejb.EJB;

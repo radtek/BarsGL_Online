@@ -5,11 +5,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejbcore.CacheController;
-import ru.rbt.barsgl.ejbcore.conf.map.AbstractConfigProperty;
-import ru.rbt.barsgl.ejbcore.conf.map.ConfigNode;
-import ru.rbt.barsgl.ejbcore.conf.map.StringProperty;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejb.conf.map.AbstractConfigProperty;
+import ru.rbt.ejb.conf.map.ConfigNode;
+import ru.rbt.ejb.conf.map.StringProperty;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteTest;
 
 import java.util.List;

@@ -4,7 +4,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.*;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.PrmValueEnum;
 
 import java.util.ArrayList;
 

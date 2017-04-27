@@ -3,21 +3,25 @@ package ru.rbt.barsgl.ejb.repository;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRateId;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Date;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
+@LocalBean
 public class RateRepository extends AbstractBaseEntityRepository<CurrencyRate, CurrencyRateId> {
 
     @Inject

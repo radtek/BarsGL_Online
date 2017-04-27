@@ -5,17 +5,21 @@ import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GlExcacRln;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
 
 import java.sql.SQLException;
 import java.util.List;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 /**
  * Created by ER18837 on 05.05.15.
  */
+@Stateless
+@LocalBean
 public class ExcacRlnRepository extends AbstractBaseEntityRepository<GlExcacRln, String> {
 
     public GlExcacRln createExcacRln(GLAccount glAccount, String optype) {

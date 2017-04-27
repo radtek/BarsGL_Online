@@ -4,7 +4,7 @@
 
     <artifactId>barsgl-ejb-core</artifactId>
     <packaging>ejb</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <parent>
         <groupId>ru.rbt</groupId>
@@ -19,8 +19,17 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-ejbcore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-prop</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
+            <artifactId>javaee-api</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -42,7 +51,6 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>3.9</version>
         </dependency>
     </dependencies>
 

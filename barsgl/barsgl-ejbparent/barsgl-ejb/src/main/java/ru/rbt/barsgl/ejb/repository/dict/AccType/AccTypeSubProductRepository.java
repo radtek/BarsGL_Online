@@ -1,12 +1,16 @@
 package ru.rbt.barsgl.ejb.repository.dict.AccType;
 
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.SubProduct;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.SubProductId;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 /**
  * Created by akichigi on 23.08.16.
  */
+@Stateless
+@LocalBean
 public class AccTypeSubProductRepository extends AbstractBaseEntityRepository<SubProduct, SubProductId> {
     public boolean isProductExists(String section, String product) {
         return null != selectFirst(SubProduct.class, "from SubProduct T where T.id.sectcode = ?1 and T.id.prodcode =?2",

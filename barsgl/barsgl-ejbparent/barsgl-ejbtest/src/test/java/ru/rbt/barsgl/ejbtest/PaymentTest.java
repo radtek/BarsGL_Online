@@ -10,7 +10,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.rsubstr;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 05.06.15.

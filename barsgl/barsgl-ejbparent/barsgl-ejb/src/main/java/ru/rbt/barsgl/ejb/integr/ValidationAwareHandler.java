@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.integr;
 
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
 
 import java.util.List;

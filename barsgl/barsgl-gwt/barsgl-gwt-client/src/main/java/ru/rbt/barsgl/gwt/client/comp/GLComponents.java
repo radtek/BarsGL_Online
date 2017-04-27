@@ -12,8 +12,8 @@ import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.enums.PostingType;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

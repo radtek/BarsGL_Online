@@ -2,9 +2,9 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
@@ -16,12 +16,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
  * Created by ER18837 on 29.02.16.
  */
+@Stateless
+@LocalBean
 public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPackage, Long> {
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
     private final SimpleDateFormat dateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");

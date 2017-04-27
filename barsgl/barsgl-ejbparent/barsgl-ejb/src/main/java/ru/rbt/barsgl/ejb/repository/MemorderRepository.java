@@ -4,12 +4,13 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.List;
+import javax.ejb.LocalBean;
 
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.CancelFlag.N;
 
@@ -17,6 +18,7 @@ import static ru.rbt.barsgl.ejb.entity.gl.Memorder.CancelFlag.N;
  * Created by Ivan Sevastyanov
  */
 @Stateless
+@LocalBean
 public class MemorderRepository extends AbstractBaseEntityRepository<Memorder, Long> {
 
     @EJB

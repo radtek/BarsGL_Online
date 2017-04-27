@@ -3,10 +3,10 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
-import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
+import ru.rbt.grid.gwt.client.export.Export2Excel;
+import ru.rbt.grid.gwt.client.export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
@@ -19,12 +19,13 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 
 /**
  * Created by akichigi on 20.03.15.
@@ -192,7 +193,7 @@ public class OperDayForm extends BaseForm {
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                BarsGLEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
+                CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();

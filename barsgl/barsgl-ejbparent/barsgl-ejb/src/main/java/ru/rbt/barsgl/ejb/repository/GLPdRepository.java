@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.repository;
 import org.apache.commons.lang3.StringUtils;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -27,13 +27,17 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.ejbcore.util.StringUtils.listToString;
 
 /**
  * Created by Ivan Sevastyanov on 10.02.2016.
  */
+@Stateless
+@LocalBean
 public class GLPdRepository extends AbstractBaseEntityRepository<GLPd, Long> {
 
     private static final Logger log = Logger.getLogger(GLPdRepository.class.getName());

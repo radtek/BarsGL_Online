@@ -1,25 +1,22 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
-import ru.rbt.barsgl.ejb.entity.AppUser;
-import ru.rbt.barsgl.ejb.entity.access.*;
-import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport;
-import ru.rbt.barsgl.ejb.security.policy.ExternalUserLoginPolicy;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
-import ru.rbt.barsgl.ejbcore.util.ServerUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.entity.access.*;
+import ru.rbt.security.AuthorizationServiceSupport;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.util.ServerUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.Builder;
-import ru.rbt.barsgl.shared.LoginResult;
-import ru.rbt.barsgl.shared.access.UserMenuItemWrapper;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
-import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.shared.LoginResult;
+import ru.rbt.shared.access.UserMenuItemWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
+import ru.rbt.shared.enums.*;
 
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
-import javax.naming.ldap.LdapContext;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Logger;

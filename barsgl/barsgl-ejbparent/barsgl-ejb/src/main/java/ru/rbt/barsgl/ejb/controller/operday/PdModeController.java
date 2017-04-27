@@ -2,12 +2,12 @@ package ru.rbt.barsgl.ejb.controller.operday;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 
 import javax.inject.Inject;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.JobControl;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.JobControl;
 
 /**
  * Created by ER21006 on 07.04.2016.

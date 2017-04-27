@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejbcore.job;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.naming.InitialContext;
 import java.io.Serializable;

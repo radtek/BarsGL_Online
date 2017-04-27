@@ -4,7 +4,7 @@ import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.MemorderRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import java.util.Date;

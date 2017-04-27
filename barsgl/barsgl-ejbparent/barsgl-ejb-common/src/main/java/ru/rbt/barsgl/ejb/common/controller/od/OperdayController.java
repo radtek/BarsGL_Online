@@ -5,10 +5,10 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import javax.annotation.PostConstruct;
@@ -30,7 +30,7 @@ import static javax.ejb.LockType.WRITE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
-import static ru.rbt.barsgl.ejbcore.util.ServerUtils.findAssignable;
+import static ru.rbt.ejbcore.util.ServerUtils.findAssignable;
 
 /**
  * Created by Ivan Sevastyanov
@@ -41,10 +41,10 @@ public class OperdayController {
 
     private static final Logger log = Logger.getLogger(OperdayController.class);
 
-    @Inject
+    @EJB
     private OperdayRepository repository;
 
-    @Inject
+    @EJB
     private BankCalendarDayRepository calendarDayRepository;
 
     @Inject

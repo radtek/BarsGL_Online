@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.client.compLookup;
 
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;

@@ -2,7 +2,7 @@ package ru.rbt.barsgl.gwt.client.audit;
 
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.AuditQuickFilterDlg;
 import ru.rbt.barsgl.gwt.client.quickFilter.AuditQuickFilterParams;
 import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;

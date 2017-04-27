@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejbcore.util;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by Ivan Sevastyanov

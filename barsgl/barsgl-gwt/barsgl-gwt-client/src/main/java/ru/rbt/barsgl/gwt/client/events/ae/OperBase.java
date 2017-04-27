@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
@@ -15,6 +15,7 @@ import ru.rbt.barsgl.shared.enums.InvisibleType;
 import java.util.EnumSet;
 
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.getWhereInClause;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
@@ -70,6 +71,7 @@ public abstract class OperBase extends OperSuperBase {
                 dlg.show(prms);
             }
 
+            @Override
             public void onDlgOkClick(Object prms){
                 dlg.hide();
 
@@ -77,7 +79,7 @@ public abstract class OperBase extends OperSuperBase {
                 _ownMessages = (Boolean)((Object[])prms)[1];
                 _type = (StepChoiceDlg.MessageType)((Object[])prms)[2];
 
-                FormManagerUI.ChangeStatusBarText("Шаг обработки: " + (_step.isNoneStep() ? "" : _step.getLabel()), FormManagerUI.MessageReason.MSG);
+                StatusBarManager.ChangeStatusBarText("Шаг обработки: " + (_step.isNoneStep() ? "" : _step.getLabel()), StatusBarManager.MessageReason.MSG);
                 doActionVisibility();
 
                 changeWhereStepPart();

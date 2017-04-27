@@ -3,13 +3,13 @@ package ru.rbt.barsgl.ejb.integr.fan;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import javax.inject.Inject;
 import java.util.List;
 
 import static com.google.common.collect.Iterables.find;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by ER18837 on 10.04.15.

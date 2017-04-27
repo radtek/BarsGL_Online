@@ -5,8 +5,8 @@ import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
@@ -17,15 +17,15 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createCachedFilialListBox;
-import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.*;
-import static ru.rbt.barsgl.shared.enums.SecurityActionCode.*;
+import static ru.rbt.shared.enums.SecurityActionCode.*;
 
 /**
  * Created by ER18837 on 05.04.16.

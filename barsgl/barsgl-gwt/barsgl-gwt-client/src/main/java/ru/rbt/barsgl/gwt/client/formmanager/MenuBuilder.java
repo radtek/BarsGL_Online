@@ -21,7 +21,7 @@ import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
-import ru.rbt.barsgl.gwt.client.monitoring.Monitor;
+import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateForm;
 import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
@@ -29,31 +29,38 @@ import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
 import ru.rbt.barsgl.gwt.client.security.AppUserForm;
-import ru.rbt.barsgl.gwt.client.security.LoginFormHandler;
+import ru.rbt.security.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
-import ru.rbt.barsgl.gwt.client.tasks.TasksFormNew;
+import ru.rbt.tasks.gwt.client.tasks.TasksFormNew;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.access.UserMenuItemWrapper;
-import ru.rbt.barsgl.shared.access.UserMenuWrapper;
-import ru.rbt.barsgl.shared.enums.UserMenuCode;
-import ru.rbt.barsgl.shared.enums.UserMenuType;
+import ru.rbt.shared.access.UserMenuItemWrapper;
+import ru.rbt.shared.access.UserMenuWrapper;
+import ru.rbt.shared.enums.UserMenuCode;
+import ru.rbt.shared.enums.UserMenuType;
 
 import java.util.ArrayList;
 import java.util.List;
+import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by akichigi on 27.04.16.
  */
-public class MenuBuilder {
+public class MenuBuilder implements IMenuBuilder {
     private final MenuItemTemplate menuTemplate = GWT.create(MenuItemTemplate.class);
 
     private UserMenuWrapper rootWrapper;
     private DockLayoutPanel dataPanel;
 
-    public MenuBuilder(UserMenuWrapper wrapper, DockLayoutPanel dataPanel){
+  //menuBuilder = new MenuBuilder(menuWrapper, dataPanel).build(menuBar);
+  public MenuBuilder() {
+  }
+
+  @Override
+  public void init(UserMenuWrapper wrapper, DockLayoutPanel dataPanel) {
         this.dataPanel = dataPanel;
 
         List<UserMenuItemWrapper> rootList;
@@ -115,7 +122,7 @@ public class MenuBuilder {
                 @Override
                 public void execute() {
                     AboutForm aboutForm = new AboutForm();
-                    aboutForm.show(BarsGLEntryPoint.getDatabaseVersion());
+                    aboutForm.show(SecurityEntryPoint.getDatabaseVersion());
                 }
             });
             case Task: return new MenuItem(wrapper.getMenuName(), false, new Command() {

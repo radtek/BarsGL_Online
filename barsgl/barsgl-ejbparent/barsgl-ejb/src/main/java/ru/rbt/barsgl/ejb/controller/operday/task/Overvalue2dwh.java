@@ -2,12 +2,12 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.datarec.DefaultJdbcAdapter;
-import ru.rbt.barsgl.ejbcore.datarec.JdbcAdapter;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
+import ru.rbt.ejbcore.datarec.JdbcAdapter;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 
 /**
  * Created by ER22317 on 17.05.2016.

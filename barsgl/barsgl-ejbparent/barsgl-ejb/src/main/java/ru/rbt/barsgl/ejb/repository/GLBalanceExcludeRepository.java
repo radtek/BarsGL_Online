@@ -2,13 +2,17 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLBalanceExclude;
 import ru.rbt.barsgl.ejb.entity.gl.GLBalanceExcludeId;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.util.Date;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov on 11.02.2016.
  */
+@Stateless
+@LocalBean
 public class GLBalanceExcludeRepository extends AbstractBaseEntityRepository<GLBalanceExclude, GLBalanceExcludeId> {
 
     /**

@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejbcore.mapping.job;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.enums.JobSchedulingType;
 import ru.rbt.barsgl.shared.enums.JobStartupType;

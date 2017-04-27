@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.common.mapping.od;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;

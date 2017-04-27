@@ -5,11 +5,11 @@ import ru.rbt.barsgl.ejb.entity.loader.LoadManagement;
 import ru.rbt.barsgl.ejb.integr.dict.BaseDictionaryController;
 import ru.rbt.barsgl.ejb.repository.loader.LoadManagementRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.LoadManagementAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import javax.annotation.Resource;

@@ -2,8 +2,8 @@ package ru.rbt.barsgl.ejbcore.job;
 
 import com.google.common.base.Joiner;
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.util.ServerUtils;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.util.ServerUtils;
 
 import javax.annotation.Resource;
 import javax.ejb.*;

@@ -6,7 +6,7 @@ import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournalId;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;

@@ -11,14 +11,14 @@ import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.shared.Assert;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -36,13 +36,17 @@ import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 import static ru.rb.ucb.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
+@LocalBean
 public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting, Long> {
 
     public static final Logger logger = Logger.getLogger(GLPostingRepository.class.getName());

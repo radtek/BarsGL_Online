@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.joining;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.rsubstr;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
 
 /**
  * Created by ER18837 on 29.07.15.

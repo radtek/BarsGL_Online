@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.common.controller.od;
 
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 
 import javax.ejb.EJB;

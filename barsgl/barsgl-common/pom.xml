@@ -11,7 +11,7 @@
 
     <artifactId>barsgl-common</artifactId>
     <packaging>jar</packaging>
-    <name>${artifactId}:${project.packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <dependencies>
         <dependency>

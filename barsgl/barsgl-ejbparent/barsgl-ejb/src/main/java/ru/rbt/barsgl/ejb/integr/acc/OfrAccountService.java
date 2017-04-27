@@ -3,12 +3,12 @@ package ru.rbt.barsgl.ejb.integr.acc;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 
@@ -22,11 +22,11 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Account;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 /**
  * Created by ER18837 on 13.11.15.
  */
@@ -47,7 +47,7 @@ public class OfrAccountService {
     private AuditController auditController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     public String findAccountCB(AccountKeys keys, Date dateFrom) throws Exception {
         return accountRepository.executeInNonTransaction(connection -> {

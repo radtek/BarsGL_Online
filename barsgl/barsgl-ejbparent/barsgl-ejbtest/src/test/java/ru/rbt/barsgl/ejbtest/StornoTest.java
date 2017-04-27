@@ -12,7 +12,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;

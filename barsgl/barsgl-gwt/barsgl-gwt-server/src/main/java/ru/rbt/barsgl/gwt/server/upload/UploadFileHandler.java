@@ -10,11 +10,11 @@ import org.apache.poi.POIXMLException;
 import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessor;
 import ru.rbt.barsgl.ejb.controller.excel.CardMessageProcessor;
 import ru.rbt.barsgl.ejb.controller.excel.ParamsParserException;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.shared.ExceptionUtils;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;

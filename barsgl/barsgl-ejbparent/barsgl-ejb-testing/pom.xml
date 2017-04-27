@@ -9,7 +9,7 @@
 
     <artifactId>barsgl-ejb-testing</artifactId>
     <packaging>ejb</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <dependencies>
         <dependency>
@@ -25,6 +25,16 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>barsgl-ejb-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

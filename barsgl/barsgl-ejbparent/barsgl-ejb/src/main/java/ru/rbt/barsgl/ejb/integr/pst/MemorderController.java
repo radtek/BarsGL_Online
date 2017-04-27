@@ -5,9 +5,9 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.MemorderRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -22,7 +22,7 @@ import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.CancelFlag.*;
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.DocType.BANK_ORDER;
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.DocType.MEMORDER;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.rsubstr;
+import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
 
 /**
  * Created by Ivan Sevastyanov

@@ -11,7 +11,7 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
  * Created by akichigi on 23.03.15.
  */
 public interface OperDayServiceAsync {
-     void getOperDay(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);
+//     void getOperDay(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);
      void runCloseLastWorkdayBalanceTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
      void runOpenOperdayTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
      void swithPdMode(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);

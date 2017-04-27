@@ -1,14 +1,18 @@
 package ru.rbt.barsgl.ejb.repository;
 
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.shared.Assert;
 
 /**
  * Created by Ivan Sevastyanov on 31.03.2016.
  */
+@Stateless
+@LocalBean
 public class GLRelationAccountingTypeRepository extends AbstractBaseEntityRepository<GLRelationAccountingType,GLRelationAccountingTypeId> {
 
     public GLRelationAccountingType createRelation(String acid, String bsaacid, String accountingType) {

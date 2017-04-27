@@ -16,6 +16,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ejb-plugin</artifactId>
+                <version>2.5.1</version>
                 <configuration>
                     <ejbVersion>3.1</ejbVersion>
                 </configuration>
@@ -44,8 +45,38 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>rbt-prop</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>security-ejb</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>security-gwt-ejb</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tasks-ejb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-jpa</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
+            <artifactId>javaee-api</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -111,12 +142,7 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>barsgl-ejb-common</artifactId>
-            <version>3.0.21-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>ru.rbt</groupId>
-            <artifactId>barsgl-ejb-common</artifactId>
-            <version>3.0.21-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <!--        <dependency>
                     <groupId>com.ibm</groupId>
@@ -134,7 +160,7 @@
                 </dependency>-->
     </dependencies>
 
-  <profiles>
+<!--  <profiles>
     <profile>
       <id>env-barsgl</id>
 
@@ -183,5 +209,5 @@
       </build>
     </profile>
 
-  </profiles>
+  </profiles>-->
 </project>

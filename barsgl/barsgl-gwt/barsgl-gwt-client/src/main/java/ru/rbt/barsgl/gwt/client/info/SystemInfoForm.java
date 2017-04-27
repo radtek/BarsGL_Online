@@ -4,8 +4,9 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
@@ -126,7 +127,7 @@ public class SystemInfoForm extends BaseForm {
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                BarsGLEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
+                CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();
@@ -145,7 +146,7 @@ public class SystemInfoForm extends BaseForm {
                     }
                 });
 
-                BarsGLEntryPoint.asyncGridService.selectOne("select count(1) as cnt from bars_jrn where is_processed=0", null, new AsyncCallback<Row>() {
+                GridEntryPoint.asyncGridService.selectOne("select count(1) as cnt from bars_jrn where is_processed=0", null, new AsyncCallback<Row>() {
                     @Override
                     public void onFailure(Throwable throwable) {
                         Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
@@ -163,7 +164,7 @@ public class SystemInfoForm extends BaseForm {
                     }
                 });
 
-                BarsGLEntryPoint.asyncGridService.selectOne("select count(1) as cnt from bars_jrn where is_processed=1", null, new AsyncCallback<Row>() {
+                GridEntryPoint.asyncGridService.selectOne("select count(1) as cnt from bars_jrn where is_processed=1", null, new AsyncCallback<Row>() {
                     @Override
                     public void onFailure(Throwable throwable) {
                         Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
@@ -189,7 +190,7 @@ public class SystemInfoForm extends BaseForm {
                     }
                 });
 
-                BarsGLEntryPoint.asyncGridService.selectOne("select count(1) as cnt from bars_jrn where is_processed=-1", null, new AsyncCallback<Row>() {
+                GridEntryPoint.asyncGridService.selectOne("select count(1) as cnt from bars_jrn where is_processed=-1", null, new AsyncCallback<Row>() {
                     @Override
                     public void onFailure(Throwable throwable) {
                         Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());

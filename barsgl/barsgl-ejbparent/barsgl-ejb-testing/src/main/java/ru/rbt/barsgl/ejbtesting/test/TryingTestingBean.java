@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejbtesting.test;
 
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.TryingDataAccessCallback;
 
 import javax.ejb.EJB;

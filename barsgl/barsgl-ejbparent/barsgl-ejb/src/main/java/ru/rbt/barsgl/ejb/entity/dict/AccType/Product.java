@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.entity.dict.AccType;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;

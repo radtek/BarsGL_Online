@@ -1,16 +1,20 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import java.math.BigDecimal;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
+@LocalBean
 public class BankCurrencyRepository extends AbstractBaseEntityRepository<BankCurrency, String> {
 
     public BankCurrency getCurrency(String currencyCode) {

@@ -7,10 +7,10 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.GLAccountRequestRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -23,8 +23,8 @@ import java.time.LocalDate;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.UnloadPDandUnspents;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.UnloadPDandUnspents;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 
 /**
@@ -219,7 +219,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     private static final String UU_DATE_KEY = "operday";
     private static final String UU_CHECK_RUN = "checkRun";

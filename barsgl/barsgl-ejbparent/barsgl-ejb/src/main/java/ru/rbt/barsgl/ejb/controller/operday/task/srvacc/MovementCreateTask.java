@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 

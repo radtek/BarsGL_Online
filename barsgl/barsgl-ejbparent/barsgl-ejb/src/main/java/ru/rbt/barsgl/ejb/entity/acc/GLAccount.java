@@ -3,8 +3,8 @@ package ru.rbt.barsgl.ejb.entity.acc;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.shared.Assert;
 
 import javax.persistence.*;
 import java.text.ParseException;

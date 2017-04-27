@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.serverutil;
 
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.remote.http.*;
 import ru.rbt.barsgl.ejbcore.util.reflection.TypedValue;
 

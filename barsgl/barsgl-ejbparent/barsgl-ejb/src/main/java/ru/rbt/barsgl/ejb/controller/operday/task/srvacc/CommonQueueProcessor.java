@@ -9,12 +9,12 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.controller.operday.task.KeyValueStorage;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.JpaAccessCallback;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejbcore.JpaAccessCallback;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -36,9 +36,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by ER22228 on 04.08.2016.

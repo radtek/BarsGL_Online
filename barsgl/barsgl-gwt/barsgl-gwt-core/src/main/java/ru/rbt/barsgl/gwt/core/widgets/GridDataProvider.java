@@ -6,7 +6,7 @@ import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import java.util.List;
 

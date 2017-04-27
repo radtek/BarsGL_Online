@@ -7,18 +7,18 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.GLPdRepository;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.inject.Inject;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STORNO_POST_NOT_FOUND;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STORNO_POST_NOT_FOUND_BUFFER;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STORNO_REF_NOT_VALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.STORNO_POST_NOT_FOUND;
+import static ru.rbt.ejbcore.validation.ErrorCode.STORNO_POST_NOT_FOUND_BUFFER;
+import static ru.rbt.ejbcore.validation.ErrorCode.STORNO_REF_NOT_VALID;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
 
 /**

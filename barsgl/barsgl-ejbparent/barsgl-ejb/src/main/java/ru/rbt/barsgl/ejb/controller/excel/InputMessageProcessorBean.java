@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejbcore.job.InmemoryJobservice;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

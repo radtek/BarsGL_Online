@@ -1,22 +1,17 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.Export.Export2Excel;
-import ru.rbt.barsgl.gwt.client.Export.Export2ExcelHead;
-import ru.rbt.barsgl.gwt.client.Export.ExportActionCallback;
-import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemFilterDlg;
+import ru.rbt.grid.gwt.client.export.Export2Excel;
+import ru.rbt.grid.gwt.client.export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
-import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -34,7 +29,7 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -42,14 +37,14 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterParams.DateFilterField.CREATE_DATE;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndCodeFilialPart;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.*;
-import static ru.rbt.barsgl.shared.enums.SecurityActionCode.*;
+import static ru.rbt.shared.enums.SecurityActionCode.*;
 
 /**
  * Created by ER18837 on 04.04.16.

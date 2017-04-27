@@ -6,9 +6,16 @@
     <inherits name="com.google.gwt.user.theme.standard.Standard" />
     <inherits name="com.google.gwt.xml.XML" />
     <inherits name="com.google.gwt.resources.Resources" />
+    <inherits name="ru.rbt.RBTShared" />
     <inherits name="ru.rbt.barsgl.BarsGLShared" />
+    <inherits name="ru.rbt.security.gwt.SecurityServer" />
+    <inherits name="ru.rbt.security.gwt.SecurityClient" />
     <inherits name="ru.rbt.barsgl.gwt.BarsGLServer" />
     <inherits name="ru.rbt.barsgl.gwt.BarsGLCore" />
+    <inherits name="ru.rbt.grid.gwt.GridServer" />
+    <inherits name="ru.rbt.grid.gwt.GridClient" />
+    <inherits name="ru.rbt.tasks.gwt.TasksServer" />    
+    <inherits name="ru.rbt.tasks.gwt.TasksClient" />
     <source path="client" />
     <entry-point class="ru.rbt.barsgl.gwt.client.BarsGLEntryPoint"/>
     <extend-property name="locale" values="ru"/>

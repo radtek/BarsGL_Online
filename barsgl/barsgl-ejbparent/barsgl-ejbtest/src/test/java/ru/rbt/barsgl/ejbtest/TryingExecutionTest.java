@@ -2,7 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
 import org.junit.Test;
-import ru.rbt.barsgl.ejbcore.DataAccessCallback;
+import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
 import ru.rbt.barsgl.ejbcore.TryingDataAccessCallback;
 import ru.rbt.barsgl.ejbtesting.test.TryingTestingBean;

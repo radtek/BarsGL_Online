@@ -3,8 +3,8 @@ package ru.rbt.barsgl.ejb.entity.gl;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static java.math.BigDecimal.ZERO;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
  * Created by ER18837 on 20.02.15.

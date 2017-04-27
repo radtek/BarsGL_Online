@@ -9,9 +9,9 @@ import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
 import ru.rbt.barsgl.ejb.repository.MemorderRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FanOperation;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.FanOperation;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Контроллер для обработки веерных операций, создающих проводки

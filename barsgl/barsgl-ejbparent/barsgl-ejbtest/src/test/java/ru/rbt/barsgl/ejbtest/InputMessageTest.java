@@ -15,13 +15,13 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.security.AuthorizationServiceSupport;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 //import ru.rbt.barsgl.gwt.server.upload.ExcelParser;
-import ru.rbt.barsgl.shared.LoginResult;
+import ru.rbt.shared.LoginResult;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import java.util.Random;
 
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.shortTimestamp;
-import static ru.rbt.barsgl.shared.LoginResult.LoginResultStatus.FAILED;
+import static ru.rbt.shared.LoginResult.LoginResultStatus.FAILED;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
 /**

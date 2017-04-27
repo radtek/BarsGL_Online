@@ -1,16 +1,20 @@
 package ru.rbt.barsgl.ejb.common.repository.od;
 
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.shared.Assert;
 
 import java.sql.SQLException;
 import java.util.Date;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
  */
+@Stateless
+@LocalBean
 public class OperdayRepository extends AbstractBaseEntityRepository <Operday, Date> {
 
     @Override

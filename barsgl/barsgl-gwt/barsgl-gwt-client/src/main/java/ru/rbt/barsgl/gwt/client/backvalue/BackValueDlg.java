@@ -20,7 +20,7 @@ import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.access.PrmValueWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.PrmValueEnum;
 
 public class BackValueDlg extends DlgFrame implements IAfterShowEvent{
 	private TxtBox tbLogin;

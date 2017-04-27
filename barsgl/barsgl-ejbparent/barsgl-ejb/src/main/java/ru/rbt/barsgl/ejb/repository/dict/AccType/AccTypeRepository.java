@@ -1,14 +1,18 @@
 package ru.rbt.barsgl.ejb.repository.dict.AccType;
 
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.sql.SQLException;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
 
 /**
  * Created by akichigi on 24.08.16.
  */
+@Stateless
+@LocalBean
 public class AccTypeRepository extends AbstractBaseEntityRepository<AccountingType, String> {
     public boolean isModifierExists(String section, String product, String subproduct, String modifier) {
         return null != selectFirst(AccountingType.class, "from AccountingType T where T.id = ?1",
