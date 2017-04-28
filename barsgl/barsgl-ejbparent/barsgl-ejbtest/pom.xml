@@ -72,6 +72,10 @@
                     <groupId>javax</groupId>
                     <artifactId>javaee-web-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>javax</groupId>
+                    <artifactId>javaee-api</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -82,6 +86,10 @@
                 <exclusion>
                     <groupId>javax</groupId>
                     <artifactId>javaee-web-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax</groupId>
+                    <artifactId>javaee-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -94,6 +102,10 @@
                     <groupId>javax</groupId>
                     <artifactId>javaee-web-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>javax</groupId>
+                    <artifactId>javaee-api</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -104,6 +116,10 @@
                 <exclusion>
                     <groupId>javax</groupId>
                     <artifactId>javaee-web-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax</groupId>
+                    <artifactId>javaee-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
