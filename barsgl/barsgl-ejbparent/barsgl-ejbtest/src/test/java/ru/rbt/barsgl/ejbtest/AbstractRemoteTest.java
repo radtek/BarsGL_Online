@@ -52,6 +52,7 @@ import static com.google.common.collect.Iterables.find;
 import java.io.IOException;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
+import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
@@ -122,7 +123,7 @@ public abstract class AbstractRemoteTest  {
     }
 
     private static void init() {
-        baseEntityRepository = ProxyFactory.createProxy(BaseEntityRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
+        baseEntityRepository = ProxyFactory.createProxy(ClientSupportRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
         postingController = ProxyFactory.createProxy(EtlPostingController.class.getName(), EtlMessageController.class, remoteAccessInternal);
         fanPostingController = ProxyFactory.createProxy(FanForwardOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);
         fanStornoController = ProxyFactory.createProxy(FanStornoBackvalueOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);
