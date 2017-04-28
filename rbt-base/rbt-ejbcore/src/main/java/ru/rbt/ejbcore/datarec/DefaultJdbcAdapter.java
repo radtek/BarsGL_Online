@@ -26,7 +26,7 @@ public class DefaultJdbcAdapter implements JdbcAdapter {
         try {
             parameterMetaData = preparedStatement.getParameterMetaData();
         } catch (SQLException e) {
-            log.log(Level.WARNING, "Error on get parameter meta data: " + e.getMessage(), e);
+            log.log(Level.WARNING, "Error on get parameter meta data: " + e.getMessage());
             parameterMetaData = null;
         }
     }
@@ -138,6 +138,7 @@ public class DefaultJdbcAdapter implements JdbcAdapter {
                 return parameterMetaData.getParameterType(index);
             }
         } catch (SQLException e) {
+            log.log(Level.WARNING, "Error on get parameter type idx=" + index+ ": " + e.getMessage());
             return UNSUPPORTED_FEATURE;
         }
         return UNSUPPORTED_FEATURE;

@@ -98,8 +98,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
         Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
         Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
-        Assert.assertEquals(StringUtils.leftPad(pst.getDealId(), 6, "0"), pdDr.getPref());
-        Assert.assertEquals(StringUtils.leftPad(pst.getDealId(), 6, "0"), pdCr.getPref());
+        Assert.assertEquals(StringUtils.leftPad(pst.getDealId(), 6, "0"), pdDr.getPref().trim());
+        Assert.assertEquals(StringUtils.leftPad(pst.getDealId(), 6, "0"), pdCr.getPref().trim());
 
         Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
