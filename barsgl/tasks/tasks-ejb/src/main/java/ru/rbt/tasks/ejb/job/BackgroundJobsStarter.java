@@ -14,7 +14,7 @@ import javax.ejb.Startup;
  * Created by Ivan Sevastyanov
  */
 @Singleton
-//@Startup
+@Startup
 public class BackgroundJobsStarter {
 
     private static final Logger log = Logger.getLogger(BackgroundJobsStarter.class);
