@@ -12,16 +12,12 @@ import ru.rbt.shared.Assert;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Date;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
 public class RateRepository extends AbstractBaseEntityRepository<CurrencyRate, CurrencyRateId> {
 
     @Inject

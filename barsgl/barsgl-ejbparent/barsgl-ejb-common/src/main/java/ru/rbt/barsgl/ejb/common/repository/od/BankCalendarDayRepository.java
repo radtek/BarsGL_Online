@@ -6,14 +6,10 @@ import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.util.Date;
 import java.util.List;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
 public class BankCalendarDayRepository extends AbstractBaseEntityRepository<BankCalendarDay,BankCalendarDayId> {
 
     private static final String BANK_CALENDAR_CODE = "RUR";

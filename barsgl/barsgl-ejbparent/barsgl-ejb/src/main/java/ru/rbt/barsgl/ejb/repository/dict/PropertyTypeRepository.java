@@ -4,8 +4,6 @@
  */
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import ru.rbt.barsgl.ejb.entity.dict.PropertyType;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
@@ -13,8 +11,6 @@ import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
  *
  * @author Andrew Samsonov
  */
-@Stateless
-@LocalBean
 public class PropertyTypeRepository extends AbstractBaseEntityRepository<PropertyType, Short> {
     public  boolean isPropertyTypeExists(Short id) {
         return null != selectFirst(PropertyType.class, "from PropertyType T where T.id = ?1", id);

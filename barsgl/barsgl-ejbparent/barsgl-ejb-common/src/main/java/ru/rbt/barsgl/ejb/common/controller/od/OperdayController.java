@@ -41,10 +41,10 @@ public class OperdayController {
 
     private static final Logger log = Logger.getLogger(OperdayController.class);
 
-    @EJB
+    @Inject
     private OperdayRepository repository;
 
-    @EJB
+    @Inject
     private BankCalendarDayRepository calendarDayRepository;
 
     @Inject

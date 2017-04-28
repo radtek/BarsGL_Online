@@ -1,7 +1,5 @@
 package ru.rbt.barsgl.ejb.repository.dict.AccType;
 
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.Modifier;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ModifierId;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
@@ -9,8 +7,6 @@ import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 /**
  * Created by akichigi on 24.08.16.
  */
-@Stateless
-@LocalBean
 public class AccTypeModifierRepository extends AbstractBaseEntityRepository<Modifier, ModifierId> {
     public boolean isSubProductExists(String section, String product, String subproduct) {
         return null != selectFirst(Modifier.class, "from Modifier T where T.id.sectcode = ?1 and T.id.prodcode =?2 and T.id.subprodcode =?3",

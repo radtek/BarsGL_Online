@@ -12,14 +12,10 @@ import ru.rbt.ejbcore.validation.ValidationError;
 
 import java.sql.SQLException;
 import java.util.List;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 /**
  * Created by ER18837 on 05.05.15.
  */
-@Stateless
-@LocalBean
 public class ExcacRlnRepository extends AbstractBaseEntityRepository<GlExcacRln, String> {
 
     public GlExcacRln createExcacRln(GLAccount glAccount, String optype) {

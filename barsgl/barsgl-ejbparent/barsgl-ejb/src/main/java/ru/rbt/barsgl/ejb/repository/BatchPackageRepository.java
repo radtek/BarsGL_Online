@@ -16,16 +16,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
  * Created by ER18837 on 29.02.16.
  */
-@Stateless
-@LocalBean
 public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPackage, Long> {
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
     private final SimpleDateFormat dateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");

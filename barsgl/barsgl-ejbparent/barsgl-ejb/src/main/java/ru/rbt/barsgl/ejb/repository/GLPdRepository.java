@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.ejbcore.util.StringUtils.listToString;
@@ -36,8 +34,6 @@ import static ru.rbt.ejbcore.util.StringUtils.listToString;
 /**
  * Created by Ivan Sevastyanov on 10.02.2016.
  */
-@Stateless
-@LocalBean
 public class GLPdRepository extends AbstractBaseEntityRepository<GLPd, Long> {
 
     private static final Logger log = Logger.getLogger(GLPdRepository.class.getName());

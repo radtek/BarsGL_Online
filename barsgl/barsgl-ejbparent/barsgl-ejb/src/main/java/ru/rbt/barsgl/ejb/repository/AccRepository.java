@@ -10,15 +10,11 @@ import javax.persistence.NoResultException;
 import java.sql.SQLException;
 
 import static java.lang.String.format;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 05.05.15.
  */
-@Stateless
-@LocalBean
 public class AccRepository extends AbstractBaseEntityRepository<Acc, String> {
 
     public Acc createAcc(GLAccount glAccount) {

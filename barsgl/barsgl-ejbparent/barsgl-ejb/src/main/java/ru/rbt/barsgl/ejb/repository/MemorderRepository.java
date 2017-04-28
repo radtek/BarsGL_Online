@@ -10,7 +10,6 @@ import ru.rbt.shared.Assert;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.List;
-import javax.ejb.LocalBean;
 
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.CancelFlag.N;
 
@@ -18,7 +17,6 @@ import static ru.rbt.barsgl.ejb.entity.gl.Memorder.CancelFlag.N;
  * Created by Ivan Sevastyanov
  */
 @Stateless
-@LocalBean
 public class MemorderRepository extends AbstractBaseEntityRepository<Memorder, Long> {
 
     @EJB

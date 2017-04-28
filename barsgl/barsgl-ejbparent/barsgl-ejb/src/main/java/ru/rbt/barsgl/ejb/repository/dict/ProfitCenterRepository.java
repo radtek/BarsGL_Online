@@ -1,15 +1,11 @@
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import ru.rbt.barsgl.ejb.entity.dict.ProfitCenter;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 /**
  * Created by akichigi on 04.08.16.
  */
-@Stateless
-@LocalBean
 public class ProfitCenterRepository extends AbstractBaseEntityRepository<ProfitCenter, String> {
     public boolean isProfitCenterExists(String id) {
         return null != selectFirst(ProfitCenter.class, "from ProfitCenter T where T.id = ?1", id);

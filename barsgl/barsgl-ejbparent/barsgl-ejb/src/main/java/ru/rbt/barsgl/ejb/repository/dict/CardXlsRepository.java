@@ -4,7 +4,6 @@ import ru.rbt.barsgl.ejb.entity.card.CardXls;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
-import java.util.Date;
 import java.util.List;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;

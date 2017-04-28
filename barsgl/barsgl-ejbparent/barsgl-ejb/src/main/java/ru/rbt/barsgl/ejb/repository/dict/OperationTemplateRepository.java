@@ -6,14 +6,10 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.sql.SQLException;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 /**
  * Created by ER18837 on 17.03.16.
  */
-@Stateless
-@LocalBean
 public class OperationTemplateRepository extends AbstractBaseEntityRepository<OperationTemplate, Long> {
 
     public boolean checkTemplateNameExists(String name, Long id) {

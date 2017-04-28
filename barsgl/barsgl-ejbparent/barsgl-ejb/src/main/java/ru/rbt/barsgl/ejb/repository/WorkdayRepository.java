@@ -6,14 +6,10 @@ import ru.rbt.shared.enums.Repository;
 
 import java.sql.SQLException;
 import java.util.Date;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
 public class WorkdayRepository extends AbstractBaseEntityRepository {
 
     public Date getWorkday() {

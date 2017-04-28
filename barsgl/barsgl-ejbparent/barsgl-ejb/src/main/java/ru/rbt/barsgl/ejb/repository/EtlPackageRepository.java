@@ -11,15 +11,11 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.WORKING;
 
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
 public class EtlPackageRepository extends AbstractBaseEntityRepository<EtlPackage, Long> {
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
     private final SimpleDateFormat dateTime = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");

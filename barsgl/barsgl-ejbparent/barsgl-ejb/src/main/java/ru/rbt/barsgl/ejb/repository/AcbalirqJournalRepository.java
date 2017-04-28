@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.acc.AcbalirqJournal;
-import ru.rbt.barsgl.ejb.entity.acc.AcbalirqJournal;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;

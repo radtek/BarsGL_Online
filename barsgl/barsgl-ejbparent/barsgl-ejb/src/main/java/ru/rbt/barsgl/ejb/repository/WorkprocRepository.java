@@ -7,8 +7,6 @@ import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.Date;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.E;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.W;
@@ -16,8 +14,6 @@ import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.W;
 /**
  * Created by Ivan Sevastyanov on 17.02.2016.
  */
-@Stateless
-@LocalBean
 public class WorkprocRepository extends AbstractBaseEntityRepository {
 
     public enum WorkprocState {

@@ -36,8 +36,6 @@ import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import static ru.rb.ucb.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -45,8 +43,6 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
 public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting, Long> {
 
     public static final Logger logger = Logger.getLogger(GLPostingRepository.class.getName());

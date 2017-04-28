@@ -4,8 +4,6 @@
  */
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
@@ -19,8 +17,6 @@ import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNTING_TYPE_NOT_FOUND;
  *
  * @author Andrew Samsonov
  */
-@Stateless
-@LocalBean
 public class AccountingTypeRepository extends AbstractBaseEntityRepository<AccountingType, String> {
 
     @Override

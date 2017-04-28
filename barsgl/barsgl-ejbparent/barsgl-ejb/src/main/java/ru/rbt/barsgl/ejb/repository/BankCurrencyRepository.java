@@ -7,14 +7,10 @@ import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
 import java.math.BigDecimal;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
  */
-@Stateless
-@LocalBean
 public class BankCurrencyRepository extends AbstractBaseEntityRepository<BankCurrency, String> {
 
     public BankCurrency getCurrency(String currencyCode) {

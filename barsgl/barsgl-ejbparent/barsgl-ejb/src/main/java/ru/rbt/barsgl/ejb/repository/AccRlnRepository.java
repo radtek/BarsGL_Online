@@ -15,8 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_RLN_INVALID;
@@ -24,8 +22,6 @@ import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_RLN_INVALID;
 /**
  * Created by ER18837 on 05.05.15.
  */
-@Stateless
-@LocalBean
 public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, AccRlnId> {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

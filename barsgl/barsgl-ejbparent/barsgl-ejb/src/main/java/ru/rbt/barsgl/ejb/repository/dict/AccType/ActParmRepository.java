@@ -18,15 +18,11 @@ import java.text.ParseException;
 import java.util.List;
 
 import static java.lang.String.format;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 
 
 /**
  * Created by akichigi on 24.08.16.
  */
-@Stateless
-@LocalBean
 public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, ActParmId> {
     @Inject
     private DateUtils dateUtils;
