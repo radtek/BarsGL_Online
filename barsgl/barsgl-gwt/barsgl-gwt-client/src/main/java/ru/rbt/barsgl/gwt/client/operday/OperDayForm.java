@@ -190,12 +190,13 @@ public class OperDayForm extends BaseForm {
         return refreshAction = new Action(null, "Обновить", new Image(ImageConstants.INSTANCE.refresh24()), 5) {
             @Override
             public void execute() {
-                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//                WaitingManager.show("TEXT_CONSTANTS.waitMessage_Load()");
 
                 BarsGLEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
-                        WaitingManager.hide();
+//                        WaitingManager.hide();
 
                         Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
                     }
@@ -207,7 +208,7 @@ public class OperDayForm extends BaseForm {
                         } else {
                             operDateRefresh(res.getResult());
                         }
-                        WaitingManager.hide();
+//                        WaitingManager.hide();
                     }
                 });
             }

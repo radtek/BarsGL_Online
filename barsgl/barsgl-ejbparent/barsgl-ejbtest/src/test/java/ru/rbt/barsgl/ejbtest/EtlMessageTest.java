@@ -637,7 +637,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Date prev = DateUtils.parseDate("24.01.2015", "dd.MM.yyyy");
         Date hold = DateUtils.parseDate("25.01.2015", "dd.MM.yyyy");
         Date curr = DateUtils.parseDate("27.01.2015", "dd.MM.yyyy");
-        List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and hol <> 'X'"
+        List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and thol <> 'X'"
                 , prev, curr);
         Assert.assertEquals(2, days.size());
         final Date finalCurr = curr;
