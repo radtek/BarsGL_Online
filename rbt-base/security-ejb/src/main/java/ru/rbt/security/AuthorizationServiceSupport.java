@@ -35,7 +35,7 @@ public class AuthorizationServiceSupport {
     @EJB
     private AuditController auditController;
 
-    @EJB
+    @Inject
     private AppUserRepository appUserRepository;
 
     @Inject

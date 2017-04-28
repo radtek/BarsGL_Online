@@ -15,12 +15,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov on 21.04.2016.
  */
-@Stateless
 public class UserMenuRepository extends AbstractBaseEntityRepository<UserMenuItem, Integer> {
 
     @Inject
