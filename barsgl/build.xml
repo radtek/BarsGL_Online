@@ -40,7 +40,10 @@
     </target>
 
     <target name="build-ejbprofile-ear">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="../rbt-base" failonerror="true">
+            <arg line="/A /C build.bat"/>
+        </exec>
+        <exec executable="cmd" dir="." failonerror="true">
             <arg line="/A /C build-ejbprofile-ear.bat"/>
         </exec>
     </target>
