@@ -395,7 +395,8 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public Integer nextIntegerId(DataSource dataSource, String sequenceName) throws SQLException {
-        return selectOne(dataSource, "select (next value for " + sequenceName + ") id_seq from DUAL").getInteger("id_seq");
+        return ((BigDecimal) persistence.createNativeQuery("select "
+                + sequenceName + ".nextval id_seq from dual").getSingleResult()).intValue();
     }
 
     @Override

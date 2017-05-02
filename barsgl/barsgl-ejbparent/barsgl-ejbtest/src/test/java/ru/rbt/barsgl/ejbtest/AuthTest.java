@@ -1,20 +1,17 @@
 package ru.rbt.barsgl.ejbtest;
 
-import ru.rbt.shared.enums.RoleSys;
-import ru.rbt.shared.enums.SecurityActionCode;
-import ru.rbt.shared.enums.UserMenuType;
-import ru.rbt.shared.enums.UserMenuCode;
-import ru.rbt.shared.enums.UserExternalType;
-import ru.rbt.shared.enums.UserLocked;
 import org.junit.*;
+import ru.rbt.barsgl.shared.Builder;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.shared.Builder;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.entity.access.*;
 import ru.rbt.shared.LoginResult;
 import ru.rbt.shared.access.UserMenuItemWrapper;
 import ru.rbt.shared.access.UserMenuWrapper;
-import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.shared.enums.*;
 
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -26,17 +23,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
-import ru.rbt.security.entity.AppUser;
-import ru.rbt.security.entity.access.Role;
-import ru.rbt.security.entity.access.SecurityAction;
-import ru.rbt.security.entity.access.SecurityActionGroup;
-import ru.rbt.security.entity.access.SecurityRoleActionRln;
-import ru.rbt.security.entity.access.SecurityRoleActionRlnId;
-import ru.rbt.security.entity.access.UserMenuActionRln;
-import ru.rbt.security.entity.access.UserMenuItem;
-import ru.rbt.security.entity.access.UserMenuNode;
-import ru.rbt.security.entity.access.UserRoleRln;
 
 
 /**
@@ -70,7 +56,7 @@ public class AuthTest extends AbstractRemoteTest{
         // role
         Role role = new Role();
         role.setId(nextId());
-        role.setName("");
+        role.setName("123");
         role.setSys(RoleSys.N);
         role = saveObject(role);
         objects.add(role);
@@ -117,13 +103,18 @@ public class AuthTest extends AbstractRemoteTest{
         item0.setParent(rootNode);
         item0 = createMenuIfAbsent(item0);
 
+        Assert.assertEquals(1, baseEntityRepository.executeUpdate("update UserMenuItem i set i.parent = ?1 where i.menuCode = ?2"
+            , rootNode, item0.getMenuCode()));
+
         UserMenuItem item1 = new UserMenuItem();
         item1.setId(nextId());
         item1.setMenuCode(UserMenuCode.Upload);
         item1.setName("Menu" + StringUtils.rsubstr(System.currentTimeMillis() + "", 5));
         item1.setMenuType(UserMenuType.N);
-        item0.setParent(rootNode);
+        item1.setParent(rootNode);
         item1 = createMenuIfAbsent(item1);
+        Assert.assertEquals(1, baseEntityRepository.executeUpdate("update UserMenuItem i set i.parent = ?1 where i.menuCode = ?2"
+                , rootNode, item1.getMenuCode()));
 
         // добавляем в пункты меню один и тот же экшн
 

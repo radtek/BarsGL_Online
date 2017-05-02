@@ -20,6 +20,7 @@
     <class>ru.rbt.security.entity.access.SecurityRoleActionRln</class>
     <class>ru.rbt.security.entity.access.UserMenuActionRln</class>
     <class>ru.rbt.security.entity.access.UserMenuItem</class>
+    <class>ru.rbt.security.entity.access.UserMenuNode</class>
     <class>ru.rbt.security.entity.access.UserRoleRln</class>
 
     <class>ru.rbt.barsgl.ejbcore.mapping.job.TimerJob</class>
