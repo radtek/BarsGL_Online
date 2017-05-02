@@ -258,7 +258,7 @@ public class OperdayTest extends AbstractTimerJobTest {
      * @throws Exception
      */
     @Test public void testPreCOBOnOpenedLWD() throws Exception {
-
+        // TODO чтобы тест прошел, надо запустить вручную Мониторинг АЕ (на тесте он не всегда сам запускается)
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, OPEN);
 
@@ -473,7 +473,7 @@ public class OperdayTest extends AbstractTimerJobTest {
 
     private void insertWorkday(Date date) {
         try {
-            baseEntityRepository.executeNativeUpdate("insert into cal values (?1, '', 'RUR')", date);
+            baseEntityRepository.executeNativeUpdate("insert into cal values (?1, '', 'RUR', '')", date);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -26,9 +26,12 @@ import java.util.Date;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay.HolidayFlag.T;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
+import ru.rbt.barsgl.shared.enums.DealSource;
+import ru.rbt.ejbcore.util.DateUtils;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -582,9 +585,11 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
     public final Date calculatePostingDate(GLOperation operation) {
         try {
             Operday operday = operdayController.getOperday();
-            // попали в выходной день
-            if ((InputMethod.AE == operation.getInputMethod()) && !calendarDayRepository.isWorkday(operation.getValueDate())) {
-                return processHoliday(operation);
+            String dayType = "";
+            if ((InputMethod.AE == operation.getInputMethod())
+                    && !isEmpty(dayType = calendarDayRepository.getDayType(operation.getValueDate()))) {
+                // попали в выходной день
+                return processHoliday(operation, dayType);
             } else {
                 final DataRecord record = glOperationRepository.selectOne("select * from V_GL_OPER_POD where GLOID = ?", operation.getId());
                 final PostingDateType podType = PostingDateType.valueOf(record.getString("POD_TYPE"));
@@ -638,8 +643,14 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
      * Если дата валютирования попала на выходной
      * @return дата postdate
      */
-    private Date processHoliday(GLOperation operation) {
+    private Date processHoliday(GLOperation operation, String dayType) {
         Operday operday = operdayController.getOperday();
+
+        // Для ARMPRO разрешен технический опердень, но не ранее 14 лней назад
+        if (DealSource.ARMPRO.name().equals(operation.getSourcePosting()) && T.name().equals(dayType)
+                && operation.getValueDate().after(DateUtils.addDay(operday.getCurrentDate(), -14))) { // технический опердень
+            return operation.getValueDate();
+        }
         // после предыд ОД
         Calendar vdatecal = Calendar.getInstance();
         vdatecal.setTime(operation.getValueDate());

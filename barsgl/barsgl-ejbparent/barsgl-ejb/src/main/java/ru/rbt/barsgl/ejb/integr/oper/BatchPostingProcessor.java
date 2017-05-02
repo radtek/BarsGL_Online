@@ -393,7 +393,7 @@ public class BatchPostingProcessor extends ValidationAwareHandler<ManualOperatio
             throw new ValidationError(DATE_AFTER_OPERDAY, fieldName,
                     dateUtils.onlyDateString(checkDate),
                     dateUtils.onlyDateString(currentDate));
-        } else if (checkHoliday && !calendarDayRepository.isWorkday(checkDate)) {
+        } else if (checkHoliday && !calendarDayRepository.isWorkdayWithTech(checkDate)) {
             // TODO проверка на выходные
             throw new ValidationError(DATE_IS_HOLIDAY, fieldName,
                     dateUtils.onlyDateString(checkDate));

@@ -162,7 +162,7 @@ public class Monitor extends BaseForm {
         tb.addColumn(colWait, "Ожидание");
         tb.addColumn(colProc, "Обработанно");
         tb.addColumn(colErr, "Ошибки");
-        tb.addColumn(colSpeed, "Скорость");
+        tb.addColumn(colSpeed, "Скорость(в сек))");
         tb.addColumn(colRest, "Осталось");
     }
 

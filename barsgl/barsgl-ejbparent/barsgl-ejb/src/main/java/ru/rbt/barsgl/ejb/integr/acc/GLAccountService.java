@@ -39,8 +39,6 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -88,8 +86,6 @@ public class GLAccountService {
     @Inject
     private BankCurrencyRepository bankCurrencyRepository;
 
-    @Inject
-    private AccRepository accRepository;
 
     @Inject
     private BsaAccRepository bsaAccRepository;
@@ -257,42 +253,12 @@ public class GLAccountService {
                             , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
                         .map(GLAccount::getBsaAcid).orElseGet(() -> glAccountController.createGLPLAccount(keys, operation, operSide));
             } else {
-                return processNotOwnPLAccount(operation,operSide,keys,dateOpen, dateStart446P);
+                return Optional.ofNullable(glAccountController.findForPlcodeNo7903(keys, dateOpen, dateStart446P))
+                        .orElseGet(() -> glAccountController.processNotOwnPLAccount(operation, operSide, keys,dateOpen, dateStart446P));
             }
         }
     }
 
-    /**
-     * Поиск/открытие счетов доходов/расходов
-     * Ищем не наш счет, иначе создаем в т.ч. у нас
-     */
-    private String processNotOwnPLAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, Date dateStart446P) throws Exception {
-        String bsaasid = accRlnRepository.findForPlcodeNo7903(keys, dateOpen, dateStart446P);
-        if (bsaasid == null) {
-            if (!glAccountRepository.checkMidasAccountExists(keys.getAccountMidas(), dateOpen)) {
-                //todo создать запись в АСС
-//                throw new ValidationError(ACCOUNT_MIDAS_NOT_FOUND, keys.getAccountMidas());
-                GLAccount glAccount = new GLAccount();
-                glAccount.setAcid(keys.getAccountMidas());
-                glAccount.setBranch(keys.getBranch());
-                glAccount.setCustomerNumberD(Integer.parseInt(keys.getCustomerNumber()));
-                 BankCurrency bankCurrency = new BankCurrency(keys.getCurrency());
-                 bankCurrency.setDigitalCode(keys.getCurrencyDigital());
-                glAccount.setCurrency(bankCurrency);
-                glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
-                glAccount.setAccountSequence(Short.parseShort(keys.getAccSequence()));
-                glAccount.setDateOpen(dateOpen);
-                glAccount.setDateClose(Date.from(LocalDate.of(2029, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
-                glAccount.setDescription("");
-                accRepository.createAcc(glAccount);
-            }
-
-            bsaasid = glAccountController.createPlAccount(keys, dateOpen, dateStart446P, operation, operSide);
-            auditController.info(Account, format("Создан счет '%s' для операции '%d' %s",
-                    bsaasid, operation.getId(), operSide.getMsgName()), operation);
-        }
-        return bsaasid;
-    }
 
     private void checkAccountPermission(ManualAccountWrapper wrapper, FormAction action) {
         String acc2 = wrapper.getBalanceAccount2();
