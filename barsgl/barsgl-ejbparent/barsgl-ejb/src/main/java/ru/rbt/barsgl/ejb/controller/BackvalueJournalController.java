@@ -1,10 +1,10 @@
 package ru.rbt.barsgl.ejb.controller;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -86,7 +86,7 @@ public class BackvalueJournalController {
                 return null;
             });
             try {
-                journalRepository.executeNativeUpdate("call GL_CORRLOCAL");
+                journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
             } catch (Exception e) {
                 throw new DefaultApplicationException("Ошибка при пересчете/локализации", e);
             }
@@ -140,7 +140,7 @@ public class BackvalueJournalController {
             }
             groups.stream().forEach(record -> {
                 try {
-                    journalRepository.executeNativeUpdate("call GL_RECALC_BS2(?)", record.getDate("POD"));
+                    journalRepository.executeNativeUpdate("{call GL_RECALC_BS2(?)}", record.getDate("POD"));
                     count[0]++;
                 } catch (Exception e) {
                     throw new DefaultApplicationException(
