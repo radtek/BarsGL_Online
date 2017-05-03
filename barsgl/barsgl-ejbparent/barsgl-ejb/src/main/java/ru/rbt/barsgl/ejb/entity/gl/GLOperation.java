@@ -302,7 +302,7 @@ public class GLOperation extends BaseEntity<Long> {
 
     // Статус, параметры опердня --------------------------
     @Enumerated(EnumType.STRING)
-    @Column(name = "STATE")
+    @Column(name = "\"STATE\"")
     private OperState state;
 
     @Temporal(TemporalType.DATE)

@@ -61,13 +61,14 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         initCorrectOperday();
     }
 
-/*
-    @Before
-    public void beforeClass() {
+
+  /* @Before
+     public void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1", N);
-    }
-*/
+
+    }*/
+
 
     /**
      * Автоматическое определение/открытие счетов при загрузке проводок из AE<br/> Расчет лицевой части счета
@@ -133,9 +134,9 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         List<GLAccountExcludeInterval> sorted = type.getExcludes();
         Collections.sort(sorted, (t1, t2) -> t1.getEndNumber() < t2.getEndNumber() ? 1 : t1.getEndNumber() == t2.getEndNumber() ? 0 : -1);
         baseEntityRepository.executeNativeUpdate(
-                "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD = ?"
+                "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD IS NULL"
                 , sorted.get(0).getStartNumber() - 1, keys2.getAccount2(), keys2.getCurrency()
-                , keys2.getCompanyCode(), keys2.getPlCode());
+                , keys2.getCompanyCode()/*, keys2.getPlCode().isEmpty()*/);
         frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
                 , keys2.getAccount2()
                 , keys2.getCurrency()
@@ -611,6 +612,9 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
      */
     @Test
     public void testChangeMidasSQFlex() {
+        //на проде все записи таблицы закрыты датой 07.12.2016, что вызывает непрохождение теста
+        baseEntityRepository.executeNativeUpdate("update gl_sqparam set dte = null");
+
         String dealSrc = "FC12_CL";
 
         final AccountKeys keys0 = new AccountKeys(
@@ -705,6 +709,8 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
      */
     @Test
     public void testChangeMidasSQNotFlex() {
+        //на проде все записи таблицы закрыты датой 07.12.2016, что вызывает непрохождение теста
+        baseEntityRepository.executeNativeUpdate("update gl_sqparam set dte = null");
 
         final AccountKeys keys0 = new AccountKeys(
                 // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
