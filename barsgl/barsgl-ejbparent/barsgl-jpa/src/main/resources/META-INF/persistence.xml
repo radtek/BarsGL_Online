@@ -15,7 +15,8 @@
         <class>ru.rbt.security.entity.access.SecurityAction</class>
         <class>ru.rbt.security.entity.access.SecurityActionGroup</class>
         <class>ru.rbt.security.entity.access.SecurityRoleActionRln</class>
-        <class>ru.rbt.security.entity.access.UserMenuActionRln</class>
+        <class>ru.rbt.security.entity.access.UserMenuActionRln</class>        
+        <class>ru.rbt.security.entity.access.UserMenuNode</class>
         <class>ru.rbt.security.entity.access.UserMenuItem</class>
         <class>ru.rbt.security.entity.access.UserRoleRln</class>
 
@@ -91,6 +92,7 @@
         <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep</class>
         <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepPattern</class>
         <class>ru.rbt.barsgl.ejb.entity.loader.LoadManagement</class>
+        <class>ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord</class>
 
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 
