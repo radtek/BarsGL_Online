@@ -3,7 +3,9 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountBalanceUnloadTask;
@@ -17,9 +19,9 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -34,7 +36,6 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
@@ -51,6 +52,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.*;
 /**
  * Created by Ivan Sevastyanov
  */
+@Ignore("Выгрузка в DWH остатков/проводок не производится. Этот тест устарел.")
 public class AccountUnloadBalanceTest extends AbstractTimerJobTest {
 
     public static final Logger logger = Logger.getLogger(AccountUnloadBalanceTest.class.getName());
