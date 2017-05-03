@@ -16,31 +16,31 @@
     </target>
 
     <target name="build-ejb-ear">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="." failonerror="true">
             <arg line="/A /C build-ejb-ear.bat"/>
         </exec>
     </target>
 
     <target name="build-all">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="."  failonerror="true">
             <arg line="/A /C build.bat"/>
         </exec>
     </target>
 
     <target name="build-prod" description="Сборка для Production Mode. Использует шифрацию пароля для Datasource и т.п.">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="."  failonerror="true">
             <arg line="/A /C build-prod.bat"/>
         </exec>
     </target>
 
     <target name="build-gwtserver-ear">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="."  failonerror="true">
             <arg line="/A /C build-ejb-gwtserver-ear.bat"/>
         </exec>
     </target>
 
     <target name="build-ejbprofile-ear">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="." failonerror="true">
             <arg line="/A /C build-ejbprofile-ear.bat"/>
         </exec>
     </target>
@@ -76,7 +76,7 @@
     </target>-->
 
     <target name="build-gwt-war">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="." failonerror="true">
             <arg line="/A /C build-gwt-war.bat"/>
         </exec>
     </target>
