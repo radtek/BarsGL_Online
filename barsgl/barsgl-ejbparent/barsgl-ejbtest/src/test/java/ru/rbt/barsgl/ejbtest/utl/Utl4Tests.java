@@ -12,6 +12,7 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
 
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Supplier;
@@ -24,26 +25,61 @@ public class Utl4Tests {
 
     private static final Logger logger = Logger.getLogger(Utl4Tests.class.getName());
 
+
+    private static Date parseDate(String date, String format){
+
+        SimpleDateFormat formatter = new SimpleDateFormat(format);
+        try {
+            return formatter.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static void deleteGlAccountWithLinks(BaseEntityRepository baseEntityRepository, String keysString) {
         final String dateStartGl = "'2015-02-25'";
+        Date date = parseDate("25.02.2015", "dd.MM.yyyy");
+
         try {
             AccountKeys keys = new AccountKeys(keysString);
-            int cntAcc = baseEntityRepository.executeNativeUpdate(
+           /* int cntAcc = baseEntityRepository.executeNativeUpdate(
                     "delete from ACC where ID in (select ACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
                             " and DACO >= " +  dateStartGl
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());
-            int cntAccRln = baseEntityRepository.executeNativeUpdate(
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());*/
+
+            int cntAcc = baseEntityRepository.executeNativeUpdate(
+                    "delete from ACC where ID in (select ACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
+                            " and DACO >= ?"
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency(), date);
+
+
+
+            /*int cntAccRln = baseEntityRepository.executeNativeUpdate(
                     "delete from ACCRLN where BSAACID in (select BSAACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
                             " and DRLNO >= " +  dateStartGl
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());*/
+
+            int cntAccRln = baseEntityRepository.executeNativeUpdate(
+                    "delete from ACCRLN where BSAACID in (select BSAACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
+                            " and DRLNO >= ?"
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency(), date);
+
             // BALTUR ??
-            int cntBsaAcc = baseEntityRepository.executeNativeUpdate(
+           /* int cntBsaAcc = baseEntityRepository.executeNativeUpdate(
                     "delete from BSAACC where ID in (select BSAACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
                             " and BSAACO >= " +  dateStartGl
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());*/
+
+            int cntBsaAcc = baseEntityRepository.executeNativeUpdate(
+                    "delete from BSAACC where ID in (select BSAACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
+                            " and BSAACO >= ?"
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency(), date);
+
             int cntGlAcc = baseEntityRepository.executeNativeUpdate(
                     "delete from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?"
                     , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());
+
             logger.info("deleted from GL_ACC:" + cntGlAcc + "; ACC:" + cntAcc + "; ACCRLN:" + cntAccRln + "; BSAACC:" + cntBsaAcc);
         }finally {
 

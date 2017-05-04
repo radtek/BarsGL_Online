@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.*;
@@ -18,14 +18,14 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountCounterType;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountExcludeInterval;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountFrontPartController;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
+import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
+import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
-import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -56,8 +56,8 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
 
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
 
-    @BeforeClass
-    public static void  initClass() {
+    @Before
+    public void  initClass() {
         initCorrectOperday();
     }
 
@@ -905,8 +905,10 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         remoteAccess.invoke(EtlStructureMonitorTask.class, "processEtlPackage", pkg);
 
         GLOperation oper1 = getOperation(pst1.getId());
+        Assert.assertEquals(OperState.POST, oper1.getState());
         Assert.assertTrue(0 < oper1.getId());
         GLOperation oper2 = getOperation(pst2.getId());
+        Assert.assertEquals(OperState.POST, oper2.getState());
         Assert.assertTrue(0 < oper2.getId());
 
         GLAccount accountDr1 = getGLAccount(oper1.getAccountDebit());
