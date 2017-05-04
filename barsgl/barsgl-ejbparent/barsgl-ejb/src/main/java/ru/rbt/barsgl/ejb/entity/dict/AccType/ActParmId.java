@@ -6,6 +6,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Created by akichigi on 24.08.16.
@@ -77,5 +78,22 @@ public class ActParmId implements Serializable {
 
     public void setDtb(Date dtb) {
         this.dtb = dtb;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ActParmId actParmId = (ActParmId) o;
+        return Objects.equals(accType, actParmId.accType) &&
+                Objects.equals(cusType, actParmId.cusType) &&
+                Objects.equals(term, actParmId.term) &&
+                Objects.equals(acc2, actParmId.acc2) &&
+                Objects.equals(dtb, actParmId.dtb);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(accType, cusType, term, acc2, dtb);
     }
 }

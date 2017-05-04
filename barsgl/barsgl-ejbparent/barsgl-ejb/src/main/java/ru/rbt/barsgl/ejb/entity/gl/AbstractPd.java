@@ -354,7 +354,7 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     }
 
     public String getPref() {
-        return pref;
+        return StringUtils.isEmpty(pref) ? pref : pref.trim();
     }
 
     public String getOperReference() {

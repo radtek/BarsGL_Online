@@ -3,6 +3,7 @@ package ru.rbt.security.entity.access;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by Ivan Sevastyanov on 21.04.2016.
@@ -38,5 +39,19 @@ public class UserMenuActionRlnId implements Serializable {
 
     public void setMenuId(Integer menuId) {
         this.menuId = menuId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserMenuActionRlnId that = (UserMenuActionRlnId) o;
+        return Objects.equals(actionId, that.actionId) &&
+                Objects.equals(menuId, that.menuId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(actionId, menuId);
     }
 }

@@ -6,6 +6,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Created by Ivan Sevastyanov on 11.02.2016.
@@ -34,5 +35,19 @@ public class GLBalanceExcludeId implements Serializable {
 
     public void setDtFrom(Date dtFrom) {
         this.dtFrom = dtFrom;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GLBalanceExcludeId that = (GLBalanceExcludeId) o;
+        return Objects.equals(bsaacid, that.bsaacid) &&
+                Objects.equals(dtFrom, that.dtFrom);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bsaacid, dtFrom);
     }
 }

@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.entity.lg;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by Ivan Sevastyanov on 18.10.2016.
@@ -46,5 +47,19 @@ public class LongRunningTaskStepId implements Serializable {
                 "idStepPattern=" + idStepPattern +
                 ", idHistory=" + idHistory +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LongRunningTaskStepId that = (LongRunningTaskStepId) o;
+        return Objects.equals(idStepPattern, that.idStepPattern) &&
+                Objects.equals(idHistory, that.idHistory);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(idStepPattern, idHistory);
     }
 }
