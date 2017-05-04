@@ -13,7 +13,6 @@ import javax.persistence.NoResultException;
 import java.sql.SQLException;
 
 import static java.lang.String.format;
-import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**

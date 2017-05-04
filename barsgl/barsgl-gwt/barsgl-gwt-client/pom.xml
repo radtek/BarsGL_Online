@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl-gwt</artifactId>
-        <version>3.0.18-SNAPSHOT</version>
+        <version>3.0.22-SNAPSHOT</version>
     </parent>
 
     <build>
@@ -114,6 +114,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>rbt-shared</artifactId>
         </dependency>
+        
     </dependencies>
 
 

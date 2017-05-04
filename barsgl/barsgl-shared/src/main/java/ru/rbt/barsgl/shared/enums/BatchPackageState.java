@@ -20,6 +20,7 @@ public enum BatchPackageState implements HasLabel {
     , IS_REFUSEDATE(HAND2, "Возвращен", "возвращен без подтверждения даты проводки %s")
     , IS_ERRSRV(HAND2, "Ошибка сервиса", "ошибка обращения к сервису движений. Обработка прервана %s")
     , ON_WAITDATE(HAND3, "Подтвердить дату", "передан на подтверждение даты проводки %s")
+    , IS_CLICKDATE(HAND3, "Дата подтверждена предварительно", "подписан с подтверждением даты проводки %s \nпакет отправлен на обработку")
     , IS_SIGNEDDATE(HAND3, "Дата подтверждена", "подписан с подтверждением даты проводки %s \nпакет отправлен на обработку")
     , IS_CONFIRM(HAND3, "Дата подтверждена", "подтверждена дата проводки %s \nпакет отправлен на обработку")
     , IS_WORKING(HAND4, "Обрабатывается", "обрабатывается %s")
@@ -60,6 +61,7 @@ public enum BatchPackageState implements HasLabel {
             case WAITSRV:       return ON_WAITSRV;
             case OKSRV:         return ON_WAITSRV;
             case WAITDATE:      return ON_WAITDATE;
+            case CLICKDATE:     return IS_CLICKDATE;
             case SIGNEDDATE:    return IS_SIGNEDDATE;
             case CONFIRM:       return IS_CONFIRM;
             case WORKING:       return IS_WORKING;

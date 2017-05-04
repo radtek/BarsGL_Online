@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.server.rpc.sync;
 
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;

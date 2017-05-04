@@ -9,7 +9,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl-ejbparent</artifactId>
-        <version>3.0.18-SNAPSHOT</version>
+        <version>3.0.22-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -21,6 +21,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>rbt-ejbcore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-prop</artifactId>
+            <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
@@ -54,11 +59,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ejb-plugin</artifactId>
+                <version>2.5.1</version>
                 <configuration>
                     <ejbVersion>3.2</ejbVersion>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
+    
 </project>

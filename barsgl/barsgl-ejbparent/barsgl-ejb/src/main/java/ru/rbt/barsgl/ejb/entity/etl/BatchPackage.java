@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.etl;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 
 import javax.persistence.*;

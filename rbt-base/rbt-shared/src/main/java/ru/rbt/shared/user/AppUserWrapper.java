@@ -1,18 +1,16 @@
-/*
- * ООО "Артком Системы" & "3G Banking Technologies" 2017
- */
 package ru.rbt.shared.user;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import ru.rbt.shared.enums.UserExternalType;
 import ru.rbt.shared.enums.UserLocked;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+
 /**
- *
- * @author Andrew Samsonov
+ * Created by ER18837 on 29.09.15.
  */
 public class AppUserWrapper implements Serializable {
+
     private Long id;
     private String userName;
     private String userPassword;
@@ -25,6 +23,7 @@ public class AppUserWrapper implements Serializable {
     private String branch;  // TODO: deptId - Подразделение
     private String closeDateStr; //Date
     private String pwdMD5;
+    private String errorListProcPermit;
 
     private ArrayList<String> grantedHeadBranches;
     private ArrayList<String> grantedSources;
@@ -139,5 +138,13 @@ public class AppUserWrapper implements Serializable {
 
     public void setCloseDateStr(String closeDateStr) {
         this.closeDateStr = closeDateStr;
-    }  
+    }
+
+    public String getErrorListProcPermit() {
+        return errorListProcPermit;
+    }
+
+    public void setErrorListProcPermit(String errorListProcPermit) {
+        this.errorListProcPermit = errorListProcPermit;
+    }
 }

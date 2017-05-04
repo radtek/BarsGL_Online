@@ -1,5 +1,6 @@
 package ru.rbt.tasks.gwt.server.rpc.job;
 
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CacheController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
@@ -9,7 +10,6 @@ import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 
 /**

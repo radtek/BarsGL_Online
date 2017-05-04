@@ -118,16 +118,20 @@ public abstract class DlgFrame {
         cancel.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                dlg.hide();
-                if (afterCancelEvent != null){
-                    afterCancelEvent.afterCancel();
-                }
+                onCancelClick();
             }
         });
 
         cancel.addStyleName("dlg-button");
 
         return cancel;
+    }
+
+    protected void onCancelClick(){
+        dlg.hide();
+        if (afterCancelEvent != null){
+            afterCancelEvent.afterCancel();
+        }
     }
 
     public void show() {

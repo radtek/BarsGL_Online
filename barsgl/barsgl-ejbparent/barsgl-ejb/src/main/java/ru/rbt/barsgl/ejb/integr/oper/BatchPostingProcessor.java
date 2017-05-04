@@ -18,7 +18,7 @@ import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
@@ -393,7 +393,7 @@ public class BatchPostingProcessor extends ValidationAwareHandler<ManualOperatio
             throw new ValidationError(DATE_AFTER_OPERDAY, fieldName,
                     dateUtils.onlyDateString(checkDate),
                     dateUtils.onlyDateString(currentDate));
-        } else if (checkHoliday && !calendarDayRepository.isWorkday(checkDate)) {
+        } else if (checkHoliday && !calendarDayRepository.isWorkdayWithTech(checkDate)) {
             // TODO проверка на выходные
             throw new ValidationError(DATE_IS_HOLIDAY, fieldName,
                     dateUtils.onlyDateString(checkDate));

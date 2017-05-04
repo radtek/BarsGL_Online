@@ -16,7 +16,6 @@ import ru.rbt.barsgl.gwt.server.rpc.properties.PropertiesService;
 import ru.rbt.barsgl.gwt.server.rpc.properties.PropertiesServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncService;
 import ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncServiceAsync;
-
 import ru.rbt.barsgl.gwt.client.formmanager.MenuBuilder;
 
 import ru.rbt.security.gwt.client.security.SecurityEntryPoint;

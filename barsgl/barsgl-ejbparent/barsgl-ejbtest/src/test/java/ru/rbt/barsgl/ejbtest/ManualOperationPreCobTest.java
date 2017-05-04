@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.PreCobBatchPostingTask;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
@@ -146,7 +146,7 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
         Assert.assertEquals(BatchPostStatus.WAITSRV, posting6.getStatus());
 
         // запустить обработку PreCob
-        remoteAccess.invoke(ExecutePreCOBTask.class, "processUnprocessedBatchPostings");
+        remoteAccess.invoke(ExecutePreCOBTaskNew.class, "processUnprocessedBatchPostings");
 
         // проверить статусы и видимость снова
         posting1 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper1.getId());

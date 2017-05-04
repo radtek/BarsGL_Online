@@ -4,7 +4,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>3.0.18-SNAPSHOT</version>
+        <version>3.0.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>barsgl-ear</artifactId>
@@ -53,13 +53,17 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>tasks-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>rbt-audit</artifactId>
                                     <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -173,13 +177,17 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>tasks-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>rbt-audit</artifactId>
                                     <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -259,7 +267,7 @@
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/barsgl/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 
@@ -290,7 +298,6 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>security-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>security-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
@@ -301,13 +308,17 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>tasks-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>rbt-audit</artifactId>
                                     <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -385,7 +396,7 @@
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 
@@ -470,13 +481,17 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>tasks-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>tasks-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>rbt-audit</artifactId>
                                     <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
@@ -534,11 +549,11 @@
                             </modules>
 
                             <env-entries>
-                                <env-entry>
-                                    <env-entry-name>java:app/env/SchedTableName</env-entry-name>
-                                    <env-entry-type>java.lang.String</env-entry-type>
-                                    <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
-                                </env-entry>
+                              <env-entry>
+                                  <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                              </env-entry>
 
                               <env-entry>
                                   <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
@@ -550,14 +565,14 @@
                                   <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>jdbc/As400Rep</env-entry-value>
-                              </env-entry>                                                                
+                              </env-entry>
                             </env-entries>
 
                             <ejbRefs>
-                                <ejb-ref>
-                                    <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                    <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
-                                </ejb-ref>
+                              <ejb-ref>
+                                  <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                              </ejb-ref>
                             </ejbRefs>
 
                         </configuration>
@@ -652,6 +667,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>rbt-shared</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-prop</artifactId>
+            <type>ejb</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

@@ -6,7 +6,7 @@ package ru.rbt.barsgl.ejb.repository.dict;
 
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
-import ru.rbt.barsgl.ejbcore.repository.AbstractCachedRepository;
+import ru.rbt.ejbcore.repository.AbstractCachedRepository;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.AccessTimeout;

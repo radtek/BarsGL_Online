@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;

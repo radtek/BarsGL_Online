@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by Ivan Sevastyanov
@@ -13,11 +14,14 @@ public class DateUtils {
     private final static SimpleDateFormat databaseDate = new SimpleDateFormat("yyyy-MM-dd");
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
     private final SimpleDateFormat fullDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss SSS z Z");
-
+    private final static SimpleDateFormat timeDate = new SimpleDateFormat("dd.MM.yy HH:mm:ss.SSS");
     static public Date addDay(Date d, int days){
         return new Date(d.getTime() + (1000 * 60 * 60 * 24 * days));
     }
 
+    public static String dateTimeString(Date d){
+        return timeDate.format(d);
+    }
     /**
      * преобразование даты в строку yyyy-MM-dd
      * @param from дата
@@ -69,4 +73,27 @@ public class DateUtils {
     public static Date addSeconds(Date date, int seconds) {
         return org.apache.commons.lang3.time.DateUtils.addSeconds(date, seconds);
 }
+
+    public static String formatElapsedTimeOver24h(long milliseconds) {
+
+        // Compiler will take care of constant arithmetics
+        if (24 * 60 * 60 * 1000 > milliseconds) {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            return sdf.format(milliseconds);
+
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat(":mm:ss.SSS");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            // Keep long data type
+            // Compiler will take care of constant arithmetics
+            long hours = milliseconds / (60L * 60L * 1000L);
+
+            return hours + sdf.format(milliseconds);
+        }
+    }
+
+
 }

@@ -21,8 +21,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.time.DateUtils.parseDate;
-import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnload;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnloadBalDelta;
 

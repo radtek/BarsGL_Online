@@ -6,9 +6,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.grid.gwt.client.GridEntryPoint;
-import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -25,8 +23,10 @@ import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import java.util.*;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 
 /**
  * Форма для управления загрузчиком BARSGL/BARSREP

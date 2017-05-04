@@ -158,7 +158,7 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
                 return false;
             }
         }
-        auditController.info(BufferModeSyncTask, "Окончание синхронизации проводок");
+        auditController.info(BufferModeSyncTask, "Синхронизация проводок завершена успешно");
         return true;
     }
 

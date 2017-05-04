@@ -9,7 +9,7 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
 import ru.rbt.ejbcore.datarec.JdbcAdapter;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;

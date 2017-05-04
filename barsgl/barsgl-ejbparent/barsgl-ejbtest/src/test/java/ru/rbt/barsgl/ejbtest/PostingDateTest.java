@@ -14,8 +14,8 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
 
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.N;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.N;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
  * Created by Ivan Sevastyanov

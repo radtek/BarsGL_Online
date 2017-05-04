@@ -4,7 +4,7 @@
   <parent>
     <artifactId>rbt-base</artifactId>
     <groupId>ru.rbt</groupId>
-    <version>1.0.0</version>
+    <version>1.0.0.ora</version>
   </parent>
     
   <artifactId>rbt-ejbcore</artifactId>
@@ -16,11 +16,12 @@
   </properties>
 
   <dependencies>
+    <!--synchronized with wls 12.2 oracle driver-->
     <dependency>
-      <groupId>oracle112</groupId>
-      <artifactId>jdbc.driver</artifactId>
-      <version>11.2</version>
-      <systemPath>${project.basedir}/../lib/ojdbc5.jar</systemPath>
+      <groupId>com.oracle.jdbc</groupId> 
+      <artifactId>ojdbc7</artifactId> 
+      <version>12.1.0.2</version>
+      <systemPath>${project.basedir}/../lib/ojdbc7.jar</systemPath>
       <scope>system</scope>
     </dependency>
     <dependency>
@@ -30,6 +31,11 @@
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>18.0</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

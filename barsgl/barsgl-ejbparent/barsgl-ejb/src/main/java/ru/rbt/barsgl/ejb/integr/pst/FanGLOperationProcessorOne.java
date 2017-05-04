@@ -7,7 +7,7 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import java.util.Collections;
 import java.util.List;
 
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
  * Created by Ivan Sevastyanov

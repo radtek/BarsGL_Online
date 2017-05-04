@@ -372,6 +372,16 @@ public class GLComponents {
         return list;
     }
 
+    public static <T extends Enum & HasLabel> HashMap<Serializable, String> getArrayLabelsList(T[] values, boolean withEmpty){
+        HashMap<Serializable, String> list = new HashMap<Serializable, String>();
+        if (withEmpty)
+            list.put("", "");
+        for (T value: values){
+            list.put(value.toString(), value.name()+ " (" + value.getLabel() + ")");
+        }
+        return list;
+    }
+
     public static HashMap<Serializable, String> getPostingTypeList(){
         HashMap<Serializable, String> list = new HashMap<Serializable, String>();
         for (PostingType postingType: PostingType.values()){

@@ -21,6 +21,7 @@ public class CommonEntryPoint implements EntryPoint {
   public static MonitorServiceAsync monitorService;
 
   public static Date CURRENT_WORKDAY;
+  public static Date CURRENT_OPER_DAY;
   
   @Override
   public void onModuleLoad() {

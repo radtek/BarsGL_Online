@@ -22,6 +22,7 @@ import java.util.HashMap;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by Ivan Sevastyanov

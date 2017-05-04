@@ -5,7 +5,8 @@ import ru.rbt.barsgl.ejb.entity.dict.AccType.*;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.integr.dict.BaseDictionaryController;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.*;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.shared.security.RequestContext;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.dict.AccTypeWrapper;
@@ -19,7 +20,6 @@ import java.util.Date;
 
 import static java.lang.String.format;
 import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
-import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by akichigi on 24.08.16.

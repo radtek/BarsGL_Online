@@ -4,8 +4,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
-import java.math.BigDecimal;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.tasks.gwt.client.TimerEntryPoint;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -28,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
-import ru.rbt.tasks.gwt.client.TimerEntryPoint;
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 /**
  * Created by Ivan Sevastyanov
@@ -107,7 +106,7 @@ public class TasksFormNew extends GridForm {
 
                 TimerJobWrapper timerJobs = new TimerJobWrapper();
 
-                timerJobs.setId(((BigDecimal)row.getField(0).getValue()).longValue());
+                timerJobs.setId((Long) row.getField(0).getValue());
                 timerJobs.setProperties((String)row.getField(2).getValue());
 
                 timerJobs.setStartupType(JobStartupType.valueOf(row.getField(5).getValue().toString()));
@@ -157,7 +156,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.startupJob(((BigDecimal)row.getField(0).getValue()).longValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.startupJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -190,7 +189,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.shutdownJob(((BigDecimal)row.getField(0).getValue()).longValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.shutdownJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -289,7 +288,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.executeJob(((BigDecimal)row.getField(0).getValue()).longValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.executeJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();

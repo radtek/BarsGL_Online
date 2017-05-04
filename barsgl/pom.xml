@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.rbt</groupId>
     <artifactId>barsgl</artifactId>
-    <version>3.0.18-SNAPSHOT</version>
+    <version>3.0.22-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
@@ -10,8 +10,8 @@
         <module>barsgl-common</module>
         <module>security</module>
         <module>barsgl-testjavadoc</module>
-        <module>tasks</module>
         <module>grid</module>
+        <module>tasks</module>
     </modules>
 
     <properties>
@@ -390,28 +390,34 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>rbt-audit</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.0.ora</version>
                 <type>ejb</type>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>rbt-shared</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.0.ora</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>rbt-ejbcore</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.0.ora</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>rbt-prop</artifactId>
+                <version>1.0.0.ora</version>
+                <type>ejb</type>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>security-jpa</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.0.ora</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>security-ejb</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.0.ora</version>
                 <type>ejb</type>
             </dependency>
         </dependencies>

@@ -6,26 +6,27 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.fan.FanProcessorStorage;
 import ru.rbt.barsgl.ejb.integr.fan.FanOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.security.GLErrorController;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.FanOperation;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -45,6 +46,12 @@ public abstract class FanOperationController implements GLOperationController <S
 
     @EJB
     private FanProcessorStorage processorStorage;
+
+    @EJB
+    private AuditController auditController;
+
+    @EJB
+    private GLErrorController errorController;
 
     public abstract YesNo getStorno();
 
@@ -130,25 +137,52 @@ public abstract class FanOperationController implements GLOperationController <S
 
     protected void operationErrorMessage(Throwable e, String msg, GLOperation operation, OperState state, String source) {
         try {
+            auditController.error(FanOperation, msg, operation, e);
             glOperationRepository.executeInNewTransaction(persistence -> {
-                final String errorMessage = format("%s '%s': %s. Обнаружена: %s\n'", msg, operation.getId(), getErrorMessage(e), source);
+                final String errorMessage = format("%s: \n%s Обнаружена: %s", msg, getErrorMessage(e), source);
                 log.error(errorMessage, e);
-                glOperationRepository.updateOperationStatusError(operation, state, substr(errorMessage, 4000));
+                glOperationRepository.updateOperationStatusError(operation, state, errorMessage);
                 return null;
             });
+            errorController.error(msg, operation, e);
         } catch (Exception e1) {
             throw new DefaultApplicationException(e.getMessage(), e1);
         }
     }
 
-    protected void operationFanErrorMessage(Throwable e, String msg, String parentRef, YesNo storno, OperState state, String source) {
+    public void operationFanErrorMessage(Throwable e, String msg, List<GLOperation> operList, String parentRef, YesNo storno, OperState state, String source) {
         try {
+            final List<GLOperation> opList = (null != operList) ? operList :
+                    glOperationRepository.getFanOperationByRef(parentRef, storno);
+            auditController.error(FanOperation, msg, (null != opList && opList.size() > 0) ? opList.get(0) : null, e);   // TODO
             glOperationRepository.executeInNewTransaction(persistence -> {
-                final String errorMessage = format("%s '%s': %s. Обнаружена: %s\n'", msg, parentRef, getErrorMessage(e), source);
+                final String errorMessage = format("%s: \n%s Обнаружена: %s\n'", msg, getErrorMessage(e), source);
                 log.error(errorMessage, e);
                 glOperationRepository.updateOperationFanStatusError(parentRef, storno, state, substr(errorMessage, 4000));
                 return null;
             });
+            for (GLOperation operation : opList) {
+                errorController.error(msg, operation, e);
+            }
+        } catch (Exception e1) {
+            throw new DefaultApplicationException(e.getMessage(), e1);
+        }
+    }
+
+    public void fanErrorMessage(Throwable e, String msg, List<GLOperation> operList, String parentRef, YesNo storno, OperState state, String source) {
+        try {
+            final List<GLOperation> opList = (null != operList) ? operList :
+                    glOperationRepository.getFanOperationByRef(parentRef, storno);
+            auditController.error(FanOperation, msg, (null != opList && opList.size() > 0) ? opList.get(0) : null, e);   // TODO
+            glOperationRepository.executeInNewTransaction(persistence -> {
+                final String errorMessage = format("%s: \n%s Обнаружена: %s\n'", msg, getErrorMessage(e), source);
+                log.error(errorMessage, e);
+                glOperationRepository.updateOperationFanStatusError(parentRef, storno, state, substr(errorMessage, 4000));
+                return null;
+            });
+            for (GLOperation operation : opList) {
+                errorController.error(msg, operation, e);
+            }
         } catch (Exception e1) {
             throw new DefaultApplicationException(e.getMessage(), e1);
         }

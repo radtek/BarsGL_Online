@@ -17,7 +17,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay.HolidayFlag.X;
 public class BankCalendarDay extends BaseEntity<BankCalendarDayId>{
 
     public enum HolidayFlag {
-        X
+        X, T
     }
 
     @EmbeddedId
@@ -25,6 +25,9 @@ public class BankCalendarDay extends BaseEntity<BankCalendarDayId>{
 
     @Column(name = "HOL")
     private String holiday;
+
+    @Column(name = "THOL")
+    private String techHoliday;
 
     @Override
     public BankCalendarDayId getId() {
@@ -46,5 +49,13 @@ public class BankCalendarDay extends BaseEntity<BankCalendarDayId>{
 
     public boolean isHoliday() {
         return X.name().equals(this.holiday);
+    }
+
+    public String getTechHoliday() {
+        return techHoliday;
+    }
+
+    public void setTechHoliday(String techHoliday) {
+        this.techHoliday = techHoliday;
     }
 }

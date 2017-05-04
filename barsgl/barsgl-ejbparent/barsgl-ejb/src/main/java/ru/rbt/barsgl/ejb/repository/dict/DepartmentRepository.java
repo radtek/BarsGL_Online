@@ -4,8 +4,6 @@
  */
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import ru.rbt.barsgl.ejb.entity.dict.Department;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 

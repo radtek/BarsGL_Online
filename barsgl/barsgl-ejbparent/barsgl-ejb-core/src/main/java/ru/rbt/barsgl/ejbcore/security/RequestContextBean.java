@@ -11,6 +11,7 @@ import ru.rbt.shared.security.RequestContext;
 /**
  * Created by Ivan Sevastyanov on 20.02.2016.
  */
+
 @Singleton(name = "ApplicationRequestContext")
 @Lock(LockType.READ)
 public class RequestContextBean implements RequestContext {

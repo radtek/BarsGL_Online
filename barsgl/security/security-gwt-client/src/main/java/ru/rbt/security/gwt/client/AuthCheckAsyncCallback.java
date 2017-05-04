@@ -2,7 +2,6 @@ package ru.rbt.security.gwt.client;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
-//import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 
 /**

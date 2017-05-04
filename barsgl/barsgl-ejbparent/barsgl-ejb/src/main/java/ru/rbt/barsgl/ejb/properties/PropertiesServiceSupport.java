@@ -3,7 +3,7 @@
  */
 package ru.rbt.barsgl.ejb.properties;
 
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;

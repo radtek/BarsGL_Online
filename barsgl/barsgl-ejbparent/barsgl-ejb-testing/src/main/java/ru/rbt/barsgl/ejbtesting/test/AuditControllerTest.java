@@ -1,14 +1,14 @@
 package ru.rbt.barsgl.ejbtesting.test;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import ru.rbt.audit.entity.AuditRecord;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 

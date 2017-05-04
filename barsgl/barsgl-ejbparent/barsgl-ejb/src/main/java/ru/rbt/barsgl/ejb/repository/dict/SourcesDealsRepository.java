@@ -8,8 +8,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.*;
 
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
-import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.repository.AbstractCachedRepository;
+import ru.rbt.ejbcore.repository.AbstractCachedRepository;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

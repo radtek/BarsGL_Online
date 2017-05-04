@@ -91,7 +91,7 @@ public class OperdayController {
 
     @Lock(WRITE)
     public void setPreCOB() throws Exception {
-        Assert.isTrue(ONLINE == operday.getPhase());
+        Assert.isTrue(ONLINE == operday.getPhase(), "Операционный день не в статусе 'ONLINE'!");
         repository.updateOperdayPhase(PRE_COB);
         init();
     }

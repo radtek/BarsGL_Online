@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -50,9 +49,6 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
 
     @Inject
     private TextResourceController textResourceController;
-
-//    @Inject
-//    private ExecutePreCOBTask preCOBTask;
 
     @EJB
     private OperdaySynchronizationController synchronizationController;

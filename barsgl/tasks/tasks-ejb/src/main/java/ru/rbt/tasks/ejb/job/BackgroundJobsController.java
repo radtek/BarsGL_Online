@@ -15,6 +15,7 @@ import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
 import javax.ejb.AccessTimeout;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -22,7 +23,6 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import javax.inject.Inject;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.JobControl;
 
 /**

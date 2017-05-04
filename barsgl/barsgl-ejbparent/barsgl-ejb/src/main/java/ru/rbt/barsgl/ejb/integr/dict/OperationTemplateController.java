@@ -5,7 +5,8 @@ import ru.rbt.barsgl.ejb.entity.dict.OperationTemplate;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.dict.OperationTemplateRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.shared.security.RequestContext;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.shared.ctx.UserRequestHolder;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import static java.lang.String.format;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
-import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by ER18837 on 17.03.16.

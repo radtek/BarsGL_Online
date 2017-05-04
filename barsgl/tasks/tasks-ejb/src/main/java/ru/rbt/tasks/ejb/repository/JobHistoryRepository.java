@@ -35,6 +35,12 @@ public class JobHistoryRepository extends AbstractBaseEntityRepository<JobHistor
                 , taskName, operday, DwhUnloadStatus.STARTED);
     }
 
+    public boolean isAlreadyRunning(String taskName, Long idHist, Date operday) {
+        return null != selectFirst(JobHistory.class
+                , "from JobHistory h where h.jobName = ?1 and h.id != ?2 and h.operday = ?3 and h.result = ?4"
+                , taskName, idHist, operday, DwhUnloadStatus.STARTED);
+    }
+
     public JobHistory createHeader(String jobName, Date operday) {
         JobHistory hist = new JobHistory(jobName, operday);
         hist.setStarttime(operdayController.getSystemDateTime());

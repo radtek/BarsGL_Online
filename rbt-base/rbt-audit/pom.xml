@@ -4,7 +4,7 @@
   <parent>
     <artifactId>rbt-base</artifactId>
     <groupId>ru.rbt</groupId>
-    <version>1.0.0</version>
+    <version>1.0.0.ora</version>
   </parent>
 
   <groupId>ru.rbt</groupId>
@@ -22,7 +22,7 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>rbt-ejbcore</artifactId>
-      <version>1.0.0</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>javax</groupId>

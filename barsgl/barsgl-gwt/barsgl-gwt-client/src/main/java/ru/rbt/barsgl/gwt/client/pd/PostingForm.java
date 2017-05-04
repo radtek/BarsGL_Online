@@ -5,27 +5,31 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.grid.gwt.client.export.Export2Excel;
+import ru.rbt.grid.gwt.client.export.ExportActionCallback;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -71,6 +75,7 @@ public class PostingForm extends MDForm {
         masterActionBar.addAction(createPreview());
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
+//        masterActionBar.addAction(BackValuePostingReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
@@ -136,16 +141,16 @@ public class PostingForm extends MDForm {
 
         result.addColumn(col = new Column("POST_TYPE", STRING, "Тип проводки", 40, false, false));
         col.setList(getPostingTypeList());
-        result.addColumn(new Column("PCID", LONG, "ID проводки", 80));
+        result.addColumn(new Column("PCID", LONG, "ID проводки", 100));
         idDrIndex = result.addColumn(new Column("ID_DR", LONG, "ID полупроводки ДБ", 80, false, false));
         idCrIndex = result.addColumn(new Column("ID_CR", LONG, "ID полупроводки КР", 80, false, false));
 
         invisibleIndex = result.addColumn(col = new Column("INVISIBLE", STRING, "Отменена", 40));
         col.setList(yesNoList);
-        result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 60));
-        result.addColumn(new Column("PBR", STRING, "Система-источник", 80, false, false));
+        result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 80));
+        result.addColumn(new Column("PBR", STRING, "Система-источник", 100, false, false));
         result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
-        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120));
+        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 180));
         result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 120, false, false));
         result.addColumn(new Column("PREF", STRING, "ИД сделки/ платежа", 120));
         result.addColumn(colProcDate = new Column("PROCDATE", DATE, "Дата опердня", 80));
@@ -155,7 +160,7 @@ public class PostingForm extends MDForm {
         podIndex = result.addColumn(colPostDate = new Column("POSTDATE", DATE, "Дата проводки", 80));
         colPostDate.setFormat("dd.MM.yyyy");
 
-        result.addColumn(new Column("ACID_DR", STRING, "Счет Midas ДБ", 160));
+        result.addColumn(new Column("ACID_DR", STRING, "Счет Midas ДБ", 170));
         result.addColumn(new Column("BSAACID_DR", STRING, "Счет ДБ", 160));
         result.addColumn(new Column("CBCC_DR", STRING, "Филиал ДБ (счет)", 60, false, false));
         result.addColumn(new Column("FILIAL_DR", STRING, "Филиал ДБ (опер)", 60, false, false));
@@ -163,7 +168,7 @@ public class PostingForm extends MDForm {
         result.addColumn(new Column("AMT_DR", DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("AMTRU_DR", DECIMAL, "Сумма в руб. ДБ", 100));
 
-        result.addColumn(new Column("ACID_CR", STRING, "Счет Midas КР", 160));
+        result.addColumn(new Column("ACID_CR", STRING, "Счет Midas КР", 170));
         result.addColumn(new Column("BSAACID_CR", STRING, "Счет КР", 160));
         result.addColumn(new Column("CBCC_CR", STRING, "Филиал КР (счет)", 60, false, false));
         result.addColumn(new Column("FILIAL_CR", STRING, "Филиал КР (опер)", 60, false, false));
@@ -442,4 +447,59 @@ public class PostingForm extends MDForm {
             }
             WaitingManager.hide();
         }
-    }}
+    }
+
+
+    private GridAction BackValuePostingReport() {
+        return new GridAction(masterGrid, null, "Отчет по Back Value", new Image(ImageConstants.INSTANCE.report()), 5) {
+
+            DateDlg dlg = null;
+            GridAction act = this;
+
+            @Override
+            public void execute() {
+                if (dlg == null) dlg = new DateDlg();
+                dlg.setDlgEvents(this);
+                dlg.setCaption("Выбор даты создания операций Back Value");
+                dlg.setDateLabel("Дата опердня создания операций Back Value");
+                dlg.show(null);
+            }
+
+            public void onDlgOkClick(Object prms){
+                dlg.hide();
+                final String data = (String) prms;
+                WaitingManager.show("Проверка наличия данных...");
+
+                BarsGLEntryPoint.operationService.operExists(data, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                        if (res.isError()) {
+                            WaitingManager.hide();
+                            DialogManager.message("Отчет", res.getMessage());
+                        } else {
+                            dlg.hide();
+                            WaitingManager.hide();
+                            setEnable(false);
+
+                            String user = "";
+                            AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+                            if (current_user != null){
+                                user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
+                            }
+
+                            ExcelExportHead head = new ExcelExportHead(Utils.Fmt("ОТЧЕТ по операциям BACK VALUE за {0}", data),
+                                    user, Utils.Fmt("дата проводки меньше {0}", data));
+
+                            Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(data), head,
+                                    new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
+                            e2e.export();
+                        }
+                    }
+                });
+            }
+        };
+    }
+
+}
+

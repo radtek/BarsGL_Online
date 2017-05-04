@@ -1,6 +1,5 @@
 package ru.rbt.security.gwt.client.security;
 
-//import ru.rbt.security.gwt.client.LoginFormHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
@@ -13,14 +12,13 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlexTable;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.ui.FieldTextBox;
 import ru.rbt.barsgl.gwt.core.ui.PasswordTextField;
 
 import java.util.Date;
-import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
-//import ru.rbt.security.gwt.formmanager.FormManagerUI;
 
 public class LoginForm {
 

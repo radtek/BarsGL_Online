@@ -14,7 +14,7 @@ import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;

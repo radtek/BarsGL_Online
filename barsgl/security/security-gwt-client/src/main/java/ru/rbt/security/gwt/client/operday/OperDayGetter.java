@@ -6,7 +6,7 @@ import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+//import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -18,12 +18,12 @@ public class OperDayGetter {
     public static final String dateFormat = "dd.MM.yyyy";
 
     public static void getOperday(final IDataConsumer<OperDayWrapper> consumer) {
-        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+ //       WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
         CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
             @Override
             public void onFailureOthers(Throwable throwable) {
-                WaitingManager.hide();
+//                WaitingManager.hide();
 
                 Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
             }
@@ -36,12 +36,13 @@ public class OperDayGetter {
 //                	final String od = res.getResult().getCurrentOD();
                     consumer.accept(res.getResult());
                 }
-                WaitingManager.hide();
+//                WaitingManager.hide();
             }
         });
 
     }
 
+    //@@@
     /*
     public static void getProcessingStatus(final IDataConsumer<ProcessingStatus> consumer) {
         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());

@@ -1,10 +1,10 @@
 package ru.rbt.security.policy;
 
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.security.ejb.repository.access.UserMenuRepository;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.LoginResult;
@@ -16,10 +16,11 @@ import javax.inject.Inject;
 import static java.lang.String.format;
 import java.util.ArrayList;
 import java.util.List;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Authorization;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.shared.enums.PrmValueEnum;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Authorization;
 
 /**
  * Created by Ivan Sevastyanov on 13.05.2016.
@@ -44,6 +45,9 @@ public abstract class LoginPolicy {
     @Inject
     private PrmValueRepository prmValueRepository;
 
+    @EJB
+    private PropertiesRepository propertiesRepository;
+    
     public final LoginResult login(String userName,String pasword) throws Exception {
         final AppUser user = userRepository.findUserByName(userName);
         if (null != user) {
@@ -83,8 +87,10 @@ public abstract class LoginPolicy {
         wrapper.setGrantedSources(granted.getGrantedSources());
         wrapper.setGrantedHeadBranches(granted.getGrantedHeadBranches());
 
+        wrapper.setErrorListProcPermit(propertiesRepository.getStringDef("list.err.proc.permit", "N"));
         return wrapper;
     }
+
 
     private LoginResult buildCommonLoginResult(AppUser user) {
         Assert.isTrue(user != null);

@@ -43,8 +43,8 @@ import static org.apache.commons.lang3.StringUtils.substring;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.ZERO;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.N;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.N;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteAccountByAcid;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 
