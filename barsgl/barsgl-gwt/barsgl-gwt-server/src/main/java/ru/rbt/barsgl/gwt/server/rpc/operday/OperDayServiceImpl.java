@@ -43,6 +43,21 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
     private static final int COB_DELAY_SEC = 3;
 
     @Override
+    public RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception {
+        return new RpcResProcessor<COB_OKWrapper>() {
+            @Override
+            protected RpcRes_Base<COB_OKWrapper> buildResponse() throws Throwable {
+                COB_OKWrapper cobOkWrapper = new COB_OKWrapper();
+                boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
+                if (!isAlreadyRunning){
+                    cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
+                }
+                return new RpcRes_Base<>(cobOkWrapper, false, "");
+            }
+        }.process();
+    }
+
+    @Override
     public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
         return new RpcResProcessor<OperDayWrapper>() {
             @Override
@@ -86,10 +101,10 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
                 wrapper.setEnabledButton(buttonStatus);
 
                 boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
-                if (!isAlreadyRunning){
-                    COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
-                    wrapper.setCobOkWrapper(cobOkWrapper);
-                }
+//                if (!isAlreadyRunning){
+//                    COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
+//                    wrapper.setCobOkWrapper(cobOkWrapper);
+//                }
                 wrapper.setIsCOBRunning(isAlreadyRunning);
                 return new RpcRes_Base<>(wrapper, false, "");
             }
