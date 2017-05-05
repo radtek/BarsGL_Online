@@ -91,7 +91,7 @@
     </target>-->
 
     <target name="build-gwt-war">
-        <exec executable="cmd" dir=".">
+        <exec executable="cmd" dir="." failonerror="true">
             <arg line="/A /C build-gwt-war.bat"/>
         </exec>
     </target>

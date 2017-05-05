@@ -43,11 +43,26 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
     @Override
     protected void additionalAction(OperDayWrapper wrapper) throws Exception {
         boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
-        if (!isAlreadyRunning){
-            COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
-            wrapper.setCobOkWrapper(cobOkWrapper);
-        }
+//        if (!isAlreadyRunning){
+//            COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
+//            wrapper.setCobOkWrapper(cobOkWrapper);
+//        }
         wrapper.setIsCOBRunning(isAlreadyRunning);
+    }
+      
+    @Override
+    public RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception {
+        return new RpcResProcessor<COB_OKWrapper>() {
+            @Override
+            protected RpcRes_Base<COB_OKWrapper> buildResponse() throws Throwable {
+                COB_OKWrapper cobOkWrapper = new COB_OKWrapper();
+                boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
+                if (!isAlreadyRunning){
+                    cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
+                }
+                return new RpcRes_Base<>(cobOkWrapper, false, "");
+            }
+        }.process();
     }
     
     @Override
