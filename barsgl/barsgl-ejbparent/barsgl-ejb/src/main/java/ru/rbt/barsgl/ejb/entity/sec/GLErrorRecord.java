@@ -11,10 +11,11 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_ERRORS")
+@SequenceGenerator(name = "GLErrorRecordIdSeq", sequenceName = "GL_ERRORS_SEQ", allocationSize = 1)
 public class GLErrorRecord extends BaseEntity<Long> {
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "GLErrorRecordIdSeq")
     private Long id;
 
     @Column(name = "PST_REF")
