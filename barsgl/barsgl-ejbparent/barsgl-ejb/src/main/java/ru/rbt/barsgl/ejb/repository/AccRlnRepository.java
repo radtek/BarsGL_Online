@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_RLN_INVALID;
 

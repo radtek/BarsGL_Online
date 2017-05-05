@@ -14,7 +14,7 @@ import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
