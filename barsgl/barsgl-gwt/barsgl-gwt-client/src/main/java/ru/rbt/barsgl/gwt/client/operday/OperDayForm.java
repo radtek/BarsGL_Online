@@ -150,20 +150,21 @@ public class OperDayForm extends BaseForm {
         return grid;
     }
 
-    private void setCOB_OKInfo(OperDayWrapper operDayWrapper){
+    private void setCOB_OKInfo(COB_OKWrapper wrapper){
         reason.setText("");
         vip.setText("");
         not_vip.setText("");
         vip_errors.setVisible(false);
 
-        COB_OKWrapper wrapper = operDayWrapper.getCobOkWrapper();
+//        COB_OKWrapper wrapper = operDayWrapper.getCobOkWrapper();
         if (wrapper == null) return;
 
         reason.setText(wrapper.getReason() == null ? "" : wrapper.getReason().toString());
-        vip.setText(wrapper.getVipCount() == null ? "" :
-                (wrapper.getVipCount() == 0 ? "0 (OK)" : wrapper.getVipCount().toString()));
+//        vip.setText(wrapper.getVipCount() == null ? "" :
+//                (wrapper.getVipCount() == 0 ? "0 (OK)" : wrapper.getVipCount().toString()));
+        vip.setText(wrapper.getVipCount() == null || wrapper.getVipCount() == 0 ? "0 (OK)" : wrapper.getVipCount().toString());
 
-        not_vip.setText(wrapper.getNotVipCount() == null ? "" :
+        not_vip.setText(wrapper.getNotVipCount() == null ? "0 (OK)" :
                 (wrapper.getNotVipCount() <= 10 ? Utils.Fmt("{0} (OK)", wrapper.getNotVipCount()) : wrapper.getNotVipCount().toString()));
 
         vip_errors.setVisible(wrapper.getState() != null && wrapper.getState() == 0);
@@ -177,7 +178,7 @@ public class OperDayForm extends BaseForm {
         pdMode.setText(operDayWrapper.getPdMode());
 
         setButtonsEnabled(operDayWrapper.getEnabledButton());
-        setCOB_OKInfo(operDayWrapper);
+//        setCOB_OKInfo(operDayWrapper);
     }
 
     private void setButtonsEnabled(OperDayButtons button){
@@ -191,13 +192,13 @@ public class OperDayForm extends BaseForm {
         return refreshAction = new Action(null, "Обновить", new Image(ImageConstants.INSTANCE.refresh24()), 5) {
             @Override
             public void execute() {
-//                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 //                WaitingManager.show("TEXT_CONSTANTS.waitMessage_Load()");
 
                 CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
-//                        WaitingManager.hide();
+                        WaitingManager.hide();
 
                         Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
                     }
@@ -209,9 +210,29 @@ public class OperDayForm extends BaseForm {
                         } else {
                             operDateRefresh(res.getResult());
                         }
+                        WaitingManager.hide();
+                    }
+                });
+
+                BarsGLEntryPoint.operDayService.getCOB_OK(new AuthCheckAsyncCallback<RpcRes_Base<COB_OKWrapper>>() {
+                    @Override
+                    public void onFailureOthers(Throwable throwable) {
+//                        WaitingManager.hide();
+
+                        Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<COB_OKWrapper > res) {
+                        if (res.isError()) {
+                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                        } else {
+                            setCOB_OKInfo(res.getResult());
+                        }
 //                        WaitingManager.hide();
                     }
                 });
+
             }
         };
     }

@@ -5,13 +5,14 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
+import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 /**
  * Created by akichigi on 23.03.15.
  */
 public interface OperDayServiceAsync {
-//     void getOperDay(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);
+     void getCOB_OK(AsyncCallback<RpcRes_Base<COB_OKWrapper>> callback);
      void runCloseLastWorkdayBalanceTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
      void runOpenOperdayTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
      void swithPdMode(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);

@@ -19,7 +19,7 @@ public class OperDayWrapper implements Serializable {
     private Date previosODDate;
 
     private OperDayButtons enabledButton;
-    private COB_OKWrapper cobOkWrapper;
+//    private COB_OKWrapper cobOkWrapper;
     private Boolean isCOBRunning;
 
     public OperDayButtons getEnabledButton() {
@@ -94,13 +94,13 @@ public class OperDayWrapper implements Serializable {
         this.previosODDate = previosODDate;
     }
 
-    public COB_OKWrapper getCobOkWrapper() {
-        return cobOkWrapper;
-    }
-
-    public void setCobOkWrapper(COB_OKWrapper cobOkWrapper) {
-        this.cobOkWrapper = cobOkWrapper;
-    }
+//    public COB_OKWrapper getCobOkWrapper() {
+//        return cobOkWrapper;
+//    }
+//
+//    public void setCobOkWrapper(COB_OKWrapper cobOkWrapper) {
+//        this.cobOkWrapper = cobOkWrapper;
+//    }
 
     public Boolean getIsCOBRunning() {
         return isCOBRunning;

@@ -22,8 +22,8 @@ public class AccountBalanceUnloadTest extends AbstractTimerJobTest {
     public void testFull() throws Exception {
         SingleActionJob job = SingleActionJobBuilder.create()
                 .withClass(AccountBalanceUnloadThree.class)
-                                  .withProps("operday=2016-03-12")
-                                  .build();
+                .withProps("operday=2016-03-12")
+                .build();
         jobService.executeJob(job);
     }
 }

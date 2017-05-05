@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 
 /**
  * Created by akichigi on 05.12.16.
@@ -86,7 +85,7 @@ public class Monitor extends BaseForm {
     }
 
     private HPanel makeReplPan(){
-        hRepl = new HPanel(616, 430){
+        hRepl = new HPanel(616, 530){
             public void handlerBody(ClickEvent event) {
                 hRepl.setButVisible(false);
                 getRepls();
@@ -97,7 +96,7 @@ public class Monitor extends BaseForm {
         setReplHeader("?", "?");
         dg = new DataGrid<ReplTableItem2>();
         dg.setWidth("616px");
-        dg.setHeight("400px");
+        dg.setHeight("500px");
         dg.setAutoHeaderRefreshDisabled(true);
 //      dg.setEmptyTableWidget(new Label("нет данных"));
         initTableCols(dg);
@@ -162,7 +161,7 @@ public class Monitor extends BaseForm {
         tb.addColumn(colWait, "Ожидание");
         tb.addColumn(colProc, "Обработанно");
         tb.addColumn(colErr, "Ошибки");
-        tb.addColumn(colSpeed, "Скорость(в сек))");
+        tb.addColumn(colSpeed, "Скорость(сек))");
         tb.addColumn(colRest, "Осталось");
     }
 
@@ -324,11 +323,11 @@ public class Monitor extends BaseForm {
         ft.setWidget(5, 0, new Label("Ост.время:"));
 
         ft.setWidget(1, 1, pd_Total = new Label());
-        ft.setWidget(2, 1, pd_Wait = new Label());
-        ft.setWidget(3, 1, pd_Moved = new Label());
+        ft.setWidget(2, 1, pd_Moved = new Label());
+        ft.setWidget(3, 1, pd_Wait = new Label());
         ft.setWidget(1, 2, blt_Total = new Label());
-        ft.setWidget(2, 2, blt_Wait = new Label());
-        ft.setWidget(3, 2, blt_Moved = new Label());
+        ft.setWidget(2, 2, blt_Moved = new Label());
+        ft.setWidget(3, 2, blt_Wait = new Label());
 
         ft.setWidget(4, 1, pdSpeed = new Label());
         ft.setWidget(5, 1, pdRest = new Label());
