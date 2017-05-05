@@ -8,11 +8,9 @@ import ru.rbt.barsgl.ejb.controller.operday.task.AccountOpenServiceTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
-import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
-import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
@@ -54,7 +52,7 @@ public class AccountOpenServiceTest extends AbstractRemoteTest {
         Assert.assertEquals(GLAccountRequest.RequestStatus.OK, request.getStatus());
         checkGlAccount(account, keys.toString());
         String error = checkResponce(request, account.getBsaAcid(), "Y");
-        Assert.assertEquals("", error);
+        Assert.assertNull(error);
         checkDefinedAccount(GLOperation.OperSide.N, account.getBsaAcid(), keys.toString());
     }
 
@@ -74,7 +72,7 @@ public class AccountOpenServiceTest extends AbstractRemoteTest {
         Assert.assertEquals(GLAccountRequest.RequestStatus.OK, request.getStatus());
         checkGlAccount(account, keys.toString());
         String error = checkResponce(request, account.getBsaAcid(), "Y");
-        Assert.assertEquals("", error);
+        Assert.assertNull(error);
         checkDefinedAccount(GLOperation.OperSide.N, account.getBsaAcid(), keys.toString());
 
         GLAccountRequest request2 = createAccountRequest("A02", "RUR", "00650143", "912020201", "8", "6",
@@ -103,7 +101,7 @@ public class AccountOpenServiceTest extends AbstractRemoteTest {
         Assert.assertEquals(GLAccountRequest.RequestStatus.OK, request.getStatus());
         checkGlAccount(account, keys.toString());
         String error = checkResponce(request, account.getBsaAcid(), "Y");
-        Assert.assertEquals("", error);
+        Assert.assertNull(error);
         checkDefinedAccount(GLOperation.OperSide.N, account.getBsaAcid(), keys.toString());
     }
 
@@ -182,11 +180,12 @@ public class AccountOpenServiceTest extends AbstractRemoteTest {
         request = (GLAccountRequest) baseEntityRepository.findById(GLAccountRequest.class, request.getId());
         Assert.assertEquals(GLAccountRequest.RequestStatus.OK, request.getStatus());
         String error = checkResponce(request, null, "N");
-        Assert.assertEquals("13", error);
+        Assert.assertEquals("1002", error);
     }
 
     @Test
     public void testAccountOpenServiceTask() throws SQLException {
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACOPENRQ where STATUS = 'NEW'");
         GLAccountRequest[] requests = new GLAccountRequest[12];
         requests[0] = createAccountRequest("A01", "RUR", "00118067", "161020100", "6", "9");
         requests[1] = createAccountRequest("A01", "USD", "00650143", "161020100", "6", "9");
@@ -283,8 +282,8 @@ public class AccountOpenServiceTest extends AbstractRemoteTest {
 
         request.setId("" + stamp);
         request.setBranchFlex(branch);
-        BankCurrency currency = remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", "RUR");
-        request.setCurrency(currency);
+//        BankCurrency currency = remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", "RUR");
+        request.setCurrency(ccy);
         request.setCustomerNumber(customerNumber);
         request.setAccountType(accountType);
         request.setCbCustomerType(custType);
@@ -296,8 +295,7 @@ public class AccountOpenServiceTest extends AbstractRemoteTest {
         request.setStatus(GLAccountRequest.RequestStatus.NEW);
         request = (GLAccountRequest)baseEntityRepository.save(request);
 
-        baseEntityRepository.executeNativeUpdate("update GL_ACOPENRQ set CCY = ? where REQUEST_ID = ?",
-                ccy, request.getId());
+//        baseEntityRepository.executeNativeUpdate("update GL_ACOPENRQ set CCY = ? where REQUEST_ID = ?", ccy, request.getId());
         return (GLAccountRequest) baseEntityRepository.findById(GLAccountRequest.class, request.getId());
     }
 

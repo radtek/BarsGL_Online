@@ -531,7 +531,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             }
             DataRecord data = selectFirst("select ID from GL_ACC where " +
                             "BRANCH = ? and CCY = ? and CUSTNO = ? and ACCTYPE = ?" +
-                            " and VALUE(DEALID, '') = ? and VALUE(SUBDEALID, '') = ?" +
+                            " and NVL(DEALID, '') = ? and NVL(SUBDEALID, '') = ?" +
                             " and (DTC is null or DTC > ?) and "
                             + custTypeField + " = ? and " + termField + " = ? "
                     , branch, currency, customerNumber,
@@ -553,11 +553,11 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             String termField = "TERM";
             if (isEmpty(cbCustType)) {
                 cbCustType = "-1";
-                custTypeField = "value(CBCUSTTYPE, -1)";
+                custTypeField = "NVL(CBCUSTTYPE, -1)";
             }
             if (isEmpty(term)) {
                 term = "-1";
-                termField = "value(TERM, -1)";
+                termField = "NVL(TERM, -1)";
             }
             return Optional.ofNullable(selectFirst(
                             "select ID " +
@@ -782,7 +782,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public DataRecord getAccountTypeParams(String accType) {
         try {
-            DataRecord res = selectFirst("select VALUE(PL_ACT, 'N') as PL_ACT, VALUE(FL_CTRL, 'N') as FL_CTRL" +
+            DataRecord res = selectFirst("select NVL(PL_ACT, 'N') as PL_ACT, NVL(FL_CTRL, 'N') as FL_CTRL" +
                     " from GL_ACTNAME n where n.ACCTYPE = ?", accType);
             if (null == res)
                 throw new ValidationError(ACCOUNTING_TYPE_NOT_FOUND, accType);

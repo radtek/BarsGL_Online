@@ -165,7 +165,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public int executeNativeUpdate(String nativeSQL, Object... params) {
-        return this.executeNativeUpdate(persistence, nativeSQL, params);
+        return this.executeNativeUpdate(dataSource, nativeSQL, params);
     }
 
     @Override
@@ -353,6 +353,29 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return result;
     }
 
+    /**
+     * Метод заменяет следующий, корректно работает с полем DATA = null
+     * @param dataSource
+     * @param nativeSQL
+     * @param params
+     * @return
+     */
+    public int executeNativeUpdate(DataSource dataSource, String nativeSQL, Object... params) {
+        try (Connection connection = dataSource.getConnection()) {
+            return DataRecordUtils.executeUpdate(connection, nativeSQL, params);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    /**
+     * Некорректно работает с полем DATA = null
+     * @param persistence
+     * @param nativeSQL
+     * @param params
+     * @return
+     */
     @Override
     public int executeNativeUpdate(EntityManager persistence, String nativeSQL, Object... params) {
         Assert.notNull(nativeSQL, "Native SQL query string cannot be null");

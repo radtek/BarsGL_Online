@@ -972,7 +972,7 @@ public class GLAccountController {
             throw new ValidationError(BRANCH_FLEX_NOT_FOUND, "", request.getBranchFlex(), request.getColumnName("branchFlex"));
         }
         wrapper.setBranch(branch);
-        BankCurrency currency = request.getCurrency();
+        BankCurrency currency = bankCurrencyRepository.refreshCurrency(request.getCurrency());
         if (null == currency) {
             throw new ValidationError(CURRENCY_CODE_IS_EMPTY, "",
                     glAccountRepository.getRequestCurrency(request), request.getColumnName("currency"));
@@ -980,17 +980,17 @@ public class GLAccountController {
         wrapper.setCurrency(currency.getCurrencyCode());
         wrapper.setCustomerNumber(request.getCustomerNumber());
         try {
-            wrapper.setAccountType(Long.parseLong(request.getAccountType()));
+            wrapper.setAccountType(Long.parseLong(trimstr(request.getAccountType())));
         } catch (NumberFormatException e) {
             throw new ValidationError(ACCOUNT_TYPE_IS_NOT_NUMBER, "", request.getAccountType(), request.getColumnName("accountType"));
         }
         try {
-            wrapper.setCbCustomerType(Short.parseShort(request.getCbCustomerType()));
+            wrapper.setCbCustomerType(Short.parseShort(trimstr(request.getCbCustomerType())));
         } catch (NumberFormatException e) {
             throw new ValidationError(CUST_TYPE_IS_NOT_NUMBER, "", request.getCbCustomerType(), request.getColumnName("cbCustomerType"));
         }
         try {
-            wrapper.setTerm(Short.parseShort(request.getTerm()));
+            wrapper.setTerm(Short.parseShort(trimstr(request.getTerm())));
         } catch (NumberFormatException e) {
             throw new ValidationError(TERM_IS_NOT_NUMBER, "", request.getTerm(), request.getColumnName("term"));
         }
