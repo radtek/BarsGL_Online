@@ -2,13 +2,19 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsViewDlg;
+import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsDlg;
+import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsViewDlg;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
+import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.shared.ClientDateUtils;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
@@ -42,7 +48,6 @@ abstract public class OperTechSuperBase extends GridForm {
     protected ManualTechOperationWrapper rowToWrapper(){
         ManualTechOperationWrapper wrapper = new ManualTechOperationWrapper();
 
-
         wrapper.setId((Long) getValue("ID"));
 
 
@@ -57,13 +62,15 @@ abstract public class OperTechSuperBase extends GridForm {
         wrapper.setCurrencyDebit((String) getValue("CCY_DR"));
         wrapper.setFilialDebit((String) getValue("CBCC_DR"));
         wrapper.setAccountDebit((String) getValue("AC_DR"));
+        wrapper.setAccountTypeDebit(Utils.fillUp(getValue("ACCTYPE_DR").toString(),9));
         wrapper.setAmountDebit((BigDecimal) getValue("AMT_DR"));
 
         wrapper.setCurrencyCredit((String) getValue("CCY_CR"));
         wrapper.setFilialCredit((String) getValue("CBCC_CR"));
         wrapper.setAccountCredit((String) getValue("AC_CR"));
-        wrapper.setAmountCredit((BigDecimal) getValue("AMT_CR"));
 
+        wrapper.setAccountTypeCredit(Utils.fillUp(getValue("ACCTYPE_CR").toString(),9));
+        wrapper.setAmountCredit((BigDecimal) getValue("AMT_CR"));
         wrapper.setAmountRu((BigDecimal) getValue("AMTRU"));
         wrapper.setCorrection("Y".equals(((String) getValue("FCHNG")))); //TODO некошерно
 
@@ -88,7 +95,7 @@ abstract public class OperTechSuperBase extends GridForm {
                 final Row row = grid.getCurrentRow();
                 if (row == null) return;
 
-                OperationHandsViewDlg dlgOperation = new OperationHandsViewDlg("Просмотр запроса на операцию GL",
+                OperationTechHandsViewDlg dlgOperation = new OperationTechHandsViewDlg("Просмотр запроса на техническую операцию GL",
                         FormAction.PREVIEW, grid.getTable().getColumns(), BatchPostStep.NOHAND);
                 dlgOperation.setDlgEvents(this);
                 dlgOperation.show(rowToWrapper());

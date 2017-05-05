@@ -408,6 +408,9 @@ public class ManualTechOperationProcessor extends ValidationAwareHandler<BatchPo
         operation.setStornoReference(null);
         operation.setFan(YesNo.N);                      // Веер
         operation.setParentReference(null);
+        if (posting.getIsTech().equals(YesNo.Y)) {
+            operation.setBsChapter("T");
+        }
 
         operation.setUserName(userContext.getUserName());
 

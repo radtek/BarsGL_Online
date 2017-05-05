@@ -305,10 +305,8 @@ public class GLAccountController {
     public String getGlAccountNumberTHWithKeys(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) {
 
         DataRecord drAccParm = glAccountRepository.getActParamByAccType(keys.getAccountType());
-        DataRecord drCurr = glAccountRepository.getCbccy(keys.getCurrency());
 
-
-        String bsaacidMask = new StringBuilder().append(drAccParm.getString("ACC2")).append(drCurr.getString("CBCCY")).append("0").append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),3,9)).toString();
+        String bsaacidMask = new StringBuilder().append(drAccParm.getString("ACC2")).append(keys.getCurrencyDigital()).append("0").append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),3,9)).toString();
         String bsaacid = glAccountFrontPartController.calculateKeyDigit(bsaacidMask,keys.getCompanyCode());
 
         Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));

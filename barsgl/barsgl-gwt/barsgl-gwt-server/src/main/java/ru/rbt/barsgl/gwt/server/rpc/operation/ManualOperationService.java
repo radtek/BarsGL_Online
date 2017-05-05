@@ -26,7 +26,7 @@ public interface ManualOperationService  extends RemoteService {
     RpcRes_Base<ManualAccountWrapper> saveTechAccount(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> updateTechAccount(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> closeTechAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualTechOperationWrapper> calculateAccount(ManualTechOperationWrapper wrapper) throws Exception;
+    RpcRes_Base<ManualAccountWrapper> findAccount(ManualAccountWrapper wrapper) throws Exception;
 
 
     RpcRes_Base<ManualOperationWrapper> updatePostings(ManualOperationWrapper wrapper) throws Exception;

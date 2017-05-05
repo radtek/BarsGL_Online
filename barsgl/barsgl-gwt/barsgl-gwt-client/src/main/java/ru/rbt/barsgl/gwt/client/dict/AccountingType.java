@@ -69,7 +69,6 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
         masterActionBar.addSecureAction(deleteAccTypeAction(), SecurityActionCode.ReferAccTypeDel);
         masterActionBar.addSecureAction(linkAccTypeAction(), SecurityActionCode.ReferAccTypeChng);
 
-
         detailActionBar.addAction(new SimpleDlgAction(detailGrid, DlgMode.BROWSE, 10));
         detailActionBar.addSecureAction(editPrmAction(), SecurityActionCode.ReferAccTypeChng);
         detailActionBar.addSecureAction(createDetailAction = createPrmAction(), SecurityActionCode.ReferAccTypeChng);
@@ -292,7 +291,8 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
                 detail_dlg.setFormAction(FormAction.CREATE);
                 detail_dlg.setDlgEvents(this);
 
-                detail_dlg.show(masterGrid.getCurrentRow().getField(4).getValue());
+                //detail_dlg.show(masterGrid.getCurrentRow().getField(4).getValue());
+                detail_dlg.show(masterGrid.getCurrentRow());
             }
 
             @Override
@@ -434,13 +434,15 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
         result.addColumn(col = new Column("ACCNAME", Column.Type.STRING, ActParm.FIELD_ACCNAME, 240));
         col.setFilterable(false);
         col.setEditable(false);
+        result.addColumn(col = new Column("TECH_ACT",Column.Type.STRING,"",10));
+        col.setVisible(false);
 
         return result;
     }
 
     @Override
     protected String prepareDetailSql() {
-        return "select PARM.ACCTYPE, PARM.CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME "
+        return "select PARM.ACCTYPE, PARM.CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, case when NM.TECH_ACT='Y' then 'Y' else 'N' end as TECH_ACT "
                 + "from GL_ACTPARM PARM, GL_ACTNAME NM "
                 + "where NM.ACCTYPE = PARM.ACCTYPE";
     }

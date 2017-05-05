@@ -151,14 +151,11 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         if (action == FormAction.PREVIEW){
             ok.setVisible(false);
         }
-
-        //Window.alert("PostingTechDlg:PostingTechDlg(3)");
     }
 
     public PostingTechDlg()
     {
         super();
-        //Window.alert("PostingTechDlg:PostingTechDlg()");
     }
 
     protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
@@ -406,13 +403,12 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
 
     protected void fillUp(){
+
     	if (null == params)
     		return;
         row = (Row) params;
         
         getOperDay();
-
-        Window.alert("PostingTechDlg: flipUp");
 
         mDealSource.setSelectValue(getFieldText("SRC_PST"));
         String dealId = getFieldText("DEAL_ID");

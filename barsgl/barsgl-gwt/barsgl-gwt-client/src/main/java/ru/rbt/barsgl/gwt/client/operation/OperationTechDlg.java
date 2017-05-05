@@ -6,6 +6,7 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
@@ -24,6 +25,7 @@ import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
@@ -31,6 +33,7 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.barsgl.shared.user.AppUserWrapper;
 
@@ -45,7 +48,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 /**
  * Created by akichigi on 19.03.15.
  */
-public class OperationDlg extends OperationDlgBase {
+public class OperationTechDlg extends OperationTechDlgBase {
 
     protected DataListBox mDealSource;
     protected TxtBox mDealId;
@@ -55,7 +58,7 @@ public class OperationDlg extends OperationDlgBase {
     protected DatePickerBox mDateOperation;
     protected DatePickerBox mDateValue;
 
-    protected TxtBox mSumRu;
+    //protected TxtBox mSumRu;
     protected CheckBox mCheckSumRu;
     protected CheckBox mCheckCorrection;
 
@@ -71,17 +74,18 @@ public class OperationDlg extends OperationDlgBase {
     private Boolean isAsyncListsCached;
     private Timer timer;
 
-    public OperationDlg(String title, FormAction action, Columns columns) {
+    public OperationTechDlg(String title, FormAction action, Columns columns) {
         super(title, action, columns);
     }
 
     @Override
     public void beforeCreateContent(){
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        //isAsyncListsCached = false;
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached_hand");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);
+        LocalDataStorage.putParam("isAsyncListsCachedTech_hand", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -108,8 +112,8 @@ public class OperationDlg extends OperationDlgBase {
 
         HorizontalPanel hp3 = new HorizontalPanel();
         hp3.setSpacing(0);
-        hp3.add(createOneSide("Дебет", OperationDlgBase.Side.DEBIT, true));
-        hp3.add(createOneSide("Кредит", OperationDlgBase.Side.CREDIT, true));
+        hp3.add(createOneSide("Дебет", Side.DEBIT, true));
+        hp3.add(createOneSide("Кредит", Side.CREDIT, true));
         mainVP.add(hp3);
 
         mainVP.add(createSumRu());
@@ -119,13 +123,15 @@ public class OperationDlg extends OperationDlgBase {
 
         mDateOperDay.setReadOnly(true);
 
-        setEnableSumRuHandler();
+        //setEnableSumRuHandler();
         setChangeHandlers();
 
         return mainVP;
     }
 
-    protected void setControlsEnabled(){
+    protected void setControlsEnabled()
+    {
+
     }
 
     protected void getOperDay() {
@@ -159,23 +165,24 @@ public class OperationDlg extends OperationDlgBase {
     }
 
     protected Grid createSumRu() {
-        Grid grid = new Grid(2,3);
+        Grid grid = new Grid(1,3);
 
-        grid.setWidget(0, 0, createLabel("Сумма в рублях", LABEL2_WIDTH));
-        grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
-        grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без проводки по курсовой разнице"));
-        grid.setWidget(1, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
+        //grid.setWidget(0, 0, createLabel("Сумма в рублях", LABEL2_WIDTH));
+        //grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
+        //grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без проводки по курсовой разнице"));
+        grid.setCellSpacing(2);
+        grid.setWidget(0, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
 
         return grid;
     }
 
     @Override
-    protected ManualOperationWrapper createWrapper() {
-        return new ManualOperationWrapper();
+    protected ManualTechOperationWrapper createWrapper() {
+        return new ManualTechOperationWrapper();
     }
 
     @Override
-    protected void setFields(ManualOperationWrapper operation) {
+    protected void setFields(ManualTechOperationWrapper operation) {
         operation.setId(id);
         if (mDealSource.isEnabled()) {
             operation.setDealSrc(check(mDealSource.getText()
@@ -189,7 +196,6 @@ public class OperationDlg extends OperationDlgBase {
         operation.setSubdealId(mSubDealId.getValue());
 
         operation.setPaymentRefernce(mDealId.getValue());   // номер платежа
-
         check(mDateOperation.getValue(), "Дата проводки", "поле не заполнено", new CheckNotNullDate());
         check(mDateValue.getValue(), "Дата валютирования", "поле не заполнено", new CheckNotNullDate());
         operation.setPostDateStr(DateTimeFormat.getFormat(operation.dateFormat).format(mDateOperation.getValue()));
@@ -205,10 +211,16 @@ public class OperationDlg extends OperationDlgBase {
         operation.setFilialCredit(check((String) mCrFilial.getValue()
                 , "Филиал (кредит)", "поле не заполнено", new CheckNotEmptyString()));
 
+        operation.setAccountTypeCredit(check(mCrAccType.getValue()
+                ,"AccType(кредит)","длина строки < 9 символов",new CheckStringExactLength(9)));
+        operation.setAccountTypeDebit(check(mDtAccType.getValue()
+                ,"AccType(дебет)","длина строки < 9 символов",new CheckStringExactLength(9)));
         operation.setAccountCredit(check(mCrAccount.getValue()
                 , "Счет (кредит)", "длина строки < 20 символов", new CheckStringExactLength(20)));
         operation.setAccountDebit(check(mDtAccount.getValue()
                 , "Счет (дебет)", "длина строки < 20 символов", new CheckStringExactLength(20)));
+        operation.setAccountCredit(mCrAccount.getValue());
+        operation.setAccountDebit(mDtAccount.getValue());
 
         operation.setAmountCredit(check(mCrSum.getValue(),
                 "Кредит: сумма", "поле должно быть заполнено числом или числом с точкой"
@@ -216,12 +228,12 @@ public class OperationDlg extends OperationDlgBase {
         operation.setAmountDebit(check(mDtSum.getValue(),
                 "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
                 , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
-        if (mCheckSumRu.getValue()) {
+        /*if (mCheckSumRu.getValue()) {
             BigDecimal sumRu = check(mSumRu.getValue(),
                     "Сумма в рублях:", "поле должно быть заполнено числом > 0"
                     , new CheckNotZeroBigDecimal(), new ConvertStringToBigDecimal());
             operation.setAmountRu(sumRu);
-        }
+        }*/
 
         checkSide(operation.getAmountDebit(), operation.getAmountRu(),
                 operation.getCurrencyDebit(), operation.getAccountCredit(), "Дебет:" );
@@ -234,7 +246,7 @@ public class OperationDlg extends OperationDlgBase {
                 , "Основание RUS", "поле не заполнено", new CheckNotEmptyString()));
         operation.setDeptId((String) mDepartment.getValue());
         operation.setProfitCenter((String) mProfitCenter.getValue());
-        operation.setCorrection(mCheckCorrection.getValue());
+        //operation.setCorrection(mCheckCorrection.getValue());
         operation.setInputMethod(InputMethod.M);
 
         // Для проверки прав по филиалам
@@ -244,21 +256,25 @@ public class OperationDlg extends OperationDlgBase {
     }
 
     protected void fillUp(){
-        ManualOperationWrapper operation = (ManualOperationWrapper)params;
+        ManualTechOperationWrapper operation = (ManualTechOperationWrapper)params;
         if (operation != null){
         id = operation.getId();
         mDealSource.setSelectValue(operation.getDealSrc());
         mDealId.setValue(operation.getDealId());
         mSubDealId.setValue(operation.getSubdealId());
 
+
         mDateOperation.setValue(ClientDateUtils.String2Date(operation.getPostDateStr()));
         mDateValue.setValue(ClientDateUtils.String2Date(operation.getValueDateStr()));
-
+        mDtAccType.setValue(operation.getAccountTypeDebit());
         mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
-        mDtFilial.setSelectValue(operation.getFilialDebit());
+        //mDtFilial.setSelectValue(operation.getFilialDebit());
+
+        mDtFilial.setValue(operation.getFilialDebit());
         mDtAccount.setValue(operation.getAccountDebit());
         mDtSum.setValue(getSumma(operation.getAmountDebit()));
 
+        mCrAccType.setValue(operation.getAccountTypeCredit());
         mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
         mCrFilial.setSelectValue(operation.getFilialCredit());
         mCrAccount.setValue(operation.getAccountCredit());
@@ -267,9 +283,8 @@ public class OperationDlg extends OperationDlgBase {
         BigDecimal amountRu = operation.getAmountRu();
         boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
                 && (null != amountRu);
-        mCheckSumRu.setValue(withoutDiff);
-        mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "");
-
+        //mCheckSumRu.setValue(withoutDiff);
+        //mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "")
         mNarrativeEN.setValue(operation.getNarrative());
         mNarrativeEN.setValue(operation.getNarrative());
         mNarrativeRU.setValue(operation.getRusNarrativeLong());
@@ -277,12 +292,10 @@ public class OperationDlg extends OperationDlgBase {
         mProfitCenter.setSelectValue(operation.getProfitCenter());
         mCheckCorrection.setValue(operation.isCorrection());
 
-        _reasonOfDeny = operation.getReasonOfDeny();
+            _reasonOfDeny = operation.getReasonOfDeny();
         }
 
         getOperDay();
-
-        setControlsEnabled();
     }
 
 
@@ -310,7 +323,7 @@ public class OperationDlg extends OperationDlgBase {
                 }
             };
 
-            timer.scheduleRepeating(500);
+            timer.scheduleRepeating(1000);
         }
     }
 
@@ -332,18 +345,18 @@ public class OperationDlg extends OperationDlgBase {
             mCrAccount.setEnabled(false);
             mCrSum.setEnabled(false);
 
-            mSumRu.setEnabled(false);
-
-            mDtButton.setEnabled(true);
-            mCrButton.setEnabled(true);
-
-            mCheckSumRu.setEnabled(false);
             mCheckCorrection.setEnabled(false);
-
             mNarrativeEN.setEnabled(false);
             mNarrativeRU.setEnabled(false);
+
             mDepartment.setEnabled(false);
             mProfitCenter.setEnabled(false);
+
+            mDtAccType.setEnabled(true);
+            mCrAccType.setEnabled(true);
+
+            mDtAccTypeButton.setEnabled(true);
+            mCrAccTypeButton.setEnabled(true);
     }
 
     protected void setOperday(final String operDayStr) {
@@ -360,10 +373,10 @@ public class OperationDlg extends OperationDlgBase {
         return mDateValue.getValue();
     }
 
-    protected void setEnableSumRuHandler() {
-        mSumRu.setEnabled(false);
-        mCheckSumRu.setValue(false);
-    	mCheckSumRu.setEnabled(true);
+/*    protected void setEnableSumRuHandler() {
+        //mSumRu.setEnabled(false);
+        //mCheckSumRu.setValue(false);
+    	//mCheckSumRu.setEnabled(true);
     	mCheckSumRu.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 
 			@Override
@@ -379,21 +392,21 @@ public class OperationDlg extends OperationDlgBase {
 	                		showInfo("Ошибка", "Сумма в рублях вводится только для операции в разных валютах");
 	                		return;
 	                	} else if ("RUR".equals(dtCurrency)) {
-	                        mSumRu.setValue(check(mDtSum.getValue(), "Дебет: сумма", "поле должно быть не 0", checkBigDecimal));
+	                        //mSumRu.setValue(check(mDtSum.getValue(), "Дебет: сумма", "поле должно быть не 0", checkBigDecimal));
 	                    } else if ("RUR".equals(crCurrency)) {
-	                        mSumRu.setValue(check(mCrSum.getValue(), "Кредит: сумма", "поле должно быть не 0", checkBigDecimal));
+	                        //mSumRu.setValue(check(mCrSum.getValue(), "Кредит: сумма", "поле должно быть не 0", checkBigDecimal));
 	                	} else if (!checkBigDecimal.check(mDtSum.getValue()) || !checkBigDecimal.check(mCrSum.getValue())) {
                             showInfo("Ошибка", "Сумма в валюте может быть равна 0 только для операций по курсовой разнице");
                             return;
                         } else {
-	                        mSumRu.setEnabled(true);
+	                        //mSumRu.setEnabled(true);
 	                    }
 	                    mCheckSumRu.setValue(true);
 	                    isRurDebit = "RUR".equals(dtCurrency);
 	                    isRurCredit = "RUR".equals(crCurrency);
 	                } else {
-	                	mSumRu.clear();
-	                    mSumRu.setEnabled(false);
+	                	//mSumRu.clear();
+	                    //mSumRu.setEnabled(false);
 	                    isRurDebit = false;
 	                    isRurCredit = false;
 	                }
@@ -401,10 +414,11 @@ public class OperationDlg extends OperationDlgBase {
 		    	}
 			}
     	});
-    }
+    }*/
 
     protected void setChangeHandlers() {
-    	mDtCurrency.addChangeHandler(new ChangeHandler() {
+
+        mDtCurrency.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
 				if (isRurDebit || "RUR".equals(mDtCurrency.getValue())) 
@@ -414,20 +428,20 @@ public class OperationDlg extends OperationDlgBase {
     	mCrCurrency.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
-				if (isRurCredit || "RUR".equals(mCrCurrency.getValue())) 
+				if (isRurCredit || "RUR".equals(mCrCurrency.getValue()))
 			        mCheckSumRu.setValue(false, true);
 			}
     	});
     	mDtSum.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
-				if (isRurDebit) { 
+			/*	if (isRurDebit) {
 					if (new CheckNotZeroBigDecimal().check(mDtSum.getValue())) {
-                        mSumRu.setValue(mDtSum.getValue());
+                        //mSumRu.setValue(mDtSum.getValue());
 					} else {
-				        mCheckSumRu.setValue(false, true);
+				        //mCheckSumRu.setValue(false, true);
 					}
-				}
+				}*/
                 correctSum(mDtSum, mCrSum);
 			}
     	});
@@ -436,9 +450,9 @@ public class OperationDlg extends OperationDlgBase {
 			public void onChange(ChangeEvent event) {
 				if (isRurCredit) { 
 					if (new CheckNotZeroBigDecimal().check(mCrSum.getValue())) {
-						mSumRu.setValue((String)mCrSum.getValue());
+						//mSumRu.setValue((String)mCrSum.getValue());
 					} else {
-				        mCheckSumRu.setValue(false, true);
+				        //mCheckSumRu.setValue(false, true);
 					}
 				}
                 correctSum(mCrSum, mDtSum);

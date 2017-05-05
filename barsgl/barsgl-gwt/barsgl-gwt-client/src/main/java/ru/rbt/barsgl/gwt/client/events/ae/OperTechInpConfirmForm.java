@@ -6,10 +6,7 @@ import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
-import ru.rbt.barsgl.gwt.client.operation.NewTechOperationAction;
-import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
-import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsDlg;
+import ru.rbt.barsgl.gwt.client.operation.*;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateFormDlg;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -61,7 +58,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
 
         abw.addAction(_modify = createModify());
         abw.addAction(_create = createNewOperation());
-        //abw.addAction(_createFromTemplate = createTemplateOperation());
         abw.addAction(_delete = createDelete());
         abw.addAction(_forward = createForward());
         abw.addAction(_backward = createBackward());
@@ -78,8 +74,8 @@ public class OperTechInpConfirmForm extends OperTechBase{
     protected String getSelectClause() {
         return "select PST.ID, PST.GLOID_REF, PST.STATE, PST.ECODE, PST.ID_PKG, PST.NROW, " +
                 "PST.INVISIBLE, PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.SEND_SRV, PST.OTS_SRV, PST.SRC_PST, " +
-                "PST.DEAL_ID, PST.SUBDEALID, PST.PMT_REF, PST.PROCDATE, PST.VDATE, PST.POSTDATE, " +
-                "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +
+                "PST.DEAL_ID, PST.SUBDEALID, PST.PMT_REF, PST.PROCDATE, PST.VDATE, PST.POSTDATE, PST.ACCTYPE_DR, " +
+                "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.ACCTYPE_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +
                 "PST.AMTRU, PST.NRT, PST.RNRTL, PST.RNRTS, PST.DEPT_ID, PST.PRFCNTR, PST.FCHNG, PST.EMSG, " +
                 "PST.USER_NAME, PST.OTS, PST.HEADBRANCH, PST.USER_AU2, PST.OTS_AU2, PST.USER_AU3, PST.OTS_AU3, " +
                 "PST.USER_CHNG, PST.OTS_CHNG, PST.DESCRDENY, PST.FIO " +
@@ -101,23 +97,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
 
     private GridAction createNewOperation() {
         return new NewTechOperationAction(grid, ImageConstants.INSTANCE.new24());
-    }
-
-    private GridAction createTemplateOperation() {
-        return new GridAction(grid, null, "Ввести операцию по шаблону", new Image(ImageConstants.INSTANCE.oper_tmpl()), 10) {
-
-            @Override
-            public void execute() {
-                GridFormDlgBase formTemplate = new OperationTemplateFormDlg("Выбор шаблона операции", grid);
-                formTemplate.show();
-                formTemplate.setAfterCancelEvent(new IAfterCancelEvent() {
-                    @Override
-                    public void afterCancel() {
-                        grid.refresh();
-                    }
-                });
-            }
-        };
     }
 
     private GridAction createForward(){
@@ -164,9 +143,9 @@ public class OperTechInpConfirmForm extends OperTechBase{
 
     public GridAction commonAction(String hint, ImageResource image, final String title, final FormAction formAction){
         return new GridAction (grid, null, hint, new Image(image), 10, true)  {
-            OperationTechHandsDlg dlg;
+            OperationTechHandsDlg2 dlg;
 
-            private BatchPostAction calcAction(final OperationTechHandsDlg.ButtonOperAction operAction){
+            private BatchPostAction calcAction(final OperationTechHandsDlg2.ButtonOperAction operAction){
                 BatchPostAction action;
                 if (formAction == FormAction.DELETE){
                     //удалить
@@ -175,12 +154,12 @@ public class OperTechInpConfirmForm extends OperTechBase{
                 else if (formAction == FormAction.UPDATE) {
                     //править
                     if (_step == BatchPostStep.HAND1){
-                        action = operAction == OperationTechHandsDlg.ButtonOperAction.OK
+                        action = operAction == OperationTechHandsDlg2.ButtonOperAction.OK
                                 ? BatchPostAction.UPDATE
                                 : BatchPostAction.UPDATE_CONTROL;
                     }else{
                         //BatchPostStep.HAND2
-                        action = operAction == OperationTechHandsDlg.ButtonOperAction.OK
+                        action = operAction == OperationTechHandsDlg2.ButtonOperAction.OK
                                 ? BatchPostAction.UPDATE_CONTROL
                                 : BatchPostAction.UPDATE_SIGN;
                     }
@@ -195,7 +174,7 @@ public class OperTechInpConfirmForm extends OperTechBase{
                 }
                 else if (formAction == FormAction.CONFIRM){
                     //подтвердить дату
-                    action = operAction == OperationTechHandsDlg.ButtonOperAction.OK
+                    action = operAction == OperationTechHandsDlg2.ButtonOperAction.OK
                             ? BatchPostAction.CONFIRM_NOW
                             : BatchPostAction.CONFIRM;
                 }else{
@@ -210,7 +189,9 @@ public class OperTechInpConfirmForm extends OperTechBase{
                 final Row row = grid.getCurrentRow();
                 if (row == null) return;
 
-                dlg = new OperationTechHandsDlg(title, formAction, grid.getTable().getColumns(), _step);
+                //dlg = new OperationHandsDlg(title, FormAction.CREATE, grid.getTable().getColumns(), BatchPostStep.HAND1);
+
+                dlg = new OperationTechHandsDlg2(title, formAction, grid.getTable().getColumns(), _step);
                 dlg.setDlgEvents(this);
                 dlg.setAfterCancelEvent(new IAfterCancelEvent() {
                     @Override
@@ -226,9 +207,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
             @Override
             public void onDlgOkClick(Object prms){
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-
-                Window.alert("onDlgOkClick");
-
                 ManualTechOperationWrapper wrapper = (ManualTechOperationWrapper) prms;
 
                 BatchPostStatus status = BatchPostStatus.valueOf((String) getValue("STATE"));
@@ -276,8 +254,8 @@ public class OperTechInpConfirmForm extends OperTechBase{
         //result.addColumn(new Column("NROW", Column.Type.INTEGER, "Строка в файле", 60, false, false));
 
         //result.addColumn(new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
-        //result.addColumn(col = new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 80));
-        //col.setList(getEnumLabelsList(InputMethod.values()));
+        result.addColumn(col = new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 80));
+        col.setList(getEnumLabelsList(InputMethod.values()));
 
         //result.addColumn(new Column("ID_PAR", Column.Type.LONG, "ID род. запроса", 80));
         //result.addColumn(new Column("ID_PREV", Column.Type.LONG, "ID пред. запроса", 80));
@@ -294,11 +272,13 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(col = new Column("POSTDATE", Column.Type.DATE, "Дата проводки", 72));
         col.setFormat("dd.MM.yyyy");
 
+        result.addColumn(new Column("ACCTYPE_DR", Column.Type.STRING, "AccountType ДБ", 160));
         result.addColumn(new Column("AC_DR", Column.Type.STRING, "Счет ДБ", 160));
         result.addColumn(new Column("CCY_DR", Column.Type.STRING, "Валюта ДБ", 60, false, false));
         result.addColumn(new Column("AMT_DR", Column.Type.DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("CBCC_DR", Column.Type.STRING, "Филиал ДБ", 60, false, false));
 
+        result.addColumn(new Column("ACCTYPE_CR", Column.Type.STRING, "AccountType КР", 160));
         result.addColumn(new Column("AC_CR", Column.Type.STRING, "Счет КР", 160));
         result.addColumn(new Column("CCY_CR", Column.Type.STRING, "Валюта КР", 60, false, false));
         result.addColumn(new Column("AMT_CR", Column.Type.DECIMAL, "Сумма КР", 100));

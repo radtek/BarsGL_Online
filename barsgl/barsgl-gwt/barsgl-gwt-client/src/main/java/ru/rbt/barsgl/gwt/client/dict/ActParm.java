@@ -205,6 +205,7 @@ public class ActParm extends GridForm {
         Column colTechAct;
         result.addColumn(colTechAct = new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 20,false,false));
         colTechAct.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));
+        colTechAct.setFilterable(true);
         Column col;
         result.addColumn(col = new Column("FL_CTRL", Column.Type.STRING, FIELD_FL_CTRL, 20, false, false));
         col.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));

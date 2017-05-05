@@ -132,13 +132,9 @@ public abstract class DlgFrame {
 
     public void show() {
         dlg.center();
-        Window.alert("show() 1");
         setPopupPosition();
-        Window.alert("show() 2");
         dlg.setGlassEnabled(true);
-        Window.alert("show() 3");
         dlg.show();
-        Window.alert("show() 4");
         if (afterShowEvent != null) {
         	afterShowEvent.afterShow();
         }
@@ -180,13 +176,9 @@ public abstract class DlgFrame {
         if (isShow){
             if (label != null) return;
             label = new Label("Загрузка данных...  Подождите!");
-            Window.alert("showPreload 1");
             label.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-            Window.alert("showPreload 2");
             dlg.remove(frame);
-            Window.alert("showPreload 3");
             dlg.add(label);
-            Window.alert("showPreload 4");
         } else{
             if (label == null) return;
             dlg.remove(label);

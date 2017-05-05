@@ -8,31 +8,43 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
+import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccCustomerFormDlg;
+import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.ui.*;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
+import ru.rbt.barsgl.shared.Builder;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.dict.FormAction.CREATE;
+import static ru.rbt.barsgl.shared.dict.FormAction.PREVIEW;
 import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
 
 
 /**
  * Created by ER18837 on 16.03.16.
  */
-public abstract class OperationDlgBase extends EditableDialog<ManualOperationWrapper> {
+public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOperationWrapper> {
     public enum Side {DEBIT, CREDIT};
 
     protected final String LABEL_WIDTH = "130px";
@@ -55,11 +67,13 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     protected DataListBoxEx mDtFilial;
     protected TxtBox mDtAccount;
     protected TxtBox mDtSum;
+    protected TxtBox mDtAccType;
 
     protected DataListBoxEx mCrCurrency;
     protected DataListBoxEx mCrFilial;
     protected TxtBox mCrAccount;
     protected TxtBox mCrSum;
+    protected TxtBox mCrAccType;
 
     protected AreaBox mNarrativeRU;
     protected AreaBox mNarrativeEN;
@@ -70,37 +84,36 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     protected DatePickerBox mDate1;
     protected TxtBox mNum2;
     protected DatePickerBox mDate2;
-    
-    protected Button mDtButton;
-    protected Button mCrButton;
+
+    protected Button mDtAccTypeButton;
+    protected Button mCrAccTypeButton;
 
     protected CheckBox mCheckFields;
 
     protected Long id;
 
-    public OperationDlgBase(String title, FormAction action, Columns columns) {
+    public OperationTechDlgBase(String title, FormAction action, Columns columns) {
         super(columns, action);
         setCaption(title);
     }
 
-    public OperationDlgBase(){
-    }
-
     @Override
-    protected ManualOperationWrapper createWrapper() {
-        return new ManualOperationWrapper();
+    protected ManualTechOperationWrapper createWrapper() {
+        return new ManualTechOperationWrapper();
     }
 
     protected Grid createOneSide(String label, final Side side, boolean withSum) {
         DataListBoxEx mCurrency;
         DataListBoxEx mFilial;
         TxtBox mAccount;
-        //TxtBox mSum = null;
-        BtnTxtBox mSum = null;
+        TxtBox mAccType;
+        TxtBox mSum = null;
+        //BtnTxtBox mSum = null;
         Button mButton;
 
         boolean isDebit = side.equals(Side.DEBIT);
-        Grid grid = new Grid(withSum ? 5 : 4, 2);
+        //Grid grid = new Grid(withSum ? 5 : 4, 2);
+        Grid grid = new Grid(6, 2);
 
         grid.setWidget(0, 0, createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
 
@@ -109,25 +122,40 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         grid.setWidget(2, 0, createLabel(("Филиал")));
         grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
 
-        grid.setWidget(3, 0, createLabel("Счет"));
-        grid.setWidget(3, 0, createAlignWidget(mButton = createBsaAcidButton("Счет", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
-        if (side.equals(Side.DEBIT))
-            grid.setWidget(3, 1, createAlignWidget(mAccount = createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
-        else
-            grid.setWidget(3, 1, mAccount = createTxtBox(20, SUM_WIDTH));
-        mAccount.setName(side.name());
+        //grid.setWidget(3, 0, createLabel("AccType"));
+        grid.setWidget(3, 0, createAlignWidget(mButton = createAccTypedButton("AccType", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
 
-        mAccount.addChangeHandler(createAccountChangeHandler(side));
+        if (side.equals(Side.DEBIT))
+            grid.setWidget(3, 1, createAlignWidget(mAccType = createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
+        else
+            grid.setWidget(3, 1, mAccType = createTxtBox(20, SUM_WIDTH));
+
+        grid.setWidget(4, 0, createLabel("Счет"));
+        //grid.setWidget(3, 0, createAlignWidget(mButton = createBsaAcidButton("Счет", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
+
+        if (side.equals(Side.DEBIT))
+            grid.setWidget(4, 1, createAlignWidget(mAccount = createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
+        else
+            grid.setWidget(4, 1, mAccount = createTxtBox(20, SUM_WIDTH));
+        mAccount.setName(side.name());
+        mAccount.setEnabled(false);
+
+        //mAccType.addChangeHandler(createAccTypeChangeHandler(side));
+        mCurrency.addChangeHandler(createCurrencyChangeHandler(side));
+        mFilial.addChangeHandler(createFilialChangeHandler(side));
+
+        //mAccount.addChangeHandler(createAccountChangeHandler(side));
+
 
         if (withSum) {
-            grid.setWidget(4, 0, createLabel("Сумма"));
-           // grid.setWidget(4, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
-            grid.setWidget(4, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
+            grid.setWidget(5, 0, createLabel("Сумма"));
+            grid.setWidget(5, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
+           /* grid.setWidget(5, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
                 @Override
                 public void method() {
                     btnClick(side);
                 }
-            }));
+            }));*/
         }
 
         if (isDebit) {
@@ -135,13 +163,15 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
             mDtCurrency = mCurrency;
             mDtFilial = mFilial;
             mDtSum = mSum;
-            mDtButton = mButton;
+            mDtAccTypeButton = mButton;
+            mDtAccType = mAccType;
         } else {
             mCrAccount = mAccount;
             mCrCurrency = mCurrency;
             mCrFilial = mFilial;
             mCrSum = mSum;
-            mCrButton = mButton;
+            mCrAccTypeButton = mButton;
+            mCrAccType = mAccType;
         }
         return grid;
     }
@@ -162,6 +192,26 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         return grid;
     };
 
+    protected ChangeHandler createFilialChangeHandler(final Side side) {
+        return new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent){
+                TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
+                updateAccount(side, mAccType);
+            }
+        };
+    }
+
+    protected ChangeHandler createCurrencyChangeHandler(final Side side) {
+        return new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent){
+                TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
+                updateAccount(side, mAccType);
+            }
+        };
+    }
+
     protected ChangeHandler createAccountChangeHandler(final Side side) {
         return new ChangeHandler() {
             @Override
@@ -178,6 +228,61 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
                 mFilial.setParam("CBCCN", filialN);
             }
         };
+    }
+
+    protected ChangeHandler createAccTypeChangeHandler(final Side side) {
+        return new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
+                Window.alert("AccType onChange: "+changeEvent.getSource().toString());
+                updateAccount(side, mAccType);
+            }
+        };
+    }
+
+    private void updateAccount(final Side side, TxtBox mAccType)
+    {
+        String accType = mAccType.getText();
+        DataListBoxEx mCurrency = (side == Side.DEBIT) ? mDtCurrency : mCrCurrency;
+        DataListBoxEx mFilial = (side == Side.DEBIT) ? mDtFilial : mCrFilial;
+        final TxtBox mAccount = (side == Side.DEBIT) ? mDtAccount : mCrAccount;
+        if (null == accType || accType.length() < 9) {
+            mAccount.clear();
+            return;
+        }
+
+        String cbccn = null;
+        String ccy = null;
+        if (mCurrency.getValue()!=null) {
+            ccy = mCurrency.getParam("CCY").toString();
+        }
+        if (mFilial.getValue()!=null) {
+            cbccn = mFilial.getValue().toString();
+        }
+
+        if ((ccy!=null) && (!ccy.isEmpty()) && (cbccn!=null) && (!cbccn.isEmpty()))
+        {
+            final ManualAccountWrapper accWrapper = new ManualAccountWrapper();
+            accWrapper.setAccountType(Long.parseLong(mAccType.getValue()));
+            accWrapper.setCurrency(ccy);
+            accWrapper.setFilial(cbccn);
+            BarsGLEntryPoint.operationService.findAccount(accWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualAccountWrapper>>() {
+                @Override
+                public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
+                    if (!wrapper.isError()) {
+                        mAccount.setValue(wrapper.getResult().getBsaAcid());
+                    }
+                    else
+                    {
+                        mAccount.clear();
+                    }
+                }
+            });
+        }
+        else {
+            mAccount.clear();
+        }
     }
 
     private Object[] createParams(Grid grid, int ind, boolean enabled){
@@ -239,7 +344,7 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
                     final DataListBoxEx mFilial = isDebit ? mDtFilial : mCrFilial;
 
                     final String bsaAcid = mAccount.getValue();
-                    FormAction action = OperationDlgBase.this.action;
+                    FormAction action = OperationTechDlgBase.this.action;
                     boolean editAccount = (CREATE == action || UPDATE == action);
                     GridFormDlgBase dlg = new AccCustomerFormDlg(!editAccount) {
                         @Override
@@ -267,6 +372,61 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         });
         return btn;
     }
+
+    private Button createAccTypedButton(String text, String width, final boolean isDebit) {
+        Button btn = new Button();
+        btn.setText(text);
+        btn.addStyleName("dlg-button");
+        btn.setWidth(width);
+        btn.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent clickEvent) {
+                try {
+                    final TxtBox mAccount = isDebit ? mDtAccount : mCrAccount;
+                    final DataListBoxEx mCurrency = isDebit ? mDtCurrency : mCrCurrency;
+                    final DataListBoxEx mFilial = isDebit ? mDtFilial : mCrFilial;
+                    final TxtBox mAccType = isDebit ? mDtAccType : mCrAccType;
+
+                    //final String bsaAcid = mAccount.getValue();
+                    FormAction action = OperationTechDlgBase.this.action;
+                    final boolean editAccount = (CREATE == action || UPDATE == action || mAccType.isEnabled());
+
+                    GridFormDlgBase dlg = new AccountTypeTechFormDlg() {
+                        @Override
+                        protected boolean getEditMode() {
+                            return editAccount;
+                        }
+
+                        @Override
+                        protected boolean setResultList(HashMap<String, Object> result) {
+                            if (null != result) {
+                                mAccType.setValue((String)result.get("ACCTYPE"));
+                                updateAccount(isDebit?Side.DEBIT:Side.CREDIT,mAccType);
+
+                                //mFilial.setParam("CBCCN", (String) result.get("CBCCN"));
+                                //mCurrency.setParam("CCYN", (String) result.get("CCYN"));
+                                //mAccount.setValue((String) result.get("BSAACID"));
+                            }
+                            return true;
+                        }
+
+                        @Override
+                        protected Object[] getInitialFilterParams() {
+                            return new Object[] {mAccType.getText()};
+                            /*return new Object[]{mCurrency.getValue(), mCurrency.getParam("CCYN"),
+                                    mFilial.getValue(), mFilial.getParam("CBCCN"), bsaAcid, getAccountDate()};*/
+                        }
+                    };
+                    dlg.setModal(true);
+                    dlg.show();
+                } catch (Exception e) {
+                    Window.alert(e.getMessage());
+                }
+            }
+        });
+        return btn;
+    }
+
 
     abstract protected Date getAccountDate();
 }

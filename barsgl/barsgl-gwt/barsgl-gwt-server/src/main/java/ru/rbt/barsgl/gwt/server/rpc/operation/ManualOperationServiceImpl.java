@@ -243,7 +243,14 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
     }
 
     @Override
-    public RpcRes_Base<ManualTechOperationWrapper> calculateAccount(ManualTechOperationWrapper wrapper) throws Exception {
-        return null;
+    public RpcRes_Base<ManualAccountWrapper> findAccount(ManualAccountWrapper wrapper) throws Exception {
+        return new RpcResProcessor<ManualAccountWrapper>() {
+            @Override
+            public RpcRes_Base<ManualAccountWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<ManualAccountWrapper> res = localInvoker.invoke(GLAccountService.class, "findManualAccount", wrapper);
+                if (res == null) throw new Throwable("Не удалось изменить счет");
+                return res;
+            }
+        }.process();
     }
 }

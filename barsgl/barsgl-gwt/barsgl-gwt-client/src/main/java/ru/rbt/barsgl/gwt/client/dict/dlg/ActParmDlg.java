@@ -5,6 +5,7 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
@@ -37,6 +38,7 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
@@ -248,14 +250,23 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
     }
 
     private void setTechFields(boolean isTech) {
-        if (isTech) cusType.setValue("00");
-        cusType.setEnabled(!isTech);
-        if (isTech) term.setValue("00");
-        term.setEnabled(!isTech);
         Date defDate = new Date(117,1,22);
-        if (isTech) acc2.setValue(accType.getValue().substring(0,4));
-        acc2.setEnabled(!isTech);
-        if (isTech) dtb.setValue(defDate);
+        if (!cusType.hasValue())
+            if (isTech) cusType.setValue("00"); else cusType.clear();
+
+        if (!term.hasValue())
+            if (isTech) term.setValue("00"); else term.clear();
+
+        if (!acc2.hasValue())
+            if ((isTech) && (accType.hasValue())) acc2.setValue("00"+accType.getValue().substring(0,3)); else acc2.clear();
+
+        if (!dtb.hasValue())
+            if (isTech) dtb.setValue(defDate); else dtb.clear();
+
+        cusType.setReadOnly(isTech);
+        term.setReadOnly(isTech);
+        plcode.setReadOnly(isTech);
+        acc2.setReadOnly(isTech);
     }
 
     private void lookUpTerm(){
@@ -408,13 +419,21 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
             dte.setReadOnly(action == FormAction.DELETE);
             generator.setVisible(action != FormAction.DELETE);
 
+            _isTech = Utils.value((String)row.getField(10).getValue()).equalsIgnoreCase("Y")?true:Utils.value((String)row.getField(10).getValue()).equalsIgnoreCase("Да");
+
         }else{
              if (params != null){
-                 accType.setValue((String) params);
+                 Row row = (Row) params;
+                 accType.setValue(row.getField(4).getValue().toString());
                  accType.setReadOnly(true);
+                 _isTech = Utils.value((String)row.getField(8).getValue()).equalsIgnoreCase("Y");
+                 //accType.setValue((String) params);
+                 //accType.setReadOnly(true);
              }
-            dtb.setValue(new Date(108, 0, 1));
+
+            if (!_isTech) dtb.setValue(new Date(108, 0, 1));
         }
+        setTechFields(_isTech);
     }
 
     private String checkRequeredString(String value, String columnCaption) {
@@ -519,7 +538,7 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         }
 
         wrapper.setTerm(checkLength(checkRequeredString(term.getValue(), ActParm.FIELD_TERM), 2, ActParm.FIELD_TERM));
-        wrapper.setAcc2(checkLength(checkRequeredString(acc2.getValue(), ActParm.FIELD_ACC2), 5, ActParm.FIELD_ACC2));
+        wrapper.setAcc2(checkLength(!_isTech?checkRequeredString(acc2.getValue(), ActParm.FIELD_ACC2):acc2.getValue(), 5, ActParm.FIELD_ACC2));
 
         wrapper.setPlcode(checkPlCode(plcode.getValue(), wrapper.getAcc2()));
 
@@ -528,8 +547,6 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
 
         wrapper.setAcod(!_isTech ? checkLength(checkRequeredString(acod.getValue(), ActParm.FIELD_ACOD), 4, ActParm.FIELD_ACOD) : acod.getValue());
         wrapper.setAc_sq(!_isTech ? checkAcod_sq(checkLength(checkRequeredString(ac_sq.getValue(), ActParm.FIELD_AC_SQ), 2, ActParm.FIELD_AC_SQ)) : ac_sq.getValue());
-
-
 
         wrapper.setDtb(ClientDateUtils.Date2String(check(dtb.getValue(),
                 "Дата начала", "поле не заполнено", new CheckNotNullDate())));

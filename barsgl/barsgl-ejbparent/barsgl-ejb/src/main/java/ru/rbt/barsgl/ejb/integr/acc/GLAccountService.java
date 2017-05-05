@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.util.StringUtil;
 import ru.rbt.barsgl.bankjar.Constants;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
@@ -20,14 +21,12 @@ import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.*;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.SecurityActionCode;
@@ -632,6 +631,31 @@ public class GLAccountService {
             String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
             auditController.error(Account, format("Ошибка при закрытии счета по ручному вводу: '%s'",
                     accountWrapper.getBsaAcid()), null, e);
+            return new RpcRes_Base<ManualAccountWrapper>(
+                    accountWrapper, true, errMessage);
+        }
+    }
+
+    public RpcRes_Base<ManualAccountWrapper> findManualAccount(ManualAccountWrapper accountWrapper) throws Exception {
+        try{
+            Long acct = accountWrapper.getAccountType();
+            AccountingType accType = accountingTypeRepository.findById(AccountingType.class, Utils.fillUp(acct.toString(),9));
+            String cbccn = glAccountRepository.getCompanyCodeByFilial(accountWrapper.getFilial());
+
+            GLAccount account = glAccountController.findTechnicalAccountTH(accType, accountWrapper.getCurrency(), cbccn);
+            if (account!=null) {
+                accountWrapper.setBsaAcid(account.getBsaAcid());
+            }
+            else {
+                accountWrapper.getErrorList().addErrorDescription("GLAccount","","счёт не найден","");
+            }
+
+            return new RpcRes_Base<ManualAccountWrapper>(accountWrapper,false,"счёт найден");
+
+        } catch (Exception e) {
+            String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            /*auditController.error(Account, format("Ошибка поиска счёта: '%s'",
+                    accountWrapper.getAccountType()), null, e);*/
             return new RpcRes_Base<ManualAccountWrapper>(
                     accountWrapper, true, errMessage);
         }

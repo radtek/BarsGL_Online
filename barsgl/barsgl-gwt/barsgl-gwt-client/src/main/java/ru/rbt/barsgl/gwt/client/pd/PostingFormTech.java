@@ -255,7 +255,7 @@ public class PostingFormTech extends EditableDictionary<ManualTechOperationWrapp
                     return;
                 }
 
-                PostingTechDlg dlg = new PostingTechDlg("Просмотр проводки по техническим счетам", FormAction.PREVIEW, this.grid.getTable().getColumns());
+                PostingTechViewDlg dlg = new PostingTechViewDlg("Просмотр проводки по техническим счетам", FormAction.PREVIEW, this.grid.getTable().getColumns());
                 dlg.setDlgEvents(this);
                 dlg.show(row);
             }

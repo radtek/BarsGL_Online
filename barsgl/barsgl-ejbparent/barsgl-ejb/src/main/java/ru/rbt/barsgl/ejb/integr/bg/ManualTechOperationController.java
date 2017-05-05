@@ -1,11 +1,13 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.ss.usermodel.DateUtil;
 import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
@@ -15,10 +17,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
-import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
-import ru.rbt.barsgl.ejb.integr.oper.BatchTechPostingProcessor;
-import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
-import ru.rbt.barsgl.ejb.integr.oper.TechAccPostingProcessor;
+import ru.rbt.barsgl.ejb.integr.oper.*;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
@@ -35,6 +34,7 @@ import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
@@ -44,6 +44,7 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -119,6 +120,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 
     @Inject
     private GLOperationRepository glOperationRepository;
+
+    @Inject
+    private ManualOperationProcessor manualOperationProcessor;
 
 
 
@@ -256,38 +260,11 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
      */
     public RpcRes_Base<ManualOperationWrapper> processOperationRq(ManualTechOperationWrapper wrapper) throws Exception {
 
-        if (wrapper.getAction() == BatchPostAction.SAVE)
-        {
-            if ((wrapper.getAccountCredit()==null) || (wrapper.getAccountCredit().isEmpty()))
-            {
-                String cbccn = this.getFilialByAlphaCode(wrapper.getFilialCredit());
-
-                AccountKeys keys = AccountKeysBuilder.create()
-                        .withAccountType(wrapper.getAccountTypeCredit())
-                        .withCompanyCode(cbccn)
-                        .withCurrency(wrapper.getCurrencyCredit())
-                        .build();
-
-                String account = glAccountController.getGlAccountNumberTHWithKeys(keys);
-                wrapper.setAccountCredit(account);
-            }
-
-            if ((wrapper.getAccountDebit()==null) || (wrapper.getAccountDebit().isEmpty()))
-            {
-                String cbccn = this.getFilialByAlphaCode(wrapper.getFilialDebit());
-
-                AccountKeys keys = AccountKeysBuilder.create()
-                        .withAccountType(wrapper.getAccountTypeDebit())
-                        .withCompanyCode(cbccn)
-                        .withCurrency(wrapper.getCurrencyDebit())
-                        .build();
-
-                String account = glAccountController.getGlAccountNumberTHWithKeys(keys);
-                wrapper.setAccountDebit(account);
-            }
-        }
-
         try {
+            if ((wrapper.getAction() == BatchPostAction.SAVE) || (wrapper.getAction() == BatchPostAction.SAVE_CONTROL))
+            {
+                checkTechAccount(wrapper);
+            }
 //            checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
                 case SAVE:              // сохранить - шаг 1 (INPUT)
@@ -519,6 +496,48 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         }
     }
 
+    public void checkTechAccount(ManualTechOperationWrapper wrapper) throws ParseException {
+        if (StringUtils.isEmpty(wrapper.getAccountDebit()))
+        {
+            throw new ValidationError(ACCOUNT_TECH_NOT_CORRECT,"Пустой или неверный псевдосчёт", "", "");
+        }
+        else{
+            GLAccount accountDr = glAccountController.findGLAccount(wrapper.getAccountDebit());
+            if (accountDr==null)
+            {
+                throw new ValidationError(ACCOUNT_NOT_FOUND,wrapper.getAccountDebit(), "", "");
+            }
+            else {
+                SimpleDateFormat df = new SimpleDateFormat("DD.MM.YYYY");
+                Date valueDate = df.parse(wrapper.getValueDateStr());
+                if ((accountDr.getDateClose()!=null) && (accountDr.getDateCloseNotNull().before(valueDate)))
+                {
+                    throw new ValidationError(ACCOUNT_IS_CLOSED,wrapper.getAccountCredit(), accountDr.getDateCloseNotNull().toString(), wrapper.getValueDateStr());
+                }
+            }
+        }
+
+        if (StringUtils.isEmpty(wrapper.getAccountCredit()))
+        {
+            throw new ValidationError(ACCOUNT_TECH_NOT_CORRECT,"Пустой или неверный псевдосчёт", "", "");
+        }
+        else{
+            GLAccount accountCr = glAccountController.findGLAccount(wrapper.getAccountCredit());
+            if (accountCr==null)
+            {
+                throw new ValidationError(ACCOUNT_NOT_FOUND,wrapper.getAccountCredit(), "", "");
+            }
+            else {
+                SimpleDateFormat df = new SimpleDateFormat("DD.MM.YYYY");
+                Date valueDate = df.parse(wrapper.getValueDateStr());
+                if ((accountCr.getDateClose()!=null) && (accountCr.getDateCloseNotNull().before(valueDate)))
+                {
+                    throw new ValidationError(ACCOUNT_IS_CLOSED,wrapper.getAccountCredit(), accountCr.getDateCloseNotNull().toString(), wrapper.getValueDateStr());
+                }
+            }
+        }
+    }
+
     public String getFilial(String bsaAsid) {
         return glOperationRepository.getFilialByAccount(bsaAsid);
     }
@@ -728,7 +747,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 //            }
             postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
             BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL);
-            checkHand12Diff(posting0);
+            //checkHand12Diff(posting0);
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             // тестируем статус - что никто еще не менял
             updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);
@@ -741,6 +760,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 // устанавливаем статус SIGNED / SIGNEDDATE / WAITDATE
                 return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
             }
+
+
+
         } catch (ValidationError e) {
             String msg = "Ошибка при авторизации запроса на операцию ID = " + wrapper.getId();
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -1067,5 +1089,16 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return ((null != posting.getMovementId()) && !(ERRSRV.equals(posting.getStatus()) || REFUSESRV.equals(posting.getStatus())))
                 || TIMEOUTSRV.equals(posting.getStatus()) ;
     }
+
+    /**
+     * Метод создания технической операции по ручной
+     * @param posting
+     * @return
+     */
+    private GLManualOperation createOperation(BatchPosting posting)
+    {
+        return manualOperationProcessor.createOperation(posting);
+    }
+
 
 }

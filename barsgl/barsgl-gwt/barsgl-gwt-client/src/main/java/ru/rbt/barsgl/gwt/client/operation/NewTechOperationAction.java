@@ -8,6 +8,7 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -25,7 +26,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  */
 public class NewTechOperationAction extends GridAction {
 
-    private OperationTechHandsDlg dlg;
+    private OperationTechHandsDlg2 dlg;
     private boolean isExtended;
 
     public NewTechOperationAction(GridWidget grid, ImageResource imageRecource) {
@@ -41,7 +42,7 @@ public class NewTechOperationAction extends GridAction {
     
     @Override
     public void execute() {
-        dlg = new OperationTechHandsDlg("Ввод бухгалтерской операции по техсчетам", FormAction.CREATE, grid.getTable().getColumns(), BatchPostStep.HAND1);
+        dlg = new OperationTechHandsDlg2("Ввод бухгалтерской операции по техсчетам", FormAction.CREATE, grid.getTable().getColumns(), BatchPostStep.HAND1);
         dlg.setDlgEvents(this);
         dlg.setAfterCancelEvent(new IAfterCancelEvent() {
             @Override
@@ -49,7 +50,6 @@ public class NewTechOperationAction extends GridAction {
                 grid.refresh();
             }
         });
-
         Object params = getParams();
         dlg.show(params);
     }
@@ -61,7 +61,7 @@ public class NewTechOperationAction extends GridAction {
         ManualTechOperationWrapper operationWrapper = (ManualTechOperationWrapper) prms;
 
         operationWrapper.setStatus(BatchPostStatus.NONE);
-        operationWrapper.setAction( dlg.getOperationAction() == OperationTechHandsDlg.ButtonOperAction.OK ?
+        operationWrapper.setAction( dlg.getOperationAction() == OperationTechHandsDlg2.ButtonOperAction.OK ?
                 BatchPostAction.SAVE : BatchPostAction.SAVE_CONTROL);
 
         BarsGLEntryPoint.operationService.processTechOperationRq(operationWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualTechOperationWrapper>>() {

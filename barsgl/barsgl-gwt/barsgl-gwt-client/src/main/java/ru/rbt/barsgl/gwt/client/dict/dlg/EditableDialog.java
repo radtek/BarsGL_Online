@@ -96,7 +96,6 @@ public abstract class EditableDialog<T extends Serializable> extends DlgFrame {
     }
 
     protected String checkRequeredString(String value, String columnCaption) {
-        DialogUtils.showInfo("EditableDialog: checkRequeredString");
         return check(value, columnCaption, REQUIRED, new AppPredicate<String>() {
             @Override
             public boolean check(String target) {

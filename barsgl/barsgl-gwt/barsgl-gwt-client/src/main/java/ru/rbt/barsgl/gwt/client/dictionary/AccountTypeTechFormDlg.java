@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
+import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -69,12 +70,14 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
                         result.addColumn(new Column("ACTYP_NAME", Column.Type.STRING, "Наименование Accounting Typе", 80));
             result.addColumn(colCtrl = new Column("FL_CTRL", Column.Type.STRING, "Контролируемый", 20, false, false));
 
-            return result;
+                        return result;
         }
 
         @Override
         public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
+            initialFilterParams = getInitialFilterParams();
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+
             if ((initialFilterParams!=null) && (initialFilterParams.length>0)) {
                 String accType = initialFilterParams[0].toString();
 

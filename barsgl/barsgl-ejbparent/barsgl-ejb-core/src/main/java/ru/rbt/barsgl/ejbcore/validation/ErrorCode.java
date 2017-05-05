@@ -52,6 +52,7 @@ public enum ErrorCode {
     , ACCOUNT_TH_CBCCN_NOT_EQUALS(42,"Ключ технического счёта по кредиту и дебету содержат различные коды филиалов '%s' != '%s'")
     , ACCOUNT_TH_ССY_NOT_RUR(43,"Код валюты дебета или кредита должны быть равны RUR. '%s', '%s'")
     , ACCOUNT_TH_ACCTYPE_NOT_VALID(44,"Поле AccType по %s содержит неверный код типа счёта '%s'")
+    ,ACCOUNT_TECH_NOT_CORRECT(45, "Некорректный счет %s: '%s'.")
 
     /**
      * Ошибки при создании проводки (runtime)
