@@ -146,7 +146,7 @@ public class OfrAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     public String createAccount(Connection connection, AccountKeys keys, Date dateOpen, Date dateClose, Date dateFrom) throws Exception {
         checkDateOpen(dateOpen, "Дата открытия'");
-        String bsaAcid = AccountUtil.createAccountCB(connection,      // Connection con,
+        String bsaAcid = AccountUtil.createAccountCbNC(connection,      // Connection con,
                 // String acc2, String ccc, String filialCode, String plCode, Date openDate, Date closeDate,
                 keys.getAccount2(), keys.getCurrencyDigital(), keys.getCompanyCode(), keys.getPlCode(), dateOpen, dateClose,
                 // String accid, String relationType, String customerType, String type)

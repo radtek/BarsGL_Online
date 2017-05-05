@@ -96,7 +96,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
      * @return счет ЦБ
      */
     public String findForSequenceGL(AccountKeys keys) throws Exception {
-        List<DataRecord> results = select("select bsaacid from accrln where CCODE = ? and CBCCY = ? and ACC2 = ? and RLNTYPE = 'T' and GLACOD = ''"
+        List<DataRecord> results = select("select bsaacid from accrln where CCODE = ? and CBCCY = ? and ACC2 = ? and RLNTYPE = 'T' and GLACOD = ' '"
             , keys.getCompanyCode(), keys.getCurrencyDigital(), keys.getAccount2());
         if (1 == results.size()) {
             return results.get(0).getString("BSAACID");
