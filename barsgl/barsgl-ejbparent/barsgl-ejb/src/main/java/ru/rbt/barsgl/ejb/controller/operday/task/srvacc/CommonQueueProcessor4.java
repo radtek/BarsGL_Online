@@ -149,11 +149,19 @@ public class CommonQueueProcessor4 {
     public void process(Properties properties) throws Exception {
         try {
             queueProperties = new QueueProperties(properties);
-            startConnection();
-            batchSize = queueProperties.mqBatchSize;
-            loadCurrency();
-            processSources(queueProperties);
-//        log.info("Сессия обработки одной очереди завершена");
+            try{
+                startConnection();
+                batchSize = queueProperties.mqBatchSize;
+                loadCurrency();
+                processSources(queueProperties);
+//              log.info("Сессия обработки одной очереди завершена");
+            }catch(JMSException ex){
+                // reset session
+                reConnect();
+                auditController.warning(AccountQuery, "Ошибка при обработке сообщений", null, ex);
+                throw ex;
+            }
+
         } catch (Exception e) {
             log.error("Ошибка в методе process", e);
             throw e;
