@@ -3,7 +3,6 @@ package ru.rbt.security.gwt.client.security;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
-//import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.shared.LoginResult;
 

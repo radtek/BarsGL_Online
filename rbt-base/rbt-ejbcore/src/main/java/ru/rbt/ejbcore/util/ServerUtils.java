@@ -1,7 +1,5 @@
 package ru.rbt.ejbcore.util;
 
-import ru.rbt.ejbcore.DefaultApplicationException;
-
 import javax.enterprise.inject.Instance;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 /**
  * Created by Ivan Sevastyanov
@@ -19,15 +18,15 @@ import java.util.logging.Logger;
 public class ServerUtils {
 
     public static String md5(String target) {
-      try {
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(target.getBytes());
-        return bytes2String(md.digest());
-      } catch (NoSuchAlgorithmException ex) {
-        Logger.getLogger(ServerUtils.class.getName()).log(Level.SEVERE, null, ex);
-        return null;
-      }
-    }    
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(target.getBytes());
+            return bytes2String(md.digest());
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(ServerUtils.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
 
     public static <T> T findAssignable(Class<? extends T> clazz, Instance<T> services) {
         for (T service : services) {
@@ -66,11 +65,12 @@ public class ServerUtils {
     }
 
     private static String bytes2String(byte[] bytes) {
-      StringBuilder string = new StringBuilder();
-      for (byte b : bytes) {
-        String hexString = Integer.toHexString(0x00FF & b);
-        string.append(hexString.length() == 1 ? "0" + hexString : hexString);
-      }
-      return string.toString();
+        StringBuilder string = new StringBuilder();
+        for (byte b : bytes) {
+            String hexString = Integer.toHexString(0x00FF & b);
+            string.append(hexString.length() == 1 ? "0" + hexString : hexString);
+        }
+        return string.toString();
     }
+    
 }

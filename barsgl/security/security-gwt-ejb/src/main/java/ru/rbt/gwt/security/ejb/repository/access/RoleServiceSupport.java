@@ -3,6 +3,7 @@ package ru.rbt.gwt.security.ejb.repository.access;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.security.entity.access.Role;
+import ru.rbt.security.ejb.repository.access.RoleRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -20,7 +21,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import ru.rbt.security.ejb.repository.access.RoleRepository;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Role;
 
@@ -245,7 +245,7 @@ public class RoleServiceSupport {
 
             if (all){
                  sql = "select  id_src,  lgnm from (\n" +
-                       "select '*'  as  id_src, 'Все'  as  lgnm from DUAL\n" +
+                       "select '*'  as  id_src, 'Все'  as  lgnm from sysibm.sysdummy1\n" +
                        "union\n" +
                        "select id_src, lgnm from GL_SRCPST) t\n" +
                        "where t. id_src not in (select id_src from V_GL_AU_USRPR where id_user=?)";
@@ -309,7 +309,7 @@ public class RoleServiceSupport {
 
             if (all){
                 sql = "select CCPCD, CCPNR, CCBBR from\n" +
-                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from DUAL\n" +
+                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from sysibm.sysdummy1\n" +
                       "union\n" +
                       "select CCPCD, CCPNR, CCBBR from IMBCBCMP) t\n" +
                       "where t.CCPCD not in (select CCPCD from  V_GL_AU_USRBR where id_user=?)";

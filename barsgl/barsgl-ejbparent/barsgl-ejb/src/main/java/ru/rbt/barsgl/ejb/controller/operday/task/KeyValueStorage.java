@@ -1,11 +1,8 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import java.util.EnumMap;

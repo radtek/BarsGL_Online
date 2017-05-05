@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.core.dialogs;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTMLTable.CellFormatter;
@@ -171,7 +172,10 @@ public class EditDlg extends DlgFrame{
 						switch (col.getType()) {
 							case STRING:
 							case DATETIME:	// строка
-								widget.setValue(value.toString());
+								if (col.getFormat() != null && !col.getFormat().isEmpty()){
+									widget.setValue(DateTimeFormat.getFormat(col.getFormat()).format((Date) value));
+								}else
+								    widget.setValue(value.toString());
 								break;
 							case DATE:
 								Date valueDate = DatePickerBox.DATE_FORMAT.parse(DatePickerBox.DATE_FORMAT.format((Date)value, TZ_CLIENT));

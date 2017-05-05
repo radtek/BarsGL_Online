@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
  * Created by ER21006 on 15.01.2016.

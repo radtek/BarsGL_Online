@@ -111,6 +111,10 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
         return operdayController.getOperday().getCurrentDate();
     }
 
+    protected JobHistory getHistory(Properties properties) {
+        return (JobHistory) properties.get(HISTORY);
+    }
+
     private JobHistory updateJobStatus(final JobHistory history, DwhUnloadStatus status) throws Exception {
         if (null != history) {
             return jobHistoryRepository.executeInNewTransaction(persistence -> jobHistoryRepository.updateStatus(history, status));

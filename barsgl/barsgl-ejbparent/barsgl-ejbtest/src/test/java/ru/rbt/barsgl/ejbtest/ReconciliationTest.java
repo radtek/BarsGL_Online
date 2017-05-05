@@ -12,7 +12,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;

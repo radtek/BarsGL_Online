@@ -18,6 +18,8 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,15 +55,15 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
-        SQL sql = prepareCommonSql(nativeSql, criterion);
-        final List<Object> params = new ArrayList<>();
-        if (null != sql.getParams()) {
-            params.addAll(Arrays.asList(sql.getParams()));
-        }
-
-        String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith, orderBy);
-
         try {
+            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            final List<Object> params = new ArrayList<>();
+            if (null != sql.getParams()) {
+                params.addAll(Arrays.asList(sql.getParams()));
+            }
+
+            String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith, orderBy);
+
             log.debug("SQL[selectRows] => " + resultSql);
             params.forEach(p -> log.debug("Param = " + p));
             DataSource dataSource = repository.getDataSource(rep);
@@ -78,10 +80,10 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
-        SQL sql = prepareCommonSql(nativeSql, criterion);
-        String sqlDummy = "select * from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
-        String resultSql = "select count(*) cnt from (" + sqlDummy + " ) " + COUNT_ALIAS;
         try {
+            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;
+
             DataSource dataSource = repository.getDataSource(rep);
             int cnt = repository.selectFirst(dataSource, resultSql, sql.getParams()).getInteger("cnt");
             if (MAX_ROW_COUNT + 1 == cnt)
@@ -139,6 +141,15 @@ public class SqlPageSupportBean implements SqlPageSupport {
         }
     }
 
+    private static String defineSql(String sql) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
+        if (sql.trim().toLowerCase().startsWith("select")) return sql;
+        String[] parts = sql.split("@");
+        Class cls = Class.forName(parts[0]);
+        Object obj =  cls.newInstance();
+        Method method = cls.getDeclaredMethod(parts[1]);
+        return (String) method.invoke(obj, null);
+    }
+
     @Override
     public String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) {
         return export2Excel(nativeSql, Repository.BARSGL, xlsColumns, criterion, pageSize, startWith, orderBy, head);
@@ -149,16 +160,15 @@ public class SqlPageSupportBean implements SqlPageSupport {
         int pgSize = (pageSize == 0 || pageSize > MAX_PAGE_SIZE) ? MAX_PAGE_SIZE : pageSize;
 
         String pagingString = buildRowNnumberMarker2(orderBy, pgSize);
-
-        SQL sql = prepareCommonSql(nativeSql, criterion);
-        final ArrayList<Object> params = new ArrayList<>();
-        if (null != sql.getParams()) {
-            params.addAll(Arrays.asList(sql.getParams()));
-        }
-
-        String resultSql = preparePaging2(sql.getQuery(), pagingString, params, startWith, pgSize);   // pagingString,
-
         try {
+               SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+               final ArrayList<Object> params = new ArrayList<>();
+               if (null != sql.getParams()) {
+                   params.addAll(Arrays.asList(sql.getParams()));
+               }
+
+           String resultSql = preparePaging2(sql.getQuery(), pagingString, params, startWith, pgSize);   // pagingString,
+
             DataSource dataSource = repository.getDataSource(rep);
             return (String) repository.executeInNonTransaction(dataSource, connection -> {
                 String excelSql = resultSql;        // TODO resultSQL

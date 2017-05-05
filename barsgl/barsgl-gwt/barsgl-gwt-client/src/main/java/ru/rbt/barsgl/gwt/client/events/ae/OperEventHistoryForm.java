@@ -23,6 +23,7 @@ import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 /**
  * Created by akichigi on 03.06.16.

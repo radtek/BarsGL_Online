@@ -13,8 +13,10 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
@@ -37,8 +39,6 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -50,12 +50,10 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
-import ru.rbt.barsgl.ejb.security.UserContext;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.shared.enums.PrmValueEnum.Source;
-import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 
 /**
  * Created by ER18837 on 03.08.15.
@@ -88,8 +86,6 @@ public class GLAccountService {
     @Inject
     private BankCurrencyRepository bankCurrencyRepository;
 
-    @Inject
-    private AccRepository accRepository;
 
     @Inject
     private BsaAccRepository bsaAccRepository;
@@ -257,42 +253,12 @@ public class GLAccountService {
                             , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
                         .map(GLAccount::getBsaAcid).orElseGet(() -> glAccountController.createGLPLAccount(keys, operation, operSide));
             } else {
-                return processNotOwnPLAccount(operation,operSide,keys,dateOpen, dateStart446P);
+                return Optional.ofNullable(glAccountController.findForPlcodeNo7903(keys, dateOpen, dateStart446P))
+                        .orElseGet(() -> glAccountController.processNotOwnPLAccount(operation, operSide, keys,dateOpen, dateStart446P));
             }
         }
     }
 
-    /**
-     * Поиск/открытие счетов доходов/расходов
-     * Ищем не наш счет, иначе создаем в т.ч. у нас
-     */
-    private String processNotOwnPLAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, Date dateStart446P) throws Exception {
-        String bsaasid = accRlnRepository.findForPlcodeNo7903(keys, dateOpen, dateStart446P);
-        if (bsaasid == null) {
-            if (!glAccountRepository.checkMidasAccountExists(keys.getAccountMidas(), dateOpen)) {
-                //todo создать запись в АСС
-//                throw new ValidationError(ACCOUNT_MIDAS_NOT_FOUND, keys.getAccountMidas());
-                GLAccount glAccount = new GLAccount();
-                glAccount.setAcid(keys.getAccountMidas());
-                glAccount.setBranch(keys.getBranch());
-                glAccount.setCustomerNumberD(Integer.parseInt(keys.getCustomerNumber()));
-                 BankCurrency bankCurrency = new BankCurrency(keys.getCurrency());
-                 bankCurrency.setDigitalCode(keys.getCurrencyDigital());
-                glAccount.setCurrency(bankCurrency);
-                glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
-                glAccount.setAccountSequence(Short.parseShort(keys.getAccSequence()));
-                glAccount.setDateOpen(dateOpen);
-                glAccount.setDateClose(Date.from(LocalDate.of(2029, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
-                glAccount.setDescription("");
-                accRepository.createAcc(glAccount);
-            }
-
-            bsaasid = glAccountController.createPlAccount(keys, dateOpen, dateStart446P, operation, operSide);
-            auditController.info(Account, format("Создан счет '%s' для операции '%d' %s",
-                    bsaasid, operation.getId(), operSide.getMsgName()), operation);
-        }
-        return bsaasid;
-    }
 
     private void checkAccountPermission(ManualAccountWrapper wrapper, FormAction action) {
         String acc2 = wrapper.getBalanceAccount2();
@@ -632,7 +598,7 @@ public class GLAccountService {
         String errorCode = ValidationError.getErrorCode(errMessage);
         String errorMessage = substr(errMessage, start, stop);
         String errorText = ValidationError.getErrorText(errorMessage);
-        errorList.addNewErrorDescription("", "", errorText, errorCode);
+        errorList.addNewErrorDescription(errorText, errorCode);
 
         log.error(format("%s: %s. Обнаружена: %s\n'", errorList.getErrorMessage(), errMessage, source), e);
 /*

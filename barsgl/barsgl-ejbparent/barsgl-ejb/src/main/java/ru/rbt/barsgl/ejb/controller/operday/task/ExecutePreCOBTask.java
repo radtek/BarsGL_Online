@@ -35,7 +35,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
-import ru.rbt.barsgl.ejb.controller.operday.task.PreCobBatchPostingTask;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
@@ -49,6 +48,7 @@ import static ru.rbt.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
  * Created by Ivan Sevastyanov
  * Перевод опердня в состояние PRE_COB
  */
+@Deprecated
 public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
 
     public static final String TIME_LOAD_BEFORE_KEY = "timeLoadBefore";
@@ -172,7 +172,7 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
                     , dateUtils.onlyDateString(operday.getCurrentDate())));
             try {
                 beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                    closeLastWorkdayBalanceTask.executeWork(); return null;
+                    closeLastWorkdayBalanceTask.executeWork(true); return null;
                 }, 60 * 60);
             } catch (Exception e) {
                 // пишем ошибку и выходим

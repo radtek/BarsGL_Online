@@ -6,6 +6,8 @@ import ru.rbt.security.entity.AppUser;
 import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.security.entity.access.PrmValueHistory;
 import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
@@ -21,14 +23,15 @@ import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 
 import static java.lang.String.format;
+import java.util.ArrayList;
+import java.util.List;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackValue;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.User;
 import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 import ru.rbt.shared.security.RequestContext;
+import ru.rbt.shared.user.AppUserWrapper;
 
 /**
  * Created by akichigi on 07.04.16.
@@ -63,7 +66,7 @@ public class AccessServiceSupport {
 
             PrmValueWrapper wrapper = new PrmValueWrapper();
 
-            AppUser user = appUserRepository.selectFirst(AppUser.class, "from AppUser u where u.id = ?1", Long.valueOf(userId));
+            AppUser user = appUserRepository.selectFirst(AppUser.class, "from AppUser u where u.id = ?1", userId);
             if (null == user) {
                 return new RpcRes_Base<PrmValueWrapper>(wrapper, true, "Пользователь не существует!");
             }
@@ -206,13 +209,36 @@ public class AccessServiceSupport {
                 "from (\n" +
                 "\tselect dat \n" +
                 "\tfrom dwh.cal\n" +
-                "\twhere ccy='RUR' and hol='' and dat< (select curdate from dwh.gl_od)\n" +
+                "\twhere ccy='RUR' and thol not in ('X', 'T') and dat< (select curdate from dwh.gl_od)\n" +
                 "\torder by 1 desc\n" +
                 "\tfetch first %s rows only) d", prm.getPrmValue()));
         Date bvDate = rec.getDate("dat");
 
         if (rec == null || bvDate.compareTo(date) == 1)
             throw new ValidationError(ErrorCode.POSTING_BACK_NOT_IN_DAYS, new SimpleDateFormat("dd.MM.yyyy").format(bvDate));
+    }
+
+    public AppUserWrapper getGrantedBranchesAndSourses(AppUser user){
+        AppUserWrapper wrapper = new AppUserWrapper();
+        ArrayList<String> grantedHeadBranches = new ArrayList<>();
+        ArrayList<String> grantedSources = new ArrayList<>();
+
+        String query = "from PrmValue p where p.userId = ?1 and p.prmCode = ?2";
+
+        List<PrmValue> prmValues = prmValueRepository.select(PrmValue.class, query, user.getId(), PrmValueEnum.HeadBranch);
+        for(PrmValue value : prmValues){
+            grantedHeadBranches.add(value.getPrmValue());
+        }
+
+        prmValues = prmValueRepository.select(PrmValue.class, query, user.getId(), PrmValueEnum.Source);
+        for(PrmValue value : prmValues){
+            grantedSources.add(value.getPrmValue());
+        }
+
+        wrapper.setGrantedHeadBranches(grantedHeadBranches);
+        wrapper.setGrantedSources(grantedSources);
+
+        return wrapper;
     }
 
     private String getUserAut(){

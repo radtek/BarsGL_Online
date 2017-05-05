@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejbcore;
 
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +18,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedThreadFactory;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 /**
  * Created by Ivan Sevastyanov

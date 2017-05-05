@@ -1,8 +1,7 @@
 package ru.rbt.security.gwt.client.formmanager;
 
-//import ru.rbt.barsgl.gwt.client.formmanager.MenuBuilder;
-import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
 import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
+import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -13,24 +12,15 @@ import com.google.gwt.user.client.ui.*;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
-//import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-//import ru.rbt.barsgl.gwt.client.formmanager.FormEvent;
-//import ru.rbt.barsgl.gwt.client.formmanager.FormEventHandler;
-//import ru.rbt.barsgl.gwt.client.formmanager.MenuBuilder;
-//import ru.rbt.barsgl.gwt.client.formmanager.StatusBarEvent;
-//import ru.rbt.barsgl.gwt.client.formmanager.StatusBarEventHandler;
-//import ru.rbt.barsgl.gwt.client.info.SystemInfoForm;
-//import ru.rbt.barsgl.gwt.client.monitoring.Monitor;
-//import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
-import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.shared.access.UserMenuWrapper;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
-//import static ru.rbt.barsgl.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 
 
 public class FormManagerUI extends Composite {
@@ -60,7 +50,6 @@ public class FormManagerUI extends Composite {
 
     private Label operdayLabel;
     private Label operdayDate;
-    
     private IMenuBuilder menuBuilder;
 
     public static FormManagerUI getFormManager(final UserMenuWrapper menuWrapper, IMenuBuilder menuBuilder){
@@ -74,7 +63,6 @@ public class FormManagerUI extends Composite {
 
         LocalEventBus.addHandler(StatusBarEvent.TYPE, createStatusBarEventHandler());
         LocalEventBus.addHandler(FormEvent.TYPE, createFormHandler());
-        
         //menuBuilder = new MenuBuilder(menuWrapper, dataPanel).build(menuBar);
         if(menuBuilder != null){
             this.menuBuilder = menuBuilder;
@@ -120,6 +108,9 @@ public class FormManagerUI extends Composite {
         };
     }
 
+    public static void ChangeStatusBarText(String text, StatusBarManager.MessageReason reason) {
+        LocalEventBus.fireEvent(new StatusBarEvent(text, reason));
+    }
 
     public static void show(Widget form){
         LocalEventBus.fireEvent(new FormEvent(form));
@@ -160,6 +151,8 @@ public class FormManagerUI extends Composite {
             public void accept(OperDayWrapper operDayWrapper) {
                 operdayDate.setText(operDayWrapper.getCurrentOD());
                 CommonEntryPoint.CURRENT_WORKDAY = operDayWrapper.getPreviosODDate();
+                CommonEntryPoint.CURRENT_OPER_DAY = operDayWrapper.getCurrentODDate();
+                LocalDataStorage.putParam("current_od_date", operDayWrapper.getCurrentODDate());
             }
         });
     }

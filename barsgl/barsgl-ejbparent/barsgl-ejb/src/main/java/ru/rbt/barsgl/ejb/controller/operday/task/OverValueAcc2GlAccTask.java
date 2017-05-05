@@ -22,8 +22,8 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
 
 /**
  * Created by ER22317 on 01.11.2016.

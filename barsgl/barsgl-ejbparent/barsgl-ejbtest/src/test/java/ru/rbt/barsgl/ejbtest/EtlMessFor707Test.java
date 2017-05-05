@@ -6,7 +6,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbtest.AbstractTimerJobTest;
 import ru.rbt.barsgl.ejbtest.EtlStructureMonitorTest;

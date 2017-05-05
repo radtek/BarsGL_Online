@@ -6,11 +6,11 @@ import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.shared.enums.Repository;
 
 import java.io.Serializable;
 import java.util.List;
-import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 
 /**
  * Created by akichigi on 02.04.15.

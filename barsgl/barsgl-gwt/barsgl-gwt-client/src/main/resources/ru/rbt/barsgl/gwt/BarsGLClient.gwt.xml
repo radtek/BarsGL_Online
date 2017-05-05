@@ -5,7 +5,7 @@
     <inherits name="com.google.gwt.user.User" />
     <inherits name="com.google.gwt.user.theme.standard.Standard" />
     <inherits name="com.google.gwt.xml.XML" />
-    <inherits name="com.google.gwt.resources.Resources" />    
+    <inherits name="com.google.gwt.resources.Resources" />
     <inherits name="ru.rbt.RBTShared" />
     <inherits name="ru.rbt.barsgl.BarsGLShared" />
     <inherits name="ru.rbt.security.gwt.SecurityServer" />

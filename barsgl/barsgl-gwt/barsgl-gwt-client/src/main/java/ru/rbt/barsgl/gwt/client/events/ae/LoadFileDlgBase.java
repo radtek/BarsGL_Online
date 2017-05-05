@@ -12,7 +12,6 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.CheckFileExtention;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
@@ -36,6 +35,7 @@ import java.util.HashMap;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by akichigi on 20.06.16.

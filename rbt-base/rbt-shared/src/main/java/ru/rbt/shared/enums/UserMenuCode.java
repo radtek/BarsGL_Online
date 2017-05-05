@@ -10,7 +10,8 @@ public enum UserMenuCode {
     , TermCode, AccountingType, PlanAccountingType, PlanAccountOfr, PropertyType, Branch
     , UnloadStamtConfig, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
     , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
-    , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize
+    , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, ErrorView, ErrorHandling
+
 
     /* Дополнительные коды меню, которые строятся всегда! */
     , Separator, SystemExit, Help, HelpAbout;

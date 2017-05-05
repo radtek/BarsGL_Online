@@ -1,11 +1,11 @@
 package ru.rbt.audit.repository;
 
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.Date;
-import ru.rbt.audit.entity.AuditRecord;
 
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 

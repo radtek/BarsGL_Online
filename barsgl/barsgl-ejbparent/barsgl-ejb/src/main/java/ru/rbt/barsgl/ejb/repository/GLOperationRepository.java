@@ -8,10 +8,11 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -23,6 +24,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static ru.rbt.ejbcore.util.StringUtils.*;
 
@@ -287,7 +289,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     }
 
     public void updateOperationStatusError(GLOperation operation, OperState state, String message) {
-        executeUpdate("update GLOperation o set o.state = ?1, o.errorMessage = ?2 where o = ?3", state, message, operation);
+        executeUpdate("update GLOperation o set o.state = ?1, o.errorMessage = ?2 where o = ?3", state, substr(message, 4000), operation);
     }
 
     public void updateOperationFanStatusSuccess(String parentRef, YesNo storno, OperState state) {
@@ -348,6 +350,27 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         return select(GLOperation.class
                 , "from GLOperation o where o.parentReference = ?1 and o.storno = ?2 and o.fan = ?3 and o.valueDate >= ?4 order by o.fbSide, o.id"
                 , parentReference, storno, YesNo.Y, getFanVdatefrom());
+    }
+
+    public List<String> getFanOperationLoad(Date procdate) {
+        try {
+            List<DataRecord> res = select("select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE = ?",
+                    procdate, OperState.LOAD.name());
+            return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public List<String> getFanOperationProcessed(Date procdate, List<String> refs) {
+        try {
+            List<DataRecord> res = select("select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE in (?, ?) and PAR_RF in (" +
+                    StringUtils.listToString(refs, ", ", "'") + ") ",
+                    procdate, OperState.POST.name(), OperState.SOCANC.name());
+            return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 
     private Date getFanVdatefrom () {

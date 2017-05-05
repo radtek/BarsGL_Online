@@ -3,7 +3,7 @@ package ru.rbt.gwt.security.policy;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;

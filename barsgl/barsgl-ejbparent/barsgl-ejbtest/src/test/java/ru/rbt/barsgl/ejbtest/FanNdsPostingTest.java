@@ -14,7 +14,8 @@ import ru.rbt.barsgl.ejb.entity.flx.NdsPosting;
 import ru.rbt.barsgl.ejb.entity.flx.TransitNdsReference;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -102,7 +103,7 @@ public class FanNdsPostingTest extends AbstractRemoteTest {
 
         baseEntityRepository.executeNativeUpdate("insert into pdext2 (id, rnarlng, docn) " +
                 "values (?, ?, ?)", id, "12345", "");
-//                "values (?, ?, ?)", id, "12345", ru.rbt.barsgl.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis()+"", 5));
+//                "values (?, ?, ?)", id, "12345", ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis()+"", 5));
         baseEntityRepository.executeNativeUpdate("insert into pdext (id) values (?)", id);
         baseEntityRepository.executeNativeUpdate("insert into pdext3 (id) values (?)", id);
         baseEntityRepository.executeNativeUpdate("insert into pdext5 (id) values (?)", id);

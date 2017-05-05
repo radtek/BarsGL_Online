@@ -20,8 +20,10 @@ public class Column implements Serializable {
     private Sort sortType;   
     // Формат поля (для полей, у которых есть формат и не устраивает формат по умолчанию)
     private String format;
-    // Ширина в пикселях
+    // Ширина в пикселях текущая
     private int width;
+    // Ширина в пикселях оригинальная
+    private int origin_width;
 
     // Допустимы ли значения NULL для колонки
     private boolean nullable = true;
@@ -67,6 +69,7 @@ public class Column implements Serializable {
     	this.type = type;
     	this.caption = caption;
     	this.width = width;
+        this.origin_width = width;
     	this.visible = visible;
     	this.readonly = readonly;
     	this.sortType = sortType;
@@ -168,7 +171,11 @@ public class Column implements Serializable {
     public int getWidth() {
     	return width;
     }
-    
+
+    public int getOrigin_width() {
+        return origin_width;
+    }
+
     public boolean isEditable() {
 		return editable;
 	}

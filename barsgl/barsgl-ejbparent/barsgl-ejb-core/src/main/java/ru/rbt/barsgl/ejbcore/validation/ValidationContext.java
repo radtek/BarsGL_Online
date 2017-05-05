@@ -4,6 +4,7 @@ import ru.rbt.ejbcore.validation.ValidationError;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import ru.rbt.ejbcore.validation.ValidationError;
 
 /**
  * Created by Ivan Sevastyanov

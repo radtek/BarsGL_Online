@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ru.rbt</groupId>
   <artifactId>rbt-base</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.0.ora</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}:${project.packaging}:${project.version}</name>
@@ -11,9 +11,10 @@
   <modules>
     <module>rbt-shared</module>
     <module>rbt-ejbcore</module>
+    <module>rbt-prop</module>
     <module>rbt-audit</module>
-    <module>security-ejb</module>
     <module>security-jpa</module>
+    <module>security-ejb</module>
   </modules>
   
   <properties>

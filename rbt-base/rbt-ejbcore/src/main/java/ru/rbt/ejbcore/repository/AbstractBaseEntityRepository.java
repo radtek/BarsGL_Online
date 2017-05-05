@@ -540,7 +540,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     @PostConstruct
     public void init() {
         dataSource = findConnection(barsglDataSourceName);
-        barsrepDataSource = findConnection(barsrepDataSourceName);
+        try{
+            barsrepDataSource = findConnection(barsrepDataSourceName);
+        }catch(Exception ex){
+            log.info("DataSource not found: "+barsrepDataSourceName);
+        }
     }
 
     private DataSource findConnection(String jndiName) {

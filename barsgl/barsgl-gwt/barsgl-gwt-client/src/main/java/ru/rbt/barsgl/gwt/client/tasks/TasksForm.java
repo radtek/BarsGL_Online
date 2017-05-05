@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.tasks;
 
+import ru.rbt.tasks.gwt.client.tasks.TaskFormDlg;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -8,6 +9,7 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Field;

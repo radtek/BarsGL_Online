@@ -4,17 +4,17 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>3.0.18-SNAPSHOT</version>
+        <version>3.0.22-SNAPSHOT</version>
     </parent>
     <artifactId>tasks</artifactId>
     <name>${project.artifactId}:${project.packaging}:${project.version}</name>
     <packaging>pom</packaging>
-    <modules>
-        <module>tasks-gwt-client</module>
-        <module>tasks-gwt-server</module>
-    <module>tasks-ejb</module>
-  </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+  <modules>
+    <module>tasks-ejb</module>
+    <module>tasks-gwt-client</module>
+    <module>tasks-gwt-server</module>
+  </modules>
 </project>

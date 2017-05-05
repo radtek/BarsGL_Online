@@ -25,10 +25,13 @@ import ru.rbt.barsgl.ejb.integr.loader.LoadManagementController;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
+import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -50,8 +53,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
+import java.io.IOException;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
+import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
@@ -122,7 +127,7 @@ public abstract class AbstractRemoteTest  {
     }
 
     private static void init() {
-        baseEntityRepository = ProxyFactory.createProxy(BaseEntityRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
+        baseEntityRepository = ProxyFactory.createProxy(ClientSupportRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
         postingController = ProxyFactory.createProxy(EtlPostingController.class.getName(), EtlMessageController.class, remoteAccessInternal);
         fanPostingController = ProxyFactory.createProxy(FanForwardOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);
         fanStornoController = ProxyFactory.createProxy(FanStornoBackvalueOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);
@@ -346,6 +351,10 @@ public abstract class AbstractRemoteTest  {
      * @return
      */
     public static EtlPosting newPosting(long stamp, EtlPackage pkg) {
+        return newPosting(stamp, pkg, "PH");
+    }
+
+    public static EtlPosting newPosting(long stamp, EtlPackage pkg, String src) {
         EtlPosting pst = new EtlPosting();
         String st = ("" + System.currentTimeMillis()).substring(3);
         pst.setAePostingId("id_" + st);
@@ -361,7 +370,7 @@ public abstract class AbstractRemoteTest  {
         pst.setOperationTimestamp(new Date());
         pst.setRusNarrativeLong("nrt" + stamp);
         pst.setRusNarrativeShort("nrt" + stamp);
-        pst.setSourcePosting("srcpst");
+        pst.setSourcePosting(src);
 
         // могут стать значимыми
         pst.setFan(YesNo.N);

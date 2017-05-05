@@ -8,7 +8,6 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.audit.entity.AuditRecord.LogCode;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.AccRlnRepository;
@@ -21,7 +20,7 @@ import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;

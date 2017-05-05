@@ -1,13 +1,12 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
-import ru.rbt.barsgl.shared.Builder;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.entity.access.*;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
-import ru.rbt.security.entity.AppUser;
-import ru.rbt.security.entity.access.*;
+import ru.rbt.barsgl.shared.Builder;
 import ru.rbt.shared.LoginResult;
 import ru.rbt.shared.access.UserMenuItemWrapper;
 import ru.rbt.shared.access.UserMenuWrapper;
@@ -23,6 +22,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
 
 
 /**

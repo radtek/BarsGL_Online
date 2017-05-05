@@ -48,6 +48,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 	public GridForm(String title, boolean delayLoad) {
 		super(delayLoad);
 		super.title.setText(title);
+		exportToExcel.setFormTitle(title);
 	}
 
 	/*
@@ -71,6 +72,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 
 		abw.addAction(filterAction = createFilterAction());
         abw.addSecureAction(exportToExcel = new Export2ExcelAction(grid, sql_select), SecurityActionCode.OperToExcel);
+
 		return panel;
 	}
 

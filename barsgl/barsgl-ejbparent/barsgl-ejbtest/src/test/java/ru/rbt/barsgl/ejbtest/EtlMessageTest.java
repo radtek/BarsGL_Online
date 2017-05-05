@@ -18,6 +18,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -654,7 +655,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         Date hold = DateUtils.parseDate("25.01.2015", "dd.MM.yyyy");
         Date curr = DateUtils.parseDate("27.01.2015", "dd.MM.yyyy");
-        List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and hol <> 'X'"
+        List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and thol <> 'X'"
                 , prev, curr);
         Assert.assertEquals(2, days.size());
         final Date finalCurr = curr;

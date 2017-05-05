@@ -14,8 +14,8 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -34,10 +34,9 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.*;
 
+import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.listToString;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -135,7 +134,7 @@ public class BatchPackageController {
                 ValidationError error = new ValidationError(ErrorCode.PACKAGE_BAD_STATUS, id.toString(),
                         wrapper.getAction().getLabel(), pkg.getPackageState().name(), pkg.getPackageState().getLabel());
 //                        ERROR.equals(pkg.getPackageState()) ? "\nПакет содержит операции с ошибкой, обработка невозможна" : "");
-                wrapper.getErrorList().addErrorDescription("", "", ValidationError.getErrorText(error.getMessage()), ValidationError.getErrorCode(error.getMessage()));
+                wrapper.getErrorList().addErrorDescription(ValidationError.getErrorText(error.getMessage()), ValidationError.getErrorCode(error.getMessage()));
                 throw new DefaultApplicationException(wrapper.getErrorMessage(), error);
             }
         }
@@ -177,7 +176,7 @@ public class BatchPackageController {
         BatchProcessResult result = new BatchProcessResult(pkgId);
         result.setPackageStatistics(packageRepository.getPackageStatistics(pkgId), true);
         String msg = result.getPackageProcessMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
@@ -421,7 +420,7 @@ public class BatchPackageController {
             }
             checkHand12Diff(posting0);
 
-            updatePackageStateNew(pkg0, IS_SIGNEDDATE);
+            updatePackageStateNew(pkg0, IS_CLICKDATE);
             createPackageHistory(pkg0, posting0.getStatus().getStep(), wrapper.getAction());
             if (CONFIRM_NOW.equals(wrapper.getAction())) {
                 postingRepository.executeInNewTransaction(persistence -> {
@@ -429,7 +428,7 @@ public class BatchPackageController {
                     return null;
                 });
             }
-            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_SIGNEDDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
+            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты пакета, загруженного из файла";
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());

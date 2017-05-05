@@ -26,8 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBalanceUnload;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBalanceUnload;
 
 /**
  * Created by Ivan Sevastyanov<br/>

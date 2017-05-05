@@ -13,11 +13,12 @@ import ru.rbt.barsgl.ejb.integr.oper.ManualOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.*;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
@@ -46,6 +47,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
@@ -322,7 +324,7 @@ public class ManualOperationController {
     private boolean processOperation(GLManualOperation operation) throws Exception {
         final Long operationId = operation.getId();
         GLOperationProcessor operationProcessor = etlPostingController.findOperationProcessor(operation);
-        String msgCommon = format(" операцию ID = %s", operation.getId());
+        String msgCommon = format(" операции ID = %s", operation.getId());
         boolean toContinue = true;
 /*
       // TODO исключаю как лишнее действие
@@ -357,7 +359,7 @@ public class ManualOperationController {
         List<ValidationError> errors = operationProcessor.validate(operation, new ValidationContext());
         boolean toContinue = errors.isEmpty();
         if (!toContinue) {
-            String msg = "Ошибка валидации" + format(" операции '%s'", operation.getId());
+            String msg = format("Ошибка валидации операции '%s'", operation.getId());
             String err = operationProcessor.validationErrorsToString(errors);
             auditController.error(ManualOperation, msg, operation, err);
             throw new DefaultApplicationException(err);

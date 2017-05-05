@@ -4,13 +4,9 @@
  */
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
-import javax.swing.text.html.Option;
 
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 
 import java.util.Optional;

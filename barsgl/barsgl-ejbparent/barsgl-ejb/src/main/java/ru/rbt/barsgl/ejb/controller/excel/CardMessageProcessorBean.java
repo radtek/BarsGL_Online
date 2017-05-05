@@ -19,7 +19,8 @@ import ru.rbt.barsgl.ejb.repository.dict.CardPostingRepository;
 import ru.rbt.barsgl.ejb.repository.dict.CardXlsRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.shared.security.RequestContext;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
@@ -46,7 +47,6 @@ import java.util.*;
 
 import static ru.rbt.ejbcore.util.StringUtils.listToString;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
-import ru.rbt.shared.security.RequestContext;
 /**
  * Created by ER22317 on 21.09.2016.
  */

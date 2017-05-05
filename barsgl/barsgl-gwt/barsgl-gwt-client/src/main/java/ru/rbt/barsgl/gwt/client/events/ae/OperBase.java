@@ -70,6 +70,7 @@ public abstract class OperBase extends OperSuperBase {
                 dlg.show(prms);
             }
 
+            @Override
             public void onDlgOkClick(Object prms){
                 dlg.hide();
 

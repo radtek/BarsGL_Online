@@ -8,7 +8,7 @@ import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
 import ru.rbt.barsgl.ejb.repository.MemorderRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.annotation.Resource;

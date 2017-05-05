@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejbcore;
 
-import ru.rbt.barsgl.ejbcore.repository.AbstractCachedRepository;
+import ru.rbt.ejbcore.repository.AbstractCachedRepository;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;

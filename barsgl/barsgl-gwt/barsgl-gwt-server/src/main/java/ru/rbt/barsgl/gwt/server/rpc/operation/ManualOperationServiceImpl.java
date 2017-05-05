@@ -6,13 +6,18 @@ import ru.rbt.barsgl.ejb.integr.acc.OfrAccountService;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
+import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
+import ru.rbt.barsgl.ejb.rep.PostingBackValueRep;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+
+import java.util.List;
 
 /**
  * Created by ER18837 on 19.08.15.
@@ -148,6 +153,32 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
                 RpcRes_Base<CurExchangeWrapper> res = localInvoker.invoke(CurrencyExchangeSupport.class, "exchange", wrapper);
                 if (res == null) throw new Throwable(Utils.Fmt("Не удалось выполнить пересчет суммы из {0} в {1}",
                         wrapper.getSourceCurrency(), wrapper.getTargetCurrency()));
+                return res;
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Integer> correctErrors(List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type) throws Exception {
+        return new RpcResProcessor<Integer>() {
+            @Override
+            public RpcRes_Base<Integer> buildResponse() throws Throwable {
+                RpcRes_Base<Integer> res = localInvoker.invoke(ReprocessPostingService.class, "correctErrors",
+                        errorIdList, comment, idPstCorr, type);
+                if (res == null) throw new Throwable("Не удалось скорректировать ошибки");
+                return res;
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> operExists(String date) throws Exception {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                RpcRes_Base<Boolean> res = localInvoker.invoke(PostingBackValueRep.class, "operExists", date);
+                if (res == null) throw new Throwable("Не удалось проверить наличие данных для отчета");
                 return res;
             }
         }.process();

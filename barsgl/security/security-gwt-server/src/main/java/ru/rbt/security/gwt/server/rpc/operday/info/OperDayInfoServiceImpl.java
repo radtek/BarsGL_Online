@@ -58,8 +58,15 @@ public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDa
                 }
                 wrapper.setEnabledButton(buttonStatus);
 
+                additionalAction(wrapper);
+
                 return new RpcRes_Base<>(wrapper, false, "");
             }
         }.process();
     }
+    
+    protected void additionalAction(OperDayWrapper wrapper) throws Exception {
+        //empty
+    }
+    
 }

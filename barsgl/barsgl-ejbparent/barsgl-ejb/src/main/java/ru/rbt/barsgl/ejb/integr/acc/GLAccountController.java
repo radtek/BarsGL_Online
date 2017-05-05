@@ -14,7 +14,7 @@ import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
@@ -32,6 +32,8 @@ import javax.inject.Inject;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -107,6 +109,9 @@ public class GLAccountController {
 
     @EJB
     private GLOperationRepository operationRepository;
+
+    @Inject
+    private AccRepository accRepository;
 
     @Lock(LockType.READ)
     public GLAccount findGLAccount(String bsaAcid) {
@@ -1121,6 +1126,47 @@ public class GLAccountController {
         return null;
     }
 
+    @Lock(LockType.READ)
+    public String findForPlcodeNo7903(AccountKeys keys, Date dateOpen, Date dateStart446P) {
+        return accRlnRepository.findForPlcodeNo7903(keys, dateOpen, dateStart446P);
+    }
+
+    /**
+     * Поиск/открытие счетов доходов/расходов
+     * Ищем не наш счет, иначе создаем в т.ч. у нас
+     */
+    @Lock(LockType.WRITE)
+    public String processNotOwnPLAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, Date dateStart446P) {
+        try {
+            String bsaasid = findForPlcodeNo7903(keys, dateOpen, dateStart446P);
+            if (bsaasid == null) {
+                if (!glAccountRepository.checkMidasAccountExists(keys.getAccountMidas(), dateOpen)) {
+                    //todo создать запись в АСС
+    //                throw new ValidationError(ACCOUNT_MIDAS_NOT_FOUND, keys.getAccountMidas());
+                    GLAccount glAccount = new GLAccount();
+                    glAccount.setAcid(keys.getAccountMidas());
+                    glAccount.setBranch(keys.getBranch());
+                    glAccount.setCustomerNumberD(Integer.parseInt(keys.getCustomerNumber()));
+                    BankCurrency bankCurrency = new BankCurrency(keys.getCurrency());
+                    bankCurrency.setDigitalCode(keys.getCurrencyDigital());
+                    glAccount.setCurrency(bankCurrency);
+                    glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
+                    glAccount.setAccountSequence(Short.parseShort(keys.getAccSequence()));
+                    glAccount.setDateOpen(dateOpen);
+                    glAccount.setDateClose(Date.from(LocalDate.of(2029, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+                    glAccount.setDescription("");
+                    accRepository.createAcc(glAccount);
+                }
+
+                bsaasid = createPlAccount(keys, dateOpen, dateStart446P, operation, operSide);
+                auditController.info(Account, format("Создан счет '%s' для операции '%d' %s",
+                        bsaasid, operation.getId(), operSide.getMsgName()), operation);
+            }
+            return bsaasid;
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
     private int getAccountIterateCount() {
         try {
             return propertiesRepository.getNumber("account.iterate.count").intValue();

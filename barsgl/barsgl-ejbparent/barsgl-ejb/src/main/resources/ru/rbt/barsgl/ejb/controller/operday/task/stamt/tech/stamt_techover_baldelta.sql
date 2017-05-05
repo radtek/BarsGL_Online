@@ -54,7 +54,7 @@ select statdate
            , 'F' stattype
            , 'BARS' hostsystem
            , rln.cnum fcccustnum
-           , get_fcc_br(acmx.acid) fccbranch
+           , get_fcc_br(acmx.bsaacid) fccbranch
            , right(rln.cnum,6) ext_custid
            , right(acmx.acid,3) accbrn
            , acmx.bsaacid cbaccount

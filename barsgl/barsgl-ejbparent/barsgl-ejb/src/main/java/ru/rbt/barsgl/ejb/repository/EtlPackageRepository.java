@@ -65,4 +65,5 @@ public class EtlPackageRepository extends AbstractBaseEntityRepository<EtlPackag
     public Long nextId() {
         return nextId("GL_SEQ_PKG");
     }
+
 }

@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejbcore;
 
-import static java.lang.String.format;
 import org.apache.log4j.Logger;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;

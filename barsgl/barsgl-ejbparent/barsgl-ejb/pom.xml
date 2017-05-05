@@ -3,7 +3,7 @@
     <parent>
         <artifactId>barsgl-ejbparent</artifactId>
         <groupId>ru.rbt</groupId>
-        <version>3.0.18-SNAPSHOT</version>
+        <version>3.0.22-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,6 +16,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ejb-plugin</artifactId>
+                <version>2.5.1</version>
                 <configuration>
                     <ejbVersion>3.2</ejbVersion>
                 </configuration>
@@ -46,6 +47,11 @@
         <dependency>
             <groupId>ru.rbt</groupId>
             <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>rbt-prop</artifactId>
             <type>ejb</type>
         </dependency>
         <dependency>
@@ -171,4 +177,13 @@
     </profile>
 
   </profiles>-->
+  
+  
+    <repositories>
+        <repository>
+            <id>rbtbase-releases</id>
+            <url>http://dev.rbtechnologies.ru:8081/artifactory/rbtbase-releases</url>
+        </repository>
+    </repositories>
+    
 </project>

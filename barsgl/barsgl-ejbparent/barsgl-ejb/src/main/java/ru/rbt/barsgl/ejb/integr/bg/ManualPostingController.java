@@ -5,19 +5,19 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
 import ru.rbt.security.entity.AppUser;
-import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
+import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.ManualOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
@@ -41,15 +41,16 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.ejbcore.util.StringUtils.*;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
-import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
+import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 /**
  * Created by ER18837 on 13.08.15.
@@ -340,7 +341,7 @@ public class ManualPostingController {
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             BatchPostStatus newStatus = SIGNEDDATE;
             // тестируем статус - что никто еще не менял
-            updatePostingStatusNew(posting0, newStatus, wrapper);
+            updatePostingStatusNew(posting0, CLICKDATE, wrapper);
             // устанавливаем статус
             Date operday = operdayController.getOperday().getCurrentDate();
             if (BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())) {
@@ -470,6 +471,7 @@ public class ManualPostingController {
                 case WAITDATE:
                     cnt = postingRepository.signedPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
                     break;
+                case CLICKDATE:
                 case SIGNEDDATE:
                     if (wrapper.getStatus().getStep().isControlStep()) {
                         cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, newStatus, oldStatus);
@@ -489,7 +491,7 @@ public class ManualPostingController {
             throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
         wrapper.setStatus(newStatus);
         String msg = result.getPostSignedMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -509,7 +511,7 @@ public class ManualPostingController {
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), nextStatus);
         result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
         String msg = result.getPostSendMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -529,7 +531,7 @@ public class ManualPostingController {
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
         String msg = result.getPostSignedMessage();
 
-        wrapper.getErrorList().addErrorDescription("", "", msg + errorMessage, null);
+        wrapper.getErrorList().addErrorDescription(msg + errorMessage, null);
         if (errorCode == 0) {
             auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         } else {
@@ -623,13 +625,13 @@ public class ManualPostingController {
             String msg = String.format("Запрос на операцию ID = %d изменен, статус: '%s' ('%s')." +
                     "\n Обновите информацию и выполните операцию повторно"
                     , posting.getId(), posting.getStatus().name(), posting.getStatus().getLabel());
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
             String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')\n Обновите информацию",
                     posting.getId(), posting.getInvisible().name(), posting.getInvisible().getLabel() );
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(msg);
         }
         if (enabledStatus.length == 0)
@@ -641,7 +643,7 @@ public class ManualPostingController {
         }
         String msg = String.format("Запрос на операцию ID = '%d': нельзя '%s' запрос в статусе: '%s' ('%s')", posting.getId(),
                 wrapper.getAction().getLabel(), posting.getStatus().name(), posting.getStatus().getLabel());
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         throw new DefaultApplicationException(msg);
     }
 
@@ -705,7 +707,7 @@ public class ManualPostingController {
             errCode = ValidationError.getErrorCode(errMessage);
             errMessage = ValidationError.getErrorText(errMessage);
             if (!errMessage.isEmpty()) {
-                errorList.addNewErrorDescription("", "", errMessage, errCode);
+                errorList.addNewErrorDescription(errMessage, errCode);
             }
         }
         return errMessage;
