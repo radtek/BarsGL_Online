@@ -150,12 +150,20 @@ public class CommonQueueProcessor4 implements MessageListener {
 
     public void process(Properties properties) throws Exception {
         try {
-            setQueueProperties(properties);
-            startConnection();
-            batchSize = queueProperties.mqBatchSize;
-            loadCurrency();
-            processSources();
-//        log.info("Сессия обработки одной очереди завершена");
+            queueProperties = new QueueProperties(properties);
+            try{
+                startConnection();
+                batchSize = queueProperties.mqBatchSize;
+                loadCurrency();
+                processSources(queueProperties);
+//              log.info("Сессия обработки одной очереди завершена");
+            }catch(JMSException ex){
+                // reset session
+                reConnect();
+                auditController.warning(AccountQuery, "Ошибка при обработке сообщений", null, ex);
+                throw ex;
+            }
+
         } catch (Exception e) {
             log.error("Ошибка в методе process", e);
             throw e;
