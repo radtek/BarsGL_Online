@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.*;
@@ -18,14 +18,14 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountCounterType;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountExcludeInterval;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountFrontPartController;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
+import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
+import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
-import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -56,18 +56,19 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
 
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
 
-    @BeforeClass
-    public static void  initClass() {
+    @Before
+    public void  initClass() {
         initCorrectOperday();
     }
 
-/*
-    @Before
-    public void beforeClass() {
+
+  /* @Before
+     public void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1", N);
-    }
-*/
+
+    }*/
+
 
     /**
      * Автоматическое определение/открытие счетов при загрузке проводок из AE<br/> Расчет лицевой части счета
@@ -133,9 +134,9 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         List<GLAccountExcludeInterval> sorted = type.getExcludes();
         Collections.sort(sorted, (t1, t2) -> t1.getEndNumber() < t2.getEndNumber() ? 1 : t1.getEndNumber() == t2.getEndNumber() ? 0 : -1);
         baseEntityRepository.executeNativeUpdate(
-                "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD = ?"
+                "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD IS NULL"
                 , sorted.get(0).getStartNumber() - 1, keys2.getAccount2(), keys2.getCurrency()
-                , keys2.getCompanyCode(), keys2.getPlCode());
+                , keys2.getCompanyCode()/*, keys2.getPlCode().isEmpty()*/);
         frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
                 , keys2.getAccount2()
                 , keys2.getCurrency()
@@ -611,6 +612,9 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
      */
     @Test
     public void testChangeMidasSQFlex() {
+        //на проде все записи таблицы закрыты датой 07.12.2016, что вызывает непрохождение теста
+        baseEntityRepository.executeNativeUpdate("update gl_sqparam set dte = null");
+
         String dealSrc = "FC12_CL";
 
         final AccountKeys keys0 = new AccountKeys(
@@ -705,6 +709,8 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
      */
     @Test
     public void testChangeMidasSQNotFlex() {
+        //на проде все записи таблицы закрыты датой 07.12.2016, что вызывает непрохождение теста
+        baseEntityRepository.executeNativeUpdate("update gl_sqparam set dte = null");
 
         final AccountKeys keys0 = new AccountKeys(
                 // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
@@ -899,8 +905,10 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         remoteAccess.invoke(EtlStructureMonitorTask.class, "processEtlPackage", pkg);
 
         GLOperation oper1 = getOperation(pst1.getId());
+        Assert.assertEquals(OperState.POST, oper1.getState());
         Assert.assertTrue(0 < oper1.getId());
         GLOperation oper2 = getOperation(pst2.getId());
+        Assert.assertEquals(OperState.POST, oper2.getState());
         Assert.assertTrue(0 < oper2.getId());
 
         GLAccount accountDr1 = getGLAccount(oper1.getAccountDebit());

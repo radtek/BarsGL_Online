@@ -2,6 +2,8 @@ package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
 import ru.rb.ucb.util.AccountUtil;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
@@ -10,21 +12,20 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -36,17 +37,18 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.E;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FIVE;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -115,6 +117,9 @@ public class GLAccountController {
     public GLAccount findGLAccount(String bsaAcid) {
         return glAccountRepository.findGLAccount(bsaAcid);
     }
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
 
     @Lock(LockType.READ)
     public GLAccount findGLAccountAE(AccountKeys keys, GLOperation.OperSide side) {
@@ -783,16 +788,22 @@ public class GLAccountController {
         boolean isNewNumber = false;
         String bsaAcid = "";
         int count = 0;
+        int tocnt = getAccountIterateCount();
+        String bsaacidFrom = null;
+        String bsaacidTo = null;
         do {
             // сформировать строку номера счета
             bsaAcid = generateAccountNumber(acc2, ccyn, cbccn, plcode);
             // проверить наличие счета в БД
             isNewNumber = !glAccountRepository.checkBsaAccountExists(bsaAcid);
-            if (!isNewNumber)
+            if (!isNewNumber){
                 log.warn("Generated BSAACID: '" + bsaAcid + "' already exists");
-        } while (!isNewNumber && count++ < 100);
-        Assert.isTrue(isNewNumber, format("Не удалось сформировать номер счета по ключам: acc2='%s', ccyn='%s', cbccn='%s', plcode='%s'. Счет: '%s'",
-                acc2, ccyn, cbccn, plcode, bsaAcid));
+                if (bsaacidFrom == null) bsaacidFrom = bsaAcid;
+                bsaacidTo = bsaAcid;
+            }
+        } while (!isNewNumber && count++ < tocnt - 1);
+        Assert.isTrue(isNewNumber, format("Не удалось сформировать номер счета по ключам: acc2='%s', ccyn='%s', cbccn='%s', plcode='%s'. Начальный счет: '%s' Конечный счет '%s' итераций '%s'",
+                acc2, ccyn, cbccn, plcode, bsaacidFrom, bsaacidTo, tocnt));
 
         return bsaAcid;
     }
@@ -1156,4 +1167,12 @@ public class GLAccountController {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+    private int getAccountIterateCount() {
+        try {
+            return propertiesRepository.getNumber("account.iterate.count").intValue();
+        } catch (ExecutionException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
 }
