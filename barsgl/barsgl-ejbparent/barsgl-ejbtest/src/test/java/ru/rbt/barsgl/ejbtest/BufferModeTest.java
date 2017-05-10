@@ -4,9 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.PdSyncTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.SyncStamtBackvalueTask;
@@ -15,14 +15,14 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -30,7 +30,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
@@ -38,8 +37,6 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -375,14 +372,14 @@ public class BufferModeTest extends AbstractRemoteTest {
         Assert.assertTrue(!pdList.isEmpty());
 
         // метим как перенесенные
-        baseEntityRepository.executeNativeUpdate("update gl_baltur set moved = 'Y'");
+        Assert.assertTrue(0 < baseEntityRepository.executeNativeUpdate("update gl_baltur set moved = 'Y'"));
         // запускаем еще раз обработку
         operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERPOST, operation.getState());
-
+        Assert.assertTrue(operation.getErrorMessage().contains("is after synchronization"));
     }
 
     /**

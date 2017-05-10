@@ -2,8 +2,8 @@ package ru.rbt.barsgl.ejb.entity.dict;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by Ivan Sevastyanov on 31.03.2016.
@@ -39,5 +39,19 @@ public class GLRelationAccountingTypeId implements Serializable {
 
     public void setAcid(String acid) {
         this.acid = acid;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GLRelationAccountingTypeId that = (GLRelationAccountingTypeId) o;
+        return Objects.equals(bsaacid, that.bsaacid) &&
+                Objects.equals(acid, that.acid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bsaacid, acid);
     }
 }

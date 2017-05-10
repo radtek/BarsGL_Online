@@ -3,6 +3,7 @@ package ru.rbt.security.entity.access;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by Ivan Sevastyanov on 19.04.2016.
@@ -38,5 +39,19 @@ public class SecurityRoleActionRlnId implements Serializable {
 
     public void setActionId(Integer actionId) {
         this.actionId = actionId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SecurityRoleActionRlnId that = (SecurityRoleActionRlnId) o;
+        return Objects.equals(roleId, that.roleId) &&
+                Objects.equals(actionId, that.actionId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(roleId, actionId);
     }
 }

@@ -5,6 +5,7 @@ import ru.rbt.security.entity.AppUser;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by ER21006 on 19.04.2016.
@@ -40,5 +41,19 @@ public class UserRoleRlnId implements Serializable {
 
     public void setRoleId(Integer roleId) {
         this.roleId = roleId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserRoleRlnId that = (UserRoleRlnId) o;
+        return Objects.equals(userId, that.userId) &&
+                Objects.equals(roleId, that.roleId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, roleId);
     }
 }

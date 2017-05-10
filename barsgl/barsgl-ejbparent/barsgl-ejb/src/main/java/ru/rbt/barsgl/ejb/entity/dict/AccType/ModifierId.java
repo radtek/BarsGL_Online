@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.entity.dict.AccType;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by akichigi on 24.08.16.
@@ -63,5 +64,21 @@ public class ModifierId implements Serializable {
 
     public void setModifcode(String modifcode) {
         this.modifcode = modifcode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ModifierId that = (ModifierId) o;
+        return Objects.equals(sectcode, that.sectcode) &&
+                Objects.equals(prodcode, that.prodcode) &&
+                Objects.equals(subprodcode, that.subprodcode) &&
+                Objects.equals(modifcode, that.modifcode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sectcode, prodcode, subprodcode, modifcode);
     }
 }

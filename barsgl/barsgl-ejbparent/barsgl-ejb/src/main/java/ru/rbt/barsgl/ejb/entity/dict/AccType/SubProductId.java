@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.entity.dict.AccType;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by akichigi on 23.08.16.
@@ -50,5 +51,20 @@ public class SubProductId implements Serializable {
 
     public void setSubprodcode(String subprodcode) {
         this.subprodcode = subprodcode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SubProductId that = (SubProductId) o;
+        return Objects.equals(sectcode, that.sectcode) &&
+                Objects.equals(prodcode, that.prodcode) &&
+                Objects.equals(subprodcode, that.subprodcode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sectcode, prodcode, subprodcode);
     }
 }
