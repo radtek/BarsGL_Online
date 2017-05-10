@@ -42,7 +42,7 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
             id = res.getLong(0);
             if (id == null) {
                 id = nextId("GL_SEQ_ACC");
-                executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?1,?2,?3,'1')"
+                executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?,?,?,'1')"
                         , id, ifEmpty(Acid, " "), Bsaacid);
             }
 //            if (id == null) throw new SQLException("not found glacid for " + Acid + "; " + Bsaacid);

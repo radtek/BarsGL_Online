@@ -365,7 +365,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
             return DataRecordUtils.executeUpdate(connection, nativeSQL, params);
         } catch (SQLException e) {
             e.printStackTrace();
-            return 0;
+            throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 

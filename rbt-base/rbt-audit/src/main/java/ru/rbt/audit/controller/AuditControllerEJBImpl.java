@@ -39,7 +39,7 @@ public class AuditControllerEJBImpl implements AuditController {
     public static final String NON_TRANSACTIONAL = "Not transactional";
 
     private static final Logger log = Logger.getLogger(AuditController.class);
-    private static final String myClassName = AuditController.class.getName();
+    private static final String myClassName = AuditControllerEJBImpl.class.getName();
     private static final String myClassNameToo = myClassName + "_";
 
     @EJB

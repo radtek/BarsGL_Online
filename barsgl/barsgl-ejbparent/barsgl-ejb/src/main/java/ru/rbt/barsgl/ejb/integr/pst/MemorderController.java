@@ -59,12 +59,12 @@ public class MemorderController {
 
         final String filial = rsubstr(operationRepository.getCompanyCode(bsaAcid), 3);
         int cnt = memorderRepository.executeNativeUpdate(
-                "UPDATE GL_MOCOUNT SET COUNT = COUNT + 1 WHERE POD = ?1 and BSCHAPTER = ?2 and CBCC = ?3 and STORNO = ?4"
+                "UPDATE GL_MOCOUNT SET COUNT = COUNT + 1 WHERE POD = ? and BSCHAPTER = ? and CBCC = ? and STORNO = ?"
                 , pod, balanceChapter.name(), filial, cancelFlag.name());
         Long nextId;
         if (0 == cnt) {
             memorderRepository.executeNativeUpdate(
-                    "INSERT into GL_MOCOUNT (POD,BSCHAPTER,CBCC,STORNO,COUNT) values (?1,?2,?3,?4,?5)"
+                    "INSERT into GL_MOCOUNT (POD,BSCHAPTER,CBCC,STORNO,COUNT) values (?,?,?,?,?)"
                     , pod, operationRepository.getBSChapter(bsaAcid), filial, cancelFlag.name(), getStartNumber(cancelFlag));
             nextId = getStartNumber(cancelFlag);
         } else {
