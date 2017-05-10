@@ -81,8 +81,11 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
         try {
-            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
-            String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;
+           /* SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            String resultSql = "select count(*) cnt from (" + sql.getQuery() + " fetch first " + (MAX_ROW_COUNT + 1) + " rows only) " + COUNT_ALIAS;*/
+            SQL sql = prepareCommonSql(nativeSql, criterion);
+            String sqlDummy = "select * from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
+            String resultSql = "select count(*) cnt from (" + sqlDummy + " ) " + COUNT_ALIAS;
 
             DataSource dataSource = repository.getDataSource(rep);
             int cnt = repository.selectFirst(dataSource, resultSql, sql.getParams()).getInteger("cnt");
