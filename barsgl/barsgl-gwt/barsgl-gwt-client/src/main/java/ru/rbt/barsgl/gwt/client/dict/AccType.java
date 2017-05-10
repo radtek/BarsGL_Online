@@ -36,6 +36,7 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
     public final static String FIELD_ACCTYPENAME = "Наименование";
     public final static String FIELD_PL_ACT = "Счет ОФР - BARSGL";
     public final static String FIELD_FL_CTRL = "Контролир. счет";
+    public final static String FIELD_TECH_ACT = "Тех. счёт";
 
     private Column sectionColumn;
     private String  initSection;
@@ -145,6 +146,7 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, FIELD_ACCTYPENAME, 240));
         result.addColumn(new Column("PL_ACT", Column.Type.STRING, FIELD_PL_ACT, 18));
         result.addColumn(new Column("FL_CTRL", Column.Type.STRING, FIELD_FL_CTRL, 18));
+        result.addColumn(new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 18));
 
 
         return result;
@@ -154,7 +156,7 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
     protected String prepareSql() {
         return  "select * from ( " +
                 "select left(ACCTYPE, 3) as SECTION, substr(ACCTYPE, 4, 2) as PRODUCT, substr(ACCTYPE, 6, 2) as SUBPRODUCT, " +
-                "right(ACCTYPE, 2) as MODIFIER, ACCTYPE, ACCNAME, PL_ACT, FL_CTRL from GL_ACTNAME) v";
+                "right(ACCTYPE, 2) as MODIFIER, ACCTYPE, ACCNAME, PL_ACT, FL_CTRL, case when TECH_ACT = 'Y' then 'Y' else 'N' end TECH_ACT from GL_ACTNAME) v";
     }
 
     @Override

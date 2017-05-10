@@ -69,7 +69,8 @@ public class AccTypeController extends BaseDictionaryController<AccTypeWrapper, 
                 format("Ошибка при создании AccType: '%s'", primaryKey),
                 () -> new AccountingType(primaryKey, wrapper.getAcctypeName(),
                         wrapper.getPl_act() == BoolType.Y ? YesNo.Y : YesNo.N,
-                        wrapper.getFl_ctrl() == BoolType.Y ? YesNo.Y : YesNo.N));
+                        wrapper.getFl_ctrl() == BoolType.Y ? YesNo.Y : YesNo.N,
+                        wrapper.getTech_act() == BoolType.Y ? YesNo.Y : YesNo.N));
     }
 
     @Override
@@ -89,6 +90,7 @@ public class AccTypeController extends BaseDictionaryController<AccTypeWrapper, 
                     accType.setAccountName(wrapper.getAcctypeName());
                     accType.setBarsAllowed(wrapper.getPl_act() == BoolType.Y ? YesNo.Y : YesNo.N);
                     accType.setCheckedAccount(wrapper.getFl_ctrl() == BoolType.Y ? YesNo.Y : YesNo.N);
+                    accType.setTechAct(wrapper.getTech_act() == BoolType.Y ? YesNo.Y : YesNo.N);
                 });
     }
 

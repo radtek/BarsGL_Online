@@ -70,6 +70,20 @@ public enum SecurityActionCode {
    /* , ToolsErrLook("Просмотр настройки по обработке ошибок")
     , ToolsErrChng("Изменение настройки по обработке ошибок")*/
 
+    , TechAccLook("Просмотр списка техсчетов")
+    , TechAccInp("Открытие техсчета")
+    , TechAccChng("Редактирование реквизитов техсчета")
+    , TechAccClose("Закрытие техсчета")
+    , TechAccOperInp("Ввод операции из списка технических счетов")
+    , TechOperLook("Просмотр проводок по техсчетам")
+    , TechOperPstChng("Изменение реквизитов проводки по техсчету")
+    , TechOperPstMakeInvisible("Подавление проводки по техсчету")
+    , TechOperManualLook("Просмотр ручных операций тек.дня по техсчетам")
+    , TechOperInp("Ввод операции по техсчету")
+    , TechOperHand2("Авторизация текущих операций по техсчетам (2 рука)")
+    , TechOperHand3("Авторизация операций backvalue по техсчетам (3 рука)")
+    , TechOperHistory("История создания операций по техсчетам для admin")
+    , TechOperHistoryUser("История создания операций по техсчетам для user")
     ;
 
     private final String desc;

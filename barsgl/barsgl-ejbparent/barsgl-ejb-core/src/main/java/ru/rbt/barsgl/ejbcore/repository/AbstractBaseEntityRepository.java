@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbcore.repository;
 
+import jdk.nashorn.internal.runtime.ECMAException;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejbcore.DataAccessCallback;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
@@ -293,6 +294,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
                 query.setParameter(i, params[i-1]);
             }
         }
+
         return query.getResultList();
     }
 
@@ -373,7 +375,9 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public Long nextId(EntityManager persistence, String sequenceName) {
+
         Long id = (Long) persistence.createNativeQuery("select (next value for " + sequenceName + ") id_seq from sysibm.sysdummy1").getSingleResult();
+
         return id;
     }
 

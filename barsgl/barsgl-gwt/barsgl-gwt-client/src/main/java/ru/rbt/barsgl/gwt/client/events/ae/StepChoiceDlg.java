@@ -36,10 +36,17 @@ public class StepChoiceDlg extends DlgFrame {
 
     }
 
+    public enum ChoiseType
+    {
+        SIMPLE,
+        TECH
+    }
+
     private ValuesBox _steps;
     private CheckBox _ownMessages;
     private ValuesBox _types;
     private InputMethod _inpMethod;
+    private ChoiseType _formType = ChoiseType.SIMPLE;
 
     public StepChoiceDlg(InputMethod inpMethod){
         super();
@@ -47,6 +54,12 @@ public class StepChoiceDlg extends DlgFrame {
 
         setCaption("Выбор шага обработки");
         ok.setText(TEXT_CONSTANTS.btn_select());
+    }
+
+    public StepChoiceDlg(InputMethod inpMethod,ChoiseType type)
+    {
+        this(inpMethod);
+        _formType = type;
     }
 
     @Override
@@ -89,7 +102,10 @@ public class StepChoiceDlg extends DlgFrame {
         }
 
         if (SecurityChecker.checkAction(SecurityActionCode.OperHand2)) _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
-        if (SecurityChecker.checkAction(SecurityActionCode.OperHand3)) _steps.addItem(BatchPostStep.HAND3, "Подтверждение даты");
+        if (_formType!=ChoiseType.TECH) {
+            if (SecurityChecker.checkAction(SecurityActionCode.OperHand3))
+                _steps.addItem(BatchPostStep.HAND3, "Подтверждение даты");
+        }
     }
 
     private void initMessageType(){

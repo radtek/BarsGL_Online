@@ -31,6 +31,13 @@ public class AccountingType extends BaseEntity<String> {
     @Enumerated(EnumType.STRING)
     private YesNo checkedAccount;
 
+    /**
+     * Признак технического счёта
+     */
+    @Column(name = "TECH_ACT")
+    @Enumerated(EnumType.STRING)
+    private YesNo techAct;
+
     @Override
     public String getId() {
         return id;
@@ -52,11 +59,12 @@ public class AccountingType extends BaseEntity<String> {
         this.accountName = accountName;
     }
 
-    public AccountingType(String id, String accountName, YesNo barsAllowed, YesNo checkedAccount) {
+    public AccountingType(String id, String accountName, YesNo barsAllowed, YesNo checkedAccount, YesNo techAct) {
         this.id = id;
         this.accountName = accountName;
         this.barsAllowed = barsAllowed;
         this.checkedAccount = checkedAccount;
+        this.techAct = techAct;
     }
 
     public YesNo getBarsAllowed() {
@@ -78,4 +86,10 @@ public class AccountingType extends BaseEntity<String> {
     public void setCheckedAccount(YesNo checkedAccount) {
         this.checkedAccount = checkedAccount;
     }
+
+    public YesNo getTechAct() {return techAct;}
+
+    public void setTechAct(YesNo techAct) {this.techAct = techAct;}
+
+    public boolean isTech() {return techAct == YesNo.Y;}
 }

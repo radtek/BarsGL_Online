@@ -147,7 +147,7 @@ public abstract class DlgFrame {
     public void show(Object params) {
         this.params = params;
         fillContent();
-        show();                
+        show();
     }
 
     public void hide() {

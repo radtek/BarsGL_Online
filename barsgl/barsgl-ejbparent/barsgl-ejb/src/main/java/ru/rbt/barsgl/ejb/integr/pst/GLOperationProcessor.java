@@ -37,6 +37,8 @@ import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
  */
 public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOperation> {
 
+    private final String TECH_OPER = "T";
+
     @EJB
     protected PdRepository pdRepository;
 
@@ -81,8 +83,22 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
     public void fillValidationContext(GLOperation operation, ValidationContext context) {
 //        final boolean accDebitOpen = glAccountRepository.checkBsaAccountOpen(operation.getAccountDebit(), operation.getValueDate());
 //        final boolean accCreditOpen = glAccountRepository.checkBsaAccountOpen(operation.getAccountCredit(), operation.getValueDate());
-        final ResultCode accDebitResult = glAccountRepository.checkBsaAccountAnal(operation.getAccountDebit(), operation.getValueDate(), operdayController.getOperday().getCurrentDate(), operdayController.getOperday().getLastWorkingDay());
-        final ResultCode accCreditResult = glAccountRepository.checkBsaAccountAnal(operation.getAccountCredit(), operation.getValueDate(), operdayController.getOperday().getCurrentDate(), operdayController.getOperday().getLastWorkingDay());
+
+        //Определения технического счёта по ключу. По идее надо ввести признак некий технической операции.
+        //пока так, а там посмотрим.
+        ResultCode accDebitResult;
+        ResultCode accCreditResult;
+        if (operation.getBsChapter().equals(TECH_OPER))
+        {
+            accDebitResult = glAccountRepository.checkBsaAccountGlAcc(operation.getAccountDebit());
+            accCreditResult = glAccountRepository.checkBsaAccountGlAcc(operation.getAccountCredit());
+
+        }
+        else {
+            accDebitResult = glAccountRepository.checkBsaAccountAnal(operation.getAccountDebit(), operation.getValueDate(), operdayController.getOperday().getCurrentDate(), operdayController.getOperday().getLastWorkingDay());
+            accCreditResult = glAccountRepository.checkBsaAccountAnal(operation.getAccountCredit(), operation.getValueDate(), operdayController.getOperday().getCurrentDate(), operdayController.getOperday().getLastWorkingDay());
+        }
+
         // Счет по дебету
         context.addValidator(() -> {
             if (accDebitResult == ResultCode.ACCOUNT_NOT_FOUND) {

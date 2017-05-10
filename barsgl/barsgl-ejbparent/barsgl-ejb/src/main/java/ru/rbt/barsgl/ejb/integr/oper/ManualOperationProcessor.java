@@ -63,7 +63,7 @@ public class ManualOperationProcessor extends ValidationAwareHandler<BatchPostin
     @Override
     public void fillValidationContext(BatchPosting target, ValidationContext context) {
         // ============== Дата ===============
-        // TODO эти проверки надо убрать, они дублипуют просерки при создании запроса на операцию
+        // TODO эти проверки надо убрать, они дублипуют проверки при создании запроса на операцию
         // Value Date
         context.addValidator(() -> {
             checkDate(target, target.getValueDate(), "Дата валютирования");

@@ -48,6 +48,11 @@ public enum ErrorCode {
     , AMOUNT_EQUAL(38, "Валюты по дебету '%s' и кредиту '%s' не равны, а суммы равны: %s  (поля '%s', '%s')")
     , ACCKEY_CURRENCY_NOT_VALID(39, "Неправильный код валюты '%s' в ключах счета. Ожидалось 'RUR'")
     , OPERATION_707_AFTER_SPOD(40, "Нельзя создать операцию по счету '707...' с датой до '%s' и после '%s'")
+    , ACCOUNT_TH_ACCKEY_NOT_VALID(41,"Ключ технического счёта по %s не содержит обязательных полей '%s'")
+    , ACCOUNT_TH_CBCCN_NOT_EQUALS(42,"Ключ технического счёта по кредиту и дебету содержат различные коды филиалов '%s' != '%s'")
+    , ACCOUNT_TH_ССY_NOT_RUR(43,"Код валюты дебета или кредита должны быть равны RUR. '%s', '%s'")
+    , ACCOUNT_TH_ACCTYPE_NOT_VALID(44,"Поле AccType по %s содержит неверный код типа счёта '%s'")
+    ,ACCOUNT_TECH_NOT_CORRECT(45, "Некорректный счет %s: '%s'.")
 
     /**
      * Ошибки при создании проводки (runtime)
@@ -90,6 +95,7 @@ public enum ErrorCode {
     , ACCOUNT_TYPE_IS_NOT_NUMBER(2012, "Ключи счета %s: Неверный формат типа счета (не число): '%s' (поле '%s')")
     , ACCOUNT_TYPE_INVALID(2013, "Ключи счета %s: Тип счета не задан в системе: '%s' (поле '%s')")
     , ACCOUNTGL_ALREADY_EXISTS(2014, "Счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre><pre>Счет Midas:   %s</pre>")
+    , ACCOUNTGLTH_ALREADY_EXISTS(2060, "Технический счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre>")
     , CLOSEDATE_NOT_VALID(2015, "Дата закрытия счета '%s' < даты открытия '%s'")
     , ACCOUNT_RLN_INVALID(2016, "Не найдена запись в таблице ACCRLN для BSAACID = '%s', ACID = '%s'")
     , ACCOUNT_BSA_INVALID(2017, "Не найдена запись в таблице BSAACC для ID (BSAACID) = '%s'")

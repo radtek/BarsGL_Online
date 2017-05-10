@@ -40,7 +40,7 @@ public class BtnTxtBox extends TxtBox {
         return grid;
     }
 
-    public void onBntClick(){};
+    public void onBntClick() {};
 
     @Override
     public void setWidth(String width) {
