@@ -11,7 +11,7 @@ public enum UserMenuCode {
     , UnloadStamtConfig, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
     , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
     , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
-    , ErrorView, ErrorHandling
+    , TechOperInpConfirm, ErrorView, ErrorHandling
 
 
     /* Дополнительные коды меню, которые строятся всегда! */

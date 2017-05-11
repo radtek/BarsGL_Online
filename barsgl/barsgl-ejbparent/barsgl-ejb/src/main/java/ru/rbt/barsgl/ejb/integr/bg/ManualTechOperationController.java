@@ -199,13 +199,13 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                     }
                 }
             } catch (Exception ex) {
-                operation.getErrorList().addNewErrorDescription("", "", ex.getMessage(), "");
+                operation.getErrorList().addNewErrorDescription(ex.getMessage(),"");
                 throw  ex;
             }
         }
             else {
                 for (ValidationError e:errors) {
-                    operation.getErrorList().addNewErrorDescription(e.getEnityName(), e.getFieldName(), e.getMessage(),e.getCode().getStrErrorCode());
+                    operation.getErrorList().addNewErrorDescription(e.getMessage(),e.getCode().getStrErrorCode());
                 }
                 auditController.error(ManualOperation, "Не найдены проводки по операции", "GLOperation", operation.getId().toString(), "Не найдены проводки по операции");
             }
@@ -349,7 +349,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             errCode = ValidationError.getErrorCode(errMessage);
             errMessage = ValidationError.getErrorText(errMessage);
             if (!errMessage.isEmpty()) {
-                errorList.addNewErrorDescription("", "", errMessage, errCode);
+                errorList.addNewErrorDescription( errMessage, errCode);
             }
         }
         return errMessage;
@@ -621,13 +621,13 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             String msg = String.format("Запрос на операцию ID = %d изменен, статус: '%s' ('%s')." +
                             "\n Обновите информацию и выполните операцию повторно"
                     , posting.getId(), posting.getStatus().name(), posting.getStatus().getLabel());
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
             String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')\n Обновите информацию",
                     posting.getId(), posting.getInvisible().name(), posting.getInvisible().getLabel() );
-            wrapper.getErrorList().addErrorDescription("", "", msg, null);
+            wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(msg);
         }
         if (enabledStatus.length == 0)
@@ -639,7 +639,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         }
         String msg = String.format("Запрос на операцию ID = '%d': нельзя '%s' запрос в статусе: '%s' ('%s')", posting.getId(),
                 wrapper.getAction().getLabel(), posting.getStatus().name(), posting.getStatus().getLabel());
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription( msg);
         throw new DefaultApplicationException(msg);
     }
 
@@ -841,7 +841,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
         wrapper.setStatus(newStatus);
         String msg = result.getPostSignedMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -922,7 +922,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), nextStatus);
         result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
         String msg = result.getPostSendMessage();
-        wrapper.getErrorList().addErrorDescription("", "", msg, null);
+        wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -979,7 +979,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
         String msg = result.getPostSignedMessage();
 
-        wrapper.getErrorList().addErrorDescription("", "", msg + errorMessage, null);
+        wrapper.getErrorList().addErrorDescription(msg + errorMessage);
         if (errorCode == 0) {
             auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         } else {

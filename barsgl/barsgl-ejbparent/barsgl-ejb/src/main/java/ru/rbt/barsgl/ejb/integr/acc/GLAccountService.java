@@ -613,7 +613,7 @@ public class GLAccountService {
                 accountWrapper.setBsaAcid(account.getBsaAcid());
             }
             else {
-                accountWrapper.getErrorList().addErrorDescription("GLAccount","","счёт не найден","");
+                accountWrapper.getErrorList().addErrorDescription("счёт не найден");
             }
 
             return new RpcRes_Base<ManualAccountWrapper>(accountWrapper,false,"счёт найден");

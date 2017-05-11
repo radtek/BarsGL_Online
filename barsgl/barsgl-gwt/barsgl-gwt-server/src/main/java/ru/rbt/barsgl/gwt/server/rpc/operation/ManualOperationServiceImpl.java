@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.server.rpc.operation;
 
-import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.ejb.cur_exchng.CurrencyExchangeSupport;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.integr.acc.OfrAccountService;
@@ -9,7 +8,6 @@ import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
-import ru.rbt.barsgl.ejb.rep.PostingBackValueRep;
 import ru.rbt.barsgl.ejb.rep.PostingBackValueRep;
 import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;

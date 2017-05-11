@@ -83,7 +83,7 @@ abstract public class OperTechSuperBase extends GridForm {
         wrapper.setReasonOfDeny((String) getValue("DESCRDENY"));
         String errorMessage = (String) getValue("EMSG");
         if (!isEmpty(errorMessage))
-            wrapper.getErrorList().addErrorDescription(null, null, errorMessage, null);
+            wrapper.getErrorList().addErrorDescription(errorMessage);
 
         return wrapper;
     }
