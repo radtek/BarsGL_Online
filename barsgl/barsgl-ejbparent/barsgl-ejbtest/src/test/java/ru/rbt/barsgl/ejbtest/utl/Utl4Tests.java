@@ -27,7 +27,7 @@ public class Utl4Tests {
     private static final Logger logger = Logger.getLogger(Utl4Tests.class.getName());
 
 
-    private static Date parseDate(String date, String format){
+    public static Date parseDate(String date, String format){
 
         SimpleDateFormat formatter = new SimpleDateFormat(format);
         try {

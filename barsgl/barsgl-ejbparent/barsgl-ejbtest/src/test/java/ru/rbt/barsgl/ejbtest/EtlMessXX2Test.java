@@ -473,8 +473,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         List<DataRecord> glAcc4 = getGlAccRlnType4();
         setCloseDateGlAcc( 0, glAcc4);
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '' where bsaacid = '" + BSAACID0 + "'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = '' where bsaacid = '" + BSAACID0 + "'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '' where bsaacid = '" + BSAACID0 + "'");
+        System.out.println(count + ": update gl_acc set dealid = '' where bsaacid = '" + BSAACID0 + "'");
         Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -507,8 +507,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
+//        System.out.println(count + ": update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
 //        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
@@ -536,8 +536,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         List<DataRecord> glAcc4 = getGlAccRlnType4();
         setCloseDateGlAcc( 0, glAcc4);
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = 'нет' where bsaacid = '" + BSAACID0 + "'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = 'нет' where bsaacid = '" + BSAACID0 + "'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'нет' where bsaacid = '" + BSAACID0 + "'");
+        System.out.println(count + ": update gl_acc set dealid = 'нет' where bsaacid = '" + BSAACID0 + "'");
         Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -570,8 +570,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
+//        System.out.println(count + ": update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
 //        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
@@ -599,8 +599,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         List<DataRecord> glAcc4 = getGlAccRlnType4();
         setCloseDateGlAcc( 0, glAcc4);
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = 'net' where bsaacid = '" + BSAACID0 + "'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = 'net' where bsaacid = '" + BSAACID0 + "'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'net' where bsaacid = '" + BSAACID0 + "'");
+        System.out.println(count + ": update gl_acc set dealid = 'net' where bsaacid = '" + BSAACID0 + "'");
         Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -633,8 +633,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
+//        System.out.println(count + ": update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
 //        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
@@ -866,8 +866,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     public void test17() throws Exception {
         long stamp = System.currentTimeMillis();
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '" + ACID + "'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123' where acid = '" + ACID + "'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '" + ACID + "'");
+        System.out.println(count + ": update gl_acc set dealid = '123' where acid = '" + ACID + "'");
         Assert.assertTrue(count > 0);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -900,8 +900,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where acid = '" + ACID + "'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null where acid = '" + ACID + "'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '" + ACID + "'");
+//        System.out.println(count + ": update gl_acc set dealid = null where acid = '" + ACID + "'");
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -931,8 +931,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         glAccBeginState();
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
-        System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
+        System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
         Assert.assertTrue(count > 0);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -965,8 +965,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = null where acid = '" + ACID + "'");
-//        System.out.println(count + ": update dwh.gl_acc set dtc = null where acid = '" + ACID + "'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '" + ACID + "'");
+//        System.out.println(count + ": update gl_acc set dtc = null where acid = '" + ACID + "'");
 //        Assert.assertTrue(count > 0);
 
         Assert.assertNotNull(operation);
@@ -997,12 +997,12 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         DataRecord accrln_rltype4 = baseEntityRepository.selectFirst("select * from accrln where acid='" + ACID + "' and rlntype='4'");
         Assert.assertNotNull(accrln_rltype4);
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.accrln set rlntype = '0' where acid = '" + ACID + "' and bsaacid=?", accrln_rltype4.getString("bsaacid"));
-        System.out.println(count + ": dwh.accrln set rlntype = '0'");
+        int count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '0' where acid = '" + ACID + "' and bsaacid=?", accrln_rltype4.getString("bsaacid"));
+        System.out.println(count + ": accrln set rlntype = '0'");
         Assert.assertTrue(count == 1);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
-        System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
+        System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "'");
         Assert.assertTrue(count > 0);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -1035,11 +1035,11 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = null where acid = '00400038RUR104902001'");
-//        System.out.println(count + ": update dwh.gl_acc set dtc = null where acid = '00400038RUR104902001'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001'");
+//        System.out.println(count + ": update gl_acc set dtc = null where acid = '00400038RUR104902001'");
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.accrln set rlntype = '4' where acid = '" + ACID + "' and bsaacid=?",accrln_rltype4.getString("bsaacid"));
-        System.out.println(count + ": update dwh.accrln set rlntype = '4'");
+        count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '4' where acid = '" + ACID + "' and bsaacid=?",accrln_rltype4.getString("bsaacid"));
+        System.out.println(count + ": update accrln set rlntype = '4'");
         Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
@@ -1070,20 +1070,20 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         glAccBeginState();
 
-        List<DataRecord> glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '" + ACID + "' and rlntype='4'");
+        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '" + ACID + "' and rlntype='4'");
         Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 1);
 
-        DataRecord glAcc4 = baseEntityRepository.selectFirst("select * from dwh.gl_acc where acid='" + ACID + "' and rlntype='4'");
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "' and bsaacid!=?", glAcc4.getString("bsaacid"));
-        System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29'");
+        DataRecord glAcc4 = baseEntityRepository.selectFirst("select * from gl_acc where acid='" + ACID + "' and rlntype='4'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "' and bsaacid!=?", glAcc4.getString("bsaacid"));
+        System.out.println(count + ": update gl_acc set dtc = '2015-12-29'");
         Assert.assertTrue(count > 0);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.accrln set drlnc = '2015-12-29' where acid = '" + ACID + "'");
-        System.out.println(count + ": update dwh.accrln set drlnc = '2015-12-29' where acid = '" + ACID + "'");
+        count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc = '2015-12-29' where acid = '" + ACID + "'");
+        System.out.println(count + ": update accrln set drlnc = '2015-12-29' where acid = '" + ACID + "'");
         Assert.assertTrue(count > 0);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '" + ACID + "'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123' where acid = '" + ACID + "'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '" + ACID + "'");
+        System.out.println(count + ": update gl_acc set dealid = '123' where acid = '" + ACID + "'");
         Assert.assertTrue(count > 0);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -1117,14 +1117,14 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         glAccBeginState();
 
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid!=?", glAcc4.getString("bsaacid"));
-//        System.out.println(count + ": update dwh.gl_acc set dtc = null");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid!=?", glAcc4.getString("bsaacid"));
+//        System.out.println(count + ": update gl_acc set dtc = null");
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.accrln set drlnc='2029-01-01' where acid = '" + ACID + "'");
-        System.out.println(count + ": update dwh.accrln set drlnc='2029-01-01' where acid = '" + ACID + "'");
+        count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc='2029-01-01' where acid = '" + ACID + "'");
+        System.out.println(count + ": update accrln set drlnc='2029-01-01' where acid = '" + ACID + "'");
 
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where acid = '00400038RUR104902001'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null where acid = '00400038RUR104902001'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001'");
+//        System.out.println(count + ": update gl_acc set dealid = null where acid = '00400038RUR104902001'");
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -1154,21 +1154,21 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         glAccBeginState();
 
         List<DataRecord> glAcc = getGlAccRlnType4();
-//        List<DataRecord> glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '"+ACID+"' and rlntype='4'");
+//        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '"+ACID+"' and rlntype='4'");
 //        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
+        System.out.println(count + ": update gl_acc set dealid = '123'");
         Assert.assertTrue(count == 1);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '"+ACID+"' and rlntype='0'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and rlntype='0'");
+        System.out.println(count + ": update gl_acc set dealid = '123'");
         Assert.assertTrue(count > 0);
 
         setCloseDateGlAcc( 2, glAcc);
 //        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+//            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
 //            Assert.assertTrue(count > 0);
 //        }
 
@@ -1203,14 +1203,14 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         glAccBeginState();
 //        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update dwh.gl_acc set dtc = null where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+//            System.out.println(count + ": update gl_acc set dtc = null where bsaacid = " + glAcc.get(i).getString("bsaacid"));
 //        }
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where acid = '00400038RUR104902001' and rlntype='0'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and rlntype='0'");
+//        System.out.println(count + ": update gl_acc set dealid = null");
 //
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
+//        System.out.println(count + ": update gl_acc set dealid = null");
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -1240,27 +1240,27 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         glAccBeginState();
 
         List<DataRecord> glAcc = getGlAccRlnType4();
-//        List<DataRecord> glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '00400038RUR104902001' and rlntype='4'");
+//        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '00400038RUR104902001' and rlntype='4'");
 //        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
 
-        DataRecord glAcc0 = baseEntityRepository.selectFirst("select * from dwh.gl_acc where acid = '"+ACID+"' and rlntype='0'");
+        DataRecord glAcc0 = baseEntityRepository.selectFirst("select * from gl_acc where acid = '"+ACID+"' and rlntype='0'");
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set acctype = ? where acid = '"+ACID+"' and bsaacid=?", glAcc.get(0).getString("acctype"), glAcc0.getString("bsaacid"));
-        System.out.println(count + ": update dwh.gl_acc set acctype = " + glAcc.get(0).getString("acctype") + " and bsaacid = " + glAcc0.getString("bsaacid"));
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set acctype = ? where acid = '"+ACID+"' and bsaacid=?", glAcc.get(0).getString("acctype"), glAcc0.getString("bsaacid"));
+        System.out.println(count + ": update gl_acc set acctype = " + glAcc.get(0).getString("acctype") + " and bsaacid = " + glAcc0.getString("bsaacid"));
         Assert.assertTrue(count == 1);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123'and bsaacid = " + glAcc.get(1).getString("bsaacid"));
+        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
+        System.out.println(count + ": update gl_acc set dealid = '123'and bsaacid = " + glAcc.get(1).getString("bsaacid"));
         Assert.assertTrue(count == 1);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = 'нет' where acid = '"+ACID+"' and rlntype='0'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = 'нет' where rlntype='0'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'нет' where acid = '"+ACID+"' and rlntype='0'");
+        System.out.println(count + ": update gl_acc set dealid = 'нет' where rlntype='0'");
         Assert.assertTrue(count > 0);
 
         setCloseDateGlAcc( 2, glAcc);
 //        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+//            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
 //            Assert.assertTrue(count > 0);
 //        }
 
@@ -1298,18 +1298,18 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         glAccBeginState();
 
 //        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update dwh.gl_acc set dtc = null where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+//            System.out.println(count + ": update gl_acc set dtc = null where bsaacid = " + glAcc.get(i).getString("bsaacid"));
 //        }
 //
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where acid = '00400038RUR104902001' and rlntype='0'");
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null where rlntype='0'");
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and rlntype='0'");
+//        System.out.println(count + ": update gl_acc set dealid = null where rlntype='0'");
 //
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
-//        System.out.println(count + ": update dwh.gl_acc set dealid = null and bsaacid = " + glAcc.get(1).getString("bsaacid"));
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
+//        System.out.println(count + ": update gl_acc set dealid = null and bsaacid = " + glAcc.get(1).getString("bsaacid"));
 //
-//        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set acctype = ? where acid = '00400038RUR104902001' and bsaacid=?", glAcc0.getString("acctype"), glAcc0.getString("bsaacid"));
-//        System.out.println(count + ": update dwh.gl_acc set acctype = " + glAcc0.getString("acctype") + " and bsaacid = " + glAcc0.getString("bsaacid"));
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set acctype = ? where acid = '00400038RUR104902001' and bsaacid=?", glAcc0.getString("acctype"), glAcc0.getString("bsaacid"));
+//        System.out.println(count + ": update gl_acc set acctype = " + glAcc0.getString("acctype") + " and bsaacid = " + glAcc0.getString("bsaacid"));
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -1342,21 +1342,21 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         glAccBeginState();
 
         List<DataRecord> glAcc4 = getGlAccRlnType4();
-//        List<DataRecord> glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '00400038RUR104902001' and rlntype='4'");
+//        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '00400038RUR104902001' and rlntype='4'");
 //        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(1).getString("bsaacid"));
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(1).getString("bsaacid"));
+        System.out.println(count + ": update gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
         Assert.assertTrue(count == 1);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = 'нет' where acid = '"+ACID+"' and rlntype='0'");
-        System.out.println(count + ": update dwh.gl_acc set dealid = 'нет' where rlntype='0'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'нет' where acid = '"+ACID+"' and rlntype='0'");
+        System.out.println(count + ": update gl_acc set dealid = 'нет' where rlntype='0'");
         Assert.assertTrue(count == 1);
 
         setCloseDateGlAcc(2, glAcc4);
 //        for(int i = 2; i < glAcc4.size(); i++ ){
-//            count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?",glAcc4.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where bsaacid = "+glAcc4.get(i).getString("bsaacid") );
+//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?",glAcc4.get(i).getString("bsaacid"));
+//            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = "+glAcc4.get(i).getString("bsaacid") );
 //            Assert.assertTrue(count == 1);
 //        }
 
@@ -1422,19 +1422,19 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         List<DataRecord> glAcc4 = getGlAccRlnType4();
         setGlAccDealId123(glAcc4);
-//        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '00400038RUR104902001' and bsaacid=?",glAcc4.get(1).getString("bsaacid"));
-//        System.out.println(count + ": update dwh.gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
+//        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '00400038RUR104902001' and bsaacid=?",glAcc4.get(1).getString("bsaacid"));
+//        System.out.println(count + ": update gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
 //        Assert.assertTrue(count == 1);
         setGlAcc0DealId();
-//        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = 'нет' where acid = '00400038RUR104902001' and rlntype='0'");
-//        System.out.println(count + ": update dwh.gl_acc set subdealid = 'нет' where rlntype='0'");
+//        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'нет' where acid = '00400038RUR104902001' and rlntype='0'");
+//        System.out.println(count + ": update gl_acc set subdealid = 'нет' where rlntype='0'");
 //        Assert.assertTrue(count == 1);
 
         setCloseDateGlAcc(2, glAcc4);
 
         setGlAcc4AccType101(glAcc4);
-//        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set acctype = '131060101' where acid = '00400038RUR104902001' and bsaacid=?", glAcc4.get(0).getString("bsaacid"));
-//        System.out.println(count + ": update dwh.gl_acc set acctype = '131060101' and bsaacid = " + glAcc4.get(0).getString("bsaacid"));
+//        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set acctype = '131060101' where acid = '00400038RUR104902001' and bsaacid=?", glAcc4.get(0).getString("bsaacid"));
+//        System.out.println(count + ": update gl_acc set acctype = '131060101' and bsaacid = " + glAcc4.get(0).getString("bsaacid"));
 //        Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -1506,8 +1506,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         setGlAcc0DealId();
         setGlAcc4AccType101(glAcc4);
 
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.GL_ACTNAME set FL_CTRL = 'Y' where ACCTYPE = '131060102'");
-        System.out.println(count +": update dwh.GL_ACTNAME set FL_CTRL = 'Y'");
+        int count = baseEntityRepository.executeNativeUpdate("update GL_ACTNAME set FL_CTRL = 'Y' where ACCTYPE = '131060102'");
+        System.out.println(count +": update GL_ACTNAME set FL_CTRL = 'Y'");
         Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -1576,8 +1576,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         setCloseDateGlAcc(2, glAcc4);
         setGlAcc0DealId();
         setGlAcc4AccType101(glAcc4);
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
-        System.out.println(count +": update dwh.GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
+        int count = baseEntityRepository.executeNativeUpdate("update GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
+        System.out.println(count +": update GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
         Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -1647,12 +1647,12 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         setCloseDateGlAcc(2, glAcc4);
         setGlAcc0DealId();
         setGlAcc4AccType101(glAcc4);
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
-        System.out.println(count +": update dwh.GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
+        int count = baseEntityRepository.executeNativeUpdate("update GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
+        System.out.println(count +": update GL_ACTPARM set dte='2015-01-01' where ACCTYPE = '131060102' and custype='9'");
         Assert.assertTrue(count == 1);
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_actparm set ac_sq = '00' where acctype = '131060102' and custype = '00'");
-        System.out.println(count +": update dwh.gl_actparm set ac_sq = '00' where acctype = '131060102' and custype = '00'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_actparm set ac_sq = '00' where acctype = '131060102' and custype = '00'");
+        System.out.println(count +": update gl_actparm set ac_sq = '00' where acctype = '131060102' and custype = '00'");
         Assert.assertTrue(count == 1);
 
 
@@ -1788,20 +1788,20 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     }
         //===============================================================
     private void setGlAcc4AccType101(List<DataRecord> glAcc4) {
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set acctype = '131060101' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(0).getString("bsaacid"));
-        System.out.println(count +": update dwh.gl_acc set acctype = '131060101' and bsaacid = "+glAcc4.get(0).getString("bsaacid"));
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set acctype = '131060101' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(0).getString("bsaacid"));
+        System.out.println(count +": update gl_acc set acctype = '131060101' and bsaacid = "+glAcc4.get(0).getString("bsaacid"));
         Assert.assertTrue(count == 1);
     }
 
     private void setGlAcc0DealId() {
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = 'нет' where acid = '"+ACID+"' and rlntype='0'");
-        System.out.println(count +": update dwh.gl_acc set subdealid = 'нет' where rlntype='0'");
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'нет' where acid = '"+ACID+"' and rlntype='0'");
+        System.out.println(count +": update gl_acc set subdealid = 'нет' where rlntype='0'");
         Assert.assertTrue(count ==1);
     }
 
     private void setGlAccDealId123(List<DataRecord> glAcc4) {
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(1).getString("bsaacid"));
-        System.out.println(count + ": update dwh.gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(1).getString("bsaacid"));
+        System.out.println(count + ": update gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
         Assert.assertTrue(count == 1);
     }
 
@@ -1814,39 +1814,39 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
     private void setCloseDateGlAcc(int from, List<DataRecord> glAcc){
         for(int i = from; i < glAcc.size(); i++ ) {
-            int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-            System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+            int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
             Assert.assertTrue(count == 1);
         }
     }
     private void setCloseDateGlAcc(int from, List<DataRecord> glAcc, int to){
         for(int i = from; i < glAcc.size() - to; i++ ) {
-            int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dtc = '2015-12-29' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-            System.out.println(count + ": update dwh.gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
+            int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
+            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
             Assert.assertTrue(count == 1);
         }
     }
 
     private List<DataRecord> getGlAccRlnType4() throws Exception{
         List<DataRecord> glAcc = null;
-        glAcc = baseEntityRepository.select("select * from dwh.gl_acc where acid = '"+ACID+"' and rlntype='4' order by bsaacid");
+        glAcc = baseEntityRepository.select("select * from gl_acc where acid = '"+ACID+"' and rlntype='4' order by bsaacid");
         Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
         return glAcc;
     }
 
     private void glAccBeginState(){
-        int count = baseEntityRepository.executeNativeUpdate("update dwh.gl_acc set dealid=null,subdealid=null,dtc=null,"+
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid=null,subdealid=null,dtc=null,"+
                 " acctype= case when rlntype='0' then '131060101' when rlntype='4' then '131060102' else acctype end where acid = '"+ACID+"'");
-        System.out.println(count + ": начальное состояние dwh.gl_acc ");
+        System.out.println(count + ": начальное состояние gl_acc ");
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.GL_ACTNAME set FL_CTRL = 'N' where ACCTYPE = '131060102'");
+        count = baseEntityRepository.executeNativeUpdate("update GL_ACTNAME set FL_CTRL = 'N' where ACCTYPE = '131060102'");
         System.out.println(count + ": set FL_CTRL = 'N' where ACCTYPE = '131060102'");
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.GL_ACTPARM set dte=null where ACCTYPE = '131060102' and custype='9'");
+        count = baseEntityRepository.executeNativeUpdate("update GL_ACTPARM set dte=null where ACCTYPE = '131060102' and custype='9'");
         System.out.println(count + ": set dte=null where ACCTYPE = '131060102'");
 
-        count = baseEntityRepository.executeNativeUpdate("update dwh.gl_actparm set ac_sq = '02' where acctype = '131060102' and custype = '00'");
-        System.out.println(count +": update dwh.gl_actparm set ac_sq = '02' where acctype = '131060102' and custype = '00'");
+        count = baseEntityRepository.executeNativeUpdate("update gl_actparm set ac_sq = '02' where acctype = '131060102' and custype = '00'");
+        System.out.println(count +": update gl_actparm set ac_sq = '02' where acctype = '131060102' and custype = '00'");
 
     }
 
