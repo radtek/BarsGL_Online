@@ -234,8 +234,9 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                     "               else OBBC\n" +
                     "           end INCORUB\n" +
                     "           , OBAC+CTAC+DTAC OUTCO, OBBC+CTBC+DTBC OUTRUB, b.bsaacid\n" +
-                    "     from baltur b, gl_od o\n" +
-                    "    where b.DATTO='2029-01-01' and b.bsaacid = ? \n" +
+                    "     from baltur b, gl_od o\n" +                            
+//                    "    where b.DATTO='2029-01-01' and b.bsaacid = ? \n" +
+                    "    where b.DATTO=TO_DATE('2029-01-01','RRRR-DD-MM') and b.bsaacid = ? \n" +
                     ") b \n" +
                     "left join   (select sum(case\n" +
                     "                    when b.dat < o.curdate then CTAC+DTAC\n" +
