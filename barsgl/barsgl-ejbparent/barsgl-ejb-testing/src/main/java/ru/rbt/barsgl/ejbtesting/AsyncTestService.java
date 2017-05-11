@@ -76,7 +76,7 @@ public class AsyncTestService {
             final long sleep = random.nextLong(1000);
             futures.add(asyncProcessor.invokeAsync(persistence -> {
                 TimeUnit.MILLISECONDS.sleep(sleep);
-                postingRepository.executeNativeUpdate("insert into tmp_test_async values(?1)", new Object[]{finalInteger});
+                postingRepository.executeNativeUpdate("insert into tmp_test_async values(?)", new Object[]{finalInteger});
                 return finalInteger;
             }));
         }

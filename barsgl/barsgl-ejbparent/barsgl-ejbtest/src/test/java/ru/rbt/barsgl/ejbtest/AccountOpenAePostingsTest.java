@@ -136,7 +136,7 @@ public class AccountOpenAePostingsTest extends AbstractRemoteTest {
         baseEntityRepository.executeNativeUpdate(
                 "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD IS NULL"
                 , sorted.get(0).getStartNumber() - 1, keys2.getAccount2(), keys2.getCurrency()
-                , keys2.getCompanyCode()/*, keys2.getPlCode().isEmpty()*/);
+                , keys2.getCompanyCode());
         frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
                 , keys2.getAccount2()
                 , keys2.getCurrency()

@@ -42,7 +42,7 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
             id = res.getLong(0);
             if (id == null) {
                 id = nextId("GL_SEQ_ACC");
-                executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?1,?2,?3,'1')"
+                executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?,?,?,'1')"
                         , id, ifEmpty(Acid, " "), Bsaacid);
             }
 //            if (id == null) throw new SQLException("not found glacid for " + Acid + "; " + Bsaacid);
@@ -108,8 +108,8 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
         // TODO предполагаем, что EVENT_ID - автоинкремент, EVENT_TIME - default,
         // TODO , EVENT_COMMENT - заполняет адаптер
         String sql = "insert into WBI_EVENTS (" +
-                "CONNECTOR_ID, OBJECT_KEY, OBJECT_NAME, OBJECT_VERB, EVENT_PRIORITY, EVENT_STATUS" +
-                ") values ('UcbruBarsGLAdapter', ?, 'ABARSGLAccountRetrieveResponse', 'Retrieve', 0, 0)";
+                "EVENT_ID, CONNECTOR_ID, OBJECT_KEY, OBJECT_NAME, OBJECT_VERB, EVENT_PRIORITY, EVENT_STATUS" +
+                ") values (WBI_EVENTS_SEQ.nextval, 'UcbruBarsGLAdapter', ?, 'ABARSGLAccountRetrieveResponse', 'Retrieve', 0, 0)";
         executeNativeUpdate(sql, request.getId());
     }
 }

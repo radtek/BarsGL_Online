@@ -1,14 +1,15 @@
 package ru.rbt.barsgl.ejbtesting.test;
 
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import ru.rbt.audit.entity.AuditRecord;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 
@@ -28,6 +29,7 @@ public class AuditControllerTest {
         GLOperation operation;
         try {
             operation = operationRepository.selectFirst(GLOperation.class, "from GLOperation o where o.id = ?1", gloid);
+            Assert.notNull(operation, "Не найдена операция GLOID = " + gloid);
             try {
                 auditController.info(AuditRecord.LogCode.Operation, message + ": before divide error", operation);
                 long e = 5 / 0;
@@ -45,7 +47,7 @@ public class AuditControllerTest {
             }
             try {
                 Thread.sleep(100);
-                auditController.info(AuditRecord.LogCode.Operation, message + ": before vaildation error: " + message, operation);
+                auditController.info(AuditRecord.LogCode.Operation, message + ": before ValidationError: " + message, operation);
                 throw new ValidationError(ErrorCode.CURRENCY_CODE_NOT_EXISTS, "LOL");
             } catch (Throwable e) {
                 Thread.sleep(100);
@@ -64,7 +66,7 @@ public class AuditControllerTest {
             }
             try {
                 Thread.sleep(100);
-                auditController.info(AuditRecord.LogCode.Operation, message + ": before FanAmounts error: " + message, operation);
+                auditController.info(AuditRecord.LogCode.Operation, message + ": before ValidationError in transaction: " + message, operation);
                 operationRepository.executeInNewTransaction(persistence -> {
                     throw new ValidationError(ErrorCode.CURRENCY_CODE_NOT_EXISTS, "SOS");
                 });
@@ -83,7 +85,7 @@ public class AuditControllerTest {
         try {
             operationRepository.executeNativeUpdate("update blabla set bla='LOL' where lala = 'DUMMY'");
         } catch (Exception e) {
-            operationRepository.setRollbackOnly();
+//            operationRepository.setRollbackOnly();
             auditController.error(Task, "Error on testing update", null, e);
         }
     }

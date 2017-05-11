@@ -109,16 +109,16 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "  B.DATTO, " +
                     "  B.OBAC + B.DTAC + B.CTAC OBAL, " +
                     "  B.OBBC + B.DTBC + B.CTBC OBALRUR " +
-                    "FROM DWH.BALTUR B, (SELECT " +
+                    "FROM BALTUR B, (SELECT " +
                     "                      A.ID ACID " +
-                    "                    FROM DWH.GL_OPER O, DWH.GL_OD OD, DWH.GL_POSTING PS, DWH.PD D, DWH.GL_SHACOD S, DWH.ACC A " +
+                    "                    FROM GL_OPER O, GL_OD OD, GL_POSTING PS, PD D, GL_SHACOD S, ACC A " +
                     "                    WHERE " +
                     "                      PS.PCID = D.PCID AND PS.GLO_REF = O.GLOID AND O.POSTDATE BETWEEN ? AND ? AND " +
                     "                      S.ACOD = A.ACOD AND " +
                     "                      S.ACSQ = RIGHT('0' || A.ACSQ, 2) AND D.ACID = A.ID AND S.BSTYPE = '2N' " +
                     "                      AND S.DATTO >= ? AND S.DAT <= ? " +
                     "                      AND D.INVISIBLE <> '1' " +
-                    "                    GROUP BY OD.CURDATE, A.ID, D.BSAACID, S.BSTYPE) V, DWH.ACCRLN AC " +
+                    "                    GROUP BY OD.CURDATE, A.ID, D.BSAACID, S.BSTYPE) V, ACCRLN AC " +
                     "WHERE " +
 //            "      V.ACID in ('00000331RUR898601033','00000331RUR898201033') AND " +
                     "      B.ACID = V.ACID " +
@@ -128,14 +128,14 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "ORDER BY B.ACID, B.BSAACID, B.DAT";
 
     private static final String unloadUnspentsShared2NInsertSql =
-            "INSERT INTO DWH.GLVD_BAL_V(DAT,UNLOAD_DAT,ACID,OBAL,OBALRUR,MID_FLAG) " +
+            "INSERT INTO GLVD_BAL_V(DAT,UNLOAD_DAT,ACID,OBAL,OBALRUR,MID_FLAG) " +
                     "VALUES(?,?,?,?,?,?)";
 
     private static final String unloadUnspentsSelectSql02 =
             "SELECT DISTINCT B.ACID, B.BSAACID, B.DAT, B.DATTO, B.OBAC+B.DTAC+B.CTAC OBAL, B.OBBC+B.DTBC+B.CTBC OBALRUR, A.DRLNO " +
-                    "FROM DWH.BALTUR B,  ( " +
+                    "FROM BALTUR B,  ( " +
                     "    SELECT A.ID ACID, D.BSAACID " +
-                    "    FROM DWH.GL_OPER O, DWH.GL_OD OD, DWH.GL_POSTING PS, DWH.PD D, DWH.GL_SHACOD S, DWH.ACC A " +
+                    "    FROM GL_OPER O, GL_OD OD, GL_POSTING PS, PD D, GL_SHACOD S, ACC A " +
                     "    WHERE PS.PCID = D.PCID " +
                     "          AND PS.GLO_REF = O.GLOID " +
                     "          AND O.POSTDATE BETWEEN ? AND ? " +
@@ -146,13 +146,13 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "          AND S.DATTO >= ? AND S.DAT <= ?  " +
                     "          AND D.INVISIBLE <> '1' " +
                     "    GROUP BY OD.CURDATE, A.ID, D.BSAACID, S.BSTYPE " +
-                    "  ) V, DWH.ACCRLN A " +
+                    "  ) V, ACCRLN A " +
                     "WHERE B.ACID = A.ACID AND B.BSAACID = A.BSAACID AND B.ACID = V.ACID AND B.BSAACID = V.BSAACID " +
                     "AND (B.DAT BETWEEN ? AND ? OR B.DATTO BETWEEN ? AND ?) " +
                     "ORDER BY B.ACID, B.BSAACID, B.DAT";
 
     private static final String unloadUnspentsShared02InsertSql =
-            "INSERT INTO DWH.GLVD_BAL_V(DAT,UNLOAD_DAT,ACID,BSAACID,OBAL,OBALRUR,MID_FLAG) " +
+            "INSERT INTO GLVD_BAL_V(DAT,UNLOAD_DAT,ACID,BSAACID,OBAL,OBALRUR,MID_FLAG) " +
                     "VALUES(?,?,?,?,?,?,?)";
 
     private static final String unloadUnspentsSelectSql =
@@ -166,7 +166,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "  A.ID                     AS GLACID, " +
                     "  A.DTC, " +
                     "  A.DTO " +
-                    "FROM DWH.BALTUR B, DWH.GL_ACC A " +
+                    "FROM BALTUR B, GL_ACC A " +
                     "WHERE " +
                     "  A.ACID = B.ACID AND A.BSAACID = B.BSAACID AND " +
                     "  B.DATTO >= ? AND B.DAT <= ? " +
@@ -174,26 +174,26 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "    SELECT " +
                     "      D.ACID, " +
                     "      D.BSAACID " +
-                    "    FROM DWH.GL_POSTING P " +
-                    "      JOIN DWH.GL_OPER O ON P.GLO_REF = O.GLOID " +
-                    "      JOIN DWH.PD D ON P.PCID = D.PCID " +
+                    "    FROM GL_POSTING P " +
+                    "      JOIN GL_OPER O ON P.GLO_REF = O.GLOID " +
+                    "      JOIN PD D ON P.PCID = D.PCID " +
                     "    WHERE " +
                     "      O.POSTDATE BETWEEN ? AND ? AND VALUE(D.ACID, '') <> '' AND D.INVISIBLE <> '1' AND " +
                     "      O.STATE = 'POST' " +
                     "  ) " +
-                    "  AND (A.ACOD, A.SQ) NOT IN (SELECT ACOD, SQ FROM DWH.GL_DWHPARM) " +
+                    "  AND (A.ACOD, A.SQ) NOT IN (SELECT ACOD, SQ FROM GL_DWHPARM) " +
                     "  AND VALUE(A.RLNTYPE, '0') <> '2' " +
                     "ORDER BY B.BSAACID, B.DAT";
 
     private static final String unloadUnspentsInsertSql =
-            "INSERT INTO DWH.GLVD_BAL_V(DAT,UNLOAD_DAT,ACID,BSAACID,GLACID,OBAL,OBALRUR,MID_FLAG,DTC) " +
+            "INSERT INTO GLVD_BAL_V(DAT,UNLOAD_DAT,ACID,BSAACID,GLACID,OBAL,OBALRUR,MID_FLAG,DTC) " +
                     "VALUES(?,?,?,?,?,?,?,?,?)";
 
     private static final String etldwhsInsertSql =
-            "INSERT INTO DWH.GL_ETLDWHS(PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD) " +
+            "INSERT INTO GL_ETLDWHS(PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD) " +
                     "VALUES('BARS_GL_DWH',1,?,?,?)";
 
-    private static final String unloadDatSelectSql = "SELECT CURDATE FROM DWH.GL_OD";
+    private static final String unloadDatSelectSql = "SELECT CURDATE FROM GL_OD";
     private static final String SCHEDULED_TASK_NAME = "GLVD_PST_V LOAD";
     private static final int batchInsertSize = 1000;
 
@@ -336,7 +336,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
     private boolean checkStep(LocalDate operday, String taskName) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             try (PreparedStatement query = connection.prepareStatement(
-                    "SELECT * FROM DWH.GL_ETLDWHS WHERE OPERDAY=? AND PARDESC=? AND PARVALUE=1")) {
+                    "SELECT * FROM GL_ETLDWHS WHERE OPERDAY=? AND PARDESC=? AND PARVALUE=1")) {
                 query.setDate(1, Date.valueOf(operday));
                 query.setString(2, taskName);
                 ResultSet rs = query.executeQuery();
@@ -350,8 +350,8 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
 
     private void clearWorkTables() throws Exception {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
-            try (PreparedStatement query = connection.prepareStatement("DELETE FROM DWH.GLVD_PST_V");
-                 PreparedStatement query2 = connection.prepareStatement("DELETE FROM DWH.GLVD_BAL_V")) {
+            try (PreparedStatement query = connection.prepareStatement("DELETE FROM GLVD_PST_V");
+                 PreparedStatement query2 = connection.prepareStatement("DELETE FROM GLVD_BAL_V")) {
                 query.execute();
                 query2.execute();
             }
@@ -359,7 +359,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
         }), 60 * 60);
     }
 
-    private static final String etldwhsUpdateSql = "UPDATE DWH.GL_ETLDWHS SET END_LOAD=? WHERE ID=?";
+    private static final String etldwhsUpdateSql = "UPDATE GL_ETLDWHS SET END_LOAD=? WHERE ID=?";
 
     private void updateEtldwhs(BigDecimal idInsertedEtldwhs) {
         try {
@@ -825,15 +825,15 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
     private LocalDate getCurDate() {
         List<DataRecord> records = null;
         try {
-            records = coreRepository.select("select * from dwh.gl_od", null);
+            records = coreRepository.select("select * from gl_od", null);
         } catch (SQLException e) {
-            log.error("Ошибка при работе с таблицей DWH.GL_OD", e);
+            log.error("Ошибка при работе с таблицей GL_OD", e);
             auditController.error(UnloadPDandUnspents, e.getMessage(), null, e);
             e.printStackTrace();
         }
         if (records == null || records.size() == 0) {
-            log.error("Таблица DWH.GL_OD либо отсутствует, либо не содержит данных");
-            throw new RuntimeException("Таблица DWH.GL_OD либо отсутствует, либо не содержит данных");
+            log.error("Таблица GL_OD либо отсутствует, либо не содержит данных");
+            throw new RuntimeException("Таблица GL_OD либо отсутствует, либо не содержит данных");
         }
 
         java.sql.Date date;
@@ -842,7 +842,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
         } else {
             date = records.get(0).getSqlDate("CURDATE");
         }
-        auditController.info(UnloadPDandUnspents, "Таблица DWH.GL_OD. ANSWER=" + date + " / PHASE=" + records.get(0).getString("PHASE") + " LWDATE=" + records.get(0).getSqlDate("LWDATE") + " CURDATE=" + records.get(0).getSqlDate("CURDATE"));
+        auditController.info(UnloadPDandUnspents, "Таблица GL_OD. ANSWER=" + date + " / PHASE=" + records.get(0).getString("PHASE") + " LWDATE=" + records.get(0).getSqlDate("LWDATE") + " CURDATE=" + records.get(0).getSqlDate("CURDATE"));
 
         return date.toLocalDate();
     }

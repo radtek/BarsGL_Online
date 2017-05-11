@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.entity.acc;
 
-import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
@@ -24,9 +23,8 @@ public class GLAccountRequest extends BaseEntity<String> {
     @Column(name = "BRANCH")
     private String branchFlex;
 
-    @ManyToOne
-    @JoinColumn(name = "CCY")
-    private BankCurrency currency;
+    @Column(name = "CCY")
+    private String currency;
 
     @Column(name = "CUSTOMER_NO")
     private String customerNumber;
@@ -73,11 +71,11 @@ public class GLAccountRequest extends BaseEntity<String> {
         this.branchFlex = branchFlex;
     }
 
-    public BankCurrency getCurrency() {
+    public String getCurrency() {
         return currency;
     }
 
-    public void setCurrency(BankCurrency currency) {
+    public void setCurrency(String currency) {
         this.currency = currency;
     }
 

@@ -25,7 +25,7 @@ public class GLBsaAccLockRepository extends AbstractBaseEntityRepository<GLBsaAc
         int cnt = executeNativeUpdate("update GL_BSACCLK set UPD_DATE = ? where BSAACID = ?"
                 , lock.getUpdateDate(), lock.getBsaAcid());
         if (0 == cnt) {
-            executeNativeUpdate("insert into GL_BSACCLK (BSAACID, UPD_DATE) values (?1,?2)"
+            executeNativeUpdate("insert into GL_BSACCLK (BSAACID, UPD_DATE) values (?,?)"
                     , lock.getBsaAcid(), lock.getUpdateDate());
         }
     }
