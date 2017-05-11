@@ -138,6 +138,8 @@ mq.password=UsATi8hU
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\test\\lirq1.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
         sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
                 new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), 
+                //new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), 
+                //new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),                 
 //                new File("C:\\Projects\\task53\\test\\ma1.xml"),
                 "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\newRequests\\AccountListQuery_01_req.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
@@ -169,9 +171,9 @@ mq.password=UsATi8hU
                         "mq.queueManager = QM_MBROKER10_TEST\n" +
                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                         "mq.topics = " +
-//                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
 //                        "BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-                        "MAPBRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+//                        "MAPBRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
 //                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF" +
 //                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
 //                        ";MAPBRQ:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF\n" +
