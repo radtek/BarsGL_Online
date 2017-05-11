@@ -200,7 +200,7 @@ public class GLOperation extends BaseEntity<Long> {
     private String accountCredit;       // 20
 
     @ManyToOne
-    @JoinColumn(name = "CCY_CR", nullable = false)
+    @JoinColumn(name = "CCY_CR")
     private BankCurrency currencyCredit;
 
     /**
@@ -270,7 +270,7 @@ public class GLOperation extends BaseEntity<Long> {
 
     // Курсовая разница -----------------------------------
     @ManyToOne
-    @JoinColumn(name = "MAIN_CCY", nullable = false)
+    @JoinColumn(name = "MAIN_CCY")
     private BankCurrency currencyMain;
 
     @Column(name = "AMTR_POST")
@@ -288,7 +288,7 @@ public class GLOperation extends BaseEntity<Long> {
 
     // Межфилиальные проводки -----------------------------
     @ManyToOne
-    @JoinColumn(name = "CCY_MFO", nullable = false)
+    @JoinColumn(name = "CCY_MFO")
     private BankCurrency currencyMfo;
 
     @Column(name="AC_MFOASST")

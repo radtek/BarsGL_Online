@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
@@ -13,18 +14,18 @@ import ru.rbt.barsgl.ejb.integr.oper.ManualOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.*;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -39,22 +40,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import ru.rbt.audit.controller.AuditController;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
-import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.ERRPROC;
-import ru.rbt.security.ejb.repository.AppUserRepository;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by ER18837 on 11.01.17.
@@ -250,35 +246,33 @@ public class ManualOperationController {
             }
             BatchPosting posting = postingRepository.findById(posting0.getId());
 
-            GLManualOperation operation0;
+            GLManualOperation operation;
             try {
-                operation0 = operationRepository.executeInNewTransaction(persistence1 -> createOperation(posting));
+                operation = operationRepository.executeInNewTransaction(persistence1 -> createOperation(posting));
             } catch (Throwable e) {
                 throw new DefaultApplicationException(logPostingError(e, "Ошибка при создании" + oper, posting, ERRPROC, 1));
             }
 
-            final Long operationId = operation0.getId();
+            final Long operationId = operation.getId();
             try {
-                final GLManualOperation enrichedOperation = operationRepository.findById(GLManualOperation.class, operationId);
-                operationRepository.executeInNewTransaction(persistence1 -> enrichmentOperation(enrichedOperation));
+                operationRepository.executeInNewTransaction(persistence1 -> enrichmentOperation(operation));
             } catch (Throwable e) {
                 throw new DefaultApplicationException(
-                        logOperationError(e, "Ошибка при заполнения данных" + oper, operation0, OperState.ERCHK));
+                        logOperationError(e, "Ошибка при заполнения данных" + oper, operation, OperState.ERCHK));
             }
 
             try {
                 GLManualOperation resultOperation = operationRepository.executeInNewTransaction(persistence1 -> {
-                    final GLManualOperation processedOperation = operationRepository.findById(GLManualOperation.class, operationId);
-                    if (processOperation(processedOperation)) {
-                        auditController.info(ManualOperation, "Успешное завершение обработки"  + oper, processedOperation);
+                    if (processOperation(operation)) {
+                        auditController.info(ManualOperation, "Успешное завершение обработки"  + oper, operation);
                     }
-                    postingRepository.updatePostingStatusSuccess(posting.getId(), processedOperation);
-                    return processedOperation;
+                    postingRepository.updatePostingStatusSuccess(posting.getId(), operation);
+                    return operation;
                 });
                 return resultOperation;
             } catch (Throwable e) {
                 throw new DefaultApplicationException(
-                        logOperationError(e, "Ошибка при обработке данных" + oper, operation0, OperState.ERCHK));
+                        logOperationError(e, "Ошибка при обработке данных" + oper, operation, OperState.ERCHK));
             }
         } catch (DefaultApplicationException e) {
             auditController.error(ManualOperation, "Системная ошибка при обработке"  + oper, posting0, e);
