@@ -29,7 +29,7 @@ public class BatchMessageTest extends AbstractTimerJobTest {
 
     public static final String exampleBatchName = "example_batch.xlsx";
 //    private static final String ETL_SINGLE_ACTION_MONITOR = "ETL_SINGLE_ACTION_MONITOR";
-    private final Long USER_ID = 2L;
+    private final Long USER_ID = 1L;
 
     @BeforeClass
     public static void beforeClass() {
