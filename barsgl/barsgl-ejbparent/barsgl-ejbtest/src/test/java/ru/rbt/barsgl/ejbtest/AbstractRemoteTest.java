@@ -25,13 +25,10 @@ import ru.rbt.barsgl.ejb.integr.loader.LoadManagementController;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
-import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -41,6 +38,7 @@ import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
 
 import javax.naming.Context;
@@ -53,12 +51,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
-import java.io.IOException;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
-import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
-import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -724,18 +719,18 @@ public abstract class AbstractRemoteTest  {
         if (!optional.isPresent()) {
             baseEntityRepository.executeNativeUpdate(
                     "insert into workproc (dat, id, starttime, endtime, result, count, msg) values (?,?,?,?,?,?,?)"
-                    , ondate, stepName, null, null, state, 0, "Testing 1");
+                    , ondate, stepName, new Date(), new Date(), state, 0, "Testing 1");
         } else {
             DataRecord record = optional.get();
-            if (!record.getString("result").trim().equals(state)) {
+            if (record.getString("result") == null || !record.getString("result").trim().equals(state)) {
                 baseEntityRepository.executeNativeUpdate("update workproc set result = ?, msg = ? where id = ? and dat = ?",
-                        state, "Testing 1", stepName, ondate);
+                        state, "Testing 1", rightPad(stepName, 10, " "), ondate);
             }
         }
     }
 
     public DataRecord getLastHistRecord(String jobName) throws SQLException {
-        return baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc fetch first 1 rows only", jobName);
+        return baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
     }
 
     public static void emulateMI3GL(Date operday) throws Exception {

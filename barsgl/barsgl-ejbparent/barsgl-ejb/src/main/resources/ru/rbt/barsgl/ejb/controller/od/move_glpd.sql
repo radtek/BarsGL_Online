@@ -92,6 +92,6 @@ SELECT   P.ID
        , P.POST_TYPE
        , P.PD_ID
        , P.STRN_PCID
-       , S.DAT
-  FROM GL_PD P, (SELECT DAT FROM SESSION.GL_TMP_CURRDAY) S
+       , ? DAT
+  FROM GL_PD P
  WHERE P.PD_ID IS NOT NULL

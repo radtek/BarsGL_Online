@@ -15,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -227,6 +228,7 @@ public class BufferModeTest extends AbstractRemoteTest {
     @Test
     public void testSyncIncrJob() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstms");
+        baseEntityRepository.executeNativeUpdate("update gl_baltur set moved = 'N'");
         initCorrectOperday();
         Operday operday = getOperday();
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
@@ -283,7 +285,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
         final String stepName = "WT_1";
-        checkCreateStep(stepName, getOperday().getLastWorkingDay(), "");
+        checkCreateStep(stepName, getOperday().getLastWorkingDay(), WorkprocRepository.WorkprocState.W.getValue());
 
         final String jobName = "IncSync1";
 
@@ -515,11 +517,11 @@ public class BufferModeTest extends AbstractRemoteTest {
      */
     private void createForPcidMo() throws SQLException {
 
-        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd fetch first 1 rows only");
+        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd where rownum < 2");
         Assert.assertNotNull(glPd);
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m where pod = ? and mo_no = ?", glPd.getDate("pod"), glPd.getString("mo_no"));
         if (null == pcidMo) {
-            pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m fetch first 1 rows only");
+            pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m where rownum < 2");
             Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pcid_mo set pod = ?, mo_no = ? where pcid = ?", glPd.getDate("pod"), glPd.getString("mo_no"), pcidMo.getLong("pcid")));
         }
 

@@ -266,7 +266,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public <E> E executeInNewTransaction(EntityManager persistence, JpaAccessCallback<E> callback) throws Exception {
-        log.debug("Executing in NEW TX: " + getTransactionKey());
+//        log.debug("Executing in NEW TX: " + getTransactionKey());
         try {
             return callback.call(persistence);
         } catch (Throwable e) {

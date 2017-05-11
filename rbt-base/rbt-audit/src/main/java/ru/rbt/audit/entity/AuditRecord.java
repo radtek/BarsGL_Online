@@ -80,6 +80,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , TechoverTask
         , CurrencyExchange
         , ReprocessAEOper
+        , KillSession
     }
 
     public enum LogLevel {

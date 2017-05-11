@@ -3,8 +3,8 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
@@ -38,17 +38,17 @@ public class StamtUnloadController {
 
     public void setHeaderStatus(long headerId, DwhUnloadStatus status) throws Exception {
         repository.executeInNewTransaction(persistence ->
-                repository.executeNativeUpdate("UPDATE GL_ETLSTMS SET PARVALUE = ?, END_LOAD = CURRENT TIMESTAMP " +
+                repository.executeNativeUpdate("UPDATE GL_ETLSTMS SET PARVALUE = ?, END_LOAD = SYSTIMESTAMP " +
                         "    WHERE ID = ?", status.getFlag(), headerId));
     }
 
     public long createHeader(Date operday, UnloadStamtParams params) throws Exception {
         return (Long)repository.executeInNewTransaction(persistence -> {
             repository.executeNativeUpdate(
-                    "INSERT INTO GL_ETLSTMS (PARNAME, PARVALUE, PARDESC, OPERDAY, START_LOAD)\n" +
-                            "    VALUES (?, ?, ?, ?, CURRENT TIMESTAMP)"
+                    "INSERT INTO GL_ETLSTMS (ID, PARNAME, PARVALUE, PARDESC, OPERDAY, START_LOAD)\n" +
+                            "    VALUES (GL_ETLSTMS_SEQ.NEXTVAL, ?, ?, ?, ?, SYSTIMESTAMP)"
                     , params.getParamName(), DwhUnloadStatus.STARTED.getFlag(), params.getParamDesc(), operday);
-            return repository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM DUAL").getLong("id");
+            return repository.selectFirst("SELECT GL_ETLSTMS_SEQ.CURRVAL ID FROM DUAL").getLong("ID");
         });
     }
 
