@@ -18,8 +18,11 @@ public class GLPLAccountTesting {
     @EJB
     private GLOperationRepository operationRepository;
 
-    public String getAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) throws Exception {
-        operation = operationRepository.update(operation);
-        return accountService.getAccount(operation, operSide, keys);
+    public String getAccount(final GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) throws Exception {
+        GLOperation operation2 = operationRepository.executeInNewTransaction(pers -> {
+            return operationRepository.update(operation);
+        });
+
+        return accountService.getAccount(operation2, operSide, keys);
     }
 }
