@@ -14,9 +14,9 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.io.File;
