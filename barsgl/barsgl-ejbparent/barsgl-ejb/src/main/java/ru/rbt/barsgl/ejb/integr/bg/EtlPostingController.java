@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.SimpleOperationProcessor;
@@ -24,6 +25,8 @@ import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
+import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -98,6 +101,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
 
     @EJB
     private GLAccountRepository glAccountRepository;
+
+    @EJB
+    private GlPdThRepository glPdThRepository;
 
     /**
      * Обрабатывает входящую проводку
@@ -253,7 +259,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         try {
             operationRepository.setFilials(operation);              // Филиалы
             operationRepository.setBsChapter(operation);            // Глава баланса
-            correctAccounts9999(operation);
+            if (!operation.getBsChapter().equals("T")) {
+                correctAccounts9999(operation);
+            }
             simpleOperationProcessor.setStornoOperation(operation); // надо найти сторнируемую ДО определения типа процессора
             operationProcessor = findOperationProcessor(operation);
             toContinue = validateOperation(operationProcessor, operation, isWtacPreStage);
@@ -513,12 +521,22 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      */
     private void finalOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
         beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection,persistence) -> {
-            List<GLPosting> pstList = operationProcessor.createPosting(operation);      // обработать операцию
-            if (!pstList.isEmpty()) {                                                   // создать проводки
-                operationProcessor.resolvePostingReference(operation, pstList);
-                pdRepository.processPosting(pstList, operationProcessor.getSuccessStatus());                             // обработать / записать проводки
-            } else {
-                operationRepository.updateOperationStatusSuccess(operation, operationProcessor.getSuccessStatus());
+
+            if (operationProcessor instanceof TechOperationProcessor) {
+
+                TechOperationProcessor techOperationProcessor = (TechOperationProcessor) operationProcessor;
+                List<GlPdTh> pdthList = techOperationProcessor.createPdTh(operation);
+                glPdThRepository.processGlPdTh(operation,pdthList,OperState.POST);
+            }
+            else {
+                List<GLPosting> pstList = operationProcessor.createPosting(operation);      // обработать операцию
+                if (!pstList.isEmpty()) {                                                   // создать проводки
+                    operationProcessor.resolvePostingReference(operation, pstList);
+                    pdRepository.processPosting(pstList, operationProcessor.getSuccessStatus());                             // обработать / записать проводки
+                } else {
+                    operationRepository.updateOperationStatusSuccess(operation, operationProcessor.getSuccessStatus());
+                }
+
             }
             return null;
         });

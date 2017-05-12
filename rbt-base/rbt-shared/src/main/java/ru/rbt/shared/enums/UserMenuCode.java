@@ -4,13 +4,14 @@ package ru.rbt.shared.enums;
  * Created by Ivan Sevastyanov on 21.04.2016.
  */
 public enum UserMenuCode {
-    SystemMenu, Accounting, Dictionary, Upload, Task, Operday, Access, User, Role
+      SystemMenu, Accounting, Dictionary, Upload, Task, Operday, Access, User, Role
     , Backvalue, Audit, PLAccount, CBAccount, Operation, Posting, OperSemiposting
     , ErrorOper, UnloadAccountBalance, AEIncomeMsg, FileIncomeMsg, PostingSource
     , TermCode, AccountingType, PlanAccountingType, PlanAccountOfr, PropertyType, Branch
     , UnloadStamtConfig, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
     , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
-    , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, ErrorView, ErrorHandling
+    , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
+    , TechOperInpConfirm, ErrorView, ErrorHandling
 
 
     /* Дополнительные коды меню, которые строятся всегда! */

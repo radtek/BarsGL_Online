@@ -27,7 +27,8 @@ public class StornoBufferExchOperationProcessor extends GLOperationProcessor {
                 && isStornoBackvalue(operation)                                 // сторно с прошедшей датой
                 && !operation.isInterFilial()                                   // филиал один
                 &&  operation.isExchangeDifferenceA()                           // есть курсовая разница
-                &&  BUFFER == operdayController.getOperday().getPdMode();
+                &&  BUFFER == operdayController.getOperday().getPdMode()
+                && !operation.isTech();                                         //признак операции по техническим счетам
     }
 
     @Override

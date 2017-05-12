@@ -38,7 +38,8 @@ public class StornoSimpleOperationProcessor extends GLOperationProcessor {
                 && isStornoBackvalue(operation)                                 // сторно с прошедшей датой
                 && !operation.isInterFilial()                                   // филиал один
                 && !operation.isExchangeDifferenceA()                          // нет курсовой разницы
-                && DIRECT == operdayController.getOperday().getPdMode();
+                && DIRECT == operdayController.getOperday().getPdMode()
+                && !operation.isTech();                                         // признак операции по техническим счетам
     }
 
     @Override

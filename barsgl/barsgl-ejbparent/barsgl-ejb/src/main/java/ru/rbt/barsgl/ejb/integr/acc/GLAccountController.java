@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.util.StringUtil;
 import ru.rb.ucb.util.AccountUtil;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
@@ -70,6 +71,9 @@ public class GLAccountController {
 
     @Inject
     private GLAccountProcessor glAccountProcessor;
+
+    @Inject
+    private GLAccountProcessorTech glAccountProcessorTech;
 
     @Inject
     private PLAccountProcessor plAccountProcessor;
@@ -246,6 +250,43 @@ public class GLAccountController {
     }
 
     /**
+     * Открытие техническолго счета, когда заполнены ключи и счет
+     * @param operation
+     * @param operSide
+     * @param dateOpen
+     * @param keys
+     * @return
+     * @throws Exception
+     */
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount findOrCreateGLAccountTH(
+            GLOperation operation, AccountingType accType,GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) throws Exception {
+
+        GLAccount glAccount = findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode());
+
+
+        if (null != glAccount) {
+            return glAccount;
+        }
+
+        /*
+        DataRecord companyCode = Optional
+                .ofNullable(glAccountRepository.selectFirst("select bcbbr, a8cmcd from imbcbbrp where a8brcd = ?", keys.getBranch()))
+                .orElseThrow(() -> new ValidationError(ErrorCode.COMPANY_CODE_NOT_FOUND
+                        , format("Не удалось определить код компании по бранчу '%s'", keys.getBranch())));
+        keys.setCompanyCode(companyCode.getString("bcbbr"));
+        keys.setFilial(companyCode.getString("a8cmcd"));
+        */
+
+        // создать счет с этим номером в GL и BARS
+        String bsaacid = this.getGlAccountNumberTHWithKeys(operation,operSide,keys);
+        glAccount = createAccountTH(bsaacid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
+
+        return glAccount;
+    }
+
+    /**
      * Поиск открытого счета по стороне операции
      * @param operation операция GL
      * @param operSide сторона дебит/крети
@@ -262,6 +303,49 @@ public class GLAccountController {
         Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));
         return bsaacid;
     }
+
+    /**
+     * Генерация номера для технического счёта
+     * @param operation
+     * @param operSide
+     * @param keys
+     * @return
+     */
+    @Lock(LockType.READ)
+    public String getGlAccountNumberTHWithKeys(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys) {
+
+        DataRecord drAccParm = glAccountRepository.getActParamByAccType(keys.getAccountType());
+
+        String bsaacidMask = new StringBuilder().append(drAccParm.getString("ACC2")).append(keys.getCurrencyDigital()).append("0").append(keys.getCompanyCode()).append("0"+StringUtils.substr(keys.getAccountType(),3,9)).toString();
+        String bsaacid = glAccountFrontPartController.calculateKeyDigit(bsaacidMask,keys.getCompanyCode());
+
+        Assert.isTrue(!isEmpty(bsaacid), format("Не заполнен счет ЦБ по стороне '%s'", operSide.getMsgName()));
+        return bsaacid;
+    }
+
+    /**
+     * Генерация номера для технического счёта
+     * @param operSide
+     * @param keys
+     * @return
+     */
+    @Lock(LockType.READ)
+    public String getGlAccountNumberTHWithKeys(GLOperation.OperSide operSide, AccountKeys keys) {
+
+        return getGlAccountNumberTHWithKeys(null, operSide, keys);
+    }
+
+    /**
+     * Генерация номера для технического счёта
+     * @param keys
+     * @return
+     */
+    @Lock(LockType.READ)
+    public String getGlAccountNumberTHWithKeys(AccountKeys keys) {
+
+        return getGlAccountNumberTHWithKeys(null, GLOperation.OperSide.N, keys);
+    }
+
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -306,10 +390,41 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount updateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
+                                        AccountKeys keys, ErrorList descriptors) throws Exception {
+
+        List<ValidationError> errors = glAccountProcessorTech.validate(keys, new ValidationContext());
+        if (!errors.isEmpty()) {
+            throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(N, errors, descriptors));
+        }
+        // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
+//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
+        glAccountProcessorTech.setDateOpen(glAccount, dateOpen);
+        glAccountProcessorTech.setDateClose(glAccount, dateOpen, dateClose);
+        //glAccount.setDealId(keys.getDealId());
+        //glAccount.setSubdealId(keys.getSubDealId());
+        //glAccount.setDescription(keys.getDescription());
+
+        return glAccountRepository.update(glAccount);
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnl(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
             glAccountProcessor.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
+
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount closeGLAccountMnlTech(GLAccount glAccount, Date dateClose,
+                                       ErrorList descriptors) throws Exception {
+        return glAccountRepository.executeInNewTransaction(persistence -> {
+            glAccountProcessorTech.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
 
             return glAccountRepository.update(glAccount);
         });
@@ -403,12 +518,27 @@ public class GLAccountController {
 
     private GLAccount createAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.OpenType openType) {
+
         // создать счет GL
         GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
         // определить дополнительные папаметры счета
+
         glAccountProcessor.enrichment(glAccount, keys);
         // записать счет в таблицы BARS
         glAccountProcessor.createBarsAccounts(glAccount);
+        // сохранить счет GL
+        return glAccountRepository.save(glAccount);
+    }
+
+    public GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
+                                    AccountKeys keys, GLAccount.OpenType openType) {
+
+        // создать счет GL
+        GLAccount glAccount = glAccountProcessor.createGlAccountTH(bsaAcid, operation, operSide, dateOpen, keys, openType);
+        // определить дополнительные папаметры счета
+        //glAccountProcessor.enrichmentTH(glAccount, keys);
+        // записать счет в таблицы BARS
+        //glAccountProcessor.createBarsAccounts(glAccount);
         // сохранить счет GL
         return glAccountRepository.save(glAccount);
     }
@@ -1009,6 +1139,11 @@ public class GLAccountController {
     @Lock(LockType.READ)
     public GLAccount findTechnicalAccount(AccountingType accountingType, String glccy, String cbccn) {
         return glAccountRepository.findTechnicalAccount(accountingType, glccy, cbccn);
+    }
+
+    @Lock(LockType.READ)
+    public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
+        return glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn);
     }
 
     /**

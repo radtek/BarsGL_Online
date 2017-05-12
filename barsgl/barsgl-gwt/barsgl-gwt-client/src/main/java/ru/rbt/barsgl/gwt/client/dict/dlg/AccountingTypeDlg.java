@@ -37,6 +37,7 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
     private AreaBox name;
     private CheckBox pl_act;
     private CheckBox fl_ctrl;
+    private CheckBox tech_act;
 
     private FormAction action;
     private AccTypeWrapper wrapper;
@@ -84,11 +85,13 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
 
         pl_act = new CheckBox(AccountingType.FIELD_PL_ACT);
         fl_ctrl = new CheckBox(AccountingType.FIELD_FL_CTRL);
+        tech_act = new CheckBox(AccountingType.FIELD_TECH_ACT);
 
         VerticalPanel panel = new VerticalPanel();
         panel.add(grid);
         panel.add(pl_act);
         panel.add(fl_ctrl);
+        panel.add(tech_act);
 
         setAfterShowEvent(this);
 
@@ -103,6 +106,8 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
         pl_act.setEnabled(true);
         fl_ctrl.setValue(false);
         fl_ctrl.setEnabled(true);
+        tech_act.setValue(false);
+        tech_act.setEnabled(true);
     }
 
     private String value(String val){
@@ -132,6 +137,10 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
             ind = columns.getColumnIndexByCaption(AccountingType.FIELD_FL_CTRL);
             if (ind >= 0) {
                 fl_ctrl.setValue(BoolType.Y.name().equals(row.getField(ind).getValue()));
+            }
+            ind = columns.getColumnIndexByCaption(AccountingType.FIELD_TECH_ACT);
+            if (ind >= 0) {
+                tech_act.setValue(BoolType.Y.name().equals(row.getField(ind).getValue()));
             }
         }
 

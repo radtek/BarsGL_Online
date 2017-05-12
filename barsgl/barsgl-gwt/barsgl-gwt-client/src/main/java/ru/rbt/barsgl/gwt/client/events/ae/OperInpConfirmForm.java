@@ -77,10 +77,8 @@ public class OperInpConfirmForm extends OperBase {
                 "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +
                 "PST.AMTRU, PST.NRT, PST.RNRTL, PST.RNRTS, PST.DEPT_ID, PST.PRFCNTR, PST.FCHNG, PST.EMSG, " +
                 "PST.USER_NAME, PST.OTS, PST.HEADBRANCH, PST.USER_AU2, PST.OTS_AU2, PST.USER_AU3, PST.OTS_AU3, " +
-                "PST.USER_CHNG, PST.OTS_CHNG, PST.DESCRDENY, " +
-                "U.SURNAME || ' '  || VALUE(U.FIRSTNAME, '') || ' ' || VALUE(U.PATRONYMIC, '') as FIO " +
-                "from GL_BATPST PST " +
-                "left join GL_USER U on U.USER_NAME = PST.USER_NAME ";
+                "PST.USER_CHNG, PST.OTS_CHNG, PST.DESCRDENY, PST.FIO " +
+                "from V_GL_BATPST PST ";
     }
 
     @Override

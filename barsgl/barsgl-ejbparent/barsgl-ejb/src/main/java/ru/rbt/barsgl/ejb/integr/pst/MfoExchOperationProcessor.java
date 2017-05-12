@@ -28,7 +28,9 @@ public class MfoExchOperationProcessor extends GLOperationProcessor {
         return     !operation.isFan()                                           // не веер
                 && !operation.isStorno()                                        // не сторно
                 &&  operation.isInterFilial()                                   // филиалы разные
-                &&  operation.isExchangeDifferenceA();                           // есть курсовая разница
+                &&  operation.isExchangeDifferenceA()                           // есть курсовая разница
+                && !operation.isTech();                                          // признак операции по техническим счетам
+
     }
 
     @Override

@@ -1,3 +1,5 @@
-set JAVA_HOME="C:\Development\jdk\1.8.0_25"
+set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_111
+set M2_HOME=C:\Develop\apache-maven-3.3.9
+set PATH=%PATH%;C:\Develop\apache-maven-3.3.9\bin;C:\Program Files\Git\bin
 
 cmd /C mvn clean install -DskipTests -pl barsgl-shared,barsgl-ejbparent/barsgl-ejb-core,barsgl-ejbparent/barsgl-ejb-common,barsgl-ejbparent/barsgl-ejb,barsgl-gwt/barsgl-gwt-serverutil,barsgl-gwt/barsgl-gwt-server,barsgl-gwt/barsgl-gwt-war,barsgl-ear
