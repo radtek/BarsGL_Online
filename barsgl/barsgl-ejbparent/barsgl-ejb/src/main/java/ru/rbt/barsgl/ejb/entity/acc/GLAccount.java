@@ -20,7 +20,7 @@ public class GLAccount extends BaseEntity<Long> {
     public enum OpenType {AENEW, AEMID, MNL, SRV};
 
     public enum RelationType {
-        TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E");
+        TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E"), NINE("9");
 
         private String value;
 

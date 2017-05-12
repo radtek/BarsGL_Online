@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccoutPaintTask;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
 /**
  * Created by Ivan Sevastyanov
  */
+
 public class AccPaintTest extends AbstractRemoteTest {
 
     public static final Logger logger = Logger.getLogger(AccPaintTest.class.getName());
@@ -21,6 +23,7 @@ public class AccPaintTest extends AbstractRemoteTest {
      * Раскраска счетов по данным из excel таблицы
      * вместе с этим заполняется таблица GL_SQVALUE
      */
+    @Ignore("Тест не требует перевода на Oracle ввиду его устаревания")
     @Test public void test() throws SQLException {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACCPNT");

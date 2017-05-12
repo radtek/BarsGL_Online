@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.comp;
 
-import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.ui.*;
@@ -18,7 +17,6 @@ import ru.rbt.shared.user.AppUserWrapper;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import ru.rbt.barsgl.gwt.core.comp.Components;
@@ -26,7 +24,6 @@ import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Sort.ASC;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.LONG;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.STRING;
-import static ru.rbt.barsgl.shared.ClientDateUtils.TZ_CLIENT;
 
 /**
  * Created by ER18837 on 28.10.15.
@@ -409,7 +406,7 @@ public class GLComponents {
     {
         BtnTxtBox box = new BtnTxtBox(){
             @Override
-            public void onBntClick(){
+            public void onBntClick()  {
                 if (cm != null) cm.method();
             }
         };

@@ -31,7 +31,7 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
  */
 public class ManualOperationTest extends AbstractTimerJobTest {
 
-    private final Long USER_ID = 2L;
+    private final Long USER_ID = 1L;
 
     @Before
     public void beforeClass() {
@@ -63,11 +63,12 @@ public class ManualOperationTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < res.getId());
 
         GLManualOperation operation = (GLManualOperation) baseEntityRepository.findById(GLManualOperation.class, res.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
+        GLOperation opera = (GLOperation) baseEntityRepository.findById(GLOperation.class, res.getId());
+        Assert.assertEquals(OperState.POST, opera.getState());
 
-        Assert.assertEquals(src, operation.getSourcePosting());
-        Assert.assertEquals(dealId, operation.getDealId());
-        Assert.assertEquals(subDealId, operation.getSubdealId());
+        Assert.assertEquals(src, opera.getSourcePosting());
+        Assert.assertEquals(dealId, opera.getDealId());
+        Assert.assertEquals(subDealId, opera.getSubdealId());
     }
 
     /**

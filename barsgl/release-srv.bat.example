@@ -1,3 +1,5 @@
-set JAVA_HOME="C:\dev\tools\jdk8"
+set JAVA_HOME=C:\Develop\jdk1.8.0_111
+set M2_HOME=C:\Develop\apache-maven-3.3.9
+set PATH=%PATH%;C:\Develop\apache-maven-3.3.9\bin;C:\Program Files\Git\bin
 
 mvn release:clean release:prepare release:perform -DscmCommentPrefix="-BUILD BARSSRV RELEASE-" -Darguments="-DskipTests -Dmaven.javadoc.skip=true -Denv=barssrv" -DpreparationGoals="" -Dresume=false -DdryRun=false -Pwith-remote-tests,srv-ear-prod,release-branch,-full-ear -Denv=barssrv

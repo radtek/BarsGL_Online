@@ -4,7 +4,7 @@
     <parent>
         <artifactId>barsgl-ejbparent</artifactId>
         <groupId>ru.rbt</groupId>
-        <version>3.0.22-SNAPSHOT</version>
+        <version>3.0.23-SNAPSHOT</version>
     </parent>
 
     <artifactId>barsgl-ejbtest</artifactId>
@@ -295,6 +295,13 @@
                     <artifactId>jboss-transaction-api_1.2_spec</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+          <groupId>com.oracle.jdbc</groupId> 
+          <artifactId>ojdbc7</artifactId> 
+          <version>12.1.0.2</version>
+          <systemPath>${project.basedir}/../barsgl-ejbtest/lib/ojdbc7.jar</systemPath>
+          <scope>system</scope>
         </dependency>
     </dependencies>
 

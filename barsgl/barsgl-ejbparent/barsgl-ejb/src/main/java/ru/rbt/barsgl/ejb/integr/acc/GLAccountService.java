@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.bankjar.Constants;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.security.entity.access.PrmValue;
@@ -54,6 +55,7 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.shared.enums.PrmValueEnum.Source;
+import ru.rbt.barsgl.shared.Utils;
 
 /**
  * Created by ER18837 on 03.08.15.
@@ -148,6 +150,20 @@ public class GLAccountService {
                 try {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountAEWithKeys(operation, operSide, dateOpen, keys);
+                } catch (Exception e) {
+                    throw new DefaultApplicationException(e);
+                }
+            }).getBsaAcid();
+        } else if(!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
+                && keys.getGlSequence().toUpperCase().startsWith("TH")) {
+            // заполнены и ключи и счет
+            //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            String sAccType = keys.getAccountType();
+            AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
+            return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
+                try {
+                    checkNotStorno(operation, operSide);
+                    return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
                 } catch (Exception e) {
                     throw new DefaultApplicationException(e);
                 }
@@ -299,8 +315,6 @@ public class GLAccountService {
                     break;
             }
         }
-
-
     }
 
     /**
@@ -325,6 +339,55 @@ public class GLAccountService {
                 throw new ValidationError(ACCOUNT_IS_CONTROLABLE, accType);
             }
             glAccount = glAccountController.createGLAccountMnl(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+            auditController.info(Account, format("Создан счет '%s' по ручному вводу",
+                    glAccount.getBsaAcid()), glAccount);
+            glAccountController.fillWrapperFields(accountWrapper, glAccount);
+            return new RpcRes_Base<>(
+                    accountWrapper, false, format("Создан счет ЦБ: '%s'", accountWrapper.getBsaAcid()));
+        } catch (Throwable e) {
+            String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            auditController.error(Account, format("Ошибка при создании счета по ручному вводу для AccountType = '%s'",
+                    accountWrapper.getAccountType()), null, e);
+            return new RpcRes_Base<>(accountWrapper, true, errMessage);
+
+        }
+    }
+
+    /**
+     * Создание лицевого счета вручную
+     * @param accountWrapper
+     * @return
+     * @throws Exception
+     */
+    public RpcRes_Base<ManualAccountWrapper> createManualAccountTech(ManualAccountWrapper accountWrapper) throws Exception {
+        try {
+            checkAccountPermission(accountWrapper, FormAction.CREATE);
+            Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
+            //AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
+            // Такой счет уже есть
+            GLAccount glAccount = null;
+            String accType = org.apache.commons.lang3.StringUtils.leftPad(accountWrapper.getAccountType().toString(),9,"0");
+            AccountingType accTypeGL = (AccountingType) accountingTypeRepository.findById(AccountingType.class,accType);
+            String glCCY = accountWrapper.getCurrency();
+            String cbCCN = accountWrapper.getFilial();
+
+            if (null != (glAccount = glAccountController.findTechnicalAccountTH(accTypeGL,glCCY,cbCCN))) {
+                throw new ValidationError(ACCOUNTGLTH_ALREADY_EXISTS, glAccount.getBsaAcid());
+            }
+            DataRecord data = glAccountRepository.getAccountTypeParams(accType);
+            if (data.getString("FL_CTRL").equals("Y")) {
+                throw new ValidationError(ACCOUNT_IS_CONTROLABLE, accType);
+            }
+
+            AccountKeys accKey =  AccountKeysBuilder.create()
+                                    .withAccountType(accType)
+                                    .withCurrency(glCCY)
+                                    .withDealSource(accountWrapper.getDealSource())
+                                    .withCompanyCode(cbCCN).build();
+
+            String bassid = glAccountController.getGlAccountNumberTHWithKeys(GLOperation.OperSide.N,accKey);
+
+            glAccount = glAccountController.createAccountTH(bassid,null,GLOperation.OperSide.N,dateOpen,accKey, GLAccount.OpenType.MNL);
             auditController.info(Account, format("Создан счет '%s' по ручному вводу",
                     glAccount.getBsaAcid()), glAccount);
             glAccountController.fillWrapperFields(accountWrapper, glAccount);
@@ -456,6 +519,110 @@ public class GLAccountService {
             String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
             auditController.error(Account, format("Ошибка при изменении счета по ручному вводу: '%s'",
                     accountWrapper.getBsaAcid()), null, e);
+            return new RpcRes_Base<ManualAccountWrapper>(
+                    accountWrapper, true, errMessage);
+        }
+    }
+
+    public RpcRes_Base<ManualAccountWrapper> updateManualAccountTech(ManualAccountWrapper accountWrapper) throws Exception {
+
+        try {
+            GLAccount account = glAccountRepository.findById(GLAccount.class, accountWrapper.getId());
+            if (null == account) {      // Такого счета нет!
+                throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
+            }
+            checkAccountPermission(accountWrapper, FormAction.UPDATE);
+            String dateOpenStr = accountWrapper.getDateOpenStr();
+            Date dateOpen = dateOpenStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateOpenStr);
+            String dateCloseStr = accountWrapper.getDateCloseStr();
+            Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
+            String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт" : "Изменен";
+
+            String accType = org.apache.commons.lang3.StringUtils.leftPad(accountWrapper.getAccountType().toString(),9,"0");
+            AccountingType accTypeGL = (AccountingType) accountingTypeRepository.findById(AccountingType.class,accType);
+            String glCCY = accountWrapper.getCurrency();
+            String cbCCN = accountWrapper.getFilial();
+
+            AccountKeys keys =  AccountKeysBuilder.create()
+                    .withAccountType(accType)
+                    .withCurrency(glCCY)
+                    .withDealSource(accountWrapper.getDealSource())
+                    .withCompanyCode(cbCCN).build();
+
+            account.setDescription(accountWrapper.getDescription());
+            GLAccount glAccount = glAccountController.updateGLAccountMnlTech(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
+            auditController.info(Account, format("%s счет '%s' по ручному вводу",
+                    act, glAccount.getBsaAcid()), glAccount);
+            glAccountController.fillWrapperFields(accountWrapper, glAccount);
+            return new RpcRes_Base<>(
+                    accountWrapper, false, format("%s счет ЦБ: '%s'", act, accountWrapper.getBsaAcid()));
+        } catch (Throwable e) {
+            String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            auditController.error(Account, format("Ошибка при изменении счета по ручному вводу: '%s'",
+                    accountWrapper.getBsaAcid()), null, e);
+            return new RpcRes_Base<ManualAccountWrapper>(
+                    accountWrapper, true, errMessage);
+        }
+    }
+
+    public RpcRes_Base<ManualAccountWrapper> closeManualAccountTech(ManualAccountWrapper accountWrapper) throws Exception {
+
+        try {
+            return glAccountRepository.executeInNewTransaction(persistence -> {
+                List<PrmValue> prm = prmValueRepository.select(PrmValue.class,
+                        "from PrmValue p where p.userId = ?1 and p.prmCode = ?2",
+                        accountWrapper.getUserId(), Source);
+
+                if (prm == null || prm.isEmpty() || prm.stream().filter(x -> x.getPrmValue().equals(accountWrapper.getDealSource()) ||
+                        x.getPrmValue().equals("*")).count() == 0){
+                    return new RpcRes_Base<ManualAccountWrapper>(
+                            accountWrapper, true, format( "У Вас нет достаточных прав производить операции над счетом с источником сделки: %s", accountWrapper.getDealSource()));
+                }
+
+                GLAccount account = glAccountController.findGLAccount(accountWrapper.getBsaAcid());
+                if (null == account) {      // Такого счета нет!
+                    throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
+                }
+                String dateCloseStr = accountWrapper.getDateCloseStr();
+                Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
+                String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт счет" : "Отменено закрытие счета";
+                GLAccount glAccount = glAccountController.closeGLAccountMnlTech(account, dateClose, accountWrapper.getErrorList());
+                auditController.info(Account, format("%s '%s' по ручному вводу",
+                        act, glAccount.getBsaAcid()), glAccount);
+                glAccountController.fillWrapperFields(accountWrapper, glAccount);
+                return new RpcRes_Base<>(
+                        accountWrapper, false, format("%s ЦБ: '%s'", act, accountWrapper.getBsaAcid()));
+
+            });
+        } catch (Exception e) {
+            String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            auditController.error(Account, format("Ошибка при закрытии счета по ручному вводу: '%s'",
+                    accountWrapper.getBsaAcid()), null, e);
+            return new RpcRes_Base<ManualAccountWrapper>(
+                    accountWrapper, true, errMessage);
+        }
+    }
+
+    public RpcRes_Base<ManualAccountWrapper> findManualAccount(ManualAccountWrapper accountWrapper) throws Exception {
+        try{
+            Long acct = accountWrapper.getAccountType();
+            AccountingType accType = accountingTypeRepository.findById(AccountingType.class, Utils.fillUp(acct.toString(),9));
+            String cbccn = glAccountRepository.getCompanyCodeByFilial(accountWrapper.getFilial());
+
+            GLAccount account = glAccountController.findTechnicalAccountTH(accType, accountWrapper.getCurrency(), cbccn);
+            if (account!=null) {
+                accountWrapper.setBsaAcid(account.getBsaAcid());
+            }
+            else {
+                accountWrapper.getErrorList().addErrorDescription("счёт не найден");
+            }
+
+            return new RpcRes_Base<ManualAccountWrapper>(accountWrapper,false,"счёт найден");
+
+        } catch (Exception e) {
+            String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            /*auditController.error(Account, format("Ошибка поиска счёта: '%s'",
+                    accountWrapper.getAccountType()), null, e);*/
             return new RpcRes_Base<ManualAccountWrapper>(
                     accountWrapper, true, errMessage);
         }

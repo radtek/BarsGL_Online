@@ -7,7 +7,6 @@ package ru.rbt.barsgl.gwt.client.dict.dlg;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
-import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;

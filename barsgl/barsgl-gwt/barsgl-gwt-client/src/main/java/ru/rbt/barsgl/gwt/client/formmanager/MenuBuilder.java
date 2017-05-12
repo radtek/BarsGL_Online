@@ -15,6 +15,7 @@ import ru.rbt.security.gwt.client.security.LoginFormHandler;
 import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
+import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
 import ru.rbt.barsgl.gwt.client.account_ofr.OfrAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
@@ -31,6 +32,7 @@ import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
 import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
+import ru.rbt.barsgl.gwt.client.pd.PostingFormTech;
 import ru.rbt.barsgl.gwt.client.security.AppUserForm;
 import ru.rbt.security.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
@@ -162,111 +164,114 @@ public class MenuBuilder implements IMenuBuilder {
                     }
                 });
 
-            case Operday:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OperDayForm());
-                    }
-                });
-            case User:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new AppUserForm());
-                    }
-                });
-            case Role:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new RoleForm());
-                    }
-                });
-            case Backvalue:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new BackValueForm());
-                    }
-                });
-            case Audit:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new AuditForm());
-                    }
-                });
-            case PLAccountAcctype:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new PlAccountForm());
-                    }
-                });
-            case PLAccountMidas:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OfrAccountForm());
-                    }
-                });
-            case CBAccount:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new AccountForm());
-                    }
-                });
-            case Operation:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OperationPostingForm());
-                    }
-                });
-            case Posting:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new PostingForm());
-                    }
-                });
-            case OperSemiposting:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new PDForm());
-                    }
-                });
-            case ErrorView:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new LoadErrorForm());
-                    }
-                });
-            case ErrorHandling:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new LoadErrorHandlingForm());
-                    }
-                });
-            case UnloadAccountBalance:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OndemandBalanceUnloadForm());
-                    }
-                });
-            case AEIncomeMsg:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new InEventsAE());
-                    }
-                });
+            case Operday: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperDayForm());
+                }
+            });
+            case User: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AppUserForm());
+                }
+            });
+            case Role: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new RoleForm());
+                }
+            });
+            case Backvalue: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new BackValueForm());
+                }
+            });
+            case Audit: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AuditForm());
+                }
+            });
+            case PLAccountAcctype: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PlAccountForm());
+                }
+            });
+            case PLAccountMidas: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OfrAccountForm());
+                }
+            });
+            case CBAccount: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountForm());
+                }
+            });
+            case TechAccount: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountFormTech());
+                }
+            });
+            case TechOperInpConfirm: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperTechInpConfirmForm());
+                }
+            });
+            case Operation: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperationPostingForm());
+                }
+            });
+            case Posting: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PostingForm());
+                }
+            });
+            case TechPosting: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PostingFormTech());
+                }
+            });
+            case OperSemiposting: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PDForm());
+                }
+            });
+            case ErrorView: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new LoadErrorForm());
+                }
+            });
+            case ErrorHandling: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new LoadErrorHandlingForm());
+                }
+            });
+            case UnloadAccountBalance: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OndemandBalanceUnloadForm());
+                }
+            });
+            case AEIncomeMsg: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new InEventsAE());
+                }
+            });
 
             case OperInpConfirm:
                 return new MenuItem(wrapper.getMenuName(), false, new Command() {
