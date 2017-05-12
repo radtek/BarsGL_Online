@@ -1,3 +1,5 @@
+with p as (select cast ('2017-02-10' as date) pdt from dual),
+od as (select cast ('2017-02-10' as date) odt from dual)
 select statdate
        , stattype
        , hostsystem
@@ -55,30 +57,28 @@ select statdate
            , 'BARS' hostsystem
            , rln.cnum fcccustnum
            , get_fcc_br(acmx.bsaacid) fccbranch
-           , right(rln.cnum,6) ext_custid
-           , right(acmx.acid,3) accbrn
+           , substr(rln.cnum, -6, 6) ext_custid
+           , substr(acmx.acid, -3, 3) accbrn
            , acmx.bsaacid cbaccount
-           --, cast(ac.acctype as varchar(35)) acctype
            , cc.glccy currcode
-           , cast(null as integer) sqnumber
+           , cast(null as number(2)) sqnumber
            , current_date createdate
            , current_timestamp timecreate
-           , cast(decimal(b.obac) / integer(power(10,cc.nbdp)) as decimal(22,2)) openblnca
-           , cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2)) closeblnca
+           , cast(b.obac / power(10,cc.nbdp) as number(22,2)) openblnca
+           , cast(b.obac + b.dtac + b.ctac / power(10,cc.nbdp) as number(22, 2)) closeblnca
            , GL_GETOPERCNT(acmx.bsaacid, c.dat, '1') dbdocnt
-           , abs(cast(decimal(b.dtac) / integer(power(10,cc.nbdp)) as decimal(22, 2))) dbturnovra
+           , abs(cast(b.dtac / power(10,cc.nbdp) as number(22, 2))) dbturnovra
            , GL_GETOPERCNT(acmx.bsaacid, c.dat, '0') crdocnt
-           , cast(decimal(b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2)) crturnovra
-           , cast(b.obbc *0.01 as decimal(22, 2)) openblncn
-           , cast((b.obbc + b.dtbc + b.ctbc) *0.01 as decimal(22, 2)) closeblncn
-           , abs(cast(b.dtbc *0.01 as decimal(22, 2))) dbturnovrn
-           , cast(b.ctbc *0.01 as decimal(22, 2)) crturnovrn
-           , cast(r.rate as decimal(13,8)) rate
+           , cast((b.ctac) / power(10,cc.nbdp) as number(22, 2)) crturnovra
+           , cast(b.obbc *0.01 as number(22, 2)) openblncn
+           , cast((b.obbc + b.dtbc + b.ctbc) *0.01 as number(22, 2)) closeblncn
+           , abs(cast(b.dtbc *0.01 as number(22, 2))) dbturnovrn
+           , cast(b.ctbc *0.01 as number(22, 2)) crturnovrn
+           , cast(r.rate as number(13,8)) rate
            , cast(null as date) inbdate
            , cast(null as date) outbdate
            , s.bxrunm rcustname
            , s.bxtpid custinn
-           --, trim(s.bbcna1) || ' ' || trim(s.bbcna2) || ' ' || trim(s.bbcna3) || ' ' || trim(s.bbcna4) ecustname
            , trim(s.bbcna1) ecustname
            , cast(null as varchar(35)) cstaddrsw1
            , cast(null as varchar(35)) cstaddrsw2
@@ -93,20 +93,21 @@ select statdate
            , cast(null as varchar(12)) bcustswift
            , cast(null as varchar(14)) bcustinn
            , c.dat ed
-           , right(rln.ccode,3) branch_id
+           , substr(rln.ccode, -3, 3) branch_id
            , b.acid alt_ac_no
            , s.bbcrnm accname
            , cast('' as varchar(255)) acodname
            , cc.glccy||' '||cc.cynm currname
            , p.pdt dateunload
            , b.dat bdat
-    from cal c, accrln rln, baltur b, currency cc, imbcbcmp i, imbcbbrp rp
-         , (select curdate pdt from session.gl_tmp_curdate) p, currates r, sdcustpd s,
+    from cal c, accrln rln, baltur b, currency cc, imbcbcmp i, imbcbbrp rp, p
+         --, (select curdate pdt from session.gl_tmp_curdate) p
+         , currates r, sdcustpd s,
       (
         select d.bsaacid, d.acid, min(d.pod) pd_min, od.odt pd_max
-          from gl_oper o, gl_posting ps, pd d
-               , (select curdate pdt from session.gl_tmp_curdate) p
-               , (select curdate odt from session.gl_tmp_od) od
+          from gl_oper o, gl_posting ps, pd d, od, p
+               --, (select curdate pdt from session.gl_tmp_curdate) p
+--               , (select curdate odt from session.gl_tmp_od) od
          where o.procdate = p.pdt and o.state = 'POST' and ps.glo_ref = o.gloid
            and ps.pcid = d.pcid and d.invisible <> '1' and d.pod < p.pdt
            and (
@@ -128,7 +129,7 @@ select statdate
        and cc.glccy = substr(acmx.acid,9,3)
        and cc.glccy = r.ccy and r.dat = c.dat
        and s.bbcust = rln.cnum
-       and i.ccbbr = rln.ccode and rp.a8brcd = right(acmx.acid,3)
+       and i.ccbbr = rln.ccode and rp.a8brcd = substr(acmx.acid, -3, 3)
        and c.dat <= (select case when phase = 'COB' then curdate else lwdate end caldate from gl_od) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount

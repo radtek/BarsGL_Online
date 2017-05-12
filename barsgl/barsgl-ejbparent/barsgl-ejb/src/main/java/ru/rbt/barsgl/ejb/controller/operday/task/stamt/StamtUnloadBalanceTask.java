@@ -1,18 +1,18 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.barsgl.shared.enums.EnumUtils;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -26,9 +26,9 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.parseDate;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
 
@@ -124,8 +124,8 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
     public int fillDataDelta(Date executeDate,  BalanceDeltaMode deltaMode) throws Exception {
         return (int) repository.executeInNewTransaction(persistence -> {
 
-            unloadController.createTemporaryTableWithDate("gl_tmp_curdate", "curdate", executeDate);
-            unloadController.createTemporaryTableWithDate("gl_tmp_od", "curdate", operdayController.getOperday().getCurrentDate());
+//            unloadController.createTemporaryTableWithDate("gl_tmp_curdate", "curdate", executeDate);
+//            unloadController.createTemporaryTableWithDate("gl_tmp_od", "curdate", operdayController.getOperday().getCurrentDate());
 
             String select = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_select.sql");
             repository.executeNativeUpdate(
