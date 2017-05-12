@@ -74,7 +74,7 @@ public class TemporaryAETest extends AbstractRemoteTest {
 
 //        List<EtlPosting> postings = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.etlPackage.id between ?1 and ?2", 327L, 333L);
 
-        List<DataRecord> postings = baseEntityRepository.select("select * from gl_etlpst where vdate = '2015-07-08' and evt_id like 'EVT\\_ID%' escape '\\'", null);
+        List<DataRecord> postings = baseEntityRepository.select("select * from gl_etlpst where vdate = '2015-07-08' and evt_id like 'EVT\\_ID%' escape '\\'", new Object[]{});
         //Assert.assertEquals(2, postings.size());
 
         for (DataRecord record : postings) {
