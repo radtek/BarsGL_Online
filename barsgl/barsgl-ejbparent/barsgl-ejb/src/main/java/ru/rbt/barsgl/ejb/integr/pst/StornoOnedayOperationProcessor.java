@@ -38,7 +38,8 @@ public class StornoOnedayOperationProcessor extends GLOperationProcessor {
     public boolean isSupported(GLOperation operation) {
         return     !operation.isFan()                                                                   // не веер
                 && isStornoOneday(operation)                                                            // сторно в тот же день
-                && DIRECT == operdayController.getOperday().getPdMode();
+                && DIRECT == operdayController.getOperday().getPdMode()
+                && !operation.isTech();                                         // признак операции по техническим счетам
     }
 
     @Override

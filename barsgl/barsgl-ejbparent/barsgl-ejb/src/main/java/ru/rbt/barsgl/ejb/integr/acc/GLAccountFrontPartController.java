@@ -115,7 +115,7 @@ public class GLAccountFrontPartController {
      */
     public String calculateKeyDigit(String account, String cbccn) {
         isTrue(!isEmpty(account) && account.matches("\\d{5}.{4}\\d{11}")
-                , format("Неверный счет '%s'. Ожидается в формате \\d{8}.\\d{11}", account));
+                 , format("Неверный счет '%s'. Ожидается в формате \\d{8}.\\d{11}", account));
         final String leftPart = account.substring(0, 8);
         final String rightPart = account.substring(9);
         String tempAccount = leftPart.concat("0").concat(rightPart);

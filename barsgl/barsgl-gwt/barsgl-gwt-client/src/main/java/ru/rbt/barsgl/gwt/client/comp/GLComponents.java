@@ -560,7 +560,7 @@ public class GLComponents {
     {
         BtnTxtBox box = new BtnTxtBox(){
             @Override
-            public void onBntClick(){
+            public void onBntClick()  {
                 if (cm != null) cm.method();
             }
         };

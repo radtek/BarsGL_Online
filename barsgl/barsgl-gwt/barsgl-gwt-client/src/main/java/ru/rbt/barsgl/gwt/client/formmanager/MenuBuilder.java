@@ -12,6 +12,7 @@ import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
+import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
 import ru.rbt.barsgl.gwt.client.account_ofr.OfrAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
@@ -28,6 +29,7 @@ import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
 import ru.rbt.barsgl.gwt.client.operday.OperDayForm;
 import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
+import ru.rbt.barsgl.gwt.client.pd.PostingFormTech;
 import ru.rbt.barsgl.gwt.client.security.AppUserForm;
 import ru.rbt.security.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
@@ -205,6 +207,18 @@ public class MenuBuilder implements IMenuBuilder {
                     formLoad(new AccountForm());
                 }
             });
+            case TechAccount: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountFormTech());
+                }
+            });
+            case TechOperInpConfirm: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperTechInpConfirmForm());
+                }
+            });
             case Operation: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
@@ -215,6 +229,12 @@ public class MenuBuilder implements IMenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new PostingForm());
+                }
+            });
+            case TechPosting: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PostingFormTech());
                 }
             });
             case OperSemiposting: return new MenuItem(wrapper.getMenuName(), false, new Command() {

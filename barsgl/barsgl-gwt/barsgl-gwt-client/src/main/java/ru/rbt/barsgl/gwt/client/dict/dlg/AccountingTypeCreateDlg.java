@@ -48,6 +48,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
     private AreaBox accname;
     private CheckBox pl_act;
     private CheckBox fl_ctrl;
+    private CheckBox tech_act;
     private Button checkBtn;
 
     @Override
@@ -211,7 +212,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         modifierName.setWidth("370px");
 
         //AccType
-        Grid grid2 = new Grid(1,4);
+        Grid grid2 = new Grid(2,4);
         grid2.getElement().getStyle().setMarginTop(15, Style.Unit.PX);
         grid2.setWidget(0, 0, new Label("AccountingType"));
         grid2.setWidget(0, 1, acctype = new TxtBox());
@@ -233,8 +234,9 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
 
         acctype.setWidth("70px");
 
-        grid2.setWidget(0, 2, pl_act = new CheckBox("Доходно-расходный счет BARSGL"));
-        grid2.setWidget(0, 3, fl_ctrl = new CheckBox("Контролируемый счет"));
+        grid2.setWidget(1, 1, pl_act = new CheckBox("Доходно-расходный счет BARSGL"));
+        grid2.setWidget(1, 2, fl_ctrl = new CheckBox("Контролируемый счет"));
+        grid2.setWidget(1, 3, tech_act = new CheckBox("Технический счет"));
 
         Grid grid3 = new Grid(1, 2);
         grid3.setWidget(0, 0, new Label("Наименование счета"));
@@ -802,6 +804,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         accname.clear();
         pl_act.setValue(false);
         fl_ctrl.setValue(false);
+        tech_act.setValue(false);
     }
 
     private AccTypeWrapper getWrapper(){
@@ -818,6 +821,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         wrapper.setAcctypeName(accname.getValue());
         wrapper.setFl_ctrl(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
         wrapper.setPl_act(pl_act.getValue() ? BoolType.Y : BoolType.N);
+        wrapper.setTech_act(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
 
         return wrapper;
     }

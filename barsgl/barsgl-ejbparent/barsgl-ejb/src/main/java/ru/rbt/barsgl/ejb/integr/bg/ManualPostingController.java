@@ -557,6 +557,7 @@ public class ManualPostingController {
         try {
             BatchPosting posting = postingProcessor.createPosting(wrapper);       // создать операцию
             posting.setStatus(status);
+            posting.setIsTech(YesNo.N); // TODO устанавливаем признак операции не по техсчетам
             return postingRepository.save(posting);     // сохранить входящую операцию
 
         } catch (Throwable e) {

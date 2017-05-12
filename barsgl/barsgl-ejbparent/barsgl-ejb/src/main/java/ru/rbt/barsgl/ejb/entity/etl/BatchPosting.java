@@ -181,11 +181,20 @@ public class BatchPosting extends BaseEntity<Long> {
     @Column(name = "SEND_SRV")
     private Date sendTimestamp;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TECH_ACT")
+    private YesNo isTech;
+
     @Transient
     private boolean controllableDebit;
 
     @Transient
     private boolean controllableCredit;
+
+    public BatchPosting()
+    {
+        this.isTech = YesNo.N;
+    }
 
     @Override
     public Long getId() {
@@ -577,5 +586,11 @@ public class BatchPosting extends BaseEntity<Long> {
         return controllableDebit || controllableCredit;
     }
 
+    public YesNo getIsTech() {
+        return isTech;
+    }
 
+    public void setIsTech(YesNo isTech) {
+        this.isTech = isTech;
+    }
 }
