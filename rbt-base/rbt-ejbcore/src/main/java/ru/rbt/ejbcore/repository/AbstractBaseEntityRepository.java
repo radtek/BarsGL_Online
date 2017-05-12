@@ -450,7 +450,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     @Asynchronous
     public <V> Future<V> invokeAsynchronous(EntityManager persistence, JpaAccessCallback<V> callback) throws Exception {
         try {
-            log.debug("Executing asynchronous, TX: " + getTransactionKey());
+//            log.debug("Executing asynchronous, TX: " + getTransactionKey());
             return new AsyncResult<>(callback.call(persistence));
         } catch (Exception e) {
             e.printStackTrace();
@@ -461,7 +461,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     public <V> Future<V> invoke(JpaAccessCallback<V> callback) throws Exception {
         try {
-            log.debug("Executing asynchronous by thread, TX: " + getTransactionKey());
+//            log.debug("Executing asynchronous by thread, TX: " + getTransactionKey());
             return new AsyncResult<>(callback.call(persistence));
         } catch (Exception e) {
             e.printStackTrace();

@@ -124,23 +124,25 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
     public int fillDataDelta(Date executeDate,  BalanceDeltaMode deltaMode) throws Exception {
         return (int) repository.executeInNewTransaction(persistence -> {
 
-//            unloadController.createTemporaryTableWithDate("gl_tmp_curdate", "curdate", executeDate);
-//            unloadController.createTemporaryTableWithDate("gl_tmp_od", "curdate", operdayController.getOperday().getCurrentDate());
 
-            String select = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_select.sql");
-            repository.executeNativeUpdate(
-                    "declare global temporary table GL_TMP_STMTBAL as (\n" + select + "\n) with data \n" +
-                            "with replace  on commit preserve rows");
+            repository.executeTransactionally(connection -> {
+                String fillTemp = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_select.sql");
+                try (PreparedStatement fillTempSt = connection.prepareCall(fillTemp)) {
+                    fillTempSt.setDate(1, new java.sql.Date(executeDate.getTime()));
+                    fillTempSt.setDate(2, new java.sql.Date(operdayController.getOperday().getCurrentDate().getTime()));
+                    fillTempSt.executeUpdate();
+                }
+                return null;
+            });
             auditController.info(StamtUnloadBalDelta, format("Таблица с остатками создана. Кол-во счетов: %s"
-                    , repository.selectFirst("select count(1) from session.GL_TMP_STMTBAL").getLong(0)));
+                    , repository.selectFirst("select count(1) from TMP_GL_BALSTMD").getLong(0)));
 
-            repository.executeNativeUpdate("CREATE UNIQUE INDEX QTEMP.IDX_GL_TMP_STMTBAL ON SESSION.GL_TMP_STMTBAL(STATDATE,CBACCOUNT)");
             repository.executeTransactionally(connection -> {
                 String cbacc, precbacc = "";
                 java.sql.Date bdat, statdate, prebdat = new java.sql.Date(parseDate("01.01.2030", "dd.MM.yyyy").getTime());
                 BigDecimal closeblnca = new BigDecimal("0");
                 BigDecimal closeblncn = new BigDecimal("0");
-                try (PreparedStatement st = connection.prepareStatement("SELECT * FROM session.GL_TMP_STMTBAL ORDER BY cbaccount, statdate")
+                try (PreparedStatement st = connection.prepareStatement("SELECT * FROM TMP_GL_BALSTMD ORDER BY cbaccount, statdate")
                      ; ResultSet rs = st.executeQuery()) {
                     while (rs.next()){
                         cbacc = rs.getString("cbaccount");

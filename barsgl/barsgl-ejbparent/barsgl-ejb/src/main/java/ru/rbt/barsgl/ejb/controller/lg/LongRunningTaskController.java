@@ -1,12 +1,13 @@
 package ru.rbt.barsgl.ejb.controller.lg;
 
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.lg.LongRunningTaskStepRepository;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -18,6 +19,9 @@ public class LongRunningTaskController {
 
     @EJB
     private LongRunningTaskStepRepository taskStepRepository;
+
+    @EJB
+    private AuditController auditController;
 
     public LongRunningTaskStep executeWithLongRunningStep(JobHistory jobHistory
             , LongRunningPatternStepEnum patternStepEnum
@@ -32,7 +36,7 @@ public class LongRunningTaskController {
             }
             return taskStepRepository.findById(LongRunningTaskStep.class, step.getId());
         } catch (Throwable e) {
-            log.log(Level.SEVERE, "Error on long running job: ", e);
+            auditController.error(AuditRecord.LogCode.Task, String.format("Ошибка при запуске задачи: %s", patternStepEnum) + e.getMessage(), null, e);
             if (null != step){
                 taskStepRepository.executeInNewTransaction(persistence -> taskStepRepository.setError(step));
                 return taskStepRepository.findById(LongRunningTaskStep.class, step.getId());

@@ -38,6 +38,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -228,6 +229,7 @@ public class BufferModeTest extends AbstractRemoteTest {
     @Test
     public void testSyncIncrJob() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstms");
+        baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
         baseEntityRepository.executeNativeUpdate("update gl_baltur set moved = 'N'");
         initCorrectOperday();
         Operday operday = getOperday();
@@ -291,6 +293,11 @@ public class BufferModeTest extends AbstractRemoteTest {
 
         execSyncStamtBackvalue(stepName, jobName);
 
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+                , getLastUnloadHeader(BALANCE_DELTA_INCR).getString("parvalue"));
+
+        Assert.assertTrue(1 <= baseEntityRepository.selectFirst("select count(1) cnt from gl_balstmd").getInteger("cnt"));
+
         DataRecord lastHist = getLastHistRecord(jobName);
         Assert.assertNotNull(lastHist);
         Assert.assertEquals("1", lastHist.getString("SCHRSLT"));
@@ -324,7 +331,7 @@ public class BufferModeTest extends AbstractRemoteTest {
                 .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(accDt)));*/
 
         updateOperday(COB, CLOSED);
-        checkCreateStep(stepName, getOperday().getCurrentDate(), "");
+        checkCreateStep(stepName, getOperday().getCurrentDate(), WorkprocRepository.WorkprocState.W.getValue());
         Assert.assertFalse(checkStepOk(stepName, getOperday().getCurrentDate()));
         baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4'");
         execSyncStamtBackvalue(stepName, jobName);

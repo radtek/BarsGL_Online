@@ -9,6 +9,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
+import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlAccount;
@@ -769,4 +770,11 @@ public abstract class AbstractRemoteTest  {
                 , bsaacidLike, dateClose))
                 .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike + " " + dateClose));
     }
+
+    protected static DataRecord getLastUnloadHeader(UnloadStamtParams params) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository
+                .selectFirst("select * from gl_etlstms where parname = ? and pardesc = ? order by id desc"
+                        , params.getParamName(), params.getParamDesc())).orElse(null);
+    }
+
 }

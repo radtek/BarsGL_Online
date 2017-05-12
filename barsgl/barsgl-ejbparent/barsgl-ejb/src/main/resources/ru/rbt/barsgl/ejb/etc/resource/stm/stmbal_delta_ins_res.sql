@@ -97,4 +97,4 @@ select              statdate
                     , acodname
                     , currname
                     , dateunload
-                    , lstoperdat from session.GL_TMP_STMTBAL
+                    , lstoperdat from TMP_GL_BALSTMD

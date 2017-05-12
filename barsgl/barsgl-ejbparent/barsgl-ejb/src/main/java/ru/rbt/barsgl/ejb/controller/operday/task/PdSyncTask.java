@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.lg.LongRunningStepWork;
@@ -9,27 +8,29 @@ import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
 
 /**
  * Created by Ivan Sevastyanov on 25.03.2016.
@@ -220,7 +221,8 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
      * @return
      */
     private JobHistory getAlreadyRunningOne(Properties properties) {
-        final JobHistory history = (JobHistory) properties.get(JobHistoryContext.HISTORY);
+//        final JobHistory history = (JobHistory) properties.get(JobHistoryContext.HISTORY);
+        final JobHistory history = getPreinstlledJobHistory(properties);
         return jobHistoryRepository.getAlreadyRunningLike(history.getId(), PdSyncTask.class.getSimpleName());
     }
 }
