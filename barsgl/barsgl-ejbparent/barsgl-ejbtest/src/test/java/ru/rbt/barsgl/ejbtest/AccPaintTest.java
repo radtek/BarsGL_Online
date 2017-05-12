@@ -23,7 +23,7 @@ public class AccPaintTest extends AbstractRemoteTest {
      * Раскраска счетов по данным из excel таблицы
      * вместе с этим заполняется таблица GL_SQVALUE
      */
-    @Ignore("Тест не требует перевода на Oracle ввиду его уставревания")
+    @Ignore("Тест не требует перевода на Oracle ввиду его устаревания")
     @Test public void test() throws SQLException {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACCPNT");
