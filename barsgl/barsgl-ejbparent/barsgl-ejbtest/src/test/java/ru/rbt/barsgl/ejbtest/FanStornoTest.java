@@ -2,9 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -12,10 +10,11 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -32,13 +31,18 @@ public class FanStornoTest extends AbstractTimerJobTest {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
 
+    @After
+    public void afterProc() {
+        restoreOperday();
+    }
+
 
     /**
      * Обработка операции сторно веера в текущий день (отмена операции)
      * @fsd 7.7.2.2
      */
     @Test
-    public void testFanStornoOneday() {
+    public void testFanStornoOneday() throws SQLException {
 
         final String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
 
@@ -76,7 +80,7 @@ public class FanStornoTest extends AbstractTimerJobTest {
      * @fsd 7.7.3
      */
     @Test
-    public void testFanStornoSimple() {
+    public void testFanStornoSimple() throws SQLException {
 
         final String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
 
@@ -105,7 +109,7 @@ public class FanStornoTest extends AbstractTimerJobTest {
      * @fsd 7.7.3
      */
     @Test
-    public void testFanStornoMfo() {
+    public void testFanStornoMfo() throws SQLException {
 
         final String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
 
@@ -134,7 +138,7 @@ public class FanStornoTest extends AbstractTimerJobTest {
      * @fsd 7.7.3
      */
     @Test
-    public void testFanStornoExch() {
+    public void testFanStornoExch() throws SQLException {
 
         final String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
 
@@ -163,7 +167,7 @@ public class FanStornoTest extends AbstractTimerJobTest {
      * @fsd 7.7.3
      */
     @Test
-    public void testFanStornoMfoExch() {
+    public void testFanStornoMfoExch() throws SQLException {
 
         final String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
 
@@ -187,47 +191,53 @@ public class FanStornoTest extends AbstractTimerJobTest {
         checkOperations(operListS, operListF);
     }
 
-    private List<EtlPosting> createSimplePostings(String paymentRef, Date operday) {
+    private List<EtlPosting> createSimplePostings(String paymentRef, Date operday) throws SQLException {
         long st = System.currentTimeMillis();
         EtlPackage etlPackage1 = newPackageNotSaved(st, "Checking fan posting logic simple");
         etlPackage1.setPostingCnt(2);                        // число перьев в веере
         etlPackage1 = (EtlPackage) baseEntityRepository.save(etlPackage1);
 
         List<EtlPosting> etlList = new ArrayList<EtlPosting>();
+        String acc1 = findBsaAccount("4080681070001%");
+        String acc2 = findBsaAccount("4070281090001%");
+        String acc3 = findBsaAccount("4070281010001%");
         // неосновная проводка (счета открыты в одном филиале)
-        etlList.add(createFanPosting(st, etlPackage1, "40806810700010000465"
-                , "40702810900010002613", new BigDecimal("101.13"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage1, acc1, acc2
+                , new BigDecimal("101.13"), BankCurrency.RUB
                 , new BigDecimal("101.13"), BankCurrency.RUB, paymentRef + "_child", paymentRef, YesNo.Y));
 
         // основная проводка
-        etlList.add(createFanPosting(st, etlPackage1, "40806810700010000465"
-                , "40702810100013995679", new BigDecimal("100.12"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage1, acc1, acc3
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("100.12"), BankCurrency.RUB, paymentRef, paymentRef, YesNo.Y));
 
         return etlList;
     }
 
-    private List<EtlPosting> createMfoPostings (String paymentRef, Date operday) {
+    private List<EtlPosting> createMfoPostings (String paymentRef, Date operday) throws SQLException {
         long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO");
         etlPackage.setPostingCnt(2);                        // число перьев в веере
         etlPackage = (EtlPackage) baseEntityRepository.save(etlPackage);
 
         List<EtlPosting> etlList = new ArrayList<EtlPosting>();
+        String acc1 = findBsaAccount("4080681070001%");
+        String acc2 = findBsaAccount("4070281010001%");
+        String acc3 = findBsaAccount("4742781055016%");
         // основная проводка
-        etlList.add(createFanPosting(st, etlPackage, "40806810700010000465"
-                , "40702810100013995679", new BigDecimal("100.12"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage, acc1, acc2
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("100.12"), BankCurrency.RUB, paymentRef, paymentRef, YesNo.Y));
 
         // неосновная проводка (счета открыты в разных филиалах)
-        etlList.add(createFanPosting(st, etlPackage, "40806810700010000465"
-                , "47427810550160009330", new BigDecimal("100.12"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage, acc1, acc3
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("100.12"), BankCurrency.RUB, paymentRef + "_child", paymentRef, YesNo.Y));
 
         return etlList;
     }
 
-    private List<EtlPosting> createMfoExchPostings (String paymentRef, Date operday) {
+    private List<EtlPosting> createMfoExchPostings (String paymentRef, Date operday) throws SQLException {
         long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO with Exchange");
         etlPackage.setPostingCnt(2);                        // число перьев в веере
@@ -235,33 +245,39 @@ public class FanStornoTest extends AbstractTimerJobTest {
 
         List<EtlPosting> etlList = new ArrayList<EtlPosting>();
         // основная проводка
-        etlList.add(createFanPosting(st, etlPackage, "40806810700010000465"
-                , "40702810100013995679", new BigDecimal("100.12"), BankCurrency.RUB
+        String acc1 = findBsaAccount("4080681070001%");
+        String acc2 = findBsaAccount("4070281010001%");
+        String acc3 = findBsaAccount("4742797840040%");
+        etlList.add(createFanPosting(st, etlPackage, acc1, acc2
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("100.12"), BankCurrency.RUB, paymentRef, paymentRef, YesNo.Y));
 
         // неосновная проводка (счета открыты в разных филиалах + курсовая разница)
-        etlList.add(createFanPosting(st, etlPackage, "40806810700010000465"
-                , "47427978400404502369", new BigDecimal("100.12"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage, acc1, acc3
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("5.23"), BankCurrency.EUR, paymentRef + "_child", paymentRef, YesNo.Y));
 
         return etlList;
     }
 
-    private List<EtlPosting> createExchPostings (String paymentRef, Date operday) {
+    private List<EtlPosting> createExchPostings (String paymentRef, Date operday) throws SQLException {
         long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO with Exchange");
         etlPackage.setPostingCnt(2);                        // число перьев в веере
         etlPackage = (EtlPackage) baseEntityRepository.save(etlPackage);
 
         List<EtlPosting> etlList = new ArrayList<EtlPosting>();
+        String acc1 = findBsaAccount("4080681070001%");
+        String acc2 = findBsaAccount("4070281010001%");
+        String acc3 = findBsaAccount("3030284070001%");
         // основная проводка
-        etlList.add(createFanPosting(st, etlPackage, "40806810700010000465"
-                , "40702810100013995679", new BigDecimal("100.12"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage, acc1, acc2
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("100.12"), BankCurrency.RUB, paymentRef, paymentRef, YesNo.Y));
 
         // неосновная проводка (счета открыты в одном филиале , но есть курсовая разница)
-        etlList.add(createFanPosting(st, etlPackage, "40806810700010000465"
-                , "30302840700010000033", new BigDecimal("100.12"), BankCurrency.RUB
+        etlList.add(createFanPosting(st, etlPackage, acc1, acc3
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("55.23"), BankCurrency.USD, paymentRef + "_child", paymentRef, YesNo.Y));
 
         return etlList;
@@ -316,7 +332,7 @@ public class FanStornoTest extends AbstractTimerJobTest {
      * @fsd 7.7.2, 7.7.3
      */
     @Test
-    public void testFanWithStornoAsPreCobStep() {
+    public void testFanWithStornoAsPreCobStep() throws SQLException {
 
         Date operday1 = getOperday().getCurrentDate();
 
@@ -372,6 +388,8 @@ public class FanStornoTest extends AbstractTimerJobTest {
      * @fsd 7.7.3
      */
     @Test
+    @Ignore
+    // на tmb01 тест проходит, потому что там есть такие операции. Но он фактически ничего не делает. Тест аналогичен testFanStornoOneday
     public void testOnedayStornoME() {
 
         Date operday1 = getOperday().getCurrentDate();

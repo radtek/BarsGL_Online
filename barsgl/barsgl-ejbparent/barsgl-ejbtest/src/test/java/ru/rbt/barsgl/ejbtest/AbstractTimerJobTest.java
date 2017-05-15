@@ -7,7 +7,6 @@ import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**

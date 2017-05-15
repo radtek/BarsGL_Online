@@ -119,7 +119,7 @@ public class CreateIBCBrecord {
             throws SQLException
     {
 
-        String sql = "select * from " + process.schemaDWH() + ".ibcb where ibacou=? and ibacin=? and ibccy=?";
+        String sql = "select * from ibcb where ibacou=? and ibacin=? and ibccy=?";
         try (PreparedStatement statement = process.connection().prepareStatement(sql)){
             statement.setString(1, cb1);
             statement.setString(2, cb2);
@@ -137,8 +137,7 @@ public class CreateIBCBrecord {
                            String cb305, String cb306)
             throws SQLException {
 
-        String sql = "insert into " + process.schemaDWH() +
-                ".ibcb (ibbrnm, ibcbrn, ibccy, ibacou, ibacin, iba305, iba306) values (?,?,?,?,?,?,?) ";
+        String sql = "insert into ibcb (ibbrnm, ibcbrn, ibccy, ibacou, ibacin, iba305, iba306) values (?,?,?,?,?,?,?) ";
         try (PreparedStatement  statement = process.connection().prepareStatement(sql)){
             statement.setString(1, brcaFrom);
             statement.setString(2, brcaTo);
@@ -155,7 +154,7 @@ public class CreateIBCBrecord {
     }
 
     private String getCbCurrencyCode(String ccy) throws SQLException {
-        String sql = "select cbccy from " + process.schemaDWH() + ".currency where glccy=?";
+        String sql = "select cbccy from currency where glccy=?";
         try (PreparedStatement statement = process.connection().prepareStatement(sql)){
             statement.setString(1, ccy);
             try (ResultSet result = statement.executeQuery()){
@@ -168,8 +167,7 @@ public class CreateIBCBrecord {
     }
 
     private String[] getBicControlCode(String branch) throws SQLException {
-        String sql = "select ccbbr, bxbicc from " + process.schemaDWH() + ".imbcbcmp p, " +
-                process.schemaDWH() + ".imbcbbrp r left join " + process.schemaDWH() + ".sdcustpd c on c.bbcust=r.a8bicn " +
+        String sql = "select ccbbr, bxbicc from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
                 "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
         try (PreparedStatement statement = process.connection().prepareStatement(sql)){
             statement.setString(1, branch);
