@@ -218,7 +218,7 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 
     @Test
     public void testCloseEqualBranch() throws Exception {
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", null);
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
         String oldBranch = rec.getString(0);
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, closeEqualBranch, null);
@@ -234,7 +234,7 @@ public class AccountDetailsNotifyTest extends AbstractTimerJobTest {
 
     @Test
     public void testCloseNoEqualBranch() throws Exception {
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", null);
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
         String oldBranch = rec.getString(0);
         String errBranch = "054";
         baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID='40802810900014820908'", new Object[]{errBranch});

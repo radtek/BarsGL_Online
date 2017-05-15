@@ -862,7 +862,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
                     "        <gbo:Status>O</gbo:Status>\n" +
                     "        <gbo:CustomerNo>00516770</gbo:CustomerNo>\n" +
                     "        <gbo:Special>PRDC1</gbo:Special>\n" +
-                    "        <gbo:OpenDate>2002-03-29</gbo:OpenDate>\n" +
+                    "        <gbo:OpenDate>2003-03-29</gbo:OpenDate>\n" +
                     "        <gbo:AltAccountNo>516770RUR405712001</gbo:AltAccountNo>\n" +
                     "        <gbo:Type>S</gbo:Type>\n" +
                     "        <gbo:ATMAvailable>N</gbo:ATMAvailable>\n" +
