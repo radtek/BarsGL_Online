@@ -134,7 +134,7 @@ public class MemorderTest extends AbstractTimerJobTest {
                     .getInteger(0);
             if (cnt == 0) {
                 baseEntityRepository.executeNativeUpdate("insert into F067_MASK (row_id, dat, datto, client_ind, dt_mask, ct_mask)" +
-                        " values (1, '2000-01-01', '2029-01-01', 'D', ?, ?)", accDt.substring(0,5) + "%", accCt.substring(0,5) + "%");
+                        " values (1, TO_DATE('2000-01-01','RRRR-MM-DD'), TO_DATE('2029-01-01','RRRR-MM-DD'), 'D', ?, ?)", accDt.substring(0,5) + "%", accCt.substring(0,5) + "%");
             }
         }
 
