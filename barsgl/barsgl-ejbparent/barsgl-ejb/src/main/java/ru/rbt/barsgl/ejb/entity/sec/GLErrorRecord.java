@@ -54,7 +54,7 @@ public class GLErrorRecord extends BaseEntity<Long> {
     @Column(name = "USER_NAME")
     private String userName;
 
-    @Column(name = "COMMENT")
+    @Column(name = "\"COMMENT\"")// COMMENT is oracle db reserved word
     private String comment;
 
     @Column(name = "ID_PST_NEW")

@@ -13,26 +13,26 @@ public enum LongRunningPatternStepEnum {
     , SYNC_ALLOW_PROCESSING(7, LongRunningPatternEnum.PdSyncTask);
 
     private long idStep;
-    private LongRunningPatternEnum pdSyncTask;
+    private LongRunningPatternEnum pattern;
 
-    LongRunningPatternStepEnum(long idStep, LongRunningPatternEnum pdSyncTask) {
+    LongRunningPatternStepEnum(long idStep, LongRunningPatternEnum pattern) {
         this.idStep = idStep;
-        this.pdSyncTask = pdSyncTask;
+        this.pattern = pattern;
     }
 
     public long getIdStep() {
         return idStep;
     }
 
-    public LongRunningPatternEnum getPdSyncTask() {
-        return pdSyncTask;
+    public LongRunningPatternEnum getPattern() {
+        return pattern;
     }
 
     @Override
     public String toString() {
         return "LongRunningPatternStepEnum{" +
                 "idStep=" + idStep +
-                ", pdSyncTask=" + pdSyncTask +
+                ", pattern=" + pattern +
                 '}';
     }
 }

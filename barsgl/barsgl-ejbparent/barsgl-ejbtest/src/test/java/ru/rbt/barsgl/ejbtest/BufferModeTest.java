@@ -15,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -37,6 +38,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -227,6 +229,8 @@ public class BufferModeTest extends AbstractRemoteTest {
     @Test
     public void testSyncIncrJob() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstms");
+        baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
+        baseEntityRepository.executeNativeUpdate("update gl_baltur set moved = 'N'");
         initCorrectOperday();
         Operday operday = getOperday();
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
@@ -283,11 +287,16 @@ public class BufferModeTest extends AbstractRemoteTest {
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
         final String stepName = "WT_1";
-        checkCreateStep(stepName, getOperday().getLastWorkingDay(), "");
+        checkCreateStep(stepName, getOperday().getLastWorkingDay(), WorkprocRepository.WorkprocState.W.getValue());
 
         final String jobName = "IncSync1";
 
         execSyncStamtBackvalue(stepName, jobName);
+
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+                , getLastUnloadHeader(BALANCE_DELTA_INCR).getString("parvalue"));
+
+        Assert.assertTrue(1 <= baseEntityRepository.selectFirst("select count(1) cnt from gl_balstmd").getInteger("cnt"));
 
         DataRecord lastHist = getLastHistRecord(jobName);
         Assert.assertNotNull(lastHist);
@@ -322,7 +331,7 @@ public class BufferModeTest extends AbstractRemoteTest {
                 .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(accDt)));*/
 
         updateOperday(COB, CLOSED);
-        checkCreateStep(stepName, getOperday().getCurrentDate(), "");
+        checkCreateStep(stepName, getOperday().getCurrentDate(), WorkprocRepository.WorkprocState.W.getValue());
         Assert.assertFalse(checkStepOk(stepName, getOperday().getCurrentDate()));
         baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4'");
         execSyncStamtBackvalue(stepName, jobName);
@@ -515,11 +524,11 @@ public class BufferModeTest extends AbstractRemoteTest {
      */
     private void createForPcidMo() throws SQLException {
 
-        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd fetch first 1 rows only");
+        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd where rownum < 2");
         Assert.assertNotNull(glPd);
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m where pod = ? and mo_no = ?", glPd.getDate("pod"), glPd.getString("mo_no"));
         if (null == pcidMo) {
-            pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m fetch first 1 rows only");
+            pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m where rownum < 2");
             Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pcid_mo set pod = ?, mo_no = ? where pcid = ?", glPd.getDate("pod"), glPd.getString("mo_no"), pcidMo.getLong("pcid")));
         }
 

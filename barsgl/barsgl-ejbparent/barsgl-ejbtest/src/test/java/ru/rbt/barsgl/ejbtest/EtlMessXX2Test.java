@@ -35,14 +35,14 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
     @Before
     public void beforeClass() throws Exception{
-        Date operday = DateUtils.parseDate("2016-03-23", "yyyy-MM-dd");
+        Date operday = DateUtils.parseDate("2017-02-10", "yyyy-MM-dd");
         setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN);
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         testInitTable();
     }
 
     public void testInitTable() throws Exception {
-        int count = 0;
+        int count;
         if (null == baseEntityRepository.selectFirst("select 1 from GL_ACTPARM where ACCTYPE = '131060102' and CUSTYPE = '00' and term='00' and acc2='30424'")) {
             count = baseEntityRepository.executeNativeUpdate("insert into GL_ACTPARM (ACCTYPE,CUSTYPE,term,acc2,plcode,acod,ac_SQ,DTB) " +
                     "values('131060102','00','00','30424',null,'1049','02','2014-05-01')");
@@ -58,20 +58,82 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
                     "values('712010100','21','05','70606','31318','8107','01','2014-05-01')");
             System.out.println(count + ": insert values('712010100','21','05','70606','31318','8107','01','2014-05-01')");
         }
-//        if (null == baseEntityRepository.selectFirst("select 1 from GL_ACTPARM where ACCTYPE = '131060102' and CUSTYPE = '22' and term='00' and acc2='30424'")) {
-//            count = baseEntityRepository.executeNativeUpdate("insert into GL_ACTPARM (ACCTYPE,CUSTYPE,term,acc2,plcode,acod,ac_SQ,DTB) " +
-//                    "values('131060102','22','00','30424',null,'1049','03','2014-05-01')");
-//            System.out.println(count + ": insert values('131060102','22','00','30424',null,'1049','03','2014-05-01')");
-//        }
+
         if (null == baseEntityRepository.selectFirst("select 1 from GL_SRCPST where ID_SRC = 'AXAPTA'")) {
             count = baseEntityRepository.executeNativeUpdate("insert into GL_SRCPST (ID_SRC, SHNM, LGNM,fl_dealid) values('AXAPTA','AXT','Внутренняя бухгалтерия', 'N')");
             System.out.println(count + ": insert into GL_SRCPST (ID_SRC, SHNM, LGNM,fl_dealid) values('AXAPTA','AXT','Внутренняя бухгалтерия', 'N')");
         }
+
+         if (null == baseEntityRepository.selectFirst("select * from  GL_ACTNAME where ACCTYPE = '131060102'")){
+            count = baseEntityRepository.executeNativeUpdate("insert into GL_ACTNAME(acctype, accname, pl_act, fl_ctrl) values('131060102', 'EtlMessXX2Test', 'N', 'N')");
+             System.out.println(count + ": insert into GL_ACTNAME(acctype, accname, pl_act, fl_ctrl) values('131060102', 'EtlMessXX2Test', 'N', 'N')");
+         }
         //предполагается существование 1 счета 30424810500014588436, 00400038RUR104902001 с rlntype='0'
         //и любого количества других счетов 00400038RUR104902001 с rlntype='4'
         //и любого количества других счетов 00400038RUR104902001 с остальными rlntype
         //начальное состояние gl_acc задается в glAccBeginState()
     }
+
+    /*
+  Case 00: Ключ счета дебета с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 9
+  (соответствует строке 9 в настройках), также пустыми оставлены атрибуты ключа COMPANY и ACC2.
+  При условии, что ACCTYPE = 131060102 в GL_ACTPARM настроен на CUSTYPE = 9 и 00 – см. выше.
+  В GL_ACC имеются 3 открытых счета с одинаковым ACID = 00400038RUR104902001: 30424810500014588436
+  c RLNTYPE=0 и 30424810420010000001/30424810720010000002 с RLNTYPE=4.
+  Все 3 они прописаны в ACCRLN. У всех 3 счетов выставляем ссылку на сделку в GL_ACC.DEALID=123.
+  Ожидается, что будет открыт новый счет, т.к. счет в GL_ACC не будет счета без привязки к сделке,
+   а в ACCRLN все 3 имеющихся счета мигрированы. (Шаг 5 e.iii). А также Шаг 5-а.
+  */
+    @Test
+    //тест создает новые счета с rltype=4 и не удаляет, что бы использовать в test5
+    public void test00() throws Exception {
+        long stamp = System.currentTimeMillis();
+
+        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '" + ACID + "'");
+        System.out.println(count + ": update gl_acc set dealid = '123' where acid = '" + ACID + "'");
+        Assert.assertTrue(count > 0);
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(1);
+        pkg.setPostingCnt(2);
+        pkg = (EtlPackage) baseEntityRepository.update(pkg);
+
+        EtlPosting pst1 = newPosting(stamp, pkg);
+        pst1.setAePostingId("21084014");
+        pst1.setEventId("ГК07248804_000000001");
+        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setOperationTimestamp(new Date());
+        pst1.setNarrative("Narrative");
+        pst1.setRusNarrativeLong("RusNarrativeLong");
+        pst1.setRusNarrativeShort("RusNarrativeShort");
+        pst1.setStorno(YesNo.N);
+        pst1.setAmountCredit(new BigDecimal("410.450"));
+        pst1.setAmountDebit(new BigDecimal("410.450"));
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(BankCurrency.RUB);
+        pst1.setSourcePosting("AXAPTA");
+        pst1.setFan(YesNo.N);
+        pst1.setAccountKeyDebit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
+        pst1.setAccountKeyCredit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
+
+        glAccBeginState();
+//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '" + ACID + "'");
+//        System.out.println(count + ": update gl_acc set dealid = null where acid = '" + ACID + "'");
+
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertTrue(!operation.getAccountDebit().equals(BSAACID0));
+        Assert.assertNotNull(baseEntityRepository.selectFirst("select 1 from GL_ACC where bsaacid=? and ACID='" + ACID + "' and RLNTYPE='4'", operation.getAccountDebit()));
+    }
+
 
     /*
     Case 1: Ключ счета дебета с GL_SEQ типа XX задан с полным набором ACOD, SQ и CUSTYPE = 9. При условии,
@@ -507,9 +569,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        System.out.println(count + ": update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -570,9 +629,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        System.out.println(count + ": update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -633,9 +689,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        System.out.println(count + ": update gl_acc set dealid = null where bsaacid = '" + BSAACID0 + "'");
-//        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -749,57 +802,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     }
 
     /*
-    Case 13: Ключ счета дебета с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 9
-    (соответствует строке 9 в настройках), также пустыми оставлены атрибуты ключа COMPANY и ACC2.
-    При условии, что ACCTYPE = 131060102 в GL_ACTPARM настроен на CUSTYPE = 9 и 00 – см. выше.
-    В ключе имеется непустая ссылка на символ доходов-расходов PL = 31318.
-    Ожидается, что ключ не будет обработан, будет диагностирована ошибка некорректного задания ключа.
-     (Шаг 1 б) поиска счета)
-    */
-    @Test
-    public void test13() throws Exception {
-        long stamp = System.currentTimeMillis();
-
-        glAccBeginState();
-
-        EtlPackage pkg = newPackage(stamp, "SIMPLE");
-        Assert.assertTrue(pkg.getId() > 0);
-        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
-        pkg.setPackageState(EtlPackage.PackageState.LOADED);
-        pkg.setAccountCnt(1);
-        pkg.setPostingCnt(2);
-        pkg = (EtlPackage) baseEntityRepository.update(pkg);
-
-        EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
-        pst1.setEventId("ГК07248804_000000001");
-        pst1.setValueDate(getOperday().getCurrentDate());
-        pst1.setOperationTimestamp(new Date());
-        pst1.setNarrative("Narrative");
-        pst1.setRusNarrativeLong("RusNarrativeLong");
-        pst1.setRusNarrativeShort("RusNarrativeShort");
-        pst1.setStorno(YesNo.N);
-        pst1.setAmountCredit(new BigDecimal("410.450"));
-        pst1.setAmountDebit(new BigDecimal("410.450"));
-        pst1.setCurrencyCredit(BankCurrency.RUB);
-        pst1.setCurrencyDebit(BankCurrency.RUB);
-        pst1.setSourcePosting("AXAPTA");
-        pst1.setFan(YesNo.N);
-        pst1.setAccountKeyDebit("001;RUR;00400038;131060102;9;;XX00000034;;;31318;;;AXAPTA;;");
-        pst1.setAccountKeyCredit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
-        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
-
-        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
-
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.ERCHK, operation.getState());
-        //"2047"
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_PLCODE.getStrErrorCode()));
-    }
-
-    /*
     Case 14: Ключ счета дебета с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 12,
     TERM = 05, также пустыми оставлены атрибуты ключа COMPANY и ACC2. При условии,
     что ACCTYPE = 712010100 в GL_ACTPARM настроен на PLCODE = 31318 – см. выше.
@@ -851,65 +853,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_DB_PLCODE.getStrErrorCode()));
     }
 
-    /*
-    Case 17: Ключ счета дебета с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 9
-    (соответствует строке 9 в настройках), также пустыми оставлены атрибуты ключа COMPANY и ACC2.
-    При условии, что ACCTYPE = 131060102 в GL_ACTPARM настроен на CUSTYPE = 9 и 00 – см. выше.
-    В GL_ACC имеются 3 открытых счета с одинаковым ACID = 00400038RUR104902001: 30424810500014588436
-    c RLNTYPE=0 и 30424810420010000001/30424810720010000002 с RLNTYPE=4.
-    Все 3 они прописаны в ACCRLN. У всех 3 счетов выставляем ссылку на сделку в GL_ACC.DEALID=123.
-    Ожидается, что будет открыт новый счет, т.к. счет в GL_ACC не будет счета без привязки к сделке,
-     а в ACCRLN все 3 имеющихся счета мигрированы. (Шаг 5 e.iii). А также Шаг 5-а.
-    */
-    @Test
-    //тест создает новые счета с rltype=4 и не удаляет, что бы использовать в test5
-    public void test17() throws Exception {
-        long stamp = System.currentTimeMillis();
-
-        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '" + ACID + "'");
-        System.out.println(count + ": update gl_acc set dealid = '123' where acid = '" + ACID + "'");
-        Assert.assertTrue(count > 0);
-
-        EtlPackage pkg = newPackage(stamp, "SIMPLE");
-        Assert.assertTrue(pkg.getId() > 0);
-        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
-        pkg.setPackageState(EtlPackage.PackageState.LOADED);
-        pkg.setAccountCnt(1);
-        pkg.setPostingCnt(2);
-        pkg = (EtlPackage) baseEntityRepository.update(pkg);
-
-        EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
-        pst1.setEventId("ГК07248804_000000001");
-        pst1.setValueDate(getOperday().getCurrentDate());
-        pst1.setOperationTimestamp(new Date());
-        pst1.setNarrative("Narrative");
-        pst1.setRusNarrativeLong("RusNarrativeLong");
-        pst1.setRusNarrativeShort("RusNarrativeShort");
-        pst1.setStorno(YesNo.N);
-        pst1.setAmountCredit(new BigDecimal("410.450"));
-        pst1.setAmountDebit(new BigDecimal("410.450"));
-        pst1.setCurrencyCredit(BankCurrency.RUB);
-        pst1.setCurrencyDebit(BankCurrency.RUB);
-        pst1.setSourcePosting("AXAPTA");
-        pst1.setFan(YesNo.N);
-        pst1.setAccountKeyDebit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
-        pst1.setAccountKeyCredit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
-        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
-
-        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
-
-        glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '" + ACID + "'");
-//        System.out.println(count + ": update gl_acc set dealid = null where acid = '" + ACID + "'");
-
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
-        Assert.assertTrue(!operation.getAccountDebit().equals(BSAACID0));
-        Assert.assertNotNull(baseEntityRepository.selectFirst("select 1 from GL_ACC where bsaacid=? and ACID='" + ACID + "' and RLNTYPE='4'", operation.getAccountDebit()));
-    }
 
     /*
     Case 15: Ключ счета дебета с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 9
@@ -925,7 +868,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     30424810500014588436 c RLNTYPE=0. (Шаг 5 e.i).
     */
     @Test
-    //если нет счетов с RLNTYPE='4', то запустить test17
+    //если нет счетов с RLNTYPE='4', то запустить test00
     public void test15() throws Exception {
         long stamp = System.currentTimeMillis();
 
@@ -965,9 +908,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '" + ACID + "'");
-//        System.out.println(count + ": update gl_acc set dtc = null where acid = '" + ACID + "'");
-//        Assert.assertTrue(count > 0);
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -991,7 +931,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     а в ACCRLN будет найдено 2 счета с одинаковым ACID и RLNTYPE = 0. (Шаг 5 e.ii).
     */
     @Test
-    //если нет счетов с RLNTYPE='4', то запустить test17
+    //если нет счетов с RLNTYPE='4', то запустить test00
     public void test16() throws Exception {
         long stamp = System.currentTimeMillis();
 
@@ -1035,8 +975,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001'");
-//        System.out.println(count + ": update gl_acc set dtc = null where acid = '00400038RUR104902001'");
 
         count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '4' where acid = '" + ACID + "' and bsaacid=?",accrln_rltype4.getString("bsaacid"));
         System.out.println(count + ": update accrln set rlntype = '4'");
@@ -1064,14 +1002,14 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     в GL_ACC 30424810720010000002 с RLNTYPE=4, т.к. у него DEALID непусто.
     */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test18() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
 
         List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '" + ACID + "' and rlntype='4'");
-        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 1);
+        Assert.assertTrue("мало записей, выполнить test00", glAcc.size() > 1);
 
         DataRecord glAcc4 = baseEntityRepository.selectFirst("select * from gl_acc where acid='" + ACID + "' and rlntype='4'");
         int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '" + ACID + "' and bsaacid!=?", glAcc4.getString("bsaacid"));
@@ -1117,14 +1055,8 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         glAccBeginState();
 
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid!=?", glAcc4.getString("bsaacid"));
-//        System.out.println(count + ": update gl_acc set dtc = null");
-
         count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc='2029-01-01' where acid = '" + ACID + "'");
         System.out.println(count + ": update accrln set drlnc='2029-01-01' where acid = '" + ACID + "'");
-
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001'");
-//        System.out.println(count + ": update gl_acc set dealid = null where acid = '00400038RUR104902001'");
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -1147,15 +1079,13 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     Ожидается, что будет найден счет 30424810620010000005 с RLNTYPE=4, т.к. у него DEALID пусто. (Шаг 5-b).
      */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test19() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
 
         List<DataRecord> glAcc = getGlAccRlnType4();
-//        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '"+ACID+"' and rlntype='4'");
-//        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
 
         int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
         System.out.println(count + ": update gl_acc set dealid = '123'");
@@ -1166,11 +1096,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(count > 0);
 
         setCloseDateGlAcc( 2, glAcc);
-//        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
-//            Assert.assertTrue(count > 0);
-//        }
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1202,15 +1127,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
 
         glAccBeginState();
-//        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update gl_acc set dtc = null where bsaacid = " + glAcc.get(i).getString("bsaacid"));
-//        }
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and rlntype='0'");
-//        System.out.println(count + ": update gl_acc set dealid = null");
-//
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
-//        System.out.println(count + ": update gl_acc set dealid = null");
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -1233,15 +1149,13 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     Будет диагностирована ошибка неоднозначного определения счета. (Шаг 5-c.ii).
      */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test20() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
 
         List<DataRecord> glAcc = getGlAccRlnType4();
-//        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '00400038RUR104902001' and rlntype='4'");
-//        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
 
         DataRecord glAcc0 = baseEntityRepository.selectFirst("select * from gl_acc where acid = '"+ACID+"' and rlntype='0'");
 
@@ -1258,11 +1172,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(count > 0);
 
         setCloseDateGlAcc( 2, glAcc);
-//        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = " + glAcc.get(i).getString("bsaacid"));
-//            Assert.assertTrue(count > 0);
-//        }
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1297,20 +1206,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         glAccBeginState();
 
-//        for (int i = 2; i < glAcc.size(); i++) {
-//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update gl_acc set dtc = null where bsaacid = " + glAcc.get(i).getString("bsaacid"));
-//        }
-//
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and rlntype='0'");
-//        System.out.println(count + ": update gl_acc set dealid = null where rlntype='0'");
-//
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = null where acid = '00400038RUR104902001' and bsaacid=?", glAcc.get(1).getString("bsaacid"));
-//        System.out.println(count + ": update gl_acc set dealid = null and bsaacid = " + glAcc.get(1).getString("bsaacid"));
-//
-//        count = baseEntityRepository.executeNativeUpdate("update gl_acc set acctype = ? where acid = '00400038RUR104902001' and bsaacid=?", glAcc0.getString("acctype"), glAcc0.getString("bsaacid"));
-//        System.out.println(count + ": update gl_acc set acctype = " + glAcc0.getString("acctype") + " and bsaacid = " + glAcc0.getString("bsaacid"));
-
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
@@ -1335,15 +1230,13 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     ACCTYPE ключа счета. (Шаг 5-c.i).
     */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test21() throws Exception {
         long stamp = System.currentTimeMillis();
 
         glAccBeginState();
 
         List<DataRecord> glAcc4 = getGlAccRlnType4();
-//        List<DataRecord> glAcc = baseEntityRepository.select("select * from gl_acc where acid = '00400038RUR104902001' and rlntype='4'");
-//        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
 
         int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '"+ACID+"' and bsaacid=?", glAcc4.get(1).getString("bsaacid"));
         System.out.println(count + ": update gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
@@ -1354,11 +1247,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(count == 1);
 
         setCloseDateGlAcc(2, glAcc4);
-//        for(int i = 2; i < glAcc4.size(); i++ ){
-//            count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = '2015-12-29' where acid = '00400038RUR104902001' and bsaacid=?",glAcc4.get(i).getString("bsaacid"));
-//            System.out.println(count + ": update gl_acc set dtc = '2015-12-29' where bsaacid = "+glAcc4.get(i).getString("bsaacid") );
-//            Assert.assertTrue(count == 1);
-//        }
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1414,7 +1302,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     Поэтому будет открыт новый счет (Шаг 5-c.iii).
      */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test22() throws Exception {
         long stamp = System.currentTimeMillis();
 
@@ -1422,20 +1310,11 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
         List<DataRecord> glAcc4 = getGlAccRlnType4();
         setGlAccDealId123(glAcc4);
-//        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '00400038RUR104902001' and bsaacid=?",glAcc4.get(1).getString("bsaacid"));
-//        System.out.println(count + ": update gl_acc set dealid = '123' and bsaacid = " + glAcc4.get(1).getString("bsaacid"));
-//        Assert.assertTrue(count == 1);
         setGlAcc0DealId();
-//        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = 'нет' where acid = '00400038RUR104902001' and rlntype='0'");
-//        System.out.println(count + ": update gl_acc set subdealid = 'нет' where rlntype='0'");
-//        Assert.assertTrue(count == 1);
 
         setCloseDateGlAcc(2, glAcc4);
 
         setGlAcc4AccType101(glAcc4);
-//        int count = baseEntityRepository.executeNativeUpdate("update gl_acc set acctype = '131060101' where acid = '00400038RUR104902001' and bsaacid=?", glAcc4.get(0).getString("bsaacid"));
-//        System.out.println(count + ": update gl_acc set acctype = '131060101' and bsaacid = " + glAcc4.get(0).getString("bsaacid"));
-//        Assert.assertTrue(count == 1);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1494,7 +1373,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     Шаг 1-a открытия счета).
      */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test23() throws Exception {
         long stamp = System.currentTimeMillis();
 
@@ -1565,7 +1444,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     Ожидается, что будет открыт новый счет на основании параметризации GL_ACTPARM по единственной активной строке.
      */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test24() throws Exception {
         long stamp = System.currentTimeMillis();
 
@@ -1637,7 +1516,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     Будет диагностирована ошибка по Шагу 1-б открытия счета.
      */
     @Test
-    //если нет или мало счетов с RLNTYPE='4', то запустить test17
+    //если нет или мало счетов с RLNTYPE='4', то запустить test00
     public void test25() throws Exception {
         long stamp = System.currentTimeMillis();
 
@@ -1695,6 +1574,58 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_SQ_0.getStrErrorCode()));
     }
 
+    /*
+  Case 13: Ключ счета дебета с GL_SEQ типа XX задан с пустым ACOD, пустым SQ и CUSTYPE = 9
+  (соответствует строке 9 в настройках), также пустыми оставлены атрибуты ключа COMPANY и ACC2.
+  При условии, что ACCTYPE = 131060102 в GL_ACTPARM настроен на CUSTYPE = 9 и 00 – см. выше.
+  В ключе имеется непустая ссылка на символ доходов-расходов PL = 31318.
+  Ожидается, что ключ не будет обработан, будет диагностирована ошибка некорректного задания ключа.
+   (Шаг 1 б) поиска счета)
+  */
+    @Test
+    public void test13() throws Exception {
+        long stamp = System.currentTimeMillis();
+
+        glAccBeginState();
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+        pkg = (EtlPackage) baseEntityRepository.findById(pkg.getClass(), pkg.getId());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(1);
+        pkg.setPostingCnt(2);
+        pkg = (EtlPackage) baseEntityRepository.update(pkg);
+
+        EtlPosting pst1 = newPosting(stamp, pkg);
+        pst1.setAePostingId("21084014");
+        pst1.setEventId("ГК07248804_000000001");
+        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setOperationTimestamp(new Date());
+        pst1.setNarrative("Narrative");
+        pst1.setRusNarrativeLong("RusNarrativeLong");
+        pst1.setRusNarrativeShort("RusNarrativeShort");
+        pst1.setStorno(YesNo.N);
+        pst1.setAmountCredit(new BigDecimal("410.450"));
+        pst1.setAmountDebit(new BigDecimal("410.450"));
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(BankCurrency.RUB);
+        pst1.setSourcePosting("AXAPTA");
+        pst1.setFan(YesNo.N);
+        pst1.setAccountKeyDebit("001;RUR;00400038;131060102;9;;XX00000034;;;31318;;;AXAPTA;;");
+        pst1.setAccountKeyCredit("001;RUR;00400038;131060102;9;;XX00000034;;;;;;AXAPTA;;");
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
+
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.ERCHK, operation.getState());
+        //"2047"
+        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_PLCODE.getStrErrorCode()));
+    }
+
+
     @Test
     public void test26_SameAccount22() throws Exception {
         long stamp = System.currentTimeMillis();
@@ -1707,9 +1638,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         setGlAcc0DealId();
         setCloseDateGlAcc(2, glAcc4);
         setGlAcc4AccType101(glAcc4);
-
-//        GLAccount glAcc = remoteAccess.invoke(GLAccountController.class, "findGLAccountAE",
-//                new AccountKeys(crKeys), GLOperation.OperSide.D );
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1739,8 +1667,6 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         pst1 = (EtlPosting) baseEntityRepository.save(pst1);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
-
-//        glAccBeginState();
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -1830,13 +1756,13 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
     private List<DataRecord> getGlAccRlnType4() throws Exception{
         List<DataRecord> glAcc = null;
         glAcc = baseEntityRepository.select("select * from gl_acc where acid = '"+ACID+"' and rlntype='4' order by bsaacid");
-        Assert.assertTrue("мало записей, выполнить test17", glAcc.size() > 2);
+        Assert.assertTrue("мало записей, выполнить test00", glAcc.size() > 2);
         return glAcc;
     }
 
     private void glAccBeginState(){
         int count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid=null,subdealid=null,dtc=null,"+
-                " acctype= case when rlntype='0' then '131060101' when rlntype='4' then '131060102' else acctype end where acid = '"+ACID+"'");
+                " acctype= case when rlntype='0' then 131060101 when rlntype='4' then 131060102 else acctype end where acid = '"+ACID+"'");
         System.out.println(count + ": начальное состояние gl_acc ");
 
         count = baseEntityRepository.executeNativeUpdate("update GL_ACTNAME set FL_CTRL = 'N' where ACCTYPE = '131060102'");
@@ -1862,7 +1788,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
     }
     private boolean isCodeInGlAudit(long id, String code) throws Exception {
-        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time > CURRENT TIMESTAMP - 1 DAYS", id);
+        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  CURRENT_TIMESTAMP - interval '1' day", id);
         System.out.println(glAudit.getString("ERRORMSG"));
         return glAudit.getString("ERRORMSG").indexOf(code) > -1;
     }

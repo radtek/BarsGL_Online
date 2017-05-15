@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
+import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.*;
+import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
@@ -34,6 +36,9 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     @Inject
     private GLAccountRepository glAccountRepository;
+
+    @Inject
+    private AccountingTypeRepository accountingTypeRepository;
 
     @EJB
     private GLAccountRequestRepository accountRequestRepository;
@@ -104,7 +109,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         // Тип счета
         context.addValidator(() -> {
             String fieldValue = target.getAccountType();
-            String fieldName = "Тип счетаа";
+            String fieldName = "Тип счета";
             int maxLen = 10;
             if (isEmpty(fieldValue)) {
                 throw new ValidationError(FIELD_IS_EMPTY, fieldName);
@@ -219,7 +224,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         }
     }
 
-    // Баланс счета при изменении даты закрвтия / открытия
+    // Баланс счета при изменении даты закрытия / открытия
     private void checkBalance(GLAccount account, Date dateFrom, Date dateTo, String fieldName) {
         BigDecimal balance = glAccountRepository.getAccountBalance(account.getBsaAcid(), account.getAcid(), dateTo);
         if (!balance.equals(BigDecimal.ZERO)) {
@@ -357,6 +362,75 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         return glAccount;
     }
 
+    public GLAccount createGlAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType) {
+//1        GLAccount glAccount = new GLAccount();
+        GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccId(keys.getAccountMidas(), bsaAcid));
+
+        // номер счета, способ создания, операция, сторона операции
+        glAccount.setBsaAcid(bsaAcid);
+        glAccount.setOpenType(openType.name());
+        glAccount.setOperation(operation);
+        glAccount.setOperSide(side);
+
+        // даты
+        checkDateOpen(dateOpen, bsaAcid, "Дата открытия");
+        if (null == operation)  // только для ручных
+            checkDateOpen707(dateOpen, bsaAcid, "Дата открытия");
+        glAccount.setDateOpen(dateOpen);
+        glAccount.setDateClose(null);                       // TODO уточнить
+        Operday operday = operdayController.getOperday();
+        glAccount.setDateRegister(operday.getCurrentDate());
+        glAccount.setDateModify(operday.getCurrentDate());
+
+        // валюта ЦБ
+        BankCurrency ccy = bankCurrencyRepository.getCurrency(keys.getCurrency());
+        glAccount.setCurrency(ccy);
+
+        glAccount.setFilial(glAccountRepository.getCBCC(keys.getCompanyCode()));
+        glAccount.setCompanyCode(keys.getCompanyCode());
+        // бранч
+        DataRecord dr = glAccountRepository.getIMBCBBRP(keys.getCompanyCode());
+        glAccount.setBranch(null!=dr?dr.getString("A8BRCD"):"");
+        // номер клиента
+        glAccount.setCustomerNumber(null!=dr?dr.getString("A8BICN"):"");
+        keys.setCustomerNumber(null!=dr?dr.getString("A8BICN"):"");
+        int cnum = (int) stringToLong(side, "номер клиента", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
+        glAccount.setCustomerNumberD(cnum);
+        // тип счета
+        long acctype = stringToLong(side, "тип счета", keys.getAccountType(), AccountKeys.getiAccountType());
+        glAccount.setAccountType(acctype);
+
+        // тип собственности клиента
+        keys.setCustomerType("0");
+        if(!isEmpty(keys.getCustomerType()))
+            glAccount.setCbCustomerType((short)stringToLong(side, "тип клиента", keys.getCustomerType(), AccountKeys.getiCustomerType()));
+        // код срока
+        keys.setTerm("0");
+        if(!isEmpty(keys.getTerm()))
+            glAccount.setTerm((short)stringToLong(side, "код срока", keys.getTerm(), AccountKeys.getiTerm()));
+
+        // номер последовательности из АЕ
+        glAccount.setGlSequence(keys.getGlSequence());
+
+
+        dr = glAccountRepository.getActParamByAccType(keys.getAccountType());
+        glAccount.setBalanceAccount2(dr.getString("ACC2"));
+        glAccount.setAccountCode(dr.getString("ACOD").trim().length()>0 ? dr.getShort("ACOD") : null);
+        glAccount.setAccountSequence(dr.getString("AC_SQ").trim().length()>0 ? dr.getShort("AC_SQ") : null);
+        glAccount.setAcid(null);
+        glAccount.setPassiveActive(" ");
+        glAccount.setDealSource(keys.getDealSource());
+        glAccount.setDealId(null);
+        glAccount.setSubDealId(null);
+
+        AccountingType accType = accountingTypeRepository.findById(AccountingType.class,keys.getAccountType());
+
+        glAccount.setDescription(accType.getAccountName());
+        glAccount.setRelationType(GLAccount.RelationType.NINE);
+
+        return glAccount;
+    }
+
     /**
      * Заполняет доп параметры счета по ключам или из справочников
      * @param glAccount     - счет
@@ -403,6 +477,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         glAccount.setDescription(accountName);
 
     }
+
     /**
      * Заполняет доп параметры счета по ключам или из справочников без Майдас специфики
      * @param glAccount     - счет
@@ -473,11 +548,14 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
         glAccount.setDateOpen(dateOpen);
         // счет ЦБ
-        bsaAccRepository.setDateOpen(glAccount);
-        // связь счета ЦБ и Майдас
-        accRlnRepository.setDateOpen(glAccount);
-        // счет Майдас - не меняем, он мог быть открыт не BARS GL
+        //Отключаем проверку для технических счетов
+        if (!glAccount.getRelationType().equals("9")) {
+            bsaAccRepository.setDateOpen(glAccount);
+            // связь счета ЦБ и Майдас
+            accRlnRepository.setDateOpen(glAccount);
+            // счет Майдас - не меняем, он мог быть открыт не BARS GL
 //        accRepository.setDateOpen(glAccount);
+        }
     }
 
     public void setDateClose(GLAccount glAccount, Date dateOpen, Date dateClose) {

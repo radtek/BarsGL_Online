@@ -18,18 +18,18 @@ insert into GL_ETLSTMD (
         when o.src_pst ='PH'  then o.chnl_name
         else o.deal_id
     end  dealid,
-    value(o.pmt_ref, o.evt_id) psid,                                                             -- источник, ид в системе
-    da.bsaacnnum dclient_id, ca.bsaacnnum cclient_id,                                            -- бранч майдас дебет
-    dwh.get_fcc_br(d.bsaacid) dbranch_id, get_fcc_br(c.bsaacid) cbranch_id,                            -- бранч майдас кредит
+    nvl(o.pmt_ref, o.evt_id) psid,                                                             -- источник, ид в системе
+    trim(da.bsaacnnum) dclient_id, trim(ca.bsaacnnum) cclient_id,                                            -- бранч майдас дебет
+    GET_FCC_BR(d.bsaacid) dbranch_id, get_fcc_br(c.bsaacid) cbranch_id,                            -- бранч майдас кредит
     d.id did, c.id cid, d.bsaacid dcbaccount, c.bsaacid ccbaccount,                              -- ид и счета полупроводок
     d.ccy dcur, c.ccy ccur,                                                                      -- валюта
-    -decimal(d.amnt)/integer(power(10, dc.nbdp)) damount, decimal(c.amnt)/integer(power(10, cc.nbdp)) camount,     -- суммы в валюте
-    -decimal(d.amntbc)/integer(power(10,2)) damount_rur,  decimal(c.amntbc)/integer(power(10, 2)) camount_rur,     -- суммы в рублях
+    -d.amnt/power(10, dc.nbdp) damount, c.amnt/power(10, cc.nbdp) camount,     -- суммы в валюте
+    -(d.amntbc)/(power(10,2)) damount_rur,  (c.amntbc)/(power(10, 2)) camount_rur,     -- суммы в рублях
     m.bo_ind doc_type, m.mo_no doc_n,                                                             -- мемордер
     p.glo_ref,
     GL_STMFANTYPE(d.bsaacid, c.bsaacid, o.ac_dr, o.ac_cr, p.post_type, o.fb_side
-        , abs(decimal(d.amnt)/integer(power(10, dc.nbdp)))
-        , abs(decimal(c.amnt)/integer(power(10, cc.nbdp)))
+        , abs((d.amnt)/(power(10, dc.nbdp)))
+        , abs((c.amnt)/(power(10, cc.nbdp)))
         , o.pst_scheme, o.amt_dr, o.amt_cr) POST_TYPE,
     o.evtp,
     o.nrt

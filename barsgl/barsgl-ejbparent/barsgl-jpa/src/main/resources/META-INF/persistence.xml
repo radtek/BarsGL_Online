@@ -91,6 +91,7 @@
         <class>ru.rbt.barsgl.ejb.entity.gl.GLManualOperation</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLOperation</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLPd</class>
+        <class>ru.rbt.barsgl.ejb.entity.gl.GlPdTh</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLPosting</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.Memorder</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.Pd</class>

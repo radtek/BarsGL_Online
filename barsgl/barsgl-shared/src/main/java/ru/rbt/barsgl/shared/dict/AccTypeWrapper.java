@@ -10,6 +10,7 @@ public class AccTypeWrapper extends AccTypeModifierWrapper {
     private String acctypeName;
     private BoolType pl_act;
     private BoolType fl_ctrl;
+    private BoolType tech_act;
 
     public String getAcctype() {
         return acctype;
@@ -41,5 +42,13 @@ public class AccTypeWrapper extends AccTypeModifierWrapper {
 
     public void setFl_ctrl(BoolType fl_ctrl) {
         this.fl_ctrl = fl_ctrl;
+    }
+
+    public BoolType getTech_act() {
+        return tech_act;
+    }
+
+    public void setTech_act(BoolType tech_act) {
+        this.tech_act = tech_act;
     }
 }

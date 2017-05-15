@@ -22,7 +22,8 @@ public class SimpleOperationProcessor extends GLOperationProcessor {
         return     !operation.isFan()                                           // не веер
                 && !operation.isStorno()                                        // не сторно
                 && !operation.isInterFilial()                                   // филиал один
-                && !operation.isExchangeDifferenceA();                          // нет курсовой разницы или не глава А
+                && !operation.isExchangeDifferenceA()                           // нет курсовой разницы или не глава А
+                && !operation.isTech();                                         // операция по техническим счетам
     }
 
     @Override

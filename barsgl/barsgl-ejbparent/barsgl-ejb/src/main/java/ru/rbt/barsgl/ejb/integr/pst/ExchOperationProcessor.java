@@ -26,7 +26,8 @@ public class ExchOperationProcessor extends GLOperationProcessor {
         return     !operation.isFan()                                           // не веер
                 && !operation.isStorno()                                        // не сторно
                 && !operation.isInterFilial()                                   // филиал один
-                &&  operation.isExchangeDifferenceA();                          // есть курсовая разница (глава А)
+                &&  operation.isExchangeDifferenceA()                          // есть курсовая разница (глава А)
+                && !operation.isTech();                                        //прзнак операции по техническим счетам
     }
 
     @Override

@@ -20,67 +20,67 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
 
 
     // Передаются с формы =================================
-    private String templateName;        // только для шаблона
-    private boolean isExtended;         // только для шаблона
-    private boolean isSystem;           // только для шаблона
+    protected String templateName;        // только для шаблона
+    protected boolean isExtended;         // только для шаблона
+    protected boolean isSystem;           // только для шаблона
 
-    private boolean withCheck;          // с проверкой баланса
-    private String dealSrc;             // 7    //    @Column(name = "PST_SRC")
-    private String dealId;              // 20   //    @Column(name = "DEAL_ID")
-    private String paymentRefernce;     // 20   //    @Column(name = "PMT_REF")
-    private String subdealId;
-    private String deptId;              // 4    //    @Column(name = "DEPT_ID")
-    private String profitCenter;        // 4    //    @Column(name = "PRFCNTR")
-    private boolean isCorrection;       // 1    //    @Column(name = "FCHNG")
-    private boolean isStorno;           // 1    //    @Column(name = "STRN")
-    private boolean isFan;              // 1    //    @Column(name = "FAN")
-    private boolean isInvisible;        // 1    //    @Column(name = "INVISIBLE") in PD
+    protected boolean withCheck;          // с проверкой баланса
+    protected String dealSrc;             // 7    //    @Column(name = "PST_SRC")
+    protected String dealId;              // 20   //    @Column(name = "DEAL_ID")
+    protected String paymentRefernce;     // 20   //    @Column(name = "PMT_REF")
+    protected String subdealId;
+    protected String deptId;              // 4    //    @Column(name = "DEPT_ID")
+    protected String profitCenter;        // 4    //    @Column(name = "PRFCNTR")
+    protected boolean isCorrection;       // 1    //    @Column(name = "FCHNG")
+    protected boolean isStorno;           // 1    //    @Column(name = "STRN")
+    protected boolean isFan;              // 1    //    @Column(name = "FAN")
+    protected boolean isInvisible;        // 1    //    @Column(name = "INVISIBLE") in PD
 
-    private String valueDateStr;        //    @Column(name = "VDATE")
-    private String postDateStr;         //    @Column(name = "POSTDATE")
+    protected String valueDateStr;        //    @Column(name = "VDATE")
+    protected String postDateStr;         //    @Column(name = "POSTDATE")
 
-    private String narrative;           // 30   //    @Column(name = "NRT")
-    private String rusNarrativeLong;    // 300  //    @Column(name = "RNRTL")
-    private String rusNarrativeShort;   // 100  //    @Column(name = "RNRTS")
+    protected String narrative;           // 30   //    @Column(name = "NRT")
+    protected String rusNarrativeLong;    // 300  //    @Column(name = "RNRTL")
+    protected String rusNarrativeShort;   // 100  //    @Column(name = "RNRTS")
 
     // Дебет ----------------------------------------------
-    private String accountDebit;        // 20   //    @Column(name = "AC_DR")
-    private String currencyDebit;       // 3    //    @JoinColumn(name = "CCY_DR")
-    private String filialDebit;         // 3    //    @Column(name = "CBCC_DR")
+    protected String accountDebit;        // 20   //    @Column(name = "AC_DR")
+    protected String currencyDebit;       // 3    //    @JoinColumn(name = "CCY_DR")
+    protected String filialDebit;         // 3    //    @Column(name = "CBCC_DR")
 
-    private BigDecimal amountDebit;     //    @Column(name = "AMT_DR")
-    private BigDecimal amountRu;     //    @Column(name = "AMTRU_DR")
+    protected BigDecimal amountDebit;     //    @Column(name = "AMT_DR")
+    protected BigDecimal amountRu;     //    @Column(name = "AMTRU_DR")
 
     // Кредит ---------------------------------------------
-    private String accountCredit;       // 20   //    @Column(name = "AC_CR")
-    private String currencyCredit;      // 3    //    @JoinColumn(name = "CCY_CR", nullable = false)
-    private String filialCredit;        // 3    //    @Column(name = "CBCC_CR")
+    protected String accountCredit;       // 20   //    @Column(name = "AC_CR")
+    protected String currencyCredit;      // 3    //    @JoinColumn(name = "CCY_CR", nullable = false)
+    protected String filialCredit;        // 3    //    @Column(name = "CBCC_CR")
 
-    private BigDecimal amountCredit;    //    @Column(name = "AMT_CR")
+    protected BigDecimal amountCredit;    //    @Column(name = "AMT_CR")
 
     // Возвращаются на форму ==============================
-    private Long id;                            //    @Column(name = "GLOID")
-    private Long operationId;
-    private String pstScheme;           // 16   //    @Column(name = "PST_SCHEME")
+    protected Long id;                            //    @Column(name = "GLOID")
+    protected Long operationId;
+    protected String pstScheme;           // 16   //    @Column(name = "PST_SCHEME")
 
     // только для проводок - список ID полупроводок
-    private ArrayList<Long> pdIdList;
-    private PostingChoice postingChoice;
+    protected ArrayList<Long> pdIdList;
+    protected PostingChoice postingChoice;
 
-    private InputMethod inputMethod;
-    private String pdMode;
+    protected InputMethod inputMethod;
+    protected String pdMode;
 
-    private BatchPostStatus status;
-    private BatchPostAction action;
-    private String reasonOfDeny;
+    protected BatchPostStatus status;
+    protected BatchPostAction action;
+    protected String reasonOfDeny;
 
     //UserID для проверки ограничений для действий со счетом для конкретного пользователя
-    private Long userId;
+    protected Long userId;
     // ID пакета
-    private Long pkgId;
+    protected Long pkgId;
 
     // список ошибок
-    private ErrorList errorList = new ErrorList();
+    protected ErrorList errorList = new ErrorList();
 
     public String getDealSrc() {
         return dealSrc;

@@ -2,13 +2,13 @@ package ru.rbt.barsgl.ejb.common.repository.od;
 
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
+import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import javax.ejb.Stateless;
 
 /**
  * Created by Ivan Sevastyanov
@@ -33,8 +33,8 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 "select * from cal c1 \n" +
                 " where c1.dat = (\n" +
                 "   select min(dat) from cal\n" +
-                "   where dat > ?1 and ccy = ?2\n" +
-                "     and thol not in ('X', 'T') ) " +
+                "   where dat > ?1 and dat < ?1 + 20 and ccy = ?2\n" +
+                "     and nvl(thol, 'W') not in ('X', 'T') ) " +
                 "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
     }
 

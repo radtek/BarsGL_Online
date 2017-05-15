@@ -10,6 +10,7 @@ import java.util.Date;
 
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.E;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.W;
+import static ru.rbt.ejbcore.util.StringUtils.rightPad;
 
 /**
  * Created by Ivan Sevastyanov on 17.02.2016.
@@ -17,7 +18,7 @@ import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.W;
 public class WorkprocRepository extends AbstractBaseEntityRepository {
 
     public enum WorkprocState {
-        E("E"),O("O"),W("");
+        E("E"),O("O"),W(" ");
 
         private String value;
 
@@ -110,7 +111,7 @@ public class WorkprocRepository extends AbstractBaseEntityRepository {
                 "select count(1) cnt\n" +
                         "  from workproc w \n" +
                         " where w.dat = ? \n" +
-                        "   and trim(w.id) = ? and w.result in (?, ?)", operdate, stepName, W.getValue(), E.getValue());
+                        "   and w.id = ? and w.result in (?, ?)", operdate, rightPad(stepName, 10, " "), W.getValue(), E.getValue());
         return countWorkproc.getInteger("cnt") != 0;
     }
 
@@ -123,8 +124,8 @@ public class WorkprocRepository extends AbstractBaseEntityRepository {
      * @return
      */
     public int updateWorkproc(String stepName, Date operdate, WorkprocState state, String message) {
-        return executeNativeUpdate("update workproc p set result = ?, msg = ?, count = value(count,0) + 1, endtime = current timestamp where dat = ? and id = ?"
-                , state.getValue(), message, operdate, stepName);
+        return executeNativeUpdate("update workproc p set result = ?, msg = ?, count = nvl(count,0) + 1, endtime = systimestamp where dat = ? and id = ?"
+                , state.getValue(), message, operdate, rightPad(stepName, 10, " "));
     }
 
     /**
@@ -136,7 +137,7 @@ public class WorkprocRepository extends AbstractBaseEntityRepository {
      */
     public int updateWorkprocMessage(String stepName, Date operdate, String message) {
         return executeNativeUpdate("update workproc p set msg = ? where dat = ? and id = ?"
-                , message, operdate, stepName);
+                , message, operdate, rightPad(stepName, 10, " "));
     }
 
     public boolean isStepOK(String stepName, Date operdate, String message) throws SQLException {
@@ -149,6 +150,6 @@ public class WorkprocRepository extends AbstractBaseEntityRepository {
     }
 
     public DataRecord getWorkprocRecord(String stepId, Date dat) throws SQLException {
-        return selectFirst("select * from workproc where id = ? and dat = ?", stepId, dat);
+        return selectFirst("select * from workproc where id = ? and dat = ?", rightPad(stepId, 10, " "), dat);
     }
 }

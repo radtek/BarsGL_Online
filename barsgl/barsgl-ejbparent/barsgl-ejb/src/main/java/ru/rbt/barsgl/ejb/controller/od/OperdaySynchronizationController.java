@@ -1,34 +1,32 @@
 package ru.rbt.barsgl.ejb.controller.od;
 
 import org.apache.commons.lang3.time.DateUtils;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -174,10 +172,9 @@ public class OperdaySynchronizationController {
      * @throws Exception
      */
     public int moveGLPdsToHistory(Date operday) throws Exception {
-        unloadController.createTemporaryTableWithDate("GL_TMP_CURRDAY", "DAT", operday);
         auditController.info(BufferModeSync, format("Перенесено в GL_PD_H: %s"
                 , pdRepository.executeNativeUpdate(textResourceController
-                        .getContent("ru/rbt/barsgl/ejb/controller/od/move_glpd.sql"))));
+                        .getContent("ru/rbt/barsgl/ejb/controller/od/move_glpd.sql"), operday)));
         auditController.info(BufferModeSync, format("Удалено перенесенных оборотов: %s"
                 , pdRepository.executeNativeUpdate("DELETE FROM GL_BALTUR WHERE MOVED = 'Y'")));
         int cntDeleted = pdRepository.executeNativeUpdate("DELETE FROM GL_PD WHERE PD_ID IS NOT NULL");
@@ -279,22 +276,20 @@ public class OperdaySynchronizationController {
         Assert.isTrue(pdRepository.executeTransactionally(connection -> {
             int cnt = 0;
             try (PreparedStatement selectStatement = connection.prepareStatement(
-                    " SELECT TRIGGER_NAME, ENABLED, EVENT_MANIPULATION FROM QSYS2.SYSTRIGGERS "+
-                            "  WHERE EVENT_OBJECT_TABLE='PD' AND TRIGGER_SCHEMA=CURRENT_SCHEMA " +
-                            "    AND TRIGGER_NAME NOT IN ('PD_AI_JRN','PD_AD_JRN','PD_AU_JRN') ")
+                    " SELECT TRIGGER_NAME, STATUS\n" +
+                            "FROM USER_TRIGGERS WHERE TABLE_NAME = 'PD' \n" +
+                            " AND TRIGGER_NAME NOT IN ('PD_AI_JRN','PD_AD_JRN','PD_AU_JRN')")
                  ; ResultSet selectResultSet = selectStatement.executeQuery()) {
                 while (selectResultSet.next()) {
-                    pdRepository.executeNativeUpdate("CALL GL_SWITCH_TRG(CURRENT_SCHEMA, 'PD',?,?)"
-                            , selectResultSet.getString("TRIGGER_NAME")
-                            , off ? "0" : "1");
+                    switchOneTrigger(selectResultSet.getString("TRIGGER_NAME"), off);
                     cnt++;
                 }
                 // проверка статуса триггеров
                 try (ResultSet testRs = selectStatement.executeQuery()) {
                     while (testRs.next()) {
                         final String triggerName = testRs.getString("TRIGGER_NAME");
-                        final String enabled = testRs.getString("ENABLED");
-                        Assert.isTrue(testRs.getString("ENABLED").equals(off ? "N" : "Y")
+                        final String enabled = testRs.getString("STATUS");
+                        Assert.isTrue(enabled.equals(off ? "DISABLED" : "ENABLED")
                                 , () -> new DefaultApplicationException(format("Trigger '%s' is in not valid state '%s'", triggerName, enabled)));
                     }
                 }
@@ -303,13 +298,16 @@ public class OperdaySynchronizationController {
         }), () -> new DefaultApplicationException(format("Не было переключено ни одного триггера в режим: '%s'", off ? "OFF" : "ON")));
     }
 
-    private void lockPD() throws Exception {
-        pdRepository.executeNativeUpdate("LOCK TABLE PD IN EXCLUSIVE MODE");
+    private void lockTable(String tableName) throws Exception {
+        pdRepository.executeNativeUpdate(format("LOCK TABLE %s IN EXCLUSIVE MODE", tableName));
     }
 
     private void restartSequence(String sequenceName, long startWith) throws Exception {
         glPdRepository.executeTransactionally(connection -> {
-            try (PreparedStatement alterSequence = connection.prepareStatement(format("alter sequence %s restart with %s", sequenceName, startWith))) {
+            final String restartSequence = resourceController.getContent("ru/rbt/barsgl/ejb/controller/od/restart_sequence.sql");
+            try (PreparedStatement alterSequence = connection.prepareCall(restartSequence)) {
+                alterSequence.setString(1, sequenceName);
+                alterSequence.setString(2, Long.toString(startWith));
                 alterSequence.executeUpdate();
             }
             return null;
@@ -450,36 +448,29 @@ public class OperdaySynchronizationController {
             memorder = memorderRepository.save(memorder, false);
         }
         glPd.setPdId(pd.getId());
+        glPdRepository.executeUpdate("update GLPd d set d.pdId = ?1 where d.id = ?2", pd.getId(), glPd.getId());
         glPdRepository.update(glPd, false);
         glPdRepository.flush();
     }
 
     /**
      * завершаем задачи которые блокируют PD
-     * скопировано из lv.gcpartners.bank.baltur.TrigerSwitch#removeLock
      * @param table таблица
      * @throws Exception
      */
     private void removeLock(String table) throws Exception {
         log.info("Try remove lock from " + table);
-        // new transaction when top level error is occurred
-        pdRepository.executeInNewTransaction(persistence ->
-                pdRepository.executeTransactionally(connection -> {
-                    try (CallableStatement st = connection.prepareCall("CALL UNLCK_TBL(CURRENT_SCHEMA,?,'*ALL',?,?,?)")) {
-                        st.setString(1, table.toUpperCase());
-                        st.registerOutParameter(2, 4);
-                        st.registerOutParameter(3, 1);
-                        st.registerOutParameter(4, 1);
-                        boolean ex = st.execute();
-                        int rcode = st.getInt(2);
-                        String msg = st.getString(3);
-                        String msg2 = msg = st.getString(4);
-                        log.info("unlck_tbl return code=" + rcode);
-                        log.info("unlck_tbl return msg1 =" + msg);
-                        log.info("unlck_tbl return msg2 =" + msg2);
-                    }
-                    return null;
-                }));
+        String killSessionBlock = resourceController.getContent("ru/rbt/barsgl/ejb/controller/od/kill_sessions.sql");
+        pdRepository.executeTransactionally(connection -> {
+            try (CallableStatement st = connection.prepareCall(killSessionBlock)) {
+                st.setString(1, table.toUpperCase());
+                st.registerOutParameter(2, Types.INTEGER);
+                st.executeUpdate();
+                int killed = st.getInt(2);
+                auditController.warning(AuditRecord.LogCode.KillSession, format("Удалено сеансов '%s' блокирующих таблицу '%s'", killed, table));
+            }
+            return null;
+        });
     }
 
     private int copyBalance() throws Exception {
@@ -793,21 +784,28 @@ public class OperdaySynchronizationController {
     private void trySwitchTriggers(boolean off) {
         try {
             pdRepository.executeInNewTransaction(persistence1 -> {
-                lockPD();
+                removeLock("PD");
+                lockTable("PD");
                 auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PD установлена");
                 swithTriggersPD(off);
                 auditController.info(BufferModeSync, String.format("%s триггеров прошло успешно", off ? "Отключение" : "Включение"));
                 return null;
             });
         } catch (Exception e) {
-            try {
-                removeLock("PD");
-            } catch (Exception r) {
-                throw new DefaultApplicationException("Ошибка снятии блокировок с таблицы PD", r);
-            }
-            // свалились сюда, должна быть еще попытка по переключению триггеров
             throw new DefaultApplicationException("Ошибка при установке блокировки на таблицу PD", e);
         }
+    }
+
+    private void switchOneTrigger(String triggerName, boolean off) throws Exception {
+        final String switchTrigger = resourceController.getContent("ru/rbt/barsgl/ejb/controller/od/switch_trigger.sql");
+        pdRepository.executeTransactionally(connection -> {
+            try (PreparedStatement statement = connection.prepareCall(switchTrigger)){
+                statement.setString(1, triggerName);
+                statement.setString(2, off ? "0" : "1");
+                statement.executeUpdate();
+            }
+            return null;
+        });
     }
 }
 

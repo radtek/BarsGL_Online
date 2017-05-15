@@ -25,6 +25,7 @@ public class AccTypeDlg extends EditableDialog<AccTypeWrapper> implements IAfter
     private AreaBox name;
     private CheckBox pl_act;
     private CheckBox fl_ctrl;
+    private CheckBox tech_act;
     private String section;
     private String product;
     private String subproduct;
@@ -53,11 +54,13 @@ public class AccTypeDlg extends EditableDialog<AccTypeWrapper> implements IAfter
 
         pl_act = new CheckBox(AccType.FIELD_PL_ACT);
         fl_ctrl = new CheckBox(AccType.FIELD_FL_CTRL);
+        tech_act = new CheckBox(AccType.FIELD_TECH_ACT);
 
         VerticalPanel panel = new VerticalPanel();
         panel.add(grid);
         panel.add(pl_act);
         panel.add(fl_ctrl);
+        panel.add(tech_act);
 
         return panel;
     }
@@ -71,6 +74,8 @@ public class AccTypeDlg extends EditableDialog<AccTypeWrapper> implements IAfter
         pl_act.setEnabled(true);
         fl_ctrl.setValue(false);
         fl_ctrl.setEnabled(true);
+        tech_act.setValue(false);
+        tech_act.setEnabled(true);
     }
 
     @Override
@@ -105,12 +110,18 @@ public class AccTypeDlg extends EditableDialog<AccTypeWrapper> implements IAfter
             if (ind >= 0) {
                 fl_ctrl.setValue(BoolType.Y.name().equals(row.getField(ind).getValue()));
             }
+            ind = columns.getColumnIndexByCaption(AccType.FIELD_TECH_ACT);
+            if (ind>= 0) {
+                tech_act.setValue(BoolType.Y.name().equals(row.getField(ind).getValue()));
+            }
+
         }
 
         if (action == FormAction.DELETE) {
             name.setReadOnly(true);
             pl_act.setEnabled(false);
             fl_ctrl.setEnabled(false);
+            tech_act.setEnabled(false);
         }
     }
 
@@ -138,6 +149,7 @@ public class AccTypeDlg extends EditableDialog<AccTypeWrapper> implements IAfter
         cnw.setAcctypeName(name.getValue());
         cnw.setFl_ctrl(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
         cnw.setPl_act(pl_act.getValue() ? BoolType.Y : BoolType.N);
+        cnw.setTech_act(tech_act.getValue() ? BoolType.Y : BoolType.N);
     }
 
     @Override
