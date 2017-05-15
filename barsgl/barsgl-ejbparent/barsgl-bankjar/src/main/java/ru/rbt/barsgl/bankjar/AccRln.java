@@ -84,7 +84,8 @@ public class AccRln
         throws SQLException
     {
         PreparedStatement stmt = null;
-        String strStmtSQL = String.valueOf(String.valueOf((new StringBuffer("insert into ")).append(schemaDWH).append(".accrln ").append("(acid, bsaacid, rlntype, ").append(" drlno, drlnc, ctype, ").append(" cnum,  ccode, acc2,  ").append(" psav, glacod, cbccy, ").append(" plcode, incl, pairbsa,transactsrc) ").append(" values (?,?,?, ").append("         ?,?,?, ").append("         ?,?,?, ").append("         ?,?,?, ").append("         ?,?,?,? ) ")));
+        //String strStmtSQL = String.valueOf(String.valueOf((new StringBuffer("insert into ")).append(schemaDWH).append(".accrln ").append("(acid, bsaacid, rlntype, ").append(" drlno, drlnc, ctype, ").append(" cnum,  ccode, acc2,  ").append(" psav, glacod, cbccy, ").append(" plcode, incl, pairbsa,transactsrc) ").append(" values (?,?,?, ").append("         ?,?,?, ").append("         ?,?,?, ").append("         ?,?,?, ").append("         ?,?,?,? ) ")));
+        String strStmtSQL = String.valueOf(String.valueOf((new StringBuffer("insert into ")).append("accrln ").append("(acid, bsaacid, rlntype, ").append(" drlno, drlnc, ctype, ").append(" cnum,  ccode, acc2,  ").append(" psav, glacod, cbccy, ").append(" plcode, incl, pairbsa,transactsrc) ").append(" values (?,?,?, ").append("         ?,?,?, ").append("         ?,?,?, ").append("         ?,?,?, ").append("         ?,?,?,? ) ")));
         stmt = connection.prepareStatement(strStmtSQL);
         return stmt;
     }
@@ -117,7 +118,8 @@ public class AccRln
         throws SQLException
     {
         PreparedStatement stmt = null;
-        String stmtText = String.valueOf(String.valueOf((new StringBuffer("update ")).append(schemaDWH).append(".accrln ").append("set DRLNC = ? ").append("where acid = ? and rlntype = ? and DRLNC = cast('1.1.2029' as date) and ctype = ? ")));
+        //String stmtText = String.valueOf(String.valueOf((new StringBuffer("update ")).append(schemaDWH).append(".accrln ").append("set DRLNC = ? ").append("where acid = ? and rlntype = ? and DRLNC = cast('1.1.2029' as date) and ctype = ? ")));
+        String stmtText = String.valueOf(String.valueOf((new StringBuffer("update ")).append("accrln ").append("set DRLNC = ? ").append("where acid = ? and rlntype = ? and DRLNC = cast('1.1.2029' as date) and ctype = ? ")));
         stmt = connection.prepareStatement(stmtText);
         return stmt;
     }

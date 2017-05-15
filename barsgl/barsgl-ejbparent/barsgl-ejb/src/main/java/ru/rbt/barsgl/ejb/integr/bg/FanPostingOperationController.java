@@ -109,7 +109,7 @@ public abstract class FanPostingOperationController extends FanOperationControll
         postList.add(fanPosting);
 
         for (GLOperation operation : operList) {
-            String msgCommon = format(" частичной веернойй операции '%d'", operation.getId());
+            String msgCommon = format(" частичной веерной операции '%d'", operation.getId());
             auditController.info(FanOperation, "Начало обработки" + msgCommon, operation);
             operation = glOperationRepository.refresh(operation);
             glOperationRepository.setFilials(operation);

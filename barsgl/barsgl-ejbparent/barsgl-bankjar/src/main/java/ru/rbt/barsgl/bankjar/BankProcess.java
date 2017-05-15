@@ -28,7 +28,9 @@ public class BankProcess extends AbstractBankjarBean {
 
     public void insertAccount(String accountMidas, String accountCB, String type, Date openDay, Date closeDay, String relationType, int customerType)
             throws SQLException {
-        String sql2 = String.valueOf(String.valueOf((new StringBuffer("insert into ")).append(schemaDWH()).append(".bsaacc (id, bssac, ccy, bsakey, brca, bsacode, bsaaco, bsaacc, bsatype, bsagrp, bsasubtype) ").append("values (?,?,?,?,?,?,?,?,?,?,?) ")));
+        //String sql2 = String.valueOf(String.valueOf((new StringBuffer("insert into ")).append(schemaDWH()).append(".bsaacc (id, bssac, ccy, bsakey, brca, bsacode, bsaaco, bsaacc, bsatype, bsagrp, bsasubtype) ").append("values (?,?,?,?,?,?,?,?,?,?,?) ")));
+        String sql2 = String.valueOf(String.valueOf((new StringBuffer("insert into ")).append("bsaacc (id, bssac, ccy, bsakey, brca, bsacode, bsaaco, bsaacc, bsatype, bsagrp, bsasubtype) ").append("values (?,?,?,?,?,?,?,?,?,?,?) ")));
+
         PreparedStatement statement = connection().prepareStatement(sql2);
         statement.setString(1, accountCB);
         statement.setString(2, accountCB.substring(0, 5));
@@ -59,7 +61,8 @@ public class BankProcess extends AbstractBankjarBean {
 
     public boolean existBsaAccount(String bsaAccount)
             throws SQLException {
-        String sql = String.valueOf(String.valueOf((new StringBuffer("select id from ")).append(schemaDWH()).append(".bsaacc where id=? ")));
+        //String sql = String.valueOf(String.valueOf((new StringBuffer("select id from ")).append(schemaDWH()).append(".bsaacc where id=? ")));
+        String sql = String.valueOf(String.valueOf((new StringBuffer("select id from ")).append("bsaacc where id=? ")));
         PreparedStatement statement = connection().prepareStatement(sql);
         statement.setString(1, bsaAccount);
         ResultSet result = statement.executeQuery();
