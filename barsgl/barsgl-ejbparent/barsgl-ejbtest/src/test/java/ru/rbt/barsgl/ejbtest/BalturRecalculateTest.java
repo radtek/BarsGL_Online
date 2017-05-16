@@ -20,12 +20,15 @@ public class BalturRecalculateTest extends AbstractRemoteTest {
     public static final Logger log = Logger.getLogger(BalturRecalculateTest.class.getName());
 
     @Test public void test() throws SQLException {
-        List<DataRecord> pdsCt = baseEntityRepository.selectMaxRows("select * from pd where amntbc > 0 and bsaacid <> '' and acid <> '' and invisible <> '1'", 10, new Object[]{});
+        
+        //List<DataRecord> pdsCt = baseEntityRepository.selectMaxRows("select * from pd where amntbc > 0 and bsaacid <> '' and acid <> '' and invisible <> '1'", 10, new Object[]{});
+        List<DataRecord> pdsCt = baseEntityRepository.selectMaxRows("select * from pd where amntbc > 0 and bsaacid is not null and acid is not null and invisible <> '1'", 10, new Object[]{});
         Assert.assertEquals(10, pdsCt.size());
         String bsaacid = pdsCt.get(0).getString("bsaacid");
         String acid = pdsCt.get(0).getString("acid");
 
-        List<DataRecord> pdsDt = baseEntityRepository.selectMaxRows("select * from pd where amntbc < 0 and bsaacid <> '' and acid <> '' and invisible <> '1'", 10, new Object[]{});
+        //List<DataRecord> pdsDt = baseEntityRepository.selectMaxRows("select * from pd where amntbc < 0 and bsaacid <> '' and acid <> '' and invisible <> '1'", 10, new Object[]{});
+        List<DataRecord> pdsDt = baseEntityRepository.selectMaxRows("select * from pd where amntbc < 0 and bsaacid is not null and acid is not null and invisible <> '1'", 10, new Object[]{});
 
         log.info("deleted: " + baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ? and acid = ?", bsaacid, acid));
         List<DataRecord> allpds = new ArrayList<>();
