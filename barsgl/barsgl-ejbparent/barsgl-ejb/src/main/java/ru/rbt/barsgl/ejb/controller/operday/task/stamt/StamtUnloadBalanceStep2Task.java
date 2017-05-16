@@ -1,14 +1,14 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -93,8 +93,8 @@ public class StamtUnloadBalanceStep2Task implements ParamsAwareRunnable {
     private int fillLedgerAccountBalances(Date executeDate) throws Exception {
         try {
             return (int)repository.executeInNewTransaction(persistence -> {
-                unloadController.createTemporaryTableWithDate("gl_tmp_curdate", "curdate", executeDate);
-                return repository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ledger.sql"));
+                return repository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ledger.sql")
+                    , executeDate);
             });
         } catch (Exception e) {
             auditController.error(StamtUnload, "Ошибка при выгрузке остатков по лицевым счетам", null, e);

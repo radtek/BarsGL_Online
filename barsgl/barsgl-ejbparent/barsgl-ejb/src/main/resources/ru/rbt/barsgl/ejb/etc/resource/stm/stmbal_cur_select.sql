@@ -48,6 +48,7 @@ insert into GL_BALSTM (STATDATE
                         , ACODNAME
                         , CURRNAME
                         , DATEUNLOAD)
+with gl_tmp_curdate as (select cast(? as date) curdate from dual)
 select *
   from (
   select p.pdt statdate
@@ -56,7 +57,7 @@ select *
           , ac.custno fcccustnum
           , cast(ac.dealid as varchar(35)) fccaccount
           , get_fcc_br(ac.branch) fccbranch
-          , right(ac.custno, 6) ext_custid
+          , substr(ac.custno, -6) ext_custid
           , ac.branch accbrn
           , ac.bsaacid cbaccount
           , cast(ac.acctype as varchar(35)) acctype
@@ -67,26 +68,26 @@ select *
           , case
               when b.dat is null then 0
               when b.dat = p.pdt then
-                 cast(decimal(b.obac) / integer(power(10,cc.nbdp)) as decimal(22,2))
+                 cast((b.obac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
              else
-                 cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22,2))
+                 cast((b.obac + b.dtac + b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
             end openblnca
           , case
               when b.dat is null then 0
-              else cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
+              else cast((b.obac + b.dtac + b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22, 2))
             end closeblnca
           , GL_GETOPERCNT(ac.bsaacid, p.pdt, '1') dbdocnt
           , case
               when b.dat is null then 0
               when b.dat = p.pdt then
-                 abs(cast(decimal(b.dtac) / integer(power(10,cc.nbdp)) as decimal(22, 2)))
+                 abs(cast((b.dtac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22, 2)))
               else 0
             end dbturnovra
           , GL_GETOPERCNT(ac.bsaacid, p.pdt, '0') crdocnt
           , case
               when b.dat is null then 0
               when b.dat = p.pdt then
-                 cast(decimal(b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
+                 cast((b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22, 2))
               else 0
             end crturnovra
           , case
@@ -136,11 +137,11 @@ select *
           , ac.cbcc branch_id
           , ac.acid alt_ac_no
           , s.bbcrnm accname
-          , value(substr(ac.description,1,255),'') acodname
+          , nvl(substr(ac.description,1,255),'') acodname
           , cc.glccy||' '||cc.cynm currname
           , p.pdt dateunload
   from gl_acc ac
-   join (select curdate pdt from SESSION.GL_TMP_CURDATE) p on ac.dto <= p.pdt and value(ac.dtc, p.pdt) >= p.pdt
+   join (select curdate pdt from GL_TMP_CURDATE) p on ac.dto <= p.pdt and nvl(ac.dtc, p.pdt) >= p.pdt
    left join baltur b on p.pdt between b.dat and b.datto and b.bsaacid = ac.bsaacid and b.acid = ac.acid
    join currency cc on ac.ccy = cc.glccy
    join currates r on ac.ccy = r.ccy and r.dat = p.pdt
@@ -149,15 +150,4 @@ select *
    join imbcbbrp rp on rp.a8brcd = ac.branch
   where ac.rlntype <> '1'
   ) ac0
- where
-       (
-           (
-             exists (select 1 from GL_STMPARM pr where pr.account = substr(ac0.cbaccount,1,5) and pr.acctype = 'B' and pr.includebln = '1')
-           )
-           or
-           (
-             exists (select 1 from GL_STMPARM pr where pr.account = ac0.cbaccount and pr.acctype = 'A' and pr.includebln = '1')
-           )
-       )
-  and not exists (select 1 from GL_STMPARM pr
-                   where pr.account = ac0.cbaccount and pr.acctype = 'A' and pr.includebln = '0')
+ where GL_STMFILTER(ac0.cbaccount) = '1'

@@ -106,11 +106,7 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
      */
     private int fillDataCurrent(Date executeDate) throws Exception {
         return (int)repository.executeInNewTransaction(persistence -> {
-
-            unloadController.createTemporaryTableWithDate("gl_tmp_curdate", "curdate", executeDate);
-
-            return repository.executeNativeUpdate(
-                    textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_cur_select.sql"));
+            return repository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_cur_select.sql"), executeDate);
         });
     }
 
