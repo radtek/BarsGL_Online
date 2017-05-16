@@ -123,11 +123,11 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     public void beforeCreateContent(){
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        /*isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);
+        LocalDataStorage.putParam("isAsyncListsCached", true);*/
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -159,7 +159,9 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
     }
 
     protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
-        return createCachedFilialListBox(name, filial, width, true, true);
+        //return createCache
+        // dFilialListBox(name, filial, width, true, true);
+        return  createFilialAuthListBox(filial, width, true, true);
     }
 
     protected Date getAccountDate() {
@@ -215,9 +217,10 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
     protected Grid createDepartments(boolean withCheck) {
         Grid grid = new Grid(2,4);
         grid.setWidget(0, 0, createLabel("Подразделение", LABEL_DEP_WIDTH));
-        grid.setWidget(0, 1, mDepartment = createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
+        //grid.setWidget(0, 1, mDepartment =  createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
+        grid.setWidget(0, 1, mDepartment =  createDepartmentListBox(CachedListEnum.Department.name(), "250px", true));
         grid.setWidget(1, 0, createLabel("Профит центр"));
-        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createCachedProfitCenterListBox(CachedListEnum.ProfitCenter.name(), null, "250px"), "260px"));
+        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createDealSourceAuthListBox(CachedListEnum.ProfitCenter.name(),"250px"), "260px"));
         if (withCheck)
             grid.setWidget(1, 2, mCheckFields = new CheckBox("Основание проверено"));
         return grid;
@@ -235,7 +238,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         grid.setWidget(0, 0, createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
 
         grid.setWidget(1, 0, createLabel("Валюта"));
-        grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
+        //grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
+        grid.setWidget(1, 1, mCurrency = createCurrencyListBox(CachedListEnum.Currency.name()+ "_" +label,  FIELD2_WIDTH, true));
         grid.setWidget(2, 0, createLabel(("Филиал")));
         grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
         if (isDebit) {
@@ -392,7 +396,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         grid.setWidget(2, 1, mDateValue = createDateBox());
 
         grid.setWidget(0, 2, createAlignWidget(createLabel("Источник сделки"), LABEL2_WIDTH));
-        grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
+        //grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
+        grid.setWidget(0, 3, mDealSource =  createDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), FIELD2_WIDTH));
         grid.setWidget(1, 2, createAlignWidget(createLabel("N сделки/ платежа"), LABEL2_WIDTH));
         grid.setWidget(1, 3, mDealId = createTxtBox(20, SUM_WIDTH));
         grid.setWidget(2, 2, createAlignWidget(createLabel("N субсделки"), LABEL2_WIDTH));
@@ -610,7 +615,9 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     protected void fillContent() {
-        if (isAsyncListsCached != null && isAsyncListsCached){
+        fillUp();
+        showPreload(false);
+        /*if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -633,7 +640,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             };
 
             timer.scheduleRepeating(500);
-        }
+        }*/
     }
 
 }
