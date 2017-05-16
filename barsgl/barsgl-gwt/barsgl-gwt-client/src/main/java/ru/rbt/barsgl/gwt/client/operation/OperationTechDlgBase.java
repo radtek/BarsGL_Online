@@ -8,36 +8,27 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
-import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccCustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
-import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
-import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.ui.*;
-import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
-import ru.rbt.barsgl.shared.Builder;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.StringJoiner;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.dict.FormAction.CREATE;
-import static ru.rbt.barsgl.shared.dict.FormAction.PREVIEW;
 import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
 
 

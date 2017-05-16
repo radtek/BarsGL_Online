@@ -4,10 +4,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
-import ru.rbt.barsgl.ejbcore.util.ServerUtils;
+import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.barsgl.ejbtesting.AsyncTestService;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJob3;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.shared.Assert;
 
 import java.sql.SQLException;
 import java.util.Arrays;

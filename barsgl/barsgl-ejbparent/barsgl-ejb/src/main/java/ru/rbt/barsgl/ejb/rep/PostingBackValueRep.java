@@ -1,10 +1,10 @@
 package ru.rbt.barsgl.ejb.rep;
 
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 
-import static ru.rbt.barsgl.shared.ExceptionUtils.getErrorMessage;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 import javax.ejb.EJB;
 import java.util.List;
 

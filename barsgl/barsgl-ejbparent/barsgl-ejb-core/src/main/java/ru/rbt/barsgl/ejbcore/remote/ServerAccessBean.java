@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejbcore.remote;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.remote.http.ExceptionInfo;
 import ru.rbt.barsgl.ejbcore.remote.http.Serializer;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceRequest;
@@ -23,7 +23,7 @@ import static java.lang.String.format;
  * Created by Ivan Sevastyanov
  */
 @Stateless(mappedName = "ServerAccessBean")
-public class ServerAccessBean implements ServerAccess {
+public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, ServerAccessEJBRemote {
 
     private static final Logger logger = Logger.getLogger(ServerAccessBean.class.getName());
 

@@ -3,9 +3,9 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.annotation.Resource;
@@ -22,8 +22,8 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.MidasPLReplication;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.MidasPLReplication;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by ER19371 on 05.11.15.
@@ -51,7 +51,7 @@ public class MidasSubAccountsUpdateTask implements ParamsAwareRunnable {
     private AuditController auditController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;

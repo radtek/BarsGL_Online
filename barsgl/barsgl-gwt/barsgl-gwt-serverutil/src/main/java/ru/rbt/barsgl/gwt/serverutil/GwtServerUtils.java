@@ -3,8 +3,7 @@ package ru.rbt.barsgl.gwt.serverutil;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.ejbcore.remote.http.HttpServiceInvokerFactory;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceInvokerFactory;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.ctx.UserRequestHolder;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -14,6 +13,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by Ivan Sevastyanov
@@ -56,7 +56,7 @@ public class GwtServerUtils {
      * @throws NamingException
      */
     private static ServerAccess findServerAccessEJB () throws NamingException {
-        final ServerAccess serverAccess = findJndiReference("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccess");
+        final ServerAccess serverAccess = findJndiReference("java:app/barsgl-ejbcore/ServerAccessBean!ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");
 
         return new AbstractLocalServerAccess() {
             @Override
@@ -98,7 +98,7 @@ public class GwtServerUtils {
      */
     public static ServerAccess findServerAccessEJBNoAuth () {
         try {
-            return findJndiReference("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccess");
+            return findJndiReference("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");
         } catch (NamingException e) {
             throw new RuntimeException(e);
         }
@@ -131,7 +131,7 @@ public class GwtServerUtils {
         try (InputStream stream = GwtServerUtils.class.getClassLoader().getResourceAsStream("application.properties")){
             if (null == stream) {
                 //read env-ref in application.xml
-                RequestContextBean contextBean = findJndiReference("java:app/env/ejb/ApplicationRequestContext");
+                RequestContext contextBean = findJndiReference("java:app/env/ejb/ApplicationRequestContext");
                 contextBean.setRequest(holder);
             }
         } catch (Throwable e) {

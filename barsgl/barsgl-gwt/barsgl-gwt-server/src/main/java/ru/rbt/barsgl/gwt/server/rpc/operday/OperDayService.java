@@ -15,7 +15,7 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 @RemoteServiceRelativePath("service/OperDayService")
 public interface OperDayService extends RemoteService {
 
-        RpcRes_Base<OperDayWrapper> getOperDay() throws Exception;
+//        RpcRes_Base<OperDayWrapper> getOperDay() throws Exception;
 
         RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception;
 

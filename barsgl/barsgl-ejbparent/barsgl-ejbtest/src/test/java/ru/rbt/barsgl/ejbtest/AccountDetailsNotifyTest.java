@@ -8,7 +8,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountDetailsNotifyProcessor;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 

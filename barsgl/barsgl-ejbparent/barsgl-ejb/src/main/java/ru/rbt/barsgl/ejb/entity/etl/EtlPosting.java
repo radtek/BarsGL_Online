@@ -2,15 +2,15 @@ package ru.rbt.barsgl.ejb.entity.etl;
 
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
+import ru.rbt.ejbcore.util.StringUtils;
 
 /**
  * Created by Ivan Sevastyanov

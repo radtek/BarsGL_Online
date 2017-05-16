@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.security;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.backvalue.BackValueDlg;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
@@ -19,17 +19,13 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.AccessRightsWrapper;
 import ru.rbt.barsgl.shared.access.PrmValueWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
-import ru.rbt.barsgl.shared.enums.UserExternalType;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
 
-import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getFilialPart;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
-import static ru.rbt.barsgl.shared.enums.YesNoType.No;
-import static ru.rbt.barsgl.shared.enums.YesNoType.Yes;
 
 
 

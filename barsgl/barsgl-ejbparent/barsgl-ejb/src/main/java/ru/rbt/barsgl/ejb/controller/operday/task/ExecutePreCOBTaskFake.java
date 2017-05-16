@@ -7,11 +7,11 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
-import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Task;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 
 /**

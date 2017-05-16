@@ -7,23 +7,28 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLTechAccountRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.inject.Inject;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import ru.rbt.ejbcore.util.DateUtils;
 
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.SUBDEAL_ID_NOT_EMPTY;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_IN_USE_AFTER;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_IN_USE_BEFORE;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_TYPE_IS_NOT_NUMBER;
+import static ru.rbt.ejbcore.validation.ErrorCode.BALANCE_NOT_ZERO;
+import static ru.rbt.ejbcore.validation.ErrorCode.CLOSEDATE_NOT_VALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.DATE_AFTER_OPERDAY;
+import static ru.rbt.ejbcore.validation.ErrorCode.FIELD_IS_EMPTY;
+import static ru.rbt.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
 
 
 public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> {
@@ -41,7 +46,7 @@ public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> 
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private DateUtils dateUtils;
 
 
     public void fillValidationContext(AccountKeys target, ValidationContext context) {

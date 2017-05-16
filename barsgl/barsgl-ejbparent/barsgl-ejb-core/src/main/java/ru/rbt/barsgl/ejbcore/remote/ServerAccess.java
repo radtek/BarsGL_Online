@@ -3,14 +3,9 @@ package ru.rbt.barsgl.ejbcore.remote;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceRequest;
 import ru.rbt.barsgl.ejbcore.remote.http.ServiceResponse;
 
-import javax.ejb.Local;
-import javax.ejb.Remote;
-
 /**
  * Created by Ivan Sevastyanov
  */
-@Remote
-@Local
 public interface ServerAccess {
     /**
      * для интерфейсного удаленного доступа

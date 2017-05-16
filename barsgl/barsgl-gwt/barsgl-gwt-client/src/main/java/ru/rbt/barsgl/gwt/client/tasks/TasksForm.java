@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.tasks;
 
+import ru.rbt.tasks.gwt.client.tasks.TaskFormDlg;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -7,8 +8,8 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Field;
@@ -107,7 +108,7 @@ public class TasksForm extends BaseForm {
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                BarsGLEntryPoint.timerJobService.getAllJobs(new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                TimerEntryPoint.timerJobService.getAllJobs(new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();
@@ -160,7 +161,7 @@ public class TasksForm extends BaseForm {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
                 TimerJobWrapper timerJobWrapper = (TimerJobWrapper) prms;
-                BarsGLEntryPoint.timerJobService.save(timerJobWrapper, new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                TimerEntryPoint.timerJobService.save(timerJobWrapper, new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();
@@ -193,7 +194,7 @@ public class TasksForm extends BaseForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        BarsGLEntryPoint.timerJobService.startupJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.startupJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -226,7 +227,7 @@ public class TasksForm extends BaseForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        BarsGLEntryPoint.timerJobService.shutdownJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.shutdownJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -259,7 +260,7 @@ public class TasksForm extends BaseForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        BarsGLEntryPoint.timerJobService.startupAll(new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.startupAll(new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -292,7 +293,7 @@ public class TasksForm extends BaseForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        BarsGLEntryPoint.timerJobService.shutdownAll(new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.shutdownAll(new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
@@ -325,7 +326,7 @@ public class TasksForm extends BaseForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        BarsGLEntryPoint.timerJobService.executeJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.executeJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();

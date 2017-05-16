@@ -5,9 +5,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -19,14 +18,15 @@ import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.Repository;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.Repository;
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
-import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.util.*;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
 
 /**
  * Форма для управления загрузчиком BARSGL/BARSREP
@@ -156,7 +156,7 @@ public abstract class LoaderControlForm extends EditableDictionary<LoadStepWrapp
     @Override
     protected List<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         List<FilterItem> initFilterList = new ArrayList<>(1);
-        initFilterList.add(new FilterItem(getTable().getColumn(COLUMN_DAT), FilterCriteria.EQ, BarsGLEntryPoint.CURRENT_WORKDAY));
+        initFilterList.add(new FilterItem(getTable().getColumn(COLUMN_DAT), FilterCriteria.EQ, CommonEntryPoint.CURRENT_WORKDAY));
         return initFilterList;
     }
 
@@ -358,7 +358,7 @@ public abstract class LoaderControlForm extends EditableDictionary<LoadStepWrapp
         return new GridWidget(table, new GridDataProvider(delayLoad) {
             @Override
             protected void getServerCount(AsyncCallback<Integer> callback) {
-                BarsGLEntryPoint.asyncGridService.getAsyncCount(repository, sql_select, getFilterCriteria(initialFilterParams), callback);
+                GridEntryPoint.asyncGridService.getAsyncCount(repository, sql_select, getFilterCriteria(initialFilterParams), callback);
             }
 
             @Override
@@ -366,7 +366,7 @@ public abstract class LoaderControlForm extends EditableDictionary<LoadStepWrapp
                 List<SortItem> sortItems = getSortCriteria();
                 List<FilterItem> filterItems = getFilterCriteria(initialFilterParams);
                 refreshGridParams(filterItems, sortItems);
-                BarsGLEntryPoint.asyncGridService.getAsyncRows(repository, sql_select, table.getColumns(), start, pageSize,
+                GridEntryPoint.asyncGridService.getAsyncRows(repository, sql_select, table.getColumns(), start, pageSize,
                         filterItems, sortItems, callback);
             };
         }, 30);

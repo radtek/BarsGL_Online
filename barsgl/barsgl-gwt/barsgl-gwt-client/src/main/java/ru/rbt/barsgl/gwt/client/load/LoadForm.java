@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by Ivan Sevastyanov
@@ -163,7 +164,7 @@ public class LoadForm extends BaseForm {
             if (isEmpty(responce))
             	return responce;
             if (responce.contains("NotAuthorizedUserException")) {
-                BarsGLEntryPoint.showLoginForm();
+                SecurityEntryPoint.showLoginForm();
             	return null;
             }
             if (responce.startsWith(LIST_DELIMITER)) {

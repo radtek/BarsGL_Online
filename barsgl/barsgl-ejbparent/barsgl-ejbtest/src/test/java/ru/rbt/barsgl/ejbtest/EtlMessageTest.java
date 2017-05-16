@@ -23,9 +23,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.ExcelParser;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -35,8 +33,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
@@ -48,6 +44,8 @@ import java.util.stream.Collectors;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import ru.rbt.barsgl.ejbcore.util.ExcelParser;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 /**
  * Created by Ivan Sevastyanov
@@ -792,7 +790,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         // повторная обработка - тот же счет
 
-        final String idpst2 = ru.rbt.barsgl.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis() + "", 8);
+        final String idpst2 = ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis() + "", 8);
         baseEntityRepository.executeUpdate("update EtlPosting p set p.aePostingId = ?1, p.accountDebit = ?2, p.accountCredit = ?3 where p.id = ?4"
                 , idpst2, failedAcDt, clientAccount, pst.getId());
         pst = (EtlPosting) baseEntityRepository.findById(EtlPosting.class, pst.getId());

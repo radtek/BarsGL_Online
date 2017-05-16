@@ -2,12 +2,12 @@ package ru.rbt.barsgl.ejb.common.repository.od;
 
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDayId;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 /**
  * Created by Ivan Sevastyanov

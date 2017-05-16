@@ -20,7 +20,7 @@ public final class ServerAccessServlet extends HttpServlet {
 
 //    private Object service = null;
 
-    @EJB
+    @EJB(mappedName = "ServerAccessBean")
     private ServerAccess service;
 
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {

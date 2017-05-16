@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.check;
 
 import ru.rbt.barsgl.gwt.core.utils.AppPredicate;
-import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 
 public class CheckNotEmptyString implements AppPredicate<String>{
 

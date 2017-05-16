@@ -4,12 +4,12 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>3.0.23-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>barsgl-ear</artifactId>
     <packaging>ear</packaging>
-    <name>${artifactId}:${project.packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
     <properties>
         <oracleMiddlewareHome>C:/dev/tools/wls12130/user_projects/domains/mydomain</oracleMiddlewareHome>
@@ -33,7 +33,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-ear-plugin</artifactId>
-                        <version>2.10</version>
+                        <version>2.10.1</version>
                         <configuration>
                             <version>6</version>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
@@ -42,26 +42,51 @@
                             <modules>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -83,12 +108,24 @@
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
                               </env-entry>
+
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400GL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400Rep</env-entry-value>
+                              </env-entry>
                             </env-entries>
 
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 
@@ -109,7 +146,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-ear-plugin</artifactId>
-                        <version>2.10</version>
+                        <version>2.10.1</version>
                         <configuration>
                             <version>6</version>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
@@ -118,33 +155,51 @@
                             <modules>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-ejb-testing</artifactId>
-                                    <bundleDir>lib</bundleDir>
-                                    <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
-                                    <excluded>true</excluded>
-                                </ejbModule>
-                                <ejbModule>
-                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -166,12 +221,24 @@
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
                               </env-entry>
+
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400GL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400Rep</env-entry-value>
+                              </env-entry>
                             </env-entries>
 
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/barsgl/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 
@@ -192,7 +259,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-ear-plugin</artifactId>
-                        <version>2.10</version>
+                        <version>2.10.1</version>
                         <configuration>
                             <version>6</version>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
@@ -201,32 +268,51 @@
                             <modules>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-ejb-testing</artifactId>
-                                    <bundleDir>lib</bundleDir>
-                                    <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
-                                </ejbModule>
-                                <ejbModule>
-                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -247,12 +333,24 @@
                                   <env-entry-type>java.lang.String</env-entry-type>
                                   <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
                               </env-entry>
+
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400GL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400Rep</env-entry-value>
+                              </env-entry>
                             </env-entries>
 
                             <ejbRefs>
                               <ejb-ref>
                                   <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                  <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
 
@@ -271,14 +369,14 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
-                        <version>1.7</version>
+                        <version>1.8</version>
                         <executions>
                             <execution>
                                 <id>sync</id>
                                 <phase>install</phase>
                                 <configuration>
                                     <target>
-                                        <property name="tagname" value="${parent.artifactId}-${project.version}" />
+                                        <property name="tagname" value="${project.parent.artifactId}-${project.version}" />
                                         <property name="branch_name" value="branch_${tagname}" />
 
                                         <property name="current_dir" location="../.." />
@@ -317,7 +415,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-ear-plugin</artifactId>
-                        <version>2.10</version>
+                        <version>2.10.1</version>
                         <configuration>
                             <version>6</version>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
@@ -326,33 +424,51 @@
                             <modules>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>security-ejb</artifactId>
+                                    <bundleFileName>security-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>security-gwt-ejb</artifactId>
+                                    <bundleFileName>security-gwt-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>tasks-ejb</artifactId>
+                                    <bundleFileName>tasks-ejb.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-audit</artifactId>
+                                    <bundleFileName>rbt-audit.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
+                                    <artifactId>rbt-prop</artifactId>
+                                    <bundleFileName>rbt-prop.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
-                                    <artifactId>barsgl-ejb-testing</artifactId>
-                                    <bundleDir>lib</bundleDir>
-                                    <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
-                                    <excluded>true</excluded>
-                                </ejbModule>
-                                <ejbModule>
-                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-                                    <bundleDir>lib</bundleDir>
+<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -369,18 +485,30 @@
                             </modules>
 
                             <env-entries>
-                                <env-entry>
-                                    <env-entry-name>java:app/env/SchedTableName</env-entry-name>
-                                    <env-entry-type>java.lang.String</env-entry-type>
-                                    <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
-                                </env-entry>
+                              <env-entry>
+                                  <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+                              </env-entry>
+
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsglDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400GL</env-entry-value>
+                              </env-entry>
+                              
+                              <env-entry>
+                                  <env-entry-name>java:app/env/BarsrepDataSourceName</env-entry-name>
+                                  <env-entry-type>java.lang.String</env-entry-type>
+                                  <env-entry-value>/jdbc/As400Rep</env-entry-value>
+                              </env-entry>
                             </env-entries>
 
                             <ejbRefs>
-                                <ejb-ref>
-                                    <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
-                                    <lookup-name>java:global/${project.build.finalName}/lib/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
-                                </ejb-ref>
+                              <ejb-ref>
+                                  <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+                                  <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+                              </ejb-ref>
                             </ejbRefs>
 
                         </configuration>
@@ -405,7 +533,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>javax</groupId>
-                    <artifactId>javaee-web-api</artifactId>
+                    <artifactId>javaee-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -417,7 +545,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>javax</groupId>
-                    <artifactId>javaee-web-api</artifactId>
+                    <artifactId>javaee-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -466,6 +594,54 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-shared</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-ejbcore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-prop</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-ejb</artifactId>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>security-gwt-ejb</artifactId>
+            <version>${project.version}</version>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tasks-ejb</artifactId>
+            <version>${project.version}</version>
+            <type>ejb</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>barsgl-jpa</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
         </dependency>
     </dependencies>
 </project>

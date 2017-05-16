@@ -1,16 +1,16 @@
 package ru.rbt.barsgl.ejb.repository;
 
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.ejb.entity.acc.Acc;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.persistence.NoResultException;
 import java.sql.SQLException;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 05.05.15.

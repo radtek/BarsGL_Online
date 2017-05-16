@@ -4,8 +4,8 @@ import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;

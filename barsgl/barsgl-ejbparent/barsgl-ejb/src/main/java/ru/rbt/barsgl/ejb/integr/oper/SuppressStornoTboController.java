@@ -2,8 +2,8 @@ package ru.rbt.barsgl.ejb.integr.oper;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -14,9 +14,9 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.SourcesDeals.SRCPST.KTP;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.PreCob;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.N;
-import static ru.rbt.barsgl.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.PreCob;
+import static ru.rbt.ejbcore.mapping.YesNo.N;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
 
 /**

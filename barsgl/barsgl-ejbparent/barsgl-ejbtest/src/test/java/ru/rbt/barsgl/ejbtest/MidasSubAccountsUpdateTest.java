@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.MidasSubAccountsUpdateTask;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.io.StringReader;
 import java.util.List;

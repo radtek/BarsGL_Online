@@ -5,7 +5,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.StartLoaderTask;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 
 import java.util.Date;

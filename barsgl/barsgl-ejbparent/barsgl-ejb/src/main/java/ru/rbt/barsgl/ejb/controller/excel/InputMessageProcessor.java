@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.excel;
 
-import ru.rbt.barsgl.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import java.util.List;
 

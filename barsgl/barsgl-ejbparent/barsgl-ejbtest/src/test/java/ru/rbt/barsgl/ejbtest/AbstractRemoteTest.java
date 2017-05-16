@@ -25,13 +25,13 @@ import ru.rbt.barsgl.ejb.integr.loader.LoadManagementController;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
-import ru.rbt.barsgl.ejbcore.repository.BaseEntityRepository;
+import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -49,10 +49,12 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
+import java.io.IOException;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
+import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov
@@ -90,7 +92,10 @@ public abstract class AbstractRemoteTest  {
     static {
         try {
             Context ctx = new InitialContext();
-            remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccess");
+            Properties prop = new Properties();
+            prop.load(AbstractRemoteTest.class.getResourceAsStream("/ejbname.properties"));
+            //remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");            
+            remoteAccessInternal = (ServerAccess) ctx.lookup(prop.getProperty("ejbname"));            
             remoteAccess = new ServiceAccessSupport() {
                 @Override
                 public <T> T invoke(Class clazz, String method, Object... params) {
@@ -112,13 +117,13 @@ public abstract class AbstractRemoteTest  {
             };
             init();
 
-        } catch (NamingException e) {
+        } catch (NamingException | IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
     private static void init() {
-        baseEntityRepository = ProxyFactory.createProxy(BaseEntityRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
+        baseEntityRepository = ProxyFactory.createProxy(ClientSupportRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
         postingController = ProxyFactory.createProxy(EtlPostingController.class.getName(), EtlMessageController.class, remoteAccessInternal);
         fanPostingController = ProxyFactory.createProxy(FanForwardOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);
         fanStornoController = ProxyFactory.createProxy(FanStornoBackvalueOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);

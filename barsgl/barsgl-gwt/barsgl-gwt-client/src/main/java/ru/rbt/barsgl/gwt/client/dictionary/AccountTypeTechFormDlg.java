@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
-import com.google.gwt.user.client.Window;
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -12,7 +11,6 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 

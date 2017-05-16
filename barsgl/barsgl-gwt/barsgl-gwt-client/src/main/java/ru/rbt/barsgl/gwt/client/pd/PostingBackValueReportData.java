@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
-import ru.rbt.barsgl.gwt.client.Export.IExportData;
+import ru.rbt.grid.gwt.client.export.IExportData;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Table;

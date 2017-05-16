@@ -1,19 +1,17 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
-import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.barsgl.ejb.entity.access.PrmValue;
+import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.PrmValueEnum;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
@@ -21,9 +19,9 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
 
 /**
  * Created by er23851 on 27.02.2017.

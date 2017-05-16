@@ -1,13 +1,13 @@
 package ru.rbt.barsgl.gwt.server.rpc.access;
 
-import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
-import ru.rbt.barsgl.ejb.access.RoleServiceSupport;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
-import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.gwt.security.ejb.repository.access.RoleServiceSupport;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.*;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.PrmValueEnum;
 
 
 import java.util.ArrayList;

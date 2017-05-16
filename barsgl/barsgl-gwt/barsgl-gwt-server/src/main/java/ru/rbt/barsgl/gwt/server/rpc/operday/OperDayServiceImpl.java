@@ -9,18 +9,16 @@ import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejb.job.BackgroundJobsController;
-import ru.rbt.barsgl.ejb.repository.JobHistoryRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
-import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
-import ru.rbt.barsgl.shared.enums.OperDayButtons;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
@@ -29,19 +27,29 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_FAKE_NAME;
 import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
+import ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl;
 
 /**
  * Created by akichigi on 23.03.15.
  */
-public class OperDayServiceImpl extends AbstractGwtService implements OperDayService{
+public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDayService{
     private static final String COB_NAME_LIKE = "ExecutePreCOBTask";
     private static final int COB_DELAY_SEC = 3;
-
+        
+    @Override
+    protected void additionalAction(OperDayWrapper wrapper) throws Exception {
+        boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
+//        if (!isAlreadyRunning){
+//            COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
+//            wrapper.setCobOkWrapper(cobOkWrapper);
+//        }
+        wrapper.setIsCOBRunning(isAlreadyRunning);
+    }
+      
     @Override
     public RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception {
         return new RpcResProcessor<COB_OKWrapper>() {
@@ -56,61 +64,7 @@ public class OperDayServiceImpl extends AbstractGwtService implements OperDaySer
             }
         }.process();
     }
-
-    @Override
-    public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
-        return new RpcResProcessor<OperDayWrapper>() {
-            @Override
-            protected RpcRes_Base<OperDayWrapper> buildResponse() throws Throwable {
-                // обновляем на тот случай, если изменили через БД
-                localInvoker.invoke(OperdayController.class, "refresh");
-                // получаем
-                Operday od = localInvoker.invoke(OperdayController.class, "getOperday");
-                if (od == null) throw new Throwable("Не найдена информация по операционному дню'.");
-
-                Operday.OperdayPhase phase = od.getPhase();
-                Operday.LastWorkdayStatus status = od.getLastWorkdayStatus();
-
-                OperDayWrapper wrapper = new OperDayWrapper();
-
-                wrapper.setCurrentODDate(od.getCurrentDate());
-                wrapper.setPreviosODDate(od.getLastWorkingDay());
-                wrapper.setCurrentOD(new SimpleDateFormat("dd.MM.yyyy").format(od.getCurrentDate()));
-                wrapper.setPhaseCurrentOD(phase.getLabel());
-                wrapper.setPreviousOD(new SimpleDateFormat("dd.MM.yyyy").format(od.getLastWorkingDay()));
-                wrapper.setPreviousODBalanceStatus(status.getLabel());
-                wrapper.setPdMode(od.getPdMode().name() + " (" + od.getPdMode().getLabel() + ")");
-
-                OperDayButtons buttonStatus = OperDayButtons.NONE;
-
-                switch (status){
-                    case OPEN:
-                        if (phase == Operday.OperdayPhase.ONLINE)  buttonStatus = OperDayButtons.CLOSE_BALANCE_PREVIOUS_OD;
-                        break;
-                    case CLOSED:
-                        switch (phase){
-                            case COB:
-                                buttonStatus = OperDayButtons.OPEN_OD;
-                                break;
-                            case ONLINE:
-                                buttonStatus = OperDayButtons.CHANGE_PHASE_TO_PRE_COB;
-                                break;
-                            default: buttonStatus = OperDayButtons.NONE;
-                        }
-                }
-                wrapper.setEnabledButton(buttonStatus);
-
-                boolean isAlreadyRunning = localInvoker.invoke(JobHistoryRepository.class, "isAlreadyRunningLike", new Object[]{null, "ExecutePreCOBTask"});
-//                if (!isAlreadyRunning){
-//                    COB_OKWrapper cobOkWrapper = localInvoker.invoke(COB_OK_Controller.class, "getData");
-//                    wrapper.setCobOkWrapper(cobOkWrapper);
-//                }
-                wrapper.setIsCOBRunning(isAlreadyRunning);
-                return new RpcRes_Base<>(wrapper, false, "");
-            }
-        }.process();
-    }
-
+    
     @Override
     public RpcRes_Base<ProcessingStatus> getProcessingStatus() throws Exception {
         return new RpcResProcessor<ProcessingStatus>() {

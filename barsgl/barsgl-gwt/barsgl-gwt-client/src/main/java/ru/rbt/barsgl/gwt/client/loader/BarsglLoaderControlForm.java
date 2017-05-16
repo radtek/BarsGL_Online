@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.client.loader;
 
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 
 /**
  * Created by ER19391 on 03.11.2016.

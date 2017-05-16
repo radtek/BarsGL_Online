@@ -35,7 +35,6 @@ import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
@@ -43,7 +42,6 @@ import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -55,6 +53,12 @@ import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
+import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.ManualOperation;
@@ -122,7 +126,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     private GlPdThRepository glPdThRepository;
 
     @Inject
-    private ManualOperationRepository manualOperationRepository;
+    private GLOperationRepository glOperationRepository;
 
     @Inject
     private ManualOperationProcessor manualOperationProcessor;

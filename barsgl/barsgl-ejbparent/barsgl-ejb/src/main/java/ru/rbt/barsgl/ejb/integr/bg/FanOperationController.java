@@ -6,13 +6,13 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.fan.FanProcessorStorage;
 import ru.rbt.barsgl.ejb.integr.fan.FanOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.GLErrorController;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -26,9 +26,9 @@ import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.FanOperation;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.FanOperation;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 
 /**

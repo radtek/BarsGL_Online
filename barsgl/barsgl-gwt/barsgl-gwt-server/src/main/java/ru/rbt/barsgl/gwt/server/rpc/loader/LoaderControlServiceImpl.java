@@ -1,10 +1,10 @@
 package ru.rbt.barsgl.gwt.server.rpc.loader;
 
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
-import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.Repository;
+import ru.rbt.shared.enums.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import java.util.List;

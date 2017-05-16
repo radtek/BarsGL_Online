@@ -4,7 +4,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.integr.pst.MfoExchOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.inject.Inject;
 import java.util.List;

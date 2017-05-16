@@ -5,7 +5,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STORNO_REF_NOT_VALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.STORNO_REF_NOT_VALID;
 /**
  * Created by Ivan Sevastyanov
  */

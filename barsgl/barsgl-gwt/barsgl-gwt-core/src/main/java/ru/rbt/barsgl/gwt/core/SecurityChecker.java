@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.core;
 
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.List;
 

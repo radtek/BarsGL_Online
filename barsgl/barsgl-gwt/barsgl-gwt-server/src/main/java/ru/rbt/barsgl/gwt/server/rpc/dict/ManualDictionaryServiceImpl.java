@@ -6,8 +6,8 @@ package ru.rbt.barsgl.gwt.server.rpc.dict;
 
 import ru.rbt.barsgl.ejb.integr.dict.AccType.*;
 import ru.rbt.barsgl.ejb.integr.dict.AcodController;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
-import ru.rbt.barsgl.gwt.server.rpc.RpcResProcessor;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.*;
 import ru.rbt.barsgl.shared.enums.AccTypeParts;

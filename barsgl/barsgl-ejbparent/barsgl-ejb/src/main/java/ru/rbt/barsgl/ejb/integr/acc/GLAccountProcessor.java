@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
-import com.google.gwt.i18n.shared.impl.DateRecord;
+import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.*;
@@ -9,13 +9,12 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.ErrorList;
 
 import javax.ejb.EJB;
@@ -27,8 +26,8 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.*;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
  * Created by ER18837 on 04.08.15.
@@ -63,7 +62,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     private OperdayController operdayController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
     private AuditController auditController;

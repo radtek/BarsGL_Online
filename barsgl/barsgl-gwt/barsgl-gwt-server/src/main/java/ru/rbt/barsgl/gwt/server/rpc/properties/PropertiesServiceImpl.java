@@ -4,7 +4,7 @@
 package ru.rbt.barsgl.gwt.server.rpc.properties;
 
 import ru.rbt.barsgl.ejb.properties.PropertiesServiceSupport;
-import ru.rbt.barsgl.gwt.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 
 /**

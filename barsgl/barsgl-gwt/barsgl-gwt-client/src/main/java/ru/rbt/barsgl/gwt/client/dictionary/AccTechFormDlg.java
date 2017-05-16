@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
@@ -10,15 +10,12 @@ import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.events.GridEvents;
-import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 
 import java.util.ArrayList;
 import java.util.Date;
 
-import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 
 /**
  * Created by ER18837 on 05.02.16.

@@ -1,15 +1,15 @@
 package ru.rbt.barsgl.ejb.security.policy;
 
-import ru.rbt.barsgl.ejb.entity.AppUser;
-import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.barsgl.ejb.repository.AppUserRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
-import ru.rbt.barsgl.ejbcore.conf.map.StringProperty;
-import ru.rbt.barsgl.ejbcore.repository.PropertiesRepository;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.LoginResult;
+import ru.rbt.security.policy.LoginPolicy;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.policy.props.PropertyName;
+import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
+import ru.rbt.shared.LoginResult;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -18,16 +18,14 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Authorization;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Authorization;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by Ivan Sevastyanov on 13.05.2016.

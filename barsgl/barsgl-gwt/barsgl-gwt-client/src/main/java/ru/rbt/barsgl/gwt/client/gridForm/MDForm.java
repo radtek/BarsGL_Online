@@ -3,9 +3,9 @@ package ru.rbt.barsgl.gwt.client.gridForm;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.Export.Export2ExcelAction;
-import ru.rbt.barsgl.gwt.client.formmanager.FormManagerUI;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
+import ru.rbt.grid.gwt.client.export.Export2ExcelAction;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.FilterAction;
 import ru.rbt.barsgl.gwt.core.actions.RefreshAction;
@@ -18,11 +18,12 @@ import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.*;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 
 /**
  * Created by akichigi on 21.05.15.
@@ -109,14 +110,14 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         return new GridWidget(masterTable, new GridDataProvider(delayLoad) {
             @Override
             protected void getServerCount(AsyncCallback<Integer> callback) {
-                BarsGLEntryPoint.asyncGridService.getAsyncCount(masterSql, (null == masterGrid ? null : masterGrid.getFilterCriteria()), callback);
+                GridEntryPoint.asyncGridService.getAsyncCount(masterSql, (null == masterGrid ? null : masterGrid.getFilterCriteria()), callback);
             }
             @Override
             protected void getServerData(int start, int pageSize, AsyncCallback<List<Row>> callback) {
                 List<SortItem> sortItems = getMasterSortCriteria();
                 List<FilterItem> filterItems = (null == masterGrid) ? null : masterGrid.getFilterCriteria();
                 refreshMasterParams(filterItems, sortItems);
-                BarsGLEntryPoint.asyncGridService.getAsyncRows(masterSql, masterTable.getColumns(), start, pageSize,
+                GridEntryPoint.asyncGridService.getAsyncRows(masterSql, masterTable.getColumns(), start, pageSize,
                         filterItems, sortItems, callback);
             }
         }, 30);
@@ -127,7 +128,7 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
             @Override
             protected void getServerCount(AsyncCallback<Integer> callback) {
 //                setDelayLoad(false);
-                BarsGLEntryPoint.asyncGridService.getAsyncCount(detailSql,
+                GridEntryPoint.asyncGridService.getAsyncCount(detailSql,
                         FilterUtils.combineFilterCriteria((null == detailGrid ? null : detailGrid.getFilterCriteria()), detailLinkFilterCriteria), callback);
             }
             @Override
@@ -135,7 +136,7 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
                 List<SortItem> sortItems = getDetailSortCriteria();
                 List<FilterItem> filterItems = (null == detailGrid) ? null : detailGrid.getFilterCriteria();
                 refreshDetailParams(filterItems, sortItems, detailLinkFilterCriteria);
-                BarsGLEntryPoint.asyncGridService.getAsyncRows(detailSql, detailTable.getColumns(), start, pageSize,
+                GridEntryPoint.asyncGridService.getAsyncRows(detailSql, detailTable.getColumns(), start, pageSize,
                         FilterUtils.combineFilterCriteria(filterItems, detailLinkFilterCriteria), sortItems, callback);
             }
         }, 30);
@@ -233,7 +234,7 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
 
     @Override
     public void dispose() {
-        FormManagerUI.ChangeStatusBarText("", FormManagerUI.MessageReason.MSG);
+        FormManagerUI.ChangeStatusBarText("", StatusBarManager.MessageReason.MSG);
         masterActionBar.dispose();
         detailActionBar.dispose();
     }

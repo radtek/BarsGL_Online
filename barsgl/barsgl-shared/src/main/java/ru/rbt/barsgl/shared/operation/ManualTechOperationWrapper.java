@@ -1,7 +1,5 @@
 package ru.rbt.barsgl.shared.operation;
 
-import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
-
 /**
  * Created by er23851 on 31.03.2017.
  */

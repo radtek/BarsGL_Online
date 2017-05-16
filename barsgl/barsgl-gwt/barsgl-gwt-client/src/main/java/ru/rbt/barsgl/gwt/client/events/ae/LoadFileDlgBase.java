@@ -11,7 +11,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.CheckFileExtention;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
@@ -28,12 +28,13 @@ import ru.rbt.barsgl.gwt.core.ui.RichAreaBox;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by akichigi on 20.06.16.
@@ -240,7 +241,7 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
             if (isEmpty(responce))
                 return responce;
             if (responce.contains("NotAuthorizedUserException")) {
-                BarsGLEntryPoint.showLoginForm();
+                SecurityEntryPoint.showLoginForm();
                 return null;
             }
             if (responce.startsWith(LIST_DELIMITER)) {

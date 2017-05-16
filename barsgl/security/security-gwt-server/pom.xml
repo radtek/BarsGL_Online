@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>ru.rbt</groupId>
+        <artifactId>security</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>security-gwt-server</artifactId>                                                                                                                                                                                                                               
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>                                                                                                                                                                                                 
+    <packaging>jar</packaging>                                                                                                                                                                                                                                                 
+    <dependencies>                                                                                                                                                                                                                                                             
+        <dependency>                                                                                                                                                                                                                                                           
+            <groupId>${project.groupId}</groupId>                                                                                                                                                                                                                              
+            <artifactId>security-gwt-ejb</artifactId>                                                                                                                                                                                                                          
+            <version>${project.version}</version>                                                                                                                                                                                                                              
+        </dependency>                                                                                                                                                                                                                                                          
+        <dependency>                                                                                                                                                                                                                                                           
+            <groupId>${project.groupId}</groupId>                                                                                                                                                                                                                              
+            <artifactId>barsgl-shared</artifactId>                                                                                                                                                                                                                             
+            <version>${project.version}</version>                                                                                                                                                                                                                              
+        </dependency>                                                                                                                                                                                                                                                          
+        <dependency>                                                                                                                                                                                                                                                           
+            <groupId>ru.rbt</groupId>                                                                                                                                                                                                                                          
+            <artifactId>barsgl-ejb-common</artifactId>                                                                                                                                                                                                                         
+            <version>${project.version}</version>                                                                                                                                                                                                                              
+            <type>jar</type>                                                                                                                                                                                                                                                   
+        </dependency>                                                                                                                                                                                                                                                          
+        <dependency>                                                                                                                                                                                                                                                           
+            <groupId>ru.rbt</groupId>                                                                                                                                                                                                                                          
+            <artifactId>barsgl-gwt-serverutil</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>barsgl-gwt-core</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+</project>

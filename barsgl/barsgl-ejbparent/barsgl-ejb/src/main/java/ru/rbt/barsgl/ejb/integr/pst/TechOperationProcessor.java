@@ -7,7 +7,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;

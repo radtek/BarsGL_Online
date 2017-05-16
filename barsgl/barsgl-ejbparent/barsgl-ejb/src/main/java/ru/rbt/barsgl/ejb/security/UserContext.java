@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.ejb.security;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejbcore.security.RequestContextBean;
-import ru.rbt.barsgl.shared.ctx.UserRequestHolder;
-import ru.rbt.barsgl.shared.user.AppUserWrapper;
+import ru.rbt.shared.security.RequestContext;
+import ru.rbt.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import javax.inject.Inject;
 import java.util.Date;
@@ -14,7 +14,7 @@ import java.util.Date;
 public class UserContext {
 
     @Inject
-    RequestContextBean contextBean;
+    RequestContext contextBean;
 
     @Inject
     OperdayController operdayController;

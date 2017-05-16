@@ -1,24 +1,5 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.*;
-import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
-import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
-import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
-import ru.rbt.barsgl.gwt.client.comp.DataListBox;
-import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
-import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
-import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
-import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
-import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
-import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -408,7 +389,7 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
     	if (null == params)
     		return;
         row = (Row) params;
-        
+
         getOperDay();
 
         mDealSource.setSelectValue(getFieldText("SRC_PST"));

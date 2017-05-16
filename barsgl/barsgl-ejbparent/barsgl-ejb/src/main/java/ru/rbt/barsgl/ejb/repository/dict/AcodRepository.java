@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.repository.dict;
 
 import ru.rbt.barsgl.ejb.entity.dict.Acod;
-import ru.rbt.barsgl.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 /**
  * Created by akichigi on 24.10.16.

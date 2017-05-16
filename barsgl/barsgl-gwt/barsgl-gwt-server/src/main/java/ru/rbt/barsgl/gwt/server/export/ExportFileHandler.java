@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.gwt.server.export;
 
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;

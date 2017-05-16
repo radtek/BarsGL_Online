@@ -2,10 +2,9 @@ package ru.rbt.barsgl.ejb.integr.acc;
 
 import ru.rb.ucb.util.AccountUtil;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.shared.Assert;
-import ru.rbt.barsgl.shared.Builder;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import java.sql.SQLException;
@@ -14,8 +13,8 @@ import java.util.*;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
-import static ru.rbt.barsgl.shared.Assert.isTrue;
+import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.shared.Assert.isTrue;
 
 /**
  * Created by Ivan Sevastyanov

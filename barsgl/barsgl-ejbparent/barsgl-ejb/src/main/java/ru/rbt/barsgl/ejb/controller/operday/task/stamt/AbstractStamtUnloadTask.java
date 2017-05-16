@@ -2,18 +2,18 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
-import ru.rbt.barsgl.ejb.etc.TextResourceController;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.ejbcore.page.SQL;
 import ru.rbt.barsgl.ejbcore.page.WhereInterpreter;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.criteria.Criteria;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 
@@ -29,8 +29,8 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
+import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
 
 /**
  * Created by ER21006 on 19.01.2016.
@@ -48,7 +48,7 @@ public abstract class AbstractStamtUnloadTask implements ParamsAwareRunnable {
     protected AuditController auditController;
 
     @Inject
-    private ru.rbt.barsgl.ejbcore.util.DateUtils dateUtils;
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;

@@ -9,8 +9,8 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -74,7 +74,7 @@ public class TemporaryAETest extends AbstractRemoteTest {
 
 //        List<EtlPosting> postings = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.etlPackage.id between ?1 and ?2", 327L, 333L);
 
-        List<DataRecord> postings = baseEntityRepository.select("select * from gl_etlpst where vdate = '2015-07-08' and evt_id like 'EVT\\_ID%' escape '\\'", null);
+        List<DataRecord> postings = baseEntityRepository.select("select * from gl_etlpst where vdate = '2015-07-08' and evt_id like 'EVT\\_ID%' escape '\\'", new Object[]{});
         //Assert.assertEquals(2, postings.size());
 
         for (DataRecord record : postings) {

@@ -4,7 +4,7 @@
  */
 package ru.rbt.barsgl.gwt.client.events.ae;
 
-import ru.rbt.barsgl.gwt.client.gridForm.GridForm;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.AEDateQFAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AEDateQFParams;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;

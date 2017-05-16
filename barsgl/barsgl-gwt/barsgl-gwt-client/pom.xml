@@ -5,13 +5,13 @@
     <groupId>ru.rbt</groupId>
     <artifactId>barsgl-gwt-client</artifactId>
     <packaging>jar</packaging>
-    <name>${artifactId}:${packaging}:${project.version}</name>
+    <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
 
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl-gwt</artifactId>
-        <version>3.0.23-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <build>
@@ -19,7 +19,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.3</version>
+                <version>1.4</version>
                 <executions>
                     <execution>
                         <phase>validate</phase>
@@ -37,7 +37,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>templating-maven-plugin</artifactId>
-                <version>1.0-alpha-3</version>
+                <version>1.0.0</version>
                 <executions>
                     <execution>
                         <id>generate-version-class</id>
@@ -56,9 +56,16 @@
                         <configuration>
                             <gwtSdkFirstInClasspath>true</gwtSdkFirstInClasspath>
                             <compileSourcesArtifacts>
+                                <artifact>ru.rbt:rbt-shared</artifact>
                                 <artifact>ru.rbt:barsgl-shared</artifact>
                                 <artifact>ru.rbt:barsgl-gwt-core</artifact>
+                                <artifact>ru.rbt:security-gwt-server</artifact>
+                                <artifact>ru.rbt:grid-gwt-server</artifact>
+                                <artifact>ru.rbt:tasks-gwt-server</artifact>
                                 <artifact>ru.rbt:barsgl-gwt-server</artifact>
+                                <artifact>ru.rbt:grid-gwt-client</artifact>
+                                <artifact>ru.rbt:security-gwt-client</artifact>
+                                <artifact>ru.rbt:tasks-gwt-client</artifact>
                             </compileSourcesArtifacts>
                             <module>ru.rbt.barsgl.gwt.BarsGLClient</module>
                         </configuration>
@@ -91,8 +98,22 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>grid-gwt-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>tasks-gwt-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rbt-shared</artifactId>
+        </dependency>
+        
     </dependencies>
 
 

@@ -9,7 +9,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 
     <servlet>
         <servlet-name>AuthorizationServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.AuthorizationServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.security.gwt.server.rpc.auth.AuthorizationServiceImpl</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>UploadFileHandler</servlet-name>
@@ -21,15 +21,19 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     </servlet>
     <servlet>
         <servlet-name>TimerJobServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.job.TimerJobServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.tasks.gwt.server.rpc.job.TimerJobServiceImpl</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>OperDayServiceImpl</servlet-name>
         <servlet-class>ru.rbt.barsgl.gwt.server.rpc.operday.OperDayServiceImpl</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>OperDayInfoServiceImpl</servlet-name>
+        <servlet-class>ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>AsyncGridServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.asyncGrid.AsyncGridServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.grid.gwt.server.rpc.asyncGrid.AsyncGridServiceImpl</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>ManualOperationServiceImpl</servlet-name>
@@ -61,7 +65,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     </servlet>
     <servlet>
         <servlet-name>MonitorServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.monitoring.MonitorServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.security.gwt.server.rpc.monitoring.MonitorServiceImpl</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -75,6 +79,10 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
     <servlet-mapping>
         <servlet-name>OperDayServiceImpl</servlet-name>
         <url-pattern>/barsgl/service/OperDayService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>OperDayInfoServiceImpl</servlet-name>
+        <url-pattern>/barsgl/service/OperDayInfoService</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AsyncGridServiceImpl</servlet-name>
