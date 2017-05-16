@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -616,6 +617,13 @@ public class FanTest extends AbstractTimerJobTest {
      */
     @Test
     public void testFanAsPreCobStep() {
+
+        baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where bsaacid = ?","40702810100013995679");
+        baseEntityRepository.executeNativeUpdate("update accrln set drlnc = null where bsaacid = ?", "40702810100013995679");
+        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaacc = ? where id = ?",
+                Utl4Tests.parseDate("2029-01-01", "yyyy-MM-dd"), "40702810100013995679");
+
+
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO");
         etlPackage.setAccountCnt(2);                        // число перьев в веере

@@ -346,11 +346,11 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     public Long getStornoOperationID(GLOperation operation) throws SQLException {
 
         String sql = "select GLOID from GL_OPER where EVT_ID = ?" +
-                         " and VALUE(DEAL_ID, '') = ? and VALUE(PMT_REF, '') = ?" +                // TODO проверка на null
+                         " and COALESCE(DEAL_ID, ' ') = ? and COALESCE(PMT_REF, ' ') = ?" +                // TODO проверка на null
 
                          // Исправлено Ициксон Е.А. 23.03.2016 task #52
                          //" and VDATE = ?" +
-                         " and VALUE(SUBDEALID,'') = ? AND SRC_PST = ?" +
+                         " and COALESCE(SUBDEALID,' ') = ? AND SRC_PST = ?" +
 
                          " and AC_DR = ? and AMT_DR = ? and AC_CR = ? and AMT_CR = ? and STATE in ('LOAD', 'POST', 'WTAC')";
 
@@ -358,12 +358,12 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 //        String paymentRefernce = (null == operation.getPaymentRefernce()) ? "" : operation.getPaymentRefernce();
         DataRecord res = selectFirst(sql,
             operation.getStornoReference(),
-            ifEmpty(operation.getDealId(), ""),             //operation.getDealId(),
-            ifEmpty(operation.getPaymentRefernce(), ""),    //operation.getPaymentRefernce(),
+            ifEmpty(operation.getDealId(), " "),             //operation.getDealId(),
+            ifEmpty(operation.getPaymentRefernce(), " "),    //operation.getPaymentRefernce(),
 
             // Исправлено Ициксон Е.А. 23.03.2016 task #52
             // operation.getValueDate(),
-            ifEmpty(operation.getSubdealId(), ""), operation.getSourcePosting(),
+            ifEmpty(operation.getSubdealId(), " "), operation.getSourcePosting(),
 
             operation.getAccountCredit(), operation.getAmountCredit(),
             operation.getAccountDebit(), operation.getAmountDebit());

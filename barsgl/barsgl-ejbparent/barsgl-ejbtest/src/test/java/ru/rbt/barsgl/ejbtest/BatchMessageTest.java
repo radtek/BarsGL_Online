@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessor;
+import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessorBean;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
@@ -29,7 +29,7 @@ public class BatchMessageTest extends AbstractTimerJobTest {
 
     public static final String exampleBatchName = "example_batch.xlsx";
 //    private static final String ETL_SINGLE_ACTION_MONITOR = "ETL_SINGLE_ACTION_MONITOR";
-    private final Long USER_ID = 2L;
+    private final Long USER_ID = 1L;
 
     @BeforeClass
     public static void beforeClass() {
@@ -42,13 +42,8 @@ public class BatchMessageTest extends AbstractTimerJobTest {
      */
     @Test
     public void testLoadPackage() throws Exception {
-        try {
-            PackageParam param = loadPackage(USER_ID);
-            System.out.println(param);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            Assert.assertFalse(true);
-        }
+        PackageParam param = loadPackage(USER_ID);
+        System.out.println(param);
     }
 
     /**
@@ -82,7 +77,7 @@ public class BatchMessageTest extends AbstractTimerJobTest {
      */
     @Test
     public void testDeletePackage() throws Exception {
-        Long userId = 2L;
+        Long userId = USER_ID;
 		// создать пакет
 		PackageParam param = loadPackage(userId);
 
@@ -185,21 +180,16 @@ public class BatchMessageTest extends AbstractTimerJobTest {
 
     public static PackageParam loadPackage(Long userId) {
         String msg = "";
-        try {
-            File file = new File(BatchMessageTest.class.getClassLoader().getResource(exampleBatchName).getFile());
+        File file = new File(BatchMessageTest.class.getClassLoader().getResource(exampleBatchName).getFile());
 
-            Map<String, String> params = new HashMap<>();
-            params.put("filename", file.getAbsolutePath());
-            params.put("userid", userId.toString());
-            params.put("movement_off", "false");
-            params.put("source", "K+TP");
-            params.put("department", "AAC");
+        Map<String, String> params = new HashMap<>();
+        params.put("filename", file.getAbsolutePath());
+        params.put("userid", userId.toString());
+        params.put("movement_off", "false");
+        params.put("source", "K+TP");
+        params.put("department", "AAC");
 
-            msg = remoteAccess.invoke(BatchMessageProcessor.class, "processMessage", file, params);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            Assert.assertFalse(true);
-        }
+        msg = remoteAccess.invoke(BatchMessageProcessorBean.class, "processMessage", file, params);
 	
         PackageParam param = getPackageParam(msg);
         Assert.assertNotNull(param.getId());

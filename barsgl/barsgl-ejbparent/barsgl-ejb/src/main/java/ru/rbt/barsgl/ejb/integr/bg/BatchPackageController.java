@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
-import static java.lang.String.format;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
@@ -10,22 +10,21 @@ import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
-import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -35,15 +34,15 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
+import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
+import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
+import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.listToString;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
-import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
-import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 
 /**
  * Created by ER18837 on 22.06.16.
@@ -150,7 +149,7 @@ public class BatchPackageController {
             whereStr = " or STATE not in ('" + whereStatus + "')";
             errStr = " или запросы на операцию не в статусе " + whereStatus;
         }
-        String sql = "select 1 from GL_BATPST where ID_PKG = ? and (VALUE(ECODE, 0) <> 0 or VALUE(EMSG, '') <> ''" + whereStr + ")";
+        String sql = "select 1 from GL_BATPST where ID_PKG = ? and (COALESCE(ECODE, 0) <> 0 or COALESCE(EMSG, '') <> ''" + whereStr + ")";
         DataRecord res = postingRepository.selectFirst(sql, packageId);
         if (null != res) {
             throw new DefaultApplicationException("Пакет с ID = " + packageId + " содержит ошибки" + errStr);
