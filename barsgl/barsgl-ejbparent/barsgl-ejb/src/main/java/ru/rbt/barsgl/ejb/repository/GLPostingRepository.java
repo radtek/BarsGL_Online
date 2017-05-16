@@ -1,20 +1,21 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import com.google.common.collect.ImmutableList;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.bankjar.Constants;
 import ru.rbt.barsgl.bankjar.CreateIBCBrecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
+import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
@@ -35,7 +36,6 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static ru.rb.ucb.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -374,18 +374,18 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
         String ccode = glOperationRepository.getCompanyCode(bsaAcid);
         String psav = operation.getExchangeDifference().signum() > 0 ? Constants.PASIV : Constants.ACTIV;
         String optype = isCach(operation);
-        String[] acids = excacRlnRepository.findAccountExchange(ccode, bankCurrency.getCurrencyCode(), psav, optype);
+        GlAccRln accRln = excacRlnRepository.findAccountExchange(ccode, bankCurrency.getCurrencyCode(), psav, optype);
 
-        if (acids == null) {
+        if (accRln == null) {
         // создание счета курсовой разницы
             AccountKeys keys = AccountKeysBuilder.create().
                     withCompanyCode(ccode).
                     withPassiveActive(psav).
                     withBranch(glOperationRepository.getHeadBranchByCCode(ccode)).build();
-            acids = glAccountController.createAccountsExDiff(operation, GLOperation.OperSide.N, keys, operation.getPostDate(), bankCurrency, optype);
+            accRln = glAccountController.createAccountsExDiff(operation, GLOperation.OperSide.N, keys, operation.getPostDate(), bankCurrency, optype);
         }
 
-        return (acids != null) ? acids[1] : "";
+        return accRln.getId().getBsaAcid();
     }
 
     /**

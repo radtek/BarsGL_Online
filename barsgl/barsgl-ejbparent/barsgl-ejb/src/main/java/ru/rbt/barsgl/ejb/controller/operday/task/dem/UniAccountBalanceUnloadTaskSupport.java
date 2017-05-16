@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.dem;
 
 import org.apache.commons.lang3.time.DateUtils;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 
@@ -12,7 +12,6 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
@@ -100,7 +99,7 @@ public class UniAccountBalanceUnloadTaskSupport {
                                         "    BSAACID, " +
                                         "    SUM(DTAC + CTAC), " +
                                         "    SUM(DTBC + CTBC) " +
-                                        "  FROM DWH.GL_BALTUR " +
+                                        "  FROM GL_BALTUR " +
                                         "  WHERE DAT <= ? " +
                                         "  GROUP BY BSAACID");
 

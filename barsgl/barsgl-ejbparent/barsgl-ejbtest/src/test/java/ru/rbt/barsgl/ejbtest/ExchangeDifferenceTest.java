@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
@@ -66,28 +67,19 @@ public class ExchangeDifferenceTest extends AbstractRemoteTest {
     @Test
     public void shouldCreateBsaacidIfAcidExists() throws Exception {
         GLOperation glOperation = new GLOperation();
+        glOperation.setCurrencyDebit(BankCurrency.EUR);
 
-//        glOperation.setValueDate(new SimpleDateFormat("yyyy-MM-dd").parse("2028-01-19"));
         glOperation.setValueDate(getOperday().getCurrentDate());
 
-
-        AccountKeys accountKeys = new AccountKeys(
-//                "001;RUR;00400044;911020101;19;03;PL00000535;0001;96307;;6202;01;K+TP;955514;"
-//                "001;RUR;00000018;643010201;;;PL00000003;0001;70613;16101;7302;01;K+TP;;" // рабочий набор ключей для vtestmgr
-                "001;RUR;00000018;771030103;;;PL00000068;0001;70606;22101;7903;01;K+TP;;"
-//                "001;RUR;00000018;643010201;;;0000000242;0001;70613;16101;7302;01;K+TP;;"
-        );
+        AccountKeys accountKeys = new AccountKeys("001;RUR;00000018;771030103;;;PL00000068;0001;70606;22101;7903;01;K+TP;;");
         String res = remoteAccess.invoke(GLAccountService.class, "getAccount", glOperation, GLOperation.OperSide.C, accountKeys);
-
         Assert.assertNotNull(res);
 
-//        deleteAccountCB22(accountKeys.getAccountMidas(), res, true);
     }
-
 
     @Test
     public void shouldThrowException() throws Exception {
-        GLOperation glOperation = new GLOperation();
+        GLOperation glOperation = (GLOperation) baseEntityRepository.selectFirst(GLOperation.class, "from GLOperation o");
         glOperation.setValueDate(getOperday().getCurrentDate());
 
         AccountKeys accountKeys = new AccountKeys(
@@ -136,7 +128,7 @@ public class ExchangeDifferenceTest extends AbstractRemoteTest {
         pst.setAccountKeyDebit(keyStringDebit);
 
         pst.setAmountCredit(new BigDecimal("15.99"));
-        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setAmountDebit(new BigDecimal("200"));
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.BGN);
 
@@ -144,8 +136,8 @@ public class ExchangeDifferenceTest extends AbstractRemoteTest {
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertTrue(null != operation && 0 < operation.getId());
-//        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-//        Assert.assertEquals(OperState.POST, operation.getState());
+        operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
 
         // проверка счетов
         String acidDr = "", acidCr = "";

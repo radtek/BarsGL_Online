@@ -1,35 +1,36 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.bankjar.Constants;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
-import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
-import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
+import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
-import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
@@ -43,19 +44,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.shared.enums.PrmValueEnum.Source;
-import ru.rbt.barsgl.shared.Utils;
 
 /**
  * Created by ER18837 on 03.08.15.
@@ -247,16 +246,14 @@ public class GLAccountService {
         Assert.isTrue(BankCurrency.RUB.getCurrencyCode().equals(keys.getCurrency())
                 , () -> new ValidationError(ErrorCode.ACCKEY_CURRENCY_NOT_VALID, keys.getCurrency()));
 
-        if ("7903".equals(keys.getAccountCode()) || "7904".equals(keys.getAccountCode())) {
-            String optype = "N";
+        if ("7903".equals(keys.getAccountCode())
+                || "7904".equals(keys.getAccountCode())) {
+            final String optype = "N";
             keys.setPassiveActive("7904".equals(keys.getAccountCode()) ? Constants.PASIV : Constants.ACTIV);
             BankCurrency bankCurrency = (operSide.equals(operSide.D) ? operation.getCurrencyCredit() : operation.getCurrencyDebit());
-            String[] acids = excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype);
-            if (acids == null) {
-                // Создаем счет как в курсовой разнице (ExDiff)
-                acids = glAccountController.createAccountsExDiff(operation, operSide, keys, dateOpen, bankCurrency, optype);
-            }
-            return (acids!=null && acids.length==2) ? acids[1] : throwsPLAccountNotCreated().get();
+            return Optional.ofNullable(excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype))
+                    .orElseGet(() -> glAccountController.createAccountsExDiff(operation, operSide, keys, dateOpen, bankCurrency, optype))
+                    .getId().getBsaAcid();
         } else {
             // Перенесено сюда, так как портит данные для других этапов
             Date dateStart446P = glAccountRepository.getDateStart446p();
@@ -782,10 +779,6 @@ public class GLAccountService {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
                 SQLIntegrityConstraintViolationException.class, IllegalArgumentException.class);
-    }
-
-    private Supplier<String> throwsPLAccountNotCreated() {
-        return () -> {throw new DefaultApplicationException();};
     }
 
 }

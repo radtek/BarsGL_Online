@@ -140,6 +140,8 @@ public enum ErrorCode {
     , GL_SEQ_XX_KEY_WITH_DB_PLCODE(2050, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым")
     , GL_SEQ_XX_KEY_WITH_SQ_0(2051, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, SQ=0")
     , GL_SEQ_XX_KEY_WITH_FL_CTRL(2052, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, GL_ACTNAME.FL_CTRL=Y")
+    , CLIENT_NOT_FOUND(2053, "%")
+
     // Опердень и задачи
     , OPEN_OPERDAY_ERROR(3001, "%s")
     , CLOSE_OPERDAY_ERROR(3002, "%s")

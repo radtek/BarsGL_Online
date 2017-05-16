@@ -1,14 +1,14 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
-import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
 import ru.rbt.ejbcore.datarec.JdbcAdapter;
-import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.ejb.EJB;
@@ -359,7 +359,7 @@ public class RemoteOpersTask implements ParamsAwareRunnable {
                  PreparedStatement updGlAccU = connection.prepareStatement("update GL_ACC_U set Date_UPL=? where BSAACID=?");
                  PreparedStatement selGlAccU = connection.prepareStatement("select Date_UPL from GL_ACC_U where BSAACID=?");
                  PreparedStatement selPdBsaacid = connection.prepareStatement("select d.bsaacid, d.pod from pd d where d.id=?");
-                 PreparedStatement selAsocPstU = connection.prepareStatement("select pcid, max(cnum) cnum from GLVD_PST_U where not exists (SELECT 1 FROM DWH.IMBCBBRP I WHERE I.A8BICN=CNUM) group by pcid");
+                 PreparedStatement selAsocPstU = connection.prepareStatement("select pcid, max(cnum) cnum from GLVD_PST_U where not exists (SELECT 1 FROM IMBCBBRP I WHERE I.A8BICN=CNUM) group by pcid");
                  PreparedStatement updGlvdPstU = connection.prepareStatement("update GLVD_PST_U set ASOC=? where pcid = ?");
                  PreparedStatement selGlvdPstD = connection.prepareStatement("select 1 from GLVD_PST_D where PDID=?");
                  PreparedStatement selGlvdPstU = connection.prepareStatement("select 1 from GLVD_PST_U where PDID=?");

@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
-import org.apache.poi.util.StringUtil;
 import ru.rb.ucb.util.AccountUtil;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
@@ -15,10 +14,10 @@ import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
@@ -577,50 +576,43 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String[] createAccountsExDiff(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, BankCurrency bankCurrency, String optype) {
-        String[] acids = excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype);
-        if (acids == null) {
-            acids = calculateAcidBsaacid(operation, operSide, keys, bankCurrency, optype);
-            if (acids != null && acids.length == 2) {
-                // Возвращаемое значение
-//          save(glAccount) не происходит, поэтому glAccount.id = null
-                GLAccount glAccount = new GLAccount();
-//                String acid = acids[0];
-//                String bsaacid = acids[1];
-//3                GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccId(acid, bsaacid));
-//                glAccount.setBsaAcid(bsaacid);
-//                glAccount.setAcid(acid);
+    public GlAccRln createAccountsExDiff(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, BankCurrency bankCurrency, String optype) {
+        GlAccRln accRln = excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype);
+        if (accRln == null) {
+            accRln = calculateAcidBsaacid(operSide, keys, bankCurrency, optype);
+            // Возвращаемое значение
+            GLAccount glAccount = new GLAccount();
 
-                glAccount.setAcid(acids[0]);
-                glAccount.setBsaAcid(acids[1]);
-                glAccount.setDateOpen(dateOpen);
-                glAccount.setDateClose(GLAccountController.DAY20290101);
-                glAccount.setCustomerNumber(acids[0].substring(0, 8));
-                glAccount.setCompanyCode(keys.getCompanyCode());
-                glAccount.setPassiveActive(keys.getPassiveActive());
-                glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
-                glAccount.setCurrency(bankCurrencyRepository.getCurrency("RUR"));
-                glAccount.setPlCode(keys.getPlCode());
-                glAccount.setRelationType(GLAccount.RelationType.TWO);
+            glAccount.setAcid(accRln.getId().getAcid());
+            glAccount.setBsaAcid(accRln.getId().getBsaAcid());
+            glAccount.setDateOpen(dateOpen);
+            glAccount.setDateClose(GLAccountController.DAY20290101);
+            glAccount.setCustomerNumber(accRln.getId().getAcid().substring(0, 8));
+            glAccount.setCompanyCode(keys.getCompanyCode());
+            glAccount.setPassiveActive(keys.getPassiveActive());
+            glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
+            glAccount.setCurrency(bankCurrencyRepository.getCurrency("RUR"));
+            glAccount.setPlCode(keys.getPlCode());
+            glAccount.setRelationType(GLAccount.RelationType.TWO);
 
-                accRlnRepository.createAccRln(glAccount);
-                BsaAcc bsaAcc = bsaAccRepository.createBsaAcc(glAccount);
+            accRlnRepository.createAccRln(glAccount);
+            BsaAcc bsaAcc = bsaAccRepository.createBsaAcc(glAccount);
 
-                glAccount.setCurrency(bankCurrency);
+            glAccount.setCurrency(bankCurrency);
 
-                excacRlnRepository.createExcacRln(glAccount, optype);
-                auditController.info(Account, format("Создан счет курсовой разницы '%s' для операции '%d' %s",
-                        bsaAcc.getId(), operation.getId(), operSide.getMsgName()), bsaAcc);
-            }
+            GlExcacRln excacRln = excacRlnRepository.createExcacRln(glAccount, optype);
+            auditController.info(Account, format("Создан счет курсовой разницы '%s' для операции '%d' %s",
+                    bsaAcc.getId(), operation.getId(), operSide.getMsgName()), bsaAcc);
+            accRln = new GlAccRln(excacRln.getId());
         }
 
-        return acids;
+        return accRln;
     }
 
-    public String[] calculateAcidBsaacid(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
+    private GlAccRln calculateAcidBsaacid(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
         try {
             String psav = keys.getPassiveActive();
-            DataRecord dataRecord = glAccountRepository.selectFirst("select ACC2, PLCODE, ACOD, ACSQ from dwh.excacparm where (CCY = ? or CCY = '000') and OPTYPE = ? and PSAV = ?",
+            DataRecord dataRecord = glAccountRepository.selectFirst("select ACC2, PLCODE, ACOD, ACSQ from excacparm where (CCY = ? or CCY = '000') and OPTYPE = ? and PSAV = ?",
                     bankCurrency.getCurrencyCode(), optype, psav);
 
             if (null == dataRecord) {
@@ -641,11 +633,8 @@ public class GLAccountController {
 
             String bsaacid = glAccountFrontPartController.calculateKeyDigit(accountMask, keys.getCompanyCode());   // TODO надо CBCCN
 
-            dataRecord = glAccountRepository.selectOne("select a8bicn from dwh.imbcbbrp where a8brcd = ?", keys.getBranch());
-            String a8bicn = dataRecord.getString("a8bicn");
-            if (a8bicn == null) {
-                return new String[]{};
-            }
+            DataRecord a8bicnRec = Optional.ofNullable(glAccountRepository.selectFirst("select a8bicn from imbcbbrp where a8brcd = ?", keys.getBranch()))
+                    .orElseThrow(() -> new ValidationError(ErrorCode.CLIENT_NOT_FOUND, format("Клиент не найден по бранчу %s", keys.getBranch())));
 
             String acsq = keys.getAccSequence();
             if (acsq.length() == 1) {
@@ -653,15 +642,11 @@ public class GLAccountController {
             }
 
             // Счет Midas
-            String acid = new StringBuilder().append(a8bicn).append("RUR").append(keys.getAccountCode()).append(acsq).append(keys.getBranch()).toString();
-
-
-            return new String[]{acid, bsaacid};
+            String acid = new StringBuilder().append(a8bicnRec.getString("a8bicn")).append("RUR").append(keys.getAccountCode()).append(acsq).append(keys.getBranch()).toString();
+            return new GlAccRln(acid, bsaacid);
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DefaultApplicationException(e.getMessage(), e);
         }
-
-        return null;
     }
 
 

@@ -7,10 +7,10 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
@@ -189,7 +190,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try
         {
-            String sql = "select ACC2, ACOD, AC_SQ from DWH.GL_ACTPARM where ACCTYPE = ? and CUSTYPE = '00' and TERM='00' and DTE IS NULL";
+            String sql = "select ACC2, ACOD, AC_SQ from GL_ACTPARM where ACCTYPE = ? and CUSTYPE = '00' and TERM='00' and DTE IS NULL";
             DataRecord res = selectFirst(sql, accType);
             return res;
         }
@@ -202,7 +203,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try
         {
-            String sql = "select CBCCY from DWH.CURRENCY where GLCCY = ?";
+            String sql = "select CBCCY from CURRENCY where GLCCY = ?";
             DataRecord res = selectFirst(sql, ccy);
             return res;
         }
@@ -216,7 +217,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try
         {
-            String sql = "select CCPCD from dwh.IMBCBCMP where CCBBR = ?";
+            String sql = "select CCPCD from IMBCBCMP where CCBBR = ?";
             DataRecord res = selectFirst(sql, cbccn);
             return null!=res?res.getString("CCPCD"):"";
         }
@@ -229,7 +230,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try
         {
-            String sql = "select A8BRCD,A8BICN from dwh.IMBCBBRP where BCBBR = ?";
+            String sql = "select A8BRCD,A8BICN from IMBCBBRP where BCBBR = ?";
             DataRecord res = selectFirst(sql, cbccn);
             return res;
         }

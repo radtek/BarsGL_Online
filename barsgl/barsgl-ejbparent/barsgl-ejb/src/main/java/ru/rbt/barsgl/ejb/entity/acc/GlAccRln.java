@@ -60,6 +60,17 @@ public class GlAccRln extends BaseEntity<AccRlnId> {
     @Column(name = "TRANSACTSRC")
     private String transactSrc;
 
+    public GlAccRln() {
+    }
+
+    public GlAccRln(String acid, String bsaacid) {
+        this.id = new AccRlnId(acid, bsaacid);
+    }
+
+    public GlAccRln(AccRlnId id) {
+        this.id = id;
+    }
+
     @Override
     public AccRlnId getId() {
         return id;
