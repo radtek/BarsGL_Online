@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -212,7 +213,8 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         try {
             postingProcessor.checkBackvaluePermission(postDate, userId);
         } catch (ValidationError e) {
-            String msg = "Недопустимая дата проводки:\n" + ValidationError.getErrorText(e.getMessage());
+            String msg = format("Недопустимая дата проводки: '%s'\n%s",
+                    new SimpleDateFormat("dd.MM.yyyy").format(postDate), ValidationError.getErrorText(e.getMessage()));
             auditController.warning(BatchOperation, msg, null, e);
             throw new ParamsParserException(msg);
         }
