@@ -1,9 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.ReplicateManualTask;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 
@@ -34,17 +32,23 @@ public class ReplicateManualTest extends AbstractTimerJobTest{
         Date sysdate10 = parseDate("2014-01-10", "yyyy-MM-dd");
         Date workday9 = parseDate("2014-01-09", "yyyy-MM-dd");
         Assert.assertEquals(workday9, getWorkdayBefore(sysdate10));
-        Assert.assertTrue(isWorkday(parseDate("2014-01-10 06", "yyyy-MM-dd HH")));
-        Assert.assertTrue(isWorkday(parseDate("2014-01-09 06", "yyyy-MM-dd HH")));
-        Assert.assertFalse(isWorkday(parseDate("2014-01-08 06", "yyyy-MM-dd HH")));
+//        Assert.assertTrue(isWorkday(parseDate("2014-01-10 06", "yyyy-MM-dd HH")));
+//        Assert.assertTrue(isWorkday(parseDate("2014-01-09 06", "yyyy-MM-dd HH")));
+//        Assert.assertFalse(isWorkday(parseDate("2014-01-08 06", "yyyy-MM-dd HH")));
+        Assert.assertTrue(isWorkday(parseDate("2014-01-10", "yyyy-MM-dd")));
+        Assert.assertTrue(isWorkday(parseDate("2014-01-09", "yyyy-MM-dd")));
+        Assert.assertFalse(isWorkday(parseDate("2014-01-08", "yyyy-MM-dd")));
 
         Date sysdate8 = parseDate("2014-01-09", "yyyy-MM-dd");
         Date workday1 = parseDate("2014-01-01", "yyyy-MM-dd");
         Assert.assertEquals(workday1, getWorkdayBefore(sysdate8));
 
-        Assert.assertTrue(check(parseDate("2014-01-09 06", "yyyy-MM-dd HH")));
-        Assert.assertFalse(check(parseDate("2014-01-08 06", "yyyy-MM-dd HH")));
-        Assert.assertFalse(check(parseDate("2014-01-10 06", "yyyy-MM-dd HH")));
+//        Assert.assertTrue(check(parseDate("2014-01-09 06", "yyyy-MM-dd HH")));
+//        Assert.assertFalse(check(parseDate("2014-01-08 06", "yyyy-MM-dd HH")));
+//        Assert.assertFalse(check(parseDate("2014-01-10 06", "yyyy-MM-dd HH")));
+        Assert.assertTrue(check(parseDate("2014-01-09", "yyyy-MM-dd")));
+        Assert.assertFalse(check(parseDate("2014-01-08", "yyyy-MM-dd")));
+        Assert.assertFalse(check(parseDate("2014-01-10", "yyyy-MM-dd")));
     }
 
     private boolean check(Date sysdate) {

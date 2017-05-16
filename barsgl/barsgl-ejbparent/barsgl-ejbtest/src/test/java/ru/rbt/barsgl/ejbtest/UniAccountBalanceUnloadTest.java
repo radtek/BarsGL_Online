@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.controller.operday.task.UnloadUnspentsToDWHServiceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.dem.UniAccountBalanceUnloadTask;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;

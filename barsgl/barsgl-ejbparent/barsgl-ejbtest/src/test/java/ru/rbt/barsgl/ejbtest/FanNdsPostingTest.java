@@ -97,7 +97,7 @@ public class FanNdsPostingTest extends AbstractRemoteTest {
     }
 
     private Pd createPd(Date operday, String transBsaacid, String transAcid) throws SQLException {
-        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from DUAL").getLong(0);
+        long id = baseEntityRepository.selectFirst("select PD_SEQ.nextval id from DUAL").getLong(0);
         baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
                 "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", 100,100, "@@IF123", "1234");
 

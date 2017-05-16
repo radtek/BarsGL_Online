@@ -40,7 +40,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
         int count;
         if (null == baseEntityRepository.selectFirst("select 1 from GL_ACTPARM where ACCTYPE = '131060102' and CUSTYPE = '00' and term='00' and acc2='30424'")) {
             count = baseEntityRepository.executeNativeUpdate("insert into GL_ACTPARM (ACCTYPE,CUSTYPE,term,acc2,plcode,acod,ac_SQ,DTB) " +
-                    "values('131060102','00','00','30424',null,'1049','02',TO_DATE(TO_DATE('2014-05-01','RRRR-MM-DD'),'RRRR-MM-DD'))");
+                    "values('131060102','00','00','30424',null,'1049','02',TO_DATE('2014-05-01','RRRR-MM-DD'))");
             System.out.println(count + ": insert values('131060102','00','00','30424',null,'1049','02',TO_DATE('2014-05-01','RRRR-MM-DD'))");
         }
         if (null == baseEntityRepository.selectFirst("select 1 from GL_ACTPARM where ACCTYPE = '131060102' and CUSTYPE = '9' and term='00' and acc2='30424'")) {
