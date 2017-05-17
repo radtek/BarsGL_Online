@@ -9,7 +9,7 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.LoadManagementAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
-import ru.rbt.shared.enums.Repository;
+import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import javax.ejb.LocalBean;

@@ -11,7 +11,7 @@ import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
-import ru.rbt.shared.enums.Repository;
+import ru.rbt.barsgl.shared.Repository;
 
 import javax.ejb.EJB;
 import javax.sql.DataSource;

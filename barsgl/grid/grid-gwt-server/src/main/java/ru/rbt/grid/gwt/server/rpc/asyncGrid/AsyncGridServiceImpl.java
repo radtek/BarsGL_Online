@@ -13,7 +13,7 @@ import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
 import ru.rbt.barsgl.shared.criteria.*;
-import ru.rbt.shared.enums.Repository;
+import ru.rbt.barsgl.shared.Repository;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.etc;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.shared.enums.Repository;
+import ru.rbt.barsgl.shared.Repository;
 
 import javax.ejb.EJB;
 import java.sql.Statement;

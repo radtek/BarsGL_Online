@@ -18,7 +18,7 @@ import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.shared.enums.Repository;
+import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 

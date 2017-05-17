@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.integr.loader;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.LoadManagementStatus;
-import ru.rbt.shared.enums.Repository;
+import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.barsgl.shared.loader.LoadStepWrapper;
 
 import javax.ejb.EJB;
