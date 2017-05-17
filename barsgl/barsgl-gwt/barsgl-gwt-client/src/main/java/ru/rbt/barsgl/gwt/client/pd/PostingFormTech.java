@@ -5,14 +5,14 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.account.AccountCloseDlg;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
 import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
-import ru.rbt.barsgl.gwt.client.operday.IDataConsumer;
-import ru.rbt.barsgl.gwt.client.operday.OperDayGetter;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -27,11 +27,9 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
@@ -49,12 +47,10 @@ import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilial
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.addDays;
-import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.dict.FormAction.*;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ALL;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_SINGLE;
-import static ru.rbt.barsgl.shared.enums.SecurityActionCode.OperPstMakeInvisible;
 
 /**
  * Created by ER18837 on 14.03.16.

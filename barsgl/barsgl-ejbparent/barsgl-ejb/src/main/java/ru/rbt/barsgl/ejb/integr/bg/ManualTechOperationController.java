@@ -1,53 +1,51 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
-import org.apache.poi.ss.usermodel.DateUtil;
-import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.oper.*;
-import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.ExceptionUtils;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.math.BigDecimal;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
@@ -55,17 +53,11 @@ import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcess
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BatchOperation;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.SIGNEDDATE;
@@ -126,7 +118,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     private GlPdThRepository glPdThRepository;
 
     @Inject
-    private GLOperationRepository glOperationRepository;
+    private ManualOperationRepository manualOperationRepository;
 
     @Inject
     private ManualOperationProcessor manualOperationProcessor;
