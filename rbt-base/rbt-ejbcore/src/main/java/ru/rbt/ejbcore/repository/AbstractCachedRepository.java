@@ -110,7 +110,7 @@ public abstract class AbstractCachedRepository<T extends BaseEntity, K extends S
     }
 
     private List<T> getAllObjects() {
-        return persistence.createQuery("from " + getEntityClass().getSimpleName() + " c").setMaxResults(200).getResultList();
+        return getPersistence().createQuery("from " + getEntityClass().getSimpleName() + " c").setMaxResults(200).getResultList();
     }
 
     protected Class<T> getEntityClass() {

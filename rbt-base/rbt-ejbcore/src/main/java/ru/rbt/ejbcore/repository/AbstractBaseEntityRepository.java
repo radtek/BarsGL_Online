@@ -8,7 +8,6 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.shared.Assert;
-import ru.rbt.shared.enums.Repository;
 
 import javax.annotation.Resource;
 import javax.ejb.*;
@@ -23,9 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import javax.annotation.PostConstruct;
-import javax.naming.InitialContext;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import ru.rbt.ejbcore.PersistenceProvider;
 
 /**
  * Created by Ivan Sevastyanov
@@ -35,29 +36,34 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     public static final int MAX_ROWS = 1000;
 
-    @PersistenceContext(unitName="GLOracleDataSource")
-    protected EntityManager persistence;
+    @Inject
+    private Instance<PersistenceProvider<? extends Enum>> instancePersistenceProvider;
 
-    @PersistenceContext(unitName="RepAS400DataSource")
-    protected EntityManager barsrepPersistence;
-
-//    @Resource(mappedName="/jdbc/As400GL")
-//    @Resource(mappedName="/jdbc/OracleGL")
-//    @Resource(mappedName="jdbc/OracleGL")
-    private DataSource dataSource;
-
-//    @Resource(mappedName="/jdbc/As400Rep")
-//    @Resource(mappedName="jdbc/As400Rep")
-    private DataSource  barsrepDataSource;
-
-    @Resource(lookup = "java:app/env/BarsglDataSourceName")
-    private String barsglDataSourceName;
-
-    @Resource(lookup = "java:app/env/BarsrepDataSourceName")
-    private String barsrepDataSourceName;
+    private PersistenceProvider persistenceProvider;
+    
+//    @PersistenceContext(unitName="GLOracleDataSource")
+//    protected EntityManager persistence;
+//
+//    @PersistenceContext(unitName="RepAS400DataSource")
+//    protected EntityManager barsrepPersistence;
+//
+////    @Resource(mappedName="/jdbc/As400GL")
+////    @Resource(mappedName="/jdbc/OracleGL")
+////    @Resource(mappedName="jdbc/OracleGL")
+//    private DataSource dataSource;
+//
+////    @Resource(mappedName="/jdbc/As400Rep")
+////    @Resource(mappedName="jdbc/As400Rep")
+//    private DataSource  barsrepDataSource;
+//
+//    @Resource(lookup = "java:app/env/BarsglDataSourceName")
+//    private String barsglDataSourceName;
+//
+//    @Resource(lookup = "java:app/env/BarsrepDataSourceName")
+//    private String barsrepDataSourceName;
     
     @Resource
-    EJBContext context;
+    private EJBContext context;
 
     //@Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")                             
     @Resource
@@ -70,145 +76,148 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<DataRecord> selectNonTransaction(String sqlString, Object ... params) throws SQLException {
-        return this.selectNonTransaction(dataSource, sqlString, params);
+        return this.selectNonTransaction(getDataSource(), sqlString, params);
     }
 
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public List<DataRecord> select(String sqlString, Object ... params) throws SQLException {
-        return this.select(dataSource,  sqlString, params);
+        return this.select(getDataSource(),  sqlString, params);
     }
 
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public List<DataRecord> selectMaxRows(String sqlString, int maxRows, Object[] params) throws SQLException {
-        return this.selectMaxRows(dataSource, sqlString, maxRows, params);
+        return this.selectMaxRows(getDataSource(), sqlString, maxRows, params);
     }
 
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public DataRecord selectFirst(String sqlString, Object... params) throws SQLException {
-        return this.selectFirst(dataSource, sqlString, params);
+        return this.selectFirst(getDataSource(), sqlString, params);
     }
 
     @Override
     public DataRecord selectOne(String sqlString, Object... params) throws SQLException {
-        return this.selectOne(dataSource, sqlString, params);
+        return this.selectOne(getDataSource(), sqlString, params);
     }
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public <E> E executeInNonTransaction(DataAccessCallback<E> callback) throws Exception {
-        return this.executeInNonTransaction(dataSource, callback);
+        return this.executeInNonTransaction(getDataSource(), callback);
     }
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public <E> E executeInNonTransaction(DataAccessCallback<E> callback, Repository enumRepository) throws Exception {
+    public <E, T extends Enum> E executeInNonTransaction(DataAccessCallback<E> callback, T enumRepository) throws Exception {
         return this.executeInNonTransaction(getDataSource(enumRepository), callback);
     }
 
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public <E> E executeTransactionally(DataAccessCallback<E> callback) throws Exception {
-        return this.executeTransactionally(dataSource, callback);
+        return this.executeTransactionally(getDataSource(), callback);
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public <E> E executeInNewTransaction(JpaAccessCallback<E> callback) throws Exception {
-        return this.executeInNewTransaction(persistence, callback);
+        return this.executeInNewTransaction(getPersistence(), callback);
     }
 
     @Override
     public <E> E selectFirst(Class<E> clazz, String jpaQuery, Object... params) {
-        return this.selectFirst(persistence, clazz, jpaQuery, params);
+        return this.selectFirst(getPersistence(), clazz, jpaQuery, params);
     }
 
     @Override
     public <E> E selectOne(Class<E> clazz, String jpaQuery, Object... params) {
-        return this.selectOne(persistence, clazz, jpaQuery, params);
+        return this.selectOne(getPersistence(), clazz, jpaQuery, params);
     }
 
     @Override
     public <E> List<E> select(Class<E> clazz, String jpaQuery, Object ... params) {
-        return this.select(persistence, clazz, jpaQuery, params);
+        return this.select(getPersistence(), clazz, jpaQuery, params);
     }
 
     @Override
     public <E> List<E> selectHinted(Class<E> clazz, String jpaQuery
             , Object[] params, Map<String,String> hints) {
-        return this.selectHinted(persistence, clazz, jpaQuery, params, hints);
+        return this.selectHinted(getPersistence(), clazz, jpaQuery, params, hints);
     }
 
     @Override
     public T save(T entity) {
-        return this.save(persistence, entity);
+        return this.save(getPersistence(), entity);
     }
 
     public T save(T entity, boolean flush) {
-        return this.save(persistence, entity, flush);
+        return this.save(getPersistence(), entity, flush);
     }
 
     @Override
     public T update(T entity) {
-        return this.update(persistence, entity);
+        return this.update(getPersistence(), entity);
     }
 
     public T update(T entity, boolean flush) {
-        return this.update(persistence, entity, flush);
+        return this.update(getPersistence(), entity, flush);
     }
 
     @Override
     public void remove(T entity) {
-        this.remove(persistence, entity);
+        this.remove(getPersistence(), entity);
     }
 
     @Override
     public int executeUpdate(String jpQuery, Object... params) {
-        return this.executeUpdate(persistence, jpQuery, params);
+        return this.executeUpdate(getPersistence(), jpQuery, params);
     }
 
     @Override
     public int executeNativeUpdate(String nativeSQL, Object... params) {
-        return this.executeNativeUpdate(dataSource, nativeSQL, params);
+        return this.executeNativeUpdate(getDataSource(), nativeSQL, params);
     }
 
     @Override
     public T refresh(T entity) {
-        return this.refresh(persistence, entity);
+        return this.refresh(getPersistence(), entity);
     }
 
     @Override
     public T refresh(T entity, boolean force) {
-        return this.refresh(persistence, entity, force);
+        return this.refresh(getPersistence(), entity, force);
     }
 
     @Override
     public T findById(Class<T> clazz, K primaryKey) {
-        return this.findById(persistence, clazz, primaryKey);
+        return this.findById(getPersistence(), clazz, primaryKey);
     }
 
     @Override
     public Long nextId(String sequenceName) {
-        return this.nextId(persistence, sequenceName);
+        return this.nextId(getPersistence(), sequenceName);
     }
 
     @Override
     public Integer nextIntegerId(String sequenceName) throws SQLException {
-        return this.nextIntegerId(dataSource, sequenceName);
+        return this.nextIntegerId(getDataSource(), sequenceName);
     }
 
     @Override
     public <E> List<E> findNative(Class<E> entityClass, String sqlQuery, int max, Object ... params) {
-        return this.findNative(persistence, entityClass, sqlQuery, max, params);
+        return this.findNative(getPersistence(), entityClass, sqlQuery, max, params);
     }
 
     public <E> E findNativeFirst(Class<E> entityClass, String sqlQuery, Object ... params) {
-        return this.findNativeFirst(persistence, entityClass, sqlQuery, params);
+        return this.findNativeFirst(getPersistence(), entityClass, sqlQuery, params);
     }
 
     @Asynchronous
     public <V> Future<V> invokeAsynchronous(JpaAccessCallback<V> callback) throws Exception {
-        return this.invokeAsynchronous(persistence, callback);
+        return this.invokeAsynchronous(getPersistence(), callback);
     }
 
     public void flush() {
-        this.flush(persistence);
+        this.flush(getPersistence());
     }
 
     @Override
@@ -418,7 +427,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public Integer nextIntegerId(DataSource dataSource, String sequenceName) throws SQLException {
-        return ((BigDecimal) persistence.createNativeQuery("select "
+        return ((BigDecimal) getPersistence().createNativeQuery("select "
                 + sequenceName + ".nextval id_seq from dual").getSingleResult()).intValue();
     }
 
@@ -462,7 +471,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     public <V> Future<V> invoke(JpaAccessCallback<V> callback) throws Exception {
         try {
 //            log.debug("Executing asynchronous by thread, TX: " + getTransactionKey());
-            return new AsyncResult<>(callback.call(persistence));
+            return new AsyncResult<>(callback.call(getPersistence()));
         } catch (Exception e) {
             e.printStackTrace();
             setRollbackOnly();
@@ -509,50 +518,70 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return context.getRollbackOnly();
     }
 
-    public EntityManager getPersistence(Repository repository) throws Exception {
-        if(null == repository) {
-            return persistence;
-        }
-        switch (repository) {
-            case BARSGL:
-                return persistence;
-            case BARSREP:
-                return barsrepPersistence;
-            default:
-                throw new Exception("Неизвестный репозиторий: " + repository.name());
-        }
+    protected EntityManager getPersistence(){
+        return persistenceProvider.getDefaultPersistence();
+    }
+    
+    public <T extends Enum> EntityManager getPersistence(T repository) throws Exception{
+        return persistenceProvider.getPersistence(repository);
+//        if(null == repository) {
+//            return persistence;
+//        }
+//        switch (repository) {
+//            case BARSGL:
+//                return persistence;
+//            case BARSREP:
+//                return barsrepPersistence;
+//            default:
+//                throw new Exception("Неизвестный репозиторий: " + repository.name());
+//        }
     }
 
-    public DataSource getDataSource(Repository repository) throws Exception {
-        if(null == repository) {
-            return dataSource;
-        }
-        switch (repository) {
-            case BARSGL:
-                return dataSource;
-            case BARSREP:
-                return barsrepDataSource;
-            default:
-                throw new Exception("Неизвестный репозиторий: " + repository.name());
-        }
+    protected DataSource getDataSource() {
+        return persistenceProvider.getDefaultDataSource();
+    }
+    
+    public <T extends Enum> DataSource getDataSource(T repository) throws Exception {
+        return persistenceProvider.getDataSource(repository);
+
+//        if(null == repository) {
+//            return dataSource;
+//        }
+//        switch (repository) {
+//            case BARSGL:
+//                return dataSource;
+//            case BARSREP:
+//                return barsrepDataSource;
+//            default:
+//                throw new Exception("Неизвестный репозиторий: " + repository.name());
+//        }
     }
 
     @PostConstruct
-    public void init() {
-        dataSource = findConnection(barsglDataSourceName);
-        try{
-            barsrepDataSource = findConnection(barsrepDataSourceName);
-        }catch(Exception ex){
-            log.info("DataSource not found: "+barsrepDataSourceName);
+    public void configure() {
+        if (instancePersistenceProvider.isUnsatisfied()) {
+            throw new RuntimeException("Application PersistenceProvider not found!");
+        } else {
+            persistenceProvider = instancePersistenceProvider.get();
         }
     }
 
-    private DataSource findConnection(String jndiName) {
-        try {
-            InitialContext c = new InitialContext();
-            return  (DataSource) c.lookup(jndiName);
-        } catch (Throwable e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
+//    @PostConstruct
+//    public void init() {
+//        dataSource = findConnection(barsglDataSourceName);
+//        try{
+//            barsrepDataSource = findConnection(barsrepDataSourceName);
+//        }catch(Exception ex){
+//            log.info("DataSource not found: "+barsrepDataSourceName);
+//        }
+//    }
+//
+//    private DataSource findConnection(String jndiName) {
+//        try {
+//            InitialContext c = new InitialContext();
+//            return  (DataSource) c.lookup(jndiName);
+//        } catch (Throwable e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
 }
