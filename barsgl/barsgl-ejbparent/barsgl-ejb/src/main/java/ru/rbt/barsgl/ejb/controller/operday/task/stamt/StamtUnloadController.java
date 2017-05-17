@@ -98,13 +98,13 @@ public class StamtUnloadController {
     public void createTemporaryTableWithDate(String tableName, String columnName, Date executeDate) throws Exception {
         repository.executeTransactionally(connection -> {
             try (PreparedStatement statementDeclare = connection.prepareStatement(
-                    "declare global temporary table " + tableName + " (\n" +
-                            "   "+columnName+" date not null\n" +
-                            ") with replace on commit preserve rows");) {
+                    "CREATE GLOBAL TEMPORARY TABLE " + tableName + " (\n" +
+                            "   "+columnName+" DATE NOT NULL\n" +
+                            ") ON COMMIT DELETE ROWS");) {
                 statementDeclare.executeUpdate();
             }
             try (PreparedStatement statementInsert = connection.prepareStatement(
-                    "insert into session."+tableName+" values (?)")) {
+                    "INSERT INTO "+tableName+" VALUES (?)")) {
                 statementInsert.setDate(1, new java.sql.Date(executeDate.getTime()));
                 statementInsert.executeUpdate();
             }

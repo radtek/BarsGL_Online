@@ -86,10 +86,10 @@ public class UniAccountBalanceUnloadTaskSupport {
             int updateResult = 0;
             try (
 //                PreparedStatement createTableStmt = connection.prepareStatement(
-//                            "DECLARE GLOBAL TEMPORARY TABLE SESSION.GL_BALTUR_SUMS (" +
+//                            "CREATE GLOBAL TEMPORARY TABLE GL_BALTUR_SUMS (" +
 //                                    "  BSAACID CHAR(20) NOT NULL, " +
 //                                    "  sumamnt DECIMAL(19, 0), " +
-//                                    "  sumamntbc DECIMAL(19, 0)) WITH REPLACE NOT LOGGED");
+//                                    "  sumamntbc DECIMAL(19, 0)) ON COMMIT DELETE ROWS");
                 PreparedStatement updateCurdate = connection.prepareStatement("INSERT INTO GL_TMP_CURDATE VALUES(?)");
             ) {
 //                createTableStmt.execute();
@@ -125,7 +125,7 @@ public class UniAccountBalanceUnloadTaskSupport {
                                         "   AND b.datto >= od.curdate\n" +
                                         "   AND a.ccy = c.glccy");
 
-                        //PreparedStatement dropTableStmt = connection.prepareStatement("DROP TABLE SESSION.GL_BALTUR_SUMS")
+                        //PreparedStatement dropTableStmt = connection.prepareStatement("DROP TABLE GL_BALTUR_SUMS")
                 ) {
                     fillTableStmt.setDate(1, new java.sql.Date(executeDate.getTime()));
                     fillTableStmt.execute();
