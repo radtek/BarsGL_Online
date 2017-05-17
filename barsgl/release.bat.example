@@ -1,0 +1,5 @@
+set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_111
+set M2_HOME=C:\Develop\apache-maven-3.3.9
+set PATH=%PATH%;C:\Develop\apache-maven-3.3.9\bin;C:\Program Files\Git\bin
+
+mvn release:clean release:prepare release:perform -DscmCommentPrefix="-BUILD VERSION-" -Darguments="-DskipTests -Dmaven.javadoc.skip=true" -DpreparationGoals="" -Dresume=false -DdryRun=false -P with-remote-tests,ear-prod,release-branch,-full-ear

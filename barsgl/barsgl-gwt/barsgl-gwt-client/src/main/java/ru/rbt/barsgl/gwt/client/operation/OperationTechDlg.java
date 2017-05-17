@@ -76,12 +76,12 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     public void beforeCreateContent(){
-        //isAsyncListsCached = false;
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached_hand");
+        /*isAsyncListsCached = false;
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCachedTech_hand", true);
+        LocalDataStorage.putParam("isAsyncListsCachedTech", true);*/
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -297,7 +297,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void fillContent() {
-        if (isAsyncListsCached != null && isAsyncListsCached){
+        fillUp();
+        /*if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -320,7 +321,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
             };
 
             timer.scheduleRepeating(1000);
-        }
+        }*/
     }
 
     protected void setControlsDisabled(){

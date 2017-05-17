@@ -35,6 +35,7 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -44,6 +45,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.math.BigDecimal;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
@@ -51,6 +53,7 @@ import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcess
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -115,11 +118,16 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     private GlPdThRepository glPdThRepository;
 
     @Inject
-    private GLOperationRepository glOperationRepository;
+    private ManualOperationRepository manualOperationRepository;
 
     @Inject
     private ManualOperationProcessor manualOperationProcessor;
 
+    @Inject
+    private GLOperationRepository glOperationRepository;
+
+    @Inject
+    private TechOperationProcessor techOperationProcessor;
 
 
     public RpcRes_Base<ManualTechOperationWrapper> updateTechOperation(ManualTechOperationWrapper operationWrapper) {
@@ -307,6 +315,55 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         }
     }
 
+    private void manualOperationProcessed(BatchPosting posting) throws Exception {
+        GLManualOperation operation = createOperation(posting);
+        operation.setBsChapter("T");
+        operation.setAmountPosting(operation.getAmountDebit());
+        manualOperationRepository.save(operation,true);
+        List<GlPdTh> pdList = techOperationProcessor.createPdTh(operation);
+
+        Long pcID = 0L;
+        for (GlPdTh pd:pdList)
+        {
+            if (pd.getOperSide().equals(GLOperation.OperSide.D))
+            {
+                pcID = pd.getId();
+            }
+        }
+
+        for (GlPdTh pd:pdList)
+        {
+            pd.setPcId(pcID);
+            glPdThRepository.save(pd,true);
+        }
+    }
+
+    public void setExchengeParameters (GLManualOperation operation) {
+        // Основная валюта, сумма проводки в рублях
+        BankCurrency ccyDebit = operation.getCurrencyDebit();
+        BankCurrency ccyCredit = operation.getCurrencyCredit();
+
+        // курсовая разница
+        BigDecimal amountDebitRu = ( null != operation.getAmountDebitRu()) ?
+                operation.getAmountDebitRu() : operation.getEquivalentDebit();
+        BigDecimal amountCreditRu = ( null != operation.getAmountCreditRu()) ?
+                operation.getAmountCreditRu() : operation.getEquivalentCredit();
+        operation.setExchangeDifference(amountDebitRu.subtract(amountCreditRu));
+
+        // основная валюта и сумма проводки
+        if (RUB.equals(ccyDebit)) {         // Если ДЕБЕТ в рублях
+            operation.setCurrencyMain(ccyDebit);        // основная валюта и сумма проводки по Дебету
+            operation.setAmountPosting(operation.getAmountDebit());
+        } else {                                        // Иначе
+            operation.setCurrencyMain(ccyCredit);       // основная валюта по Кредиту
+            if (RUB.equals(ccyCredit)) {    // Если КРЕДИТ в рублях
+                operation.setAmountPosting(operation.getAmountCredit());
+            } else {                        // Иначе
+                operation.setAmountPosting(amountCreditRu);
+            }
+        }
+    }
+
     /**
      * Интерфейс: Создает запрос на операцию с проверкой прав
      * @param wrapper
@@ -419,11 +476,8 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
      * @param wrapper
      * @return
      */
-    public final GLOperation createOperation(ManualTechOperationWrapper wrapper, BatchPostStatus status) {
-
-        GLOperation operation = new GLOperation();
-
-
+    public final GLManualOperation createOperation(ManualTechOperationWrapper wrapper, BatchPostStatus status) {
+        GLManualOperation operation = new GLManualOperation();
         fillOperation(wrapper, operation);
 
         // опердень создания
@@ -442,7 +496,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
      * @param operation           - запрос на операцию
      * @return
      */
-    public final GLOperation fillOperation(ManualTechOperationWrapper wrapper, GLOperation operation)  {
+    public final GLManualOperation fillOperation(ManualTechOperationWrapper wrapper, GLManualOperation operation)  {
 
         operation.setInputMethod(wrapper.getInputMethod());
         operation.setSourcePosting(wrapper.getDealSrc());
@@ -452,6 +506,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         operation.setDeptId(StringUtils.trim(wrapper.getDeptId()));
         operation.setProfitCenter(wrapper.getProfitCenter());
         operation.setIsCorrection(wrapper.isCorrection() ? YesNo.Y : YesNo.N);
+        operation.setStorno(YesNo.N);
+        operation.setBsChapter("T");
+        operation.setFan(YesNo.N);
 
         // Описание
         // TODO StringUtils.removeCtrlChars() пока убрала
@@ -539,10 +596,11 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     }
 
     private  String getFilial(String filial, String bsaAsid, GLOperation.OperSide operSide) {
-        String accountFilial = glOperationRepository.getFilialByAccount(bsaAsid);
+        String accountFilial = filial;
+        /*String accountFilial = glOperationRepository.getFilialByAccount(bsaAsid);
         if (!isEmpty(filial) && !filial.equals(accountFilial)){
             throw new ValidationError(FILIAL_NOT_VALID, operSide.getMsgName(), filial, accountFilial);
-        }
+        }*/
         return accountFilial;
     }
 
@@ -635,7 +693,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         }
         String msg = String.format("Запрос на операцию ID = '%d': нельзя '%s' запрос в статусе: '%s' ('%s')", posting.getId(),
                 wrapper.getAction().getLabel(), posting.getStatus().name(), posting.getStatus().getLabel());
-        wrapper.getErrorList().addErrorDescription( msg);
+        wrapper.getErrorList().addErrorDescription(msg);
         throw new DefaultApplicationException(msg);
     }
 
@@ -748,16 +806,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             // тестируем статус - что никто еще не менял
             updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);
             BatchPostStatus newStatus = getOperationRqStatusSigned(wrapper.getUserId(), posting.getPostDate());
-            setOperationRqStatusSigned(wrapper, userContext.getUserName(), SIGNEDVIEW, newStatus);
-
-            if (posting0.isControllable()) {                    // есть контролируемы счет
-                return sendMovement(posting, wrapper, newStatus);          // посылка запроса в MovementCreate
-            } else {
-                // устанавливаем статус SIGNED / SIGNEDDATE / WAITDATE
-                return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
-            }
-
-
+            return setOperationRqStatusSigned(wrapper, userContext.getUserName(), SIGNEDVIEW, newStatus);
 
         } catch (ValidationError e) {
             String msg = "Ошибка при авторизации запроса на операцию ID = " + wrapper.getId();
@@ -798,7 +847,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return newStatus;
     }
 
-    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSigned(ManualOperationWrapper wrapper, String userName,
+    public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusSigned(ManualTechOperationWrapper wrapper, String userName,
                                                                           BatchPostStatus newStatus, BatchPostStatus logStatus) throws Exception {
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
         BatchPostStatus oldStatus = wrapper.getStatus();
@@ -835,6 +884,12 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         });
         if (0 == count)
             throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
+
+        if (newStatus==SIGNED) {
+            BatchPosting posting = postingRepository.findById(wrapper.getId());
+            manualOperationProcessed(posting);
+        }
+
         wrapper.setStatus(newStatus);
         String msg = result.getPostSignedMessage();
         wrapper.getErrorList().addErrorDescription(msg);
