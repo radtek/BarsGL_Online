@@ -175,8 +175,8 @@ public class AppUserForm extends EditableDictionary<AppUserWrapper> {
     }
                  
     @Override
-    protected String prepareSql() {
-        return "ru.rbt.barsgl.ejb.security.AuthorizationServiceSupport@getUserSql";
+    protected String prepareSql() {        
+        return "ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport@getUserSql";
     }
      
     @Override
