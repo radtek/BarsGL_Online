@@ -6,19 +6,14 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.sql.DataSource;
 import javax.transaction.SystemException;
-import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
 import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import javax.annotation.PostConstruct;
-import javax.naming.InitialContext;
+import javax.inject.Inject;
 
 /**
  * Created by Ivan Sevastyanov
@@ -39,18 +34,21 @@ public class BeanManagedProcessor {
     @Resource
     private UserTransaction tx;
 
-    @PersistenceContext(unitName="GLOracleDataSource")
-    protected EntityManager persistence;
-
-//    @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
-//    private TransactionSynchronizationRegistry trx;
-
-//    @Resource(mappedName="/jdbc/As400GL")
-    //@Resource(mappedName="jdbc/OracleGL")
-    private DataSource dataSource;
+    @Inject
+    private BarsglPersistenceProvider provider; 
     
-    @Resource(lookup = "java:app/env/BarsglDataSourceName")
-    private String barsglDataSourceName;
+//    @PersistenceContext(unitName="GLOracleDataSource")
+//    protected EntityManager persistence;
+//
+////    @Resource (mappedName = "java:comp/TransactionSynchronizationRegistry")
+////    private TransactionSynchronizationRegistry trx;
+//
+////    @Resource(mappedName="/jdbc/As400GL")
+//    //@Resource(mappedName="jdbc/OracleGL")
+//    private DataSource dataSource;
+//    
+//    @Resource(lookup = "java:app/env/BarsglDataSourceName")
+//    private String barsglDataSourceName;
     
     /**
      * Выполнить транзакционную работу в новой транзакции с установкой таймаута
@@ -68,8 +66,8 @@ public class BeanManagedProcessor {
                     , timeoutSecond, DEFAULT_TIMEOUT_SEC));
         }
         beginTx();
-        try(Connection connection = dataSource.getConnection()) {
-            E result = callback.execute(persistence, connection);
+        try(Connection connection = provider.getDefaultDataSource().getConnection()) {
+            E result = callback.execute(provider.getDefaultPersistence(), connection);
             commitTx();
             return result;
         } catch (Exception e) {
@@ -132,17 +130,17 @@ public class BeanManagedProcessor {
         }
     }
 
-    @PostConstruct
-    public void init() {
-        dataSource = findConnection(barsglDataSourceName);
-    }
-
-    private DataSource findConnection(String jndiName) {
-        try {
-            InitialContext c = new InitialContext();
-            return  (DataSource) c.lookup(jndiName);
-        } catch (Throwable e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
+//    @PostConstruct
+//    public void init() {
+//        dataSource = findConnection(barsglDataSourceName);
+//    }
+//
+//    private DataSource findConnection(String jndiName) {
+//        try {
+//            InitialContext c = new InitialContext();
+//            return  (DataSource) c.lookup(jndiName);
+//        } catch (Throwable e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
 }
