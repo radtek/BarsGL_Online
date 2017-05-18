@@ -4,13 +4,13 @@ import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
-import ru.rbt.ejbcore.util.StringUtils;
 
 /**
  * Created by Ivan Sevastyanov
@@ -95,7 +95,7 @@ public class EtlPosting extends BaseEntity <Long> {
     private String accountCredit;
 
     @ManyToOne
-    @JoinColumn(name = "CCY_CR", nullable = false)
+    @JoinColumn(name = "CCY_CR")
     private BankCurrency currencyCredit;
 
     @Column(name = "AMT_CR")

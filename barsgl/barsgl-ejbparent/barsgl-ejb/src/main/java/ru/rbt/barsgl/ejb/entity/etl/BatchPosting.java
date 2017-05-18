@@ -87,7 +87,7 @@ public class BatchPosting extends BaseEntity<Long> {
     private String filialCredit;
 
     @ManyToOne
-    @JoinColumn(name = "CCY_CR", nullable = false)
+    @JoinColumn(name = "CCY_CR")
     private BankCurrency currencyCredit;
 
     @Column(name = "AMT_CR")

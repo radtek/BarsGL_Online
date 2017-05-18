@@ -10,10 +10,10 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -31,10 +31,10 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
  * Created by Ivan Sevastyanov on 11.02.2016.
@@ -76,7 +76,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
         pst.setStornoReference("storno_" + st);
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
@@ -109,7 +109,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
         pst.setValueDate(getOperday().getCurrentDate());
         pst.setAccountDebit("30302840700010000033");    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
-        pst.setAmountDebit(new BigDecimal("100.00"));
+        pst.setAmountDebit(new BigDecimal("100.006"));
         pst.setAccountCredit("47427810550160009330");     // "CHL"
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
@@ -130,15 +130,15 @@ public class StornoBufferTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.SOCANC);
-        Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.ST);
-        Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.C);
-        Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
+        Assert.assertEquals(OperState.SOCANC, operationS.getState());
+        Assert.assertEquals(GLOperation.OperType.ST, operationS.getPstScheme());
+        Assert.assertEquals(GLOperation.StornoType.C, operationS.getStornoRegistration());
+        Assert.assertEquals(operation.getId(), operationS.getStornoOperation().getId());        // ссылка на сторно операцию
         List<GLPosting> postList = getPostings(operationS);
         Assert.assertTrue(postList.isEmpty());                    // нет своих проводки
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.CANC);
+        Assert.assertEquals(OperState.CANC, operation.getState());
         postList = getPostings(operation);
 
         Assert.assertNotNull(postList);
@@ -287,12 +287,12 @@ public class StornoBufferTest extends AbstractTimerJobTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.005"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
 
-        pst = (EtlPosting) baseEntityRepository.save(pst);
+        pst = (EtlPosting)baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertTrue(0 < operation.getId());       // операция создана
@@ -373,7 +373,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertTrue(0 < operation.getId());       // операция создана
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.POST);
+        Assert.assertEquals(OperState.POST, operation.getState());
         List<GLPosting> postListDirect = getPostings(operation);
         Assert.assertTrue(postListDirect.isEmpty());
         List<GLPd> glPdsPre = getGLPostings(operation);
@@ -395,9 +395,9 @@ public class StornoBufferTest extends AbstractTimerJobTest {
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
         Assert.assertEquals(operationS.getState(), OperState.POST);
-        Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.M);
-        Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.S);
-        Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
+        Assert.assertEquals(GLOperation.OperType.M, operationS.getPstScheme());
+        Assert.assertEquals(GLOperation.StornoType.S, operationS.getStornoRegistration());
+        Assert.assertEquals(operation.getId(), operationS.getStornoOperation().getId());        // ссылка на сторно операцию
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operationS.getId());
         Assert.assertEquals(operation.getState(), OperState.POST);
@@ -760,7 +760,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.005"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
@@ -810,7 +810,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.005"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
@@ -852,7 +852,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.POST);
+        Assert.assertEquals(OperState.POST, operationS.getState());
         Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.S);
         Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.S);
         Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
