@@ -73,7 +73,7 @@ public class LoadManagement extends BaseEntity<Long> {
     public LoadManagement() {}
 
     public LoadManagement(
-            long id,
+            Long id,
             long ordid,
             Date dat,
             String code,

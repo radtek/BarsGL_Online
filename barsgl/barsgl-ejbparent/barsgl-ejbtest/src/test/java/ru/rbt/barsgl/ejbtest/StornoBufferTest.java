@@ -653,7 +653,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
      */
     @Test public void testReprocessStorno() {
 
-        Date toDate = Date.from(getOperday().getCurrentDate().toInstant().minus(-10, ChronoUnit.DAYS));
+        Date toDate = Date.from(new Date(getOperday().getCurrentDate().getTime()).toInstant().minus(-10, ChronoUnit.DAYS));
         baseEntityRepository.executeUpdate("update GLOperation o set o.valueDate = ?1 where o.storno = ?2 and o.state = ?3 and o.valueDate = ?4"
                 , toDate, YesNo.Y, OperState.ERCHK, getOperday().getCurrentDate());
 
