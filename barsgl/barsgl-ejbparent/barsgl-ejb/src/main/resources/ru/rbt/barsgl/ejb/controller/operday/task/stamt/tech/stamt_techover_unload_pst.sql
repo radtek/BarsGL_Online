@@ -11,22 +11,22 @@ insert into gl_etlstmd (
     evtp, narrative
 )
  select  d.pcid pcid,                                                -- pcid проводки
-    'Требования по прочим операциям' russhnar,                       -- описание
-    j.ts statementdate, d.pod postingdate, d.vald valuedate,         -- даты
-    'BSG-IB' hostsystem,
-    cast(null as varchar(20)) dealid,
-    d.pcid psid,                                                             -- источник, ид в системе
-    da.bsaacnnum dclient_id, ca.bsaacnnum cclient_id,                        -- бранч майдас дебет
-    get_fcc_br(d.bsaacid) dbranch_id, get_fcc_br(c.bsaacid) cbranch_id,        -- бранч майдас кредит
-    d.id did, c.id cid, d.bsaacid dcbaccount, c.bsaacid ccbaccount,          -- ид и счета полупроводок
-    d.ccy dcur, c.ccy ccur,                                                  -- валюта
-    -decimal(d.amnt)/integer(power(10, dc.nbdp)) damount, decimal(c.amnt)/integer(power(10, cc.nbdp)) camount,     -- суммы в валюте
-    -decimal(d.amntbc)/integer(power(10,2)) damount_rur,  decimal(c.amntbc)/integer(power(10, 2)) camount_rur,     -- суммы в рублях
-    m.bo_ind doc_type, m.mo_no doc_n,                                                                              -- мемордер
-    cast(null as bigint) glo_ref,
-    '1' post_type,
-    cast(null as varchar(20)) evtp,
-    d.pcid nrt
+     'Требования по прочим операциям' russhnar,                       -- описание
+     j.ts statementdate, d.pod postingdate, d.vald valuedate,         -- даты
+     'BSG-IB' hostsystem,
+     cast(null as varchar2(20)) dealid,
+     d.pcid psid,                                                             -- источник, ид в системе
+     trim(da.bsaacnnum) dclient_id, trim(ca.bsaacnnum) cclient_id,                        -- бранч майдас дебет
+     get_fcc_br(d.bsaacid) dbranch_id, get_fcc_br(c.bsaacid) cbranch_id,        -- бранч майдас кредит
+     d.id did, c.id cid, d.bsaacid dcbaccount, c.bsaacid ccbaccount,          -- ид и счета полупроводок
+     d.ccy dcur, c.ccy ccur,                                                  -- валюта
+     -(d.amnt)/cast(power(10, dc.nbdp) as number(4)) damount, (c.amnt)/cast(power(10, cc.nbdp) as number(4)) camount,     -- суммы в валюте
+     -(d.amntbc)/cast(power(10,2) as number(4)) damount_rur,  (c.amntbc)/cast(power(10, 2) as number(4)) camount_rur,     -- суммы в рублях
+     m.bo_ind doc_type, m.mo_no doc_n,                                                                              -- мемордер
+     cast(null as number(10)) glo_ref,
+     '1' post_type,
+     cast(null as varchar2(20)) evtp,
+     d.pcid nrt
  from (select j.pcid, min(j.ts) ts from gl_pdjover j
         where j.operday >= ?
           and j.chfl in ('I', 'U') and j.unf = 'N'
