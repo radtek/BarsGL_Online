@@ -12,8 +12,11 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
 import ru.rbt.security.AuthorizationServiceSupport;
+import ru.rbt.shared.enums.UserExternalType;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.shared.enums.YesNoType.No;
+import static ru.rbt.barsgl.shared.enums.YesNoType.Yes;
 import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
 /**
@@ -27,6 +30,18 @@ public class AuthorizationServiceGwtSupport {
 
     @EJB
     private AuthorizationServiceSupport authorizationSupport;
+    
+    public String getUserSql(){
+        return  "select * from ( " +
+                "select ID_USER, USER_NAME, SURNAME, FIRSTNAME, PATRONYMIC, FILIAL, DEPID, CREATE_DT, END_DT, " +
+                "case when LOCKED = '0' then trim('" + No.getLabel() + "') " +
+                "else trim('" + Yes.getLabel() + "') " +
+                "end LOCKED, " +
+                "case when SEC_TYPE = '0' then trim('" + UserExternalType.L.name() + "') " +
+                "else trim('" + UserExternalType.E.name() + "') end SEC_TYPE, USER_PWD " +
+                "from GL_USER) v ";
+    }    
+        
     
     public LoginResult login(String username, String password) throws Exception {
       return authorizationSupport.login(username, password);

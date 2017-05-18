@@ -79,7 +79,7 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
             if ((initialFilterParams!=null) && (initialFilterParams.length>0)) {
                 String accType = initialFilterParams[0].toString();
 
-                if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.EQ, accType));
+                if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.START_WITH, accType));
             }
             return list;
         }
