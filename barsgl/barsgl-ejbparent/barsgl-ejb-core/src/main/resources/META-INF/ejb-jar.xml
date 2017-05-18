@@ -4,7 +4,7 @@
     <description>Enterprise JavaBeans 3.2</description>
     <display-name>Enterprise JavaBeans 3.2</display-name>
 
-    <enterprise-beans>
+<!--    <enterprise-beans>
         <session>
             <display-name>CoreRepository</display-name>
             <ejb-name>CoreRepository</ejb-name>
@@ -12,5 +12,5 @@
             <ejb-class>ru.rbt.barsgl.ejbcore.CoreRepository</ejb-class>
             <session-type>Stateless</session-type>
         </session>
-    </enterprise-beans>
+    </enterprise-beans>-->
 </ejb-jar>
