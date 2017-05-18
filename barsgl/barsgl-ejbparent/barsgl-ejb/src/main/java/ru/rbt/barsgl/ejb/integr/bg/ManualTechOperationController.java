@@ -1,50 +1,49 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
-import org.apache.poi.ss.usermodel.DateUtil;
-import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
-import ru.rbt.barsgl.ejb.entity.sec.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.oper.*;
 import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.Assert;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
+import ru.rbt.shared.Assert;
+import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -55,17 +54,12 @@ import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcess
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.BatchOperation;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.*;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.SIGNEDDATE;
@@ -93,7 +87,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     private BatchPostingRepository postingRepository;
 
     @EJB
-    private ManualOperationRepository operationRepository;
+    private ManualOperationRepository manualOperationRepository;
 
     @Inject
     private AppUserRepository userRepository;
@@ -116,11 +110,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     @EJB
     private GLAccountController glAccountController;
 
-    @Inject
     private SecurityActionRepository actionRepository;
-
-    @Inject
-    private AccessServiceSupport accessServiceSupport;
 
     @EJB
     private GlPdThRepository glPdThRepository;
@@ -132,10 +122,10 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     private ManualOperationProcessor manualOperationProcessor;
 
     @Inject
-    private GLOperationRepository glOperationRepository;
+    private TechOperationProcessor techOperationProcessor;
 
     @Inject
-    private TechOperationProcessor techOperationProcessor;
+    private AccessServiceSupport accessServiceSupport;
 
 
     public RpcRes_Base<ManualTechOperationWrapper> updateTechOperation(ManualTechOperationWrapper operationWrapper) {
@@ -150,7 +140,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
                 if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.OperPstChngDate) ) {
-                    Date oldDate = operationRepository.findById(GLManualOperation.class, operationWrapper.getId()).getPostDate();
+                    Date oldDate = manualOperationRepository.findById(GLManualOperation.class, operationWrapper.getId()).getPostDate();
                     Date minDate = newDate.before(oldDate) ? newDate : oldDate;
                     accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
                 }
@@ -187,7 +177,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             try {
                 Date newPostDate = dateUtils.onlyDateParse(operation.getPostDateStr());
                 Date newValDate = dateUtils.onlyDateParse(operation.getValueDateStr());
-                GLManualOperation glOperation = operationRepository.findById(GLManualOperation.class, operation.getId());
+                GLManualOperation glOperation = manualOperationRepository.findById(GLManualOperation.class, operation.getId());
 
 
                 glOperation.setPostDate(newPostDate);
@@ -196,7 +186,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 glOperation.setRusNarrativeShort(operation.getRusNarrativeShort());
                 glOperation.setRusNarrativeLong(operation.getRusNarrativeLong());
 
-                operationRepository.save(glOperation);
+                manualOperationRepository.save(glOperation);
 
                 List<GlPdTh> glPdThList = glPdThRepository.select(GlPdTh.class, "from GlPdTh p where p.glOperationId = " + glOperation.getId());
 
@@ -431,7 +421,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
      * @throws Exception
      */
     public RpcRes_Base<ManualOperationWrapper> saveOperationRqInternal(ManualTechOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
-        BatchPosting posting = operationRepository.executeInNewTransaction(persistence -> createPosting(wrapper, newStatus));
+        BatchPosting posting = glOperationRepository.executeInNewTransaction(persistence -> createPosting(wrapper, newStatus));
         wrapper.setId(posting.getId());
         wrapper.setStatus (posting.getStatus());
         String msg = "Запрос на операцию ID = " + wrapper.getId() +
@@ -655,7 +645,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 
     private BatchPosting createPostingHistory(BatchPosting posting, BatchPostStep step, BatchPostAction action) throws Exception {
         return postingProcessor.needHistory(posting, step, action) ?
-                operationRepository.executeInNewTransaction(persistence ->
+                glOperationRepository.executeInNewTransaction(persistence ->
                         postingRepository.createPostingHistory(posting.getId(), userContext.getTimestamp(), userContext.getUserName()))
                 : posting;
     }
@@ -663,7 +653,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     public RpcRes_Base<ManualOperationWrapper> setOperationRqStatusControl(ManualTechOperationWrapper wrapper, boolean withChange) throws Exception {
         final BatchPostStatus status = CONTROL;
         BatchPostStatus oldStatus = wrapper.getStatus();
-        int count = operationRepository.executeInNewTransaction(persistence -> {
+        int count = glOperationRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
                 return postingRepository.updatePostingStatusChanged(wrapper.getId(), userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
             } else {
@@ -712,7 +702,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
      * @throws Exception
      */
     public RpcRes_Base<ManualOperationWrapper> deleteOperationRq(ManualTechOperationWrapper wrapper) throws Exception {
-        operationRepository.executeInNewTransaction(persistence -> deletePosting(wrapper));
+        glOperationRepository.executeInNewTransaction(persistence -> deletePosting(wrapper));
         String msg = "Запрос на операцию ID = " + wrapper.getId() + " удалён";
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
@@ -763,7 +753,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
      */
     public RpcRes_Base<ManualOperationWrapper> updateOperationRqInternal(ManualTechOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         BatchPostStatus status = wrapper.getStatus().getStep().isControlStep() ? CONTROL : newStatus;
-        BatchPosting posting = operationRepository.executeInNewTransaction(persistence -> updatePosting(wrapper, status));
+        BatchPosting posting = glOperationRepository.executeInNewTransaction(persistence -> updatePosting(wrapper, status));
         wrapper.setId(posting.getId());
         wrapper.setStatus(posting.getStatus());
         String msg = "Запрос на операцию ID = " + wrapper.getId() +
@@ -860,7 +850,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         BatchProcessResult result = new BatchProcessResult(wrapper.getId(), newStatus);
         BatchPostStatus oldStatus = wrapper.getStatus();
         BatchPostAction action = wrapper.getAction();
-        int count = operationRepository.executeInNewTransaction(persistence -> {
+        int count = glOperationRepository.executeInNewTransaction(persistence -> {
             Date timestamp = userContext.getTimestamp();
             int cnt = 0;
             switch (newStatus) {
@@ -893,12 +883,24 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         if (0 == count)
             throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
 
-        if (newStatus==SIGNED) {
-            BatchPosting posting = postingRepository.findById(wrapper.getId());
-            manualOperationProcessed(posting);
+        if (newStatus==SIGNEDVIEW) {
+            int cnt = 0;
+            try {
+                BatchPosting posting = postingRepository.findById(wrapper.getId());
+                manualOperationProcessed(posting);
+                Date timestamp = userContext.getTimestamp();
+                cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, COMPLETED, SIGNEDVIEW);
+                result.setStatus(COMPLETED);
+                wrapper.setStatus(COMPLETED);
+            } catch (EJBException ex) {
+                auditController.info(ManualOperation, ex.getMessage(), postingName, getWrapperId(wrapper));
+                Date timestamp = userContext.getTimestamp();
+                cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, REFUSESRV, newStatus);
+                wrapper.setStatus(REFUSESRV);
+                result.setStatus(REFUSESRV);
+            }
         }
 
-        wrapper.setStatus(newStatus);
         String msg = result.getPostSignedMessage();
         wrapper.getErrorList().addErrorDescription(msg);
         auditController.info(ManualOperation, msg, postingName, getWrapperId(wrapper));
@@ -970,7 +972,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 //        BatchPostStatus srvStatus = WAITSRV;
         // устанавливаем статус = WAITSRV, movementId , SEND_SRV
         BatchPostStatus oldStatus = wrapper.getStatus();
-        int count = operationRepository.executeInNewTransaction(persistence -> {
+        int count = glOperationRepository.executeInNewTransaction(persistence -> {
             return postingRepository.sendPostingStatus(wrapper.getId(), movementId, userContext.getTimestamp(), srvStatus, oldStatus);
         });
         if (0 == count) {
@@ -1028,7 +1030,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         BatchPostStatus oldStatus = wrapper.getStatus();
         BatchPostStatus stepStatus = getStepStatus(wrapper.getStatus().getStep(), newStatus);
         Date timstamp = (TIMEOUTSRV == newStatus) ? null : userContext.getTimestamp();
-        int count = operationRepository.executeInNewTransaction(persistence -> {
+        int count = glOperationRepository.executeInNewTransaction(persistence -> {
             return postingRepository.receivePostingStatus(wrapper.getId(), movementId, timstamp, stepStatus, oldStatus, errorCode, errorMessage);
         });
         if (0 == count) {
@@ -1077,7 +1079,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
         try {
             // TODO здесь падает при обработке пакета!!
-            operationRepository.executeInNewTransaction(persistence -> postingRepository.updatePostingStatusError(wrapper.getId(), wrapper.getErrorMessage(),
+            glOperationRepository.executeInNewTransaction(persistence -> postingRepository.updatePostingStatusError(wrapper.getId(), wrapper.getErrorMessage(),
                     getStepStatus(wrapper.getStatus().getStep(), status), errorCode));
         } catch (Throwable e1) {
             return msg + "\n" + e.getMessage();
@@ -1130,7 +1132,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         } else {
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             BatchPostStatus oldStatus = posting.getStatus();
-            int count = operationRepository.executeInNewTransaction(persistence -> {
+            int count = glOperationRepository.executeInNewTransaction(persistence -> {
                 return postingRepository.refusePostingStatus(posting.getId(), wrapper.getReasonOfDeny(),
                         userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
             });
