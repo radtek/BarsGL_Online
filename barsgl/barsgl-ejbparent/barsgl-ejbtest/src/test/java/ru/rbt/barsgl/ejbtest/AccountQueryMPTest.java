@@ -142,7 +142,9 @@ mq.password=UsATi8hU
         sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
 //                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
 //                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
+//                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
+                new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()),
+//                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),                
                 "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
 //                new File(this.getClass().getResource("/AccountBalanceListQuery-B4.xml").getFile()),
 //                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
@@ -185,7 +187,8 @@ mq.password=UsATi8hU
 //                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF\n" +
                         "mq.user=er22228\n" +
                         "mq.password="+vugluskr9+"\n"+
-                        "unspents=show"
+                        "unspents=show\n"+
+                        "writeOut=true"
                 )
                 .build();
         jobService.executeJob(job);
