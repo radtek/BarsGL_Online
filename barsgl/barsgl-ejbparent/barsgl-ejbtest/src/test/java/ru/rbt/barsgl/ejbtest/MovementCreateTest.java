@@ -26,6 +26,19 @@ public class MovementCreateTest extends AbstractTimerJobTest {
 
     public static final Logger logger = Logger.getLogger(MovementCreateTest.class.getName());
 
+    /*
+update GL_PRPRP set STRING_VALUE = 
+'mq.host=vs338
+mq.port=1414
+mq.queueManager=QM_MBROKER10_TEST
+mq.channel=SYSTEM.DEF.SVRCONN
+mq.queue.inc = UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+mq.queue.out = UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF
+mq.user=er22228
+mq.password=Vugluskr4' where ID_PRP = 'mc.queues.param';
+commit;
+    */
+    
     @Test
     public void testFull2() throws Exception {
         // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
@@ -36,7 +49,7 @@ public class MovementCreateTest extends AbstractTimerJobTest {
 
 
         // Config
-        cf.setHostName("172.17.148.210");
+        cf.setHostName("vs338");
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         cf.setQueueManager("QM_MBROKER10_TEST");
@@ -82,7 +95,7 @@ public class MovementCreateTest extends AbstractTimerJobTest {
 
 
         // Config
-        cf.setHostName("172.17.148.210");
+        cf.setHostName("vs338");
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         cf.setQueueManager("QM_MBROKER10_TEST");
