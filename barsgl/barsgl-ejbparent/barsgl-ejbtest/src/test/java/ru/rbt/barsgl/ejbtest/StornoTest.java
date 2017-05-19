@@ -12,8 +12,8 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
  * Created by Ivan Sevastyanov
@@ -739,7 +739,7 @@ public class StornoTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.POST);
+        Assert.assertEquals(OperState.POST, operationS.getState());
         Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.S);
         Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.S);
         Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
