@@ -9,11 +9,9 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.etl.EtlAccount;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
@@ -22,13 +20,13 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
-import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
+import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.PROCESSED;
 
 /**
  * Created by Ivan Sevastyanov
@@ -45,12 +43,11 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
     }
 
     /**
-     * Выполнение задачи обработки входного пакета, содержащего проводки и счета
+     * Выполнение задачи обработки входного пакета, содержащего проводки
      * @fsd 4.2
      * @throws Exception
      */
     @Test
-    @Ignore
     public void etlStructureMonitorTaskTestNew() throws Exception {
         Long stamp = System.currentTimeMillis();
 
@@ -74,15 +71,6 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
         pst3.setParentReference("0092");
         pst3 = (EtlPosting) baseEntityRepository.save(pst3);
 
- /*       EtlAccount etlAcc = newAccount(pkg, "10603810000010280090", true);
-        etlAcc.setCurrency(BankCurrency.USD);
-        etlAcc.setAccountType(551110901L);
-        etlAcc.setCustomerNumber("11455");
-        etlAcc.setFilial("NVS");
-        etlAcc.setBranch("010");
-        etlAcc.setPlCode("");
-        etlAcc = (EtlAccount)baseEntityRepository.save(etlAcc);*/
-
         CalendarJob etlMonitor = (CalendarJob) baseEntityRepository.selectOne(CalendarJob.class
             , "from CalendarJob j where j.name = ?1", ETL_MONITOR_TASK);
         jobService.executeJob(etlMonitor);
@@ -101,15 +89,10 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
         oper3 = getOperation(pst3.getId());
         Assert.assertNotNull(oper3);
         Assert.assertEquals(OperState.POST, oper3.getState());
-
-//        EtlAccount etlAcc = (EtlAccount) baseEntityRepository.findById(etlAcc.getClass(), etlAcc.getId());
-//        Assert.assertTrue(0 == etlAcc.getErrorCode());
-//        GLAccount acc = getAccount(etlAcc.getId().getBsaAcid());
-//        Assert.assertNotNull(acc);
     }
 
     @Test
-    @Ignore
+    @Ignore // странный тест, был заигнорен  раньше
     public void etlByPkgId()throws Exception {
         EtlPackage pkg = (EtlPackage) baseEntityRepository.findById(EtlPackage.class, 4647l);
         pkg.setPackageState(LOADED);
@@ -137,7 +120,6 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
      * @throws Exception
      */
     @Test
-    @Ignore
     public void etlStructureMonitorTaskTestAll() throws Exception {
         Long stamp = System.currentTimeMillis();
 
@@ -168,15 +150,6 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
         pst2.setValueDate(getOperday().getCurrentDate());
         pst2 = (EtlPosting) baseEntityRepository.save(pst2);
 
-        EtlAccount etlAcc = newAccount(pkg, "10603810000010280090", true);
-        etlAcc.setCurrency(BankCurrency.USD);
-        etlAcc.setAccountType(551110901L);
-        etlAcc.setCustomerNumber("11455");
-        etlAcc.setFilial("NVS");
-        etlAcc.setBranch("010");
-        etlAcc.setPlCode("");
-        etlAcc = (EtlAccount)baseEntityRepository.save(etlAcc);
-
         CalendarJob etlMonitor = (CalendarJob) baseEntityRepository.selectOne(CalendarJob.class
                 , "from CalendarJob j where j.name = ?1", ETL_MONITOR_TASK);
         jobService.executeJob(etlMonitor);
@@ -185,8 +158,6 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
         Assert.assertNull(oper1);
         GLOperation oper2 = getOperation(pst2.getId());
         Assert.assertNull(oper2);
-        GLAccount acc = getAccount(etlAcc.getId().getBsaAcid());
-        Assert.assertNull(acc);
 
         pkg.setPackageState(LOADED);
 
@@ -203,11 +174,6 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
         oper2 = getOperation(pst2.getId());
         Assert.assertEquals(OperState.POST, oper2.getState());
         Assert.assertNotNull(oper2);
-
-        etlAcc = (EtlAccount) baseEntityRepository.findById(etlAcc.getClass(), etlAcc.getId());
-        Assert.assertTrue(0 == etlAcc.getErrorCode());
-        acc = getAccount(etlAcc.getId().getBsaAcid());
-        Assert.assertNotNull(acc);
     }
 
     /**
@@ -306,7 +272,7 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
 
     }
 
-    @Test @Ignore
+    @Test
     public void test100() throws Exception {
 
         final int postingsCount = 200;
@@ -423,98 +389,6 @@ public class EtlStructureMonitorTest extends AbstractTimerJobTest {
         oper2 = getOperation(pst2.getId());
         Assert.assertEquals(OperState.POST, oper2.getState());
         Assert.assertNotNull(oper2);
-    }
-
-    /**
-     * Выполнение задачи обработки входного пакета, содержащего счета
-     * @fsd 4.2
-     * @throws Exception
-     */
-    @Test
-    @Ignore
-    public void etlStructureMonitorTaskTestAccount() throws Exception {
-        Long stamp = System.currentTimeMillis();
-        EtlPackage pkg = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
-        pkg.setDateLoad(getSystemDateTime());
-        pkg.setPackageState(EtlPackage.PackageState.LOADED);
-        pkg.setAccountCnt(1);
-        pkg.setPostingCnt(0);
-        pkg = (EtlPackage) baseEntityRepository.save(pkg);
-
-        EtlAccount etlAcc = newAccount(pkg, "10603810000010280091", true);
-        etlAcc.setCurrency(BankCurrency.EUR);
-        etlAcc.setAccountType(551110901L);
-        etlAcc.setCustomerNumber("29941");
-        etlAcc.setFilial("SPB");
-        etlAcc.setBranch("014");
-        etlAcc.setPlCode("");
-        etlAcc = (EtlAccount)baseEntityRepository.save(etlAcc);
-
-        CalendarJob etlMonitor = (CalendarJob) baseEntityRepository.selectOne(CalendarJob.class
-                , "from CalendarJob j where j.name = ?1", ETL_MONITOR_TASK);
-        jobService.executeJob(etlMonitor);
-        GLAccount acc = getAccount(etlAcc.getId().getBsaAcid());
-        Assert.assertNull(acc);
-
-        pkg.setPackageState(LOADED);
-
-        pkg = (EtlPackage) baseEntityRepository.update(pkg);
-
-        jobService.executeJob(etlMonitor);
-
-        pkg = (EtlPackage) baseEntityRepository.findById(EtlPackage.class, pkg.getId());
-        Assert.assertEquals(PROCESSED, pkg.getPackageState());
-
-        etlAcc = (EtlAccount) baseEntityRepository.findById(etlAcc.getClass(), etlAcc.getId());
-        Assert.assertTrue(0 == etlAcc.getErrorCode());
-        acc = getAccount(etlAcc.getId().getBsaAcid());
-        Assert.assertNotNull(acc);
-    }
-
-    /**
-     * Выполнение задачи обработки входного пакета, содержащего счета с ошибками
-     * @fsd 4.2
-     * @throws Exception
-     */
-    @Test
-    @Ignore
-    public void etlStructureMonitorTaskTestErrorAccount() throws Exception {
-        Long stamp = System.currentTimeMillis();
-        EtlPackage pkg = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
-        pkg.setDateLoad(getSystemDateTime());
-        pkg.setPackageState(EtlPackage.PackageState.INPROGRESS);
-        pkg.setAccountCnt(1);
-        pkg.setPostingCnt(0);
-        pkg = (EtlPackage) baseEntityRepository.save(pkg);
-
-        EtlAccount etlAcc = newAccount(pkg, "10603810000010280091", true);
-        etlAcc.setCurrency(BankCurrency.EUR);
-        etlAcc.setAccountType(551110901L);
-        etlAcc.setCustomerNumber("29941");
-        etlAcc.setFilial("SPP");
-        etlAcc.setBranch("014");
-        etlAcc.setPlCode("");
-        etlAcc = (EtlAccount)baseEntityRepository.save(etlAcc);
-
-        CalendarJob etlMonitor = (CalendarJob) baseEntityRepository.selectOne(CalendarJob.class
-                , "from CalendarJob j where j.name = ?1", ETL_MONITOR_TASK);
-        jobService.executeJob(etlMonitor);
-        GLAccount acc = getAccount(etlAcc.getId().getBsaAcid());
-        Assert.assertNull(acc);
-
-        pkg.setPackageState(LOADED);
-
-        pkg = (EtlPackage) baseEntityRepository.update(pkg);
-
-        jobService.executeJob(etlMonitor);
-
-        pkg = (EtlPackage) baseEntityRepository.findById(EtlPackage.class, pkg.getId());
-        Assert.assertEquals(ERROR, pkg.getPackageState());
-
-        etlAcc = (EtlAccount) baseEntityRepository.findById(etlAcc.getClass(), etlAcc.getId());
-        Assert.assertTrue(1 == etlAcc.getErrorCode());
-        acc = getAccount(etlAcc.getId().getBsaAcid());
-        Assert.assertNull(acc);
     }
 
     @Test

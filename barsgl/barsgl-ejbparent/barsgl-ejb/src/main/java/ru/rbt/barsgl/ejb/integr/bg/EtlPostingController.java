@@ -255,7 +255,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         try {
             operationRepository.setFilials(operation);              // Филиалы
             operationRepository.setBsChapter(operation);            // Глава баланса
-            if (!operation.getBsChapter().equals("T")) {
+            if (!GLOperationProcessor.TECH_OPER.equals(operation.getBsChapter())) {
                 correctAccounts9999(operation);
             }
             simpleOperationProcessor.setStornoOperation(operation); // надо найти сторнируемую ДО определения типа процессора
