@@ -85,7 +85,7 @@ public class Operday extends BaseEntity<Date> {
      * текущий операционный день
      */
     @Id
-//    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.DATE)
     @Column(name = "CURDATE", nullable = false)
     private Date currentDate;
 
@@ -99,7 +99,7 @@ public class Operday extends BaseEntity<Date> {
     /**
      * предыдущий рабочий операционный день
      */
-//    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.DATE)
     @Column(name = "LWDATE", nullable = false)
     private Date lastWorkingDay;
 
