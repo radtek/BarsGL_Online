@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import org.apache.commons.lang3.StringUtils;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -10,15 +11,14 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.shared.enums.InputMethod;
+import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.enums.InputMethod;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -430,7 +430,7 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
         String sql = "select PD.ID from GL_OPER o" +
                          " join GL_POSTING p on o.GLOID = p.GLO_REF" +
                          " join PD on p.PCID = PD.PCID" +
-                         " where VALUE(PAR_GLO, GLOID) = ?";
+                         " where NVL(PAR_GLO, GLOID) = ?";
         try {
             List<DataRecord> res = select(sql, parentId);
             if (null == res)

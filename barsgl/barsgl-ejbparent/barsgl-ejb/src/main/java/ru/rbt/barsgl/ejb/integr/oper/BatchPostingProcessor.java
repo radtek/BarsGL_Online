@@ -1,10 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
-import ru.rbt.shared.enums.PrmValueEnum;
-import ru.rbt.shared.enums.SecurityActionCode;
-import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
@@ -15,17 +11,24 @@ import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.enums.BatchPostAction;
+import ru.rbt.barsgl.shared.enums.BatchPostStep;
+import ru.rbt.barsgl.shared.enums.InputMethod;
+import ru.rbt.barsgl.shared.enums.InvisibleType;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.barsgl.shared.enums.*;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.entity.access.PrmValue;
+import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -393,7 +396,7 @@ public class BatchPostingProcessor extends ValidationAwareHandler<ManualOperatio
             throw new ValidationError(DATE_AFTER_OPERDAY, fieldName,
                     dateUtils.onlyDateString(checkDate),
                     dateUtils.onlyDateString(currentDate));
-        } else if (checkHoliday && !calendarDayRepository.isWorkdayWithTech(checkDate)) {
+        } else if (checkHoliday && !calendarDayRepository.isWorkday(checkDate) && !calendarDayRepository.isWorkdayWithTech(checkDate)) {
             // TODO проверка на выходные
             throw new ValidationError(DATE_IS_HOLIDAY, fieldName,
                     dateUtils.onlyDateString(checkDate));

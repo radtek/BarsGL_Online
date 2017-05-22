@@ -1,14 +1,15 @@
 package ru.rbt.barsgl.ejb.bt;
 
-import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
-import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
+import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.datarec.DefaultJdbcAdapter;
 import ru.rbt.ejbcore.datarec.JdbcAdapter;
 import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
 
 import javax.ejb.*;
@@ -181,7 +182,7 @@ public class BalturRecalculator {
 
     private int registerChangeMarkerInternal(String bsaacid, String acid, Date dat) {
         if (1 > pdRepository.executeNativeUpdate("update GL_BSARC set RECTED = ? where bsaacid = ? and acid = ? and dat = ?"
-                , BalturRecalcState.NEW.getValue(), bsaacid, acid, dat)) {
+                , BalturRecalcState.NEW.getValue(), bsaacid, StringUtils.rightPad(acid, 20, " "), dat)) {
             return pdRepository.executeNativeUpdate("insert into GL_BSARC (RECTED,bsaacid,acid,dat) values (?,?,?,?)"
                     , BalturRecalcState.NEW.getValue(), bsaacid, acid, dat);
         }
