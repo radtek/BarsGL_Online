@@ -96,6 +96,7 @@ public class EtlPosting extends BaseEntity <Long> {
 
     @ManyToOne
     @JoinColumn(name = "CCY_CR")
+
     private BankCurrency currencyCredit;
 
     @Column(name = "AMT_CR")

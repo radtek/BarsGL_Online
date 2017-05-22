@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 
@@ -39,14 +40,14 @@ public class SuppressTboStornoDuplicatesTest extends AbstractRemoteTest {
     @Test
     public void testSuppress() {
 
-        baseEntityRepository.executeNativeUpdate("update gl_oper set vdate = vdate - 10 day, procdate = procdate - 10 day");
+        Date firstOperday = getOperday().getCurrentDate();
+        baseEntityRepository.executeNativeUpdate("update gl_oper set vdate = vdate - 10, procdate = procdate - 10");
 
         long stamp = System.currentTimeMillis();
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
 
-        Date firstOperday = getOperday().getCurrentDate();
         EtlPosting pst = createPosting(stamp, pkg);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
@@ -103,7 +104,7 @@ public class SuppressTboStornoDuplicatesTest extends AbstractRemoteTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
@@ -121,8 +122,13 @@ public class SuppressTboStornoDuplicatesTest extends AbstractRemoteTest {
     }
 
     private List<Pd> findPds(GLOperation operation) {
-        return baseEntityRepository.findNative(Pd.class,
-                "select * from pd d where exists (select 1 from gl_posting p where p.glo_ref = ?1 and p.pcid = d.pcid)", 100, operation.getId());
-    }
+       GLPosting posting =  (GLPosting) baseEntityRepository.selectOne(GLPosting.class, "from GLPosting gp where gp.operation = ?1", operation);
+       Assert.assertNotNull(posting);
 
+       List<Pd> pds = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId = ?1", posting.getId());
+       Assert.assertNotNull(pds);
+       Assert.assertFalse(pds.isEmpty());
+
+        return pds;
+    }
 }
