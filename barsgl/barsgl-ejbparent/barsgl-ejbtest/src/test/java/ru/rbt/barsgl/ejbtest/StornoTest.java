@@ -217,7 +217,7 @@ public class StornoTest extends AbstractTimerJobTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
@@ -246,7 +246,7 @@ public class StornoTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.POST);
+        Assert.assertEquals(OperState.POST, operationS.getState());
         Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.S);
         Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.S);
         Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
@@ -541,8 +541,8 @@ public class StornoTest extends AbstractTimerJobTest {
      * Повторная обработка сторно с статусом ERCHK
      */
     @Test public void testReprocessStorno() {
-
-        Date toDate = Date.from(getOperday().getCurrentDate().toInstant().minus(-10, ChronoUnit.DAYS));
+        Date currentDate = new Date(getOperday().getCurrentDate().getTime());
+        Date toDate = Date.from(currentDate.toInstant().minus(-10, ChronoUnit.DAYS));
         baseEntityRepository.executeUpdate("update GLOperation o set o.valueDate = ?1 where o.storno = ?2 and o.state = ?3 and o.valueDate = ?4"
                 , toDate, YesNo.Y, OperState.ERCHK, getOperday().getCurrentDate());
 
@@ -649,7 +649,7 @@ public class StornoTest extends AbstractTimerJobTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
@@ -699,7 +699,7 @@ public class StornoTest extends AbstractTimerJobTest {
 
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
-        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
