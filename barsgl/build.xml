@@ -1,6 +1,5 @@
 <project name="barsgl" basedir="." default="start-weblogic">
 
-
     <property file="build.properties" />
 
     <property environment="env"/>
