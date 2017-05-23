@@ -57,7 +57,7 @@ public class DwhTools {
 
     public boolean isStepInOperDay(String stepName, java.sql.Date operDay) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-            try (PreparedStatement selStep = connection.prepareStatement("select operday from Gl_Etldwhs where pardesc=? and parvalue=1 and operday=?")){
+            try (PreparedStatement selStep = connection.prepareStatement("select operday from Gl_Etldwhs where pardesc=? and parvalue='1' and operday=?")){
                  selStep.setString(1, stepName);
                  selStep.setDate(2, operDay);
                  try(ResultSet rsStep = selStep.executeQuery()) {

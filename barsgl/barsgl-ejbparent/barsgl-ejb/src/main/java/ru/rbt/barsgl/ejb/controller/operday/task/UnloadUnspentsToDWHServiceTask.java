@@ -336,7 +336,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
     private boolean checkStep(LocalDate operday, String taskName) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             try (PreparedStatement query = connection.prepareStatement(
-                    "SELECT * FROM GL_ETLDWHS WHERE OPERDAY=? AND PARDESC=? AND PARVALUE=1")) {
+                    "SELECT * FROM GL_ETLDWHS WHERE OPERDAY=? AND PARDESC=? AND PARVALUE='1'")) {
                 query.setDate(1, Date.valueOf(operday));
                 query.setString(2, taskName);
                 ResultSet rs = query.executeQuery();
