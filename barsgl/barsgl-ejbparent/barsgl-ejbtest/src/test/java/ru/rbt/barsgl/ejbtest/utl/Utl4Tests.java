@@ -174,4 +174,35 @@ public class Utl4Tests {
         return pdList.stream().filter(p -> !Objects.equals(p.getId(), p.getPcId())).findFirst().orElseThrow(()->new RuntimeException("pd credit is not found"));
     }
 
+    public static boolean createUser(long userId, BaseEntityRepository baseEntityRepository) {
+        return 1 == baseEntityRepository.executeNativeUpdate("merge into gl_user u\n" +
+                "using (select 2 id_user from dual) u2\n" +
+                "on (u.id_user = u2.id_user)\n" +
+                "when not matched then insert (id_user, user_name, user_pwd, surname, firstname, patronymic, create_dt, locked)\n" +
+                "values (?, 'name2', '123', 'surname2', 'firstname2', 'patronymic2', systimestamp, '0')", userId);
+    }
+
+    public static int grantAllPerission(long userId, BaseEntityRepository baseEntityRepository) {
+        return baseEntityRepository.executeNativeUpdate(
+                "merge into gl_au_actrl ar\n" +
+                "using ( select *\n" +
+                "          from (\n" +
+                "        select a.id_act, ur.id_role, row_number() over (partition by a.id_act order by ur.id_role) rn\n" +
+                "          from gl_au_usrrl ur, gl_au_act a\n" +
+                "         where ur.id_user = ?\n" +
+                "           ) where rn = 1) s\n" +
+                "  on (ar.id_act = s.id_act and ar.id_role = s.id_role)\n" +
+                "when not matched then insert (ar.id_role,ar.id_act, usr_aut, dt_aut) \n" +
+                "values (s.id_role, s.id_act, 'sys', systimestamp)", userId);
+    }
+
+    public static int grantAllBranches(long userId, BaseEntityRepository baseEntityRepository) {
+        return baseEntityRepository.executeNativeUpdate(
+                "merge into GL_AU_PRMVAL p\n" +
+                "using (select ? id_user, max(id_prm) + 1 id_prm, 'HeadBranch' prm_code, '*' prmval, cast('2015-09-01' as date) dt_begin from GL_AU_PRMVAL) p0\n" +
+                " on (p.id_user = p0.id_user)\n" +
+                "when not matched then insert (id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut)\n" +
+                "values (p0.id_prm, p0.id_user, p0.prm_code, p0.prmval, p0.dt_begin, null, 'sys', systimestamp)", userId);
+    }
+
 }

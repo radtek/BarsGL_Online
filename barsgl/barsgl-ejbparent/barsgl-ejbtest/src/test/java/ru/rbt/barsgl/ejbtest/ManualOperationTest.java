@@ -38,16 +38,7 @@ public class ManualOperationTest extends AbstractTimerJobTest {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 
         // все права пользователю 1
-        baseEntityRepository.executeNativeUpdate("merge into gl_au_actrl ar\n" +
-                "using ( select *\n" +
-                "          from (\n" +
-                "        select a.id_act, ur.id_role, row_number() over (partition by a.id_act order by ur.id_role) rn\n" +
-                "          from gl_au_usrrl ur, gl_au_act a\n" +
-                "         where ur.id_user = ?\n" +
-                "           ) where rn = 1) s\n" +
-                "  on (ar.id_act = s.id_act and ar.id_role = s.id_role)\n" +
-                "when not matched then insert (ar.id_role,ar.id_act, usr_aut, dt_aut) \n" +
-                "values (s.id_role, s.id_act, 'sys', systimestamp)", USER_ID);
+        Utl4Tests.grantAllPerission(USER_ID, baseEntityRepository);
     }
     /**
      * Создание и обработка операции по ручному вводу
