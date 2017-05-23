@@ -11,8 +11,10 @@ import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import java.io.File;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +34,16 @@ public class BatchMessageTest extends AbstractTimerJobTest {
     private final Long USER_ID = 1L;
 
     @BeforeClass
+//    public static void beforeClass() {
+//        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+//    }
     public static void beforeClass() {
-        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        try {
+            setOperday(DateUtils.dbDateParse("2015-02-26"), DateUtils.dbDateParse("2015-02-25"),
+                    Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

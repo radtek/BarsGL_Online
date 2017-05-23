@@ -190,7 +190,7 @@ public class ValidationTest extends AbstractTimerJobTest {
      * Проверка неверного кода валюты, отсутствия ИД проводки - ИД платежа или ИД сделки (ошибка проводки из АЕ)
      * @fsd 7.4.1
      */
-    @Test public void testCurrency() {
+    @Test public void testCurrency() throws SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -210,8 +210,11 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst.setDealId(null);
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
+
         Assert.assertNotNull(pst);
         baseEntityRepository.executeNativeUpdate("update GL_ETLPST set CCY_CR = 'LOL' where ID = ?", pst.getId());
+
+
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);

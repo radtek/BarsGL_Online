@@ -5,12 +5,11 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.OverValueAcc2GlAccTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.io.StringReader;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
@@ -21,15 +20,18 @@ public class OverValueAcc2GlAccTest extends AbstractTimerJobTest {
 
     @Test
     public void test() throws Exception {
-        Date operDay = getOperday().getCurrentDate();
-        String sql = "delete from gl_etldwhs where pardesc = '"+DwhUnloadParams.UnloadOverValueAcc.getParamDesc()+"' and operday='"+new SimpleDateFormat("yyyy-MM-dd").format(operDay)+"'";
-        baseEntityRepository.executeNativeUpdate(sql);
-        emulateP9(operDay);
         Properties properties = new Properties();
         properties.load(new StringReader(TaskUtils.CHECK_RUN_KEY + "=true\nstepName=P9"));
+        Date executeDate = TaskUtils.getDateFromGLOD(properties, baseEntityRepository, getOperday());
+
+        String sql = "delete from gl_etldwhs where pardesc = '"+DwhUnloadParams.UnloadOverValueAcc.getParamDesc()+"' and operday=?";    //+new SimpleDateFormat("yyyy-MM-dd").format(operDay)+"'";
+        baseEntityRepository.executeNativeUpdate(sql, executeDate);
+
+        emulateP9(executeDate);
+
         SingleActionJobBuilder builder = SingleActionJobBuilder.create().withClass(OverValueAcc2GlAccTask.class).withProps(properties);
         jobService.executeJob(builder.build());
-        checkHeadersSuccess(operDay);
+        checkHeadersSuccess(executeDate);
     }
 
     private static void emulateP9(Date operDay) throws Exception {
@@ -46,9 +48,10 @@ public class OverValueAcc2GlAccTest extends AbstractTimerJobTest {
     }
 
     private static void checkHeadersSuccess(Date operDay) throws SQLException {
-        DataRecord rec = baseEntityRepository.selectFirst("select count(1) cnt from GL_ETLDWHS where PARDESC = '"+ DwhUnloadParams.UnloadOverValueAcc.getParamDesc()+"' and parvalue = 1 and operday='"+new SimpleDateFormat("yyyy-MM-dd").format(operDay)+"'");
+        DataRecord rec = baseEntityRepository.selectFirst("select count(1) cnt from GL_ETLDWHS where PARDESC = '"+ DwhUnloadParams.UnloadOverValueAcc.getParamDesc()
+                +"' and parvalue = '1' and operday=?", operDay);
 
-        Assert.assertTrue(rec.getInteger("cnt") == 1);
+        Assert.assertEquals(1, (int)rec.getInteger("cnt"));
     }
 
 }

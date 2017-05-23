@@ -89,7 +89,7 @@ public class TaskUtils {
     public static long getDwhAlreadyHeaderCount(Date executeDate, DwhUnloadParams params, BaseEntityRepository repository) throws SQLException {
         return repository.selectFirst(
                 "select count(1) cnt from GL_ETLDWHS " +
-                        "where PARNAME = ? and PARVALUE in (0, 1) and PARDESC = ? and OPERDAY = ?"
+                        "where PARNAME = ? and PARVALUE in ('0', '1') and PARDESC = ? and OPERDAY = ?"
                 , params.getParamName(), params.getParamDesc(), executeDate).getLong(0);
     }
 
@@ -101,10 +101,10 @@ public class TaskUtils {
         return repository.executeInNewTransaction(persistence -> {
             // нужна запись о готовности выгрузки счетов, так как это вьюха - GLVD_ACC
             repository.executeNativeUpdate(
-                    "insert into GL_ETLDWHS (PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD,END_LOAD) values (?,?,?,?,?,?)"
+                    "insert into GL_ETLDWHS (ID,PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD,END_LOAD) values (GL_ETLDWHS_SEQ.NEXTVAL,?,?,?,?,?,?)"
                     , unloadParams.getParamName(), DwhUnloadStatus.STARTED.getFlag(), unloadParams.getParamDesc()
                     , operdate, operdayController.getSystemDateTime(), null);
-            return repository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM DUAL").getLong("id");
+            return repository.selectFirst("SELECT GL_ETLDWHS_SEQ.CURRVAL id FROM DUAL").getLong("id");
         });
     }
 

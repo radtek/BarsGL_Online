@@ -1,13 +1,13 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
-import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
+import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
@@ -20,9 +20,9 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.TechoverTask;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_TECHOVER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.POSTING_TECHOVER;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.TechoverTask;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_LDR_STEP_ERR;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 
@@ -144,7 +144,6 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
 
     private int fillBalanceDelta(Date lwdate) throws Exception {
         repository.executeTransactionally(connection -> {
-            repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_tmp.sql"));
             try (PreparedStatement st = connection.prepareStatement(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_insacc.sql"))) {
                 st.setDate(1, new java.sql.Date(lwdate.getTime()));
                 st.executeUpdate();

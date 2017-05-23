@@ -12,20 +12,22 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 
 /**
  * Created by ER18837 on 21.04.16.
@@ -209,7 +211,7 @@ public class ManualEditPostingDirectTest extends AbstractTimerJobTest {
 
     public static void checkCommonParams(GLOperation operation, List<AbstractPd> pdList, String dealId, String subDealId, String profit) {
         pdList.forEach(pd -> {
-            Assert.assertEquals(profit, pd.getProfitCenter());
+            Assert.assertEquals(ifEmpty(profit,""), ifEmpty(pd.getProfitCenter(), ifEmpty(profit,"")).trim());
             Assert.assertEquals(dealId, pd.getDealId());
             Assert.assertEquals(subDealId, pd.getSubdealId());
             String pnar = operation.getInputMethod().equals(InputMethod.AE) ? getPnar(operation) : getPnarManual(dealId, subDealId, null);

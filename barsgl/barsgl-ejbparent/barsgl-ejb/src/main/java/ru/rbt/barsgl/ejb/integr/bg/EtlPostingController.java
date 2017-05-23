@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -10,23 +11,18 @@ import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.SimpleOperationProcessor;
-import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
-import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
+import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.security.GLErrorController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
-import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
-import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -49,9 +45,9 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.integr.ValidationAwareHandler.validationErrorsToString;
+import static ru.rbt.barsgl.shared.enums.OperState.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -259,7 +255,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         try {
             operationRepository.setFilials(operation);              // Филиалы
             operationRepository.setBsChapter(operation);            // Глава баланса
-            if (!operation.getBsChapter().equals("T")) {
+            if (!GLOperationProcessor.TECH_OPER.equals(operation.getBsChapter())) {
                 correctAccounts9999(operation);
             }
             simpleOperationProcessor.setStornoOperation(operation); // надо найти сторнируемую ДО определения типа процессора
@@ -404,17 +400,16 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             }
             return new CobStepResult(CobStepStatus.Success, format("%s. Обработано успешно %d", msg, cnt));
         } else {
-//            auditController.info(Operation, "Не найдено сторно операций для повторной обработки");
             return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");
         }
     }
 
     private boolean reprocessOperation(GLOperationProcessor processor, GLOperation operation, String reason) throws Exception {
         if (operation.getState() != POST) {
+            operation = refreshOperationForcibly(operation);
             if (!refillAccounts(processor, operation)) {
                 return false;
             }
-            operation = refreshOperationForcibly(operation);
             if (processOperation(operation, false)) {
                 auditController.info(Operation,
                         format("Успешное завершение повторной обработки операции '%s'. Причина '%s'.", operation.getId(), reason)
@@ -622,8 +617,8 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      */
     private boolean refillAccounts(GLOperationProcessor processor, GLOperation operation) throws Exception {
         try {
-            operation = fillAccount(processor, operation, GLOperation.OperSide.D);
-            operation = fillAccount(processor, operation, GLOperation.OperSide.C);
+            fillAccount(processor, operation, GLOperation.OperSide.D);
+            fillAccount(processor, operation, GLOperation.OperSide.C);
             return true;
         } catch (Exception e) {
             String msg = format("Ошибка поиска (создания) счетов при обработке отложенной операции '%s'", operation);

@@ -89,7 +89,7 @@ public class SuppressStornoTboController {
     }
 
     private Optional<DataRecord> findGrandParentOperation(DataRecord parentOperation, long notEquals) throws SQLException {
-        return Optional.ofNullable(repository.selectFirst(
+        DataRecord record = repository.selectFirst(
                 "select o.gloid, p.pcid from gl_oper o, gl_posting p \n" +
                         " where deal_id = ? \n" +
                         "   and ac_dr = ? and ac_cr = ? and amt_dr = ? \n" +
@@ -99,12 +99,14 @@ public class SuppressStornoTboController {
                 , parentOperation.getString("deal_id")
                 , parentOperation.getString("ac_dr")
                 , parentOperation.getString("ac_cr")
-                , parentOperation.getString("amt_dr")
-                , parentOperation.getString("amt_cr")
+                , parentOperation.getBigDecimal("amt_dr")
+                , parentOperation.getBigDecimal("amt_cr")
                 , parentOperation.getDate("vdate")
                 , POST.name()
                 , notEquals
                 , operdayController.getOperday().getCurrentDate()
-                , N.name()));
+                , N.name());
+
+        return Optional.ofNullable(record);
     }
 }

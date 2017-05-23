@@ -1,17 +1,14 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -23,9 +20,9 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_FLEX;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnload;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnloadBalStep3;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_FLEX;
 
 /**
  * Created by Ivan Sevastyanov on 19.09.2016.
@@ -101,13 +98,12 @@ public class StamtUnloadBalanceFlexTask extends AbstractJobHistoryAwareTask {
     private int fillFlexData(Date executeDate) throws Exception {
         return (int) coreRepository.executeInNewTransaction(persistence -> {
             return coreRepository.executeTransactionally((conn)-> {
-                try (CallableStatement statement = conn.prepareCall("CALL GL_STMFLEX(?,?)")){
+                try (CallableStatement statement = conn.prepareCall("{ CALL GL_STMFLEX(?,?) }")){
                     statement.setDate(1, new java.sql.Date(executeDate.getTime()));
                     statement.registerOutParameter(2, java.sql.Types.INTEGER);
                     statement.execute();
                     return statement.getInt(2);
                 }
-
             });
         });
     }

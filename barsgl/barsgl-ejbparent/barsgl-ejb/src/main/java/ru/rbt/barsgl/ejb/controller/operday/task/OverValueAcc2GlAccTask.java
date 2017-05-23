@@ -1,14 +1,10 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccountBalanceUnloadTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
-import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
@@ -17,13 +13,15 @@ import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import java.sql.CallableStatement;
+import java.sql.Types;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.OverValueAcc2GlAcc;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
 
 /**
  * Created by ER22317 on 01.11.2016.
@@ -52,10 +50,10 @@ public class OverValueAcc2GlAccTask implements ParamsAwareRunnable {
         try {
             if (checkRun(properties, executeDate)) {
                 headerId = taskUtils.createHeaders(DwhUnloadParams.UnloadOverValueAcc, executeDate);
-                DataRecord ret = repository.selectFirst("select GL_OVERVALUE_ACC() from DUAL", new Object[]{});
-                auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов переоценки", ret.getBigInteger(0)));
-                ret = repository.selectFirst("select GL_EXCHANGE_ACC() from DUAL", new Object[]{});
-                auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов курсовой", ret.getBigInteger(0)));
+                long cnt1 = callFunction("GL_OVERVALUE_ACC");
+                auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов переоценки", cnt1));
+                long cnt2 = callFunction("GL_EXCHANGE_ACC");
+                auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов курсовой", cnt2));
 
                 taskUtils.setResultStatus(headerId, DwhUnloadStatus.SUCCEDED);
 
@@ -94,6 +92,22 @@ public class OverValueAcc2GlAccTask implements ParamsAwareRunnable {
             auditController.warning(OverValueAcc2GlAcc, "Ошибка запуска счетов переоценки и курсовой разницы", null, validationError);
             return false;
         }
+    }
+
+    private long callFunction(String funcName) throws Exception {
+        String sql =
+                "declare cnt number;\n" +
+                "begin \n" +
+                "  cnt := " + funcName + "();\n" +
+                "  ? := cnt;\n" +
+                "end;\n";
+        return (long) repository.executeTransactionally(connection -> {
+            try (CallableStatement st = connection.prepareCall(sql)) {
+                st.registerOutParameter(1, Types.INTEGER);
+                st.executeUpdate();
+                return st.getLong(1);
+            }
+        });
     }
 
 }

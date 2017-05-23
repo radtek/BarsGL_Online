@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadFullTask;
@@ -40,6 +41,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.cleanHeader;
  * Выгрузка данных о проводках и остатках в DWH
  * @fsd 8.2
  */
+@Ignore("Больше не используется тестируемый функционал")
 public class UnloadUnspentsToDWHTest extends AbstractTimerJobTest {
 
     public static final Logger logger = Logger.getLogger(UnloadUnspentsToDWHTest.class.getName());

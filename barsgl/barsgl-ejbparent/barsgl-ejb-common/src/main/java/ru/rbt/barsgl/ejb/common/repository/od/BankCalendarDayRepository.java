@@ -24,7 +24,7 @@ public class BankCalendarDayRepository extends AbstractBaseEntityRepository<Bank
                 " where c1.dat = (\n" +
                 "   select max(dat) from cal\n" +
                 "   where dat < ?1 and ccy = ?2\n" +
-                "     and thol not in ('X', 'T') ) " +
+                "     and nvl(thol, 'W') not in ('X', 'T') ) " +
                 "and c1.ccy = ?2", date, BANK_CALENDAR_CODE);
     }
 

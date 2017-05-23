@@ -40,7 +40,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "      T.BSAACID," +
                     "      CASE" +
                     "      WHEN W.ACOD IS NULL" +
-                    "      THEN CASE WHEN VALUE(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL END" +
+                    "      THEN CASE WHEN COALESCE(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL END" +
                     "      ELSE NULL" +
                     "      END                                             GLACID," +
                     "      SUBSTRING(T.ACID, 1, 8)                         CNUM," +
@@ -91,7 +91,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "             JOIN GL_OPER O ON P.GLO_REF = O.GLOID" +
                     "             JOIN PD D ON P.PCID = D.PCID" +
                     "             JOIN PDEXT E ON D.ID = E.ID" +
-                    "           WHERE VALUE(ACID, '') <> '' AND D.INVISIBLE <> '1' AND O.STATE='POST' " +
+                    "           WHERE COALESCE(ACID, '') <> '' AND D.INVISIBLE <> '1' AND O.STATE='POST' " +
                     "                 AND O.PROCDATE BETWEEN ? AND ? " +
                     "         ) T" +
                     "      LEFT JOIN GL_ACC A ON T.BSAACID = A.BSAACID " +
@@ -182,7 +182,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
                     "      O.STATE = 'POST' " +
                     "  ) " +
                     "  AND (A.ACOD, A.SQ) NOT IN (SELECT ACOD, SQ FROM GL_DWHPARM) " +
-                    "  AND VALUE(A.RLNTYPE, '0') <> '2' " +
+                    "  AND COALESCE(A.RLNTYPE, '0') <> '2' " +
                     "ORDER BY B.BSAACID, B.DAT";
 
     private static final String unloadUnspentsInsertSql =
@@ -336,7 +336,7 @@ public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
     private boolean checkStep(LocalDate operday, String taskName) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             try (PreparedStatement query = connection.prepareStatement(
-                    "SELECT * FROM GL_ETLDWHS WHERE OPERDAY=? AND PARDESC=? AND PARVALUE=1")) {
+                    "SELECT * FROM GL_ETLDWHS WHERE OPERDAY=? AND PARDESC=? AND PARVALUE='1'")) {
                 query.setDate(1, Date.valueOf(operday));
                 query.setString(2, taskName);
                 ResultSet rs = query.executeQuery();

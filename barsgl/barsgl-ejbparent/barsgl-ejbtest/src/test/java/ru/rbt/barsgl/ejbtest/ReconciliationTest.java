@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.Iterables;
+import com.google.gwt.user.client.DOM;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,8 +47,8 @@ public class ReconciliationTest extends AbstractRemoteTest {
 
     @Before
     public void before() {
-        baseEntityRepository.executeNativeUpdate("update gl_oper set curdate = curdate - 1 day where curdate = ?", getOperday().getCurrentDate());
-        baseEntityRepository.executeNativeUpdate("update pd set pod = pod - 1 day where pod = ? and pbr = ? and invisible = '1'"
+        baseEntityRepository.executeNativeUpdate("update gl_oper set curdate = curdate - interval'1' day where curdate = ?", getOperday().getCurrentDate());
+        baseEntityRepository.executeNativeUpdate("update pd set pod = pod - interval'1' day where pod = ? and pbr = ? and invisible = '1'"
                 , getOperday().getCurrentDate(), Pbr.PH.getSource());
     }
 
@@ -254,7 +255,7 @@ public class ReconciliationTest extends AbstractRemoteTest {
     private void setPbr(List<Pd> pds) {
         for (Pd pd : pds) {
             log.info("pcid = " + pd.getPcId());
-            baseEntityRepository.executeNativeUpdate("update pd p set p.pbr = ?1 where p.id = ?2", Pbr.GL_PH.getSource(), pd.getId());
+            baseEntityRepository.executeNativeUpdate("update pd p set p.pbr = ? where p.id = ?", Pbr.GL_PH.getSource(), pd.getId());
         }
     }
 

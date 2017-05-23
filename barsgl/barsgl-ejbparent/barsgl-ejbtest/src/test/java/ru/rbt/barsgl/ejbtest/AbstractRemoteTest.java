@@ -575,7 +575,7 @@ public abstract class AbstractRemoteTest  {
     protected static void checkCreateBankCurrency(Date ondate, BankCurrency currency, BigDecimal rateAmount) {
         CurrencyRate rate = remoteAccess.invoke(RateRepository.class, "findRate", currency, ondate);
         if (null == rate) {
-            rate = new CurrencyRate(currency, ondate, rateAmount);
+            rate = new CurrencyRate(currency, ondate, rateAmount, new BigDecimal(1L));
             remoteAccess.invoke(RateRepository.class, "save", rate);
         }
     }

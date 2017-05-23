@@ -9,7 +9,6 @@ import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
@@ -18,6 +17,7 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -378,7 +378,7 @@ public class ManualOperationTest extends AbstractTimerJobTest {
 
         if (status != inputStatus) {
             baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ?, " +
-                    "USER_NAME = (select USER_NAME from GL_USER where ID = ?) where ID = ?", status.name(), userId, wrapper.getId());
+                    "USER_NAME = (select distinct USER_NAME from GL_USER where ID = ?) where ID = ?", status.name(), userId, wrapper.getId());
         }
         BatchPosting posting = (BatchPosting)baseEntityRepository.findById(BatchPosting.class, wrapper.getId());
         baseEntityRepository.refresh(posting, true);
