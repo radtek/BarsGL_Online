@@ -94,22 +94,22 @@ public class CreateIBCBrecord {
         String cb1 = cBaccount.calculateControlNumber(bicCode, "30301"+cbccy+"0"+brca1+lclCode);
         /*process.*/logger.debug("Calculate account =" + cb1);
         if(!process.existBsaAccount(cb1))
-            process.insertAccount("", cb1, Constants.PASIV, process.currDay(), MAXDAY, "T", 0);
+            process.insertAccount(" ", cb1, Constants.PASIV, process.currDay(), MAXDAY, "T", 0);
 
         String cb2 = cBaccount.calculateControlNumber(bicCode, "30302"+cbccy+"0"+brca1+lclCode);
         /*process.*/logger.debug("Calculate account ="+cb2);
         if(!process.existBsaAccount(cb2))
-            process.insertAccount("", cb2, Constants.ACTIV, process.currDay(), MAXDAY, "T", 0);
+            process.insertAccount(" ", cb2, Constants.ACTIV, process.currDay(), MAXDAY, "T", 0);
 
         String cb305 = cBaccount.calculateControlNumber(bicCode, "30305"+cbccy+"0"+brca1+lclCode5);
         /*process.*/logger.debug("Calculate account ="+cb305);
         if(!process.existBsaAccount( cb305))
-            process.insertAccount("", cb305, Constants.PASIV, process.currDay(), MAXDAY, "T", 0);
+            process.insertAccount(" ", cb305, Constants.PASIV, process.currDay(), MAXDAY, "T", 0);
 
         String cb306 = cBaccount.calculateControlNumber(bicCode, "30306"+cbccy+"0"+brca1+lclCode5);
         /*process.*/logger.debug("Calculate account ="+cb306);
         if(!process.existBsaAccount( cb306))
-            process.insertAccount("", cb306, Constants.ACTIV, process.currDay(), MAXDAY, "T", 0);
+            process.insertAccount(" ", cb306, Constants.ACTIV, process.currDay(), MAXDAY, "T", 0);
 
         if(!existIbcb(cb1, cb2, cbccy ))
             insertIbcb(brcaFrom, brcaTo, ccy, cb1, cb2, cb305, cb306);
