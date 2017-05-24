@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.repository.cob;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -19,8 +19,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 10.03.17.
@@ -43,7 +43,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
         int cnt = executeNativeUpdate("insert into GL_COB_STAT " +
                 " (ID_COB, PHASE_NO, DAT, PHASE_NAME, COEF_A, COEF_B, STATUS)" +
                 " select " + idCob + ", PHASE_NO, '" + DateUtils.dbDateString(curdate) + "', PHASE_NAME, COEF_A, COEF_B, '"
-                + CobStepStatus.NotStart.name() + "' from GL_COB_MOD", curdate);
+                + CobStepStatus.NotStart.name() + "' from GL_COB_MOD");
         return idCob;
     }
 

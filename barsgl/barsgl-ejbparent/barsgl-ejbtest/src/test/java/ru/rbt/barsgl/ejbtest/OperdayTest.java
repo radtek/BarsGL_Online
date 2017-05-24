@@ -6,25 +6,27 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.*;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
+import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -43,7 +45,6 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 /**
  * Created by Ivan Sevastyanov
@@ -56,7 +57,8 @@ public class OperdayTest extends AbstractTimerJobTest {
 
     @BeforeClass public static void beforeClass() {
         initCorrectOperday();
-        baseEntityRepository.executeNativeUpdate("update gl_oper o set VDATE = VDATE - 20 DAY, POSTDATE = POSTDATE - 20 DAY");
+        baseEntityRepository.executeNativeUpdate("update gl_oper o set VDATE = VDATE - 20, POSTDATE = POSTDATE - 20 where o.procdate in (?,?)"
+            , getOperday().getCurrentDate(), getOperday().getLastWorkingDay());
     }
 
 
@@ -259,18 +261,13 @@ public class OperdayTest extends AbstractTimerJobTest {
      * @throws Exception
      */
     @Test public void testPreCOBOnOpenedLWD() throws Exception {
-        // TODO чтобы тест прошел, надо запустить вручную Мониторинг АЕ (на тесте он не всегда сам запускается)
+
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, OPEN);
 
-        if (EnumUtils.contains(new ProcessingStatus[]{ProcessingStatus.ALLOWED, ProcessingStatus.STARTED}
-                , previosOperday.getProcessingStatus())) {
-            try {
-                remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.REQUIRED);
-            } catch (Exception e) {
-                remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.STOPPED);
-            }
-        }
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+
+        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
         // задача мониторинга ETL
         checkCreateEtlStructureMonitor();
@@ -290,7 +287,7 @@ public class OperdayTest extends AbstractTimerJobTest {
         baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p.dateLoad <= ?2"
                 , EtlPackage.PackageState.PROCESSED, loadDateCalendar.getTime());
 
-        CalendarJob calendarJob = new CalendarJob();
+        /*CalendarJob calendarJob = new CalendarJob();
         calendarJob.setDelay(0L);
         calendarJob.setDescription("test calendar job");
         calendarJob.setRunnableClass(ExecutePreCOBTaskNew.class.getName());
@@ -298,9 +295,13 @@ public class OperdayTest extends AbstractTimerJobTest {
         calendarJob.setState(STOPPED);
         calendarJob.setName(System.currentTimeMillis() + "");
         calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
-        calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
+        calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");*/
 
-        jobService.executeJob(calendarJob);
+//        SingleActionJob calendarJob = SingleActionJobBuilder.create().withClass(ExecutePreCOBTaskNew.class).build();
+
+        remoteAccess.invoke(ExecutePreCOBTaskNew.class, "run", "ExecutePreCOBTaskNew", new Properties());
+
+//        jobService.executeJob(calendarJob);
 
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);
@@ -370,7 +371,7 @@ public class OperdayTest extends AbstractTimerJobTest {
         Date today = DateUtils.truncate(new Date(), Calendar.DATE);
         Date yesterday = DateUtils.addDays(today, -1);
         Date nextday = DateUtils.addDays(today, 3);
-        baseEntityRepository.executeNativeUpdate("delete from cal where dat between ?1 and ?2 and ccy = 'RUR'", today, nextday);
+        baseEntityRepository.executeNativeUpdate("delete from cal where dat between ? and ? and ccy = 'RUR'", today, nextday);
         insertWorkday(nextday);
         setOperday(today, yesterday, COB, CLOSED);
         Assert.assertEquals(Operday.PdMode.DIRECT, calculatePdMode(new Properties()));
@@ -474,7 +475,7 @@ public class OperdayTest extends AbstractTimerJobTest {
 
     private void insertWorkday(Date date) {
         try {
-            baseEntityRepository.executeNativeUpdate("insert into cal values (?1, '', 'RUR', '')", date);
+            baseEntityRepository.executeNativeUpdate("insert into cal values (?, ' ', 'RUR', 'N')", date);
         } catch (Exception e) {
             e.printStackTrace();
         }
