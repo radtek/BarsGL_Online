@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.Overvalue2dwh;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -13,6 +14,7 @@ import java.util.Properties;
  * Created by ER22317 on 18.05.2016.
  * Выгрузка данных переоценки в DWH
  */
+@Ignore("задача не выполняется на проде")
 public class Overvalue2dwhTest extends AbstractTimerJobTest{
     @Test
     public void test() throws Exception {

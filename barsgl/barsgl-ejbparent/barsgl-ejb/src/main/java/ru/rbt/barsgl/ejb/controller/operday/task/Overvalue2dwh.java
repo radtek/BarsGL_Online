@@ -25,6 +25,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 /**
  * Created by ER22317 on 17.05.2016.
  */
+@Deprecated //("задача не выполняется на проде")
 public class Overvalue2dwh implements ParamsAwareRunnable {
     private static final Logger log = Logger.getLogger(Overvalue2dwh.class);
     @EJB

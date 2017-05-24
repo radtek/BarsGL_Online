@@ -1,19 +1,15 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import org.apache.commons.lang3.time.DateUtils;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
-import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -25,16 +21,16 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.DwhUnloadPosting;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.DwhUnloadPosting;
-import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
 
 /**
  * Created by ER18837 on 18.06.15.
  */
+@Deprecated //("задача не выполняется на проде")
 public class DwhUnloadFullTask implements ParamsAwareRunnable {
 
     public static final String DWH_UNLOAD_FULL_DATE_KEY = "operday";

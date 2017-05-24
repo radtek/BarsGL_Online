@@ -734,19 +734,6 @@ public abstract class AbstractRemoteTest  {
         return baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
     }
 
-    public static void emulateMI3GL(Date operday) throws Exception {
-        int cnt = baseEntityRepository.selectFirst("select count(1) cnt from workproc where dat = ? and trim(id) = 'MI3GL'"
-                , operday).getInteger(0);
-        if (cnt == 1) {
-            baseEntityRepository.executeNativeUpdate("update workproc set result = 'O' where dat = ? and trim(id) = 'MI3GL'"
-                    , operday);
-        } else {
-            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'MI3GL', current_timestamp, current_timestamp, 'O', 1, 'MI3GL')"
-                    , operday);
-        }
-
-    }
-
     public static GLOperation getLastOperation(Long idpst) {
         return (GLOperation) baseEntityRepository.selectFirst(GLOperation.class, "from GLOperation o where o.etlPostingRef = ?1 order by 1 desc", idpst);
     }
@@ -775,6 +762,19 @@ public abstract class AbstractRemoteTest  {
         return Optional.ofNullable(baseEntityRepository
                 .selectFirst("select * from gl_etlstms where parname = ? and pardesc = ? order by id desc"
                         , params.getParamName(), params.getParamDesc())).orElse(null);
+    }
+
+    protected static void emulateWorkprocStep(Date operDay, String stepName) throws Exception {
+        int cnt = baseEntityRepository.selectFirst("select count(1) cnt from workproc where dat = ? and trim(id) = ?"
+                , operDay, stepName).getInteger(0);
+        if (cnt == 1) {
+            baseEntityRepository.executeNativeUpdate("update workproc set result = 'O' where dat = ? and trim(id) = ?"
+                    , operDay, stepName);
+        } else {
+            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, ?, current_timestamp, current_timestamp, 'O', 1, ?)"
+                    , operDay, stepName, stepName);
+        }
+
     }
 
 }
