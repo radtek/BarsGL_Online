@@ -214,14 +214,13 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertNotNull(pst);
         baseEntityRepository.executeNativeUpdate("update GL_ETLPST set CCY_CR = 'LOL' where ID = ?", pst.getId());
 
-
-        pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
+        pst.setCurrencyCredit(new BankCurrency("LOL"));
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNull(operation);                                               // операция не должна быть создана
 
         pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
-        checkPostingErrorRecord(pst, "13", "12", "5");
+        Assert.assertNull("Некорректная валюта CCY_CR 'LOL'",pst);
     }
 
     /**
@@ -946,10 +945,11 @@ public class ValidationTest extends AbstractTimerJobTest {
 
         Date valDate = getOperday().getCurrentDate();
 
-        /*
-        *   99998810900010000001	001;RUR;00000018;999999998;;;GL00000015;0001;99998;;;;;;    99998810900010000001
-            91319810500014859604    001;RUR;00610000;891070200;18;;0000659456;0001;91319;;6574;21;FC12_CL;111_A104T_15;
-        */
+        // коррекция счетов
+        baseEntityRepository.executeNativeUpdate("update gl_acc set dto = ?, dtc = null where bsaacid in ('99999810200010000001', '91319810420010000100')", "1993-01-01");
+        baseEntityRepository.executeNativeUpdate("update accrln set drlno = ?, drlnc = null where bsaacid in ('99999810200010000001', '91319810420010000100')", "1993-01-01");
+        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaaco = ?, bsaacc = ? where ID in ('99999810200010000001', '91319810420010000100')", "1993-01-01", "2029-01-01");
+
         pst1.setValueDate(valDate);
         pst1.setAccountKeyDebit("001;RUR;00000018;999999999;;;GL00000015;0001;99999;;;;;;");
         pst1.setAccountKeyCredit("001;RUR;00610000;891070200;18;;0000659456;0001;91319;;6574;21;FC12_CL;111_A104T_15;");
@@ -961,7 +961,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst1 = (EtlPosting) baseEntityRepository.save(pst1);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
-        Assert.assertNotNull(operation);                                               // операция не должна быть создана
+        Assert.assertNotNull(operation);
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertNull(operation.getErrorMessage());
@@ -969,10 +969,6 @@ public class ValidationTest extends AbstractTimerJobTest {
 
         EtlPosting pst2 = newPosting(stamp, pkg);
 
-        /*
-        91604810020010000574	001;RUR;00685207;832020100;18;;0000868709;0001;;;;03;FC12_CL;101_A308C_16;101_A308C_16
-        99999810200010000001	001;RUR;00000018;999999999;;;GL00000019;0001;99999;;;;;;    99999810200010000001
-        */
         pst2.setValueDate(valDate);
         pst2.setAccountKeyDebit("001;RUR;00685207;832020100;18;;0000868709;0001;;;;03;FC12_CL;101_A308C_16;101_A308C_16");
         pst2.setAccountKeyCredit("001;RUR;00000018;999999998;;;GL00000019;0001;99998;;;;;;");
@@ -984,12 +980,11 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst2 = (EtlPosting) baseEntityRepository.save(pst2);
 
         operation = (GLOperation) postingController.processMessage(pst2);
-        Assert.assertNotNull(operation);                                               // операция не должна быть создана
+        Assert.assertNotNull(operation);
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertNull(operation.getErrorMessage());
         Assert.assertEquals('9', operation.getAccountCredit().charAt(4));
-
     }
 
     @Test @Ignore

@@ -895,12 +895,12 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     public ValidationError checkAccount9999(String account1, String account2, GLOperation.OperSide operSide){
         if (isEmpty(account1) || !account1.startsWith("9999") || isEmpty(account2) || (account2.length() < 20) )
             return null;
-        if (!checkAccountRlnExists(account1, "", "T"))
+        if (!checkAccountRlnExists(account1, " ", "T"))
             return new ValidationError(ACCOUNT_NOT_CORRECT, operSide.getMsgName(), account1);
 
         String psavName = "";
         char digit = '-';
-        String[] items = getPassiveActiveType(account2);
+        String[] items = getPassiveActiveType(account2.substring(0, 5));
         String psav = items[0];
         String type = items[1];
         switch (psav) {
@@ -934,7 +934,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @throws SQLException
      */
     public String getAccount9999Corr(String accountNotCorresp) throws SQLException {
-        DataRecord res = selectFirst("select ACC2, CCODE from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?", accountNotCorresp, "", "T");
+        DataRecord res = selectFirst("select ACC2, CCODE from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?", accountNotCorresp, " ", "T");
         if (null == res)
             return "";
         String acc2 = res.getString(0);
@@ -957,7 +957,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         };
         String acc2corr = acc2.substring(0, 4) + corr;
         String filial = res.getString(1);
-        res = selectFirst("select BSAACID from ACCRLN where ACC2 = ? and CCODE = ? and ACID = ? and RLNTYPE = ? ", acc2corr, filial, "", "T");
+        res = selectFirst("select BSAACID from ACCRLN where ACC2 = ? and CCODE = ? and ACID = ? and RLNTYPE = ? ", acc2corr, filial, " ", "T");
         return null == res ? "" : res.getString(0);
     }
 
