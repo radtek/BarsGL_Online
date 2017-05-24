@@ -6,7 +6,6 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
@@ -14,11 +13,14 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+
+import static ru.rbt.ejbcore.util.StringUtils.trim;
 
 /**
  * Created by ER18837 on 01.06.16.
@@ -30,6 +32,8 @@ public class ManualOperationAuthTest extends AbstractTimerJobTest {
     @Before
     public void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        Utl4Tests.createUser(USER_ID, baseEntityRepository);
+        Utl4Tests.grantAllBranches(USER_ID, baseEntityRepository);
     }
 
     /**
@@ -361,10 +365,10 @@ public class ManualOperationAuthTest extends AbstractTimerJobTest {
     private void checkOperationRq(ManualOperationWrapper wrapper, BatchPosting posting, boolean all) throws ParseException {
 
         Assert.assertEquals(wrapper.getDealSrc(), posting.getSourcePosting());
-        Assert.assertEquals(wrapper.getDealId(), posting.getDealId());
+        Assert.assertEquals(trim(wrapper.getDealId()), trim(posting.getDealId()));
         Assert.assertEquals(wrapper.getSubdealId(), posting.getSubDealId());
-        Assert.assertEquals(wrapper.getDeptId(), posting.getDeptId());
-        Assert.assertEquals(wrapper.getProfitCenter(), posting.getProfitCenter());
+        Assert.assertEquals(trim(wrapper.getDeptId()), trim(posting.getDeptId()));
+        Assert.assertEquals(trim(wrapper.getProfitCenter()), trim(posting.getProfitCenter()));
         Assert.assertEquals(wrapper.getInputMethod(), posting.getInputMethod());
 
         Assert.assertEquals(onlyDate.parse(wrapper.getValueDateStr()), posting.getValueDate());

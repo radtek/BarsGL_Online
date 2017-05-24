@@ -177,6 +177,41 @@
     </profile>
 
   </profiles>-->
+
+    <profiles>
+        <profile>
+            <id>ejb-ear</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                    </resource>
+                    <resource>
+                        <directory>src/main/resources-test</directory>
+                    </resource>
+                </resources>
+            </build>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                    </resource>
+                    <resource>
+                        <directory>src/main/resources-prod</directory>
+                    </resource>
+                </resources>
+            </build>
+        </profile>
+    </profiles>
   
   
     <repositories>

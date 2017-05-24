@@ -4,16 +4,17 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.SCASAMCResponseStorage;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.jms.MessageContext;
 import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.ejb.EJB;
+import javax.enterprise.inject.Default;
 import javax.jms.*;
 import javax.jms.Queue;
 import javax.xml.bind.JAXBException;
@@ -32,15 +33,16 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MovementCreate;
+import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by ER22228 on 02.06.2016.
  */
-public class MovementCreateProcessor {
+@Default
+public class MovementCreateProcessor implements MovementCommunicator {
     private static final Logger log = Logger.getLogger(MovementCreateProcessor.class.getName());
     private static final String PROP_ATTEMPTS = "mc.attempts";
     private static final String PROP_MVMTDEBUG = "mc.debug";
