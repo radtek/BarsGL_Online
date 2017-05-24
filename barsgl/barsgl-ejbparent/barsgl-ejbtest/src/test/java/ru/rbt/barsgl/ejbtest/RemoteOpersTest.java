@@ -81,7 +81,7 @@ public class RemoteOpersTest extends AbstractTimerJobTest{
             baseEntityRepository.executeNativeUpdate("update workproc set msg = 'MI3GL', result = 'O' where dat = ? and trim(id) = 'IFLEX'"
                     , operday);
         } else {
-            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'IFLEX', current_timestamp, current_timestamp, 'O', 1, 'MI3GL')"
+            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'IFLEX', systimestamp, systimestamp, 'O', 1, 'MI3GL')"
                     , operday);
         }
     }
@@ -104,7 +104,7 @@ public class RemoteOpersTest extends AbstractTimerJobTest{
             baseEntityRepository.executeNativeUpdate("update workproc set result = 'O' where dat = ? and trim(id) = 'MI3GL'"
                     , operday);
         } else {
-            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'MI3GL', current_timestamp, current_timestamp, 'O', 1, 'MI3GL')"
+            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'MI3GL', systimestamp, systimestamp, 'O', 1, 'MI3GL')"
                     , operday);
         }
 

@@ -21,7 +21,8 @@ public class MQConnectionManager {
 
   private MessageContext messageContext;
   private MessageContext messageContextOut;
-  private MessageConsumer messageConsumer;
+  //private MessageConsumer messageConsumer;
+  private JMSConsumer messageConsumer;
 
   public void start(Properties properties, MessageListener messageListener, ExceptionListener exceptionListener) throws Exception {
     String mqHost = Optional.ofNullable(properties.getProperty(MQPropertiesConst.MQ_HOST)).orElse("###");
@@ -44,13 +45,13 @@ public class MQConnectionManager {
 
     if (messageContext == null) {
       messageContext = new MessageContext(mqHost, Integer.valueOf(mqPortStr), mqQueueManager, mqChannel, mqUser, mqPassword);
-      QueueSession session = messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+      JMSContext jmsContext = messageContext.createJMSContext();
       if (exceptionListener != null) {
         messageContext.setExceptionListener(exceptionListener);
       }
-      Queue queue = messageContext.createQueue("queue:///" + mqQueue);
-      messageConsumer = messageContext.createConsumer(queue);
-      setMessageListener(messageListener);
+      messageConsumer = messageContext.createConsumer(messageContext.createQueue("queue:///" + mqQueue));
+      if(messageListener != null)
+        setMessageListener(messageListener);
     }
     
     if(messageContextOut == null){
@@ -60,12 +61,8 @@ public class MQConnectionManager {
 
   public void stop() {
     logger.log(Level.INFO, "Stop MQ");
-    try {
-      if (messageConsumer != null) {
-        messageConsumer.close();
-      }
-    } catch (JMSException ex) {
-      logger.log(Level.SEVERE, null, ex);
+    if (messageConsumer != null) {
+      messageConsumer.close();
     }
     messageConsumer = null;
     try {
@@ -87,8 +84,7 @@ public class MQConnectionManager {
     }    
   }
   
-  public QueueSession createOutgouingSession() throws JMSException{
-    QueueSession session = messageContextOut.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-    return session;
+  public JMSContext createOutgouingJMSContext() throws JMSException{
+    return messageContextOut.createJMSContext();
   }
 }

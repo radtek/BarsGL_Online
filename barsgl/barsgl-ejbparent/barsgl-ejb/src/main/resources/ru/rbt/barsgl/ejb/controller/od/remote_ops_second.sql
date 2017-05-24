@@ -1,6 +1,6 @@
 select t.PDID
         ,t.pcid
-        ,CASE  WHEN W.ACOD IS NULL AND VALUE(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL  END GLACID
+        ,CASE  WHEN W.ACOD IS NULL AND NVL(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL  END GLACID
         ,case when T.ACID !='' then SUBSTRING(T.ACID, 1, 8) else '' end CNUM
         ,T.CCY
 --        ,CAST (SUBSTRING(T.ACID, 12, 4) AS NUMERIC(4, 0)) ACOD

@@ -83,7 +83,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACOD IN (" + glacods + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(current_date, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
               return dataRecords;
         } catch (SQLException e) {
@@ -109,7 +109,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACCTYPE IN (" + acctypes + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(current_date, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
 
             return dataRecords;
@@ -126,7 +126,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(current_date, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
             return dataRecords;
         } catch (SQLException e) {
@@ -266,7 +266,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 "SELECT BSAACID FROM ACCRLN A WHERE NVL(A.BSAACID,'')<>'' AND " + condition + " "+
                     "AND EXISTS(SELECT * FROM GL_ACC G WHERE A.BSAACID=G.BSAACID) " +
                     //"AND (CURRENT DATE - A.DRLNC) <= 1131" 
-                    "AND MONTHS_BETWEEN(current_date, A.DRLNC) < 12 "
+                    "AND MONTHS_BETWEEN(sysdate, A.DRLNC) < 12 "
                 , Integer.MAX_VALUE,null);
 
             Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());

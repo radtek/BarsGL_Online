@@ -23,8 +23,7 @@ public class MessageContext implements Serializable, AutoCloseable {
   private String user;
   private String password;
 
-  private QueueConnection connection;
-  private QueueSession session;
+  JMSContext jmsContext;
 
   public MessageContext(String host, int port, String queueManager, String channel, String user, String password) {
     this.host = host;
@@ -35,17 +34,6 @@ public class MessageContext implements Serializable, AutoCloseable {
     this.password = password;
   }
       
-  private QueueConnection getConnection() throws JMSException {
-    if (connection == null) {
-      QueueConnectionFactory cf = getConnectionFactory();
-      if(user != null && !user.isEmpty() && password != null)
-        connection = cf.createQueueConnection(user, password);
-      else
-        connection = cf.createQueueConnection();
-    }
-    return connection;
-  }
-
   private QueueConnectionFactory getConnectionFactory() throws JMSException {
     MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
     cf.setHostName(host);
@@ -57,80 +45,86 @@ public class MessageContext implements Serializable, AutoCloseable {
   }
 
   public boolean getTransacted() throws JMSException{
-    return session.getTransacted();
+    return jmsContext.getTransacted();
   }
-
-  public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-    if (session == null) {
-      session = getConnection().createQueueSession(transacted, acknowledgeMode);//Session.AUTO_ACKNOWLEDGE);    
+  
+  public JMSContext createJMSContext() throws JMSException {
+    if (jmsContext == null) {
+        QueueConnectionFactory cf = getConnectionFactory();
+        if(user != null && !user.isEmpty() && password != null)
+            jmsContext = cf.createContext(user, password);
+        else
+            cf.createContext();
     }
-    return session;
+    return jmsContext;
+  }
+  
+  public JMSContext createJMSContext(boolean transacted, int acknowledgeMode) throws JMSException {
+    if (jmsContext == null) {
+        QueueConnectionFactory cf = getConnectionFactory();
+        if(user != null && !user.isEmpty() && password != null)
+            jmsContext = cf.createContext(user, password, acknowledgeMode);
+        else
+            cf.createContext(acknowledgeMode);
+    }
+    return jmsContext;
   }
 
   public Queue createQueue(String queueName) throws JMSException{
-    return session.createQueue(queueName);
+    return jmsContext.createQueue(queueName);
   }
   
-  public MessageProducer createProducer(Queue queue) throws JMSException{
-    MessageProducer messageProducer = session.createProducer(queue);
+  public JMSConsumer createConsumer(Queue queue) throws JMSException {
+    JMSConsumer jmsConsumer = jmsContext.createConsumer(queue);
+    return jmsConsumer;
+  }
+
+  public JMSProducer createProducer() throws JMSException{
+    JMSProducer messageProducer = jmsContext.createProducer();
     return messageProducer;
   }
-
-  private QueueReceiver createReceiver(Queue queue) throws JMSException {
-    QueueReceiver receiver = session.createReceiver(queue);
-    return receiver;
-  }
-
-  public MessageConsumer createConsumer(Queue queue) throws JMSException {
-    MessageConsumer messageConsumer = session.createConsumer(queue);
-    return messageConsumer;
-  }
-
+  
   public QueueBrowser createBrowser(Queue queue) throws JMSException{
-    QueueBrowser browser = session.createBrowser(queue);
+    QueueBrowser browser = jmsContext.createBrowser(queue);
     return browser;
   }
   
   public BytesMessage createBytesMessage() throws JMSException{
-    return session.createBytesMessage();
+    return jmsContext.createBytesMessage();
   }
   
   public TextMessage createTextMessage() throws JMSException{
-    return session.createTextMessage();
+    return jmsContext.createTextMessage();
   }
 
   public TextMessage createTextMessage(String message) throws JMSException {
-    return session.createTextMessage(message);
+    return jmsContext.createTextMessage(message);
   }
 
   public void setExceptionListener(ExceptionListener listener) throws JMSException{
-    connection.setExceptionListener(listener);
+    jmsContext.setExceptionListener(listener);
   }
   
   public void start() throws JMSException{
-    getConnection().start();
+      jmsContext.start();
   }
   
   public void stop() throws JMSException{
-    getConnection().stop();
+    jmsContext.stop();
   }
   
   public void commit() throws JMSException{
-    session.commit();
+    jmsContext.commit();
   }
 
   public void rollback() throws JMSException{
-    session.rollback();    
+    jmsContext.rollback();    
   }
   
   @Override
   public void close() throws Exception {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
+    if (jmsContext != null) {
+      jmsContext.close();
     }
   }
-
 }

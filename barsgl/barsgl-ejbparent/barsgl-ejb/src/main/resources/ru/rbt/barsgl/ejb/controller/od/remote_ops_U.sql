@@ -1,6 +1,6 @@
-SELECT  PDID                                                      -- PD.ID
+﻿SELECT  PDID                                                      -- PD.ID
         , CASE                                                     -- только для неисключаемых счетов
-            WHEN W.ACOD IS NULL AND VALUE(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL
+            WHEN W.ACOD IS NULL AND NVL(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL
           END GLACID
         , SUBSTRING(T.ACID, 1, 8) CNUM                            -- Номер клиента
         , T.CNUM_asoc
@@ -99,7 +99,7 @@ FROM (
             JOIN PDEXT2 E2 ON D.ID = E2.ID
             JOIN pcid_mo mo on mo.pcid = p.pcid
             left join CURRENCY CC on d.CCY=CC.GLCCY
-        WHERE VALUE(ACID, '') <> '' AND D.INVISIBLE <> '1'  -- Проводки актуальны
+        WHERE NVL(ACID, '') <> '' AND D.INVISIBLE <> '1'  -- Проводки актуальны
             and d.id = ?
     ) T
     LEFT JOIN GL_ACC A ON T.BSAACID = A.BSAACID

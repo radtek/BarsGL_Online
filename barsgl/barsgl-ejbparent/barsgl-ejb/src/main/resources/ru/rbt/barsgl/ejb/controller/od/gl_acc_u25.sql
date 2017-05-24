@@ -1,5 +1,5 @@
 select  u.bsaacid bsaacid,
-        u.id uid,
+        u.id "uid",
         u.date_upl,
         g.id glacid
 from gl_acc_u u

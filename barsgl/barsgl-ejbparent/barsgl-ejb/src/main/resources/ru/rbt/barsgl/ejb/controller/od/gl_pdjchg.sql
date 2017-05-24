@@ -1,14 +1,14 @@
 select t.PDID
         ,t.pcid
-        ,CASE  WHEN W.ACOD IS NULL AND VALUE(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL  END GLACID
-        ,SUBSTRING(T.ACID, 1, 8) CNUM
+        ,CASE  WHEN W.ACOD IS NULL AND NVL(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL  END GLACID
+        ,SUBSTR(T.ACID, 1, 8) CNUM
         ,T.CCY
-        ,case when T.ACID !='' then CAST (SUBSTRING(T.ACID, 12, 4) AS NUMERIC(4, 0)) else null end ACOD
-        ,case when T.ACID !='' then CAST (SUBSTRING(T.ACID, 16, 2) AS NUMERIC(2, 0)) else null end ACSQ
+        ,case when T.ACID !='' then CAST (SUBSTR(T.ACID, 12, 4) AS NUMERIC(4, 0)) else null end ACOD
+        ,case when T.ACID !='' then CAST (SUBSTR(T.ACID, 16, 2) AS NUMERIC(2, 0)) else null end ACSQ
         ,CAST (PSTA AS NUMERIC(13, 0)) PSTA
         ,t.PSTARUR
         ,CAST (DRCR AS NUMERIC(1, 0)) DRCR
-        ,CAST (SUBSTRING(T.ACID, 18, 3) AS CHARACTER(3)) BRCA
+        ,CAST (SUBSTR(T.ACID, 18, 3) AS CHAR(3)) BRCA
         ,CAST (PREF AS VARCHAR(20)) PREF
         ,CAST (DLREF AS VARCHAR(20)) DLREF
         ,CAST (OTRF  AS VARCHAR(20)) OTRF
@@ -54,7 +54,7 @@ where (j.operday = od.curdate or j.operday = od.lwdate)
    and op.procdate < od.curdate
    and po.glo_ref = op.gloid
    and j.pcid = po.pcid
-   and j.chseq = value((select min(j2.chseq) from gl_pdjchg j2 where j2.id=j.id),j.chseq)
+   and j.chseq = NVL((select min(j2.chseq) from gl_pdjchg j2 where j2.id=j.id),j.chseq)
    and d.id = j.id
    and d.id = e.id
    and d.id = e5.id

@@ -153,6 +153,8 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
      * @throws SQLException
      */
     public BatchPosting createPostingHistory(Long postingId, Date timestamp, String userName) throws SQLException {
+        long idHist = selectFirst("select GL_BATPST_SEQ.nextval id from DUAL").getLong(0);
+
         executeNativeUpdate(
                 "INSERT INTO GL_BATPST (ID, INVISIBLE, ID_PAR, " + histfields + ")" +
                 " SELECT GL_BATPST_SEQ.NEXTVAL, 'H', ID, "  + histfields + " FROM GL_BATPST WHERE ID = ?",

@@ -114,7 +114,7 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
     public void updatePostingsStateReprocess(String idPstList, String idPkgList) {
         executeNativeUpdate("update GL_ETLPST p set p.ECODE = ?, p.EMSG = ? where p.ID in (" + idPstList + ")",
                 null, null);
-        executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = max(p.DT_LOAD, CURRENT TIMESTAMP - 5 DAYS)" +
+        executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = max(p.DT_LOAD, systimestamp - 5)" +
                 " where p.ID_PKG in (" + idPkgList + ")",
                 EtlPackage.PackageState.LOADED.name());
     }

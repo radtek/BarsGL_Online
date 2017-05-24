@@ -575,7 +575,7 @@ public abstract class AbstractRemoteTest  {
     protected static void checkCreateBankCurrency(Date ondate, BankCurrency currency, BigDecimal rateAmount) {
         CurrencyRate rate = remoteAccess.invoke(RateRepository.class, "findRate", currency, ondate);
         if (null == rate) {
-            rate = new CurrencyRate(currency, ondate, rateAmount, new BigDecimal(1L));
+            rate = new CurrencyRate(currency, ondate, rateAmount, BigDecimal.ONE);
             remoteAccess.invoke(RateRepository.class, "save", rate);
         }
     }
@@ -732,6 +732,19 @@ public abstract class AbstractRemoteTest  {
 
     public DataRecord getLastHistRecord(String jobName) throws SQLException {
         return baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
+    }
+
+    public static void emulateMI3GL(Date operday) throws Exception {
+        int cnt = baseEntityRepository.selectFirst("select count(1) cnt from workproc where dat = ? and trim(id) = 'MI3GL'"
+                , operday).getInteger(0);
+        if (cnt == 1) {
+            baseEntityRepository.executeNativeUpdate("update workproc set result = 'O' where dat = ? and trim(id) = 'MI3GL'"
+                    , operday);
+        } else {
+            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'MI3GL', systimestamp, systimestamp, 'O', 1, 'MI3GL')"
+                    , operday);
+        }
+
     }
 
     public static GLOperation getLastOperation(Long idpst) {

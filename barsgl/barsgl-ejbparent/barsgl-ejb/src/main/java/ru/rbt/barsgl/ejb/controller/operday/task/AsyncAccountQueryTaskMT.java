@@ -47,8 +47,9 @@ public class AsyncAccountQueryTaskMT implements ParamsAwareRunnable, ExceptionLi
   private void startJMS() throws Exception, JMSException {
     connectionManager.start(properties, null, this);
     
-    queueProcessor.setSession(connectionManager.createOutgouingSession());
-    queueProcessor.setQueueProperties(properties);
+    queueProcessor.setJmsContext(connectionManager.createOutgouingJMSContext());
+//    queueProcessor.setSession(connectionManager.createOutgouingSession());
+//    queueProcessor.setQueueProperties(properties);
     
     connectionManager.setMessageListener(queueProcessor);
   }

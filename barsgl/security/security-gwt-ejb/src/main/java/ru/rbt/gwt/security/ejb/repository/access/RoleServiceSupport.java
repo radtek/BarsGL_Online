@@ -196,7 +196,7 @@ public class RoleServiceSupport {
 
             //History
             String sql_history = format("insert into GL_AU_PRMVALH(id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, dt_sys, usr_sys, chng_type)\n" +
-                    "select id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, current_timestamp, '%s', 'D'\n" +
+                    "select id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, systimestamp, '%s', 'D'\n" +
                     "from GL_AU_PRMVAL where id_user=? and prm_code in ('Source', 'HeadBranch')", usr);
 
             roleRepository.executeNativeUpdate(sql_history, wrapper.getUserId());
