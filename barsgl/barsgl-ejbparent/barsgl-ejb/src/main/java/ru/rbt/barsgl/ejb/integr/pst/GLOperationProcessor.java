@@ -88,7 +88,7 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
         //пока так, а там посмотрим.
         ResultCode accDebitResult;
         ResultCode accCreditResult;
-        if (operation.getBsChapter().equals(TECH_OPER))
+        if ((null!=operation.getBsChapter()) && operation.getBsChapter().equals(TECH_OPER))
         {
             accDebitResult = glAccountRepository.checkBsaAccountGlAcc(operation.getAccountDebit());
             accCreditResult = glAccountRepository.checkBsaAccountGlAcc(operation.getAccountCredit());

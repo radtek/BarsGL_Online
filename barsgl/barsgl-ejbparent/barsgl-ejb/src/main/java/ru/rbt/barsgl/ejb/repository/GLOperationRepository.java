@@ -37,6 +37,8 @@ import static ru.rbt.ejbcore.util.StringUtils.*;
 @LocalBean
 public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperation, Long> {
 
+    private final String TECH_OPER = "T";
+
     @Inject
     private DateUtils dateUtils;
 
@@ -141,7 +143,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getFilial(String bsaAcid, AccountKeys accountParams) {
         if (!isEmpty(bsaAcid)) {
-            if ((null!=accountParams) && (accountParams.getGlSequence().startsWith("TH")))
+            if ((null!=accountParams) && (accountParams.getGlSequence()!=null) && (accountParams.getGlSequence().startsWith("TH")))
             {
                 GLAccount account = glAccountRepository.findGLAccount(bsaAcid);
                 return account.getFilial();
@@ -301,9 +303,9 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         if (!isEmpty(bsaAcid))
             return getBSChapter(bsaAcid);
         else if (null != accountKeys)
-                if (accountKeys.getGlSequence().startsWith("TH"))
+                if (accountKeys.getGlSequence()!=null && accountKeys.getGlSequence().startsWith("TH"))
                 {
-                    return "T";
+                    return TECH_OPER;
                 }
                 else {
                     return getBSChapterAcc2(accountKeys.getAccount2());
