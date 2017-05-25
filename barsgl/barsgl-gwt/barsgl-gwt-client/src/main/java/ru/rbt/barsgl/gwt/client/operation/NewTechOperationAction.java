@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -44,7 +45,7 @@ public class NewTechOperationAction extends GridAction {
         dlg.setAfterCancelEvent(new IAfterCancelEvent() {
             @Override
             public void afterCancel() {
-                grid.refresh();
+                if (grid!=null) grid.refresh();
             }
         });
         Object params = getParams();

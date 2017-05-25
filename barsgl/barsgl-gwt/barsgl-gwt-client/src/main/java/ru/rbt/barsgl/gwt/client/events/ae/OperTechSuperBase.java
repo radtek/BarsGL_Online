@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsViewDlg;
@@ -39,10 +40,10 @@ abstract public class OperTechSuperBase extends GridForm {
     }
 
     protected ManualTechOperationWrapper rowToWrapper(){
+
         ManualTechOperationWrapper wrapper = new ManualTechOperationWrapper();
 
         wrapper.setId((Long) getValue("ID"));
-
 
         wrapper.setPostDateStr(ClientDateUtils.Date2String((Date) getValue("POSTDATE")));
         wrapper.setValueDateStr(ClientDateUtils.Date2String((Date) getValue("VDATE")));

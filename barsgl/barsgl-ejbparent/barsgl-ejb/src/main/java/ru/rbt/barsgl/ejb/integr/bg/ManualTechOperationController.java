@@ -318,6 +318,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         operation.setBsChapter("T");
         operation.setAmountPosting(operation.getAmountDebit());
         manualOperationRepository.save(operation,true);
+        posting.setOperation(operation);
+        posting.setProcDate(operdayController.getOperday().getCurrentDate());
+        postingRepository.save(posting);
         List<GlPdTh> pdList = techOperationProcessor.createPdTh(operation);
 
         Long pcID = 0L;
@@ -548,6 +551,26 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     }
 
     public void checkTechAccount(ManualTechOperationWrapper wrapper) throws ParseException {
+
+        if (null != wrapper.getFilialDebit() && null!=wrapper.getFilialCredit())
+        {
+            if (!wrapper.getFilialDebit().equals(wrapper.getFilialCredit()))
+            {
+                throw  new ValidationError(ErrorCode.FILIAL_NOT_VALID,"Операции по техническим счетам должны проводиться только в рамках одного филиала");
+            }
+        }
+        else{
+            throw  new ValidationError(ErrorCode.FILIAL_NOT_FOUND,String.format("Не найден филиал по %s",wrapper.getFilialDebit()==null?"дебету":"кредиту"));
+        }
+
+        if (null!=wrapper.getCurrencyDebit() && null!=wrapper.getCurrencyCredit())
+        {
+            if (!wrapper.getCurrencyDebit().equalsIgnoreCase("RUR") && !wrapper.getCurrencyCredit().equalsIgnoreCase("RUR"))
+            {
+                throw new ValidationError(ErrorCode.ANY_CURRNCY_IS_RUR);
+            }
+        }
+
         if (StringUtils.isEmpty(wrapper.getAccountDebit()))
         {
             throw new ValidationError(ACCOUNT_TECH_NOT_CORRECT,"Пустой или неверный псевдосчёт", "", "");

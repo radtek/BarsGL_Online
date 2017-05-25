@@ -146,7 +146,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
                 , "Валюта", "обязательно для заполнения", new CheckNotEmptyString()));
         account.setAccountType(check(mAccountType.getValue()
                 , "Accounting type", "обязательно для заполнения и должно содержать только цифры"
-                , new CheckNotNullLong(), new ConvertStringToLong()));
+                , new CheckStringLength(1, 9), new ConvertStringToLong()));
         account.setDescription(check(mAccountDesc.getValue(),
                 "Наименование счета", "обязательно для заполнения, не более 255 символов \n(Для разблокировки нажмите на кнопку 'Accounting Type')",
                 new CheckStringLength(1, 255)));
@@ -234,7 +234,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
         mCurrency.setEnabled(action == FormAction.CREATE);
 
         mAccountTypeButton.setEnabled(action == FormAction.CREATE);
-        mAccountType.setEnabled(false);
+        mAccountType.setEnabled(true);
         mAccountDesc.setEnabled(action == FormAction.UPDATE);
         mDealSource.setEnabled(action == FormAction.CREATE);
 
@@ -276,7 +276,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
 
                         @Override
                         protected Object[] getInitialFilterParams() {
-                            return new Object[] {};
+                            return new Object[] {mAccountType.getValue()};
                         }
 
                         @Override
