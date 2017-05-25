@@ -28,12 +28,9 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
     @PersistenceContext(unitName="RepAS400DataSource")
     protected EntityManager barsrepPersistence;
 
-//    @Resource(mappedName="/jdbc/As400GL")
-//    @Resource(mappedName="/jdbc/OracleGL")
 //    @Resource(mappedName="jdbc/OracleGL")
     private DataSource dataSource;
 
-//    @Resource(mappedName="/jdbc/As400Rep")
 //    @Resource(mappedName="jdbc/As400Rep")
     private DataSource  barsrepDataSource;
 
@@ -103,3 +100,43 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
     }
     
 }
+/*
+    @Resource(lookup = "java:app/env/jdbc/OracleGL")
+    @Resource(lookup = "java:app/env/jdbc/As400Rep")
+
+    need add to application.xml
+    WF
+    <resource-ref>
+        <res-ref-name>java:app/env/jdbc/OracleGL</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+        <lookup-name>java:/jdbc/OracleGL</lookup-name>
+    </resource-ref>
+
+    <resource-ref>
+        <res-ref-name>java:app/env/jdbc/As400Rep</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+        <lookup-name>java:/jdbc/As400Rep</lookup-name>
+    </resource-ref>
+
+    WLS    
+    <resource-ref>
+        <res-ref-name>java:app/env/jdbc/OracleGL</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+        <lookup-name>jdbc/OracleGL</lookup-name>
+    </resource-ref>
+
+    <resource-ref>
+        <res-ref-name>java:app/env/jdbc/As400Rep</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+        <lookup-name>jdbc/As400Rep</lookup-name>
+    </resource-ref>
+    
+*/    
