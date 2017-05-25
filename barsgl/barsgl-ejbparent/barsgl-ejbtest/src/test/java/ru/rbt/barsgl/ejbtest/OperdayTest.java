@@ -197,6 +197,9 @@ public class OperdayTest extends AbstractTimerJobTest {
                 .withProps(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
 
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
+
         jobService.executeJob(job);
         List<JobHistory> histories = baseEntityRepository.select(JobHistory.class, "from JobHistory h where h.jobName = ?1", job.getName());
         Assert.assertEquals(1, histories.size());
@@ -246,6 +249,10 @@ public class OperdayTest extends AbstractTimerJobTest {
         SingleActionJob calendarJob = SingleActionJobBuilder.create()
                 .withClass(ExecutePreCOBTaskNew.class)
                 .withProps(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
+
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+
+        baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
         jobService.executeJob(calendarJob);
 
