@@ -149,7 +149,7 @@ public class CobStatTest extends AbstractTimerJobTest  {
 
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
-        boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
+        boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", new Object[]{ null, null});
         Assert.assertTrue(ex);
 
         Long idCob = null;
