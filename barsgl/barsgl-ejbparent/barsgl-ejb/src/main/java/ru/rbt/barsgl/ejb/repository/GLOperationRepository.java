@@ -7,6 +7,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
@@ -36,8 +37,6 @@ import static ru.rbt.ejbcore.util.StringUtils.*;
 @Stateless
 @LocalBean
 public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperation, Long> {
-
-    private final String TECH_OPER = "T";
 
     @Inject
     private DateUtils dateUtils;
@@ -305,7 +304,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         else if (null != accountKeys)
                 if (accountKeys.getGlSequence()!=null && accountKeys.getGlSequence().startsWith("TH"))
                 {
-                    return TECH_OPER;
+                    return GLOperation.flagTechOper;
                 }
                 else {
                     return getBSChapterAcc2(accountKeys.getAccount2());

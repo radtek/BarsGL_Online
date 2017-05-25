@@ -60,8 +60,6 @@ import static ru.rbt.barsgl.shared.enums.OperState.*;
 @LocalBean
 public class EtlPostingController implements EtlMessageController<EtlPosting, GLOperation> {
 
-    private final String TECH_OPER = "T";
-
     private static final Logger log = Logger.getLogger(EtlPostingController.class);
 
     @Inject
@@ -261,7 +259,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         try {
             operationRepository.setFilials(operation);              // Филиалы
             operationRepository.setBsChapter(operation);            // Глава баланса
-            if ((null!=operation.getBsChapter()) && (TECH_OPER.equals(operation.getBsChapter())))
+            if (!GLOperation.flagTechOper.equals(operation.getBsChapter()))
             {
                 correctAccounts9999(operation);
             }
