@@ -945,8 +945,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
         //Добавление нового курса
-        CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
-        baseEntityRepository.save(currencyRate);
+        //CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
+        //baseEntityRepository.save(currencyRate);
 
         List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
