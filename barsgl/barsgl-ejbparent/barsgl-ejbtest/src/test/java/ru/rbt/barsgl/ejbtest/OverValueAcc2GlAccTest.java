@@ -35,19 +35,6 @@ public class OverValueAcc2GlAccTest extends AbstractTimerJobTest {
         checkHeadersSuccess(executeDate);
     }
 
-    private static void emulateP9(Date operDay) throws Exception {
-        int cnt = baseEntityRepository.selectFirst("select count(1) cnt from workproc where dat = ? and trim(id) = 'P9'"
-                , operDay).getInteger(0);
-        if (cnt == 1) {
-            baseEntityRepository.executeNativeUpdate("update workproc set result = 'O' where dat = ? and trim(id) = 'P9'"
-                    , operDay);
-        } else {
-            baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, 'P9', systimestamp, systimestamp, 'O', 1, 'P9')"
-                    , operDay);
-        }
-
-    }
-
     private static void checkHeadersSuccess(Date operDay) throws SQLException {
         DataRecord rec = baseEntityRepository.selectFirst("select count(1) cnt from GL_ETLDWHS where PARDESC = '"+ DwhUnloadParams.UnloadOverValueAcc.getParamDesc()
                 +"' and parvalue = '1' and operday=?", operDay);
