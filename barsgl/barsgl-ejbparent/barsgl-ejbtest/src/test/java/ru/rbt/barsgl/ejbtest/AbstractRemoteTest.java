@@ -273,10 +273,14 @@ public abstract class AbstractRemoteTest  {
     }
 
     public static String getPnar(GLOperation operation) {
-        if (operation.getInputMethod().equals(InputMethod.AE)) {
-            return substr(operation.getNarrative(), 30);
+        String pref = rsubstr(operation.hasParent() ? operation.getParentReference() : operation.getPaymentRefernce(), 15);
+        if (operation.isChild()) {
+            return (operation.isStorno() ? "*" : "") + "CHARGE " + pref;
         } else {
-            return getPnarManual(operation.getDealId(), operation.getSubdealId(), operation.getPaymentRefernce());
+            if(InputMethod.AE == operation.getInputMethod())
+                return substr(operation.getNarrative(), 30); // для AE - из NRT
+            else                    
+                return substr(operation.getRusNarrativeShort(), 30);
         }
     }
 
