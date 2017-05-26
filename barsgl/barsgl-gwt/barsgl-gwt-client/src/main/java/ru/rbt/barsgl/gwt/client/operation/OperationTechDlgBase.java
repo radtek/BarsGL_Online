@@ -8,6 +8,7 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
@@ -135,6 +136,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         //mAccType.addChangeHandler(createAccTypeChangeHandler(side));
         mCurrency.addChangeHandler(createCurrencyChangeHandler(side));
         mFilial.addChangeHandler(createFilialChangeHandler(side));
+        mAccType.addChangeHandler(createAccTypeChangeHandler(side));
 
         //mAccount.addChangeHandler(createAccountChangeHandler(side));
 
@@ -227,7 +229,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             @Override
             public void onChange(ChangeEvent changeEvent) {
                 TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
-                Window.alert("AccType onChange: "+changeEvent.getSource().toString());
                 updateAccount(side, mAccType);
             }
         };
@@ -236,6 +237,17 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
     private void updateAccount(final Side side, TxtBox mAccType)
     {
         String accType = mAccType.getText();
+
+        for (char c:accType.toCharArray())
+        {
+            if (!Character.isDigit(c))
+            {
+                DialogUtils.showInfo("Accounting Type должен содерждать только цифры");
+                mAccType.clear();
+                return;
+            }
+        }
+
         DataListBoxEx mCurrency = (side == Side.DEBIT) ? mDtCurrency : mCrCurrency;
         DataListBoxEx mFilial = (side == Side.DEBIT) ? mDtFilial : mCrFilial;
         final TxtBox mAccount = (side == Side.DEBIT) ? mDtAccount : mCrAccount;
@@ -264,6 +276,16 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                 public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
                     if (!wrapper.isError()) {
                         mAccount.setValue(wrapper.getResult().getBsaAcid());
+
+                        if (!mAccount.hasValue())
+                        {
+                            if (side.equals(Side.DEBIT)) {
+                                DialogUtils.showInfo("Для выбранных параметров счёт по дебету не найден");
+                            }
+                            else {
+                                DialogUtils.showInfo("Для выбранных параметров счёт по кредиту не найден");
+                            }
+                        }
                     }
                     else
                     {

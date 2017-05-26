@@ -69,6 +69,7 @@ public class MenuBuilder implements IMenuBuilder {
     @Override
     public void init(UserMenuWrapper wrapper, DockLayoutPanel dataPanel) {
         this.dataPanel = dataPanel;
+
         List<UserMenuItemWrapper> rootList;
         if (wrapper == null) {
             rootList = new ArrayList<>();
@@ -77,6 +78,7 @@ public class MenuBuilder implements IMenuBuilder {
             rootWrapper = wrapper;
             rootList = rootWrapper.getRootElements();
         }
+
         UserMenuItemWrapper tmp = null;
         // System
         for (UserMenuItemWrapper item : rootList) {
@@ -98,71 +100,69 @@ public class MenuBuilder implements IMenuBuilder {
             systemList.add(new UserMenuItemWrapper(-1, "-", UserMenuCode.Separator, UserMenuType.L));
             systemList.add(new UserMenuItemWrapper(-1, "Выход", UserMenuCode.SystemExit, UserMenuType.L));
         }
+
         // Help
         ArrayList<UserMenuItemWrapper> aboutList = new ArrayList<>();
         aboutList.add(new UserMenuItemWrapper(-1, " О программе...", UserMenuCode.HelpAbout, UserMenuType.L));
         tmp = new UserMenuItemWrapper(-1, "Справка", UserMenuCode.Help, UserMenuType.N);
         tmp.setChildren(aboutList);
         rootList.add(tmp);
+
         // Separators
-        for (int i = rootList.size() - 1; i > 0; i--) {
+        for(int i = rootList.size()-1; i > 0; i--){
             rootList.add(i, new UserMenuItemWrapper(-1, "-", UserMenuCode.Separator, UserMenuType.L));
         }
     }
 
-    private MenuItem createItem(UserMenuItemWrapper wrapper) {
+    private MenuItem createItem(UserMenuItemWrapper wrapper){
         MenuItem item;
         switch (wrapper.getMenuCode()) {
-            case SystemExit:
-                return new MenuItem("Выход", false, new Command() {
-                    @Override
-                    public void execute() {
-                        LocalDataStorage.clear();
-                        LoginFormHandler.logoff();
-                    }
-                });
-            case HelpAbout:
-                return new MenuItem(menuTemplate.createItem(ImageConstants.INSTANCE.about16().getSafeUri(),
-                        SafeHtmlUtils.fromString(" О программе...")), new Command() {
-                    @Override
-                    public void execute() {
-                        AboutForm aboutForm = new AboutForm();
-                        aboutForm.show(SecurityEntryPoint.getDatabaseVersion());
-                    }
-                });
-            case Task:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        //formLoad(new TasksForm());
-                        BarsGLEntryPoint.propertiesService.getEnvProperty("java:app/env/SchedTableName", new AsyncCallback<RpcRes_Base<String>>() {
-                            @Override
-                            public void onSuccess(RpcRes_Base<String> result) {
-                                final String schedTableName = result.getResult();
-                                formLoad(new TasksFormNew() {
-                                    @Override
-                                    protected String prepareSql() {
-                                        return "SELECT * FROM " + schedTableName;
-                                    }
+            case SystemExit: return new MenuItem("Выход", false, new Command() {
+                @Override
+                public void execute() {
+                    LocalDataStorage.clear();
+                    LoginFormHandler.logoff();
+                }
+            });
+            case HelpAbout: return new MenuItem(menuTemplate.createItem(ImageConstants.INSTANCE.about16().getSafeUri(),
+                    SafeHtmlUtils.fromString(" О программе...")), new Command(){
+                @Override
+                public void execute() {
+                    AboutForm aboutForm = new AboutForm();
+                    aboutForm.show(SecurityEntryPoint.getDatabaseVersion());
+                }
+            });
+            case Task: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    //formLoad(new TasksForm());
+                    BarsGLEntryPoint.propertiesService.getEnvProperty("java:app/env/SchedTableName", new AsyncCallback<RpcRes_Base<String>>() {
+                        @Override
+                        public void onSuccess(RpcRes_Base<String> result) {
+                            final String schedTableName = result.getResult();
+                            formLoad(new TasksFormNew() {
+                                @Override
+                                protected String prepareSql() {
+                                    return "SELECT * FROM " + schedTableName;
+                                }
 
-                                });
-                            }
+                            });
+                        }
 
-                            @Override
-                            public void onFailure(Throwable caught) {
-                                throw new RuntimeException(caught);
-                            }
-                        });
-                    }
-                });
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            throw new RuntimeException(caught);
+                        }
+                    });
+                }
+            });
 
-            case LoaderControl:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new FullLoaderControlForm());
-                    }
-                });
+            case LoaderControl: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new FullLoaderControlForm());
+                }
+            });
 
             case Operday: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
@@ -273,155 +273,142 @@ public class MenuBuilder implements IMenuBuilder {
                 }
             });
 
-            case OperInpConfirm:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OperInpConfirmForm());
-                    }
-                });
+            case OperInpConfirm: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperInpConfirmForm());
+                }
+            });
 
-            case FileIncomeMsg:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new BatchPostingForm());
-                    }
-                });
-            case FileIncomePkg:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new BatchPackageForm());
-                    }
-                });
-            case PostingSource:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new SourcesDeals());
-                    }
-                });
-            case TermCode:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new TypesOfTerms(false));
-                    }
-                });
-            case AccountingType:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new AccountingType());
-                    }
-                });
-            case PlanAccountingType:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new AccountTypesByCategory());
-                    }
-                });
-            case PlanAccountOfr:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OfrSymbols());
-                    }
-                });
-            case PropertyType:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new PropertyType());
-                    }
-                });
-            case Branch:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new Departments());
-                    }
-                });
-            case UnloadStamtConfig:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new StamtUnloadParamDict());
-                    }
-                });
+            case FileIncomeMsg: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new BatchPostingForm());
+                }
+            });
+            case FileIncomePkg: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new BatchPackageForm());
+                }
+            });
+            case PostingSource: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new SourcesDeals());
+                }
+            });
+            case TermCode: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new TypesOfTerms(false));
+                }
+            });
+            case AccountingType: return  new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountingType());
+                }
+            });
+            case PlanAccountingType: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountTypesByCategory());
+                }
+            });
+            case PlanAccountOfr: return  new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OfrSymbols());
+                }
+            });
+            case PropertyType: return  new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new PropertyType());
+                }
+            });
+            case Branch: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new Departments());
+                }
+            });
+            case UnloadStamtConfig: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new StamtUnloadParamDict());
+                }
+            });
 
-            case TemplateOper:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OperationTemplateForm());
-                    }
-                });
+            case TemplateOper: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperationTemplateForm());
+                }
+            });
 
-            case OperInpHistory:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new OperEventHistoryForm());
-                    }
-                });
+            case OperInpHistory: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperEventHistoryForm());
+                }
+            });
 
-            case ProfitCentr:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new ProfitCenter());
-                    }
-                });
+            case ProfitCentr: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new ProfitCenter());
+                }
+            });
 
-            case BufferSync:
-                return new MenuItem(BufferSyncForm.FORM_NAME, false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new BufferSyncForm());
-                    }
-                });
+            case BufferSync: return new MenuItem(BufferSyncForm.FORM_NAME, false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new BufferSyncForm());
+                }
+            });
 
-            case AccTypeParts:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new AccTypeSection());
-                    }
-                });
+            case AccTypeParts: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new AccTypeSection());
+                }
+            });
 
-            case AcodMidas:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new Acod());
-                    }
-                });
+            case AcodMidas: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new Acod());
+                }
+            });
 
-            case Monitoring:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new Monitor());
-                    }
-                });
+            case Monitoring: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new Monitor());
+                }
+            });
 
-            case CheckCardsRemains:
-                return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                    @Override
-                    public void execute() {
-                        formLoad(new CheckCardRemForm());
-                    }
-                });
+            case CheckCardsRemains: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new CheckCardRemForm());
+                }
+            });
 
-            default:
-                return getUnSupportedMenuItem();
+            case TechOperInpHistory: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new OperTechEventHistoryForm());
+                }
+            });
+
+            default: return getUnSupportedMenuItem();
         }
     }
 
-    private MenuItem getUnSupportedMenuItem() {
+    private MenuItem getUnSupportedMenuItem(){
         return new MenuItem("* Ошибка!!! *", false, new Command() {
             @Override
             public void execute() {
@@ -430,11 +417,10 @@ public class MenuBuilder implements IMenuBuilder {
         });
     }
 
-    @Override
-    public MenuBuilder build(MenuBar menu) {
+    public MenuBuilder build(MenuBar menu){
         menu.setAnimationEnabled(true);
 
-        for (UserMenuItemWrapper itemWrapper : rootWrapper.getRootElements()) {
+        for (UserMenuItemWrapper itemWrapper: rootWrapper.getRootElements()){
             createMenuElement(menu, itemWrapper);
         }
         return this;
@@ -442,9 +428,9 @@ public class MenuBuilder implements IMenuBuilder {
 
     private void createMenuElement(MenuBar menu, UserMenuItemWrapper itemWrapper) {
         if (itemWrapper.getType() == UserMenuType.L) {
-            if (itemWrapper.getMenuCode() == UserMenuCode.Separator) {
+            if (itemWrapper.getMenuCode() == UserMenuCode.Separator){
                 menu.addSeparator();
-            } else {
+            } else{
                 menu.addItem(createItem(itemWrapper));
             }
         } else {
@@ -456,8 +442,8 @@ public class MenuBuilder implements IMenuBuilder {
         }
     }
 
-    public void formLoad(Widget form) {
-        if (dataPanel.getWidgetCount() == 1) {
+    public void formLoad(Widget form){
+        if (dataPanel.getWidgetCount() == 1){
             Widget w = dataPanel.getWidget(0);
             if (w instanceof IDisposable) {
                 ((IDisposable) w).dispose();

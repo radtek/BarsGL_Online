@@ -37,7 +37,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 /**
  * Created by ER18837 on 29.10.15.
  */
-public class ManualAccountTest extends AbstractRemoteTest {
+public class  ManualAccountTest extends AbstractRemoteTest {
 
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsTest.class.getName());
     private static final Long USER_ID = 1L;

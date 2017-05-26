@@ -37,8 +37,6 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
  */
 public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOperation> {
 
-    public static final String TECH_OPER = "T";
-
     @EJB
     protected PdRepository pdRepository;
 
@@ -88,7 +86,7 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
         //пока так, а там посмотрим.
         ResultCode accDebitResult;
         ResultCode accCreditResult;
-        if (TECH_OPER.equals(operation.getBsChapter()))
+        if (GLOperation.flagTechOper.equals(operation.getBsChapter()))
         {
             accDebitResult = glAccountRepository.checkBsaAccountGlAcc(operation.getAccountDebit());
             accCreditResult = glAccountRepository.checkBsaAccountGlAcc(operation.getAccountCredit());

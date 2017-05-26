@@ -1,11 +1,13 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
 import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
+import ru.rbt.barsgl.gwt.client.operation.NewTechOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountTechBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountTechQuickFilterParams;
@@ -16,12 +18,14 @@ import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
@@ -75,7 +79,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
+        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, SUBSTR(char(1000000000+ACCTYPE),2,9) as ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
                 "ACC2, PLCODE, ACOD, SQ, ACID, PSAV, DEALSRS, DEALID, SUBDEALID, DESCRIPTION, " +
                 "DTO, DTC, DTR, DTM, OPENTYPE, GLOID, GLO_DC, BALANCE " +
                 "from V_GL_ACC_TH"
@@ -92,10 +96,11 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     protected Table prepareTable() {
         Table result = new Table();
 
-        result.addColumn(colAccType = new Column("ACCTYPE", DECIMAL, "Accounting Type", 80, true, false, Column.Sort.ASC, "000000000"));// No Space
-        result.addColumn(colAccount = new Column("BSAACID", STRING, "Псевдосчёт", 160));
+        result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "Accounting Type", 60, true, false, Column.Sort.ASC, ""));// No Space
+        colAccType.setFilterable(true);
+        result.addColumn(colAccount = new Column("BSAACID", STRING, "Псевдосчёт", 100));
         result.addColumn(colCurrency = new Column("CCY", STRING, "Валюта", 60));
-        result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 120));
+        result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 80));
         result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 60));
         Column colCBCCN;
         result.addColumn(colCBCCN = new Column("CBCC", STRING, "Код филиала (цифровой)", 60));
@@ -223,7 +228,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         };
     }
 
-    class NewOperationAccAction extends NewOperationAction {
+    class NewOperationAccAction extends NewTechOperationAction {
 
         private boolean isDebit;
         public NewOperationAccAction(OperationDlg.Side side) {
@@ -240,23 +245,26 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
             String bsaAcid = (String)row.getField(columns.getColumnIndexByName("BSAACID")).getValue();
             String ccy = (String)row.getField(columns.getColumnIndexByName("CCY")).getValue();
             String filial = (String)row.getField(columns.getColumnIndexByName("CBCC")).getValue();
-            String dealId = (String)row.getField(columns.getColumnIndexByName("DEALID")).getValue();
-            String subDealId = (String)row.getField(columns.getColumnIndexByName("SUBDEALID")).getValue();
+            //String dealId = (String)row.getField(columns.getColumnIndexByName("DEALID")).getValue();
+            //String subDealId = (String)row.getField(columns.getColumnIndexByName("SUBDEALID")).getValue();
             String dealSounce = (String)row.getField(columns.getColumnIndexByName("DEALSRS")).getValue();
+            String accType = String.valueOf(row.getField(columns.getColumnIndexByName("ACCTYPE")).getValue());
 
-            ManualOperationWrapper wrapper = new ManualOperationWrapper();
+            ManualTechOperationWrapper wrapper = new ManualTechOperationWrapper();
             wrapper.setCurrencyDebit(ccy);
             wrapper.setCurrencyCredit(ccy);
             wrapper.setFilialDebit(filial);
             wrapper.setFilialCredit(filial);
             if (isDebit) {
                 wrapper.setAccountDebit(bsaAcid);
+                wrapper.setAccountTypeDebit(accType);
             } else {
                 wrapper.setAccountCredit(bsaAcid);
+                wrapper.setAccountTypeCredit(accType);
             }
             wrapper.setDealSrc(dealSounce);
-            wrapper.setDealId(dealId);
-            wrapper.setSubdealId(subDealId);
+            //wrapper.setDealId(dealId);
+            //wrapper.setSubdealId(subDealId);
             return wrapper;
         }
     }

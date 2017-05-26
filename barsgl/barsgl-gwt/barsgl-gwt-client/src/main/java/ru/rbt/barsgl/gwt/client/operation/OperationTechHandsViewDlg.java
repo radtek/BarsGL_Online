@@ -50,7 +50,9 @@ public class OperationTechHandsViewDlg extends OperationTechHandsDlg2 {
     @Override
     protected void setControlsEnabled(){
         super.setControlsEnabled();
-        //mDtButton.setEnabled(true);
-        //mCrButton.setEnabled(true);
+        mCrAccTypeButton.setEnabled(false);
+        mDtAccTypeButton.setEnabled(false);
+        mDtAccType.setEnabled(false);
+        mCrAccType.setEnabled(false);
     }
 }

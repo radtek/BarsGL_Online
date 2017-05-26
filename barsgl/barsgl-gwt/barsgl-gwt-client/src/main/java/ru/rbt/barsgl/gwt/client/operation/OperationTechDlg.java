@@ -6,6 +6,7 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
@@ -33,7 +34,9 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.core.comp.Components.*;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
@@ -179,6 +182,22 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void setFields(ManualTechOperationWrapper operation) {
+
+//        if (!mDtAccount.hasValue() || !mCrAccount.hasValue())
+//        {
+//            final String msg = "для выбранных параметров счёт по %s не найден";
+//            List<String> msgList = new ArrayList<String>();
+//            msgList.add(!mDtAccount.hasValue()?"дебету\n":"");
+//            msgList.add(!mCrAccount.hasValue()?"кредиту\n":"");
+//            msgList.forEach(m->{
+//                if (m.length()>0) {
+//                    msgList.add(String.format(msg, m));
+//                }
+//                msgList.remove(m);
+//            });
+//            DialogUtils.showInfo("Ошибка",String.join("\n",msgList));
+//        }
+
         operation.setId(id);
         if (mDealSource.isEnabled()) {
             operation.setDealSrc(check(mDealSource.getText()
@@ -186,8 +205,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
         } else {
             operation.setDealSrc(mDealSource.getText());
         }
-//            operation.setDealId(check(mDealId.getValue()
-//                    , "Номер сделки", "поле не заполнено", new CheckNotEmptyString()));
         operation.setDealId(mDealId.getValue());            // номер сделки
         operation.setSubdealId(mSubDealId.getValue());
 
@@ -199,8 +216,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
         operation.setCurrencyCredit((String) mCrCurrency.getValue());
         operation.setCurrencyDebit((String) mDtCurrency.getValue());
-        // operation.setFilialCredit((String) mCrFilial.getValue());
-        //operation.setFilialDebit((String) mDtFilial.getValue());
         operation.setFilialDebit(check((String) mDtFilial.getValue()
                 , "Филиал (дебет)", "поле не заполнено", new CheckNotEmptyString()));
 
@@ -349,8 +364,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
             mDepartment.setEnabled(false);
             mProfitCenter.setEnabled(false);
 
-            mDtAccType.setEnabled(true);
-            mCrAccType.setEnabled(true);
+            mDtAccType.setEnabled(false);
+            mCrAccType.setEnabled(false);
 
             mDtAccTypeButton.setEnabled(true);
             mCrAccTypeButton.setEnabled(true);

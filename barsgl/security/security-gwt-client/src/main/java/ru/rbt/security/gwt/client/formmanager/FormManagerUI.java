@@ -73,7 +73,7 @@ public class FormManagerUI extends Composite {
 
         createOperdayPanel();
 
-        showMonitoring();
+//        showMonitoring();
     }
 
     private FormEventHandler createFormHandler() {
@@ -163,9 +163,9 @@ public class FormManagerUI extends Composite {
         }
     }
 
-    private void showMonitoring(){
-        if (SecurityChecker.checkAction(SecurityActionCode.TaskMonitor)){
-            show(new Monitor());
-        }
-    }
+//    private void showMonitoring(){
+//        if (SecurityChecker.checkAction(SecurityActionCode.TaskMonitor)){
+//            show(new Monitor());
+//        }
+//    }
 }

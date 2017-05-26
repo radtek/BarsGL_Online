@@ -7,6 +7,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
@@ -141,7 +142,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getFilial(String bsaAcid, AccountKeys accountParams) {
         if (!isEmpty(bsaAcid)) {
-            if ((null!=accountParams) && (accountParams.getGlSequence().startsWith("TH")))
+            if ((null!=accountParams) && (accountParams.getGlSequence()!=null) && (accountParams.getGlSequence().startsWith("TH")))
             {
                 GLAccount account = glAccountRepository.findGLAccount(bsaAcid);
                 return account.getFilial();
@@ -301,9 +302,9 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         if (!isEmpty(bsaAcid))
             return getBSChapter(bsaAcid);
         else if (null != accountKeys)
-                if (accountKeys.getGlSequence().startsWith("TH"))
+                if (accountKeys.getGlSequence()!=null && accountKeys.getGlSequence().startsWith("TH"))
                 {
-                    return "T";
+                    return GLOperation.flagTechOper;
                 }
                 else {
                     return getBSChapterAcc2(accountKeys.getAccount2());
