@@ -4,6 +4,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
+import java.math.BigDecimal;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
@@ -106,7 +107,8 @@ public class TasksFormNew extends GridForm {
 
                 TimerJobWrapper timerJobs = new TimerJobWrapper();
 
-                timerJobs.setId((Long) row.getField(0).getValue());
+                //timerJobs.setId((Long) row.getField(0).getValue());
+                timerJobs.setId(((BigDecimal) row.getField(0).getValue()).longValueExact());
                 timerJobs.setProperties((String)row.getField(2).getValue());
 
                 timerJobs.setStartupType(JobStartupType.valueOf(row.getField(5).getValue().toString()));

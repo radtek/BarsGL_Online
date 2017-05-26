@@ -36,6 +36,8 @@
                         <version>2.10.1</version>
                         <configuration>
                             <version>7</version>
+                            <generateApplicationXml>false</generateApplicationXml>
+                            <applicationXml>${project.basedir}/env/full/application.xml</applicationXml>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
                             <packagingExcludes>jdbc/*prod*.xml</packagingExcludes>
                             <filtering>true</filtering>
@@ -68,25 +70,26 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
+                                    <artifactId>barsgl-ejb-testing</artifactId>
+                                    <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
+                                </ejbModule>
+                                <ejbModule>
+                                    <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -112,7 +115,7 @@
                                   <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
                                 </jarModule>
                             </modules>
-
+<!--
                             <env-entries>
                               <env-entry>
                                   <env-entry-name>java:app/env/SchedTableName</env-entry-name>
@@ -139,7 +142,7 @@
                                   <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
-
+-->
                         </configuration>
                     </plugin>
                 </plugins>
@@ -160,6 +163,8 @@
                         <version>2.10.1</version>
                         <configuration>
                             <version>7</version>
+                            <generateApplicationXml>false</generateApplicationXml>
+                            <applicationXml>${project.basedir}/env/prod/application.xml</applicationXml>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
                             <packagingExcludes>jdbc/*dev*.xml</packagingExcludes>
                             <filtering>true</filtering>
@@ -192,32 +197,27 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-testing</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
                                     <excluded>true</excluded>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -243,7 +243,7 @@
                                   <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
                                 </jarModule>
                             </modules>
-
+<!--
                             <env-entries>
                               <env-entry>
                                   <env-entry-name>java:app/env/SchedTableName</env-entry-name>
@@ -270,7 +270,7 @@
                                   <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
-
+-->
                         </configuration>
                     </plugin>
                 </plugins>
@@ -291,6 +291,8 @@
                         <version>2.10.1</version>
                         <configuration>
                             <version>7</version>
+                            <generateApplicationXml>false</generateApplicationXml>
+                            <applicationXml>${project.basedir}/env/ejb/application.xml</applicationXml>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
                             <packagingExcludes>jdbc/*prod*.xml</packagingExcludes>
                             <filtering>true</filtering>
@@ -323,31 +325,26 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-testing</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -372,7 +369,7 @@
                                   <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
                                 </jarModule>
                             </modules>
-
+<!--
                             <env-entries>
                               <env-entry>
                                   <env-entry-name>java:app/env/SchedTableName</env-entry-name>
@@ -399,7 +396,7 @@
                                   <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
-
+-->
                         </configuration>
                     </plugin>
                 </plugins>
@@ -464,6 +461,8 @@
                         <version>2.10.1</version>
                         <configuration>
                             <version>7</version>
+                            <generateApplicationXml>false</generateApplicationXml>
+                            <applicationXml>${project.basedir}/env/prod/application.xml</applicationXml>
                             <defaultLibBundleDir>lib</defaultLibBundleDir>
                             <packagingExcludes>jdbc/*prod*.xml</packagingExcludes>
                             <filtering>true</filtering>
@@ -496,32 +495,27 @@
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-core</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejbcore.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-bankjar</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-bankjar.jar</bundleFileName>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-testing</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-testing.jar</bundleFileName>
                                     <excluded>true</excluded>
                                 </ejbModule>
                                 <ejbModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-ejb-common</artifactId>
-<!--                                    <bundleDir>lib</bundleDir>-->
                                     <bundleFileName>barsgl-ejb-common.jar</bundleFileName>
                                 </ejbModule>
                                 <webModule>
@@ -547,7 +541,7 @@
                                   <bundleFileName>com.ibm.mq.jmqi.jar</bundleFileName>
                                 </jarModule>
                             </modules>
-
+<!--
                             <env-entries>
                               <env-entry>
                                   <env-entry-name>java:app/env/SchedTableName</env-entry-name>
@@ -574,7 +568,7 @@
                                   <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
                               </ejb-ref>
                             </ejbRefs>
-
+-->
                         </configuration>
                     </plugin>
                 </plugins>
