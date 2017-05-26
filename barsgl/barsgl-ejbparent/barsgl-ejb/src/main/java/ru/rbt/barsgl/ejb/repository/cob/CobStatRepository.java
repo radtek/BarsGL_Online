@@ -68,8 +68,9 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 res = selectOne("select count(1) from GL_PD where PD_ID is null");
                 return res.getLong(0);
             case CobManualProc:
-                res = selectOne("select count(1) from GL_BATPST where PROCDATE = ? and STATE <> ? and INVISIBLE = ?",
-                        curdate, BatchPostStatus.COMPLETED.name(), YesNo.N.name());
+                res = selectOne("select count(1) from GL_BATPST where PROCDATE = ? and INVISIBLE = ? and STATE in (?, ?, ?)",
+                        curdate, YesNo.N.name(),
+                        BatchPostStatus.WAITDATE.name(), BatchPostStatus.SIGNED.name(), BatchPostStatus.SIGNEDDATE.name());
                 return res.getLong(0);
             case CobStornoProc:
                 res = selectOne("select count(1) from GL_OPER where STATE = ? and VDATE in (?, ?) and STRN = ?",
