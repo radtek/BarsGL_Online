@@ -73,8 +73,10 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
             return new RpcRes_Base<>(wrapper, true, format("Код срока '%s' не существует!", wrapper.getTerm()));
         }
 
-        if (!actParmRepository.isAcc2Exists(wrapper.getAcc2())) {
-            return new RpcRes_Base<>(wrapper, true, format("Б/счет 2-го порядка '%s' не существует!", wrapper.getAcc2()));
+        if (!accTypeRepository.isAccTypeTechAct(wrapper.getAccType())) {
+            if (!actParmRepository.isAcc2Exists(wrapper.getAcc2())) {
+                return new RpcRes_Base<>(wrapper, true, format("Б/счет 2-го порядка '%s' не существует!", wrapper.getAcc2()));
+            }
         }
 
         if (accTypeRepository.isAccTypePL_ACT_yes(wrapper.getAccType()) &&

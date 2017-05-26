@@ -12,6 +12,7 @@ import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
+import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -42,6 +43,7 @@ import java.util.HashMap;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.CREDIT;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.DEBIT;
+import static ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterParams.DateFilterField.CREATE_DATE;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
@@ -95,7 +97,7 @@ public class PostingFormTech extends EditableDictionary<ManualTechOperationWrapp
     private void reconfigure() {
 
     	quickFilterParams = createQuickFilterParams();
-        abw.addAction(quickFilterAction = new AccountQuickFilterAction(grid, quickFilterParams) );
+        abw.addAction(quickFilterAction = new DateQuickFilterAction(grid, colProcDate, colValueDate, colPostDate, CREATE_DATE, false));
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addSecureAction(createPreview(), SecurityActionCode.TechOperLook);
         abw.addSecureAction(editPostingTech(), SecurityActionCode.TechOperPstChng);

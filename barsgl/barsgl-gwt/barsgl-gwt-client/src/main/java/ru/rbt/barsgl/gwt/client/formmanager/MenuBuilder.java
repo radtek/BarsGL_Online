@@ -392,6 +392,13 @@ public class MenuBuilder implements IMenuBuilder {
                 }
             });
 
+            case TechOperInpHistory: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new OperTechEventHistoryForm());
+                }
+            });
+
             default: return getUnSupportedMenuItem();
         }
     }

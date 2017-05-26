@@ -371,6 +371,8 @@ public class GLAccountService {
             String glCCY = accountWrapper.getCurrency();
             String cbCCN = accountWrapper.getFilial();
 
+            BankCurrency currency = bankCurrencyRepository.getCurrency(glCCY);
+
             if (null != (glAccount = glAccountController.findTechnicalAccountTH(accTypeGL,glCCY,cbCCN))) {
                 throw new ValidationError(ACCOUNTGLTH_ALREADY_EXISTS, glAccount.getBsaAcid());
             }
@@ -381,7 +383,8 @@ public class GLAccountService {
 
             AccountKeys accKey =  AccountKeysBuilder.create()
                                     .withAccountType(accType)
-                                    .withCurrency(glCCY)
+                                    .withCurrencyDigital(currency.getDigitalCode())
+                                    .withCurrency(currency.getCurrencyCode())
                                     .withDealSource(accountWrapper.getDealSource())
                                     .withCompanyCode(cbCCN).build();
 
