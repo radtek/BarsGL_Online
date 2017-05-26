@@ -96,8 +96,13 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int setStepEstimate(Long idCob, Integer phaseNo, Long parameter) {
-        return executeNativeUpdate("update GL_COB_STAT set PARAMETER = ?, ESTIMATED = COEF_A + COEF_B * ? where ID_COB = ? and PHASE_NO = ?",
+        int cnt = executeNativeUpdate("update GL_COB_STAT set PARAMETER = ?, ESTIMATED = COEF_A + COEF_B * ? where ID_COB = ? and PHASE_NO = ?",
                 parameter, parameter, idCob, phaseNo);
+        if (cnt == 1) {
+            executeNativeUpdate("update GL_COB_STAT set ESTIMATED = 0 where ESTIMATED < 0 and ID_COB = ? and PHASE_NO = ?",
+                    idCob, phaseNo);
+        }
+        return cnt;
     }
 
     public int increaseStepEstimate(Long idCob, Integer phaseNo, BigDecimal newEstimate, BigDecimal oldEstimate) {
@@ -149,7 +154,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                 Success.name(), timestamp, getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo, Running.name());
         if (cnt == 1) {
-            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
+            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = GET_DIFF_SECONDS(OTS_START, OTS_END) " +
                     " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                     idCob, phaseNo, Success.name());
         }
@@ -161,7 +166,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                         " where ID_COB = ? and PHASE_NO = ?",
                 status.name(), timestamp, substr(errorMessage, ERR_LEN), getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo);
         if (cnt == 1) {
-            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
+            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = GET_DIFF_SECONDS(OTS_START, OTS_END) " +
                             " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                     idCob, phaseNo, status.name());
         }

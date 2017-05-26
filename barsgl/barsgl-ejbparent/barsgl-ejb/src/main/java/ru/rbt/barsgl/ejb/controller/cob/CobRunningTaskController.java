@@ -44,12 +44,12 @@ public class CobRunningTaskController {
     @EJB
     private CobStatRecalculator recalculator;
 
-    public CobStepStatistics executeWithLongRunningStep(Long idCob, CobPhase phase, CobRunningWork work) {
+    public CobStepStatistics executeWithLongRunningStep(Long idCob, CobPhase phase, CobRunningWork work) throws Exception {
         CobStepStatistics step = statRepository.findById(CobStepStatistics.class, new CobStatId(idCob, phase.getPhaseNo()));
         try {
             recalculator.setStepStart(idCob, step, phase);
             CobStepResult result = statRepository.executeInNewTransaction(persistence -> work.runWork(idCob, phase));
-            switch(result.getStepStatus()) {
+            switch (result.getStepStatus()) {
                 case Success:
                     recalculator.setStepSuccess(idCob, step, phase, result.getMessage());
                     break;
@@ -68,14 +68,12 @@ public class CobRunningTaskController {
             }
             return statRepository.refresh(step, true);
         } catch (Throwable t) {
-            log.log(Level.SEVERE, "Error on long running cob: ", t);
+            log.log(Level.SEVERE, "Error on long running cob step: ", t);
             String msg = String.format("Шаг COB %d завершен с ошибкой", phase.getPhaseNo());
             auditController.error(PreCob, msg, step, t);
-            if (null != step){
-                try {
-                    recalculator.setStepError(idCob, step, phase, "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt);
-                    return statRepository.refresh(step, true);
-                } catch (Exception ignored) {}
+            if (null != step) {
+                recalculator.setStepError(idCob, step, phase, "Шаг завершен с ошибкой", getErrorMessage(t), CobStepStatus.Halt);
+                return statRepository.refresh(step, true);
             }
             return null;
         }
@@ -88,18 +86,25 @@ public class CobRunningTaskController {
     }
 
     public boolean execWorks(List<CobRunningStepWork> works, Long idCob) {
-        for (CobRunningStepWork work : works) {
-            CobStepStatistics step = executeWithLongRunningStep(idCob, work.getPhase(), work.getWork());
-            if (null == step) {
-                auditController.error(PreCob,
-                        format("Не удалось создать шаг выполнения для '%s'", work), null, new DefaultApplicationException(""));
-            } else if (step.getStatus() == CobStepStatus.Halt) {
-                auditController.error(PreCob,
-                        format("Сбой выполнения COB. Шаг %s: '%s'. Процесс остановлен", step.getPhaseNo().toString(), step.getPhaseName()), null, new DefaultApplicationException(""));
-                return false;
+            for (CobRunningStepWork work : works) {
+                try {
+                    CobStepStatistics step = executeWithLongRunningStep(idCob, work.getPhase(), work.getWork());
+                    if (null == step) {
+                        auditController.error(PreCob,
+                                format("Не удалось создать шаг выполнения для '%s'", work), null, new DefaultApplicationException(""));
+                    } else if (step.getStatus() == CobStepStatus.Halt) {
+                        auditController.error(PreCob,
+                                format("Сбой выполнения COB. Шаг %s: '%s'. Процесс остановлен", step.getPhaseNo().toString(), step.getPhaseName()), null, new DefaultApplicationException(""));
+                        return false;
+                    }
+                } catch (Throwable t) {
+                    log.log(Level.SEVERE, "Error on long running cob: ", t);
+                    String msg = String.format("COB %d завершен с ошибкой на шаге %d", idCob, work.getPhase().getPhaseNo());
+                    auditController.error(PreCob, msg, null, t);
+                    return false;
+                }
             }
-        }
-        return true;
+            return true;
     }
 
 }
