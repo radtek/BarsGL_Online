@@ -85,7 +85,7 @@ public class PostingDateTest extends AbstractRemoteTest {
                 + "           (SELECT MIN(DAT) MIN_DT\n"
                 + "              FROM CAL C\n"
                 + "             WHERE C.HOL <> 'X' AND CCY = 'RUR'\n"
-                + "               AND C.DAT > (SELECT CURDATE - 14 DAYS FROM GL_OD)) CC\n"
+                + "               AND C.DAT > (SELECT CURDATE - 14 FROM GL_OD)) CC\n"
                 + ") V"
         );
     }

@@ -53,7 +53,7 @@ public class OverValueAcc2GlAccTask implements ParamsAwareRunnable {
                 long cnt1 = callFunction("GL_OVERVALUE_ACC");
                 auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов переоценки", cnt1));
                 long cnt2 = callFunction("GL_EXCHANGE_ACC");
-                auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов курсовой", cnt2));
+                auditController.info(OverValueAcc2GlAcc, format("Добавлено %d счетов курсовой разницы", cnt2));
 
                 taskUtils.setResultStatus(headerId, DwhUnloadStatus.SUCCEDED);
 
@@ -100,10 +100,10 @@ public class OverValueAcc2GlAccTask implements ParamsAwareRunnable {
                 "begin \n" +
                 "  cnt := " + funcName + "();\n" +
                 "  ? := cnt;\n" +
-                "end;\n";
+                "end;";
         return (long) repository.executeTransactionally(connection -> {
             try (CallableStatement st = connection.prepareCall(sql)) {
-                st.registerOutParameter(1, Types.INTEGER);
+                st.registerOutParameter(1, Types.BIGINT);
                 st.executeUpdate();
                 return st.getLong(1);
             }

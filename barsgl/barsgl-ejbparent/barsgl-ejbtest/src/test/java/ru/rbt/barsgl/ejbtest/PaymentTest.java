@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.List;
 
 import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER18837 on 05.06.15.
@@ -121,12 +120,15 @@ public class PaymentTest extends AbstractTimerJobTest {
             Assert.assertEquals(OperState.POST, oper.getState());
 
             String pref = rsubstr(oper.hasParent() ? oper.getParentReference() : oper.getPaymentRefernce(), 15);
-            String pnar;
-            if (oper.isChild()) {
-                pnar = (oper.isStorno() ? "*" : "") + "CHARGE " + pref;
-            } else {
-                pnar = substr(oper.getRusNarrativeShort(), 30);
-            }
+            String pnar = getPnar(oper);
+//            if (oper.isChild()) {
+//                pnar = (oper.isStorno() ? "*" : "") + "CHARGE " + pref;
+//            } else {
+//                if(InputMethod.AE == oper.getInputMethod())
+//                    pnar = substr(oper.getNarrative(), 30); // для AE - из NRT
+//                else                    
+//                    pnar = substr(oper.getRusNarrativeShort(), 30);
+//            }
 
             List<GLPosting> postList = getPostings(oper);
             Assert.assertNotNull(postList);

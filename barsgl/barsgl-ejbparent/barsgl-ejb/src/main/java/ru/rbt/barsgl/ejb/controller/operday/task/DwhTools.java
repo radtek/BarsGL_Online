@@ -97,18 +97,21 @@ public class DwhTools {
 
     public long startGlEtldwhs(String pardesc, java.sql.Date operDay) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+            //GL_BATPST_SEQ.nextval
             try(
                 //       1       2        3       4       5          6
-                PreparedStatement insGlEtldwhs = connection.prepareStatement("insert into Gl_Etldwhs(PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD) values('BARS_GL_DWH',0,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement insGlEtldwhs = connection.prepareStatement("insert into Gl_Etldwhs(ID,PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD) values(GL_ETLDWHS_SEQ.NEXTVAL,'BARS_GL_DWH',0,?,?,?)");
+                PreparedStatement idValStmnt = connection.prepareStatement("SELECT GL_ETLDWHS_SEQ.CURRVAL id FROM DUAL");
                 ){
                 insGlEtldwhs.setString(1, pardesc);
                 insGlEtldwhs.setDate(2, operDay);
                 insGlEtldwhs.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
                 insGlEtldwhs.executeUpdate();
-                ResultSet rs = insGlEtldwhs.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getLong(1);
-                }else throw new Exception("DwhTools.startGlEtldwhs() id not found");
+                try(ResultSet rs = idValStmnt.executeQuery();){
+                    if (rs.next()) {
+                        return rs.getLong(1);
+                    }else throw new Exception("DwhTools.startGlEtldwhs() id not found");
+                }
             }
         }, 60 * 60);
 

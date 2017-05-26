@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor.TECH_OPER;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 
 
@@ -302,7 +303,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         if (!isEmpty(bsaAcid))
             return getBSChapter(bsaAcid);
         else if (null != accountKeys)
-                if (accountKeys.getGlSequence()!=null && accountKeys.getGlSequence().startsWith("TH"))
+                if (accountKeys.getGlSequence().startsWith("TH"))
                 {
                     return GLOperation.flagTechOper;
                 }

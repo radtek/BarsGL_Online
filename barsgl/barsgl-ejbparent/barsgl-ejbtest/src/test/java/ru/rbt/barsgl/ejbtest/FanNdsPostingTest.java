@@ -14,10 +14,9 @@ import ru.rbt.barsgl.ejb.entity.flx.NdsPosting;
 import ru.rbt.barsgl.ejb.entity.flx.TransitNdsReference;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -41,7 +40,7 @@ public class FanNdsPostingTest extends AbstractRemoteTest {
         baseEntityRepository.executeNativeUpdate("update gl_etlpkg set state = 'ERROR' where state = 'LOADED'");
 
         baseEntityRepository.executeNativeUpdate("update workday set workday = ?", workday);
-        emulateMI3GL(workday);
+        emulateWorkprocStep(workday, "MI3GL");
 
         TransitNdsReference reference = createTransitAccount();
         Assert.assertNotNull(reference);

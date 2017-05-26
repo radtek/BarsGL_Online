@@ -5,6 +5,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
  */
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -16,27 +17,24 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.TimerJobRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -47,15 +45,16 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.PreCob;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.shared.enums.CobPhase.*;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.Halt;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -91,9 +90,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     BalturRecalculator balturRecalculator;
 
     @EJB
-    private AuditController auditController;
-
-    @EJB
     private BeanManagedProcessor beanManagedProcessor;
 
     @Inject
@@ -116,9 +112,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
     @EJB
     private CoreRepository repository;
-
-    @EJB
-    private JobHistoryRepository jobHistoryRepository;
 
     @Inject
     private TimerJobRepository jobRepository;

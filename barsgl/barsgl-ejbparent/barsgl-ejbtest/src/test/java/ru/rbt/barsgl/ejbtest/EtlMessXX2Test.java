@@ -1783,7 +1783,7 @@ public class EtlMessXX2Test extends AbstractTimerJobTest {
 
     }
     private boolean isCodeInGlAudit(long id, String code) throws Exception {
-        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  CURRENT_TIMESTAMP - interval '1' day", id);
+        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and systimestamp >  systimestamp - 1", id);
         System.out.println(glAudit.getString("ERRORMSG"));
         return glAudit.getString("ERRORMSG").indexOf(code) > -1;
     }

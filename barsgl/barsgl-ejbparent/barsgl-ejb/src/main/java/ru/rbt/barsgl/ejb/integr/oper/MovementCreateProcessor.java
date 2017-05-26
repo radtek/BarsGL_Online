@@ -4,16 +4,17 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.SCASAMCResponseStorage;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.jms.MessageContext;
 import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.ejb.EJB;
+import javax.enterprise.inject.Default;
 import javax.jms.*;
 import javax.jms.Queue;
 import javax.xml.bind.JAXBException;
@@ -32,15 +33,16 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MovementCreate;
+import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
  * Created by ER22228 on 02.06.2016.
  */
-public class MovementCreateProcessor {
+@Default
+public class MovementCreateProcessor implements MovementCommunicator {
     private static final Logger log = Logger.getLogger(MovementCreateProcessor.class.getName());
     private static final String PROP_ATTEMPTS = "mc.attempts";
     private static final String PROP_MVMTDEBUG = "mc.debug";
@@ -257,37 +259,35 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         List<MovementCreateData> mcdList = new ArrayList<>();
         try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr),
                 queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
-            messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            messageContext.createJMSContext();
             Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
-            MessageConsumer messageConsumer = messageContext.createConsumer(queue);
-
-            messageContext.start();
-
-            while (true) {
-                String[] messageParts = readFromJMS(messageConsumer);
-                if (isEmpty(messageParts[1])) {
-                    break;
-                } else {
-                    String messageID = getMessageUUID(messageParts);
-                    auditController.stat(MovementCreate, "Service answer", messageParts[1], messageID);
-
-                    // Есть ID по которому можно найти запрос?
-                    if (isEmpty(messageID)) {
-                        // не можем найти запрос для данного ответа
-                        auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageID);
+            try (JMSConsumer messageConsumer = messageContext.createConsumer(queue)) {
+                //messageContext.start();
+                
+                while (true) {
+                    String[] messageParts = readFromJMS(messageConsumer);
+                    if (isEmpty(messageParts[1])) {
+                        break;
                     } else {
+                        String messageID = getMessageUUID(messageParts);
+                        auditController.stat(MovementCreate, "Service answer", messageParts[1], messageID);
+                        
+                        // Есть ID по которому можно найти запрос?
+                        if (isEmpty(messageID)) {
+                            // не можем найти запрос для данного ответа
+                            auditController.stat(MovementCreate, "messageID is null", messageParts[1], messageID);
+                        } else {
 //                        responseStorage.put(messageID,messageParts);
-                        String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
-                        MovementCreateData mcd = new MovementCreateData();
-                        parseResponse(envelopeParts[0], mcd);
-                        mcd.setMessageUUID(messageID);
-                        mcdList.add(mcd);
-                        log.info(String.format("MC: message UUID = '%s' parsed", messageID));
+                            String[] envelopeParts = getInfoFromSOAPEnvelope(messageParts[1]);
+                            MovementCreateData mcd = new MovementCreateData();
+                            parseResponse(envelopeParts[0], mcd);
+                            mcd.setMessageUUID(messageID);
+                            mcdList.add(mcd);
+                            log.info(String.format("MC: message UUID = '%s' parsed", messageID));
+                        }
                     }
                 }
             }
-
-            messageConsumer.close();
         }
         return mcdList;
     }
@@ -453,16 +453,15 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
     // Debug "server"
     public void putTestAnswer() throws JMSException, Exception {
       try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
-        messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        messageContext.createJMSContext();
         Queue queueOut = messageContext.createQueue("queue:///" + queueProperties.mqQueueOut);
-        MessageConsumer messageConsumer = messageContext.createConsumer(queueOut);
-
-        messageContext.start();
-
-        String[] fromOperator = readFromJMS(messageConsumer);
-
+        String[] fromOperator;
+          try (JMSConsumer jmsConsumer = messageContext.createConsumer(queueOut)) {
+              //messageContext.start();
+              fromOperator = readFromJMS(jmsConsumer);
+          }
         Queue queue = null;
-        MessageProducer sender = null;
+        JMSProducer sender = messageContext.createProducer();
 //        if (Math.random() > 0.2) {
 //        if(true){
           TextMessage message = messageContext.createTextMessage();
@@ -471,14 +470,12 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             message.setJMSReplyTo(queueOut);
 
             if (fromOperator != null && fromOperator.length == 3) {
-            queue = messageContext.createQueue(fromOperator[2]);
-            sender = messageContext.createProducer(queue);
+                queue = messageContext.createQueue(fromOperator[2]);
                 message.setJMSCorrelationID(fromOperator[0]);
           }else{
             queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
-            sender = messageContext.createProducer(queue);
             }
-            sender.send(message);
+            sender.send(queue, message);
             System.out.println("Test answer sent");
 //        } else {
 //            JMSTextMessage message = (JMSTextMessage) session.createTextMessage();
@@ -490,13 +487,13 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 //            System.out.println("Test error sent");
 //        }
 //
-          sender.close();
+          //sender.close();
 //        senderErr.close();
             }
         }
 
-    private String[] readFromJMS(MessageConsumer receiver) throws JMSException {
-        Message receivedMessage = receiver.receiveNoWait();//receive(10000);
+    private String[] readFromJMS(JMSConsumer jmsConsumer) throws JMSException {
+        Message receivedMessage = jmsConsumer.receiveNoWait();//receive(10000);
         return parseMessage(receivedMessage);
     }
 
@@ -545,50 +542,48 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
     private void receiveEnvelops(List<MovementCreateData> mcdList) throws JMSException, JAXBException, Exception {
 //        auditController.info(MovementCreate, "Messages receiving");
       try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {        
-        messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        messageContext.createJMSContext();
         Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
-        MessageConsumer messageConsumer = messageContext.createConsumer(queue);
+        try (JMSConsumer messageConsumer = messageContext.createConsumer(queue)) {
+            //messageContext.start();
 
-        messageContext.start();
-
-        int completed = 0;
-        int att = getAttempls();
-        for (int i = 0; i < att && completed < mcdList.size(); i++) {
-            while (true) {
-            int ret = receiveMessage(messageConsumer, mcdList);
-                if (ret == 2) {
-                    completed++;
-                    if (completed >= mcdList.size()) {
+            int completed = 0;
+            int att = getAttempls();
+            for (int i = 0; i < att && completed < mcdList.size(); i++) {
+                while (true) {
+                    int ret = receiveMessage(messageConsumer, mcdList);
+                    if (ret == 2) {
+                        completed++;
+                        if (completed >= mcdList.size()) {
+                            break;
+                        }
+                    } else if (ret == 3) {
                         break;
                     }
-                } else if (ret == 3) {
-                    break;
+                }
+
+                try {
+                    Thread.sleep(PERIOD);
+                } catch (InterruptedException e) {
+                    log.info("", e);
                 }
             }
-
-            try {
-                Thread.sleep(PERIOD);
-            } catch (InterruptedException e) {
-                log.info("", e);
-            }
-        }
-
+              
 //        auditController.info(MovementCreate, "Parsed. completed:" + completed);
         if (responseStorage.size() > 0) {
-            auditController.info(MovementCreate, "Storage (on exit):" + Arrays.toString(responseStorage.keySet().toArray()));
-        }
+                    auditController.info(MovementCreate, "Storage (on exit):" + Arrays.toString(responseStorage.keySet().toArray()));
+                }
 
-        for (MovementCreateData item : mcdList) {
-            if (item.getState() == null) {
+                for (MovementCreateData item : mcdList) {
+                    if (item.getState() == null) {
 //                auditController.info(MovementCreate, "Timeout. set state. id:" + item.getMessageUUID());
-                item.setState(MovementCreateData.StateEnum.ERROR);
-                item.setErrType(MovementErrorTypes.ERR_TIMEOUT);
-                item.setErrDescr("");
+                        item.setState(MovementCreateData.StateEnum.ERROR);
+                        item.setErrType(MovementErrorTypes.ERR_TIMEOUT);
+                        item.setErrDescr("");
+                    }
+                }
             }
         }
-
-        messageConsumer.close();
-    }
     }
 
     private Map<String, String> readFromXML(String bodyXML/*, Long jId*/) throws Exception {
@@ -666,7 +661,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
     }
     
     // Message queue
-    private int receiveMessage(MessageConsumer receiver, List<MovementCreateData> mcdList) throws JMSException {
+    private int receiveMessage(JMSConsumer receiver, List<MovementCreateData> mcdList) throws JMSException {
         String[] messageParts = readFromJMS(receiver);
         if (!isEmpty(messageParts[1])) {
             //Парсим
@@ -840,24 +835,24 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 
     private void sendEnvelops(List<MovementCreateData> envelopes) throws JMSException, UnsupportedEncodingException, Exception {
       try (MessageContext messageContext = new MessageContext(queueProperties.mqHost, Integer.parseInt(queueProperties.mqPortStr), queueProperties.mqQueueManager, queueProperties.mqChannel, queueProperties.mqUser, queueProperties.mqPassword)) {
-        messageContext.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        messageContext.createJMSContext();
         Queue queue = messageContext.createQueue("queue:///" + queueProperties.mqQueueOut);        
-        MessageProducer messageProducer = messageContext.createProducer(queue);
+        JMSProducer messageProducer = messageContext.createProducer();
         Queue queueReplyTo = messageContext.createQueue("queue:///" + queueProperties.mqQueueInc);
 
-        messageContext.start();
+        //messageContext.start();
 
         for (MovementCreateData oneEnvelope : envelopes) {
           TextMessage message = messageContext.createTextMessage();
             message.setText(oneEnvelope.getEnvelopOutcoming());
             message.setJMSCorrelationID(oneEnvelope.getMessageUUID());
             message.setJMSReplyTo(queueReplyTo);
-          messageProducer.send(message);
+          messageProducer.send(queue, message);
             auditController.stat(MovementCreate, "Message sent", oneEnvelope.getEnvelopOutcoming(), oneEnvelope.getMessageUUID());
           oneEnvelope.setState(MovementCreateData.StateEnum.SENT);
         }
 
-        messageProducer.close();
+        //messageProducer.close();
     }
     }
 

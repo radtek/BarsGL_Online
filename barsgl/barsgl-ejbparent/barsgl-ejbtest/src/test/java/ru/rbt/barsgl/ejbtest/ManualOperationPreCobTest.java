@@ -37,7 +37,7 @@ import static ru.rbt.barsgl.ejbtest.BatchMessageTest.loadPackage;
  */
 public class ManualOperationPreCobTest extends AbstractTimerJobTest {
 
-    private final Long USER_ID = 2L;
+    private final Long USER_ID = 1L;
 
     @Before
     public  void before() {
@@ -129,7 +129,7 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
         Assert.assertNotNull(posting);
         wrapper6.setId(posting.getId());
         wrapper6.setStatus(posting.getStatus());
-        baseEntityRepository.executeNativeUpdate("update GL_BATPST set SRV_REF = 'TEST', SEND_SRV = CURRENT TIMESTAMP where ID = ?", wrapper6.getId());
+        baseEntityRepository.executeNativeUpdate("update GL_BATPST set SRV_REF = 'TEST', SEND_SRV = systimestamp where ID = ?", wrapper6.getId());
 
         // проверить статусы
         BatchPosting posting1 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper1.getId());
@@ -286,11 +286,11 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
 
 //        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DTAC=0, DTBC=0, CTAC=0, CTBC=0" + sqlWhere + " and dat >= ?", acid, bsaAcid, dateFrom);
 //        Assert.assertEquals(3, cnt);
-        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DATTO = DATTO + 1 DAYS" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[0]);
+        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DATTO = DATTO + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[0]);
         Assert.assertEquals(1, cnt);
-        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1 DAYS, DATTO = DATTO + 1 DAYS" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[1]);
+        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1, DATTO = DATTO + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[1]);
         Assert.assertEquals(1, cnt);
-        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1 DAYS" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[2]);
+        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[2]);
         Assert.assertEquals(1, cnt);
 
         updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STOPPED);
@@ -346,12 +346,12 @@ public class ManualOperationPreCobTest extends AbstractTimerJobTest {
     };
 
     private DataRecord getAccountInBaltur(String acc2, Date dateFrom) throws SQLException {
-        return baseEntityRepository.selectFirst("select ACID, BSAACID from ACCRLN where DRLNC > CURRENT DATE and CCODE = '0001' and CBCCY = '810'" +
+        return baseEntityRepository.selectFirst("select ACID, BSAACID from ACCRLN where DRLNC > sysdate and CCODE = '0001' and CBCCY = '810'" +
                 " and ACC2 = ? and (BSAACID, ACID) in (select BSAACID, ACID from BALTUR where DAT >= ?)", acc2, dateFrom);
     }
 
     private DataRecord getAccountNotBaltur(String acc2, Date dateFrom) throws SQLException {
-        return baseEntityRepository.selectFirst("select ACID, BSAACID from ACCRLN where DRLNC > CURRENT DATE and CCODE = '0001' and CBCCY = '810'" +
+        return baseEntityRepository.selectFirst("select ACID, BSAACID from ACCRLN where DRLNC > sysdate and CCODE = '0001' and CBCCY = '810'" +
                 " and ACC2 = ? and (BSAACID, ACID) not in (select BSAACID, ACID from BALTUR where DAT >= ?)", acc2, dateFrom);
     }
 

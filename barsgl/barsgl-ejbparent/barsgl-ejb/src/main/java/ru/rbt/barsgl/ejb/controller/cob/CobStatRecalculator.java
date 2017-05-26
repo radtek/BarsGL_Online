@@ -1,15 +1,16 @@
 package ru.rbt.barsgl.ejb.controller.cob;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.shared.enums.CobPhase;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.enums.CobPhase;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -70,7 +71,7 @@ public class CobStatRecalculator {
             return idCob;
         } catch (Throwable t) {
             auditController.error(PreCob, "Ошибка при расчете длительности COB", null, t);
-            return null;
+            throw new DefaultApplicationException(t.getMessage(), t);
         }
     }
 

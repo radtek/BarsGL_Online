@@ -36,6 +36,9 @@ public class ManualOperationTest extends AbstractTimerJobTest {
     @Before
     public void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+
+        // все права пользователю 1
+        Utl4Tests.grantAllPerission(USER_ID, baseEntityRepository);
     }
     /**
      * Создание и обработка операции по ручному вводу

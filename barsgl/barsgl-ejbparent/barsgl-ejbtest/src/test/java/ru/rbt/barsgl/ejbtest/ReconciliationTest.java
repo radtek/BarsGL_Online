@@ -2,24 +2,32 @@ package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.Iterables;
 import com.google.gwt.user.client.DOM;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.ReconcilationTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 
+import java.io.Console;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.ejbtest.AbstractTimerJobTest.restoreOperday;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.getPds;
 
 /**
@@ -47,9 +55,10 @@ public class ReconciliationTest extends AbstractRemoteTest {
 
     @Before
     public void before() {
-        baseEntityRepository.executeNativeUpdate("update gl_oper set curdate = curdate - interval'1' day where curdate = ?", getOperday().getCurrentDate());
-        baseEntityRepository.executeNativeUpdate("update pd set pod = pod - interval'1' day where pod = ? and pbr = ? and invisible = '1'"
+        baseEntityRepository.executeNativeUpdate("update gl_oper set curdate = curdate - 1 where curdate = ?", getOperday().getCurrentDate());
+        baseEntityRepository.executeNativeUpdate("update pd set pod = pod - 1 where pod = ? and pbr = ? and invisible = '1'"
                 , getOperday().getCurrentDate(), Pbr.PH.getSource());
+        openAccounts();
     }
 
     /**
@@ -266,4 +275,13 @@ public class ReconciliationTest extends AbstractRemoteTest {
     private List<DataRecord> getRecsMd() throws SQLException {
         return baseEntityRepository.select("select * from gl_recpdmd");
     }
+
+    private void openAccounts(){
+        baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where dealid in ('47411978750020010096', '47427978400404502369', '40702810100013995679', '40702810900010002613', '40806810700010000465')");
+        baseEntityRepository.executeNativeUpdate("update accrln set drlnc = null where BSAACID in ('47411978750020010096', '47427978400404502369', '40702810100013995679', '40702810900010002613', '40806810700010000465')");
+        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaacc = ? where ID in ('47411978750020010096', '47427978400404502369', '40702810100013995679', '40702810900010002613', '40806810700010000465')",
+                Utl4Tests.parseDate("2029-01-01", "yyyy-MM-dd"));
+    }
+
+
 }

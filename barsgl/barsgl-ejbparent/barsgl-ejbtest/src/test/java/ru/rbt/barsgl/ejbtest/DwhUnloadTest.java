@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadFullTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
@@ -9,10 +10,10 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -28,9 +29,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.PRE_COB;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.cleanHeader;
 
 /**
@@ -38,6 +37,7 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.cleanHeader;
  * Выгрузка данных о проводках в DWH
  * @fsd 8.2
  */
+@Ignore("задача не выполняется на проде")
 public class DwhUnloadTest extends AbstractTimerJobTest {
 
     public static final Logger logger = Logger.getLogger(DwhUnloadTest.class.getName());
@@ -134,9 +134,9 @@ public class DwhUnloadTest extends AbstractTimerJobTest {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(valueDate);
 
-        String bsaCt = getBsaacid("40817%", null);
+        String bsaCt = getBsaacid("40817036%", null);
         pst.setAccountCredit(bsaCt);
-        pst.setAccountDebit(getBsaacid("40817%", bsaCt));
+        pst.setAccountDebit(getBsaacid("40817036%", bsaCt));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -161,11 +161,12 @@ public class DwhUnloadTest extends AbstractTimerJobTest {
     private String getBsaacid(String like, String not) throws SQLException {
         if (isEmpty(not)) {
             return Optional.ofNullable(baseEntityRepository.selectFirst(
-                    "select * from accrln where bsaacid like ? and value(acid,'') <> ''", like))
+                    "select * from accrln where drlnc = '2029-01-01' and bsaacid like ? and coalesce(acid,' ') <> ' '", like))
                     .orElseThrow(() -> new IllegalArgumentException(like + ":" + not)).getString("bsaacid");
         } else {
             return Optional.ofNullable(baseEntityRepository.selectFirst(
-                    "select * from accrln where bsaacid like ? and value(acid,'') <> '' and bsaacid <> ? and value(acid,'') <> ''", like, not))
+                    "select * from accrln where drlnc = '2029-01-01' and bsaacid like ? and coalesce(acid,' ') <> ' '" +
+                            " and bsaacid <> ? and coalesce(acid,' ') <> ' '", like, not))
                     .orElseThrow(() -> new IllegalArgumentException(like + ":" + not)).getString("bsaacid");
         }
     }

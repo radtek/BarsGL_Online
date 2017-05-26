@@ -1,16 +1,17 @@
 package ru.rbt.barsgl.ejbcore.job;
 
 import org.apache.log4j.Logger;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
+import ru.rbt.barsgl.shared.enums.JobStartupType;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.JobStartupType;
 
 import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
 import javax.ejb.*;
 import javax.ejb.Timer;
 import javax.enterprise.inject.Instance;
@@ -21,12 +22,11 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static java.lang.String.format;
-import javax.annotation.security.PermitAll;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.*;
+import static ru.rbt.barsgl.shared.enums.JobStartupType.AUTO;
 import static ru.rbt.shared.Assert.assertThat;
 import static ru.rbt.shared.Assert.notNull;
-import static ru.rbt.barsgl.shared.enums.JobStartupType.AUTO;
 
 /**
  * Created by Ivan Sevastyanov
@@ -309,7 +309,8 @@ public class BackgroundJobServiceBean implements BackgroundJobService {
                         , job, clazz, job.getClass(), clazz.isAssignableFrom(job.getClass())));
             }
         }*/
-        for (ParamsAwareRunnable job : jobs) {
+        Instance<? extends ParamsAwareRunnable> filtered = jobs.select(clazz);
+        for (ParamsAwareRunnable job : filtered) {
             if (clazz.isAssignableFrom(job.getClass())) return job;
         }
         throw new DefaultApplicationException("Not found: " + clazz);

@@ -5,13 +5,7 @@ import com.ibm.msg.client.wmq.WMQConstants;
 import javax.jms.BytesMessage;
 import javax.jms.TextMessage;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSession;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
@@ -26,9 +20,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
-import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -39,6 +31,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import javax.jms.JMSConsumer;
+import javax.jms.JMSContext;
+import javax.jms.JMSProducer;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
@@ -86,29 +81,28 @@ public class CommonQueueProcessor4 implements MessageListener {
 
     private QueueProperties queueProperties;
 
-    QueueConnection connection = null;
-    QueueSession session = null;
+//    QueueConnection connection = null;
+//    QueueSession session = null;
 
+    private JMSContext jmsContext = null;
     private int defaultBatchSize = 50;
     private int batchSize;
 
     public void startConnection() throws JMSException {
-        if (session == null) {
+        if (jmsContext == null) {
             MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
             cf.setHostName(queueProperties.mqHost);
             cf.setPort(queueProperties.mqPort);
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
             cf.setQueueManager(queueProperties.mqQueueManager);
             cf.setChannel(queueProperties.mqChannel);
-            connection = cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
-            setSession(connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE));
-
-            connection.setExceptionListener(new ExceptionListener() {
-                @Override
-                public void onException(JMSException e) {
-                    log.info("\n\nonException calling");
-                    reConnect();
-                }
+//            connection = cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
+//            setSession(connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE));
+            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword));
+//            connection.setExceptionListener(new ExceptionListener() {
+            jmsContext.setExceptionListener((JMSException e) -> {
+                log.info("\n\nonException calling");
+                reConnect();
             });
         }
     }
@@ -116,28 +110,32 @@ public class CommonQueueProcessor4 implements MessageListener {
     private void reConnect() {
         log.info("\n\nreConnect calling");
         closeConnection();
-        connection = null;
-        session = null;
+//        connection = null;
+//        session = null;
+        jmsContext = null;
         // На следующем старте задачи сработает startConnection()
     }
 
     @PreDestroy
     public void closeConnection() {
         log.info("\n\ncloseConnection calling");
-        try {
-            if (session != null) {
-                session.close();
-            }
-        } catch (JMSException e1) {
-            auditController.warning(AccountQuery, "Ошибка при закрытии сессии", null, e1);
-        }
+//        try {
+//            if (session != null) {
+//                session.close();
+//            }
+//        } catch (JMSException e1) {
+//            auditController.warning(AccountQuery, "Ошибка при закрытии сессии", null, e1);
+//        }
 
         try {
-            if (connection != null) {
-                connection.close();
-            }
+//            if (connection != null) {
+//                connection.close();
+//            }
+            if(jmsContext != null)
+                jmsContext.close();
 
-        } catch (JMSException e1) {
+//        } catch (JMSException e1) {
+        } catch (Exception e1) {
             auditController.warning(AccountQuery, "Ошибка при закрытии соединения", null, e1);
         }
     }
@@ -173,12 +171,18 @@ public class CommonQueueProcessor4 implements MessageListener {
       this.queueProperties = new QueueProperties(properties);
     }
 
-    public void setSession(QueueSession session) {
-      this.session = session;
-    }
+//    @Deprecated
+//    public void setSession(QueueSession session) {
+//      //this.session = session;
+//      throw new UnsupportedOperationException("You must upgrade to JMS 2.0!");
+//    }
     
-    private String[] readFromJMS(MessageConsumer receiver) throws JMSException {
-        Message receivedMessage = receiver.receiveNoWait();
+    public void setJmsContext(JMSContext jmsContext) {
+        this.jmsContext = jmsContext;
+    }
+        
+    private String[] readFromJMS(JMSConsumer consumer) throws JMSException {
+        Message receivedMessage = consumer.receiveNoWait();
         if (receivedMessage == null) {
             return null;
         }
@@ -221,15 +225,17 @@ public class CommonQueueProcessor4 implements MessageListener {
 
     private void processSources() throws Exception {
         String[] params = queueProperties.mqTopics.split(":");
-        Queue queueIn = session.createQueue("queue:///" + params[1]);
-        QueueReceiver receiver = session.createReceiver(queueIn);
-
-        connection.start();
-
+//        Queue queueIn = session.createQueue("queue:///" + params[1]);
+//        QueueReceiver receiver = session.createReceiver(queueIn);
+//
+//        connection.start();
+        
+        try(JMSConsumer consumer =  jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));){
+        
         List<JpaAccessCallback<Void>> callbacks = new ArrayList<>();
 
         for (int i = 0; i < batchSize; i++) {
-            String[] incMessage = readFromJMS(receiver);
+            String[] incMessage = readFromJMS(consumer);
             if (incMessage == null || incMessage[0] == null) {
                 break;
             }
@@ -253,8 +259,8 @@ public class CommonQueueProcessor4 implements MessageListener {
             asyncProcessor.asyncProcessPooledByExecutor(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
 //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов. Обработка завершена");
         }
-
-        receiver.close();
+        }
+        //receiver.close();
     }
 
     @Override
@@ -348,13 +354,16 @@ public class CommonQueueProcessor4 implements MessageListener {
         }
 
         public void sendToQueue(String outMessage, QueueProperties queueProperties, String[] incMessage, String queue) throws JMSException {
-            TextMessage message = session.createTextMessage(outMessage);
+            //TextMessage message = session.createTextMessage(outMessage);
+            TextMessage message = jmsContext.createTextMessage(outMessage);
             message.setJMSCorrelationID(incMessage[1]);
-            Queue queueOut = session.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue);
+//            Queue queueOut = session.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue);
 //            QueueSender sender = session.createSender(queueOut);
-            MessageProducer sender = session.createProducer(queueOut);            
-            sender.send(message);
-            sender.close();
+//            MessageProducer sender = session.createProducer(queueOut);
+            JMSProducer producer = jmsContext.createProducer();
+            //sender.send(message);
+            producer.send(jmsContext.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue), message);
+//            sender.close();
 //            log.info("Отправка сообщения завершена");
         }
 
