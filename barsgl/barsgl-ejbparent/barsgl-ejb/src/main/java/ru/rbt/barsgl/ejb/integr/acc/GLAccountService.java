@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
-import org.apache.poi.util.StringUtil;
 import ru.rbt.barsgl.bankjar.Constants;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
@@ -21,7 +20,6 @@ import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
@@ -50,7 +48,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
 import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Account;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
@@ -157,6 +154,8 @@ public class GLAccountService {
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
+            keys.setCurrencyDigital(currency.getDigitalCode());
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
             return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
@@ -164,7 +163,7 @@ public class GLAccountService {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
                 } catch (Exception e) {
-                    throw new DefaultApplicationException(e);
+                    throw new DefaultApplicationException(e.getMessage(), e);
                 }
             }).getBsaAcid();
         } else {
