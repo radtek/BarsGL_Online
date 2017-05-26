@@ -81,42 +81,36 @@ public class CobStatRecalculator {
                 statRepository.setStepStart(idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(msg)));
     }
 
-    public void setStepSuccess(Long idCob, CobStepStatistics step, CobPhase phase, String message) {
+    public void setStepSuccess(Long idCob, CobStepStatistics step, CobPhase phase, String message) throws Exception {
         auditController.info(PreCob, message, step);
         try {
             statRepository.executeInNewTransaction(persistence -> statRepository.setStepSuccess(
                     idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(message), true));
         } catch (Exception e) {
-            try {
                 statRepository.executeInNewTransaction(persistence -> statRepository.setStepSuccess(
                         idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(message), false));
-            } catch (Exception e1) {}
         }
     }
 
-    public void setStepSkipped(Long idCob, CobStepStatistics step, CobPhase phase, String message) {
+    public void setStepSkipped(Long idCob, CobStepStatistics step, CobPhase phase, String message) throws Exception {
         auditController.info(PreCob, message, step);
         try {
             statRepository.executeInNewTransaction(persistence -> statRepository.setStepSkipped(
                     idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(message), true));
         } catch (Exception e) {
-            try {
                 statRepository.executeInNewTransaction(persistence -> statRepository.setStepSkipped(
                         idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(message), false));
-            } catch (Exception e1) {}
         }
     }
 
-    public void setStepError(Long idCob, CobStepStatistics step, CobPhase phase, String message, String errorMessage, CobStepStatus stepStatus) {
+    public void setStepError(Long idCob, CobStepStatistics step, CobPhase phase, String message, String errorMessage, CobStepStatus stepStatus) throws Exception {
         auditController.error(PreCob, message, step, new ValidationError(ErrorCode.COB_STEP_ERROR, errorMessage));
         try {
             statRepository.executeInNewTransaction(persistence -> statRepository.setStepError(
                     idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(message), errorMessage, stepStatus, true));
         } catch (Exception e) {
-            try {
                 statRepository.executeInNewTransaction(persistence -> statRepository.setStepError(
                         idCob, phase.getPhaseNo(), operdayController.getSystemDateTime(), getLogMessage(message), errorMessage, stepStatus, false));
-            } catch (Exception e1) {}
         }
     }
 

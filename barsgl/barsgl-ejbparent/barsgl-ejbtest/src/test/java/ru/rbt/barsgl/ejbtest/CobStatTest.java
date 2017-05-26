@@ -1,9 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
@@ -11,13 +8,14 @@ import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,6 +39,15 @@ public class CobStatTest extends AbstractTimerJobTest  {
     @AfterClass
     public static void afterClass() {
         initCorrectOperday();
+    }
+
+    @Before
+    public void before() {
+        long maxCob = remoteAccess.invoke(CobStatRepository.class, "getMaxRunCobId", getOperday().getCurrentDate());
+        if (maxCob > 0) {
+            baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set STATUS = ? where ID_COB = ? and STATUS in (?, ?)", Halt.name(), maxCob, Running.name(), Error.name());
+        }
+
     }
 
     @Test
