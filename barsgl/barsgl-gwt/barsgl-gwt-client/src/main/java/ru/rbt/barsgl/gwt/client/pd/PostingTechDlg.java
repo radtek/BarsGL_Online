@@ -308,7 +308,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
                         @Override
                         protected boolean getEditMode()
                         {
-                            if (action == FormAction.PREVIEW) {
+                            if (action == FormAction.PREVIEW || !mDtAccount.isEnabled()) {
                                 return false;
                             }
                             else {
@@ -347,7 +347,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
                         @Override
                         protected Object[] getInitialFilterParams()
                         {
-                            if (action == FormAction.PREVIEW) {
+                            if (action == FormAction.PREVIEW ) {
                                 return new Object[]{mCrAccountType.getValue()};
                             }
                             else{
@@ -358,7 +358,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
                         @Override
                         protected boolean getEditMode()
                         {
-                            if (action == FormAction.PREVIEW) {
+                            if (action == FormAction.PREVIEW || !mCrAccountType.isEnabled()) {
                                 return false;
                             }
                             else {
@@ -531,8 +531,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mSubDealId.setEnabled(false);
         mCheckCorrection.setEnabled(false);
 
-        mDrAccountTypeButton.setEnabled(false);
-        mCrAccountTypeButton.setEnabled(false);
+        //mDrAccountTypeButton.setEnabled(false);
+        //mCrAccountTypeButton.setEnabled(false);
 
     }
 
