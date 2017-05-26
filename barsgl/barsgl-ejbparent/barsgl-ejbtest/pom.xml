@@ -54,6 +54,37 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>run-integration-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.oracle.weblogic</groupId>
+                        <artifactId>weblogic-maven-plugin</artifactId>
+                        <version>12.2.1-2-0</version>
+                        <configuration>
+                            <middlewareHome>C:\develop\Tools\wls12212</middlewareHome>
+                            <domainHome>C:\develop\Tools\wls12212\wlserver\server\bin</domainHome>
+                            <user>weblogic</user>
+                            <password>weblogic1</password>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>wls-start</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>start-server</goal>
+                                    <goal>stop-server</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
