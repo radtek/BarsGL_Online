@@ -7,16 +7,15 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
+import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor.TECH_OPER;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 
 
