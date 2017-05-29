@@ -33,7 +33,8 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 "SELECT * FROM DWH.GL_ACC A WHERE "
                         + "A.BSAACID IN (" + acidsStr + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
-                        + "AND A.DTC IS NULL "
+                        //+ "AND A.DTC IS NULL "
+                        + "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                 , Integer.MAX_VALUE, null);
             return dataRecords;            
         } catch (SQLException e) {
