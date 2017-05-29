@@ -151,6 +151,7 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
         setCaption(title);
         if (action == FormAction.PREVIEW){
             ok.setVisible(false);
+
         }
     }
 
@@ -355,12 +356,7 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
                         @Override
                         protected boolean getEditMode()
                         {
-                            if (action == FormAction.PREVIEW) {
-                                return false;
-                            }
-                            else {
-                                return true;
-                            }
+                            return true;
                         }
 
                         @Override
@@ -479,8 +475,8 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
         mProfitCenter.setEnabled(true);
         mCheckCorrection.setEnabled(isManual);
 
-        mDrAccountTypeButton.setEnabled(isManual);
-        mCrAccountTypeButton.setEnabled(isManual);
+        //mDrAccountTypeButton.setEnabled(isManual);
+        //mCrAccountTypeButton.setEnabled(isManual);
     }
 
     protected void setControlsDisabled()
@@ -527,8 +523,8 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
         mSubDealId.setEnabled(false);
         mCheckCorrection.setEnabled(false);
 
-        mDrAccountTypeButton.setEnabled(false);
-        mCrAccountTypeButton.setEnabled(false);
+        //mDrAccountTypeButton.setEnabled(false);
+        //mCrAccountTypeButton.setEnabled(false);
 
     }
 
