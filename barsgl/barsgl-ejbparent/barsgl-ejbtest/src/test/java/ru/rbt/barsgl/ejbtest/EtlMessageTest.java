@@ -942,6 +942,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
+
         //Добавление нового курса
         //CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
         //baseEntityRepository.save(currencyRate);
@@ -1062,8 +1063,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         //pst.setAccountCredit("40817036200012959997");
         //pst.setAccountDebit("40817036250010000018");
-        pst.setAccountKeyDebit(";RUR;;008010103;;;TH01096372;0001;;;;;K+TP;;");
-        pst.setAccountKeyCredit(";RUR;;007010103;;;TH01096364;0001;;;;;K+TP;;");
+        pst.setAccountKeyDebit(";RUR;;007010103;;;TH00000002;0001;;;;;K+TP;;");
+        pst.setAccountKeyCredit(";RUR;;008010103;;;TH00000004;0001;;;;;K+TP;;");
         pst.setAmountCredit(new BigDecimal("20539.180"));
         pst.setAmountDebit(new BigDecimal("20539.180"));
         pst.setAmountCreditRu(pst.getAmountCredit());

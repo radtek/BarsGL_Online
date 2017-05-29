@@ -189,6 +189,18 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         return new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent){
+                if (side.equals(Side.DEBIT))
+                {
+                    if (!mCrFilial.hasValue()) {
+                        mCrFilial.setSelectedIndex(mDtFilial.getSelectedIndex());
+                    }
+                }
+                else{
+                    if (mDtFilial.hasValue()) {
+                        mDtFilial.setSelectedIndex(mCrFilial.getSelectedIndex());
+                    }
+                }
+
                 TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
                 updateAccount(side, mAccType);
             }
@@ -199,8 +211,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         return new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent){
+                Window.alert("onChange 1");
                 TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
+                Window.alert("onChange 2");
                 updateAccount(side, mAccType);
+                Window.alert("onChange 3");
             }
         };
     }
@@ -236,17 +251,22 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
     private void updateAccount(final Side side, TxtBox mAccType)
     {
         String accType = mAccType.getText();
+        Window.alert("updateAccount 1");
 
-        for (char c:accType.toCharArray())
-        {
-            if (!Character.isDigit(c))
-            {
-                DialogUtils.showInfo("Accounting Type должен содерждать только цифры");
-                mAccType.clear();
-                return;
+        if (null != accType && accType.length()>0) {
+            Window.alert("updateAccount 2");
+            for (char c : accType.toCharArray()) {
+                Window.alert("updateAccount 3");
+                if (!Character.isDigit(c)) {
+                    Window.alert("updateAccount 4");
+                    DialogUtils.showInfo("Accounting Type должен содерждать только цифры");
+                    mAccType.clear();
+                    return;
+                }
             }
         }
 
+        Window.alert("updateAccount 5");
         DataListBoxEx mCurrency = (side == Side.DEBIT) ? mDtCurrency : mCrCurrency;
         DataListBoxEx mFilial = (side == Side.DEBIT) ? mDtFilial : mCrFilial;
         final TxtBox mAccount = (side == Side.DEBIT) ? mDtAccount : mCrAccount;
@@ -254,6 +274,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             mAccount.clear();
             return;
         }
+        Window.alert("updateAccount 6");
 
         String cbccn = null;
         String ccy = null;
@@ -263,9 +284,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         if (mFilial.getValue()!=null) {
             cbccn = mFilial.getValue().toString();
         }
+        Window.alert("updateAccount 7");
 
         if ((ccy!=null) && (!ccy.isEmpty()) && (cbccn!=null) && (!cbccn.isEmpty()))
         {
+            Window.alert("updateAccount 8");
             final ManualAccountWrapper accWrapper = new ManualAccountWrapper();
             accWrapper.setAccountType(Long.parseLong(mAccType.getValue()));
             accWrapper.setCurrency(ccy);
