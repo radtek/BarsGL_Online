@@ -46,6 +46,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.ejbcore.mapping.YesNo;
+import sun.util.cldr.CLDRLocaleProviderAdapter;
 
 /**
  * Created by Ivan Sevastyanov
@@ -953,6 +954,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         //Удаление записей по техничесим с счетам.
         //this.clearTechRecords();
 
+        closeAllTHAccount();
+
         EtlPosting pst_2 = this.getPosting_RUR_RUR();
         pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
         GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
@@ -1011,6 +1014,16 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertFalse("Отсутствует и не создан счёт по кредиту.",accListCredit.isEmpty());
     }
 
+    private void closeAllTHAccount()
+    {
+        List<GLAccount> accList = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.relationType = '9'");
+
+        for(GLAccount acc:accList) {
+            acc.setDateClose(new Date());
+            baseEntityRepository.update(acc);
+        }
+    }
+
 
     private EtlPosting getPosting_USD_RUR() throws ParseException {
         long stamp = System.currentTimeMillis();
@@ -1062,8 +1075,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         //pst.setAccountCredit("40817036200012959997");
         //pst.setAccountDebit("40817036250010000018");
-        pst.setAccountKeyDebit(";RUR;;008010103;;;TH01096372;0001;;;;;K+TP;;");
-        pst.setAccountKeyCredit(";RUR;;007010103;;;TH01096364;0001;;;;;K+TP;;");
+        pst.setAccountKeyDebit(";RUR;;057010103;;;TH00000003;0001;;;;;K+TP;;");
+        pst.setAccountKeyCredit(";RUR;;058010103;;;TH00000001;0001;;;;;K+TP;;");
         pst.setAmountCredit(new BigDecimal("20539.180"));
         pst.setAmountDebit(new BigDecimal("20539.180"));
         pst.setAmountCreditRu(pst.getAmountCredit());
