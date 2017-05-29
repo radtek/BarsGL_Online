@@ -158,7 +158,7 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.startupJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.startupJob(((BigDecimal) row.getField(0).getValue()).longValueExact(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();
