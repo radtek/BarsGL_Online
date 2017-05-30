@@ -94,6 +94,8 @@ public class AccountBalanceRegisteredUnloadTask implements ParamsAwareRunnable {
         }
     }
 
+    /*don't used GL_SHACOD*/
+    //*
     public void fillRegistered(java.util.Date executeDate) throws Exception {
         logger.info("Registered rows: " +
                         beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
@@ -152,6 +154,7 @@ public class AccountBalanceRegisteredUnloadTask implements ParamsAwareRunnable {
                                 "ru/rbt/barsgl/ejb/controller/operday/task/balsep/fill_reg_result_substep1.sql"));
                         }));
     }
+    //*/
 
     private boolean checkRun(java.util.Date executeDate, Properties properties) throws Exception {
         try {
