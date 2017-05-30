@@ -55,8 +55,11 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>run-integration-tests</id>
+        <!--<profile>
+            <id>run-test-default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -71,13 +74,18 @@
                                 </goals>
                                 <phase>test</phase>
                                 <configuration>
-                                    <includes>
-                                        <include>TmpTest.class</include>
-                                    </includes>
+                                    <skipTests>true</skipTests>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>-->
+        <profile>
+            <id>run-integration-tests</id>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>com.oracle.weblogic</groupId>
                         <artifactId>weblogic-maven-plugin</artifactId>
@@ -96,38 +104,6 @@
                                     <goal>start-server</goal>
                                 </goals>
                             </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.20</version>
-                        <executions>
-                            <execution>
-                                <id>integration-test</id>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <phase>integration-test</phase>
-                                <configuration>
-                                    <excludes>
-                                        <exclude>**/*.java</exclude>
-                                    </excludes>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!--<plugin>
-                        <groupId>com.oracle.weblogic</groupId>
-                        <artifactId>weblogic-maven-plugin</artifactId>
-                        <version>12.2.1-2-0</version>
-                        <configuration>
-                            <middlewareHome>C:\develop\Tools\wls12212</middlewareHome>
-                            <domainHome>C:\develop\Tools\wls12212\wlserver\server\bin</domainHome>
-                            <user>weblogic</user>
-                            <password>weblogic1</password>
-                        </configuration>
-                        <executions>
                             <execution>
                                 <id>wls-stop</id>
                                 <phase>post-integration-test</phase>
@@ -136,9 +112,59 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>-->
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.20</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.maven.surefire</groupId>
+                                <artifactId>surefire-junit47</artifactId>
+                                <version>2.20</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <id>integration-test</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <phase>integration-test</phase>
+                                <configuration>
+                                    <includes>
+                                        <include>**/*IT.class</include>
+                                        <!--<include>ru.rbt.barsgl.ejbtest.ManualEditPostingBufferIT.class</include>-->
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-report-plugin</artifactId>
+                        <version>2.20</version>
+                        <configuration>
+                            <reportsDirectories>
+                                <reportsDirectoriy>${basedir}/target/failsafe-reports</reportsDirectoriy>
+                            </reportsDirectories>
+                        </configuration>
+                        <reportSets>
+                            <reportSet>
+                                <id>integration-test</id>
+                                <reports>
+                                    <report>failsafe-report-only</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
     </profiles>
 

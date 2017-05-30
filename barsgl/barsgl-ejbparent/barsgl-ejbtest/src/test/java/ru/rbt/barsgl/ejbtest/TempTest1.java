@@ -4,9 +4,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
-import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.barsgl.ejbtesting.AsyncTestService;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJob3;
+import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.shared.Assert;
 
 import java.sql.SQLException;
@@ -21,7 +21,7 @@ import static ru.rbt.barsgl.shared.enums.JobStartupType.AUTO;
 /**
  * Created by Ivan Sevastyanov
  */
-public class TempTest1 extends AbstractTimerJobTest {
+public class TempTest1 extends AbstractTimerJobIT {
 
     @Test @Ignore
     public void tst() {

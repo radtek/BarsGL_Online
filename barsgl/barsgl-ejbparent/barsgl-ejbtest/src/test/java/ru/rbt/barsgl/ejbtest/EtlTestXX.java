@@ -6,18 +6,16 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by ER22317 on 09.03.2017.
  */
-public class EtlTestXX extends AbstractTimerJobTest {
+public class EtlTestXX extends AbstractTimerJobIT {
 
     @Test
     public void test01() throws Exception {
