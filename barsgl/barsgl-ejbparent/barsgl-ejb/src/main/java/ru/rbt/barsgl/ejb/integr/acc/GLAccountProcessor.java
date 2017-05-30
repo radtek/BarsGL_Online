@@ -364,7 +364,9 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     public GLAccount createGlAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType) {
 //1        GLAccount glAccount = new GLAccount();
-        GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccId(keys.getAccountMidas(), bsaAcid));
+
+        //GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccId(keys.getAccountMidas(), bsaAcid));
+        GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccIdForTH());
 
         // номер счета, способ создания, операция, сторона операции
         glAccount.setBsaAcid(bsaAcid);

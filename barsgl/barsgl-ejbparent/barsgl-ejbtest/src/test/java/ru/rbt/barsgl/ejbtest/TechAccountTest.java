@@ -65,8 +65,11 @@ public class TechAccountTest extends AbstractRemoteTest {
             curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
         }
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
-        //Удаление записей по техничесим с счетам.
-        //this.clearTechRecords();
+
+
+        //List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
+
+
 
         EtlPosting pst_2 = this.getPosting_RUR_RUR();
         pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
