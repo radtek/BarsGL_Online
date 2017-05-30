@@ -167,7 +167,7 @@ public class ManualAccountOfrTest extends AbstractRemoteTest {
         Assert.assertNotNull(res0);
         Assert.assertFalse(res0.isError());
         Assert.assertEquals(acid, res0.getResult().getAcid());
-
+        
         RpcRes_Base<ManualAccountWrapper> res1 = remoteAccess.invoke(OfrAccountService.class, "createOfrManualAccount", wrapper);
         Assert.assertNotNull(res1);
         ManualAccountWrapper wrapper1 = res1.getResult();
@@ -179,7 +179,7 @@ public class ManualAccountOfrTest extends AbstractRemoteTest {
         Assert.assertNotNull(res2);
         Assert.assertTrue(res2.isError());
         Assert.assertEquals(res1.getResult().getBsaAcid(), res2.getResult().getBsaAcid());
-
+        
         // удалить все счета
         deleteAccountCB(wrapper1.getAcid(), wrapper1.getBsaAcid(), false);
     }

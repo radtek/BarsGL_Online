@@ -79,6 +79,8 @@ public class OfrAccountService {
         });
     }
 
+    /*don't used IMBCBHBPN*/
+    /*
     public RpcRes_Base<ManualAccountWrapper> createOfrManualAccount(ManualAccountWrapper wrapper) throws Exception {
         try {
             // создать ключи счета, заполнить недостающие поля
@@ -122,13 +124,16 @@ public class OfrAccountService {
 
         }
     }
-
+    */
+    
+    /*don't used IMBCBHBPN*/
     /**
      * Получить счет Майдас и дополнительные параметры счета по основным параметрам
      * @param wrapper
      * @return
      * @throws Exception
      */
+    /*
     public RpcRes_Base<ManualAccountWrapper> getOfrAccountParameters(ManualAccountWrapper wrapper) throws Exception {
         try {
             AccountKeys keys = ofrAccountProcessor.createWrapperAccountKeys(wrapper);
@@ -159,7 +164,8 @@ public class OfrAccountService {
 
         }
     }
-
+    */
+    
     private String accountErrorMessage(Throwable e, ErrorList errorList, String source) {
         String errMessage = getErrorMessage(e);
         final String start = "DefaultApplicationException: ";

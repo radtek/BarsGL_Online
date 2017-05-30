@@ -60,7 +60,7 @@ public class AccountBalanceUnloadTask implements ParamsAwareRunnable {
     private BeanManagedProcessor beanManagedProcessor;
 
     @Override
-    public void run(String jobName, Properties properties) throws Exception {
+    public void run(String jobName, Properties properties) throws Exception {        
         if (checkRun(properties)) {
             beanManagedProcessor.executeInNewTxWithTimeout((p1, p2) -> {
                 auditController.info(AccountBalanceUnload
@@ -114,10 +114,13 @@ public class AccountBalanceUnloadTask implements ParamsAwareRunnable {
         repository.executeInNewTransaction(persistence ->
                 repository.executeNativeUpdate(" delete from GLVD_BAL "));
     }
+    
+    /*don't used GL_DWHPARM*/
     /**
      * Остатки/обороты по зарегистрированным в BarsGL счетам
      * @throws Exception
      */
+    //*
     public void fillRegistered() throws Exception {
         int cnt = beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence,connection) ->
                 repository.executeNativeUpdate("insert into GLVD_BAL (DAT, ACID, BSAACID, GLACID, OBAL, DTRN, CTRN, DTRNBD, CTRNBD, UNLOAD_DAT)" +
@@ -154,6 +157,7 @@ public class AccountBalanceUnloadTask implements ParamsAwareRunnable {
                         "    and am.curdate between b.dat and b.datto" +
                         ")"));
     }
+    //*/
 
     public void setResultStatus(long headerId, DwhUnloadStatus status) throws Exception {
         if (headerId > 0) {
