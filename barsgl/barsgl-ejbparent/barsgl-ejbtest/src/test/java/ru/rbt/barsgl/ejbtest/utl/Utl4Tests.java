@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 /**
  * Created by Ivan Sevastyanov
  */
@@ -39,33 +41,46 @@ public class Utl4Tests {
 
     public static void deleteGlAccountWithLinks(BaseEntityRepository baseEntityRepository, String keysString) {
         Date date = parseDate("25.02.2015", "dd.MM.yyyy");
+        final String CUST_EMPTY = "-1";
+        final String SEQ_EMPTY = "GL_SEQ_IS_EMPTY";
 
         try {
             AccountKeys keys = new AccountKeys(keysString);
+            String custType = keys.getCustomerType();
+            if (isEmpty(custType))
+                custType = CUST_EMPTY;
+            String glSeq = keys.getGlSequence();
+            if (isEmpty(glSeq))
+                glSeq = SEQ_EMPTY;
+            String where = "where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and COALESCE(CBCUSTTYPE, " + CUST_EMPTY + ") = ? and COALESCE(GL_SEQ, '" + glSeq + "') = ? and CCY = ?";
 
             int cntAcc = baseEntityRepository.executeNativeUpdate(
-                    "delete from ACC where ID in (select ACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
+                    "delete from ACC where ID in (select ACID from GL_ACC " + where +")" +
                             " and DACO >= ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency(), date);
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency(), date);
 
 
             int cntAccRln = baseEntityRepository.executeNativeUpdate(
-                    "delete from ACCRLN where BSAACID in (select BSAACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
+                    "delete from ACCRLN where BSAACID in (select BSAACID from GL_ACC " + where +")" +
                             " and DRLNO >= ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency(), date);
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency(), date);
+
+            int cntAccRlnExt = baseEntityRepository.executeNativeUpdate(
+                    "delete from ACCRLNEXT where BSAACID in (select BSAACID from GL_ACC " + where +")"
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency());
 
             // BALTUR ??
 
             int cntBsaAcc = baseEntityRepository.executeNativeUpdate(
-                    "delete from BSAACC where ID in (select BSAACID from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?)" +
+                    "delete from BSAACC where ID in (select BSAACID from GL_ACC " + where +")" +
                             " and BSAACO >= ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency(), date);
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency(), date);
 
             int cntGlAcc = baseEntityRepository.executeNativeUpdate(
-                    "delete from GL_ACC where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and GL_SEQ = ? and CCY = ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType(), keys.getGlSequence(), keys.getCurrency());
+                    "delete from GL_ACC " + where
+                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency());
 
-            logger.info("deleted from GL_ACC:" + cntGlAcc + "; ACC:" + cntAcc + "; ACCRLN:" + cntAccRln + "; BSAACC:" + cntBsaAcc);
+            logger.info("deleted from GL_ACC:" + cntGlAcc + "; ACC:" + cntAcc + "; ACCRLN:" + cntAccRln + "; ACCRLNEXT:" + cntAccRlnExt + "; BSAACC:" + cntBsaAcc);
         }finally {
 
         }
