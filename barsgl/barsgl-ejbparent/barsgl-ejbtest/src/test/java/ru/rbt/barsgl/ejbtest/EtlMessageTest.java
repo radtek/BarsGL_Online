@@ -925,6 +925,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertNotNull(operationTrans);
         Assert.assertEquals(OperState.POST, operationTrans.getState());
 
+
     }
 
     private void incldeBs2ByBsaacid(String bsaacid) throws SQLException {
