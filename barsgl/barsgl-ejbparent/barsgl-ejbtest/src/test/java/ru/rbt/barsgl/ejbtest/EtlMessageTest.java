@@ -944,18 +944,21 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
-        //Добавление нового курса
-        //CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
-        //baseEntityRepository.save(currencyRate);
-
         List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
+        if (curRate==null || curRate.isEmpty())
+        {
+            //Добавление нового курса
+            CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
+            baseEntityRepository.save(currencyRate);
+            curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
+        }
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
 
 
         //Удаление записей по техничесим с счетам.
         //this.clearTechRecords();
 
-        EtlPosting pst_2 = this.getPosting_RUR_RUR();
+        EtlPosting pst_2 = this.getPosting_USD_RUR();
         pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
         GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
         Assert.assertNotNull(operation_2);
@@ -1043,7 +1046,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         //pst.setAccountDebit("40817036250010000018");
         pst.setAccountKeyDebit(";USD;;057010103;;;TH01096378;0001;;;;;K+TP;;");
         pst.setAccountKeyCredit(";RUR;;007010201;;;TH01096366;0001;;;;;K+TP;;");
-        pst.setAmountCredit(new BigDecimal("60000.000"));
+        pst.setAmountCredit(new BigDecimal("1000.000"));
         pst.setAmountDebit(new BigDecimal("1000.000"));
         //pst.setAmountCreditRu(pst.getAmountCredit());
         //pst.setAmountDebitRu(pst.getAmountDebit());
@@ -1127,7 +1130,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
     }
 
 
-    @Test public void LoadEtlFromFile() throws IOException, InvalidFormatException, ParseException {
+    @Test @Ignore public void LoadEtlFromFile() throws IOException, InvalidFormatException, ParseException {
 
         File f = new File("c:\\Projects\\GL_ETLPST_20170320_01.xlsx");
         Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());

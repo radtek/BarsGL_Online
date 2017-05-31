@@ -301,7 +301,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         if (!isEmpty(bsaAcid))
             return getBSChapter(bsaAcid);
         else if (null != accountKeys)
-                if (accountKeys.getGlSequence().startsWith("TH"))
+                if (null!= accountKeys.getGlSequence() && accountKeys.getGlSequence().startsWith("TH"))
                 {
                     return GLOperation.flagTechOper;
                 }
