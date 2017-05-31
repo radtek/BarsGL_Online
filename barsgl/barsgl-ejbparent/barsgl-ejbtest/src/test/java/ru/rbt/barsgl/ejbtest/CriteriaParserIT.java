@@ -1,13 +1,25 @@
 package ru.rbt.barsgl.ejbtest;
 
-//import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.RecognitionException;
+import org.apache.commons.lang3.time.DateUtils;
+import org.junit.Test;
+import ru.rbt.barsgl.common.security.antlr.AntlrCriteriaBuilder;
+import ru.rbt.barsgl.ejbtest.utl.support.SomeAcc;
+import ru.rbt.barsgl.shared.criteria.Criteria;
+
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import static ru.rbt.barsgl.common.security.antlr.InMemoryInterpreter.filter;
 
 /**
  * Created by Ivan Sevastyanov on 02.03.2016.
  */
 public class CriteriaParserIT {
 
-/*    @Test
+    @Test
     public void testParsefilter() throws RecognitionException, ParseException {
         SomeAcc account1 = new SomeAcc(1, "One", new Date(), "num1");
         SomeAcc account2 = new SomeAcc(2, "Two", new Date(), "num2");
@@ -81,9 +93,8 @@ public class CriteriaParserIT {
         org.junit.Assert.assertTrue(filtered.contains(account8));
         org.junit.Assert.assertEquals(1, filtered.size());
 
-    }*/
+    }
 
-/*
     private Criteria parseCriteriaString(String criteriaString) throws RecognitionException {
         AntlrCriteriaBuilder criteriaBuilder = new AntlrCriteriaBuilder(criteriaString);
         if (criteriaBuilder.hasErrors()) {
@@ -91,5 +102,4 @@ public class CriteriaParserIT {
         }
         return criteriaBuilder.getResult();
     }
-*/
 }

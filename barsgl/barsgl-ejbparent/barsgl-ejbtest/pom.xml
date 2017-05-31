@@ -55,33 +55,6 @@
     </build>
 
     <profiles>
-        <!--<profile>
-            <id>run-test-default</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.20</version>
-                        <executions>
-                            <execution>
-                                <id>test</id>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <phase>test</phase>
-                                <configuration>
-                                    <skipTests>true</skipTests>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>-->
         <profile>
             <id>run-integration-tests</id>
             <build>
@@ -135,7 +108,7 @@
                                 <configuration>
                                     <includes>
                                         <include>**/*IT.class</include>
-                                        <!--<include>ru.rbt.barsgl.ejbtest.ManualEditPostingBufferIT.class</include>-->
+                                        <!--<include>ru.rbt.barsgl.ejbtest.CriteriaParserIT.class</include>-->
                                     </includes>
                                 </configuration>
                             </execution>

@@ -1,1 +1,5 @@
 DOMAIN_HOME=C:\dev\tools\wls12130\user_projects\domains\mydomain
+middlewareHome=C:\develop\Tools\wls12212
+domainHome=C:\develop\Tools\wls12212\wlserver\server\bin
+weblogicUser=weblogic
+weblogicPassword=weblogic1
