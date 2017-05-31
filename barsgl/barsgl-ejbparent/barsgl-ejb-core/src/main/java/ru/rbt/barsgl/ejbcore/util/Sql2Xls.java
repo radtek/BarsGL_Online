@@ -48,7 +48,7 @@ public class Sql2Xls {
 
         row = sheet.createRow(rowNumber++);
         cell = row.createCell(0);
-        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss");
+        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         cell.setCellValue("Дата выгрузки: " + df.format(new Date()));
 
         row = sheet.createRow(rowNumber++);
