@@ -68,8 +68,9 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 res = selectOne("select count(1) from GL_PD where PD_ID is null");
                 return res.getLong(0);
             case CobManualProc:
-                res = selectOne("select count(1) from GL_BATPST where PROCDATE = ? and STATE <> ? and INVISIBLE = ?",
-                        curdate, BatchPostStatus.COMPLETED.name(), YesNo.N.name());
+                res = selectOne("select count(1) from GL_BATPST where PROCDATE = ? and INVISIBLE = ? and STATE in (?, ?, ?)",
+                        curdate, YesNo.N.name(),
+                        BatchPostStatus.WAITDATE.name(), BatchPostStatus.SIGNED.name(), BatchPostStatus.SIGNEDDATE.name());
                 return res.getLong(0);
             case CobStornoProc:
                 res = selectOne("select count(1) from GL_OPER where STATE = ? and VDATE in (?, ?) and STRN = ?",
@@ -96,8 +97,13 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
     }
 
     public int setStepEstimate(Long idCob, Integer phaseNo, Long parameter) {
-        return executeNativeUpdate("update GL_COB_STAT set PARAMETER = ?, ESTIMATED = COEF_A + COEF_B * ? where ID_COB = ? and PHASE_NO = ?",
+        int cnt = executeNativeUpdate("update GL_COB_STAT set PARAMETER = ?, ESTIMATED = COEF_A + COEF_B * ? where ID_COB = ? and PHASE_NO = ?",
                 parameter, parameter, idCob, phaseNo);
+        if (cnt == 1) {
+            executeNativeUpdate("update GL_COB_STAT set ESTIMATED = 0 where ESTIMATED < 0 and ID_COB = ? and PHASE_NO = ?",
+                    idCob, phaseNo);
+        }
+        return cnt;
     }
 
     public int increaseStepEstimate(Long idCob, Integer phaseNo, BigDecimal newEstimate, BigDecimal oldEstimate) {
@@ -149,7 +155,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                 " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                 Success.name(), timestamp, getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo, Running.name());
         if (cnt == 1) {
-            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
+            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = GET_DIFF_SECONDS(OTS_START, OTS_END) " +
                     " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                     idCob, phaseNo, Success.name());
         }
@@ -161,7 +167,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                         " where ID_COB = ? and PHASE_NO = ?",
                 status.name(), timestamp, substr(errorMessage, ERR_LEN), getJointMessage(idCob, phaseNo, message, withDelim), idCob, phaseNo);
         if (cnt == 1) {
-            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = OTS_END - OTS_START " +
+            cnt = executeNativeUpdate("update GL_COB_STAT set DURATION = GET_DIFF_SECONDS(OTS_START, OTS_END) " +
                             " where ID_COB = ? and PHASE_NO = ? and STATUS = ?",
                     idCob, phaseNo, status.name());
         }

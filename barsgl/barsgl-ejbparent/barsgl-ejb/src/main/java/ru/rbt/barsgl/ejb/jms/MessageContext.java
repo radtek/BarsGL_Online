@@ -23,7 +23,7 @@ public class MessageContext implements Serializable, AutoCloseable {
   private String user;
   private String password;
 
-  JMSContext jmsContext;
+  private JMSContext jmsContext;
 
   public MessageContext(String host, int port, String queueManager, String channel, String user, String password) {
     this.host = host;
@@ -54,7 +54,7 @@ public class MessageContext implements Serializable, AutoCloseable {
         if(user != null && !user.isEmpty() && password != null)
             jmsContext = cf.createContext(user, password);
         else
-            cf.createContext();
+            jmsContext = cf.createContext();
     }
     return jmsContext;
   }
@@ -65,7 +65,7 @@ public class MessageContext implements Serializable, AutoCloseable {
         if(user != null && !user.isEmpty() && password != null)
             jmsContext = cf.createContext(user, password, acknowledgeMode);
         else
-            cf.createContext(acknowledgeMode);
+            jmsContext = cf.createContext(acknowledgeMode);
     }
     return jmsContext;
   }

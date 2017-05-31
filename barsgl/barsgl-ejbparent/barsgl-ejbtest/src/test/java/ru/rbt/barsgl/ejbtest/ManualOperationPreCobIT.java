@@ -29,8 +29,12 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
+import static ru.rbt.barsgl.ejbtest.AbstractRemoteTest.remoteAccess;
 
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.loadPackage;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
+import ru.rbt.barsgl.shared.enums.CobPhase;
 
 /**
  * Created by ER18837 on 04.07.16.
@@ -146,7 +150,12 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         Assert.assertEquals(BatchPostStatus.WAITSRV, posting6.getStatus());
 
         // запустить обработку PreCob
-        remoteAccess.invoke(ExecutePreCOBTaskNew.class, "processUnprocessedBatchPostings");
+        RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "calculateCob");
+        Assert.assertFalse(res.isError());
+        CobWrapper wrapper = res.getResult();
+        Assert.assertTrue(wrapper.getIdCob() > 0);
+        
+        remoteAccess.invoke(ExecutePreCOBTaskNew.class, "processUnprocessedBatchPostings", getOperday(), wrapper.getIdCob(), CobPhase.CobManualProc);
 
         // проверить статусы и видимость снова
         posting1 = (BatchPosting) baseEntityRepository.findById(BatchPosting.class, wrapper1.getId());

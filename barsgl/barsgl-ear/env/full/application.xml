@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/application_7.xsd" version="7">
+    <display-name>${project.build.finalName}-ear</display-name>
+  
+    <module>
+        <ejb>security-ejb.jar</ejb>
+    </module>
+    <module>
+        <ejb>security-gwt-ejb.jar</ejb>
+    </module>
+    <module>
+        <ejb>tasks-ejb.jar</ejb>
+    </module>
+    <module>
+        <ejb>rbt-audit.jar</ejb>
+    </module>
+    <module>
+        <ejb>rbt-prop.jar</ejb>
+    </module>
+    <module>
+        <ejb>barsgl-ejb.jar</ejb>
+    </module>
+    <module>
+        <ejb>barsgl-ejbcore.jar</ejb>
+    </module>
+    <module>
+        <ejb>barsgl-bankjar.jar</ejb>
+    </module>
+    <module>
+        <ejb>barsgl-ejb-common.jar</ejb>
+    </module>
+  
+    <module>
+        <web>
+            <web-uri>barsgl-gwt.war</web-uri>
+            <context-root>${project.build.finalName}</context-root>
+        </web>
+    </module>
+  
+    <module>
+        <ejb>barsgl-ejb-testing.jar</ejb>
+    </module>
+  
+    <library-directory>lib</library-directory>
+  
+    <env-entry>
+        <env-entry-name>java:app/env/SchedTableName</env-entry-name>
+        <env-entry-type>java.lang.String</env-entry-type>
+        <env-entry-value>${schedtablename.ru.rbt}</env-entry-value>
+    </env-entry>
+  
+    <ejb-ref>
+        <ejb-ref-name>java:app/env/ejb/ApplicationRequestContext</ejb-ref-name>
+        <lookup-name>java:global/${project.build.finalName}/barsgl-ejbcore/ApplicationRequestContext</lookup-name>
+    </ejb-ref>
+
+    <resource-ref>
+        <res-ref-name>java:app/env/jdbc/OracleGL</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+        <lookup-name>jdbc/OracleGL</lookup-name>
+    </resource-ref>
+
+    <resource-ref>
+        <res-ref-name>java:app/env/jdbc/As400Rep</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+<!--emulate As400Rep dataSource-->
+        <lookup-name>jdbc/OracleGL</lookup-name>
+<!--        <lookup-name>jdbc/As400Rep</lookup-name>-->
+    </resource-ref>
+    
+</application>

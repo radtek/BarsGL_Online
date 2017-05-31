@@ -48,7 +48,7 @@ public class OperationTemplateForm extends EditableDictionary<ManualOperationWra
     protected String prepareSql() {
         //AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
         return "select ID_TMPL, TMPL_NAME, TMPL_TYPE, SRC_PST, AC_DR, CCY_DR, CBCC_DR, AMT_DR, AC_CR, CCY_CR, CBCC_CR, AMT_CR, " +
-                "NRT, RNRTL, DEPT_ID, PRFCNTR, SYS, USER_NAME from DWH.GL_OPRTMPL";
+                "NRT, RNRTL, DEPT_ID, PRFCNTR, SYS, USER_NAME from GL_OPRTMPL";
 
                /* Utils.Fmt("select ID_TMPL, TMPL_NAME, TMPL_TYPE, SRC_PST, AC_DR, CCY_DR, CBCC_DR, AMT_DR, AC_CR, CCY_CR, CBCC_CR, AMT_CR, " +
                          "NRT, RNRTL, DEPT_ID, PRFCNTR, SYS, USER_NAME from DWH.GL_OPRTMPL"

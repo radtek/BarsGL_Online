@@ -44,4 +44,14 @@ public class AccTypeRepository extends AbstractBaseEntityRepository<AccountingTy
         AccountingType act = selectFirst(AccountingType.class, "from AccountingType T where T.id = ?1", id);
         return (act != null) && (act.isBarsAllowed());
     }
+
+    public boolean isAccTypeTechAct(String accType){
+        AccountingType act = getAccType(accType);
+        if (act!=null)
+        {
+            return act.isTech();
+        }
+
+        return false;
+    }
 }

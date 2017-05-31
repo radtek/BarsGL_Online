@@ -21,7 +21,7 @@
     </servlet>
     <servlet>
         <servlet-name>TimerJobServiceImpl</servlet-name>
-        <servlet-class>ru.rbt.tasks.gwt.server.rpc.job.TimerJobServiceImpl</servlet-class>
+        <servlet-class>ru.rbt.tasks.gwt.server.rpc.job.TimerJobServiceImpl</servlet-class>        
     </servlet>
     <servlet>
         <servlet-name>OperDayServiceImpl</servlet-name>

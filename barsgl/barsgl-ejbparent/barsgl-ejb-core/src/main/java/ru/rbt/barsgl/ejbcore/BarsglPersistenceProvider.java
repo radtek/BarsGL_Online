@@ -4,14 +4,11 @@
 package ru.rbt.barsgl.ejbcore;
 
 import ru.rbt.barsgl.shared.Repository;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.naming.InitialContext;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 import org.apache.log4j.Logger;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.PersistenceProvider;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
@@ -28,20 +25,11 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
     @PersistenceContext(unitName="RepAS400DataSource")
     protected EntityManager barsrepPersistence;
 
-//    @Resource(mappedName="/jdbc/As400GL")
-//    @Resource(mappedName="/jdbc/OracleGL")
-//    @Resource(mappedName="jdbc/OracleGL")
+    @Resource(lookup="java:app/env/jdbc/OracleGL")
     private DataSource dataSource;
 
-//    @Resource(mappedName="/jdbc/As400Rep")
-//    @Resource(mappedName="jdbc/As400Rep")
+    @Resource(lookup="java:app/env/jdbc/As400Rep")
     private DataSource  barsrepDataSource;
-
-    @Resource(lookup = "java:app/env/BarsglDataSourceName")
-    private String barsglDataSourceName;
-
-    @Resource(lookup = "java:app/env/BarsrepDataSourceName")
-    private String barsrepDataSourceName;
     
     @Override
     public EntityManager getPersistence(Repository repository) throws Exception {
@@ -83,6 +71,7 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
         return persistence;
     }
 
+    /*
     @PostConstruct
     public void init() {
         dataSource = findConnection(barsglDataSourceName);
@@ -101,5 +90,6 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+    */
     
 }

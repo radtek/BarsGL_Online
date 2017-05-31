@@ -49,7 +49,7 @@ public class AsyncAccountQueryTaskMT implements ParamsAwareRunnable, ExceptionLi
     
     queueProcessor.setJmsContext(connectionManager.createOutgouingJMSContext());
 //    queueProcessor.setSession(connectionManager.createOutgouingSession());
-//    queueProcessor.setQueueProperties(properties);
+    queueProcessor.setQueueProperties(properties);
     
     connectionManager.setMessageListener(queueProcessor);
   }

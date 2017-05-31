@@ -1,9 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
@@ -11,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.props.PropertyName;
+import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
@@ -41,6 +39,15 @@ public class CobStatIT extends AbstractTimerJobIT  {
     @AfterClass
     public static void afterClass() {
         initCorrectOperday();
+    }
+
+    @Before
+    public void before() {
+        long maxCob = remoteAccess.invoke(CobStatRepository.class, "getMaxRunCobId", getOperday().getCurrentDate());
+        if (maxCob > 0) {
+            baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set STATUS = ? where ID_COB = ? and STATUS in (?, ?)", Halt.name(), maxCob, Running.name(), Error.name());
+        }
+
     }
 
     @Test
@@ -142,7 +149,7 @@ public class CobStatIT extends AbstractTimerJobIT  {
 
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
-        boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
+        boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", new Object[]{ null, null});
         Assert.assertTrue(ex);
 
         Long idCob = null;

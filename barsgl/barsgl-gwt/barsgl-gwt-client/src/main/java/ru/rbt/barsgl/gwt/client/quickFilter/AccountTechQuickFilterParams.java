@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
+import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
@@ -51,9 +52,9 @@ public abstract class AccountTechQuickFilterParams implements IQuickFilterParams
 
         if (!isEmpty(acctype)) {
             boolean isPattern = acctype.contains("%") || acctype.contains("_");
-            if ((acctype.length() != 9) || isPattern) {
+            if ((acctype.length() < 9) || isPattern) {
                 FilterCriteria accCriteria = (isPattern) ? FilterCriteria.LIKE : FilterCriteria.START_WITH;
-                list.add(new FilterItem(colAccType, accCriteria, acctype));
+                list.add(new FilterItem(colAccType, accCriteria, Integer.valueOf(acctype).toString()));
             }
             else {
                 FilterCriteria accCriteria = FilterCriteria.EQ;

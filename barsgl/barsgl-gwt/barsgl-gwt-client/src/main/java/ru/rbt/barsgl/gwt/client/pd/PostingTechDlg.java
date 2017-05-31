@@ -219,7 +219,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         //grid.setWidget(0, 1, mDepartment =  createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
         grid.setWidget(0, 1, mDepartment =  createDepartmentListBox(CachedListEnum.Department.name(), "250px", true));
         grid.setWidget(1, 0, createLabel("Профит центр"));
-        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createDealSourceAuthListBox(CachedListEnum.ProfitCenter.name(),"250px"), "260px"));
+        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createProfitCenterListBox(CachedListEnum.ProfitCenter.name(),"250px"), "260px"));
         if (withCheck)
             grid.setWidget(1, 2, mCheckFields = new CheckBox("Основание проверено"));
         return grid;
