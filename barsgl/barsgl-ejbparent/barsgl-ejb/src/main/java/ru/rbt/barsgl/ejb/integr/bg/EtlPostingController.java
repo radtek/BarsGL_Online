@@ -11,11 +11,8 @@ import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.SimpleOperationProcessor;
-import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
-import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
+import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.security.GLErrorController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
@@ -24,13 +21,8 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
-import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
-import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -56,7 +48,6 @@ import static ru.rbt.barsgl.ejb.integr.ValidationAwareHandler.validationErrorsTo
 import static ru.rbt.barsgl.shared.enums.OperState.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by Ivan Sevastyanov

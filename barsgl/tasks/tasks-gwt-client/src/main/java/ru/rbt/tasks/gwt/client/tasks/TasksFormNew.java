@@ -4,10 +4,6 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
-import java.math.BigDecimal;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.tasks.gwt.client.TimerEntryPoint;
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -23,9 +19,13 @@ import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.enums.JobSchedulingType;
 import ru.rbt.barsgl.shared.enums.JobStartupType;
-import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.jobs.TimerJobWrapper;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 

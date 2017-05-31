@@ -10,9 +10,6 @@ import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.security.AppUserForm;
-import ru.rbt.security.gwt.client.security.LoginFormHandler;
-import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
 import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
@@ -25,7 +22,6 @@ import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
-import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateForm;
 import ru.rbt.barsgl.gwt.client.operday.BufferSyncForm;
@@ -34,23 +30,23 @@ import ru.rbt.barsgl.gwt.client.pd.PDForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingForm;
 import ru.rbt.barsgl.gwt.client.pd.PostingFormTech;
 import ru.rbt.barsgl.gwt.client.security.AppUserForm;
-import ru.rbt.security.gwt.client.security.LoginFormHandler;
 import ru.rbt.barsgl.gwt.client.security.RoleForm;
-import ru.rbt.tasks.gwt.client.tasks.TasksFormNew;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
+import ru.rbt.security.gwt.client.monitoring.Monitor;
+import ru.rbt.security.gwt.client.security.LoginFormHandler;
+import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.shared.access.UserMenuItemWrapper;
 import ru.rbt.shared.access.UserMenuWrapper;
 import ru.rbt.shared.enums.UserMenuCode;
 import ru.rbt.shared.enums.UserMenuType;
+import ru.rbt.tasks.gwt.client.tasks.TasksFormNew;
 
 import java.util.ArrayList;
 import java.util.List;
-import ru.rbt.barsgl.gwt.client.load.LoadForm;
-import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
-import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 
 /**
  * Created by akichigi on 27.04.16.

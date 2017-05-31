@@ -13,7 +13,9 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
-import ru.rbt.barsgl.ejb.integr.oper.*;
+import ru.rbt.barsgl.ejb.integr.oper.BatchTechPostingProcessor;
+import ru.rbt.barsgl.ejb.integr.oper.ManualOperationProcessor;
+import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.TechOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.repository.*;
@@ -49,21 +51,15 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_EMPTY;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
-import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
-import static ru.rbt.barsgl.shared.enums.BatchPostStatus.SIGNEDDATE;
-import static ru.rbt.barsgl.shared.enums.BatchPostStatus.WAITDATE;
+import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by er23851 on 04.04.2017.

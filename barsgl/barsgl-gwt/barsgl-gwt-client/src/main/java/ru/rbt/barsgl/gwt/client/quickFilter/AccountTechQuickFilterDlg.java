@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -14,9 +13,10 @@ import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 
-import static ru.rbt.barsgl.gwt.core.comp.Components.*;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createCurrencyListBox;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createFilialAuthListBox;
+import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
+import static ru.rbt.barsgl.gwt.core.comp.Components.createTxtBox;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 

@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
-import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;

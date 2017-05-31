@@ -1,7 +1,5 @@
 package ru.rbt.security.gwt.client.formmanager;
 
-import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
-import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -9,18 +7,17 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.security.gwt.client.CommonEntryPoint;
-import ru.rbt.security.gwt.client.monitoring.Monitor;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
-import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
-import ru.rbt.shared.access.UserMenuWrapper;
-import ru.rbt.shared.enums.SecurityActionCode;
+import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
+import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.shared.access.UserMenuWrapper;
 
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
-import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 
 
 public class FormManagerUI extends Composite {

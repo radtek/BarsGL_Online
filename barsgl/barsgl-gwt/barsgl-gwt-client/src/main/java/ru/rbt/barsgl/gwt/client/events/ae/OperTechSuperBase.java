@@ -1,8 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsViewDlg;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -14,6 +12,7 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.math.BigDecimal;

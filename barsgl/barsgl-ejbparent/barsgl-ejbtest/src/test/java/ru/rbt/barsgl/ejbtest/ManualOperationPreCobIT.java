@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.PreCobBatchPostingTask;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
@@ -14,10 +15,8 @@ import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.BatchPostAction;
-import ru.rbt.barsgl.shared.enums.BatchPostStatus;
-import ru.rbt.barsgl.shared.enums.InvisibleType;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.barsgl.shared.cob.CobWrapper;
+import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -29,12 +28,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
-import static ru.rbt.barsgl.ejbtest.AbstractRemoteTest.remoteAccess;
 
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.loadPackage;
-import ru.rbt.barsgl.shared.cob.CobWrapper;
-import ru.rbt.barsgl.shared.enums.CobPhase;
 
 /**
  * Created by ER18837 on 04.07.16.

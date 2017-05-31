@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-./build.bat
-.idea
-/build.bat
-/rbt-base.iml
-=======
 .idea
 rbt-base.iml
 build-rbt-base.bat
->>>>>>> master
+

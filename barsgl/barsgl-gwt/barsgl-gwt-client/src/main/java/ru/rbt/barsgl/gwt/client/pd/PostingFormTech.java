@@ -28,23 +28,23 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
+import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
+import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.enums.SecurityActionCode;
-import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
-import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.CREDIT;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.DEBIT;
 import static ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterParams.DateFilterField.CREATE_DATE;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -53,6 +53,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.dict.FormAction.*;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ALL;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_SINGLE;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 
 /**
  * Created by ER18837 on 14.03.16.

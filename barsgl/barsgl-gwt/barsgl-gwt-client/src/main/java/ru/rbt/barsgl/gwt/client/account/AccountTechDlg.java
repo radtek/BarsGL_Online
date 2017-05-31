@@ -19,7 +19,6 @@ import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.dictionary.CustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
@@ -31,16 +30,15 @@ import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
 
 import java.util.Date;
 import java.util.HashMap;
 
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.comp.Components.*;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createCurrencyListBox;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createDealSourceListBox;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createFilialListBox;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
-import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
  * Created by ER18837 on 14.03.16.

@@ -1,15 +1,15 @@
 package ru.rbt.barsgl.ejb.controller.cob;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.shared.enums.CobPhase;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.CobPhase;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;

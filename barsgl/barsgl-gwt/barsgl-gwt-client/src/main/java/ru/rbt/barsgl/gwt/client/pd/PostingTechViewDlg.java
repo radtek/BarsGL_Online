@@ -43,7 +43,6 @@ import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.comp.Components.*;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;

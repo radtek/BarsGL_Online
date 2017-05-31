@@ -3,14 +3,15 @@
  */
 package ru.rbt.barsgl.ejbcore;
 
+import org.apache.log4j.Logger;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.ejbcore.PersistenceProvider;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
-import org.apache.log4j.Logger;
-import ru.rbt.ejbcore.PersistenceProvider;
-import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 /**
  *

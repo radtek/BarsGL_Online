@@ -1,9 +1,5 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.gwt.client.operation.OperationHandsViewDlg;
-import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsViewDlg;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateIntervalQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;
@@ -11,14 +7,11 @@ import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
-import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
