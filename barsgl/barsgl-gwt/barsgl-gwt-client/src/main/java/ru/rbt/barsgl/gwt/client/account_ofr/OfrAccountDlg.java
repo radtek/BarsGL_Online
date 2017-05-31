@@ -46,6 +46,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 /**
  * Created by ER18837 on 10.11.15.
  */
+/*don't used IMBCBHBPN*/
 public class OfrAccountDlg extends DlgFrame {
 
 	private final String LABEL_WIDTH = "120px"; 

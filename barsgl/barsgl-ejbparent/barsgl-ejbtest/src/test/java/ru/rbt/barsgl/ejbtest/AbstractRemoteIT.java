@@ -34,6 +34,7 @@ import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
+import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -778,7 +779,10 @@ public abstract class AbstractRemoteIT  {
             baseEntityRepository.executeNativeUpdate("insert into workproc  values (?, ?, current_timestamp, current_timestamp, 'O', 1, ?)"
                     , operDay, stepName, stepName);
         }
+    }
 
+    protected static void executeAutonomic(String sql) throws Exception {
+        remoteAccess.invoke(GLPLAccountTesting.class, "executeAutonomic", sql);
     }
 
 }

@@ -49,6 +49,7 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
             super("Выбор Accounting Type по техническим счетам");
             reconfigure();
             ok.setVisible(editMode);
+
         }
 
         private void reconfigure() {

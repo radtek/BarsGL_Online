@@ -28,7 +28,8 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
  */
 public class OfrAccountForm extends GridForm {
     public static final String FORM_NAME = "Счета ОФР по Midas";
-    private OfrAccountDlg dlg = null;
+    /*don't used IMBCBHBPN*/
+    //private OfrAccountDlg dlg = null;
     private boolean isOfrAccountDlgCreated;  //Флаг, что форма уже создана
     public OfrAccountForm(){
         super(FORM_NAME);
@@ -41,6 +42,8 @@ public class OfrAccountForm extends GridForm {
 
     }
 
+    /*don't used IMBCBHBPN*/
+    /*
     private GridAction createNewAccount(){
         return new GridAction(grid, null, "Открыть счет ОФР", new Image(ImageConstants.INSTANCE.new24()), 10)  {
 
@@ -84,7 +87,8 @@ public class OfrAccountForm extends GridForm {
             }
         };
     }
-
+    */
+    
     @Override
     protected String prepareSql() {
         return "SELECT BSAACID,  CTYPE, PLCODE, CCODE, CCPCD, CNUM, GLACOD, " +

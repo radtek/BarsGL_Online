@@ -21,6 +21,7 @@ import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 /**
  * Created by ER18837 on 11.01.16.
  */
+/*don't used IMBCBHBPN ???*/
 public class OfrSymbols extends OfrSymbolsBase {
     public final static String FORM_NAME = "План счетов ОФР по Midas";
 

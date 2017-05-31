@@ -180,7 +180,8 @@ mq.password=UsATi8hU
 //                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF\n" +
                         "mq.user=er22228\n" +
                         "mq.password="+vugluskr9+"\n"+
-                        "unspents=show"
+                        "unspents=show\n"+
+                        "writeOut=true"
                 )
                 .build();
         jobService.executeJob(job);

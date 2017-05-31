@@ -111,10 +111,12 @@ public class AccountBalanceSharedUnloadTask implements ParamsAwareRunnable {
         }
     }
 
+    /*don't used GL_SHACOD*/
     /**
      * Остатки обороты по счетам по настроечной таблице GL_SHACOD.BSTYPE 0 и 2
      * @return кол-во вставленных строк
-     */
+     */    
+    //*
     private int fillSharedSimple(java.util.Date executeDate) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             int count = 0;
@@ -163,7 +165,8 @@ public class AccountBalanceSharedUnloadTask implements ParamsAwareRunnable {
             return count;
         }), 60*60);
     }
-
+    //*/
+    
     private int moveToHistory() throws Exception {
         return (int) repository.executeInNewTransaction(persistence ->
                 repository.executeNativeUpdate("insert into GLVD_BAL2_H (DAT,ACID,BSAACID,GLACID,OBAL,OBALRUR,DTRN,DTRNRUR,CTRN,CTRNRUR,DTRNMID,DTRNMIDRUR,CTRNMID,CTRNMIDRUR,UNLOAD_DAT)" +
@@ -176,11 +179,13 @@ public class AccountBalanceSharedUnloadTask implements ParamsAwareRunnable {
         });
     }
 
+    /*don't used GL_SHACOD*/
     /**
      * Остатки обороты по счетам по настроечной таблице GL_SHACOD.BSTYPE 2N
      * @return кол-во вставленных строк
      * @throws Exception
      */
+    //*
     private int fillShared2N (java.util.Date executeDate) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             int count = 0;
@@ -227,11 +232,14 @@ public class AccountBalanceSharedUnloadTask implements ParamsAwareRunnable {
             return count;
         }), 60*60);
     }
+    //*/
 
+    /*don't used GL_SHACOD*/
     /**
      * совместно используемые счета Майдас, по которым существует проводка в Майдасе
      * @return кол-во вставленных/измененных строк
      */
+    //*
     private int fillSharedMidas(java.util.Date executeDate) throws Exception {
         logger.info(format("Получаем список проводок по буферной таблице Майдас в текущем закрытом ОД: '%s'"
                 , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
@@ -296,6 +304,7 @@ public class AccountBalanceSharedUnloadTask implements ParamsAwareRunnable {
             return count;
         }), 2 * 60 * 60);
     }
+    //*/
 
     private long getMinorRur(long minor, BankCurrency currency) {
         currency = currencyRepository.refreshCurrency(currency);

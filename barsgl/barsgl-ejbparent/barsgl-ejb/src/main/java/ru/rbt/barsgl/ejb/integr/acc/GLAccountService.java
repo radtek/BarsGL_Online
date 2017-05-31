@@ -157,6 +157,8 @@ public class GLAccountService {
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
+            keys.setCurrencyDigital(currency.getDigitalCode());
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
             return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
@@ -164,7 +166,7 @@ public class GLAccountService {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
                 } catch (Exception e) {
-                    throw new DefaultApplicationException(e);
+                    throw new DefaultApplicationException(e.getMessage(), e);
                 }
             }).getBsaAcid();
         } else {

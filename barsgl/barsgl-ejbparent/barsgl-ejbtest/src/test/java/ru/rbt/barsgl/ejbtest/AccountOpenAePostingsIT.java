@@ -75,9 +75,10 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * @fsd
      */
     @Test
-    public void testFrontPart() {
-        int cntDeleted = baseEntityRepository.executeNativeUpdate(
-                "delete from GL_ACNOCNT");
+    public void testFrontPart() throws Exception {
+        executeAutonomic("create table GL_ACNOCNT_tmp as (select * from GL_ACNOCNT)");
+
+        int cntDeleted = baseEntityRepository.executeNativeUpdate("delete from GL_ACNOCNT");
         ru.rb.ucb.util.GLAccountCounterType type1 = ru.rb.ucb.util.GLAccountCounterType.PROFIT_LOSS;
         AccountKeys keys1 = AccountKeysBuilder.create()
                 .withAcc2("47023")
@@ -143,6 +144,10 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 , keys2.getCompanyCode()
                 , keys2.getPlCode());
         Assert.assertEquals(type.getDecimalFormat().format(sorted.get(0).getEndNumber() + 1), frontPart);
+
+        executeAutonomic("delete from GL_ACNOCNT");
+        executeAutonomic("insert into GL_ACNOCNT select * from GL_ACNOCNT_tmp");
+        executeAutonomic("drop table GL_ACNOCNT_tmp");
     }
 
     /**
@@ -288,7 +293,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 //        pst.setAccountCredit("47407840700010060039");
         pst.setAccountCredit("");
         // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
-        final String keyStringCredit = "001;USD;00114240;356030405;00;00;17;;47423;;1871;05;DEALSRC;123456;SUBDEALID";
+        final String keyStringCredit = "001;USD;00674113;356030405;00;00;17;;47423;;1871;05;DEALSRC;123456;SUBDEALID";  //   00114240
         Assert.assertTrue(isEmpty(new AccountKeys(keyStringCredit).getPlCode()));
         deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         pst.setAccountKeyCredit(keyStringCredit);
@@ -797,14 +802,14 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         String dealId = "FL_" + System.currentTimeMillis();
         pst.setAccountCredit("");
         // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
-        final String keyStringCredit = "001;RUR;00100198;161020100;18;06;0000001645;0001;45205;;;;FC12_CL;" + dealId + ";00204487RURSN0100001";
+        final String keyStringCredit = "001;RUR;00208934;161020100;18;06;0000001645;0001;45205;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
         deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         deleteSQvalue(new AccountKeys(keyStringCredit));
         pst.setAccountKeyCredit(keyStringCredit);
 
         pst.setAccountDebit("");
         // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
-        final String keyStringDebit = "001;RUR;00100198;161020200;18;10;0000001898;0001;45812;;;;FC12_CL;" + dealId + ";00204487RURSN0100001";
+        final String keyStringDebit = "001;RUR;00208934;161020200;18;10;0000001898;0001;45812;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
         deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
         deleteSQvalue(new AccountKeys(keyStringDebit));
         pst.setAccountKeyDebit(keyStringDebit);
@@ -1103,4 +1108,5 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         logger.info("deleted acc: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where acid = ?", acid));
 
     }
+
 }

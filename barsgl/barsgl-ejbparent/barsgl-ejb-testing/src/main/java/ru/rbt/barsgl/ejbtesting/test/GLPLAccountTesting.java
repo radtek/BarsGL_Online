@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 
 import javax.ejb.EJB;
+import java.sql.PreparedStatement;
 
 /**
  * Created by Ivan Sevastyanov on 31.03.2016.
@@ -24,5 +25,21 @@ public class GLPLAccountTesting {
         });
 
         return accountService.getAccount(operation2, operSide, keys);
+    }
+
+    public void executeAutonomic(String sql) throws Exception {
+        String sqlStatemant =
+                        "declare\n" +
+                        "  PRAGMA AUTONOMOUS_TRANSACTION;\n" +
+                        "begin\n" +
+                        "  execute immediate '" + sql + "';\n" +
+                        "  commit;\n" +
+                        "end;\n";
+        operationRepository.executeTransactionally(connection -> {
+            try (PreparedStatement sta = connection.prepareCall(sqlStatemant)) {
+                sta.executeUpdate();
+            }
+            return null;
+        });
     }
 }

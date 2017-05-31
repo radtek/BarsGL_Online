@@ -752,6 +752,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    /*don't used IMBCBHBPN*/
     /**
      * Получить символ ОФР (PLCODE) по параметрам счета
      *
@@ -761,6 +762,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @param curdate
      * @return
      */
+    /*
     public String getPlCode(String acod, short sq, short custType, Date curdate) {
         try {
             DataRecord res = selectFirst("select HBITEM from IMBCBHBPN where HBMIAC = ? and HBMISQ in (?,0) and HBCTYP = ?" +
@@ -770,6 +772,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+    */
 
     /**
      * Возвращает дату начала действия 446П
