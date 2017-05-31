@@ -16,7 +16,7 @@ public class FanStornoPostingProcessor extends IncomingPostingProcessor {
     @Override
     public boolean isSupported(EtlPosting posting) {
         return null != posting
-                && posting.isFan() && posting.isStorno();
+                && posting.isFan() && posting.isStorno() && !posting.isTech();
     }
 
     /*
