@@ -68,7 +68,7 @@ public class TemporaryAEIT extends AbstractRemoteIT {
         }
     }
 
-    @Test public void test2() throws SQLException {
+    @Test @Ignore public void test2() throws SQLException {
 
 //        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 

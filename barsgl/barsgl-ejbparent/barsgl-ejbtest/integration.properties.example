@@ -1,0 +1,4 @@
+middlewareHome=C:\develop\Tools\wls12212
+domainHome=C:\develop\Tools\wls12212\wlserver\server\bin
+weblogicUser=weblogic
+weblogicPassword=weblogic1
