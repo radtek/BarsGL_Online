@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * Created by ER22317 on 09.03.2017.
  */
-public class EtlTestXX extends AbstractTimerJobIT {
+public class EtlTestXXIT extends AbstractTimerJobIT {
 
     @Test
     public void test01() throws Exception {
@@ -55,8 +55,7 @@ public class EtlTestXX extends AbstractTimerJobIT {
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
-//        Assert.assertTrue(operation.getAccountDebit().equals(BSAACID0));
+        Assert.assertEquals(OperState.LOAD, operation.getState());
     }
 
 }

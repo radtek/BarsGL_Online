@@ -793,6 +793,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.ERCHK, operation.getState());
         //"2046"
+        Thread.sleep(5000);
         Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_KEY_WITH_SUBDEAL.getStrErrorCode()));
     }
 
