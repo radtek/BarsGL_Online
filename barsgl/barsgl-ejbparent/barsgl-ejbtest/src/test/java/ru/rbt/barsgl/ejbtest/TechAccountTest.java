@@ -53,6 +53,8 @@ public class TechAccountTest extends AbstractRemoteTest {
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
+        closeAllTHAccount();
+
         //Добавление нового курса
         List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
         if (null==curDate)
