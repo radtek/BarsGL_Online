@@ -1,27 +1,31 @@
 package ru.rbt.barsgl.ejb.integr.oper;
 
-import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.barsgl.ejb.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.security.entity.access.PrmValue;
+import ru.rbt.barsgl.ejb.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
+import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.barsgl.ejb.repository.access.PrmValueRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
+import ru.rbt.barsgl.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.barsgl.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.barsgl.shared.enums.PrmValueEnum;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
+import static ru.rbt.barsgl.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.STRING_FIELD_IS_TOO_LONG;
 
 /**
  * Created by er23851 on 27.02.2017.
@@ -37,6 +41,18 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
 
     @Inject
     private AccessServiceSupport accessServiceSupport;
+
+    @Inject
+    private OperdayController operdayController;
+
+    @Inject
+    private GLOperationRepository glOperationRepository;
+
+    @Inject
+    private BankCurrencyRepository bankCurrencyRepository;
+
+    @Inject
+    private RateRepository rateRepository;
 
     @Override
     public boolean isSupported(EtlPosting posting) {
@@ -434,6 +450,68 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
         StringBuilder result = new StringBuilder(format("Обнаружены ошибки валидации входных данных\n"));
         result.append(validationErrorsToString(errors, descriptors));
         return result.toString();
+    }
+
+    /**
+     * Заполняет в GL операции вычисляемые поля, общие для всех видов операций
+     * @param operation
+     * @throws Exception
+     */
+    @Override
+    public void enrichment(GLOperation operation) throws SQLException {
+        // дата операции и дата проводки
+        operation.setProcDate(operdayController.getOperday().getCurrentDate());
+        Date postDate = calculatePostingDate(operation);
+        operation.setPostDate(postDate);
+
+        // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
+        BankCurrency ccyDebit = bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit());
+        operation.setCurrencyDebit(ccyDebit);
+        BigDecimal rateDebit = rateRepository.getRate(ccyDebit.getCurrencyCode(), postDate);
+        BigDecimal eqvDebit = rateRepository.getEquivalent(ccyDebit, rateDebit, operation.getAmountDebit());
+
+        operation.setRateDebit(rateDebit);
+        operation.setEquivalentDebit(eqvDebit);
+
+        // параметры КРЕДИТА: курс валюты, рублевый эквивалент
+        BankCurrency ccyCredit = bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit());
+        operation.setCurrencyCredit(ccyCredit);
+        BigDecimal rateCredit = rateRepository.getRate(ccyCredit.getCurrencyCode(), postDate);
+        BigDecimal eqvCredit = rateRepository.getEquivalent(ccyCredit, rateCredit, operation.getAmountCredit());
+
+        operation.setRateCredit(rateCredit);
+        operation.setEquivalentCredit(eqvCredit);
+
+        // параметры счетов - они нужны для определения филиала и главы баланса в случае отсутствифя счетов
+        if (isEmpty(operation.getAccountDebit()))
+            operation.createAccountParamDebit();
+        if (isEmpty(operation.getAccountCredit()))
+            operation.createAccountParamCredit();
+
+        // филиалы по дебету и кредиту
+        glOperationRepository.setFilials(operation);
+
+        // глава балансового счета
+        // Добавили определение также в processOperation, тк счет может быть не задан
+        glOperationRepository.setBsChapter(operation);            // Глава баланса
+
+        // параметры обмена валюты
+        setExchengeParameters(operation);
+
+        //Для технических счетов меняем значения суммы в рублях на значение рублёвой стороны проводки
+        if (operation.getCurrencyCredit().getCurrencyCode()!="RUR" || operation.getCurrencyDebit().getCurrencyCode()!="RUR")
+        {
+            if (operation.getCurrencyDebit().getCurrencyCode().equalsIgnoreCase("RUR"))
+            {
+                operation.setAmountCreditRu(operation.getAmountDebit());
+                operation.setAmountDebitRu(operation.getAmountDebit());
+            }
+            else if (operation.getCurrencyCredit().getCurrencyCode().equalsIgnoreCase("RUR"))
+            {
+                operation.setAmountCreditRu(operation.getAmountCredit());
+                operation.setAmountDebitRu(operation.getAmountCredit());
+            }
+        }
     }
 
 }
