@@ -1,35 +1,36 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
-import org.apache.poi.util.StringUtil;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.bankjar.Constants;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
-import ru.rbt.barsgl.ejb.entity.access.PrmValue;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.access.PrmValueRepository;
-import ru.rbt.barsgl.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
-import ru.rbt.barsgl.ejb.security.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
-import ru.rbt.barsgl.ejbcore.DefaultApplicationException;
-import ru.rbt.barsgl.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.mapping.YesNo;
-import ru.rbt.barsgl.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.*;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.SecurityActionCode;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
+import ru.rbt.security.entity.access.PrmValue;
+import ru.rbt.shared.Assert;
+import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -47,14 +48,13 @@ import java.util.function.Supplier;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Account;
-import static ru.rbt.barsgl.ejb.entity.sec.AuditRecord.LogCode.Operation;
-import static ru.rbt.barsgl.ejbcore.util.StringUtils.substr;
-import static ru.rbt.barsgl.ejbcore.validation.ErrorCode.*;
-import static ru.rbt.barsgl.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.PrmValueEnum.Source;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.validation.ErrorCode.*;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.shared.enums.PrmValueEnum.Source;
 
 /**
  * Created by ER18837 on 03.08.15.
@@ -157,6 +157,8 @@ public class GLAccountService {
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            BankCurrency currency = bankCurrencyRepository.getCurrency(keys.getCurrency());
+            keys.setCurrencyDigital(currency.getDigitalCode());
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
             return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
@@ -282,7 +284,7 @@ public class GLAccountService {
         Long userId = wrapper.getUserId();
         if (null == userId)
             userId = userContext.getUserId();
-        String acc1 = StringUtils.substr(acc2, 3);
+        String acc1 = substr(acc2, 3);
         if (FormAction.CREATE == action) {
             switch (acc1) {
                 case "707":

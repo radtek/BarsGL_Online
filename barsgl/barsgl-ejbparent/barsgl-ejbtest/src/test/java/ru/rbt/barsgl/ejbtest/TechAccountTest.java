@@ -4,7 +4,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -14,17 +13,15 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Iterator;
@@ -123,6 +120,56 @@ public class TechAccountTest extends AbstractRemoteTest {
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
     }
 
+    @Test public void testTHStorno() throws ParseException {
+
+        Operday oldOperday = getOperday();
+        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+        //Обрабатываем прямую операцию
+        EtlPosting pst_1 = getPostingForStorno();
+        pst_1 = (EtlPosting) baseEntityRepository.save(pst_1);
+        GLOperation operation_1 = (GLOperation) postingController.processMessage(pst_1);
+        Assert.assertNotNull(operation_1);
+        Assert.assertTrue(0 < operation_1.getId());
+        operation_1 = (GLOperation) baseEntityRepository.findById(operation_1.getClass(), operation_1.getId());
+        Assert.assertEquals(OperState.POST, operation_1.getState());
+        //Проверяем наличие счёта по дебету
+        List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_1.getAccountDebit());
+        Assert.assertFalse("Отсутствует и не создан счёт по дебету.",accListDebit.isEmpty());
+
+        //Проверяем наличе счёта по кредиту
+        List<GLAccount> accListCredit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_1.getAccountCredit());
+        Assert.assertFalse("Отсутствует и не создан счёт по кредиту.",accListCredit.isEmpty());
+
+        List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_1.getId());
+        Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        //Обрабатываем сторнирующую операцию
+        EtlPosting pst_2 = getPostingStorno();
+        pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
+        GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
+        Assert.assertNotNull(operation_2);
+        Assert.assertTrue(0 < operation_2.getId());
+        operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
+        Assert.assertEquals(OperState.POST, operation_1.getState());
+        //Проверяем наличие счёта по дебету
+        accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
+        Assert.assertFalse("Отсутствует и не создан счёт по дебету.",accListDebit.isEmpty());
+
+        //Проверяем наличе счёта по кредиту
+        accListCredit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountCredit());
+        Assert.assertFalse("Отсутствует и не создан счёт по кредиту.",accListCredit.isEmpty());
+
+        pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
+        Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+    }
+
+
     private void closeAllTHAccount()
     {
         List<GLAccount> accList = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.relationType = '9' and a.dateClose is null");
@@ -183,12 +230,8 @@ public class TechAccountTest extends AbstractRemoteTest {
         Assert.assertTrue(pkg.getId() > 0);
 
         EtlPosting pst = newPosting(stamp, pkg);
-        //pst.setValueDate(getOperday().getCurrentDate());
         pst.setValueDate(DateUtils.parseDate("2017-05-26","yyyy-MM-dd"));
 
-        //pst.setAccountCredit("47407810620010000002");
-        //pst.setAccountDebit("40817036250010000018");
-        //pst.setAccountKeyDebit("001;RUR;00000018;743010102;;;PL00005045;0001;70614;45102;8307;01;K+TP;;");
         pst.setAccountKeyDebit(";RUR;;058010103;;;TH00000001;0001;;;;;K+TP;;");
         pst.setAccountKeyCredit(";RUR;;057010103;;;TH00000003;0001;;;;;K+TP;;");
         pst.setAmountCredit(new BigDecimal("20539.180"));
@@ -212,6 +255,74 @@ public class TechAccountTest extends AbstractRemoteTest {
 
         return pst;
     }
+
+    private EtlPosting getPostingForStorno() throws ParseException {
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "TECHACC_TEST_STORNO");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(DateUtils.parseDate("2017-05-30","yyyy-MM-dd"));
+        pst.setOperationTimestamp(DateUtils.parseDate("2017-05-30 16:01:31.550000","yyyy-MM-dd HH:mm:ss.SSS"));
+
+        pst.setAccountKeyDebit(";RUR;;008010403;;;TH00000018;0001;;;;;K+TP;;;");
+        pst.setAccountKeyCredit(";RUR;;007010403;;;TH00000017;0001;;;;;K+TP;;");
+        pst.setAmountCredit(new BigDecimal("530936.610"));
+        pst.setAmountDebit(new BigDecimal("530936.610"));
+        pst.setAmountCreditRu(pst.getAmountCredit());
+        pst.setAmountDebitRu(pst.getAmountDebit());
+        pst.setCurrencyCredit(BankCurrency.RUB);
+        pst.setCurrencyDebit(BankCurrency.RUB);
+        pst.setSourcePosting("TBO");
+        pst.setEventId("3370547");
+        pst.setDeptId("TBM");
+        pst.setDealId("1287387");
+        pst.setChnlName("KONDOR+TP");
+        pst.setNarrative("04;5731;1287387;200428");
+        pst.setRusNarrativeLong("04;5731;1287387;200428;Реализованный финансовый результат по опциону");
+        pst.setRusNarrativeShort("04;5731;1287387;200428");
+        pst.setStorno(YesNo.N);
+        pst.setFan(YesNo.N);
+        pst.setEventType("Exercise");
+
+        return pst;
+    }
+
+    private EtlPosting getPostingStorno() throws ParseException {
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "TECHACC_TEST_STORNO");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(DateUtils.parseDate("2017-05-30","yyyy-MM-dd"));
+        pst.setOperationTimestamp(DateUtils.parseDate("2017-05-30 16:04:07.520000","yyyy-MM-dd HH:mm:ss.SSS"));
+
+        pst.setAccountKeyDebit(";RUR;;007010403;;;TH00000017;0001;;;;;K+TP;;");
+        pst.setAccountKeyCredit(";RUR;;008010403;;;TH00000018;0001;;;;;K+TP;;");
+        pst.setAmountCredit(new BigDecimal("530936.610"));
+        pst.setAmountDebit(new BigDecimal("530936.610"));
+        pst.setAmountCreditRu(pst.getAmountCredit());
+        pst.setAmountDebitRu(pst.getAmountDebit());
+        pst.setCurrencyCredit(BankCurrency.RUB);
+        pst.setCurrencyDebit(BankCurrency.RUB);
+        pst.setSourcePosting("TBO");
+        pst.setEventId("3370547");
+        pst.setDeptId("TBM");
+        pst.setDealId("1287387");
+        pst.setChnlName("KONDOR+TP");
+        pst.setNarrative("*04;5731;1287387;200428");
+        pst.setRusNarrativeLong("*04;5731;1287387;200428;Реализованный финансовый результат по опциону");
+        pst.setRusNarrativeShort("*04;5731;1287387;200428");
+        pst.setStorno(YesNo.Y);
+        pst.setFan(YesNo.N);
+        pst.setEventType("Exercise");
+
+        return pst;
+    }
+
+
 
     private void clearTechRecords()
     {
@@ -237,7 +348,7 @@ public class TechAccountTest extends AbstractRemoteTest {
     }
 
 
-    @Test @Ignore public void LoadEtlFromFile() throws IOException, InvalidFormatException, ParseException {
+    public void LoadEtlFromFile() throws IOException, InvalidFormatException, ParseException {
 
         File f = new File("c:\\Projects\\GL_ETLPST_20170320_01.xlsx");
         Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());
@@ -279,7 +390,7 @@ public class TechAccountTest extends AbstractRemoteTest {
         }
     }
 
-    @Test @Ignore public void LoadEtlFromFileByNumber() throws IOException, InvalidFormatException, ParseException {
+    public void LoadEtlFromFileByNumber() throws IOException, InvalidFormatException, ParseException {
 
         File f = new File("c:\\Projects\\GL_ETLPST_20170320_02.xlsx");
         Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());
