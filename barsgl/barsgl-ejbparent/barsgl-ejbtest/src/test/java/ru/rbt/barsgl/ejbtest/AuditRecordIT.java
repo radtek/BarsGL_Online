@@ -5,6 +5,7 @@ import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbtesting.test.AuditControllerTest;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -56,10 +57,10 @@ public class AuditRecordIT extends AbstractRemoteIT {
         Assert.assertNotNull(rec);
         Long gloid = rec.getLong(0);
         remoteAccess.invoke(AuditControllerTest.class.getName(), "testLog", new Object[]{logLevel, msg, gloid});
-        Thread.sleep(2000L);
+        Thread.sleep(10000L);
 
         List<AuditRecord> records = baseEntityRepository.select(AuditRecord.class,
-                "from AuditRecord a where a.message like ?1", "%" + msg + "%");
+                "from AuditRecord a where a.message like ?1 and logTime > ?2", "%" + msg + "%", DateUtils.onlyDate(new Date()));
         Assert.assertNotNull(records);
         for (AuditRecord record: records) {
             System.out.printf("%s :: %s :: %s\n", record.getLogLevel(), record.getMessage(), record.getErrorMessage());
