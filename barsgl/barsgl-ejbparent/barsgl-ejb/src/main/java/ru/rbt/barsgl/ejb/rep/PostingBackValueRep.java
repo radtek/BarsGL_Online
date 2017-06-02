@@ -15,7 +15,7 @@ public class PostingBackValueRep {
     @EJB
     private CoreRepository repository;
 
-    private final String sql = "select procdate from gl_oper where procdate = '%s' fetch first 1 row only";
+    private final String sql = "select procdate from gl_oper where procdate = to_date('%s', 'YYYY-MM-DD') and rownum = 1";
 
     public RpcRes_Base<Boolean> operExists(String date){
         try{

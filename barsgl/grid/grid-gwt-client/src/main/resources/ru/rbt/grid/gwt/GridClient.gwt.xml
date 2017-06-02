@@ -7,6 +7,7 @@
     <inherits name="com.google.gwt.xml.XML" />
     <inherits name="com.google.gwt.resources.Resources" />
     <inherits name="ru.rbt.grid.gwt.GridServer" />
+    <inherits name="ru.rbt.security.gwt.SecurityClient" />
     <source path="client" />
     <entry-point class="ru.rbt.grid.gwt.client.GridEntryPoint"/>
     <extend-property name="locale" values="ru"/>
