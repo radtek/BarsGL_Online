@@ -51,6 +51,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
      * @throws SQLException
      */
     @Test
+    @Ignore("Probably, very old!!! Need check")
     public void testCreateAccountCB() throws SQLException, ParseException {
 
         Date dateOpen = getOperday().getCurrentDate();
@@ -343,7 +344,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
 
         DataRecord data = baseEntityRepository.selectOne("select ACC2, PLCODE, CTYPE" +
                         " from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?",
-                bsaAcid, acid, '2');
+                bsaAcid, acid, "2");
         Assert.assertNotNull(data);                 // bsaAcid + acid есть в таблице ACCRLN
 
         DataRecord parm = remoteAccess.invoke(GLAccountRepository.class, "getAccountParams",
