@@ -11,7 +11,7 @@ insert into gl_etlstmd (
     evtp, narrative
 )
  select  d.pcid pcid,                                                -- pcid проводки
-    'Требования по прочим операциям' russhnar,                       -- описание
+    coalesce(pde2.rnarlng, 'Требования по прочим операциям') russhnar,                       -- описание
     j.ts statementdate, d.pod postingdate, d.vald valuedate,         -- даты
     'BSG-IB' hostsystem,
     cast(null as varchar(20)) dealid,
@@ -39,6 +39,7 @@ insert into gl_etlstmd (
      join currency cc on cc.glccy = c.ccy
      join bsaacc da on d.bsaacid = da.id
      join bsaacc ca on c.bsaacid = ca.id
+     left join pdext2 pde2 on pde2.id = d.id
  where d.invisible <> '1' and c.invisible <> '1' -- проводки актуальны
   and (GL_STMFILTER(d.bsaacid) = '1' or GL_STMFILTER(c.bsaacid) = '1')
   and not exists (select 1 from gl_etlstma a where a.pcid = d.pcid)
