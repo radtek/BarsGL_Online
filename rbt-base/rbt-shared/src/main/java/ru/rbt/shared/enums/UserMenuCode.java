@@ -7,9 +7,9 @@ public enum UserMenuCode {
       SystemMenu, Accounting, Dictionary, Upload, Task, Operday, Access, User, Role
     , Backvalue, Audit, PLAccount, CBAccount, Operation, Posting, OperSemiposting
     , ErrorOper, UnloadAccountBalance, AEIncomeMsg, FileIncomeMsg, PostingSource
-    , TermCode, AccountingType, PlanAccountingType, PlanAccountOfr, PropertyType, Branch
+    , TermCode, AccountingType, PlanAccountingType, PropertyType, Branch
     , UnloadStamtConfig, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
-    , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
+    , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype
     , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
     , TechOperInpConfirm, ErrorView, ErrorHandling, TechOperInpHistory
 
