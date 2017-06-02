@@ -434,7 +434,7 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
         result.addColumn(col = new Column("ACCNAME", Column.Type.STRING, ActParm.FIELD_ACCNAME, 240));
         col.setFilterable(false);
         col.setEditable(false);
-        result.addColumn(col = new Column("TECH_ACT",Column.Type.STRING,"",10));
+        result.addColumn(col = new Column("TECH_ACT",Column.Type.STRING,FIELD_TECH_ACT,10));
         col.setVisible(false);
 
         return result;

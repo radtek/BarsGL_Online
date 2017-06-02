@@ -29,10 +29,10 @@ public class TechOperationProcessor extends GLOperationProcessor
     @Inject
     private SourcesDealsRepository sourcesDealsRepository;
 
+    //Берём все технические в том числе и стороно
     @Override
     public boolean isSupported(GLOperation operation) {
         return     !operation.isFan()                                           // не веер
-                && !operation.isStorno()                                        // не сторно
                 && !operation.isInterFilial()                                   // филиал один
                 && !operation.isExchangeDifferenceA()                           // нет курсовой разницы или не глава А
                 && operation.isTech();                                         // операция по техническим счетам

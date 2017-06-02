@@ -10,16 +10,13 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
-import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
-import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -42,6 +39,9 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
 
     @EJB
     private GLOperationRepository glOperationRepository;
+
+    @EJB
+    private GLTechOperationRepository glTechOperationRepository;
 
     @EJB
     private GLAccountRepository glAccountRepository;
@@ -263,7 +263,14 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
     public void setStornoOperation(GLOperation operation) throws Exception {
         if (!operation.isStorno())
             return;
-        Long stornoID = glOperationRepository.getStornoOperationID(operation);
+        Long stornoID = null;
+        if (operation.isTech())
+        {
+            stornoID = glTechOperationRepository.getStornoOperationID(operation);
+        }
+        else {
+            stornoID = glOperationRepository.getStornoOperationID(operation);
+        }
         if (null == stornoID) {
             throw new ValidationError(STORNO_REF_NOT_FOUND,
                     operation.getStornoReference(), operation.getDealId(), operation.getPaymentRefernce(), operation.getValueDate().toString());
