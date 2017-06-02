@@ -43,8 +43,8 @@ public class CobStatIT extends AbstractTimerJobIT  {
 
     @Before
     public void before() {
-        long maxCob = remoteAccess.invoke(CobStatRepository.class, "getMaxRunCobId", getOperday().getCurrentDate());
-        if (maxCob > 0) {
+        Long maxCob = remoteAccess.invoke(CobStatRepository.class, "getMaxRunCobId", getOperday().getCurrentDate());
+        if (maxCob!= null && maxCob > 0) {
             baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set STATUS = ? where ID_COB = ? and STATUS in (?, ?)", Halt.name(), maxCob, Running.name(), Error.name());
         }
 
