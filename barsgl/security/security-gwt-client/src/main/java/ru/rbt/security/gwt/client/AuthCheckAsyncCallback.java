@@ -16,6 +16,7 @@ public abstract class AuthCheckAsyncCallback<T> implements AsyncCallback<T> {
         }
         if (SecurityEntryPoint.isNotAuthorizedUserException(throwable)) {
             SecurityEntryPoint.showLoginForm();
+            afterReauthorize(throwable);
         } else {
             onFailureOthers(throwable);
         }
@@ -25,4 +26,5 @@ public abstract class AuthCheckAsyncCallback<T> implements AsyncCallback<T> {
         throw new RuntimeException(throwable);
     }
 
+    protected void afterReauthorize(Throwable afterException) {}
 }

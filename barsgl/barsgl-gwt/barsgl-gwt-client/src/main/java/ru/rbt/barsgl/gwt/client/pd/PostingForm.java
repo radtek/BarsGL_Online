@@ -75,7 +75,7 @@ public class PostingForm extends MDForm {
         masterActionBar.addAction(createPreview());
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
-//        masterActionBar.addAction(BackValuePostingReport());
+        masterActionBar.addAction(BackValuePostingReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
@@ -453,24 +453,24 @@ public class PostingForm extends MDForm {
     private GridAction BackValuePostingReport() {
         return new GridAction(masterGrid, null, "Отчет по Back Value", new Image(ImageConstants.INSTANCE.report()), 5) {
 
-            DateDlg dlg = null;
+            BackValueReportDlg dlg = null;
             GridAction act = this;
 
             @Override
             public void execute() {
-                if (dlg == null) dlg = new DateDlg();
+                if (dlg == null) dlg = new BackValueReportDlg();
                 dlg.setDlgEvents(this);
-                dlg.setCaption("Выбор даты создания операций Back Value");
-                dlg.setDateLabel("Дата опердня создания операций Back Value");
                 dlg.show(null);
             }
 
             public void onDlgOkClick(Object prms){
                 dlg.hide();
-                final String data = (String) prms;
+
+                final String date = (String)((Object[]) prms)[0];
+                final String limit = (String)((Object[]) prms)[1];
                 WaitingManager.show("Проверка наличия данных...");
 
-                BarsGLEntryPoint.operationService.operExists(data, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                BarsGLEntryPoint.operationService.operExists(date, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
 
                     @Override
                     public void onSuccess(RpcRes_Base<Boolean> res) {
@@ -488,10 +488,10 @@ public class PostingForm extends MDForm {
                                 user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
                             }
 
-                            ExcelExportHead head = new ExcelExportHead(Utils.Fmt("ОТЧЕТ по операциям BACK VALUE за {0}", data),
-                                    user, Utils.Fmt("дата проводки меньше {0}", data));
+                            ExcelExportHead head = new ExcelExportHead(Utils.Fmt("ОТЧЕТ по операциям BACK VALUE за {0}", date),
+                                    user, Utils.Fmt("дата проводки меньше {0}", date));
 
-                            Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(data), head,
+                            Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(date, limit), head,
                                     new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
                             e2e.export();
                         }
@@ -500,6 +500,5 @@ public class PostingForm extends MDForm {
             }
         };
     }
-
 }
 
