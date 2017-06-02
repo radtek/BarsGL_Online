@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
@@ -33,6 +34,8 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
  * Класс обработки технических счетов
  */
 public class TechAccPostingProcessor extends IncomingPostingProcessor  {
+
+    private static final String RUR_810 = "810";
 
     @Inject
     private AccountingTypeRepository accountingTypeRepository;
@@ -59,7 +62,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
     public boolean isSupported(EtlPosting posting) {
 
         return null != posting
-                && !posting.isFan() && !posting.isStorno() && posting.isTech();
+                && !posting.isFan() && posting.isTech();
     }
 
     @Override
@@ -277,7 +280,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
 
         // ============== Ссылки ===============
         // ссылка на сторно
-        /*context.addValidator(() -> {
+        context.addValidator(() -> {
             String fieldName = target.getColumnName("stornoReference");
             String fieldValue = target.getStornoReference();
             int maxLen = 20;
@@ -288,20 +291,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
                     throw new ValidationError(STRING_FIELD_IS_TOO_LONG, fieldValue, fieldName, Integer.toString(maxLen));
                 }
             }
-        });*/
-        // Ссылка на родительскую операцию в продуктовой системе
-        /*context.addValidator(() -> {
-            String fieldName = target.getColumnName("parentReference");
-            String fieldValue = target.getParentReference();
-            int maxLen = 20;
-            if (isEmpty(target.getParentReference())) {
-                if (target.getFan().equals(YesNo.Y))    // только для веерров
-                    throw new ValidationError(PARENT_REF_IS_EMPTY, fieldName);
-            }
-            else if (maxLen < fieldValue.length()) {
-                throw new ValidationError(STRING_FIELD_IS_TOO_LONG, fieldValue, fieldName, Integer.toString(maxLen));
-            }
-        });*/
+        });
 
         //Проверки для технических счетов
 
@@ -429,6 +419,12 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
             }
 
         });
+
+    }
+
+    public void checkStorno(EtlPosting posting)
+    {
+
     }
 
     public void checkFilialPermission(String filialDebit, String filialCredit, Long userId) throws Exception {
@@ -460,6 +456,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
      */
     @Override
     public void enrichment(GLOperation operation) throws SQLException {
+
         // дата операции и дата проводки
         operation.setProcDate(operdayController.getOperday().getCurrentDate());
         Date postDate = calculatePostingDate(operation);
@@ -500,14 +497,14 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
         setExchengeParameters(operation);
 
         //Для технических счетов меняем значения суммы в рублях на значение рублёвой стороны проводки
-        if (operation.getCurrencyCredit().getCurrencyCode()!="RUR" || operation.getCurrencyDebit().getCurrencyCode()!="RUR")
+        if (!RUR_810.equalsIgnoreCase(operation.getCurrencyCredit().getDigitalCode()) || !RUR_810.equalsIgnoreCase(operation.getCurrencyDebit().getDigitalCode()))
         {
-            if (operation.getCurrencyDebit().getCurrencyCode().equalsIgnoreCase("RUR"))
+            if (RUR_810.equalsIgnoreCase(operation.getCurrencyDebit().getDigitalCode()))
             {
                 operation.setAmountCreditRu(operation.getAmountDebit());
                 operation.setAmountDebitRu(operation.getAmountDebit());
             }
-            else if (operation.getCurrencyCredit().getCurrencyCode().equalsIgnoreCase("RUR"))
+            else if (RUR_810.equalsIgnoreCase(operation.getCurrencyCredit().getDigitalCode()))
             {
                 operation.setAmountCreditRu(operation.getAmountCredit());
                 operation.setAmountDebitRu(operation.getAmountCredit());

@@ -65,11 +65,6 @@ public class TechAccountTest extends AbstractRemoteTest {
         }
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
 
-
-        //List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
-
-
-
         EtlPosting pst_2 = this.getPosting_RUR_RUR();
         pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
         GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
@@ -155,7 +150,7 @@ public class TechAccountTest extends AbstractRemoteTest {
         Assert.assertNotNull(operation_2);
         Assert.assertTrue(0 < operation_2.getId());
         operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
-        Assert.assertEquals(OperState.POST, operation_1.getState());
+        Assert.assertEquals(OperState.POST, operation_2.getState());
         //Проверяем наличие счёта по дебету
         accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
         Assert.assertFalse("Отсутствует и не создан счёт по дебету.",accListDebit.isEmpty());
@@ -166,6 +161,45 @@ public class TechAccountTest extends AbstractRemoteTest {
 
         pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
         Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+    }
+
+    @Test public void testTHStornoEmptyStornoRef() throws ParseException {
+
+        Operday oldOperday = getOperday();
+        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+        //Обрабатываем сторнирующую операцию
+        EtlPosting pst_2 = getPostingStorno();
+        pst_2.setStornoReference("");
+        pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
+        GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
+        Assert.assertNull(operation_2);
+
+        setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+    }
+
+    @Test public void testTHStornoDirectNotFound() throws ParseException {
+
+        Operday oldOperday = getOperday();
+        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+        //Обрабатываем сторнирующую операцию
+        EtlPosting pst_2 = getPostingStorno();
+        pst_2.setStornoReference("12312121");
+        pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
+        GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
+        Assert.assertNotNull(operation_2);
+        Assert.assertTrue(0 < operation_2.getId());
+        operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
+        Assert.assertNotEquals(OperState.POST, operation_2.getState());
 
         setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
@@ -268,7 +302,7 @@ public class TechAccountTest extends AbstractRemoteTest {
         pst.setValueDate(DateUtils.parseDate("2017-05-30","yyyy-MM-dd"));
         pst.setOperationTimestamp(DateUtils.parseDate("2017-05-30 16:01:31.550000","yyyy-MM-dd HH:mm:ss.SSS"));
 
-        pst.setAccountKeyDebit(";RUR;;008010403;;;TH00000018;0001;;;;;K+TP;;;");
+        pst.setAccountKeyDebit(";RUR;;008010403;;;TH00000018;0001;;;;;K+TP;;");
         pst.setAccountKeyCredit(";RUR;;007010403;;;TH00000017;0001;;;;;K+TP;;");
         pst.setAmountCredit(new BigDecimal("530936.610"));
         pst.setAmountDebit(new BigDecimal("530936.610"));
@@ -287,6 +321,7 @@ public class TechAccountTest extends AbstractRemoteTest {
         pst.setStorno(YesNo.N);
         pst.setFan(YesNo.N);
         pst.setEventType("Exercise");
+        pst.setPaymentRefernce("");
 
         return pst;
     }
@@ -311,6 +346,7 @@ public class TechAccountTest extends AbstractRemoteTest {
         pst.setCurrencyDebit(BankCurrency.RUB);
         pst.setSourcePosting("TBO");
         pst.setEventId("3370547");
+        pst.setStornoReference("3370547");
         pst.setDeptId("TBM");
         pst.setDealId("1287387");
         pst.setChnlName("KONDOR+TP");
@@ -320,6 +356,7 @@ public class TechAccountTest extends AbstractRemoteTest {
         pst.setStorno(YesNo.Y);
         pst.setFan(YesNo.N);
         pst.setEventType("Exercise");
+        pst.setPaymentRefernce("");
 
         return pst;
     }
