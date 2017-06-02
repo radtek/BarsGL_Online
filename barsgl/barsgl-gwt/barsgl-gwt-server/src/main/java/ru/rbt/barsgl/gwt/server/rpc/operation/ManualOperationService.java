@@ -39,8 +39,6 @@ public interface ManualOperationService  extends RemoteService {
     RpcRes_Base<ManualAccountWrapper> saveAccount(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> updateAccount(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> closeAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> saveOfrAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> getOfrAccountParameters(ManualAccountWrapper wrapper) throws Exception;
     RpcRes_Base<ManualAccountWrapper> savePlAccount(ManualAccountWrapper wrapper) throws Exception;
 
     RpcRes_Base<CurExchangeWrapper> exchangeCurrency(CurExchangeWrapper wrapper) throws Exception;

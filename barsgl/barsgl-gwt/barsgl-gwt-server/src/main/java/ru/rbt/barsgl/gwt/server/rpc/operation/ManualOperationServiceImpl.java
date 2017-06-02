@@ -2,7 +2,6 @@ package ru.rbt.barsgl.gwt.server.rpc.operation;
 
 import ru.rbt.barsgl.ejb.cur_exchng.CurrencyExchangeSupport;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
-import ru.rbt.barsgl.ejb.integr.acc.OfrAccountService;
 import ru.rbt.barsgl.ejb.integr.bg.*;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
@@ -134,31 +133,7 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
             }
         }.process();
     }
-
-    @Override
-    public RpcRes_Base<ManualAccountWrapper> saveOfrAccount(final ManualAccountWrapper wrapper) throws Exception {
-        return new RpcResProcessor<ManualAccountWrapper>() {
-            @Override
-            public RpcRes_Base<ManualAccountWrapper> buildResponse() throws Throwable {
-                RpcRes_Base<ManualAccountWrapper> res = localInvoker.invoke(OfrAccountService.class, "createOfrManualAccount", wrapper);
-                if (res == null) throw new Throwable("Не удалось сохранить счет");
-                return res;
-            }
-        }.process();
-    }
-
-    @Override
-    public RpcRes_Base<ManualAccountWrapper> getOfrAccountParameters(final ManualAccountWrapper wrapper) throws Exception {
-        return new RpcResProcessor<ManualAccountWrapper>() {
-            @Override
-            public RpcRes_Base<ManualAccountWrapper> buildResponse() throws Throwable {
-                RpcRes_Base<ManualAccountWrapper> res = localInvoker.invoke(OfrAccountService.class, "getOfrAccountParameters", wrapper);
-                if (res == null) throw new Throwable("Не удалось получить параметры счета");
-                return res;
-            }
-        }.process();
-    }
-
+    
     @Override
     public RpcRes_Base<CurExchangeWrapper> exchangeCurrency(final CurExchangeWrapper wrapper) throws Exception {
         return new RpcResProcessor<CurExchangeWrapper>(){
