@@ -14,7 +14,6 @@ import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
 import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
-import ru.rbt.barsgl.gwt.client.account_ofr.OfrAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
 import ru.rbt.barsgl.gwt.client.backvalue.BackValueForm;
 import ru.rbt.barsgl.gwt.client.bal.OndemandBalanceUnloadForm;
@@ -196,12 +195,6 @@ public class MenuBuilder implements IMenuBuilder {
                     formLoad(new PlAccountForm());
                 }
             });
-            case PLAccountMidas: return new MenuItem(wrapper.getMenuName(), false, new Command() {
-                @Override
-                public void execute() {
-                    formLoad(new OfrAccountForm());
-                }
-            });
             case CBAccount: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
@@ -310,12 +303,6 @@ public class MenuBuilder implements IMenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new AccountTypesByCategory());
-                }
-            });
-            case PlanAccountOfr: return  new MenuItem(wrapper.getMenuName(), false, new Command() {
-                @Override
-                public void execute() {
-                    formLoad(new OfrSymbols());
                 }
             });
             case PropertyType: return  new MenuItem(wrapper.getMenuName(), false, new Command() {
