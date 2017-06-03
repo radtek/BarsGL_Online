@@ -7,7 +7,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
@@ -43,84 +42,6 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
     @Before
     public void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
-    }
-
-
-    /**
-     * Тест создания счета ЦБ через внешнюю функцию
-     * @throws SQLException
-     */
-    @Test
-    @Ignore("Probably, very old!!! Need check")
-    public void testCreateAccountCB() throws SQLException, ParseException {
-
-        Date dateOpen = getOperday().getCurrentDate();
-
-        // 010	UCB, NVS, OO Barnaulsky       	0050	00000109
-        String branch = "010";
-        Short acod = 7004;
-        Short sq = 01;
-        Short custType = 0;
-        String acc2 = "70601";
-        String rlnType = "0";
-
-        String[] accRln = createAccountCB(branch, acod, sq, custType, acc2, rlnType, dateOpen);
-        Assert.assertNotNull(accRln);
-        Assert.assertNotNull(accRln[0]);
-        Assert.assertNotNull(accRln[1]);
-
-        DataRecord res = baseEntityRepository.selectFirst(
-                "select * from ACCRLN where ACID = ? and BSAACID = ? and RLNTYPE = ? and ? between DRLNO and DRLNC",
-                accRln[0], accRln[1], rlnType, dateOpen);
-        Assert.assertNotNull(res);
-
-        deleteAccountCB(accRln[0], accRln[1], true);
-
-    }
-
-    private String[] createAccountCB(String branch, Short acod, Short sq, Short custType, String acc2, String rlnType, Date dateOpen) throws SQLException, ParseException {
-
-        DataRecord data = baseEntityRepository.selectOne("select BCBBR, A8BICN from IMBCBBRP where A8BRCD = ?", branch);
-        Assert.assertNotNull(data);
-        String filialCode = data.getString("BCBBR");
-        String cnum = data.getString("A8BICN");
-
-        String acid = remoteAccess.invoke(GLAccountRepository.class, "makeMidasAccount", Integer.parseInt(cnum), "RUR", branch, acod, sq);
-        Assert.assertEquals(20, acid.length());
-        DataRecord data1 = baseEntityRepository.selectFirst("select ID from ACC where ID = ?", acid);
-        Assert.assertNull(data1);
-
-        // String acod, short sq, short custType, Date curdate
-        String plCode = remoteAccess.invoke(GLAccountRepository.class, "getPlCode", acod.toString(), sq, custType, dateOpen);
-        Assert.assertFalse(isEmpty(plCode));
-
-        DataRecord data2 = baseEntityRepository.selectOne("select PSAV from BSS where ACC2 = ?", acc2);
-        Assert.assertNotNull(data2);
-        String psav = data2.getString(0);
-
-        AccountKeys keys0 = AccountKeysBuilder.create()
-                .withAcc2(acc2)
-                .withCurrencyDigital("810")
-                .withCompanyCode(filialCode)
-                .withPlCode(plCode)
-                .withAccountMidas(acid)
-                .withRelationType(rlnType)
-                .withCustomerType(custType.toString())
-                .withPassiveActive(psav)
-                .build();
-
-        Date dateClose = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(ManualAccountWrapper.dateNull);
-        try {   // пока транзакция на внешней стороне
-            String bsaacid = remoteAccess.invoke(OfrAccountService.class, "createAccountCBnoTrans", keys0, dateOpen, dateClose, dateOpen);
-            Assert.assertEquals(20, bsaacid.length());
-            checkAccountCB(acid, bsaacid, rlnType);
-            Assert.assertTrue(true);
-            return new String[]{acid, bsaacid};
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            Assert.assertTrue(false);
-            return null;
-        }
     }
 
     /**
