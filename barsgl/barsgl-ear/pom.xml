@@ -355,6 +355,7 @@
                                 <webModule>
                                     <groupId>ru.rbt</groupId>
                                     <artifactId>barsgl-gwt-servlet</artifactId>
+                                    <bundleFileName>barsgl-gwt-servlet.war</bundleFileName>
                                     <contextRoot>${project.build.finalName}/api</contextRoot>
                                 </webModule>
 

@@ -1,14 +1,17 @@
 package ru.rbt.barsgl.bankjar;
 
+import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.PersistenceProvider;
+
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.annotation.PostConstruct;
-import javax.naming.InitialContext;
-import ru.rbt.ejbcore.DefaultApplicationException;
 
 /**
  * Created by Ivan Sevastyanov
@@ -22,6 +25,9 @@ public abstract class AbstractBankjarBean {
 
     @Resource(lookup = "java:app/env/BarsglDataSourceName")
     private String barsglDataSourceName;
+
+    @Inject
+    protected PersistenceProvider<Repository> databaseProvider;
     
     @Inject
     private PropertiesBean properties;
@@ -44,7 +50,8 @@ public abstract class AbstractBankjarBean {
 
     @PostConstruct
     public void init() {
-        dataSource = findConnection(barsglDataSourceName);
+//        dataSource = findConnection(barsglDataSourceName);
+        dataSource = databaseProvider.getDefaultDataSource();
     }
 
     private DataSource findConnection(String jndiName) {

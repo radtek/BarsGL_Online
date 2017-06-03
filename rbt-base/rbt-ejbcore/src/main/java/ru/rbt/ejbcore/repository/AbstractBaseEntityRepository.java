@@ -4,13 +4,17 @@ import org.apache.log4j.Logger;
 import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
+import ru.rbt.ejbcore.PersistenceProvider;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.shared.Assert;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.*;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.persistence.*;
 import javax.sql.DataSource;
 import javax.transaction.TransactionSynchronizationRegistry;
@@ -21,12 +25,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import javax.annotation.PostConstruct;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import ru.rbt.ejbcore.PersistenceProvider;
 
 /**
  * Created by Ivan Sevastyanov
@@ -539,7 +539,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     protected DataSource getDataSource() {
         return persistenceProvider.getDefaultDataSource();
-    }
+}
     
     public <T extends Enum> DataSource getDataSource(T repository) throws Exception {
         return persistenceProvider.getDataSource(repository);
