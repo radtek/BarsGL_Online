@@ -55,7 +55,7 @@ public class StartLoaderIT extends AbstractTimerJobIT{
         try{
 //            remoteAccess.invoke(TaskUtils.class, "clearGlEtldwhs4Pardesc", DwhUnloadParams.SetWorkday, currentDate );
             setOperday(currentDate, lastWorkingDay ,Operday.OperdayPhase.ONLINE, status);
-            remoteAccess.invoke(WorkdayRepository.class, "setWorkday", newWorkday );
+            remoteAccess.invoke(WorkdayRepository.class, "setGlWorkday", newWorkday );
 
             Properties properties = new Properties();
             SingleActionJobBuilder builder = SingleActionJobBuilder.create().withClass(StartLoaderTask.class).withProps(properties);
@@ -67,7 +67,7 @@ public class StartLoaderIT extends AbstractTimerJobIT{
 
         }finally {
             restoreOperday();
-            remoteAccess.invoke(WorkdayRepository.class, "setWorkday", workday );
+            remoteAccess.invoke(WorkdayRepository.class, "setGlWorkday", workday );
         }
 
     }
@@ -85,7 +85,7 @@ public class StartLoaderIT extends AbstractTimerJobIT{
         try{
 //            remoteAccess.invoke(TaskUtils.class, "clearGlEtldwhs4Pardesc", DwhUnloadParams.SetWorkday, currentDate );
             setOperday(currentDate, lastWorkingDay ,Operday.OperdayPhase.ONLINE, status);
-            remoteAccess.invoke(WorkdayRepository.class, "setWorkday", newWorkday );
+            remoteAccess.invoke(WorkdayRepository.class, "setGlWorkday", newWorkday );
 
             Properties properties = new Properties();
             SingleActionJobBuilder builder = SingleActionJobBuilder.create().withClass(StartLoaderTask.class).withProps(properties);
@@ -97,7 +97,7 @@ public class StartLoaderIT extends AbstractTimerJobIT{
 
         }finally {
             restoreOperday();
-            remoteAccess.invoke(WorkdayRepository.class, "setWorkday", workday );
+            remoteAccess.invoke(WorkdayRepository.class, "setGlWorkday", workday );
         }
 
     }
@@ -122,7 +122,7 @@ public class StartLoaderIT extends AbstractTimerJobIT{
 
         }finally {
             restoreOperday();
-            remoteAccess.invoke(WorkdayRepository.class, "setWorkday", workday );
+            remoteAccess.invoke(WorkdayRepository.class, "setGlWorkday", workday );
         }
 
     }
@@ -147,7 +147,7 @@ public class StartLoaderIT extends AbstractTimerJobIT{
 
         }finally {
             restoreOperday();
-            remoteAccess.invoke(WorkdayRepository.class, "setWorkday", workday );
+            remoteAccess.invoke(WorkdayRepository.class, "setGlWorkday", workday );
         }
 
     }
