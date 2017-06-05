@@ -1,6 +1,7 @@
 package ru.rbt.security.gwt.server.rpc.auth;
 
 
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
 import ru.rbt.security.AuthorizationServiceSupport;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.LoginParams;
@@ -91,7 +92,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
                     default:
                         throw new Throwable("Недопустимое действие!");
                 }
-                RpcRes_Base<AppUserWrapper> res = localInvoker.invoke(AuthorizationServiceSupport.class, method, wrapper);
+                RpcRes_Base<AppUserWrapper> res = localInvoker.invoke(AuthorizationServiceGwtSupport.class, method, wrapper);
                 if (res == null) throw new Throwable("Не удалось выполнить действие!");
                 return res;
             }
