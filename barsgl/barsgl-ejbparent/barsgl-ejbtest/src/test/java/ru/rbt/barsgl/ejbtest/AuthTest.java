@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.*;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.security.entity.access.*;
-import ru.rbt.security.AuthorizationServiceSupport;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -120,7 +120,7 @@ public class AuthTest extends AbstractRemoteTest{
         menuActionRln1 = createMenuActIfAbsent(menuActionRln1);
 
         // залогиница
-        LoginResult result = remoteAccess.invoke(AuthorizationServiceSupport.class, "login", user.getUserName(), "123");
+        LoginResult result = remoteAccess.invoke(AuthorizationServiceGwtSupport.class, "login", user.getUserName(), "123");
         Assert.assertEquals(result.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
 
         Assert.assertEquals(1, result.getAvailableActions().size());
@@ -146,7 +146,7 @@ public class AuthTest extends AbstractRemoteTest{
         baseEntityRepository.executeUpdate("delete from UserRoleRln r where r.id = ?1", userRoleRln.getId());
         objects.remove(userRoleRln);
 
-        LoginResult result2 = remoteAccess.invoke(AuthorizationServiceSupport.class, "login", user.getUserName(), "123");
+        LoginResult result2 = remoteAccess.invoke(AuthorizationServiceGwtSupport.class, "login", user.getUserName(), "123");
         Assert.assertEquals(result2.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
         Assert.assertTrue(result2.getUserMenu().getRootElements().isEmpty());
     }

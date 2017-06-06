@@ -18,7 +18,7 @@ import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_NAME;
  */
 public abstract class AbstractLocalServerAccess implements ServerAccess {
 
-    public static final String LOGIN_BEAN_NAME = "AuthorizationServiceSupport";
+    public static final String LOGIN_BEAN_NAME = "AuthorizationServiceGwtSupport";
     public static final String LOGIN_BEAN_METHOD = "login";
     public static final String LOGOFF_BEAN_METHOD = "logoff";
 

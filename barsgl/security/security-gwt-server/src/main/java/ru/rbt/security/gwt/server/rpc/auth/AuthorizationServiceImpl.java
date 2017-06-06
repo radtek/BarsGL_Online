@@ -2,7 +2,6 @@ package ru.rbt.security.gwt.server.rpc.auth;
 
 
 import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
-import ru.rbt.security.AuthorizationServiceSupport;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.LoginParams;
 import ru.rbt.shared.LoginResult;
@@ -32,7 +31,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
         HttpServletRequest request = getThreadLocalRequest();
         GwtServerUtils.setUserRequest(new UserRequestHolder(user, null != request ? request.getRemoteAddr() : ""));
         try {
-            LoginResult result = localInvoker.invoke(AuthorizationServiceSupport.class, "login", user, password);
+            LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "login", user, password);
             if (null != request){
                 HttpSession httpSession = request.getSession(true);
                 LoginParams params = new LoginParams(result.getUserName(), result.getUserType(), request.getRemoteAddr());
@@ -70,7 +69,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
             params = new LoginParams("Not authorized user", "no type", "no host");
         }
         
-        LoginResult result = localInvoker.invoke(AuthorizationServiceSupport.class, "logoff", params.getUserName());
+        LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "logoff", params.getUserName());
 //        log.info(result.getMessage());
         params.setUserName("");
         httpSession.setAttribute(USER_NAME.getPath(), params);  // user
@@ -101,12 +100,12 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
 
     @Override
     public RpcRes_Base<String> getDatabaseVersion() throws Exception {
-        return new RpcRes_Base<String>((String)localInvoker.invoke(AuthorizationServiceSupport.class, "getDatabaseVersion"), false, "");
+        return new RpcRes_Base<String>((String)localInvoker.invoke(AuthorizationServiceGwtSupport.class, "getDatabaseVersion"), false, "");
     }
 
     @Override
     public UserMenuWrapper getUserMenu(String userName) throws Exception {
-        return localInvoker.invoke(AuthorizationServiceSupport.class, "getUserMenu", userName);
+        return localInvoker.invoke(AuthorizationServiceGwtSupport.class, "getUserMenu", userName);
     }
 
     @Override
