@@ -34,6 +34,7 @@
             <module>barsgl-ejb-core</module>
             <module>barsgl-ejb-common</module>
             <module>barsgl-bankjar</module>
+            <module>barsgl-jpa</module>
             <module>barsgl-ejb</module>
             <module>barsgl-ejb-testing</module>
             <module>barsgl-ejbtest</module>
