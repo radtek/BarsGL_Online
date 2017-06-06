@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
+import ru.rbt.barsgl.ejbtesting.test.DdlSupportBeanTesting;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -21,72 +22,10 @@ import static ru.rbt.ejbcore.mapping.YesNo.Y;
  */
 public class PostingDateIT extends AbstractRemoteIT {
 
-    public static final String NEW_VIEW
-            = "CREATE OR REPLACE VIEW V_GL_OPER_POD as"
-            + " select v1.gloid, v1.pod_type,\n"
-            + "       case when v1.pod_type = 'HARD' then cast ('2012-12-12' as date) else cast (null as date) end pod\n"
-            + "  from\n"
-            + " (\n"
-            + "    select gloid,\n"
-            + "           case when o.fan = 'Y' and o.strn = 'N' then 'CURRENT' \n"
-            + "                when o.fan = 'N' and o.strn = 'Y' then 'LAST'   \n"
-            + "                when o.fan = 'Y' and o.strn = 'Y' then 'STANDARD'\n"
-            + "                when o.fan = 'N' and o.strn = 'N' then 'HARD'    \n"
-            + "           end pod_type\n"
-            + "      from GL_OPER o\n"
-            + "  ) v1";
-
-    //public static final String AUTH = "call CHGAUT2 (CURRENT SCHEMA, 'V_GL_OPER_POD', 'FILE', 'DWHDATA')";
-//    @BeforeClass
-//    public static void initClass() {
-//        baseEntityRepository.executeNativeUpdate("call DROPVIEW_IF_EXISTS(CURRENT SCHEMA, 'V_GL_OPER_POD')");
-//    }
     @AfterClass
     public static void teardownClass() {
-//        baseEntityRepository.executeNativeUpdate("call DROPVIEW_IF_EXISTS(CURRENT SCHEMA, 'V_GL_OPER_POD')");
-//        baseEntityRepository.executeNativeUpdate(
-//                                "CREATE VIEW V_GL_OPER_POD AS\n" +
-//                                "SELECT GLOID\n" +
-//                                "       , POD_TYPE\n" +
-//                                "       , CASE WHEN POD_TYPE = 'HARD' THEN POSTDATE ELSE CAST (NULL AS DATE) END POD\n" +
-//                                "FROM\n" +
-//                                "(\n" +
-//                                "    SELECT GLOID\n" +
-//                                "           , CASE\n" +
-//                                "                WHEN OPER_CLASS = 'MANUAL'\n" +
-//                                "                    OR (OPER_CLASS = 'AUTOMATIC' AND SRC_PST IN ('ARMPRO', 'SECMOD')) THEN 'HARD'\n" +
-//                                "                ELSE 'STANDARD' END POD_TYPE\n" +
-//                                "           , case\n" +
-//                                "                when OPER_CLASS = 'MANUAL' then POSTDATE\n" +
-//                                "                when OPER_CLASS = 'AUTOMATIC' AND SRC_PST IN ('ARMPRO', 'SECMOD') then VDATE\n" +
-//                                "             end POSTDATE\n" +
-//                                "      FROM GL_OPER O\n" +
-//                                ") V");
-//
-//        baseEntityRepository.executeNativeUpdate(AUTH);
-        baseEntityRepository.executeNativeUpdate("CREATE OR REPLACE FORCE VIEW V_GL_OPER_POD (GLOID, POD_TYPE, POD) AS \n"
-                + "  SELECT GLOID\n"
-                + "       , POD_TYPE\n"
-                + "       , CASE WHEN POD_TYPE = 'HARD' THEN POSTDATE ELSE CAST (NULL AS DATE) END POD\n"
-                + "FROM\n"
-                + "(\n"
-                + "    SELECT GLOID\n"
-                + "           , CASE\n"
-                + "                WHEN OPER_CLASS = 'MANUAL'\n"
-                + "                    OR (OPER_CLASS = 'AUTOMATIC' AND SRC_PST IN ('ARMPRO', 'SECMOD', 'IMEX', 'AXAPTA')) THEN 'HARD'\n"
-                + "                ELSE 'STANDARD' END POD_TYPE\n"
-                + "           , case\n"
-                + "                when OPER_CLASS = 'MANUAL' then POSTDATE\n"
-                + "                when OPER_CLASS = 'AUTOMATIC' and SRC_PST IN ('ARMPRO', 'SECMOD', 'IMEX', 'AXAPTA') then\n"
-                + "                    case when VDATE < CC.MIN_DT then MIN_DT else VDATE end\n"
-                + "             end POSTDATE\n"
-                + "      FROM GL_OPER O,\n"
-                + "           (SELECT MIN(DAT) MIN_DT\n"
-                + "              FROM CAL C\n"
-                + "             WHERE C.HOL <> 'X' AND CCY = 'RUR'\n"
-                + "               AND C.DAT > (SELECT CURDATE - 14 FROM GL_OD)) CC\n"
-                + ") V"
-        );
+        remoteAccess.invoke(DdlSupportBeanTesting.class, "createGlOperPodViewOld", new Object[]{});
+
     }
 
     /**
@@ -100,8 +39,10 @@ public class PostingDateIT extends AbstractRemoteIT {
 
         Operday operday = getOperday();
 
-        baseEntityRepository.executeNativeUpdate(NEW_VIEW);
+//        baseEntityRepository.executeNativeUpdate(NEW_VIEW);
         //baseEntityRepository.executeNativeUpdate(AUTH);
+
+        remoteAccess.invoke(DdlSupportBeanTesting.class, "createGlOperPodViewNew", new Object[]{});
 
         GLOperation operation = new GLOperation();
         operation.setStorno(N);
