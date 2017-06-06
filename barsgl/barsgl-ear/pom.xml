@@ -4,7 +4,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.1.0</version>
     </parent>
 
     <artifactId>barsgl-ear</artifactId>
@@ -637,7 +637,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>barsgl-jpa</artifactId>
-            <version>${project.version}</version>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
