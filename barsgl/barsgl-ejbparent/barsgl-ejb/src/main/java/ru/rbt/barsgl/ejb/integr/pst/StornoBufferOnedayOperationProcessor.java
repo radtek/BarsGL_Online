@@ -44,7 +44,8 @@ public class StornoBufferOnedayOperationProcessor extends GLOperationProcessor {
     public boolean isSupported(GLOperation operation) {
         return     !operation.isFan()                                                                   // не веер
                 && isStornoOneday(operation)                                                            // сторно в тот же день
-                && BUFFER == operdayController.getOperday().getPdMode();                                // режим BUFFER
+                && BUFFER == operdayController.getOperday().getPdMode()
+                && !operation.isTech();                                                                 // режим BUFFER
     }
 
     @Override
