@@ -44,6 +44,8 @@ public class OperationTechHandsDlg2 extends OperationTechDlg {
         else if (action == FormAction.PREVIEW){
             ok.setVisible(false);
         }
+
+        setControlsEnabled();
     }
 
     private Button createSignButton(String caption){
@@ -71,6 +73,8 @@ public class OperationTechHandsDlg2 extends OperationTechDlg {
 
     @Override
     protected boolean onClickOK() throws Exception {
+        if (!checkOneSideData())
+            return false;
         operationAction = ButtonOperAction.OK;
         return super.onClickOK();
     }

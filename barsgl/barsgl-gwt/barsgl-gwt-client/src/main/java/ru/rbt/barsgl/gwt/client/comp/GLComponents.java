@@ -368,7 +368,7 @@ public class GLComponents {
 
         int keyIndex = numberCode ? 1 : 0;
         DataListBoxEx box = new DataListBoxEx(new ListBoxSqlDataProvider(withEmptyValue, filial,
-                "select CCPCD as CBCC, CCBBR as CBCCN, CCPCD || ' ' || CCBBR as TEXT from IMBCBCMP"
+                "select CCPCD as CBCC, CCBBR as CBCCN, CCPCD || ' ' || CCBBR as TEXT from IMBCBCMP WHERE CCPRI = 'Y'"
                 , columns, null, sort, new StringRowConverter(keyIndex, 2)));
         box.setWidth(width);
         return box;

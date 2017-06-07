@@ -244,8 +244,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
 
     private void updateAccount(final Side side, TxtBox mAccType)
     {
-        Window.alert("updateAccount: "+side.toString());
-
         String accType = mAccType.getText();
 
         if (null != accType && accType.length()>0) {
@@ -275,7 +273,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             cbccn = mFilial.getValue().toString();
         }
 
-        if ((ccy!=null) && (!ccy.isEmpty()) && (cbccn!=null) && (!cbccn.isEmpty()) && checkOneSideData(mCurrency,mFilial))
+        if ((ccy!=null) && (!ccy.isEmpty()) && (cbccn!=null) && (!cbccn.isEmpty()))
         {
             final ManualAccountWrapper accWrapper = new ManualAccountWrapper();
             accWrapper.setAccountType(Long.parseLong(mAccType.getValue()));
@@ -288,7 +286,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                     if (!wrapper.isError()) {
                         mAccount.setValue(wrapper.getResult().getBsaAcid());
 
-                        if (!mAccount.hasValue())
+                       /* if (!mAccount.hasValue())
                         {
                             if (side.equals(Side.DEBIT)) {
                                 DialogUtils.showInfo("Для выбранных параметров счёт по дебету не найден");
@@ -296,7 +294,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                             else {
                                 DialogUtils.showInfo("Для выбранных параметров счёт по кредиту не найден");
                             }
-                        }
+                        }*/
                     }
                     else
                     {
@@ -313,13 +311,10 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
     /**
      * Проверяем данные по дебету и кредиту
      */
-    private boolean checkOneSideData(DataListBoxEx mCurrency, DataListBoxEx mFilial)
+    protected boolean checkOneSideData()
     {
-        Window.alert("checkOneSideData");
-
         String curDt = "";
         String curCr = "";
-        boolean result = false;
 
 
         if (mDtCurrency!=null && mDtCurrency.getParam("CCY")!=null) {
@@ -330,20 +325,32 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             curCr = mCrCurrency.getParam("CCY").toString();
         }
 
+        String filialDt = mDtFilial.getValue().toString();
+        String filialCr = mCrFilial.getValue().toString();
+
+        if (!filialDt.equalsIgnoreCase(filialCr))
+        {
+            DialogUtils.showInfo("Операции по техсчетам должны проводиться только в рамках одного филиала");
+            return false;
+        }
+
         if (!curDt.equals("RUR") && !curCr.equals("RUR"))
         {
             DialogUtils.showInfo("Одна из валют должна быть RUR");
-            if (mCurrency!=null)
-            {
-                mCurrency.setSelectValue("RUR");
-            }
+            return false;
         }
-        else {
-            result = true;
+
+        String bsaccidDt = mDtAccount.getValue();
+        String bsaccidCr = mCrAccount.getValue();
+
+        if (bsaccidDt.equalsIgnoreCase(bsaccidCr))
+        {
+            DialogUtils.showInfo("Невозможно осужествить операцию в рамках одного счёта");
+            return false;
         }
 
 
-        return result;
+        return true;
     }
 
     private Object[] createParams(Grid grid, int ind, boolean enabled){
