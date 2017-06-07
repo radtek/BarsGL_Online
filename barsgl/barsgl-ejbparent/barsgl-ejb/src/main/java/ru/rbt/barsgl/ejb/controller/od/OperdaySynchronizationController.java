@@ -278,7 +278,7 @@ public class OperdaySynchronizationController {
             try (PreparedStatement selectStatement = connection.prepareStatement(
                     " SELECT TRIGGER_NAME, STATUS\n" +
                             "FROM USER_TRIGGERS WHERE TABLE_NAME = 'PD' \n" +
-                            " AND TRIGGER_NAME NOT IN ('PD_AI_JRN','PD_AD_JRN','PD_AU_JRN')")
+                            " AND TRIGGER_NAME NOT IN ('PD_AI_JRN','PD_AD_JRN','PD_AU_JRN') AND TRIGGER_NAME NOT LIKE '%MIGR%'")
                  ; ResultSet selectResultSet = selectStatement.executeQuery()) {
                 while (selectResultSet.next()) {
                     switchOneTrigger(selectResultSet.getString("TRIGGER_NAME"), off);
