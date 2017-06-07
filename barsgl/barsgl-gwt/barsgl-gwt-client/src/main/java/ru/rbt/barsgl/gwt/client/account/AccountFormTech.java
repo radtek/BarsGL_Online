@@ -99,10 +99,10 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 80));
         result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 60));
         Column colCBCCN;
-        result.addColumn(colCBCCN = new Column("CBCC", STRING, "Код филиала (цифровой)", 60));
-        colCBCCN.setVisible(false);
+        result.addColumn(colCBCCN = new Column("CBCCN", STRING, "Код филиала (цифровой)", 60));
+        colCBCCN.setVisible(true);
         result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 60));
-        result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
+        //result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
         Column colAcod;
         result.addColumn(colAcod = new Column("ACOD", STRING, "ACOD", 380));
         colAcod.setVisible(false);

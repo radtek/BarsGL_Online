@@ -75,7 +75,7 @@ public abstract class DlgFrame {
     	return null;
     }
 
-    protected void fillContent() {}
+    protected void fillContent()  {}
 
     protected abstract boolean onClickOK() throws Exception;
 

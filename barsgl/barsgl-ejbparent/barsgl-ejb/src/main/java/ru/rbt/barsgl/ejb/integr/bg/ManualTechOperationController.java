@@ -822,7 +822,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 //            }
             postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
             BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL);
-            //checkHand12Diff(posting0);
+            checkHand12Diff(posting0);
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             // тестируем статус - что никто еще не менял
             updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);

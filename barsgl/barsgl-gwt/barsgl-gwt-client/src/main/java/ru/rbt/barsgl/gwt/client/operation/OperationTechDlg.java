@@ -6,14 +6,10 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
-import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
@@ -31,17 +27,18 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 
 /**
  * Created by akichigi on 19.03.15.
@@ -78,12 +75,12 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     public void beforeCreateContent(){
-        /*isAsyncListsCached = false;
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        isAsyncListsCached = false;
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCachedTech");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCachedTech", true);*/
+        LocalDataStorage.putParam("isAsyncListsCachedTech", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -311,8 +308,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void fillContent() {
-        fillUp();
-        /*if (isAsyncListsCached != null && isAsyncListsCached){
+        //fillUp();
+        if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -334,8 +331,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
                 }
             };
 
-            timer.scheduleRepeating(1000);
-        }*/
+            timer.scheduleRepeating(100);
+        }
     }
 
     protected void setControlsDisabled(){
