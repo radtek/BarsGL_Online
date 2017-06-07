@@ -41,7 +41,7 @@ public class Utl4Tests {
 
     public static void deleteGlAccountWithLinks(BaseEntityRepository baseEntityRepository, String keysString) {
         Date date = parseDate("25.02.2015", "dd.MM.yyyy");
-        final String CUST_EMPTY = "-1";
+        final String CUST_EMPTY = "0";
         final String SEQ_EMPTY = "GL_SEQ_IS_EMPTY";
 
         try {

@@ -57,7 +57,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
     }
 
     /**
-     * Создание счета и повторный запрос на создание такого счета
+     * Создание счета и повторный запрос на создание такого счета (тип клиента и код срока: 00 == null)
      * @throws SQLException
      */
     @Test
@@ -82,6 +82,56 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
         Assert.assertNotNull(account2);
         Assert.assertEquals(account.getBsaAcid(), account2.getBsaAcid());
         checkResponce(request2, account2.getBsaAcid(), "N");
+    }
+
+    /**
+     * Тест создания счета из ручного ввода и поиска его по ключам (тип клиента и код срока: 00 == null)
+     * @throws SQLException
+     */
+    @Test
+    public void testFindServiceAccountWith00() throws SQLException {
+
+/*
+        DataRecord data = baseEntityRepository.selectFirst("select BBCUST from SDCUSTPD" +
+                " where BXCTYP < 3 and not coalesce(BBCNA1, ' ') = ' ' and not coalesce(BXRUNM, ' ') = ' '");
+        String custNo = data.getString(0);
+        data = baseEntityRepository.selectFirst("select p.ACCTYPE from GL_ACTPARM p join GL_ACTNAME n on n.ACCTYPE = p.ACCTYPE" +
+                " where CUSTYPE = '00' and TERM = '00' and TECH_ACT <> 'Y' and DTB <= ? and DTE is null", getOperday().getCurrentDate());
+        String accType = data.getString(0);
+*/
+
+        String custNo = getCustomerNumber();
+        String accType = getAccountType("00", "00");
+        String dealId = substring("" + System.currentTimeMillis(), 1, 10);
+        String src = "AXAPTA";
+
+        GLAccountRequest request = createAccountRequest("A02", "RUR", custNo, accType, null, "00", src, dealId, null, null);
+        GLAccount account = createServiceAccount(request);
+
+        account = (GLAccount) baseEntityRepository.findById(GLAccount.class, account.getId());
+        Assert.assertNotNull(account);
+        Assert.assertNotNull(account);
+        Assert.assertNull(account.getSubDealId());
+        Assert.assertTrue(0 == account.getTerm());
+        Assert.assertNull(account.getCbCustomerType());
+
+        Date dateOpen = null != request.getDateOpen() ? request.getDateOpen() : getOperday().getCurrentDate();
+        AccountKeys keys = remoteAccess.invoke(GLAccountController.class, "createRequestAccountKeys", request, dateOpen);
+        request = (GLAccountRequest) baseEntityRepository.findById(GLAccountRequest.class, request.getId());
+        Assert.assertEquals(GLAccountRequest.RequestStatus.OK, request.getStatus());
+        checkGlAccount(account, keys.toString());
+        String error = checkResponce(request, account.getBsaAcid(), "Y");
+        Assert.assertNull(error);
+        checkDefinedAccount(GLOperation.OperSide.N, account.getBsaAcid(), keys.toString());
+
+        GLAccountRequest request1 = createAccountRequest("A02", "RUR", custNo, accType, "00", null, src, dealId, null, null);
+        GLAccount account1 = createServiceAccount(request1);
+        Assert.assertEquals(account, account1);
+
+        request1 = (GLAccountRequest) baseEntityRepository.findById(GLAccountRequest.class, request1.getId());
+        Assert.assertEquals(GLAccountRequest.RequestStatus.OK, request1.getStatus());
+        error = checkResponce(request1, account.getBsaAcid(), "N");
+        Assert.assertNull(error);
     }
 
     /**
@@ -228,7 +278,10 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
 
         Assert.assertEquals(account.getDealSource(), keys.getDealSource());
         Assert.assertEquals(account.getDealId(), keys.getDealId());
-        Assert.assertEquals(account.getSubDealId(), keys.getSubDealId());
+        if (isEmpty(keys.getSubDealId()))
+            Assert.assertNull(account.getSubDealId());
+        else
+            Assert.assertEquals(account.getSubDealId(), keys.getSubDealId());
     }
 
     private String checkResponce(GLAccountRequest request, String bsaAcid, String newAcc) throws SQLException {
@@ -257,8 +310,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
     }
 
     private GLAccountRequest createAccountRequest(String branch, String ccy, String customerNumber,
-                                                  String accountType, String custType, String term) {
-        long stamp = System.currentTimeMillis();
+                                                  String accountType, String custType, String term ) {
         return createAccountRequest(branch, ccy, customerNumber, accountType, custType, term,
                 getOperday().getCurrentDate());
 
@@ -269,7 +321,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
                                                   Date dateOpen) {
         long stamp = System.currentTimeMillis();
         return createAccountRequest(branch, ccy, customerNumber, accountType, custType, term,
-                "K+TP", substring("" + stamp, 1, 6), substring("" + stamp, 6, 10),
+                "K+TP", substring("" + stamp, 1, 10), substring("" + stamp, 6, 10),
                 dateOpen);
     }
 

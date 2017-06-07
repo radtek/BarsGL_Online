@@ -65,6 +65,46 @@ public class ManualAccountIT extends AbstractRemoteIT {
     }
 
     /**
+     * Тест создания счета из ручного ввода и поиска его по ключам (тип клиента и код срока: 00 == null)
+     * @throws SQLException
+     */
+    @Test
+    public void testFindManualAccountWith00() throws SQLException {
+/*
+        DataRecord data = baseEntityRepository.selectFirst("select BBCUST from SDCUSTPD" +
+                " where BXCTYP < 3 and not coalesce(BBCNA1, ' ') = ' ' and not coalesce(BXRUNM, ' ') = ' '");
+        String custNo = data.getString(0);
+        data = baseEntityRepository.selectFirst("select p.ACCTYPE from GL_ACTPARM p join GL_ACTNAME n on n.ACCTYPE = p.ACCTYPE" +
+                                                            " where CUSTYPE = '00' and TERM = '00' and TECH_ACT <> 'Y' and DTB <= ? and DTE is null", getOperday().getCurrentDate());
+        Long accType = data.getLong(0);
+*/
+        String custNo = getCustomerNumber();
+        Long accType = Long.parseLong(getAccountType("00", "00"));
+        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, null, null, "00");
+        GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        Assert.assertNotNull(account);
+        Assert.assertNull(account.getSubDealId());
+        Assert.assertTrue(0 == account.getTerm());
+        Assert.assertNull(account.getCbCustomerType());
+        AccountKeys keys = remoteAccess.invoke(GLAccountController.class, "createWrapperAccountKeys", wrapper, getOperday().getCurrentDate());
+        checkDefinedAccount(GLOperation.OperSide.N, wrapper.getBsaAcid(), keys.toString());
+
+        RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
+        Assert.assertTrue(res.isError());
+        Assert.assertFalse(isEmpty(res.getMessage()));
+        Assert.assertTrue(res.getMessage().contains(account.getBsaAcid()));
+
+        wrapper.setTerm(null);
+        res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
+        Assert.assertTrue(res.isError());
+        Assert.assertFalse(isEmpty(res.getMessage()));
+        Assert.assertTrue(res.getMessage().contains(account.getBsaAcid()));
+
+        System.out.println("Message: " + res.getMessage());
+
+    }
+
+    /**
      * Создание счета по ручному вводу для разных систем с подменой Midas SQ
      */
     @Test
@@ -163,7 +203,6 @@ public class ManualAccountIT extends AbstractRemoteIT {
         Assert.assertFalse(isEmpty(res.getMessage()));
         System.out.println("Message: " + res.getMessage());
     }
-
 
     /**
      * Тест редактирования счета из ручного ввода
@@ -358,6 +397,8 @@ public class ManualAccountIT extends AbstractRemoteIT {
             wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(dateOpen));
         }
         RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
+        if (res.isError())
+            System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
         wrapper = res.getResult();
         Assert.assertTrue(0 < wrapper.getId());

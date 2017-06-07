@@ -1105,12 +1105,12 @@ public class GLAccountController {
             throw new ValidationError(ACCOUNT_TYPE_IS_NOT_NUMBER, "", request.getAccountType(), request.getColumnName("accountType"));
         }
         try {
-            wrapper.setCbCustomerType(Short.parseShort(trimstr(request.getCbCustomerType())));
+            wrapper.setCbCustomerType(isEmpty(request.getCbCustomerType()) ? null : Short.parseShort(trimstr(request.getCbCustomerType())));
         } catch (NumberFormatException e) {
             throw new ValidationError(CUST_TYPE_IS_NOT_NUMBER, "", request.getCbCustomerType(), request.getColumnName("cbCustomerType"));
         }
         try {
-            wrapper.setTerm(Short.parseShort(trimstr(request.getTerm())));
+            wrapper.setTerm(isEmpty(request.getTerm()) ? null : Short.parseShort(trimstr(request.getTerm())));
         } catch (NumberFormatException e) {
             throw new ValidationError(TERM_IS_NOT_NUMBER, "", request.getTerm(), request.getColumnName("term"));
         }

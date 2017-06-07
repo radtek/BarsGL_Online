@@ -785,4 +785,16 @@ public abstract class AbstractRemoteIT  {
         remoteAccess.invoke(GLPLAccountTesting.class, "executeAutonomic", sql);
     }
 
+    protected static String getCustomerNumber() throws SQLException {
+        DataRecord data = baseEntityRepository.selectFirst("select BBCUST from SDCUSTPD" +
+                " where BXCTYP < 3 and not coalesce(BBCNA1, ' ') = ' ' and not coalesce(BXRUNM, ' ') = ' '");
+        return data.getString(0);
+    }
+
+    protected static String getAccountType(String custType, String term) throws SQLException {
+        DataRecord data = baseEntityRepository.selectFirst("select p.ACCTYPE from GL_ACTPARM p join GL_ACTNAME n on n.ACCTYPE = p.ACCTYPE" +
+                " where CUSTYPE = ? and TERM = ? and TECH_ACT <> 'Y' and DTB <= ? and DTE is null", StringUtils.rightPad(custType,3), term, getOperday().getCurrentDate());
+        return data.getString(0);
+    }
+
 }
