@@ -1,12 +1,10 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;
-import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.NewTechOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountTechBaseQuickFilterAction;
@@ -18,7 +16,6 @@ import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
@@ -27,7 +24,6 @@ import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.shared.enums.SecurityActionCode;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -103,10 +99,10 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 80));
         result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 60));
         Column colCBCCN;
-        result.addColumn(colCBCCN = new Column("CBCC", STRING, "Код филиала (цифровой)", 60));
-        colCBCCN.setVisible(false);
+        result.addColumn(colCBCCN = new Column("CBCCN", STRING, "Код филиала (цифровой)", 60));
+        colCBCCN.setVisible(true);
         result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 60));
-        result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
+        //result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
         Column colAcod;
         result.addColumn(colAcod = new Column("ACOD", STRING, "ACOD", 380));
         colAcod.setVisible(false);
