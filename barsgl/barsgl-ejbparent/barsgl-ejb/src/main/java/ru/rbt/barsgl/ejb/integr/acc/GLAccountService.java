@@ -380,9 +380,12 @@ public class GLAccountService {
                 throw new ValidationError(ACCOUNT_IS_CONTROLABLE, accType);
             }
 
+            BankCurrency bankCurrency  = bankCurrencyRepository.getCurrency(glCCY);
+
             AccountKeys accKey =  AccountKeysBuilder.create()
                                     .withAccountType(accType)
                                     .withCurrency(glCCY)
+                                    .withCurrencyDigital(bankCurrency.getDigitalCode())
                                     .withDealSource(accountWrapper.getDealSource())
                                     .withCompanyCode(cbCCN).build();
 

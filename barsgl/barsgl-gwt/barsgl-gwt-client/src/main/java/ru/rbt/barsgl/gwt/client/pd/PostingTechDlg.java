@@ -16,8 +16,6 @@ import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
-import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
@@ -36,16 +34,19 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createLabel;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createTxtBox;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
-import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
  * Created by ER18837 on 05.04.16.
@@ -123,11 +124,11 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     public void beforeCreateContent(){
-        /*isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);*/
+        LocalDataStorage.putParam("isAsyncListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -615,9 +616,16 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     protected void fillContent() {
-        fillUp();
-        showPreload(false);
-        /*if (isAsyncListsCached != null && isAsyncListsCached){
+
+        /*for (int i = 0; i<10; i++)
+        {
+            showPreload(true);
+            timer.scheduleRepeating(500);
+        }*/
+
+
+
+        if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -640,7 +648,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             };
 
             timer.scheduleRepeating(500);
-        }*/
+        }
     }
 
 }
