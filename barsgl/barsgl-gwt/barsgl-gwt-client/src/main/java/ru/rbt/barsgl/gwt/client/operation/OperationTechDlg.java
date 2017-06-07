@@ -36,6 +36,7 @@ import java.util.Date;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createCachedDealSourceAuthListBox;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getSumma;
 import static ru.rbt.barsgl.gwt.core.comp.Components.*;
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
@@ -75,12 +76,12 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     public void beforeCreateContent(){
-        /*isAsyncListsCached = false;
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        isAsyncListsCached = false;
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCachedTech");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCachedTech", true);*/
+        LocalDataStorage.putParam("isAsyncListsCachedTech", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -308,8 +309,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void fillContent() {
-        fillUp();
-        /*if (isAsyncListsCached != null && isAsyncListsCached){
+        //fillUp();
+        if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -331,8 +332,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
                 }
             };
 
-            timer.scheduleRepeating(1000);
-        }*/
+            timer.scheduleRepeating(100);
+        }
     }
 
     protected void setControlsDisabled(){

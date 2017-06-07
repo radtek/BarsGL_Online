@@ -46,6 +46,7 @@ import static ru.rbt.barsgl.gwt.core.comp.Components.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
  * Created by ER18837 on 05.04.16.
@@ -123,11 +124,11 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     public void beforeCreateContent(){
-        /*isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);*/
+        LocalDataStorage.putParam("isAsyncListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -615,9 +616,16 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     protected void fillContent() {
-        fillUp();
-        showPreload(false);
-        /*if (isAsyncListsCached != null && isAsyncListsCached){
+
+        /*for (int i = 0; i<10; i++)
+        {
+            showPreload(true);
+            timer.scheduleRepeating(500);
+        }*/
+
+
+
+        if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -640,7 +648,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             };
 
             timer.scheduleRepeating(500);
-        }*/
+        }
     }
 
 }

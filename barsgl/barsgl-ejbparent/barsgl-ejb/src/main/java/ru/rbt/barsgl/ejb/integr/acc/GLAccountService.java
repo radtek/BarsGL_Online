@@ -23,7 +23,6 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
@@ -157,7 +156,7 @@ public class GLAccountService {
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             //glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
-            BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
+            BankCurrency currency = bankCurrencyRepository.getCurrency(keys.getCurrency());
             keys.setCurrencyDigital(currency.getDigitalCode());
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
@@ -166,7 +165,7 @@ public class GLAccountService {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
                 } catch (Exception e) {
-                    throw new DefaultApplicationException(e.getMessage(), e);
+                    throw new DefaultApplicationException(e);
                 }
             }).getBsaAcid();
         } else {
@@ -282,7 +281,7 @@ public class GLAccountService {
         Long userId = wrapper.getUserId();
         if (null == userId)
             userId = userContext.getUserId();
-        String acc1 = StringUtils.substr(acc2, 3);
+        String acc1 = substr(acc2, 3);
         if (FormAction.CREATE == action) {
             switch (acc1) {
                 case "707":
@@ -370,8 +369,6 @@ public class GLAccountService {
             String glCCY = accountWrapper.getCurrency();
             String cbCCN = accountWrapper.getFilial();
 
-            BankCurrency currency = bankCurrencyRepository.getCurrency(glCCY);
-
             if (null != (glAccount = glAccountController.findTechnicalAccountTH(accTypeGL,glCCY,cbCCN))) {
                 throw new ValidationError(ACCOUNTGLTH_ALREADY_EXISTS, glAccount.getBsaAcid());
             }
@@ -380,10 +377,12 @@ public class GLAccountService {
                 throw new ValidationError(ACCOUNT_IS_CONTROLABLE, accType);
             }
 
+            BankCurrency bankCurrency  = bankCurrencyRepository.getCurrency(glCCY);
+
             AccountKeys accKey =  AccountKeysBuilder.create()
                                     .withAccountType(accType)
-                                    .withCurrencyDigital(currency.getDigitalCode())
-                                    .withCurrency(currency.getCurrencyCode())
+                                    .withCurrency(glCCY)
+                                    .withCurrencyDigital(bankCurrency.getDigitalCode())
                                     .withDealSource(accountWrapper.getDealSource())
                                     .withCompanyCode(cbCCN).build();
 

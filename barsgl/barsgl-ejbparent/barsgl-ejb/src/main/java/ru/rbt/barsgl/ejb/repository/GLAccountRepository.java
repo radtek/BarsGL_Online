@@ -987,9 +987,9 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     }
 
-    public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
-        List<GLAccount> accrecs = findNative(GLAccount.class, "select * from gl_acc a where a.acctype = ? and a.ccy = ? and a.cbccn = ? and a.rlntype = ?"
-                , 5, accountingType.getId(), glccy, cbccn, GLAccount.RelationType.NINE.getValue());
+    public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn, Date currentDate) {
+        List<GLAccount> accrecs = findNative(GLAccount.class, "select * from gl_acc a where a.acctype = ? and a.ccy = ? and a.cbccn = ? and a.rlntype = ? and (DTC is null or DTC > ?)"
+                , 5, accountingType.getId(), glccy, cbccn, GLAccount.RelationType.NINE.getValue(),currentDate);
         if (accrecs.isEmpty()) {
             return null;
         }

@@ -163,6 +163,7 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
 
         wrapper.setFl_ctrl(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
         wrapper.setPl_act(pl_act.getValue() ? BoolType.Y : BoolType.N);
+        wrapper.setTech_act(tech_act.getValue() ? BoolType.Y : BoolType.N);
     }
 
     private String checkRequeredString(String value, String columnCaption) {

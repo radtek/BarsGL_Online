@@ -141,7 +141,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getFilial(String bsaAcid, AccountKeys accountParams) {
         if (!isEmpty(bsaAcid)) {
-            if ((null!=accountParams) && (accountParams.getGlSequence()!=null) && (accountParams.getGlSequence().startsWith("TH")))
+            if ((null!=accountParams) && (accountParams.getGlSequence().startsWith("TH")))
             {
                 GLAccount account = glAccountRepository.findGLAccount(bsaAcid);
                 return account.getFilial();
@@ -301,7 +301,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         if (!isEmpty(bsaAcid))
             return getBSChapter(bsaAcid);
         else if (null != accountKeys)
-                if (accountKeys.getGlSequence().startsWith("TH"))
+                if (null!= accountKeys.getGlSequence() && accountKeys.getGlSequence().startsWith("TH"))
                 {
                     return GLOperation.flagTechOper;
                 }
