@@ -410,7 +410,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         try {
             Assert.notNull(curdate, "Параметр 'curdate' не может быть null");
             String sql = "select ACC2, PLCODE, ACOD, AC_SQ SQ, CUSTYPE from GL_ACTPARM " +
-                    "where ACCTYPE = ? and CUSTYPE = ? and TERM = ?" +
+                    "where ACCTYPE = ? and CUSTYPE = ? and TERM = ? " +
                     "and DTB <= ? and (DTE is null or DTE >= ?)";
             DataRecord res = selectFirst(sql, accType, ifEmpty(normalizeString(custype), "00"), ifEmpty(term, "00"), curdate, curdate);
             if (res == null) {
@@ -542,28 +542,18 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     public GLAccount findGLAccountAE(String branch, String currency, String customerNumber,
                                      String accountType, String cbCustType, String term, String glSeguence, Date dateCurrent) {
         try {
-            String custTypeField = "CBCUSTTYPE";
-            String termField = "TERM";
-            if (isEmpty(cbCustType)) {
-                cbCustType = "-1";
-                custTypeField = "coalesce(CBCUSTTYPE, -1)";
-            }
-            if (isEmpty(term)) {
-                term = "-1";
-                termField = "coalesce(TERM, -1)";
-            }
             //todo XX
             String addForXX = "";
             if (!isEmpty(glSeguence) && glSeguence.toUpperCase().startsWith("XX")){
                 addForXX = " and (dealid is null or dealid ='' or dealid ='нет') and (subdealid is null or subdealid ='' or subdealid ='нет')";
             }
             DataRecord data = selectFirst("select ID from GL_ACC where " +
-                            "BRANCH = ? and CCY = ? and CUSTNO = ? and ACCTYPE = ?" +
+                            " BRANCH = ? and CCY = ? and CUSTNO = ? and ACCTYPE = ?" +
                             " and GL_SEQ = ?" +
-                            " and (DTC is null or DTC > ?) and "
-                            + custTypeField + " = ? and " + termField + " = ? "
+                            " and (DTC is null or DTC > ?) and coalesce(CBCUSTTYPE, 0) = ? and coalesce(TERM, 0) = ? "
                             + addForXX
-                    , branch, currency, customerNumber, accountType, glSeguence, dateCurrent, cbCustType, term);
+                    , branch, currency, customerNumber, accountType, glSeguence, dateCurrent
+                    , ifEmpty(cbCustType, "0"), ifEmpty(term, "0"));
             return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -588,24 +578,13 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
                                       String accountType, String cbCustType, String term,
                                       String dealSrc, String dealId, String subdealId, Date dateCurrent) {
         try {
-            String custTypeField = "CBCUSTTYPE";
-            String termField = "TERM";
-            if (isEmpty(cbCustType)) {
-                cbCustType = "-1";
-                custTypeField = "coalesce(CBCUSTTYPE, -1)";
-
-            }
-            if (isEmpty(term)) {
-                term = "-1";
-                termField = "coalesce(TERM, -1)";
-            }
             DataRecord data = selectFirst("select ID from GL_ACC where " +
                             "BRANCH = ? and CCY = ? and CUSTNO = ? and ACCTYPE = ?" +
-                            " and coalesce(DEALID, '') = ? and coalesce(SUBDEALID, '') = ?" +
-                            " and (DTC is null or DTC > ?) and "
-                            + custTypeField + " = ? and " + termField + " = ? "
-                    , branch, currency, customerNumber,
-                    accountType, ifEmpty(dealId, ""), ifEmpty(subdealId, ""), dateCurrent, cbCustType, term);
+                            " and coalesce(DEALID, ' ') = ? and coalesce(SUBDEALID, ' ') = ?" +
+                            " and (DTC is null or DTC > ?) and coalesce(CBCUSTTYPE, 0) = ? and coalesce(TERM, 0) = ? "
+                    , branch, currency, customerNumber
+                    , accountType, ifEmpty(dealId, " "), ifEmpty(subdealId, " "), dateCurrent
+                    , ifEmpty(cbCustType, "0"), ifEmpty(term, "0"));
             return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

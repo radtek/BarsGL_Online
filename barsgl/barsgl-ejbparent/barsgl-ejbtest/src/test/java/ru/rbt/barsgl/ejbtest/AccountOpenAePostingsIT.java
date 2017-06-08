@@ -43,6 +43,7 @@ import static org.apache.commons.lang3.StringUtils.substring;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.ZERO;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteAccountByAcid;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.ejbcore.mapping.YesNo.N;
@@ -322,13 +323,13 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // проверка счетов
         String acidDr = "", acidCr = "";
         if (isEmpty(pst.getAccountDebit()))
-            acidDr = checkDefinedAccount(GLOperation.OperSide.D, operation.getAccountDebit(), operation.getAccountKeyDebit());
+            acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit());
         if (isEmpty(pst.getAccountCredit()))
             acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
 
         final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2";
         GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
-                operation, GLOperation.OperSide.D);
+                operation, D);
         Assert.assertNotNull(accountDt);
         Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
 
@@ -359,6 +360,82 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
 
+    }
+
+    /**
+     * Тест создания счетов ЦБ по проводке и поиска его (тип клиента и код срока: 00 == null)
+     * @throws ParseException
+     */
+    @Test public void testPostingFindAccountWith00() throws ParseException, SQLException {
+
+        EtlPosting pst = createPostingByCustTerm("00", "", "", "00", true );
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        // проверка счетов
+        if (isEmpty(pst.getAccountDebit()))
+            checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit());
+        if (isEmpty(pst.getAccountCredit()))
+            checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
+
+        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2";
+        GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, D);
+        Assert.assertNotNull(accountDt);
+        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+
+        GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, C);
+        Assert.assertNotNull(accountCt);
+        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+
+        EtlPosting pst1 = createPostingByCustTerm("", "00", "00", "", false );
+
+        GLOperation operation1 = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        Assert.assertEquals(operation.getAccountDebit(), operation1.getAccountDebit());
+        Assert.assertEquals(operation.getAccountCredit(), operation1.getAccountCredit());
+    }
+
+    private EtlPosting createPostingByCustTerm(String custTypeDt, String termDt, String custTypeCt, String termCt, boolean withDelete) {
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+//        pst.setAccountCredit("47407840700010060039");
+        pst.setAccountCredit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringCreditLike = "001;EUR;00831986;361050501;%s;%s;1111117;;47423;;;;DEALSRC;123451;SUBDEALID";  //   00114240
+        String keyStringCredit = format(keyStringCreditLike, custTypeDt, termDt);
+        Assert.assertTrue(isEmpty(new AccountKeys(keyStringCredit).getPlCode()));
+        if(withDelete)
+            deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
+        pst.setAccountKeyCredit(keyStringCredit);
+
+//        pst.setAccountDebit("47408840700010262894");
+        pst.setAccountDebit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        // 001;RUR;0000000018;912030101;;;XX00000007;0001;99997;;6280;01;K+TP;955304;
+        final String keyStringDebitLike = "001;EUR;00642479;361050501;%s;%s;2222228;;47423;;;;DEALSRC;123452;SUBDEALID";
+        String keyStringDebit = format(keyStringDebitLike, custTypeCt, termCt);
+        Assert.assertTrue(isEmpty(new AccountKeys(keyStringDebit).getPlCode()));
+        if(withDelete)
+            deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
+        pst.setAccountKeyDebit(keyStringDebit);
+
+        pst.setAmountCredit(new BigDecimal("14.99"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.EUR);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        return pst;
     }
 
     /**
@@ -419,7 +496,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertEquals(operation, accountDt.getOperation());
 
         // проверка счетов
-        String acidDr = checkDefinedAccount(GLOperation.OperSide.D, operation.getAccountDebit(), operation.getAccountKeyDebit(), ZERO);
+        String acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit(), ZERO);
         String acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit(), ZERO);
 
         // проверка проводок
@@ -475,9 +552,10 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * @return
      */
     private void deleteAllReleations(String bsaacid) {
-        logger.info("deleted gl_acc: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid = ?", bsaacid));
-        logger.info("deleted acc: " + baseEntityRepository.executeNativeUpdate("delete from acc a where a.id in (select r.acid from accrln r where r.bsaacid = ?)", bsaacid));
-        logger.info("deleted accrln: " + baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid = ?", bsaacid));
+        logger.info("deleted GL_ACC: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid = ?", bsaacid));
+        logger.info("deleted ACC: " + baseEntityRepository.executeNativeUpdate("delete from acc a where a.id in (select r.acid from accrln r where r.bsaacid = ?)", bsaacid));
+        logger.info("deleted ACCRLN: " + baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid = ?", bsaacid));
+        logger.info("deleted ACCRLNEXT: " + baseEntityRepository.executeNativeUpdate("delete from accrlnext where bsaacid = ?", bsaacid));
         logger.info("deleted BSAACC: " + baseEntityRepository.executeNativeUpdate("delete from BSAACC where id = ?", bsaacid));
     }
 
@@ -550,7 +628,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Throwable exception = null;
         try {
             remoteAccess.invoke(GLAccountController.class
-                    , "fillAccountKeysMidas", GLOperation.OperSide.D, pst.getValueDate(), acDt);
+                    , "fillAccountKeysMidas", D, pst.getValueDate(), acDt);
         }catch(Throwable e){
             exception = e;
         }
@@ -829,7 +907,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // проверка счетов
         String acidDr = "", acidCr = "";
         if (isEmpty(pst.getAccountDebit()))
-            acidDr = checkDefinedAccount(GLOperation.OperSide.D, operation.getAccountDebit(), operation.getAccountKeyDebit());
+            acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit());
         if (isEmpty(pst.getAccountCredit()))
             acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
 
