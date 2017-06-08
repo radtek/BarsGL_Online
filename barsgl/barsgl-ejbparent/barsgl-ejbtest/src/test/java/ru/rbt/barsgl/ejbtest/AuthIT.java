@@ -1,14 +1,13 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
-import ru.rbt.security.entity.AppUser;
-import ru.rbt.security.entity.access.*;
-import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
 import ru.rbt.barsgl.shared.Builder;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.shared.Builder;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.entity.access.*;
 import ru.rbt.shared.LoginResult;
 import ru.rbt.shared.access.UserMenuItemWrapper;
 import ru.rbt.shared.access.UserMenuWrapper;
@@ -153,7 +152,7 @@ public class AuthIT extends AbstractRemoteIT{
         baseEntityRepository.executeUpdate("delete from UserRoleRln r where r.id = ?1", userRoleRln.getId());
         objects.remove(userRoleRln);
 
-        LoginResult result2 = remoteAccess.invoke(AuthorizationServiceSupport.class, "login", user.getUserName(), "123");
+        LoginResult result2 = remoteAccess.invoke(AuthorizationServiceGwtSupport.class, "login", user.getUserName(), "123");
         Assert.assertEquals(result2.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
         Assert.assertTrue(result2.getUserMenu().getRootElements().isEmpty());
     }
