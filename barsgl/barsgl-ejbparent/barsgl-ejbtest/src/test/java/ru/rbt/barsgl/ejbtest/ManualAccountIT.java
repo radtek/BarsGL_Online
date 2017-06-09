@@ -78,7 +78,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
                                                             " where CUSTYPE = '00' and TERM = '00' and TECH_ACT <> 'Y' and DTB <= ? and DTE is null", getOperday().getCurrentDate());
         Long accType = data.getLong(0);
 */
-        String custNo = getCustomerNumber();
+        String custNo = getCustomerNumberEmptyType();
         Long accType = Long.parseLong(getAccountType("00", "00"));
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, null, null, "00");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
@@ -280,7 +280,10 @@ public class ManualAccountIT extends AbstractRemoteIT {
      */
     @Test
     public void testCloseManualAccountDateError() throws SQLException {
-        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00699937", 351021001, getOperday().getCurrentDate());
+        String custType = "20";
+        String custNo = getCustomerNumberByType(custType);
+        Long accType = Long.parseLong(getAccountType(custType, "00"));
+        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, getOperday().getCurrentDate());
         wrapper.setUserId(USER_ID);
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
 
@@ -353,7 +356,10 @@ public class ManualAccountIT extends AbstractRemoteIT {
      */
     @Test
     public void testCloseManualAccountOperError() throws SQLException {
-        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00640539", 351021001, getOperday().getCurrentDate(), "subdeal", "01");
+        String custType = "20";
+        String custNo = getCustomerNumberByType(custType);
+        Long accType = Long.parseLong(getAccountType(custType, "00"));
+        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
 
         long stamp = System.currentTimeMillis();

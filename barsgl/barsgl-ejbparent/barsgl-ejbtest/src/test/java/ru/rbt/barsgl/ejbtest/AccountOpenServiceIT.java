@@ -100,7 +100,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
         String accType = data.getString(0);
 */
 
-        String custNo = getCustomerNumber();
+        String custNo = getCustomerNumberEmptyType();
         String accType = getAccountType("00", "00");
         String dealId = substring("" + System.currentTimeMillis(), 1, 10);
         String src = "AXAPTA";
