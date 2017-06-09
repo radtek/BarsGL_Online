@@ -202,7 +202,7 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
      * @param operation
      * @return
      */
-    private String getPref(GLOperation operation) {
+    public String getPref(GLOperation operation) {
         if (operation.fromPaymentHub()) {                   // источник операция - PaymentHub
             if (operation.hasParent()) {
                 return rsubstr(operation.getParentReference(), 15);         // платеж с комиссией
@@ -240,7 +240,7 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
      * @param operation
      * @return
      */
-    private String getPnar(GLOperation operation, String pref) {
+    public String getPnar(GLOperation operation, String pref) {
         if (operation.fromPaymentHub() && operation.isChild()) {    // операция из PaymentHub, комиссия по платежу
             String pnar = "CHARGE " + pref;
             if (operation.isStorno()) {

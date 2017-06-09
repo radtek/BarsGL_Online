@@ -24,6 +24,7 @@ import ru.rbt.barsgl.ejb.integr.bg.*;
 import ru.rbt.barsgl.ejb.integr.loader.ILoadManagementController;
 import ru.rbt.barsgl.ejb.integr.loader.LoadManagementController;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
+import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
@@ -274,20 +275,12 @@ public abstract class AbstractRemoteIT  {
     }
 
     public static String getPnar(GLOperation operation) {
-        String pref = rsubstr(operation.hasParent() ? operation.getParentReference() : operation.getPaymentRefernce(), 15);
-        if (operation.isChild()) {
-            return (operation.isStorno() ? "*" : "") + "CHARGE " + pref;
-        } else {
-            if(InputMethod.AE == operation.getInputMethod())
-                return substr(operation.getNarrative(), 30); // для AE - из NRT
-            else                    
-                return substr(operation.getRusNarrativeShort(), 30);
-        }
+        String pref = remoteAccess.invoke(PdRepository.class, "getPref", operation);
+        return remoteAccess.invoke(PdRepository.class, "getPnar", operation, pref);
     }
 
     public static String getPnarManual (String dealId, String subDealId, String paymentRef) {
-        String pnar = isEmpty(dealId) ? paymentRef : (dealId + (isEmpty(subDealId) ? "" : ";" + subDealId));
-        return substr(pnar, 30);
+        return remoteAccess.invoke(PdRepository.class, "getPnarManual",  dealId, subDealId, paymentRef);
     }
 
 
