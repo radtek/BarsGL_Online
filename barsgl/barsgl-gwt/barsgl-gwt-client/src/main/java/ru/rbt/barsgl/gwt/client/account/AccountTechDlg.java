@@ -19,7 +19,6 @@ import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.dictionary.CustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
@@ -31,13 +30,15 @@ import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
-import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 
 /**
  * Created by ER18837 on 14.03.16.
@@ -70,6 +71,8 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
     private int asyncListCount = 3; /*count async lists:  mBranch; mCurrency; mDealSource; mTerm*/
     private HandlerRegistration registration;
     private Timer timer;
+
+    private static Logger rootLogger = Logger.getLogger("AccountTechDlg");
 
     @Override
     public void beforeCreateContent() {
@@ -179,7 +182,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
 
         if (action == FormAction.CREATE)
         {
-            mDateOpen.setValue(new Date());
+            mDateOpen.setValue(null);
         }
 
         if (action == FormAction.UPDATE) {
@@ -245,6 +248,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
 
     private void setOperday(final String operDayStr) {
         operday = DateTimeFormat.getFormat(ManualAccountWrapper.dateFormat).parse(operDayStr);
+        rootLogger.info("OperDay = "+operday);
         mDateOperDay.setValue(operDayStr);
         if (null == mDateOpen.getValue())
             mDateOpen.setValue(operday);

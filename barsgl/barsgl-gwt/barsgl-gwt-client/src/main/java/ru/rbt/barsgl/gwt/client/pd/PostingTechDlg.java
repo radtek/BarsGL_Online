@@ -17,6 +17,7 @@ import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
+import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -47,6 +48,8 @@ import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.ifEmpty;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.shared.enums.SecurityActionCode.TechOperPstChng;
+import static ru.rbt.shared.enums.SecurityActionCode.TechOperPstChngDate;
 
 /**
  * Created by ER18837 on 05.04.16.
@@ -302,7 +305,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
                                 return new Object[]{mDtAccountType.getValue()};
                             }
                             else{
-                                return new Object[]{};
+                                return new Object[]{mDtAccountType.getValue()};
                             }
                         }
 
@@ -352,7 +355,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
                                 return new Object[]{mCrAccountType.getValue()};
                             }
                             else{
-                                return new Object[]{};
+                                return new Object[]{mCrAccountType.getValue()};
                             }
                         }
 
@@ -475,17 +478,22 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     protected void setEnabled(boolean isManual, PostingChoice postingChoice, boolean disableCorrection, boolean isFan) {
 
-        mDateValue.setEnabled(isManual);
-        mDateOperation.setEnabled(isManual);
-        mDealId.setEnabled(isManual);
-        mSubDealId.setEnabled(isManual);
-        mNarrativeEN.setEnabled(true);
-        mNarrativeRU.setEnabled(true);
-        mProfitCenter.setEnabled(true);
-        mCheckCorrection.setEnabled(isManual);
+        if (SecurityChecker.checkActions(TechOperPstChngDate)) {
+            mDateValue.setEnabled(true);
+            mDateOperation.setEnabled(true);
+        }
 
-        mDrAccountTypeButton.setEnabled(isManual);
-        mCrAccountTypeButton.setEnabled(isManual);
+        if (SecurityChecker.checkAction(TechOperPstChng)) {
+            mDealId.setEnabled(isManual);
+            mSubDealId.setEnabled(isManual);
+            mNarrativeEN.setEnabled(true);
+            mNarrativeRU.setEnabled(true);
+            mProfitCenter.setEnabled(true);
+            mCheckCorrection.setEnabled(isManual);
+
+            //mDrAccountTypeButton.setEnabled(isManual);
+            //mCrAccountTypeButton.setEnabled(isManual);
+        }
     }
 
     protected void setControlsDisabled()
@@ -506,31 +514,31 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
     }
 
     protected void enableAll(boolean isEnabled) {
-        mDealSource.setEnabled(false);
+        mDealSource.setEnabled(isEnabled);
 
-        mDateOperation.setEnabled(false);
-        mDateValue.setEnabled(false);
+        mDateOperation.setEnabled(isEnabled);
+        mDateValue.setEnabled(isEnabled);
 
-        mDtCurrency.setEnabled(false);
-        mDtFilial.setEnabled(false);
-        mDtAccount.setEnabled(false);
-        mDtSum.setEnabled(false);
-        mDtAccountType.setEnabled(false);
+        mDtCurrency.setEnabled(isEnabled);
+        mDtFilial.setEnabled(isEnabled);
+        mDtAccount.setEnabled(isEnabled);
+        mDtSum.setEnabled(isEnabled);
+        mDtAccountType.setEnabled(isEnabled);
 
-        mCrCurrency.setEnabled(false);
-        mCrFilial.setEnabled(false);
-        mCrAccount.setEnabled(false);
-        mCrSum.setEnabled(false);
-        mCrAccountType.setEnabled(false);
-        mDepartment.setEnabled(false);
+        mCrCurrency.setEnabled(isEnabled);
+        mCrFilial.setEnabled(isEnabled);
+        mCrAccount.setEnabled(isEnabled);
+        mCrSum.setEnabled(isEnabled);
+        mCrAccountType.setEnabled(isEnabled);
+        mDepartment.setEnabled(isEnabled);
 
-        mNarrativeEN.setEnabled(false);
-        mNarrativeRU.setEnabled(false);
-        mProfitCenter.setEnabled(false);
+        mNarrativeEN.setEnabled(isEnabled);
+        mNarrativeRU.setEnabled(isEnabled);
+        mProfitCenter.setEnabled(isEnabled);
 
-        mDealId.setEnabled(false);
-        mSubDealId.setEnabled(false);
-        mCheckCorrection.setEnabled(false);
+        mDealId.setEnabled(isEnabled);
+        mSubDealId.setEnabled(isEnabled);
+        mCheckCorrection.setEnabled(isEnabled);
 
         //mDrAccountTypeButton.setEnabled(false);
         //mCrAccountTypeButton.setEnabled(false);

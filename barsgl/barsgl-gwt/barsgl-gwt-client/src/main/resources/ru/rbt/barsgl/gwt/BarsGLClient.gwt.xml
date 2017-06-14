@@ -5,6 +5,7 @@
     <inherits name="com.google.gwt.user.User" />
     <inherits name="com.google.gwt.user.theme.standard.Standard" />
     <inherits name="com.google.gwt.xml.XML" />
+    <inherits name="com.google.gwt.logging.Logging" />
     <inherits name="com.google.gwt.resources.Resources" />
     <inherits name="ru.rbt.RBTShared" />
     <inherits name="ru.rbt.barsgl.BarsGLShared" />
@@ -19,4 +20,7 @@
     <source path="client" />
     <entry-point class="ru.rbt.barsgl.gwt.client.BarsGLEntryPoint"/>
     <extend-property name="locale" values="ru"/>
+    <set-property name="gwt.logging.logLevel" value="ALL" />
+    <set-property name="gwt.logging.enabled" value="FALSE"/>
+
 </module>

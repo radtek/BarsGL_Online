@@ -378,6 +378,7 @@ public class ManualOperationProcessor extends ValidationAwareHandler<BatchPostin
         // Даты и время //
         operation.setValueDate(posting.getValueDate());
         operation.setPostDate(posting.getPostDate());
+        operation.setProcDate(posting.getProcDate());
         // текущее системное время
         operation.setOperationTimestamp(userContext.getTimestamp());
 

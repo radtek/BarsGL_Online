@@ -142,7 +142,7 @@ public class GLAccountService {
             keys.setCurrencyDigital(currency.getDigitalCode());
             return accRlnRepository.findForSequenceGL(keys);
         } else // заполнены и ключи и счет
-        if(isAccountWithKeys(operation, operSide)) {
+        if(isAccountWithKeys(operation, operSide) && !keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
             return Optional.ofNullable(glAccountController.findGLAccountWithKeys(operation, operSide)).orElseGet(() -> {
@@ -625,8 +625,8 @@ public class GLAccountService {
 
         } catch (Exception e) {
             String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
-            /*auditController.error(Account, format("Ошибка поиска счёта: '%s'",
-                    accountWrapper.getAccountType()), null, e);*/
+            auditController.error(Account, format("Ошибка поиска счёта: '%s'",
+                    accountWrapper.getAccountType()), null, e);
             return new RpcRes_Base<ManualAccountWrapper>(
                     accountWrapper, true, errMessage);
         }

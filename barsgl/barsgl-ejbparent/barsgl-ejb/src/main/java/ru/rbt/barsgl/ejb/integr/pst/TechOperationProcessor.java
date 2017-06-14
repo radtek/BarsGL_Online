@@ -94,7 +94,6 @@ public class TechOperationProcessor extends GLOperationProcessor
         pdth.setId(id);
         pdth.setPod(operation.getPostDate());
         pdth.setVald(operation.getValueDate());
-
         SourcesDeals dealSrc = sourcesDealsRepository.findCached(operation.getSourcePosting());
 
         if (dealSrc!=null) {
@@ -131,7 +130,7 @@ public class TechOperationProcessor extends GLOperationProcessor
         }
 
         pdth.setPnar(operation.getNarrative().length()>30?operation.getNarrative().substring(0,29):operation.getNarrative());
-        pdth.setDepartment(operation.getDeptId());
+        pdth.setDepartment(operation.getDeptId()!=null ? operation.getDeptId() : " ");
         pdth.setRusNarrLong(operation.getRusNarrativeLong());
         pdth.setRusNarrShort(operation.getRusNarrativeShort());
         pdth.setGlOperationId(operation.getId());

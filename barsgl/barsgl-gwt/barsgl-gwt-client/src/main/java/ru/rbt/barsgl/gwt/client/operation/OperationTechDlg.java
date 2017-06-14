@@ -223,9 +223,9 @@ public class OperationTechDlg extends OperationTechDlgBase {
         operation.setAccountTypeDebit(check(mDtAccType.getValue()
                 ,"AccType(дебет)","длина строки < 9 символов",new CheckStringExactLength(9)));
         operation.setAccountCredit(check(mCrAccount.getValue()
-                , "Счет (кредит)", "длина строки < 20 символов", new CheckStringExactLength(20)));
+                , "Счет (кредит)", "по заданным атрибутам не найден", new CheckStringExactLength(20)));
         operation.setAccountDebit(check(mDtAccount.getValue()
-                , "Счет (дебет)", "длина строки < 20 символов", new CheckStringExactLength(20)));
+                , "Счет (дебет)", "по заданным атрибутам не найден", new CheckStringExactLength(20)));
         operation.setAccountCredit(mCrAccount.getValue());
         operation.setAccountDebit(mDtAccount.getValue());
 
@@ -235,12 +235,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
         operation.setAmountDebit(check(mDtSum.getValue(),
                 "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
                 , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
-        /*if (mCheckSumRu.getValue()) {
-            BigDecimal sumRu = check(mSumRu.getValue(),
-                    "Сумма в рублях:", "поле должно быть заполнено числом > 0"
-                    , new CheckNotZeroBigDecimal(), new ConvertStringToBigDecimal());
-            operation.setAmountRu(sumRu);
-        }*/
 
         checkSide(operation.getAmountDebit(), operation.getAmountRu(),
                 operation.getCurrencyDebit(), operation.getAccountCredit(), "Дебет:" );
@@ -253,7 +247,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
                 , "Основание RUS", "поле не заполнено", new CheckNotEmptyString()));
         operation.setDeptId((String) mDepartment.getValue());
         operation.setProfitCenter((String) mProfitCenter.getValue());
-        //operation.setCorrection(mCheckCorrection.getValue());
+        operation.setCorrection(mCheckCorrection.getValue());
         operation.setInputMethod(InputMethod.M);
 
         // Для проверки прав по филиалам
@@ -426,20 +420,20 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     protected void setChangeHandlers() {
 
-        mDtCurrency.addChangeHandler(new ChangeHandler() {
+        /*mDtCurrency.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
 				if (isRurDebit || "RUR".equals(mDtCurrency.getValue())) 
 			        mCheckSumRu.setValue(false, true);
 			}
-    	});
-    	mCrCurrency.addChangeHandler(new ChangeHandler() {
+    	});*/
+    	/*mCrCurrency.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
 				if (isRurCredit || "RUR".equals(mCrCurrency.getValue()))
 			        mCheckSumRu.setValue(false, true);
 			}
-    	});
+    	});*/
     	mDtSum.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
@@ -456,13 +450,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
     	mCrSum.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
-				if (isRurCredit) { 
-					if (new CheckNotZeroBigDecimal().check(mCrSum.getValue())) {
-						//mSumRu.setValue((String)mCrSum.getValue());
-					} else {
-				        //mCheckSumRu.setValue(false, true);
-					}
-				}
                 correctSum(mCrSum, mDtSum);
 			}
     	});
@@ -511,7 +498,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
                      isDebit ? "кредита" : "дебета"));
             return;
         }
-        calculateSum(createCurExchangeWrapper(isDebit), isDebit);
+       //calculateSum(createCurExchangeWrapper(isDebit), isDebit);
     }
 
 

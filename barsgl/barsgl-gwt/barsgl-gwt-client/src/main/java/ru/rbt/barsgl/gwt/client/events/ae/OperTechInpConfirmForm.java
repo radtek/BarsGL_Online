@@ -2,9 +2,9 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.operation.*;
+import ru.rbt.barsgl.gwt.client.operation.NewTechOperationAction;
+import ru.rbt.barsgl.gwt.client.operation.OperationTechHandsDlg2;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
@@ -20,6 +20,8 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
 
@@ -52,13 +54,13 @@ public class OperTechInpConfirmForm extends OperTechBase{
     protected void reconfigure() {
         super.reconfigure();
 
-        abw.addAction(_modify = createModify());
-        abw.addAction(_create = createNewOperation());
-        abw.addAction(_delete = createDelete());
-        abw.addAction(_forward = createForward());
-        abw.addAction(_backward = createBackward());
-        abw.addAction(_sign = createSign());
-        abw.addAction(_confirmDate = createConfirmDate());
+        abw.addSecureAction(_modify = createModify(), SecurityActionCode.TechOperInp);
+        abw.addSecureAction(_create = createNewOperation(),SecurityActionCode.TechOperHand2);
+        abw.addSecureAction(_delete = createDelete(),SecurityActionCode.TechOperHand2);
+        abw.addSecureAction(_forward = createForward(),SecurityActionCode.TechOperHand2);
+        abw.addSecureAction(_backward = createBackward(),SecurityActionCode.TechOperHand2);
+        abw.addSecureAction(_sign = createSign(),SecurityActionCode.TechOperHand2);
+        abw.addSecureAction(_confirmDate = createConfirmDate(),SecurityActionCode.TechOperHand3);
     }
 
     @Override
