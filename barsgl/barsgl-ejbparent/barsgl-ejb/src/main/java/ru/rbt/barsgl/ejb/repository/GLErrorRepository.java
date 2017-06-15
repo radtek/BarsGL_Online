@@ -87,7 +87,7 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
 
     public List<String> getOperCorrList(String idList, YesNo isCorrect) throws SQLException {
         List<DataRecord> res = select("select e.ID_PST from GL_ERRORS e " +
-                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?", isCorrect.name()) ;
+                " where e.ID in (" + idList + ") and coalesce(e.CORRECT, 'N') = ?", isCorrect.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
@@ -102,9 +102,9 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
     }
 
     public int setErrorsCorrected(String idList, String corrType, String comment, String idPstNew, Date timestamt, String userName) {
-        int cnt =  executeNativeUpdate("update GL_ERRORS e set e.CORRECT = ?, e.COMMENT = ?, e.ID_PST_NEW = ?, e.OTS_PROC = ?, e.USER_NAME = ?, e.CORR_TYPE = ?," +
+        int cnt =  executeNativeUpdate("update GL_ERRORS e set e.CORRECT = ?, e.\"COMMENT\" = ?, e.ID_PST_NEW = ?, e.OTS_PROC = ?, e.USER_NAME = ?, e.CORR_TYPE = ?," +
                 " e.ID_PKG = (select ID_PKG from GL_ETLPST p where p.ID = e.PST_REF)" +
-                " where e.ID in (" + idList + ") and value(e.CORRECT, 'N') = ?",
+                " where e.ID in (" + idList + ") and coalesce(e.CORRECT, 'N') = ?",
                 YesNo.Y.name(), comment, idPstNew, timestamt, userName, corrType, YesNo.N.name());
         executeNativeUpdate("update GL_ERRORS e set e.OLD_PKG_DT = (select DT_LOAD from GL_ETLPKG g where g.ID_PKG = e.ID_PKG)" +
                 " where e.ID in (" + idList + ") and e.OLD_PKG_DT is null");
@@ -114,18 +114,18 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
     public void updatePostingsStateReprocess(String idPstList, String idPkgList) {
         executeNativeUpdate("update GL_ETLPST p set p.ECODE = ?, p.EMSG = ? where p.ID in (" + idPstList + ")",
                 null, null);
-        executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = max(p.DT_LOAD, systimestamp - 5)" +
+        executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = greatest(p.DT_LOAD, systimestamp - 5)" +
                 " where p.ID_PKG in (" + idPkgList + ")",
                 EtlPackage.PackageState.LOADED.name());
     }
 
     public int updateErrorsCorrected(String idList, String comment, Date timestamt, String userName) {
-        return executeNativeUpdate("update GL_ERRORS e set e.COMMENT = ?, e.OTS_PROC = ?, e.USER_NAME = ?" +
+        return executeNativeUpdate("update GL_ERRORS e set e.\"COMMENT\" = ?, e.OTS_PROC = ?, e.USER_NAME = ?" +
                 " where e.ID in (" + idList + ") and e.CORRECT = ?", comment, timestamt, userName, YesNo.Y.name());
     }
 
     public int updateErrorsCorrected(String idList, String comment, String idPstNew, Date timestamt, String userName) {
-        return executeNativeUpdate("update GL_ERRORS e set e.COMMENT = ?, e.ID_PST_NEW = ?, e.OTS_PROC = ?, e.USER_NAME = ?" +
+        return executeNativeUpdate("update GL_ERRORS e set e.\"COMMENT\" = ?, e.ID_PST_NEW = ?, e.OTS_PROC = ?, e.USER_NAME = ?" +
                 " where e.ID in (" + idList + ") and e.CORRECT = ?", comment, idPstNew, timestamt, userName, YesNo.Y.name());
     }
 
