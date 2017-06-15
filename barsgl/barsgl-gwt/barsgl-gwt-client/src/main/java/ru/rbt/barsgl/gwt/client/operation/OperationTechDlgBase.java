@@ -191,20 +191,15 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         return new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent){
-                /*if (side.equals(Side.DEBIT))
-                {
-                    if (!mCrFilial.hasValue()) {
-                        mCrFilial.setSelectedIndex(mDtFilial.getSelectedIndex());
-                    }
+                if (side.equals(Side.DEBIT)) {
+                    mCrFilial.setSelectedIndex(mDtFilial.getSelectedIndex());
                 }
                 else{
-                    if (mDtFilial.hasValue()) {
-                        mDtFilial.setSelectedIndex(mCrFilial.getSelectedIndex());
-                    }
-                }*/
+                    mDtFilial.setSelectedIndex(mCrFilial.getSelectedIndex());
+                }
 
                 TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
-                 updateAccount(side, mAccType);
+                updateAccount(side, mAccType);
             }
         };
     }

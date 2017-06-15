@@ -55,7 +55,7 @@ public class OperTechInpConfirmForm extends OperTechBase{
         super.reconfigure();
 
         abw.addSecureAction(_modify = createModify(), SecurityActionCode.TechOperInp);
-        abw.addSecureAction(_create = createNewOperation(),SecurityActionCode.TechOperHand2);
+        abw.addSecureAction(_create = createNewOperation(),SecurityActionCode.TechOperInp);
         abw.addSecureAction(_delete = createDelete(),SecurityActionCode.TechOperHand2);
         abw.addSecureAction(_forward = createForward(),SecurityActionCode.TechOperHand2);
         abw.addSecureAction(_backward = createBackward(),SecurityActionCode.TechOperHand2);

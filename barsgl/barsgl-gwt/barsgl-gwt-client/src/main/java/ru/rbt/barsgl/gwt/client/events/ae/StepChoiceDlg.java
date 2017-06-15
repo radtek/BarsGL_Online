@@ -93,6 +93,7 @@ public class StepChoiceDlg extends DlgFrame {
         _steps.addItem(BatchPostStep.NOHAND, "");
         if (_inpMethod == InputMethod.M ){
             if (SecurityChecker.checkAction(SecurityActionCode.OperInp) ||
+                SecurityChecker.checkAction(SecurityActionCode.TechOperInp) ||
                 SecurityChecker.checkAction(SecurityActionCode.OperInpTmpl) ||
                 SecurityChecker.checkAction(SecurityActionCode.AccOperInp)) _steps.addItem(BatchPostStep.HAND1,
                     "Ввод и передача на подпись");
@@ -101,7 +102,8 @@ public class StepChoiceDlg extends DlgFrame {
                    "Загрузка и передача на подпись");
         }
 
-        if (SecurityChecker.checkAction(SecurityActionCode.OperHand2)) _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
+        if (SecurityChecker.checkAction(SecurityActionCode.OperHand2) || SecurityChecker.checkAction(SecurityActionCode.TechOperHand2)) _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
+
         if (_formType!=ChoiseType.TECH) {
             if (SecurityChecker.checkAction(SecurityActionCode.OperHand3))
                 _steps.addItem(BatchPostStep.HAND3, "Подтверждение даты");
