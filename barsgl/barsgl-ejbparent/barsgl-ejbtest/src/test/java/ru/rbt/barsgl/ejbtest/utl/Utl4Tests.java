@@ -98,6 +98,7 @@ public class Utl4Tests {
         }
     }
 
+
     public static void deleteAccountByAcid(BaseEntityRepository baseEntityRepository, String acid) {
         try {
             int cntGlAcc = baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID in " +
@@ -106,6 +107,18 @@ public class Utl4Tests {
                     "(select BSAACID from accrln where acid = ? and RLNTYPE = '2')", acid);
             int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from ACCRLN where acid = ?", acid);
             logger.info("deleted Midas from GL_ACC:" + cntGlAcc + "; ACCRLN:" + cntAccRln + "; BSAACC:" + cntBsaAcc);
+        }finally {
+
+        }
+    }
+
+    public static void deleteAccountByBsaAcid(BaseEntityRepository baseEntityRepository, String bsaAcid) {
+        try {
+            int cntGlAcc = baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ? ", bsaAcid);
+            int cntBsaAcc = baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ? ", bsaAcid);
+            int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from ACCRLN where BSAACID = ? ", bsaAcid);
+            int cntAccRlnExt = baseEntityRepository.executeNativeUpdate("delete from ACCRLNEXT where BSAACID = ? ", bsaAcid);
+            logger.info("deleted BSAACID '" + bsaAcid + "' from GL_ACC:" + cntGlAcc + "; ACCRLN:" + cntAccRln + "; ACCRLNEXT:" + cntAccRlnExt + "; BSAACC:" + cntBsaAcc);
         }finally {
 
         }

@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,12 +26,15 @@ import ru.rbt.ejbcore.util.StringUtils;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbtest.AccountOpenAePostingsIT.checkDefinedAccount;
 import static ru.rbt.barsgl.ejbtest.AccountOpenAePostingsIT.delateSQvalue;
+import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteAccountByBsaAcid;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
 
@@ -42,11 +46,21 @@ public class ManualAccountIT extends AbstractRemoteIT {
     private static final Logger logger = Logger.getLogger(AccountOpenAePostingsIT.class.getName());
     private static final Long USER_ID = 1L;
 
+    private static List<String> bsaList = new ArrayList<String>();
 
     @Before
-    public void beforeClass() {
+    public void before() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
+
+    @After
+    public void After(){
+        for (String bsaAcid: bsaList) {
+            deleteAccountByBsaAcid(baseEntityRepository, bsaAcid);
+        }
+        bsaList.clear();
+    }
+
     /**
      * Тест создания счета по ручному вводу
      * @throws java.sql.SQLException
@@ -58,6 +72,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00601715", 181010101, null, subdealId, term);
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
         Assert.assertNotNull(account);
+        bsaList.add(account.getBsaAcid());
         Assert.assertEquals(subdealId, account.getSubDealId());
         Assert.assertTrue(Short.parseShort(term) == account.getTerm());
         AccountKeys keys = remoteAccess.invoke(GLAccountController.class, "createWrapperAccountKeys", wrapper, getOperday().getCurrentDate());
@@ -83,6 +98,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, null, null, "00");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
         Assert.assertNotNull(account);
+        bsaList.add(account.getBsaAcid());
         Assert.assertNull(account.getSubDealId());
         Assert.assertTrue(0 == account.getTerm());
         Assert.assertNull(account.getCbCustomerType());
@@ -101,7 +117,6 @@ public class ManualAccountIT extends AbstractRemoteIT {
         Assert.assertTrue(res.getMessage().contains(account.getBsaAcid()));
 
         System.out.println("Message: " + res.getMessage());
-
     }
 
     /**
@@ -135,12 +150,14 @@ public class ManualAccountIT extends AbstractRemoteIT {
         ManualAccountWrapper wrapper6 = createManualAccountSQ("007", ccy, custNo, accType, null, "FC12_CL", dealId6, subdealId, term, sq6);
         GLAccount account6 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper6.getId());
         Assert.assertNotNull(account6);
+        bsaList.add(account6.getBsaAcid());
         Assert.assertEquals(sq6, account6.getAccountSequence());
 
         // FLEX - SQ не задан, та же сделка - SQ из предыдущей
         ManualAccountWrapper wrapper7 = createManualAccountSQ("008", ccy, custNo, accType, null, "FC12_CL", dealId6, subdealId, term, null);
         GLAccount account7 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper7.getId());
         Assert.assertNotNull(account7);
+        bsaList.add(account7.getBsaAcid());
         Assert.assertEquals(sq6, account7.getAccountSequence());
 
         // ARMPRO - SQ задан - не меняется
@@ -148,12 +165,14 @@ public class ManualAccountIT extends AbstractRemoteIT {
         ManualAccountWrapper wrapper2 = createManualAccountSQ("007", ccy, custNo, accType, null, "ARMPRO", dealId, subdealId, term, sq2);
         GLAccount account2 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper2.getId());
         Assert.assertNotNull(account2);
+        bsaList.add(account2.getBsaAcid());
         Assert.assertEquals(sq, account2.getAccountSequence());
 
         // ARMPRO - SQ не задан, та же сделка - SQ из параметров
         ManualAccountWrapper wrapper4 = createManualAccountSQ("008", ccy, custNo, accType, null, "ARMPRO", dealId, subdealId, term, null);
         GLAccount account4 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper4.getId());
         Assert.assertNotNull(account4);
+        bsaList.add(account4.getBsaAcid());
         Assert.assertEquals(sq, account4.getAccountSequence());
 
         // MZO - другая сделка, SQ задан - не меняется
@@ -163,12 +182,14 @@ public class ManualAccountIT extends AbstractRemoteIT {
         ManualAccountWrapper wrapper3 = createManualAccountSQ("007", ccy, custNo, accType, null, "MZO", dealId3, subdealId3, term, sq3);
         GLAccount account3 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper3.getId());
         Assert.assertNotNull(account3);
+        bsaList.add(account3.getBsaAcid());
         Assert.assertEquals(sq3, account3.getAccountSequence());
 
         // MZO - та же сделка, другой SQ - ошибка
         Short sq5 = 93;
         RpcRes_Base<ManualAccountWrapper> res = createManualAccountOnly("008", ccy, custNo, accType, null, "MZO", dealId3, subdealId3, term, sq5);
         Assert.assertTrue(res.isError());
+
     }
 
     /**
@@ -212,6 +233,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testEditManualAccount() throws SQLException {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00103796", 132010300, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
 
         Date dateOpen = getOperday().getLastWorkingDay();
         wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(dateOpen));
@@ -239,6 +261,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testEditManualAccountError() throws SQLException {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00103796", 132010300, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
 
         wrapper.setCustomerNumber(null);
 //        Date dateClose = getOperday().getLastWorkingDay();
@@ -262,6 +285,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
         // TODO надо как-то этого избежать
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00100347", 191010201, getOperday().getLastWorkingDay());
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
 
         Date dateClose = getOperday().getCurrentDate();
         wrapper.setDateCloseStr(new SimpleDateFormat(wrapper.dateFormat).format(dateClose));
@@ -282,10 +306,11 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testCloseManualAccountDateError() throws SQLException {
         String custType = "20";
         String custNo = getCustomerNumberByType(custType);
-        Long accType = Long.parseLong(getAccountType(custType, "00"));
+        Long accType = Long.parseLong(getAccountType(custType, "00", "706%"));
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, getOperday().getCurrentDate());
         wrapper.setUserId(USER_ID);
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
 
         Date curDate = getOperday().getCurrentDate();
         Date dateClose = DateUtils.addDays(curDate, 1);
@@ -306,7 +331,6 @@ public class ManualAccountIT extends AbstractRemoteIT {
         wrapper.setDateCloseStr(new SimpleDateFormat(wrapper.dateFormat).format(dateClose));
         res = remoteAccess.invoke(GLAccountService.class, "closeManualAccount", wrapper);
         Assert.assertFalse(res.isError());
-        dateClose = curDate;
 
     }
 
@@ -318,6 +342,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testCloseManualAccountBalanceError() throws SQLException {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00600609", 181010101, getOperday().getCurrentDate());
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
 
         long stamp = System.currentTimeMillis();
 
@@ -358,9 +383,10 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testCloseManualAccountOperError() throws SQLException {
         String custType = "20";
         String custNo = getCustomerNumberByType(custType);
-        Long accType = Long.parseLong(getAccountType(custType, "00"));
+        Long accType = Long.parseLong(getAccountType(custType, "00", "706%"));
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
 
         long stamp = System.currentTimeMillis();
 
@@ -392,6 +418,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
         Assert.assertTrue(res.isError());
         Assert.assertFalse(isEmpty(res.getMessage()));
         System.out.println("Message: " + res.getMessage());
+
     }
 
     public static ManualAccountWrapper createManualAccount(String branch, String currency, String customerNumber,

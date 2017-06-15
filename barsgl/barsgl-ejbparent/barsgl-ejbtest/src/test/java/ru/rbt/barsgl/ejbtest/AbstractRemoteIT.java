@@ -796,4 +796,11 @@ public abstract class AbstractRemoteIT  {
         return data.getString(0);
     }
 
+    protected static String getAccountType(String custType, String term, String acc2) throws SQLException {
+        DataRecord data = baseEntityRepository.selectFirst("select p.ACCTYPE from GL_ACTPARM p join GL_ACTNAME n on n.ACCTYPE = p.ACCTYPE" +
+                " where CUSTYPE = ? and TERM = ? and ACC2 like ? and TECH_ACT <> 'Y' and DTB <= ? and DTE is null",
+                StringUtils.rightPad(custType,3), term, acc2, getOperday().getCurrentDate());
+        return data.getString(0);
+    }
+
 }
