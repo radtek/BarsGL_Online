@@ -734,6 +734,28 @@ public class GLAccountService {
         }
     }
 
+    public GLAccount createBalkOpeningAccount(AccountKeys keys, Date dateOpen) {
+        //checkAccountPermission(accountWrapper, FormAction.CREATE);
+        ErrorList errList = new ErrorList();
+
+        GLAccount glAccount = null;
+        try {
+            glAccount = glAccountController.createGLAccountMnl(keys, dateOpen, errList, GLAccount.OpenType.MNL);
+            auditController.info(Account, format("Создан счет '%s' по массовому открытию счетов",
+                    glAccount.getBsaAcid()), glAccount);
+
+            /*
+        // Такой счет уже есть?
+        GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
+             */
+        } catch (Throwable e) {
+            String errMessage = accountErrorMessage(e, errList, initSource());
+            auditController.error(Account, format("Ошибка при создании счета по массовому открытию счетов для acid: '%s'",
+                    keys.getAccountMidas()), null, e);
+        }
+        return glAccount;
+    }
+    
     /**
      * Поиск/создание технического счета
      * @param accountingType
