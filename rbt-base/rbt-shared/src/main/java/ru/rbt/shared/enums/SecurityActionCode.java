@@ -83,6 +83,7 @@ public enum SecurityActionCode {
     , TechOperHand3("Авторизация операций backvalue по техсчетам (3 рука)")
     , TechOperHistory("История создания операций по техсчетам для admin")
     , TechOperHistoryUser("История создания операций по техсчетам для user")
+    , TechOperPstChngDate("Изменение даты проводки по техсчетам без анализа прав доступа в архив")
 
     ;
 
