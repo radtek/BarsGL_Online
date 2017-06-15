@@ -60,12 +60,23 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         pst = (EtlPosting) baseEntityRepository.refresh(pst, true);
         Assert.assertEquals(1, pst.getErrorCode().intValue());
 
+        EtlPackage pkg1 = newPackage(System.currentTimeMillis(), "WithoutError");
+        Assert.assertTrue(pkg.getId() > 0);
+        EtlPosting pst1 = createPosting(pkg, pst.getSourcePosting(), pst.getAccountDebit(), pst.getAccountCredit(), pst.getCurrencyDebit(), new BigDecimal("315.45"),
+                    pst.getEventId(), pst.getDealId(), pst.getPaymentRefernce());
+        Assert.assertTrue(pst.getId() > 0);
+
+        operation = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertNotNull(operation);                                               // операция не должна быть создана
+        pst1 = (EtlPosting) baseEntityRepository.refresh(pst1, true);
+        Assert.assertEquals(0, pst1.getErrorCode().intValue());
+
         GLErrorRecord err = getPostingErrorRecord(pst);
         List<Long> errorIdList = new ArrayList<>();
         errorIdList.add(err.getId());
         // correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType correctType)
         RpcRes_Base<Integer> res = remoteAccess.invoke(ReprocessPostingService.class, "correctErrors",
-                errorIdList, "testCloseOne", pst.getAePostingId().replace('d', 't'), ErrorCorrectType.CLOSE_ONE);
+                errorIdList, "testCloseOne", pst1.getAePostingId(), ErrorCorrectType.CLOSE_ONE);
 
         Assert.assertFalse(res.isError());
         Assert.assertEquals(1, res.getResult().intValue());
@@ -230,6 +241,19 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     }
 
     public EtlPosting createPostingBad(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccy, BigDecimal sum) throws SQLException {
+        return (EtlPosting) baseEntityRepository.save(newPosting(pkg, src, acDt, acCt, ccy, ccy, sum, sum.add(new BigDecimal("0.1"))));
+    }
+
+    public EtlPosting createPosting(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccy, BigDecimal sum,
+                                    String evtId, String dealId, String pmtRef) throws SQLException {
+        EtlPosting pst = newPosting(pkg, src, acDt, acCt, ccy, ccy, sum, sum);
+        pst.setDealId(dealId);
+        pst.setPaymentRefernce(pmtRef);
+        pst.setEventId(evtId);
+        return (EtlPosting) baseEntityRepository.save(pst);
+    }
+
+    public EtlPosting newPosting(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccyDt, BankCurrency ccyCt, BigDecimal sumDt, BigDecimal sumCt ) throws SQLException {
         Operday od = getOperday();
         long stamp = System.currentTimeMillis();
 
@@ -241,12 +265,12 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
 
         pst.setAccountCredit(acCredit);
         pst.setAccountDebit(acDebit);
-        pst.setCurrencyCredit(ccy);
-        pst.setCurrencyDebit(ccy);
-        pst.setAmountCredit(sum);
-        pst.setAmountDebit(sum.add(new BigDecimal("0.1")));
+        pst.setCurrencyCredit(ccyCt);
+        pst.setCurrencyDebit(ccyDt);
+        pst.setAmountCredit(sumCt);
+        pst.setAmountDebit(sumDt);
 
-        return (EtlPosting) baseEntityRepository.save(pst);
+        return pst;
     }
 
     public static GLErrorRecord getPostingErrorRecord(EtlPosting posting) {
