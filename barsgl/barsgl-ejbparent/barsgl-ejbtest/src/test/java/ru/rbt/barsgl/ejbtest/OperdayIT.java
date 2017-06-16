@@ -65,7 +65,7 @@ public class OperdayIT extends AbstractTimerJobIT {
     @Before
     public void before() {
         initCorrectOperday();
-        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1", EtlPackage.PackageState.PROCESSED);
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = 'PROCESSED' where p.state not in ('PROCESSED', 'ERROR') ");
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
     }
     /**
@@ -189,8 +189,8 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         processOnePosting();
 
-        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p.dateLoad <= ?2"
-                , EtlPackage.PackageState.PROCESSED, loadDateCalendar.getTime());
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = ? where p.DT_LOAD <= ? and p.state not in ('PROCESSED', 'ERROR')"
+                , EtlPackage.PackageState.PROCESSED.name(), loadDateCalendar.getTime());
 
         SingleActionJob job = SingleActionJobBuilder.create()
                 .withClass(ExecutePreCOBTaskNew.class).withName(System.currentTimeMillis() + "")
@@ -242,8 +242,8 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         processOnePosting();
 
-        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p.dateLoad <= ?2"
-                , EtlPackage.PackageState.PROCESSED, loadDateCalendar.getTime());
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = ? where p.DT_LOAD <= ? and p.state not in ('PROCESSED', 'ERROR')"
+                , EtlPackage.PackageState.PROCESSED.name(), loadDateCalendar.getTime());
 
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
         SingleActionJob calendarJob = SingleActionJobBuilder.create()
@@ -291,24 +291,10 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         processOnePosting();
 
-        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p.dateLoad <= ?2"
-                , EtlPackage.PackageState.PROCESSED, loadDateCalendar.getTime());
-
-        /*CalendarJob calendarJob = new CalendarJob();
-        calendarJob.setDelay(0L);
-        calendarJob.setDescription("test calendar job");
-        calendarJob.setRunnableClass(ExecutePreCOBTaskNew.class.getName());
-        calendarJob.setStartupType(MANUAL);
-        calendarJob.setState(STOPPED);
-        calendarJob.setName(System.currentTimeMillis() + "");
-        calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
-        calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");*/
-
-//        SingleActionJob calendarJob = SingleActionJobBuilder.create().withClass(ExecutePreCOBTaskNew.class).build();
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = ? where p.DT_LOAD <= ? and p.state not in ('PROCESSED', 'ERROR')"
+                , EtlPackage.PackageState.PROCESSED.name(), loadDateCalendar.getTime());
 
         remoteAccess.invoke(ExecutePreCOBTaskNew.class, "run", "ExecutePreCOBTaskNew", new Properties());
-
-//        jobService.executeJob(calendarJob);
 
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);
@@ -351,7 +337,7 @@ public class OperdayIT extends AbstractTimerJobIT {
      */
     @Test public void testCheckPackages() {
         List<String> errList = new ArrayList<>();
-        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1", EtlPackage.PackageState.PROCESSED);
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = 'PROCESSED' where p.state not in ('PROCESSED', 'ERROR') ");
         Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkPackagesToloadExists", new Properties(), errList));
 
         Long stamp = System.currentTimeMillis();

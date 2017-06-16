@@ -391,10 +391,10 @@
                     <groupId>javax.annotation</groupId>
                     <artifactId>jsr250-api</artifactId>
                 </exclusion>
-                <exclusion>
+                <!--<exclusion>
                     <groupId>antlr</groupId>
                     <artifactId>antlr</artifactId>
-                </exclusion>
+                </exclusion>-->
                 <exclusion>
                     <groupId>org.jboss.spec.javax.transaction</groupId>
                     <artifactId>jboss-transaction-api_1.2_spec</artifactId>
