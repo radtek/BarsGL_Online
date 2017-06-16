@@ -388,7 +388,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * @param date2 вторая дата валютирования
      * @return false в случае ошибок иначе true
      */
-    public CobStepResult reprocessErckStorno(Date date1, Date date2, String comment) throws Exception {
+    public CobStepResult reprocessErckStorno(Date date1, Date date2) throws Exception {
         int cnt = 0;
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
                 "FROM GLOperation g WHERE g.state = ?1 AND g.valueDate IN (?2 , ?3) and g.storno = ?4 ORDER BY g.id"
@@ -397,8 +397,6 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             String msg = format("Найдено %d отложенных СТОРНО операций", operations.size());
             auditController.info(Operation, msg);
             for (GLOperation operation : operations) {
-                reprocessController.closeReprocessOperErrors(operation.getId(), format("Повторная обработка СТОРНО в задаче '%s'", comment));
-
                 if (reprocessOperation(findOperationProcessor(operation), operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }
@@ -417,6 +415,8 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                 return false;
             }
             operation = refreshOperationForcibly(operation);
+            reprocessController.closeReprocessOperErrors(operation.getId(), reason);
+
             if (processOperation(operation, false)) {
                 auditController.info(Operation,
                         format("Успешное завершение повторной обработки операции '%s'. Причина '%s'.", operation.getId(), reason)

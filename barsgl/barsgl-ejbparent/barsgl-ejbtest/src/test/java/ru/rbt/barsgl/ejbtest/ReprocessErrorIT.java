@@ -284,7 +284,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         Assert.assertEquals(OperState.POST, operParent.getState());
 
         remoteAccess.invoke(EtlPostingController.class, "reprocessErckStorno"
-                , getOperday().getLastWorkingDay(), getOperday().getCurrentDate(), this.getClass().getName());
+                , getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
 
         operStorno = (GLOperation) baseEntityRepository.refresh(operStorno, true);
         Assert.assertEquals(OperState.SOCANC, operStorno.getState());

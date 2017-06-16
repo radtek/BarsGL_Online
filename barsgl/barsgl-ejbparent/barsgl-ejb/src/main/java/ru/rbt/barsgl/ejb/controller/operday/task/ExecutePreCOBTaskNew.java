@@ -282,7 +282,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
 //                auditController.info(AuditRecord.LogCode.Operday, "Повторная обработка сторно");
                 return beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) ->
-                        etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate(), this.getClass().getName()));
+                        etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
             });
         } catch (Exception e) {
             return stepErrorResult(Error, "Ошибка при повторной обработке сторно", e);

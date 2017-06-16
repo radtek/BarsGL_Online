@@ -10,9 +10,12 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.math.BigDecimal;
@@ -23,6 +26,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask.DEFAULT_STEP_NAME;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import static ru.rbt.barsgl.ejbtest.ReprocessErrorIT.getOperationErrorRecord;
 
 /**
  * Created by Ivan Sevastyanov on 18.02.2016.
@@ -71,6 +75,7 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         updateOperday(ONLINE,OPEN);
 
         baseEntityRepository.executeNativeUpdate("delete from GL_SCHED_H");
+        baseEntityRepository.executeNativeUpdate("update GL_ETLPKG set STATE = 'ERROR' where STATE = 'LOADED'");
 
         Long stamp = System.currentTimeMillis();
         EtlPackage pkg = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
@@ -95,6 +100,9 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         Assert.assertEquals(OperState.WTAC, oper1.getState());
         Assert.assertNull(oper1.getPstScheme());
 
+        GLErrorRecord err = getOperationErrorRecord(oper1);
+        Assert.assertEquals("4", err.getErrorCode());
+
         oper1.setAccountCredit("40817036200012959997");
         oper1.setValueDate(getOperday().getLastWorkingDay());
         baseEntityRepository.update(oper1);
@@ -106,6 +114,12 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         Assert.assertNotNull(oper1);
         Assert.assertEquals(OperState.POST, oper1.getState());
         Assert.assertEquals(GLOperation.OperType.S, oper1.getPstScheme());
+
+        err = (GLErrorRecord) baseEntityRepository.refresh(err, true);
+        Assert.assertEquals(YesNo.Y, err.getCorrect());
+        Assert.assertEquals(ErrorCorrectType.CorrectType.REPROC.name(), err.getCorrectType());
+        Assert.assertNotNull(err.getComment());
+        System.out.println(String.format("Comment: '%s' ", err.getComment()));
     }
 
     private GLOperation getOperation(Long idpst) {
