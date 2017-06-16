@@ -48,7 +48,7 @@ public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
             checkOperdayStatus(operdayController.getOperday());
 
             if (withStorno) {
-                etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
+                etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate(), this.getClass().getName());
             }
 
             operdayController.closeLastWorkdayBalance();

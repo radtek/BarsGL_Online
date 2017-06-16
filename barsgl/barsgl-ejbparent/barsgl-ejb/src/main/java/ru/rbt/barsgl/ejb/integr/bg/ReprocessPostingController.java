@@ -3,14 +3,14 @@ package ru.rbt.barsgl.ejb.integr.bg;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -85,6 +85,18 @@ public class ReprocessPostingController {
 
         return cnt;
     }
+
+    public int closeReprocessOperErrors(Long gloid, String comment) throws SQLException {
+        List<String> errorIdList = errorRepository.getRecordIdsByRef(null, gloid, YesNo.N);
+        if (null == errorIdList || errorIdList.isEmpty())
+            return 0;
+
+        String idList = StringUtils.listToString(errorIdList, ",");
+        int cnt = errorRepository.setErrorsCorrected(idList, ErrorCorrectType.CorrectType.REPROC.name(), comment, null, userContext.getTimestamp(), userContext.getUserName());
+
+        return cnt;
+    }
+
 
     public int editPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType) throws SQLException {
         String idList = StringUtils.listToString(errorIdList, ",");

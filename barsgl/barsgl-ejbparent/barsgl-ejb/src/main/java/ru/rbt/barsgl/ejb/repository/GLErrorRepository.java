@@ -3,15 +3,16 @@ package ru.rbt.barsgl.ejb.repository;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         return errorRecord;
     }
 
+/*
     public GLErrorRecord getRecordByPstRef(Long pstRef) {
         return selectFirst(GLErrorRecord.class, "from GLErrorRecord g where g.etlPostingRef = ?1 order by g.id desc", pstRef);
     }
@@ -48,15 +50,27 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
     public GLErrorRecord getRecordByGloRef(Long gloRef) {
         return selectFirst(GLErrorRecord.class, "from GLErrorRecord g where g.glOperRef = ?1 order by g.id desc", gloRef);
     }
+*/
 
     public GLErrorRecord getRecordByRef(Long pstRef, Long gloRef) {
         if (null != pstRef) {
-            return getRecordByPstRef(pstRef);
+            return selectFirst(GLErrorRecord.class, "from GLErrorRecord g where g.etlPostingRef = ?1 order by g.id desc", pstRef);
         } else
         if (null != gloRef) {
-            return getRecordByGloRef(gloRef);
+            return selectFirst(GLErrorRecord.class, "from GLErrorRecord g where g.glOperRef = ?1 order by g.id desc", gloRef);
         } else
             return null;
+    }
+
+    public List<String> getRecordIdsByRef(Long pstRef, Long gloRef, YesNo isCorrect) throws SQLException {
+        List<DataRecord> res = Collections.EMPTY_LIST;
+        if (null != pstRef) {
+            res = select("select e.ID from GL_ERRORS e where e.PST_REF = ? and coalesce(e.CORRECT, 'N') = ?", pstRef, isCorrect.name()) ;
+        } else
+        if (null != gloRef) {
+            res = select("select e.ID from GL_ERRORS e where e.GLO_REF = ? and coalesce(e.CORRECT, 'N') = ?", gloRef, isCorrect.name()) ;
+        }
+        return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
     public List<String> getNotUniqueList(String idList) throws SQLException {

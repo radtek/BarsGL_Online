@@ -8,11 +8,13 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
+import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
@@ -46,37 +48,43 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     }
 
     /**
-     * Проверка закрытия одной ошибки
+     * Проверка закрытия одной ошибки с новым ID_PST
      */
     @Test
     public void testCloseOne() throws SQLException {
-        EtlPackage pkg = newPackage(System.currentTimeMillis(), "WithError");
-        Assert.assertTrue(pkg.getId() > 0);
-        EtlPosting pst = createPostingBad(pkg, "SECMOD", "40817036%1", "40817036%2", BankCurrency.AUD, new BigDecimal("315.45") );
-        Assert.assertTrue(pst.getId() > 0);
+        EtlPackage pkgOk = newPackage(System.currentTimeMillis(), "WithoutError");
+        EtlPosting pstOk = createPosting(pkgOk, "SECMOD", "40817036%1", "40817036%2", BankCurrency.AUD, new BigDecimal("315.45"));
+        Assert.assertTrue(pstOk.getId() > 0);
 
-        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        EtlPackage pkgErr = newPackage(System.currentTimeMillis(), "WithError");
+        Assert.assertTrue(pkgErr.getId() > 0);
+        EtlPosting pstErr = newPosting(pkgErr, pstOk.getSourcePosting(),
+                pstOk.getAccountDebit(), pstOk.getAccountCredit(),
+                pstOk.getCurrencyDebit(), pstOk.getCurrencyCredit(),
+                pstOk.getAmountDebit(), pstOk.getAmountDebit().add(new BigDecimal("0.5")) );
+        pstErr.setDealId(pstOk.getDealId());
+        pstErr.setPaymentRefernce(pstOk.getPaymentRefernce());
+        pstErr.setEventId(pstOk.getEventId());
+        pstErr = (EtlPosting) baseEntityRepository.save(pstErr);
+        Assert.assertTrue(pstErr.getId() > 0);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pstErr);
         Assert.assertNull(operation);                                               // операция не должна быть создана
-        pst = (EtlPosting) baseEntityRepository.refresh(pst, true);
-        Assert.assertEquals(1, pst.getErrorCode().intValue());
+        pstErr = (EtlPosting) baseEntityRepository.refresh(pstErr, true);
+        Assert.assertEquals(1, pstErr.getErrorCode().intValue());
 
-        EtlPackage pkg1 = newPackage(System.currentTimeMillis(), "WithoutError");
-        Assert.assertTrue(pkg.getId() > 0);
-        EtlPosting pst1 = createPosting(pkg, pst.getSourcePosting(), pst.getAccountDebit(), pst.getAccountCredit(), pst.getCurrencyDebit(), new BigDecimal("315.45"),
-                    pst.getEventId(), pst.getDealId(), pst.getPaymentRefernce());
-        Assert.assertTrue(pst.getId() > 0);
-
-        operation = (GLOperation) postingController.processMessage(pst1);
-        Assert.assertNotNull(operation);                                               // операция не должна быть создана
-        pst1 = (EtlPosting) baseEntityRepository.refresh(pst1, true);
-        Assert.assertEquals(0, pst1.getErrorCode().intValue());
-
-        GLErrorRecord err = getPostingErrorRecord(pst);
+        GLErrorRecord err = getPostingErrorRecord(pstErr);
         List<Long> errorIdList = new ArrayList<>();
         errorIdList.add(err.getId());
+
+        operation = (GLOperation) postingController.processMessage(pstOk);
+        Assert.assertNotNull(operation);                                               // операция не должна быть создана
+        operation = (GLOperation) baseEntityRepository.refresh(operation, true);
+        Assert.assertEquals(OperState.POST, operation.getState());
+
         // correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType correctType)
         RpcRes_Base<Integer> res = remoteAccess.invoke(ReprocessPostingService.class, "correctErrors",
-                errorIdList, "testCloseOne", pst1.getAePostingId(), ErrorCorrectType.CLOSE_ONE);
+                errorIdList, "testCloseOne", pstOk.getAePostingId(), ErrorCorrectType.CLOSE_ONE);
 
         Assert.assertFalse(res.isError());
         Assert.assertEquals(1, res.getResult().intValue());
@@ -88,8 +96,8 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         Assert.assertNotNull(err.getAePostingIdNew());
         System.out.println(String.format("Comment: '%s' ID_NEW: '%s'", err.getComment(), err.getAePostingIdNew()));
 
-        pst = (EtlPosting) baseEntityRepository.refresh(pst, true);
-        Assert.assertEquals(1, pst.getErrorCode().intValue());
+        pstErr = (EtlPosting) baseEntityRepository.refresh(pstErr, true);
+        Assert.assertEquals(1, pstErr.getErrorCode().intValue());
     }
 
     /**
@@ -240,16 +248,62 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         }
     }
 
+    /**
+     * Проверка переобработки ERCHK Storno после получения родительсокй проводки
+     */
+    @Test
+    public void testReprocessStorno() throws SQLException {
+        EtlPackage pkgParent = newPackage(System.currentTimeMillis(), "Parent");
+        EtlPosting pstParent = createPosting(pkgParent, "SECMOD", "40817036%1", "40817036%2", BankCurrency.AUD, new BigDecimal("315.45") );
+        Assert.assertTrue(pstParent.getId() > 0);
+
+        EtlPackage pkgStorno = newPackage(System.currentTimeMillis(), "Storno");
+        EtlPosting pstStorno = newPosting(pkgStorno, pstParent.getSourcePosting(),
+                pstParent.getAccountCredit(), pstParent.getAccountDebit(),
+                pstParent.getCurrencyDebit(), pstParent.getCurrencyDebit(),
+                pstParent.getAmountCredit(), pstParent.getAmountDebit());
+        pstStorno.setDealId(pstParent.getDealId());
+        pstStorno.setPaymentRefernce(pstParent.getPaymentRefernce());
+        pstStorno.setEventId(pstParent.getEventId());
+        pstStorno.setStornoReference(pstParent.getEventId());
+        pstStorno.setStorno(YesNo.Y);
+        pstStorno = (EtlPosting) baseEntityRepository.save(pstStorno);
+        Assert.assertTrue(pstStorno.getId() > 0);
+
+        GLOperation operStorno = (GLOperation) postingController.processMessage(pstStorno);
+        Assert.assertNotNull(operStorno);                                               // операция не должна быть создана
+        operStorno = (GLOperation) baseEntityRepository.refresh(operStorno, true);
+        Assert.assertEquals(OperState.ERCHK, operStorno.getState());
+
+        GLErrorRecord err = getOperationErrorRecord(operStorno);
+        Assert.assertEquals("1007", err.getErrorCode());
+
+        GLOperation operParent = (GLOperation) postingController.processMessage(pstParent);
+        Assert.assertNotNull(operParent);                                               // операция не должна быть создана
+        operParent = (GLOperation) baseEntityRepository.refresh(operParent, true);
+        Assert.assertEquals(OperState.POST, operParent.getState());
+
+        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStorno"
+                , getOperday().getLastWorkingDay(), getOperday().getCurrentDate(), this.getClass().getName());
+
+        operStorno = (GLOperation) baseEntityRepository.refresh(operStorno, true);
+        Assert.assertEquals(OperState.SOCANC, operStorno.getState());
+
+        err = (GLErrorRecord) baseEntityRepository.refresh(err, true);
+        Assert.assertEquals(YesNo.Y, err.getCorrect());
+        Assert.assertEquals(ErrorCorrectType.CorrectType.REPROC.name(), err.getCorrectType());
+        Assert.assertNotNull(err.getComment());
+        System.out.println(String.format("Comment: '%s' ", err.getComment()));
+    }
+
+    // TODO тест ReprocessWTAC
+
     public EtlPosting createPostingBad(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccy, BigDecimal sum) throws SQLException {
         return (EtlPosting) baseEntityRepository.save(newPosting(pkg, src, acDt, acCt, ccy, ccy, sum, sum.add(new BigDecimal("0.1"))));
     }
 
-    public EtlPosting createPosting(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccy, BigDecimal sum,
-                                    String evtId, String dealId, String pmtRef) throws SQLException {
+    public EtlPosting createPosting(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccy, BigDecimal sum) throws SQLException {
         EtlPosting pst = newPosting(pkg, src, acDt, acCt, ccy, ccy, sum, sum);
-        pst.setDealId(dealId);
-        pst.setPaymentRefernce(pmtRef);
-        pst.setEventId(evtId);
         return (EtlPosting) baseEntityRepository.save(pst);
     }
 
@@ -282,6 +336,17 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         Assert.assertNotEquals(errorMessage, "SUCCESS");
 
         GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        Assert.assertNotNull(errorRecord);
+        return errorRecord;
+    }
+
+
+    public static GLErrorRecord getOperationErrorRecord(GLOperation operation) {
+        Assert.assertNotNull(operation);
+        Long gloRef = operation.getId();
+        GLOperation oper = (GLOperation) baseEntityRepository.refresh(operation, true);
+
+        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", null, gloRef);
         Assert.assertNotNull(errorRecord);
         return errorRecord;
     }

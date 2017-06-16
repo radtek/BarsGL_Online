@@ -2,31 +2,26 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
-import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.TimerJobRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -37,11 +32,11 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.CLOSE_OPERDAY_ERROR;
 
 /**
@@ -191,7 +186,8 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
                 setPreCobState();
 
                 auditController.info(Operday, "Повторная обработка сторно");
-                beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
+                beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) ->
+                        etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate(), this.getClass().getName()));
 
                 auditController.info(Operday, "Обработка вееров");
                 beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> preCobStepController.processFan());
