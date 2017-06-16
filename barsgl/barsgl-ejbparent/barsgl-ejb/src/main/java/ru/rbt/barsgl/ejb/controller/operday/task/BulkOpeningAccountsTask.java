@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import javax.ejb.EJB;
-import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
@@ -92,7 +92,7 @@ public class BulkOpeningAccountsTask {
 
         if ("ALL".equalsIgnoreCase(branch)) {
             return repository.select(sqlSelect,
-                     new Object[]{});
+                    new Object[]{});
         } else {
             return repository.select(sqlSelect
                     + " WHERE A8CMCD=?", new Object[]{branch});
@@ -100,7 +100,7 @@ public class BulkOpeningAccountsTask {
     }
 
     private String getCCode(String branch) throws Exception {
-        List<DataRecord> list = repository.select("SELECT CCODE FROM IMBCBBRP WHERE A8BRCD=?", new Object[]{branch});
+        List<DataRecord> list = repository.select("SELECT BCBBR FROM IMBCBBRP WHERE A8BRCD=?", new Object[]{branch});
         if (list.isEmpty()) {
             throw new Exception("Код филиала для " + branch + " не найден");
         } else {
@@ -131,14 +131,14 @@ public class BulkOpeningAccountsTask {
         String acId = createAcId(cNum, branch, item);
         //@@@ ??? createTmp(item, vAcid, cCode); 
 
-        try {
-            GLAccount account = getGLAccount(acId);
+        GLAccount account = getGLAccount(acId);
+        if (account != null) {
             try {
                 updateAccount(account, item);
             } catch (Exception ex) {
                 auditController.error(Account, format("Ошибка при изменении счета для acid = '%s'", acId), null, ex);
             }
-        } catch (NoResultException ex) {
+        } else {
             createBalkOpeningAccount(item, cNum, branch, cCode, acId);
         }
 
@@ -146,7 +146,13 @@ public class BulkOpeningAccountsTask {
     }
 
     private GLAccount getGLAccount(String acId) {
-        return accountRepository.selectOne(GLAccount.class, "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
+        List<GLAccount> list = accountRepository.select(GLAccount.class, "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
+        if (1 < list.size()) {
+            throw new NonUniqueResultException("Found more than one entity on query");
+        } else if (list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
     }
 
     private List<DataRecord> getGLAccounts(Set<String> acids) throws Exception {
@@ -156,7 +162,7 @@ public class BulkOpeningAccountsTask {
                     "SELECT * FROM DWH.GL_ACC A WHERE "
                     + "A.ACID IN (" + acidsStr + ") "
                     + "AND A.DTC IS NULL ",
-                     Integer.MAX_VALUE, null);
+                    Integer.MAX_VALUE, null);
             return dataRecords;
         } catch (SQLException e) {
             throw new Exception(e);
@@ -168,7 +174,7 @@ public class BulkOpeningAccountsTask {
                 "SELECT * FROM DWH.GL_ACC A WHERE "
                 + "A.ACID = ? "
                 + "AND A.DTC IS NULL ",
-                 new Object[]{acId});
+                new Object[]{acId});
     }
 
     private void updateAccount(GLAccount account, DataRecord item) {
@@ -181,12 +187,12 @@ public class BulkOpeningAccountsTask {
 
     private GLAccount createBalkOpeningAccount(DataRecord dataRecord, String cNum, String branch, String cCode, String acId) {
         Date dateOpen = dataRecord.getDate("DTO");
-        AccountKeys keys = createBalkOpeningAccountKeys(dataRecord, cNum, branch, cCode, acId, dateOpen);
+        AccountKeys keys = createBulkOpeningAccountKeys(dataRecord, cNum, branch, cCode, acId, dateOpen);
 
-        return accountService.createBalkOpeningAccount(keys, dateOpen);
+        return accountService.createBulkOpeningAccount(keys, dateOpen);
     }
 
-    private AccountKeys createBalkOpeningAccountKeys(DataRecord dataRecord, String cNum, String branch, String cCode, String acId, Date dateOpen) {
+    private AccountKeys createBulkOpeningAccountKeys(DataRecord dataRecord, String cNum, String branch, String cCode, String acId, Date dateOpen) {
         ManualAccountWrapper wrapper = new ManualAccountWrapper();
 
         wrapper.setAccountType(Long.parseLong(dataRecord.getString("ACCTYPE")));

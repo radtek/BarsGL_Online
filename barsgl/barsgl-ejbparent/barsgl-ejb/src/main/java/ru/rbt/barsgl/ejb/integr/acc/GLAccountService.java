@@ -734,7 +734,7 @@ public class GLAccountService {
         }
     }
 
-    public GLAccount createBalkOpeningAccount(AccountKeys keys, Date dateOpen) {
+    public GLAccount createBulkOpeningAccount(AccountKeys keys, Date dateOpen) {
         //checkAccountPermission(accountWrapper, FormAction.CREATE);
         ErrorList errList = new ErrorList();
 
