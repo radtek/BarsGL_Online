@@ -65,7 +65,7 @@ public class BufferSyncForm extends BaseForm {
         hp.add(createRefreshTabButton());
         hp.add(createExecButton());
         if (SecurityChecker.checkAction(SecurityActionCode.Replication)){
-            hp.add(createReplicateButton());
+           // hp.add(createReplicateButton());
         }
 
         rootPanel.addNorth(hp, 12);
