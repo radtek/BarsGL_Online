@@ -146,4 +146,7 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"report.png"})
     public abstract ImageResource report();
 
+    @ClientBundle.Source({"copy.png"})
+    public abstract ImageResource copy();
+
 }

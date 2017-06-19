@@ -43,7 +43,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , BufferModeSyncBackvalue
         , RecalcBS2
         , RecalcWTAC
-        , ReplAfterHolidays
+        , ReplAfterBufferRelease
         , UnloadPDandUnspents
         , AccountDetailsNotify
         , JobControl

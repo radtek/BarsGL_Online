@@ -84,6 +84,7 @@ public enum SecurityActionCode {
     , TechOperHistory("История создания операций по техсчетам для admin")
     , TechOperHistoryUser("История создания операций по техсчетам для user")
     , TechOperPstChngDate("Изменение даты проводки по техсчетам без анализа прав доступа в архив")
+    , Replication("Ручная репликация")
 
     ;
 

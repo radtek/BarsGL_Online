@@ -1,9 +1,8 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.ReplicateManualTask;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 
@@ -24,11 +23,12 @@ public class ReplicateManualTest extends AbstractTimerJobTest{
 
         setOperday(parseDate("07072014", "ddMMyyyy"), parseDate("04072014", "ddMMyyyy"), ONLINE, OPEN);
 
-        SingleActionJobBuilder ReplicTaskBuilder = SingleActionJobBuilder.create().withClass(ReplicateManualTask.class);
+        SingleActionJobBuilder ReplicTaskBuilder = SingleActionJobBuilder.create().withName(ReplicateManualTask.class.getSimpleName()).withClass(ReplicateManualTask.class);
         jobService.executeJob(ReplicTaskBuilder.build());
     }
 
     @Test
+    @Ignore("Метод  Checkrun() не используется ")
     public void testCheckrun() throws ParseException {
         // init
         Date sysdate10 = parseDate("2014-01-10", "yyyy-MM-dd");
