@@ -36,7 +36,7 @@ import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 /*
 insert into gl_sched (TSKNM, PROPS, DESCR, STATE, STR_TYPE, SCH_TYPE, RUN_CLS, DELAY, INTERVAL, SCH_EXPR)
 values('BulkOpeningAccountsTask', null, 'Массовое открытие счетов', 'STOPPED', 'MANUAL', 'SINGLE', 'ru.rbt.barsgl.ejb.controller.operday.task.BulkOpeningAccountsTask', 0, null, null);
-*/
+ */
 public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
 
     private static final Logger log = Logger.getLogger(BulkOpeningAccountsTask.class);
@@ -66,30 +66,31 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
     }
 
     private void bulkOpeningAccounts(Properties properties) throws Exception {
-        List<DataRecord> list = getAccount();
+        try {
+            List<DataRecord> list = getAccount();
 
-        /*
-        int batchSize = 100;
-        for (int i = 0; i < list.size(); i += batchSize) {
-            List<DataRecord> subList = list.subList(i, Math.min(i + batchSize, list.size()));
-        }
-         */
-        //Set<String> accounts = new HashSet<>();
-        list.forEach(item -> {
-            Long id = item.getLong("ID");
-            String cNum = item.getString("CNUM");
-            String branch = item.getString("BRANCH");
+            /*
+            int batchSize = 100;
+            for (int i = 0; i < list.size(); i += batchSize) {
+                List<DataRecord> subList = list.subList(i, Math.min(i + batchSize, list.size()));
+            }
+            */
+            //Set<String> accounts = new HashSet<>();
+            list.forEach(item -> {
+                Long id = item.getLong("ID");
+                String cNum = item.getString("CNUM");
+                String branch = item.getString("BRANCH");
 
-            try {
-                repository.executeTransactionally(dac -> {
-                    if (cNum != null && !cNum.isEmpty()) {
-                        String cCode = getCCode(branch);
-                        //accounts.add(loadAccount(item, cNum, branch, cCode));
-                        loadAccount(item, cNum, branch, cCode);
-                    } else {
-                        List<DataRecord> listImbcbbrp = getListImbcbbrp(branch);
+                try {
+                    repository.executeTransactionally(dac -> {
+                        if (cNum != null && !cNum.isEmpty()) {
+                            String cCode = getCCode(branch);
+                            //accounts.add(loadAccount(item, cNum, branch, cCode));
+                            loadAccount(item, cNum, branch, cCode);
+                        } else {
+                            List<DataRecord> listImbcbbrp = getListImbcbbrp(branch);
 
-                        if (listImbcbbrp != null) {
+                            if (listImbcbbrp != null) {
                                 listImbcbbrp.forEach(imbcbbrp -> {
                                     String imbCNum = imbcbbrp.getString("A8BICN");
                                     String imbBranch = imbcbbrp.getString("A8BRCD");
@@ -101,17 +102,20 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
                                         throw new BreakException(ex);
                                     }
                                 });
+                            }
                         }
-                    }
-                    createBultOpeneingAccountResult(id, GlOpenaccStatus.OK);
-                    return null;
-                });
-            } catch (Throwable ex) {
-                createBultOpeneingAccountResult(id, GlOpenaccStatus.ERROR);
-                auditController.error(BulkOpeningAccountsTask, "Ошибка при массовом открытии счетов", null, ex);
-                log.error(null, ex);
-            }            
-        });
+                        createBultOpeneingAccountResult(id, GlOpenaccStatus.OK);
+                        return null;
+                    });
+                } catch (Throwable ex) {
+                    createBultOpeneingAccountResult(id, GlOpenaccStatus.ERROR);
+                    auditController.error(BulkOpeningAccountsTask, "Ошибка при массовом открытии счетов", null, ex);
+                    log.error(null, ex);
+                }
+            });
+        } catch (Exception ex) {
+            auditController.error(BulkOpeningAccountsTask, "Ошибка при массовом открытии счетов", null, ex);
+        }
     }
 
     private List<DataRecord> getListImbcbbrp(String branch) throws SQLException {
@@ -284,6 +288,6 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
         private BreakException(Exception ex) {
             super(ex);
         }
-        
+
     }
 }
