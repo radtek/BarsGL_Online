@@ -115,6 +115,7 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
             });
         } catch (Exception ex) {
             auditController.error(BulkOpeningAccountsTask, "Ошибка при массовом открытии счетов", null, ex);
+            throw ex;
         }
     }
 
