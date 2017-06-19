@@ -734,6 +734,27 @@ public class GLAccountService {
         }
     }
 
+    public GLAccount createBulkOpeningAccount(ManualAccountWrapper accountWrapper) throws Exception {
+        try {
+            Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
+            AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
+            // Такой счет уже есть
+//            GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
+//            if (glAccount != null) return glAccount.getBsaAcid();
+
+            GLAccount glAccount = glAccountController.createGLAccountMnl(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+            auditController.info(Account, format("Создан счет '%s'  по массовому открытию счетов",
+                    glAccount.getBsaAcid()), glAccount);
+            glAccountController.fillWrapperFields(accountWrapper, glAccount);
+            return glAccount;
+        } catch (Throwable e) {
+            accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            auditController.error(Account, format("Ошибка при создании счета по массовому открытию счетов для acid: '%s'",
+                    accountWrapper.getAcid()), null, e);
+            throw e;
+        }
+    }
+
     public GLAccount createBulkOpeningAccount(AccountKeys keys, Date dateOpen) {
         //checkAccountPermission(accountWrapper, FormAction.CREATE);
         ErrorList errList = new ErrorList();

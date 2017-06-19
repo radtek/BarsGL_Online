@@ -24,16 +24,18 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     @Test
     public void bulkOpeningAccount() {
         baseEntityRepository.executeNativeUpdate(
-                "insert into dwh.gl_openacc values "
+                "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
-                + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2017-05-26')");
+//                + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2017-05-26')");
+                + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2015-02-26')");
+        //Long id = baseEntityRepository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
         try {
             String acId = createAcId("00000083", "RUR", "3320", "04", "008");
-            remoteAccess.invoke(BulkOpeningAccountsTask.class, "bulkOpeningAccounts");
+            remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
             GLAccount account = (GLAccount) baseEntityRepository.selectOne(GLAccount.class,
                     "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
-            Assert.notNull(account);
             deleteAccountByAcid(acId);
+            Assert.notNull(account);
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
                     + "where BRANCH = '008' and CNUM = '00000083' and CCY = 'RUR' and ACOD = '3320' and SQ = '04'");
@@ -43,12 +45,12 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     @Test
     public void bulkOpeningAccountWithErrorData() {
         baseEntityRepository.executeNativeUpdate(
-                "insert into dwh.gl_openacc values "
+                "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
-                + "('001','00000018','RUR','3213','01','3213','01','90702','851030300','Бланки собственных векселей Банка','2017-05-26')");
+                + "('001','00000018','RUR','3213','01','3213','01','90702','851030300','Бланки собственных векселей Банка','2015-02-26')");
         try {
             String acId = createAcId("00000018", "RUR", "3213", "01", "001");
-            remoteAccess.invoke(BulkOpeningAccountsTask.class, "bulkOpeningAccounts");
+            remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
             GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                     "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
             org.junit.Assert.assertNull(account);
@@ -61,9 +63,9 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     @Test
     public void bulkOpeningAccountWithCNumNull() throws SQLException {
         baseEntityRepository.executeNativeUpdate(
-                "insert into dwh.gl_openacc values "
+                "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
-                + "('MOS',null,'AUD','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2017-05-26')");
+                + "('MOS',null,'AUD','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')");
 
         try {
             List<String> acIdList = new ArrayList<>();
@@ -75,13 +77,13 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
                 acIdList.add(createAcId(imbCNum, "AUD", "3201", "01", imbBranch));
             });
 
-            remoteAccess.invoke(BulkOpeningAccountsTask.class, "bulkOpeningAccounts");
+            remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
 
             acIdList.forEach(acId -> {
                 GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                         "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
-                Assert.notNull(account);
                 deleteAccountByAcid(acId);
+                Assert.notNull(account);
             });
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
@@ -92,9 +94,9 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     @Test
     public void bulkOpeningAccountWithCNumAll() throws SQLException {
         baseEntityRepository.executeNativeUpdate(
-                "insert into dwh.gl_openacc values "
+                "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
-                + "('ALL',null,'EUR','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2017-05-26')");
+                + "('ALL',null,'EUR','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')");
 
         try {
             List<String> acIdList = new ArrayList<>();
@@ -106,13 +108,13 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
                 acIdList.add(createAcId(imbCNum, "EUR", "3201", "01", imbBranch));
             });
 
-            remoteAccess.invoke(BulkOpeningAccountsTask.class, "bulkOpeningAccounts");
+            remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
 
             acIdList.forEach(acId -> {
                 GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                         "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
-                Assert.notNull(account);
                 deleteAccountByAcid(acId);
+                Assert.notNull(account);
             });
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
@@ -151,8 +153,8 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
                     "(select BSAACID from accrln where acid = ?)", acid);
             int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from ACCRLN where acid = ?", acid);
             logger.info("deleted Midas from GL_ACC:" + cntGlAcc + "; ACCRLN:" + cntAccRln + "; BSAACC:" + cntBsaAcc);
-        }finally {
-
+        }catch(Exception ex) {
+            logger.severe("Error deleted Midas from GL_ACC acid: " + acid);            
         }
     }
     

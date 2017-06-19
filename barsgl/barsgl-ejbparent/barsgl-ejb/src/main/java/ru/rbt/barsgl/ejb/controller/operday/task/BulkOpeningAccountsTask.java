@@ -5,8 +5,10 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import static java.lang.String.format;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import javax.ejb.EJB;
 import javax.persistence.NonUniqueResultException;
@@ -25,14 +27,23 @@ import ru.rbt.shared.Assert;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BulkOpeningAccountsTask;
+import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 /**
  *
  * @author Andrew Samsonov
  */
-public class BulkOpeningAccountsTask {
+/*
+insert into gl_sched (TSKNM, PROPS, DESCR, STATE, STR_TYPE, SCH_TYPE, RUN_CLS, DELAY, INTERVAL, SCH_EXPR)
+values('BulkOpeningAccountsTask', null, 'Массовое открытие счетов', 'STOPPED', 'MANUAL', 'SINGLE', 'ru.rbt.barsgl.ejb.controller.operday.task.BulkOpeningAccountsTask', 0, null, null);
+*/
+public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
 
     private static final Logger log = Logger.getLogger(BulkOpeningAccountsTask.class);
+
+    public enum GlOpenaccStatus {
+        NEW, OK, ERROR
+    };
 
     @EJB
     private AuditController auditController;
@@ -49,8 +60,13 @@ public class BulkOpeningAccountsTask {
     @EJB
     private CoreRepository repository;
 
-    public void bulkOpeningAccounts(Object... args) throws Exception {
-        List<DataRecord> list = getAccount(args);
+    @Override
+    public void run(String jobName, Properties properties) throws Exception {
+        bulkOpeningAccounts(properties);
+    }
+
+    private void bulkOpeningAccounts(Properties properties) throws Exception {
+        List<DataRecord> list = getAccount();
 
         /*
         int batchSize = 100;
@@ -60,30 +76,41 @@ public class BulkOpeningAccountsTask {
          */
         //Set<String> accounts = new HashSet<>();
         list.forEach(item -> {
+            Long id = item.getLong("ID");
             String cNum = item.getString("CNUM");
             String branch = item.getString("BRANCH");
-            try {
-                if (cNum != null && !cNum.isEmpty()) {
-                    String cCode = getCCode(branch);
-                    //accounts.add(loadAccount(item, cNum, branch, cCode));
-                    loadAccount(item, cNum, branch, cCode);
-                } else {
-                    List<DataRecord> listImbcbbrp = getListImbcbbrp(branch);
 
-                    if (listImbcbbrp != null) {
-                        listImbcbbrp.forEach(imbcbbrp -> {
-                            String imbCNum = imbcbbrp.getString("A8BICN");
-                            String imbBranch = imbcbbrp.getString("A8BRCD");
-                            String cCode = imbcbbrp.getString("BCBBR");
-                            //accounts.add(loadAccount(item, imbCNum, imbBranch, cCode));
-                            loadAccount(item, imbCNum, imbBranch, cCode);
-                        });
+            try {
+                repository.executeTransactionally(dac -> {
+                    if (cNum != null && !cNum.isEmpty()) {
+                        String cCode = getCCode(branch);
+                        //accounts.add(loadAccount(item, cNum, branch, cCode));
+                        loadAccount(item, cNum, branch, cCode);
+                    } else {
+                        List<DataRecord> listImbcbbrp = getListImbcbbrp(branch);
+
+                        if (listImbcbbrp != null) {
+                                listImbcbbrp.forEach(imbcbbrp -> {
+                                    String imbCNum = imbcbbrp.getString("A8BICN");
+                                    String imbBranch = imbcbbrp.getString("A8BRCD");
+                                    String cCode = imbcbbrp.getString("BCBBR");
+                                    try {
+                                        //accounts.add(loadAccount(item, imbCNum, imbBranch, cCode));
+                                        loadAccount(item, imbCNum, imbBranch, cCode);
+                                    } catch (Exception ex) {
+                                        throw new BreakException(ex);
+                                    }
+                                });
+                        }
                     }
-                }
-            } catch (Exception ex) {
+                    createBultOpeneingAccountResult(id, GlOpenaccStatus.OK);
+                    return null;
+                });
+            } catch (Throwable ex) {
+                createBultOpeneingAccountResult(id, GlOpenaccStatus.ERROR);
                 auditController.error(BulkOpeningAccountsTask, "Ошибка при массовом открытии счетов", null, ex);
                 log.error(null, ex);
-            }
+            }            
         });
     }
 
@@ -110,7 +137,7 @@ public class BulkOpeningAccountsTask {
 
     public List<DataRecord> getAccount(Object... args) throws SQLException {
         List<DataRecord> dataRecords = repository.selectMaxRows(
-                "SELECT A.* FROM DWH.GL_OPENACC A " //+ "WHERE CLAUSE"
+                "SELECT A.* FROM GL_OPENACC A WHERE A.STATUS = '" + GlOpenaccStatus.NEW.name() + "'"//+ "WHERE CLAUSE"
                 ,
                  Integer.MAX_VALUE, null);
         return dataRecords;
@@ -127,7 +154,7 @@ public class BulkOpeningAccountsTask {
         return acId;
     }
 
-    private String loadAccount(DataRecord item, String cNum, String branch, String cCode) {
+    private String loadAccount(DataRecord item, String cNum, String branch, String cCode) throws Exception {
         String acId = createAcId(cNum, branch, item);
         //@@@ ??? createTmp(item, vAcid, cCode); 
 
@@ -137,6 +164,7 @@ public class BulkOpeningAccountsTask {
                 updateAccount(account, item);
             } catch (Exception ex) {
                 auditController.error(Account, format("Ошибка при изменении счета для acid = '%s'", acId), null, ex);
+                throw ex;
             }
         } else {
             createBalkOpeningAccount(item, cNum, branch, cCode, acId);
@@ -159,7 +187,7 @@ public class BulkOpeningAccountsTask {
         try {
             String acidsStr = "'" + StringUtils.listToString(acids, "','") + "'";
             List<DataRecord> dataRecords = repository.selectMaxRows(
-                    "SELECT * FROM DWH.GL_ACC A WHERE "
+                    "SELECT * FROM GL_ACC A WHERE "
                     + "A.ACID IN (" + acidsStr + ") "
                     + "AND A.DTC IS NULL ",
                     Integer.MAX_VALUE, null);
@@ -171,7 +199,7 @@ public class BulkOpeningAccountsTask {
 
     private DataRecord getNativeGLAccount(String acId) throws Exception {
         return repository.selectFirst(
-                "SELECT * FROM DWH.GL_ACC A WHERE "
+                "SELECT * FROM GL_ACC A WHERE "
                 + "A.ACID = ? "
                 + "AND A.DTC IS NULL ",
                 new Object[]{acId});
@@ -185,11 +213,33 @@ public class BulkOpeningAccountsTask {
         accountRepository.save(account);
     }
 
-    private GLAccount createBalkOpeningAccount(DataRecord dataRecord, String cNum, String branch, String cCode, String acId) {
+    private GLAccount createBalkOpeningAccount(DataRecord dataRecord, String cNum, String branch, String cCode, String acId) throws Exception {
         Date dateOpen = dataRecord.getDate("DTO");
-        AccountKeys keys = createBulkOpeningAccountKeys(dataRecord, cNum, branch, cCode, acId, dateOpen);
+        //AccountKeys keys = createBulkOpeningAccountKeys(dataRecord, cNum, branch, cCode, acId, dateOpen);
 
-        return accountService.createBulkOpeningAccount(keys, dateOpen);
+        //return accountService.createBulkOpeningAccount(keys, dateOpen);
+        ManualAccountWrapper wrapper = new ManualAccountWrapper();
+
+        wrapper.setAccountType(Long.parseLong(dataRecord.getString("ACCTYPE")));
+        wrapper.setBalanceAccount2(dataRecord.getString("ACC2"));
+        wrapper.setCurrency(dataRecord.getString("CCY"));
+        wrapper.setAccountCode(Short.parseShort(dataRecord.getString("ACOD")));
+        wrapper.setAccountSequence(Short.parseShort(dataRecord.getString("SQ")));
+
+        wrapper.setBranch(branch);
+        wrapper.setCompanyCode(cCode);
+        wrapper.setCustomerNumber(cNum);
+        wrapper.setAcid(acId);
+
+        wrapper.setDealId(dataRecord.getString("DEALID"));
+        wrapper.setSubDealId(dataRecord.getString("SUBDEALID"));
+        wrapper.setDescription(dataRecord.getString("DESCRIPTION"));
+
+        wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(dateOpen));
+
+        //UCBCA	-CA	Касса	N
+        wrapper.setDealSource("UCBCA");
+        return accountService.createBulkOpeningAccount(wrapper);
     }
 
     private AccountKeys createBulkOpeningAccountKeys(DataRecord dataRecord, String cNum, String branch, String cCode, String acId, Date dateOpen) {
@@ -216,5 +266,24 @@ public class BulkOpeningAccountsTask {
         keys.setAccountMidas(acId);
 
         return keys;
+    }
+
+    private void createBultOpeneingAccountResult(Long openAccId, GlOpenaccStatus status) {
+        try {
+            accountRepository.executeInNewTransaction(persistence -> {
+                accountRepository.executeNativeUpdate("update gl_openacc set status = ?1 where id = ?2", status.name(), openAccId);
+                return null;
+            });
+        } catch (Exception ex) {
+            auditController.error(Account, format("Ошибка при изменении статуса записи gl_openacc для id = '%s'", openAccId), null, ex);
+        }
+    }
+
+    private class BreakException extends RuntimeException {
+
+        private BreakException(Exception ex) {
+            super(ex);
+        }
+        
     }
 }
