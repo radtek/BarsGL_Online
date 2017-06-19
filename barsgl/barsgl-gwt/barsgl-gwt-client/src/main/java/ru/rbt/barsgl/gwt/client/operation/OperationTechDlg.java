@@ -245,8 +245,12 @@ public class OperationTechDlg extends OperationTechDlgBase {
                 , "Основание ENG", "поле не заполнено", new CheckNotEmptyString()));
         operation.setRusNarrativeLong(check(mNarrativeRU.getValue()
                 , "Основание RUS", "поле не заполнено", new CheckNotEmptyString()));
-        operation.setDeptId((String) mDepartment.getValue());
-        operation.setProfitCenter((String) mProfitCenter.getValue());
+        if (mDepartment.getValue()!=null) {
+            operation.setDeptId((String) mDepartment.getValue());
+        }
+        if (mProfitCenter.getValue()!=null) {
+            operation.setProfitCenter((String) mProfitCenter.getValue());
+        }
         operation.setCorrection(mCheckCorrection.getValue());
         operation.setInputMethod(InputMethod.M);
 
@@ -471,7 +475,8 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void btnClick(Side side) {
-        exchange(side.equals(Side.DEBIT));
+        super.btnClick(side);
+
     }
 
     private void exchange(boolean isDebit){
@@ -480,12 +485,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
             return;
         }
 
-        if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
-            showInfo("Ошибка", "Для конвертации валюта дебета не должна быть равна валюте кредита");
-            return;
-        }
-
-        if (!(((String)mDtCurrency.getValue()).equalsIgnoreCase("RUR") || ((String)mCrCurrency.getValue()).equalsIgnoreCase("RUR"))){
+                if (!(((String)mDtCurrency.getValue()).equalsIgnoreCase("RUR") || ((String)mCrCurrency.getValue()).equalsIgnoreCase("RUR"))){
             showInfo("Ошибка", "Валюта дебета или кредита должна быть RUR");
             return;
         }

@@ -146,7 +146,9 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         return grid;
     }
 
-    protected void btnClick(Side side){}
+    protected void btnClick(Side side){
+
+    }
 
     protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
         return createCachedFilialListBox(name, filial, width, false, true);

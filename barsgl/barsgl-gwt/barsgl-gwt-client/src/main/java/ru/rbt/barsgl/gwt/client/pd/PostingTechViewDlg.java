@@ -2,11 +2,11 @@ package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
@@ -19,7 +19,9 @@ import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
 import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
@@ -122,11 +124,11 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
 
     @Override
     public void beforeCreateContent(){
-        //isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
-        //if (isAsyncListsCached != null && isAsyncListsCached) return;
-        //registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        if (isAsyncListsCached != null && isAsyncListsCached) return;
+        registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        //LocalDataStorage.putParam("isAsyncListsCached", true);
+        LocalDataStorage.putParam("isAsyncListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -605,8 +607,8 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
 
     @Override
     protected void fillContent() {
-        fillUp();
-        /*if (isAsyncListsCached != null && isAsyncListsCached){
+        //fillUp();
+        if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
             return;
@@ -629,7 +631,7 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
             };
 
             timer.scheduleRepeating(500);
-        }*/
+        }
     }
 
 }

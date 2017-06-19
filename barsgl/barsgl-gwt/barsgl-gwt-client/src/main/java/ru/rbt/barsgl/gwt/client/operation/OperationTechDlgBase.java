@@ -117,7 +117,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         grid.setWidget(1, 0, createLabel("Валюта"));
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
+        grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH,false,false));
 
         //grid.setWidget(3, 0, createLabel("AccType"));
         grid.setWidget(3, 0, createAlignWidget(mButton = createAccTypedButton("AccType", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
@@ -348,15 +348,15 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             return false;
         }
 
-        String bsaccidDt = mDtAccount.getValue();
-        String bsaccidCr = mCrAccount.getValue();
+        if (mDtAccount.getValue()!=null && mCrAccount.getValue()!=null) {
+            String bsaccidDt = mDtAccount.getValue();
+            String bsaccidCr = mCrAccount.getValue();
 
-        if (bsaccidDt.equalsIgnoreCase(bsaccidCr))
-        {
-            DialogUtils.showInfo("Невозможно осуществить операцию в рамках одного счёта");
-            return false;
+            if (bsaccidDt.equalsIgnoreCase(bsaccidCr)) {
+                DialogUtils.showInfo("Невозможно осуществить операцию в рамках одного счёта");
+                return false;
+            }
         }
-
 
         return true;
     }

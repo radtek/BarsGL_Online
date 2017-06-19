@@ -127,11 +127,11 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     public void beforeCreateContent(){
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCachedTH");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);
+        LocalDataStorage.putParam("isAsyncListsCachedTH", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -429,6 +429,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDateValue.setValue((Date)getFieldValue("VALD"));
         mDateOperDay.setValue(getFieldValue("POD").toString());
 
+        Window.alert(getFieldText("CCY_DR"));
         mDtCurrency.setSelectValue(getFieldText("CCY_DR"));
         mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
         String accDtType = Utils.fillUp(getFieldText("ACCTYPE_DR"),9);
@@ -562,6 +563,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     protected void setFields(ManualTechOperationWrapper operation) {
 
+        Window.alert("PostingTechDlg.setFields");
         operation.setId(idOperation);
         operation.setDealSrc(mDealSource.getText());
         operation.setDealId(mDealId.getValue());
@@ -597,7 +599,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         operation.setStorno(isStorno);
         operation.setFan(isFan);
 
-        //Window.alert(inputMethod);
+        Window.alert(inputMethod);
         if (InputMethod.M.getLabel().equalsIgnoreCase(inputMethod))
         {
             operation.setInputMethod(InputMethod.M);
@@ -625,14 +627,6 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
     @Override
     protected void fillContent() {
 
-        /*for (int i = 0; i<10; i++)
-        {
-            showPreload(true);
-            timer.scheduleRepeating(500);
-        }*/
-
-
-
         if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
@@ -655,7 +649,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
                 }
             };
 
-            timer.scheduleRepeating(500);
+            timer.scheduleRepeating(100);
         }
     }
 
