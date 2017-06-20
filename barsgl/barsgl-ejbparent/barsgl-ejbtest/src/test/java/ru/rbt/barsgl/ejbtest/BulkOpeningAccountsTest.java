@@ -83,8 +83,8 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     public void bulkOpeningAccount() {
         executeNativeUpdate("insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                         //Cnum+CCY+Acod+SQ+Branch
-//                + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2017-05-26')");
-                        + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2015-02-26')");
+                        + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2015-02-26')"
+        );
         //Long id = baseEntityRepository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
         try {
             String acId = createAcId("00000083", "RUR", "3320", "04", "008");
@@ -157,7 +157,9 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
         baseEntityRepository.executeNativeUpdate(
                 "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
-                + "('ALL',null,'EUR','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')");
+                //+ "('ALL',null,'EUR','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')"
+                + "('ALL',null,'RUR','3218','01','3218','01','91203','863010200','Сомнительные банкноты Банка России , направленные на экспертизу в Банк России','2015-02-26')"
+        );
 
         try {
             List<String> acIdList = new ArrayList<>();
@@ -166,7 +168,8 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
             listImbcbbrp.forEach(imbcbbrp -> {
                 String imbCNum = imbcbbrp.getString("A8BICN");
                 String imbBranch = imbcbbrp.getString("A8BRCD");
-                acIdList.add(createAcId(imbCNum, "EUR", "3201", "01", imbBranch));
+                //acIdList.add(createAcId(imbCNum, "EUR", "3201", "01", imbBranch));
+                acIdList.add(createAcId(imbCNum, "RUR", "3218", "01", imbBranch));
             });
 
             remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
@@ -179,7 +182,8 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
             });
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
-                    + "where BRANCH = 'ALL' and CNUM is null and CCY = 'EUR' and ACOD = '3201' and SQ = '01'");
+                    //+ "where BRANCH = 'ALL' and CNUM is null and CCY = 'EUR' and ACOD = '3201' and SQ = '01'");
+                    + "where BRANCH = 'ALL' and CNUM is null and CCY = 'RUR' and ACOD = '3218' and SQ = '01'");
         }
     }
 

@@ -198,7 +198,7 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
     private GLAccount getGLAccount(String acId) {
         List<GLAccount> list = accountRepository.select(GLAccount.class, "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
         if (1 < list.size()) {
-            throw new NonUniqueResultException("Found more than one entity on query");
+            throw new NonUniqueResultException("Found more than one entity on query for acid " + acId);
         } else if (list.isEmpty()) {
             return null;
         }
