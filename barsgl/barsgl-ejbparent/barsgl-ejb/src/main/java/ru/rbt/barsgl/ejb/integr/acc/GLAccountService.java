@@ -742,7 +742,7 @@ public class GLAccountService {
 //            GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
 //            if (glAccount != null) return glAccount.getBsaAcid();
 
-            GLAccount glAccount = glAccountController.createGLAccountMnl(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+            GLAccount glAccount = glAccountController.createGLAccountMnlInRequiredTrans(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
             auditController.info(Account, format("Создан счет '%s'  по массовому открытию счетов",
                     glAccount.getBsaAcid()), glAccount);
             glAccountController.fillWrapperFields(accountWrapper, glAccount);

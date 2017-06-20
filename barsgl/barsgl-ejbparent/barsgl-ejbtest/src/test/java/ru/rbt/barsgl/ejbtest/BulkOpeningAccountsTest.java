@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.BulkOpeningAccountsTask;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -22,12 +23,68 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     private static final Logger logger = Logger.getLogger(BulkOpeningAccountsTest.class.getName());
 
     @Test
+    public void testTrans() throws SQLException{
+        //Cnum+CCY+Acod+SQ+Branch
+        String [] sqlList = new String[]{
+            "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
+                + "('ALL',null,'EUR','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')",
+            "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
+                + "('MOS',null,'DKK','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')"
+        };
+
+        try {
+            List<String> acIdListMOS = new ArrayList<>();
+
+            List<DataRecord> listImbcbbrpMOS = getListImbcbbrp("MOS");
+            listImbcbbrpMOS.forEach(imbcbbrp -> {
+                String imbCNum = imbcbbrp.getString("A8BICN");
+                String imbBranch = imbcbbrp.getString("A8BRCD");
+                acIdListMOS.add(createAcId(imbCNum, "DKK", "3201", "01", imbBranch));
+            });
+
+            List<String> acIdListALL = new ArrayList<>();
+            List<DataRecord> listImbcbbrpALL = getListImbcbbrp("ALL");
+
+            listImbcbbrpALL.forEach(imbcbbrp -> {
+                String imbCNum = imbcbbrp.getString("A8BICN");
+                String imbBranch = imbcbbrp.getString("A8BRCD");
+                acIdListALL.add(createAcId(imbCNum, "EUR", "3201", "01", imbBranch));
+            });
+
+            Object [] acIdList = new Object[]{
+                acIdListALL,
+                acIdListMOS
+            };
+
+            for(String sql:sqlList){
+                executeNativeUpdate(sql);
+            }
+                
+            remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
+
+            for(Object list : acIdList){
+                ((List<String>)list).forEach(acId -> {
+                    GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
+                            "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
+                    deleteAccountByAcid(acId);
+                    Assert.notNull(account);
+                });                
+            }            
+        } finally {
+            executeNativeUpdate("delete from GL_OPENACC "
+                    + "where BRANCH = 'MOS' and CNUM is null and CCY = 'DKK' and ACOD = '3201' and SQ = '01'");
+            executeNativeUpdate("delete from GL_OPENACC "
+                    + "where BRANCH = 'ALL' and CNUM is null and CCY = 'EUR' and ACOD = '3201' and SQ = '01'");
+        }
+        
+    }
+    
+    @Test
     public void bulkOpeningAccount() {
-        baseEntityRepository.executeNativeUpdate(
-                "insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
-                //Cnum+CCY+Acod+SQ+Branch
+        executeNativeUpdate("insert into gl_openacc (BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
+                        //Cnum+CCY+Acod+SQ+Branch
 //                + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2017-05-26')");
-                + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2015-02-26')");
+                        + "('008','00000083','RUR','3320','04','3320','04','91202','863020600','Бланки пластиковых карт, находящиеся в хранилище ценностей VISA Classic Unembossed (chip PayWave)','2015-02-26')");
         //Long id = baseEntityRepository.selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
         try {
             String acId = createAcId("00000083", "RUR", "3320", "04", "008");
@@ -40,6 +97,10 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
                     + "where BRANCH = '008' and CNUM = '00000083' and CCY = 'RUR' and ACOD = '3320' and SQ = '04'");
         }
+    }
+
+    private void executeNativeUpdate(String sql) {
+        baseEntityRepository.executeNativeUpdate(sql);
     }
 
     @Test
@@ -123,15 +184,23 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
     }
 
     private List<DataRecord> getListImbcbbrp(String branch) throws SQLException {
-        String sqlSelect = "SELECT * FROM IMBCBBRP";
+//        String sqlSelect = "SELECT * FROM IMBCBBRP";
+        List<DataRecord> listImbcbbrp = getAllListImbcbbrp();
 
         if ("ALL".equalsIgnoreCase(branch)) {
-            return baseEntityRepository.select(sqlSelect,
-                    new Object[]{});
+            return listImbcbbrp;
+//            return baseEntityRepository.select(sqlSelect,
+//                    new Object[]{});
         } else {
-            return baseEntityRepository.select(sqlSelect
-                    + " WHERE A8CMCD=?", new Object[]{branch});
+            return getFilterList(listImbcbbrp, branch);
+//            return baseEntityRepository.select(sqlSelect
+//                    + " WHERE A8CMCD=?", new Object[]{branch});
         }
+    }
+    
+    private List<DataRecord> getAllListImbcbbrp() throws SQLException{
+        String sqlSelect = "SELECT BRP.A8BICN, BRP.A8BRCD, BRP.BCBBR, BRP.A8CMCD FROM IMBCBBRP BRP, IMBCBCMP CMP WHERE BRP.BCBBR = CMP.CCBBR AND CMP.CCPRI <> 'N'";
+        return baseEntityRepository.select(sqlSelect, new Object[]{});
     }
 
     private String createAcId(String cNum, String ccy, String aCod, String sq, String branch) {
@@ -157,5 +226,9 @@ public class BulkOpeningAccountsTest extends AbstractRemoteTest {
             logger.severe("Error deleted Midas from GL_ACC acid: " + acid);            
         }
     }
-    
+
+    private List<DataRecord> getFilterList(List<DataRecord> listImbcbbrp, String branch){
+        return listImbcbbrp.stream().filter(p -> branch.equals(p.getString("A8CMCD"))).collect(Collectors.toList());        
+    }
+        
 }
