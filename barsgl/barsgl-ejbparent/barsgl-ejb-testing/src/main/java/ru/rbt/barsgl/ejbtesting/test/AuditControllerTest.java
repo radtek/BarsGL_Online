@@ -9,6 +9,7 @@ import ru.rbt.ejbcore.validation.ValidationError;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.shared.Assert;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 
@@ -28,6 +29,7 @@ public class AuditControllerTest {
         GLOperation operation;
         try {
             operation = operationRepository.selectFirst(GLOperation.class, "from GLOperation o where o.id = ?1", gloid);
+            Assert.notNull(operation, "Не найдена операция GLOID = " + gloid);
             try {
                 auditController.info(AuditRecord.LogCode.Operation, message + ": before divide error", operation);
                 long e = 5 / 0;
@@ -45,7 +47,7 @@ public class AuditControllerTest {
             }
             try {
                 Thread.sleep(100);
-                auditController.info(AuditRecord.LogCode.Operation, message + ": before vaildation error: " + message, operation);
+                auditController.info(AuditRecord.LogCode.Operation, message + ": before ValidationError: " + message, operation);
                 throw new ValidationError(ErrorCode.CURRENCY_CODE_NOT_EXISTS, "LOL");
             } catch (Throwable e) {
                 Thread.sleep(100);
