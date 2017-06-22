@@ -137,7 +137,7 @@ public class OperTechEventHistoryForm extends OperTechSuperBase {
     protected String getSelectClause() {
         String whereSFpart = "";
         String where = "";
-        if ( !SecurityChecker.checkAction(SecurityActionCode.OperHistory)) {
+        if ( !SecurityChecker.checkAction(SecurityActionCode.TechOperHistory)) {
                 where = (isEmpty(whereSFpart = getSourceAndFilialPart("where", "PST.SRC_PST", "PST.CBCC_CR", "PST.CBCC_DR")) ? " where" : whereSFpart + " and") +
                     " INVISIBLE <> '" + InvisibleType.H.name() + "' ";
         }

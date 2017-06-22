@@ -94,9 +94,9 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
         result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "Accounting Type", 60, true, false, Column.Sort.ASC, ""));// No Space
         colAccType.setFilterable(true);
-        result.addColumn(colAccount = new Column("BSAACID", STRING, "Псевдосчёт", 100));
+        result.addColumn(colAccount = new Column("BSAACID", STRING, "Псевдосчёт", 160));
         result.addColumn(colCurrency = new Column("CCY", STRING, "Валюта", 60));
-        result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 80));
+        result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 120));
         result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 60));
         Column colCBCCN;
         result.addColumn(colCBCCN = new Column("CBCCN", STRING, "Код филиала (цифровой)", 60));
@@ -254,9 +254,19 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
             if (isDebit) {
                 wrapper.setAccountDebit(bsaAcid);
                 wrapper.setAccountTypeDebit(accType);
+                wrapper.setCurrencyDebit(ccy);
+                if (!"RUR".equalsIgnoreCase(ccy))
+                {
+                    wrapper.setCurrencyCredit("RUR");
+                }
             } else {
                 wrapper.setAccountCredit(bsaAcid);
                 wrapper.setAccountTypeCredit(accType);
+                wrapper.setCurrencyCredit(ccy);
+                if (!"RUR".equalsIgnoreCase(ccy))
+                {
+                    wrapper.setCurrencyDebit("RUR");
+                }
             }
             wrapper.setDealSrc(dealSounce);
             //wrapper.setDealId(dealId);

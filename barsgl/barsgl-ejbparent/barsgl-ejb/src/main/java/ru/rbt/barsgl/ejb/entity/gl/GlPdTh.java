@@ -89,7 +89,7 @@ public class GlPdTh extends BaseEntity<Long> {
     /**
      * Depatment code
      */
-    @Column(name = "DPMT",length = 3)
+    @Column(name = "DPMT",length = 4)
     private String department;
 
     /**

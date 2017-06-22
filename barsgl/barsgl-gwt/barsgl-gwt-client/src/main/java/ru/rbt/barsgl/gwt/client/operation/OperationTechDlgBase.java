@@ -88,9 +88,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
 
     protected Long id;
 
+
     public OperationTechDlgBase(String title, FormAction action, Columns columns) {
         super(columns, action);
         setCaption(title);
+        //rootLogger.addHandler(new ConsoleLogHandler());
     }
 
     @Override
@@ -116,7 +118,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         grid.setWidget(1, 0, createLabel("Валюта"));
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
+        grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH,false,false));
 
         //grid.setWidget(3, 0, createLabel("AccType"));
         grid.setWidget(3, 0, createAlignWidget(mButton = createAccTypedButton("AccType", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
@@ -190,16 +192,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         return new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent){
-                if (side.equals(Side.DEBIT))
-                {
-                    if (!mCrFilial.hasValue()) {
-                        mCrFilial.setSelectedIndex(mDtFilial.getSelectedIndex());
-                    }
+                if (side.equals(Side.DEBIT)) {
+                    mCrFilial.setSelectedIndex(mDtFilial.getSelectedIndex());
                 }
                 else{
-                    if (mDtFilial.hasValue()) {
-                        mDtFilial.setSelectedIndex(mCrFilial.getSelectedIndex());
-                    }
+                    mDtFilial.setSelectedIndex(mCrFilial.getSelectedIndex());
                 }
 
                 TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
@@ -248,9 +245,10 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
 
     private void updateAccount(final Side side, TxtBox mAccType)
     {
+        if (null == mAccType) return;
         String accType = mAccType.getText();
 
-        if (null != accType && accType.length()>0) {
+        if (null != accType && accType.length() > 0) {
             for (char c : accType.toCharArray()) {
                 if (!Character.isDigit(c)) {
                     DialogUtils.showInfo("Accounting Type должен содерждать только цифры");
@@ -259,28 +257,31 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                 }
             }
         }
-
         DataListBoxEx mCurrency = (side == Side.DEBIT) ? mDtCurrency : mCrCurrency;
         DataListBoxEx mFilial = (side == Side.DEBIT) ? mDtFilial : mCrFilial;
         final TxtBox mAccount = (side == Side.DEBIT) ? mDtAccount : mCrAccount;
+
+
         if (null == accType || accType.length() < 9) {
-            mAccount.clear();
+            if (mAccount != null) {
+                mAccount.setValue("");
+            }
             return;
         }
-
         String cbccn = null;
         String ccy = null;
-        if (mCurrency.getValue()!=null) {
-            ccy = mCurrency.getParam("CCY").toString();
+        if (mCurrency!=null && mCurrency.getValue() != null) {
+            ccy = mCurrency.getParam("CCY") != null ? String.valueOf(mCurrency.getParam("CCY")) : "";
         }
-        if (mFilial.getValue()!=null) {
-            cbccn = mFilial.getValue().toString();
+        if (mFilial.getParam("CBCC") != null) {
+            cbccn = String.valueOf(mFilial.getParam("CBCC"));
         }
 
-        if ((ccy!=null) && (!ccy.isEmpty()) && (cbccn!=null) && (!cbccn.isEmpty()))
-        {
+        if ((ccy != null) && (!ccy.isEmpty()) && (cbccn != null) && (!cbccn.isEmpty())) {
             final ManualAccountWrapper accWrapper = new ManualAccountWrapper();
-            accWrapper.setAccountType(Long.parseLong(mAccType.getValue()));
+            if (null != mAccType) {
+                accWrapper.setAccountType(mAccType.getValue() != null ? Long.parseLong(mAccType.getValue()) : null);
+            }
             accWrapper.setCurrency(ccy);
             accWrapper.setFilial(cbccn);
 
@@ -290,24 +291,21 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                     if (!wrapper.isError()) {
                         mAccount.setValue(wrapper.getResult().getBsaAcid());
 
-                       /* if (!mAccount.hasValue())
-                        {
-                            if (side.equals(Side.DEBIT)) {
-                                DialogUtils.showInfo("Для выбранных параметров счёт по дебету не найден");
-                            }
-                            else {
-                                DialogUtils.showInfo("Для выбранных параметров счёт по кредиту не найден");
-                            }
-                        }*/
-                    }
-                    else
+                   /* if (!mAccount.hasValue())
                     {
+                        if (side.equals(Side.DEBIT)) {
+                            DialogUtils.showInfo("Для выбранных параметров счёт по дебету не найден");
+                        }
+                        else {
+                            DialogUtils.showInfo("Для выбранных параметров счёт по кредиту не найден");
+                        }
+                    }*/
+                    } else {
                         mAccount.clear();
                     }
                 }
             });
-        }
-        else {
+        } else {
             mAccount.clear();
         }
     }
@@ -320,7 +318,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         String curDt = "";
         String curCr = "";
 
-
         if (mDtCurrency!=null && mDtCurrency.getParam("CCY")!=null) {
             curDt  = mDtCurrency.getParam("CCY").toString();
         }
@@ -329,8 +326,16 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             curCr = mCrCurrency.getParam("CCY").toString();
         }
 
-        String filialDt = mDtFilial.getValue().toString();
-        String filialCr = mCrFilial.getValue().toString();
+        String filialDt = "";
+        String filialCr = "";
+
+        if (null!=mDtFilial.getValue()) {
+            filialDt = mDtFilial.getValue().toString();
+        }
+
+        if (null!=mCrFilial.getValue()) {
+            filialCr = mCrFilial.getValue().toString();
+        }
 
         if (!filialDt.equalsIgnoreCase(filialCr))
         {
@@ -344,15 +349,15 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             return false;
         }
 
-        String bsaccidDt = mDtAccount.getValue();
-        String bsaccidCr = mCrAccount.getValue();
+        if (mDtAccount.getValue()!=null && mCrAccount.getValue()!=null) {
+            String bsaccidDt = mDtAccount.getValue();
+            String bsaccidCr = mCrAccount.getValue();
 
-        if (bsaccidDt.equalsIgnoreCase(bsaccidCr))
-        {
-            DialogUtils.showInfo("Невозможно осужествить операцию в рамках одного счёта");
-            return false;
+            if (bsaccidDt.equalsIgnoreCase(bsaccidCr)) {
+                DialogUtils.showInfo("Невозможно осуществить операцию в рамках одного счёта");
+                return false;
+            }
         }
-
 
         return true;
     }

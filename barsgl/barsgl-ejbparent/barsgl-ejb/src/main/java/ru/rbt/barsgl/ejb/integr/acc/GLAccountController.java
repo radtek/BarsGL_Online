@@ -349,6 +349,16 @@ public class GLAccountController {
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLAccountMnl(AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
+        return internalCreateGLAccountMnl(keys, descriptors, dateOpen, openType);
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public GLAccount createGLAccountMnlInRequiredTrans(AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
+        return internalCreateGLAccountMnl(keys, descriptors, dateOpen, openType);
+    }
+
+    private GLAccount internalCreateGLAccountMnl(AccountKeys keys, ErrorList descriptors, Date dateOpen, GLAccount.OpenType openType) throws DefaultApplicationException {
         GLAccount glAccount = findGLAccountMnlnoLock(keys);     // счет создается вручную
         if (null != glAccount) {
             return glAccount;
@@ -358,7 +368,7 @@ public class GLAccountController {
             throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(GLOperation.OperSide.N, errors, descriptors));
         }
         // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
-//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
+        //        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
 
         // сгенерировать номер счета ЦБ
         String bsaAcid = getAccountNumber(GLOperation.OperSide.N, dateOpen, keys);

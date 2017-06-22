@@ -141,7 +141,7 @@ public class GLAccountService {
             keys.setCurrencyDigital(currency.getDigitalCode());
             return accRlnRepository.findForSequenceGL(keys);
         } else // заполнены и ключи и счет
-        if(isAccountWithKeys(operation, operSide)) {
+        if(isAccountWithKeys(operation, operSide) && !keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
             glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
             return Optional.ofNullable(glAccountController.findGLAccountWithKeys(operation, operSide)).orElseGet(() -> {
@@ -622,8 +622,8 @@ public class GLAccountService {
 
         } catch (Exception e) {
             String errMessage = accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
-            /*auditController.error(Account, format("Ошибка поиска счёта: '%s'",
-                    accountWrapper.getAccountType()), null, e);*/
+            auditController.error(Account, format("Ошибка поиска счёта: '%s'",
+                    accountWrapper.getAccountType()), null, e);
             return new RpcRes_Base<ManualAccountWrapper>(
                     accountWrapper, true, errMessage);
         }
@@ -731,6 +731,49 @@ public class GLAccountService {
         }
     }
 
+    public GLAccount createBulkOpeningAccount(ManualAccountWrapper accountWrapper) throws Exception {
+        try {
+            Date dateOpen = new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(accountWrapper.getDateOpenStr());
+            AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
+            // Такой счет уже есть
+//            GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
+//            if (glAccount != null) return glAccount.getBsaAcid();
+
+            GLAccount glAccount = glAccountController.createGLAccountMnlInRequiredTrans(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+            auditController.info(Account, format("Создан счет '%s'  по массовому открытию счетов",
+                    glAccount.getBsaAcid()), glAccount);
+            glAccountController.fillWrapperFields(accountWrapper, glAccount);
+            return glAccount;
+        } catch (Throwable e) {
+            accountErrorMessage(e, accountWrapper.getErrorList(), initSource());
+            auditController.error(Account, format("Ошибка при создании счета по массовому открытию счетов для acid: '%s'",
+                    accountWrapper.getAcid()), null, e);
+            throw e;
+        }
+    }
+
+    public GLAccount createBulkOpeningAccount(AccountKeys keys, Date dateOpen) {
+        //checkAccountPermission(accountWrapper, FormAction.CREATE);
+        ErrorList errList = new ErrorList();
+
+        GLAccount glAccount = null;
+        try {
+            glAccount = glAccountController.createGLAccountMnl(keys, dateOpen, errList, GLAccount.OpenType.MNL);
+            auditController.info(Account, format("Создан счет '%s' по массовому открытию счетов",
+                    glAccount.getBsaAcid()), glAccount);
+
+            /*
+        // Такой счет уже есть?
+        GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
+             */
+        } catch (Throwable e) {
+            String errMessage = accountErrorMessage(e, errList, initSource());
+            auditController.error(Account, format("Ошибка при создании счета по массовому открытию счетов для acid: '%s'",
+                    keys.getAccountMidas()), null, e);
+        }
+        return glAccount;
+    }
+    
     /**
      * Поиск/создание технического счета
      * @param accountingType

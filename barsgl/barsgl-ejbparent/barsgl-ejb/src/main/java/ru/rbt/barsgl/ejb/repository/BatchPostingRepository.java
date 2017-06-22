@@ -32,7 +32,7 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
             "AC_DR, CCY_DR, AMT_DR, AC_CR, CCY_CR, AMT_CR, AMTRU, \n" +
             "SUBDEALID, FCHNG, PRFCNTR, USER_NAME, NROW, ECODE, EMSG, VDATE, INP_METHOD, PROCDATE, \n" +
             "HEADBRANCH, USER_AU2, OTS_AU2, USER_AU3, OTS_AU3, USER_CHNG, OTS_CHNG, STATE, \n" +
-            "GLOID_REF, DESCRDENY, POSTDATE, CBCC_DR, CBCC_CR, SRV_REF, SEND_SRV, OTS_SRV\n";
+            "GLOID_REF, DESCRDENY, POSTDATE, CBCC_DR, CBCC_CR, SRV_REF, SEND_SRV, OTS_SRV, TECH_ACT \n";
 
     public BatchPosting refresh(BatchPosting posting) {
         return (null == posting) ? null : refresh(posting, true);

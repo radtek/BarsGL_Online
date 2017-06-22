@@ -44,7 +44,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , BufferModeSyncBackvalue
         , RecalcBS2
         , RecalcWTAC
-        , ReplAfterHolidays
+        , ReplAfterBufferRelease
         , UnloadPDandUnspents
         , AccountDetailsNotify
         , JobControl
@@ -80,6 +80,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , TechoverTask
         , CurrencyExchange
         , ReprocessAEOper
+        , BulkOpeningAccountsTask
         , KillSession
     }
 

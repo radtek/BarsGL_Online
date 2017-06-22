@@ -100,8 +100,8 @@ public class PostingFormTech extends EditableDictionary<ManualTechOperationWrapp
     	quickFilterParams = createQuickFilterParams();
         abw.addAction(quickFilterAction = new DateQuickFilterAction(grid, colProcDate, colValueDate, colPostDate, CREATE_DATE, false));
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
-        abw.addSecureAction(createPreview(), SecurityActionCode.TechOperLook);
-        abw.addSecureAction(editPostingTech(), SecurityActionCode.TechOperPstChng);
+        abw.addAction(createPreview());
+        abw.addSecureAction(editPostingTech(), SecurityActionCode.TechOperPstChng, SecurityActionCode.TechOperPstChngDate);
         abw.addSecureAction(new PostingFormTech.DeleteAction(), SecurityActionCode.TechOperPstMakeInvisible);
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
@@ -268,7 +268,7 @@ public class PostingFormTech extends EditableDictionary<ManualTechOperationWrapp
                 "Проводка создана успешно");
     }
     private GridAction editPostingTech() {
-        return (GridAction) commonLazyAction("PostingTechDlg", "Редактирование ручной проводки по тех. счетам", UPDATE, table.getColumns(),
+        return (GridAction) commonLazyAction("PostingTechDlg", "Редактирование ручной проводки по тех. счетам", UPDATE, this.grid.getTable().getColumns(),
                 "Ручная проводка не изменена",
                 "Ошибка изменения проводки",
                 "Проводка изменена успешно");

@@ -2,6 +2,8 @@ package ru.rbt.barsgl.gwt.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import ru.rbt.barsgl.gwt.server.rpc.replication.ReplService;
+import ru.rbt.barsgl.gwt.server.rpc.replication.ReplServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.access.AccessService;
 import ru.rbt.barsgl.gwt.server.rpc.access.AccessServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.dict.ManualDictionaryService;
@@ -32,6 +34,7 @@ public class BarsGLEntryPoint implements EntryPoint {
     public static PdSyncServiceAsync pdSyncService;
     public static PropertiesServiceAsync propertiesService;
     public static LoaderControlServiceAsync loaderService;
+    public static ReplServiceAsync replService;
     
     @Override
     public void onModuleLoad() {
@@ -42,6 +45,7 @@ public class BarsGLEntryPoint implements EntryPoint {
         pdSyncService = GWT.create(PdSyncService.class);
         propertiesService = GWT.create(PropertiesService.class);
         loaderService = GWT.create(LoaderControlService.class);
+        replService = GWT.create(ReplService.class);
 
         SecurityEntryPoint.init(new MenuBuilder());
         SecurityEntryPoint.checkSession();

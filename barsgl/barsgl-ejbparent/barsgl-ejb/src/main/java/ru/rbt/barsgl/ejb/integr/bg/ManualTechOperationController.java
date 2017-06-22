@@ -309,15 +309,20 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         }
     }
 
-    private void manualOperationProcessed(BatchPosting posting) throws Exception {
+    private List<String> manualOperationProcessed(BatchPosting posting) throws Exception {
+        List<String> errorList = new ArrayList<>();
+        posting.setProcDate(operdayController.getOperday().getCurrentDate());
         GLManualOperation operation = createOperation(posting);
         operation.setBsChapter("T");
         operation.setAmountPosting(operation.getAmountDebit());
         manualOperationRepository.save(operation,true);
         posting.setOperation(operation);
-        posting.setProcDate(operdayController.getOperday().getCurrentDate());
         postingRepository.save(posting);
         List<GlPdTh> pdList = techOperationProcessor.createPdTh(operation);
+        if (pdList==null || pdList.size()<2)
+        {
+            errorList.add("Ошибка создания проводок при обработке операции");
+        }
 
         Long pcID = 0L;
         for (GlPdTh pd:pdList)
@@ -333,6 +338,8 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             pd.setPcId(pcID);
             glPdThRepository.save(pd,true);
         }
+
+        return errorList;
     }
 
     public void setExchengeParameters (GLManualOperation operation) {
@@ -689,14 +696,13 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 
     private boolean checkPostingStatus(BatchPosting posting, ManualTechOperationWrapper wrapper, BatchPostStatus ... enabledStatus) {
         if (!posting.getStatus().equals(wrapper.getStatus())) {
-            String msg = String.format("Запрос на операцию ID = %d изменен, статус: '%s' ('%s')." +
-                            "\n Обновите информацию и выполните операцию повторно"
+            String msg = String.format("Запрос на операцию ID = %d изменен, статус: '%s' ('%s')."
                     , posting.getId(), posting.getStatus().name(), posting.getStatus().getLabel());
             wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
-            String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')\n Обновите информацию",
+            String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')",
                     posting.getId(), posting.getInvisible().name(), posting.getInvisible().getLabel() );
             wrapper.getErrorList().addErrorDescription(msg);
             throw new DefaultApplicationException(msg);
@@ -904,15 +910,16 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 
         if (newStatus==SIGNEDVIEW) {
             int cnt = 0;
+            List<String> errorList=null;
             try {
                 BatchPosting posting = postingRepository.findById(wrapper.getId());
-                manualOperationProcessed(posting);
+                errorList = manualOperationProcessed(posting);
                 Date timestamp = userContext.getTimestamp();
                 cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, COMPLETED, SIGNEDVIEW);
                 result.setStatus(COMPLETED);
                 wrapper.setStatus(COMPLETED);
             } catch (EJBException ex) {
-                auditController.info(ManualOperation, ex.getMessage(), postingName, getWrapperId(wrapper));
+                auditController.info(ManualOperation, "Ошибка при обработке ручной операции\n"+errorList!=null ? String.join("\n",errorList) : "", postingName, getWrapperId(wrapper));
                 Date timestamp = userContext.getTimestamp();
                 cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, REFUSESRV, newStatus);
                 wrapper.setStatus(REFUSESRV);

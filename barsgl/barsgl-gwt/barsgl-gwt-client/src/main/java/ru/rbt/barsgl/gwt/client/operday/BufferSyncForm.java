@@ -3,7 +3,9 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
@@ -20,6 +22,7 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,7 @@ public class BufferSyncForm extends BaseForm {
     private RefreshAction refreshAction;
     private ListBoxSqlDataProvider listBoxDataProvider;
     private PushButton refreshComboButton;
+    private PushButton replicateButton;
 
     public BufferSyncForm() {
         super();
@@ -60,6 +64,10 @@ public class BufferSyncForm extends BaseForm {
         hp.add(historiesBox = createSyncRowsListBox());
         hp.add(createRefreshTabButton());
         hp.add(createExecButton());
+        if (SecurityChecker.checkAction(SecurityActionCode.Replication)){
+           // hp.add(createReplicateButton());
+        }
+
         rootPanel.addNorth(hp, 12);
 
         rootPanel.add(grid);
@@ -118,6 +126,46 @@ public class BufferSyncForm extends BaseForm {
         refreshComboButton.setTitle("Обновить историю");
         refreshComboButton.getElement().getStyle().setMarginRight(5, Style.Unit.PX);
         return refreshComboButton;
+    }
+
+    private PushButton createReplicateButton() {
+       replicateButton = new PushButton(new Image(ImageConstants.INSTANCE.copy()), new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                DialogManager.confirm("Подтверждение", "Запустить задачу репликации?", "Запустить", new ClickHandler() {
+                            @Override
+                            public void onClick(ClickEvent clickEvent) {
+
+                                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                                BarsGLEntryPoint.replService.Test(new AuthCheckAsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>>() {
+                                    @Override
+                                    public void onFailureOthers(Throwable throwable) {
+                                        WaitingManager.hide();
+
+                                        Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
+                                    }
+
+                                    @Override
+                                    public void onSuccess(RpcRes_Base<TimerJobHistoryWrapper> res) {
+                                        WaitingManager.hide();
+
+                                        if (res.isError()) {
+                                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                                        } else {
+                                            DialogManager.message("Инфо", res.getMessage());
+                                        }
+                                    }
+                                });
+                            }
+                        });
+            }
+        });
+        replicateButton.setEnabled(true);
+        replicateButton.setWidth("24px");
+        replicateButton.setHeight("24px");
+        replicateButton.setTitle("Репликация");
+        replicateButton.getElement().getStyle().setMarginRight(5, Style.Unit.PX);
+        return replicateButton;
     }
 
     private Long getSelectedHistory() {

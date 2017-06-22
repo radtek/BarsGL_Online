@@ -56,6 +56,7 @@ public class OperationTechHandsDlg2 extends OperationTechDlg {
             public void onClick(ClickEvent clickEvent) {
                 operationAction = ButtonOperAction.OTHER;
                 try {
+                    if (!checkOneSideData()) return;
                     if (OperationTechHandsDlg2.super.onClickOK()){
                         doOnOkClick();
                     }

@@ -56,6 +56,10 @@
         <servlet-class>ru.rbt.barsgl.gwt.server.rpc.sync.PdSyncServiceImpl</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>ReplServiceImpl</servlet-name>
+        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.replication.ReplServiceImpl</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>PropertiesServiceImpl</servlet-name>
         <servlet-class>ru.rbt.barsgl.gwt.server.rpc.properties.PropertiesServiceImpl</servlet-class>
     </servlet>
@@ -115,6 +119,10 @@
     <servlet-mapping>
         <servlet-name>PdSyncServiceImpl</servlet-name>
         <url-pattern>/barsgl/service/PdSyncService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ReplServiceImpl</servlet-name>
+        <url-pattern>/barsgl/service/ReplService</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>PropertiesServiceImpl</servlet-name>
