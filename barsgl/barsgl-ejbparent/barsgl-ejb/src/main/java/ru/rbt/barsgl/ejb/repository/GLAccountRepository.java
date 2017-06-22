@@ -659,9 +659,9 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             return Optional.ofNullable(selectFirst(
                     "select ID from GL_ACC " +
                             " where CCY = ? and CUSTNO = ? and ACCTYPE = ? and PLCODE = ? and CBCCN = ?" +
-                            "  and DTO <= ? and (DTC is null or DTC > ?)" +
-                            "  and ACC2 = ? and CBCUSTTYPE = ? and TERM = ? "
-                    , currency, customerNumber, accountType, plcode, cbccn, dateCurrent, dateCurrent
+                            " and (DTC is null or DTC > ?)" +   //and DTO <= ?   убрали тк может быть сразу 2 открытых счета
+                            " and ACC2 = ? and CBCUSTTYPE = ? and TERM = ? "
+                    , currency, customerNumber, accountType, plcode, cbccn, dateCurrent
                     , acc2, cbCustType, term))
                     .map((record) -> findById(GLAccount.class, record.getLong("ID"))).orElse(null);
         } catch (SQLException e) {
@@ -869,13 +869,14 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 -	RLNTYPE = ‘2’
 -	«Б/счет 2-го порядка» (из формы)
     */
-    public DataRecord getAccountForPl(String acid, Short ctype, String plcode, String acc2) {
+    public DataRecord getAccountForPl(String acid, Short ctype, String plcode, String acc2, Date dateOpen) {
         try {
             DataRecord res = selectFirst("select a.BSAACID, a.ACID, a.CTYPE, a.PLCODE, a.ACC2" +
                     " from ACCRLN a exception join GL_ACC g" +
                     " on g.ACID = a.ACID and g.CBCUSTTYPE = a.CTYPE and g.PLCODE = a.PLCODE and g.ACC2 = a.ACC2" +
-                    " where a.ACID = ? and a.CTYPE = ? and a.PLCODE = ? and a.ACC2 = ? and a.RLNTYPE = ?",
-                    acid, ctype, plcode, acc2, '2');
+                    " where a.ACID = ? and a.CTYPE = ? and a.PLCODE = ? and a.ACC2 = ? and a.RLNTYPE = ?" +
+                    " and DRLNO >= ? and DRLNC > ?",    // датой открытия >= datestart446P "И" с датой закрытия > даты открытия нового счета
+                    acid, ctype, plcode, acc2, '2', getDateStart446p(), dateOpen);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

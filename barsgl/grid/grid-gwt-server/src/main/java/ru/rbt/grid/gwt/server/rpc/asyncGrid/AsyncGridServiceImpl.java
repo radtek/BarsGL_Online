@@ -105,7 +105,10 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     @Override
     public Row selectOne(String sql, Serializable[] params) throws Exception {
         try{
-            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", sql, (Object[])params /*new Object[]{11} */);
+            Serializable[] newParams = new Serializable[params.length + 1];
+            newParams[0] = sql;
+            System.arraycopy(params, 0, newParams, 1, params.length);
+            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", newParams /*new Object[]{11} */);
             Row row = new Row();
             for( int i = 0; i <  record.getColumnCount(); i++){
                 row.addField(new Field((Serializable)record.getObject(i)));

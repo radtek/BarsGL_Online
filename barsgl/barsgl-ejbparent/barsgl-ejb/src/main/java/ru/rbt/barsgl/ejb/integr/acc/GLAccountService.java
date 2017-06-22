@@ -420,7 +420,7 @@ public class GLAccountService {
                 AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
                 // поиск в GL_ACC
                 GLAccount glAccount = null;
-                if (null != (glAccount = glAccountController.findGLPLAccountMnl(keys))) {
+                if (null != (glAccount = glAccountController.findGLPLAccountMnl(keys, dateOpen))) {
                     throw new ValidationError(ACCOUNTGL_ALREADY_EXISTS, glAccount.getBsaAcid(), glAccount.getAcid());
                 }
 /*
@@ -440,8 +440,8 @@ public class GLAccountService {
                     keys.setRelationType("5");
                 } else {
                     // поиск в ACCRLN
-                    data = glAccountRepository.getAccountForPl(keys.getAccountMidas(),
-                            accountWrapper.getCbCustomerType(), accountWrapper.getPlCode(), accountWrapper.getBalanceAccount2());
+                    data = glAccountRepository.getAccountForPl(keys.getAccountMidas(), accountWrapper.getCbCustomerType(),
+                            accountWrapper.getPlCode(), accountWrapper.getBalanceAccount2(), dateOpen);
                     if (null != data ) {
                         throw new ValidationError(ACCOUNT_PL_ALREADY_EXISTS, data.getString(0), data.getString(1), keys.getAccountType());
                     }
