@@ -307,7 +307,7 @@ public class PostingFormTech extends EditableDictionary<ManualTechOperationWrapp
                         "Отменено закрытие счета ЦБ '" + account + "'"
                         : "Счет ЦБ '" + account + "' закрыт");
             default: {
-                Window.alert("PostingFormTech: getSuccessMessage default");
+               // Window.alert("PostingFormTech: getSuccessMessage default");
                 return null;
             }
         }

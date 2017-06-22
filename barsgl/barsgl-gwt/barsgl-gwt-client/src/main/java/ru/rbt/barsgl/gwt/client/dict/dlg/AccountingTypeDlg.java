@@ -110,10 +110,6 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
         tech_act.setEnabled(true);
     }
 
-    private String value(String val){
-        return  val == null ? val : val.trim();
-    }
-
     @Override
     protected void fillContent() {
         clearContent();
@@ -151,7 +147,7 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
         }
     }
 
-    private void setWrapperFields(){
+    private void setWrapperFields() throws Exception {
         wrapper.setAcctype(code.getValue());
         wrapper.setAcctypeName(checkRequeredString(name.getValue(), AccountingType.FIELD_ACCTYPENAME));
         try{
@@ -160,6 +156,11 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
             showInfo("Ошибка", Utils.Fmt("Неверное значение в поле {0}. {1}", AccountingType.FIELD_ACCTYPENAME, e.getMessage()));
             throw new IllegalArgumentException("column");
         }
+
+        if (Utils.toStr(code.getValue()).startsWith("0") != tech_act.getValue()){
+            throw new Exception("Значение поля Технический счет не соответствует типу AccountingType");
+        }
+
 
         wrapper.setFl_ctrl(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
         wrapper.setPl_act(pl_act.getValue() ? BoolType.Y : BoolType.N);

@@ -18,7 +18,7 @@ public class AccTypeLookUp extends AccType {
     @Override
     protected Table prepareTable(){
         Table table = super.prepareTable();
-        table.getColumn("ACCTYPE").setWidth(28);
+        table.getColumn("ACCTYPE").setWidth(38);
         table.getColumn("PL_ACT").setVisible(false);
         table.getColumn("FL_CTRL").setVisible(false);
 
