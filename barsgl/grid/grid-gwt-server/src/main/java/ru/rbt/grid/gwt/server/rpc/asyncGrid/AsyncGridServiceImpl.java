@@ -53,8 +53,8 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     public Row selectOne(Repository repository, String sql, Serializable[] params) throws Exception {
         try{
             Object [] array = new Object[(params == null) ? 2 : params.length + 2];
-            array[0] = repository;
-            array[1] = sql;
+            array[0] = sql;
+            array[1] = repository;
             if(params != null && params.length  > 0)
                 System.arraycopy(params, 0, array, 2, params.length);
             DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", array);
