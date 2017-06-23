@@ -34,7 +34,7 @@ public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, Ser
     private SessionContext sessionContext;
 
     @Override
-    public <T> T invoke(Class clazz, String method, Object[] params) {
+    public <T> T invoke(Class clazz, String method, Object... params) {
         final Instance<T> filtered = services.select(clazz);
         for (Object bean : filtered) {
             logger.log(Level.FINE, format("About to check bean '%s' on compatibility to '%s'", bean, clazz));
@@ -52,7 +52,7 @@ public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, Ser
     }
 
     @Override
-    public <T> T invoke(String className, String method, Object[] params) {
+    public <T> T invoke(String className, String method, Object... params) {
         try {
             Class clazz = Class.forName(className);
             return invoke(clazz, method, params);
