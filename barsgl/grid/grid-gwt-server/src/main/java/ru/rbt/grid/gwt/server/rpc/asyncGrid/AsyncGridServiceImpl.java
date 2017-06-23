@@ -52,7 +52,13 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     @Override
     public Row selectOne(Repository repository, String sql, Serializable[] params) throws Exception {
         try{
-            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", sql, repository, (Object[])params /*new Object[]{11} */);
+            Object [] array = new Object[(params == null) ? 2 : params.length + 2];
+            array[0] = repository;
+            array[1] = sql;
+            if(params != null && params.length  > 0)
+                System.arraycopy(params, 0, array, 2, params.length);
+            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", array);
+            //DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", sql, repository, (Object[])params /*new Object[]{11} */);
             Row row = new Row();
             for( int i = 0; i <  record.getColumnCount(); i++){
                 row.addField(new Field((Serializable)record.getObject(i)));
@@ -105,10 +111,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     @Override
     public Row selectOne(String sql, Serializable[] params) throws Exception {
         try{
-            Serializable[] newParams = new Serializable[params.length + 1];
-            newParams[0] = sql;
-            System.arraycopy(params, 0, newParams, 1, params.length);
-            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", newParams /*new Object[]{11} */);
+            Object [] array = new Object[(params == null) ? 1 : params.length + 1];
+            array[0] = sql;
+            if(params != null && params.length  > 0)
+                System.arraycopy(params, 0, array, 1, params.length);
+            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectOne", array);
             Row row = new Row();
             for( int i = 0; i <  record.getColumnCount(); i++){
                 row.addField(new Field((Serializable)record.getObject(i)));
