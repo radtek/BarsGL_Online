@@ -96,7 +96,7 @@ public class EditPdThController {
 
     public RpcRes_Base<ManualTechOperationWrapper> suppressPostingsWrapper(ManualTechOperationWrapper operationWrapper) {
         try {
-            String msg = "Ошибка при подавлении прододки";
+            String msg = "Ошибка при подавлении проводки";
             try {
                 accessServiceSupport.checkUserAccessToBackValueDate(dateUtils.onlyDateParse(operationWrapper.getPostDateStr()), operationWrapper.getUserId());
 
@@ -110,7 +110,7 @@ public class EditPdThController {
             }
 
             List<GlPdTh> pdList = suppressPdTh(operationWrapper);
-            msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки c ID: " + listToString(pdList, ",");
+            msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки по тех.счету c ID: " + listToString(pdList, ",");
             auditController.info(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
         } catch (Exception e) {

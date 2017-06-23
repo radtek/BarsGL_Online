@@ -18,6 +18,7 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,7 +38,7 @@ import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ONE_OF;
  */
 public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperationWrapper> {
 
-    @Inject
+    @EJB
     private GlPdThRepository glPdThRepository;
 
     @Inject
