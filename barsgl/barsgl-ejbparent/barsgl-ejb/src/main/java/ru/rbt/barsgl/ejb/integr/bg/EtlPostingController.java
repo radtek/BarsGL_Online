@@ -117,8 +117,8 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             IncomingPostingProcessor etlPostingProcessor = findPostingProcessor(posting);      // найти процессор сообщеиня
             GLOperation operation;
             try {
-                operation = createOperation(etlPostingProcessor, posting);
-                if (null == operation) {
+                    operation = createOperation(etlPostingProcessor, posting);
+                    if (null == operation) {
                     return null;            // ошибки валидации
                 }
                 etlPostingRepository.updatePostingStateSuccess(posting);
