@@ -391,9 +391,5 @@ public class GlPdTh extends BaseEntity<Long> {
         this.operSide = operSide;
     }
 
-    @Override
-    public String toString() {
-        return getId().toString();
-    }
 
 }

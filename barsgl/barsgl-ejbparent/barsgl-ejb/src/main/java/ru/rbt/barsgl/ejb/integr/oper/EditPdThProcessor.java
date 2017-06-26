@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -181,20 +182,22 @@ public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperatio
      */
     public void updateAllPostings(ManualTechOperationWrapper wrapper, List<GlPdTh> pdList) throws Exception {
         Date valueDate = checkDateFormat(wrapper.getValueDateStr(), "Дата валютирования");
+        Date postDate = checkDateFormat(wrapper.getPostDateStr(), "Дата проводки");
+
         for (GlPdTh pd : pdList) {
             if (InputMethod.AE != wrapper.getInputMethod()) {       // M || F
                 pd.setDealId(wrapper.getDealId());
                 pd.setSubdealId(wrapper.getSubdealId());
                 pd.setPaymentRef(wrapper.getDealId());
-                pd.setRusNarrLong(wrapper.getRusNarrativeLong());
-                pd.setProfitCenter(glPdThRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
-                        GLOperation.srcPaymentHub.equals(wrapper.getDealSrc())));
                 pd.setPnar(glPdThRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));
             }
+
+            pd.setNarrative(wrapper.getNarrative());
+            pd.setRusNarrLong(wrapper.getRusNarrativeLong());
+            pd.setIsCorrection(YesNo.getValue(wrapper.isCorrection()));
             pd.setVald(valueDate);
-            pd.setProfitCenter(wrapper.getProfitCenter());  // TODO возможно, надо будет перенести в OnePosting
-        };
-    };
-
-
+            pd.setPod(postDate);
+            pd.setProfitCenter(wrapper.getProfitCenter());
+        }
+    }
 }

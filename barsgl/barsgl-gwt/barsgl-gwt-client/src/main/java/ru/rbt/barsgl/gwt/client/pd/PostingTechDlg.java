@@ -388,9 +388,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDealId.setValue(!dealId.isEmpty() ? dealId : paymentRef);
         mSubDealId.setValue(getFieldText("SUBDEALID"));
 
-        mDateOperation.setValue((Date)getFieldValue("PROCDATE"));
         mDateValue.setValue((Date)getFieldValue("VALD"));
-        mDateOperDay.setValue(getFieldValue("POD").toString());
+        mDateOperation.setValue((Date)getFieldValue("POD"));
 
         mDtCurrency.setSelectValue(getFieldText("CCY_DR"));
         mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
