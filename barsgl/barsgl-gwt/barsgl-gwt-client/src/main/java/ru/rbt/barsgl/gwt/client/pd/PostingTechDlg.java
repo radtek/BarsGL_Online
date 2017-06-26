@@ -212,7 +212,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         grid.setWidget(1, 0, createLabel("Валюта"));
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" + label + "_Digit", null, FIELD2_WIDTH));
+        grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" + label /*+ "_Digit"*/, null, FIELD2_WIDTH));
         if (isDebit) {
             grid.setWidget(3, 0, createDtAccountTypeButton("AccType", BUTTON_WIDTH));
         }
@@ -392,7 +392,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDateOperation.setValue((Date)getFieldValue("POD"));
 
         mDtCurrency.setSelectValue(getFieldText("CCY_DR"));
-        mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
+        mDtFilial.setSelectValue(getFieldText("CBCC_DR"));
         String accDtType = Utils.fillUp(getFieldText("ACCTYPE_DR"),9);
         mDtAccountType.setValue(accDtType);
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
@@ -400,14 +400,14 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDtSum.setValue(ifEmpty(getFieldValue("AMNT_DR"), ""));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
-        mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
+        mCrFilial.setSelectValue(getFieldText("CBCC_CR"));
         String accCrType = Utils.fillUp(getFieldText("ACCTYPE_CR"),9);
         mCrAccountType.setValue(accCrType);
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
         mCrSum.setValue(ifEmpty(getFieldValue("AMNT_CR"), ""));
 
         mNarrativeEN.setValue(getFieldText("NRT"));
-        mNarrativeRU.setValue(getFieldText("RNARSHT"));
+        mNarrativeRU.setValue(getFieldText("RNARLNG"));
         mDepartment.setSelectValue(getFieldText("DEPT_ID"));
         mProfitCenter.setSelectValue(getFieldText("PRFCNTR"));
 

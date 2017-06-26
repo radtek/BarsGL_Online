@@ -46,8 +46,7 @@ public class PostingFormTech extends GridForm {
     public static final String FORM_NAME = "Проводки (учёт по техническим счетам)";
     public static final int DAYS_EDIT = 30;
 
-    private Column colFilialDr;
-    private Column colFilialCr;
+
     protected Column colProcDate;
     protected Column colPostDate;
     protected Column colValueDate;
@@ -84,7 +83,7 @@ public class PostingFormTech extends GridForm {
     @Override
     protected String prepareSql() {
         return "SELECT * FROM V_GL_PDTH "
-                + getSourceAndFilialPart("where", "SRC_PST", "FILIAL_DR");
+               /* + getSourceAndFilialPart("where", "SRC_PST", "FILIAL_DR")*/;
     }
 
     @Override
@@ -104,6 +103,7 @@ public class PostingFormTech extends GridForm {
         col.setList(getEnumLabelsList(InputMethod.values()));
 
         idDrIndex = result.addColumn(new Column("PCID", LONG, "ID проводки", 80));
+        invisibleIndex = result.addColumn(new Column("INVISIBLE", STRING, "Отменена", 40));
         result.addColumn(new Column("SRC_PST", STRING, "Источник сделки", 60));
         result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
         Column colSubDealID;
@@ -120,30 +120,28 @@ public class PostingFormTech extends GridForm {
 
         result.addColumn(new Column("ACCTYPE_DR", DECIMAL, "AccType ДБ", 80, false, false, Column.Sort.ASC, "000000000"));
         result.addColumn(new Column("BSAACID_DR", STRING, "Счет ДБ", 160));
-        result.addColumn(colFilialDr = new Column("FILIAL_DR", STRING, "Филиал ДБ (опер)", 60, false, false));
+        result.addColumn(new Column("CBCC_DR", STRING, "Филиал ДБ (счет)", 60, false, false));
+        result.addColumn(new Column("FILIAL_DR", STRING, "Филиал ДБ (опер)", 60, false, false));
         result.addColumn(new Column("CCY_DR", STRING, "Валюта ДБ", 60));
         result.addColumn(new Column("AMNT_DR", DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("AMNTBC_DR", DECIMAL, "Сумма в руб. ДБ", 100));
 
         result.addColumn(new Column("ACCTYPE_CR", DECIMAL, "AccType КР", 80,false, false, Column.Sort.ASC, "000000000"));
         result.addColumn(new Column("BSAACID_CR", STRING, "Счет КР", 160));
-        result.addColumn(colFilialCr = new Column("FILIAL_CR", STRING, "Филиал КР (опер)", 60, false, false));
+        result.addColumn(new Column("CBCC_CR", STRING, "Филиал КР (счет)", 60, false, false));
+        result.addColumn(new Column("FILIAL_CR", STRING, "Филиал КР (опер)", 60, false, false));
         result.addColumn(new Column("CCY_CR", STRING, "Валюта КР", 60));
         result.addColumn(new Column("AMNT_CR", DECIMAL, "Сумма КР", 100));
         result.addColumn(new Column("AMNTBC_CR", DECIMAL, "Сумма в руб. КР", 100));
 
         result.addColumn(new Column("NRT", STRING, "Основание ENG", 500, false, false));
+        result.addColumn(new Column("RNARLNG", STRING, "Основание RUS", 200, false, false));
         result.addColumn(new Column("RNARSHT", STRING, "Основание короткое", 200, false, false));
 
         result.addColumn(col = new Column("FCHNG", STRING, "Исправительная", 40));
         col.setList(yesNoList);
         result.addColumn(new Column("PRFCNTR", STRING, "Профит центр", 60));
         result.addColumn(new Column("DEPT_ID", STRING, "Подразделение", 60));
-
-        invisibleIndex = result.addColumn(new Column("INVISIBLE", STRING, "Подавлена", 40));
-
-        colFilialDr.setVisible(false);
-        colFilialCr.setVisible(false);
 
         return result;
     }
