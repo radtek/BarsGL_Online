@@ -140,7 +140,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
 
     private DataListBoxEx createFilialListBox(String name, String filial, String width) {
-        return createCachedFilialListBox(name, filial, width, true, true);
+        return createCachedFilialListBox(name, filial, width, false, true);
     }
 
     protected void getOperDay() {
@@ -392,7 +392,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDateOperation.setValue((Date)getFieldValue("POD"));
 
         mDtCurrency.setSelectValue(getFieldText("CCY_DR"));
-        mDtFilial.setSelectValue(getFieldText("CBCC_DR"));
+        mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
+
         String accDtType = Utils.fillUp(getFieldText("ACCTYPE_DR"),9);
         mDtAccountType.setValue(accDtType);
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
@@ -400,7 +401,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDtSum.setValue(ifEmpty(getFieldValue("AMNT_DR"), ""));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
-        mCrFilial.setSelectValue(getFieldText("CBCC_CR"));
+        mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
+
         String accCrType = Utils.fillUp(getFieldText("ACCTYPE_CR"),9);
         mCrAccountType.setValue(accCrType);
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
