@@ -4,15 +4,13 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
@@ -317,5 +315,20 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
                 operation.setAccountCredit(accCredit);
             }
         }
+    }
+
+    public final GLOperation createOperationExt(GLBackValueOperation operation) {
+
+        GLOperationExt operExt = new GLOperationExt(operation.getId(), operation.getPostDate());
+        operExt.setManualStatus(BackValuePostStatus.CONTROL);
+
+        // TODO где хранить эти даты и причину... в GLOperation ?
+        operExt.setManualReason(GLOperationExt.BackValueReason.OverDepth.getValue());
+        operExt.setBackCutDate(operation.getValueDate());
+        operExt.setCloseCutDate(operation.getValueDate());
+        operExt.setCloseLastDate(operation.getValueDate());
+//        operation.setOperExt(operExt);
+
+        return operation;
     }
 }

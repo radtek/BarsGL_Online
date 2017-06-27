@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
@@ -72,6 +73,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
 
     @EJB
     private GLOperationRepository operationRepository;
+
+    @Inject
+    private BackValueOperationRepository backValueRepository;
 
     @Resource
     private EJBContext context;
@@ -652,5 +656,72 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             cachedPostingProcessors.add(processor);
         }
     }
+
+    //============================ тестируем BackValue ======================
+
+    /**
+     * создаем запись в таблице расширения GL_OPEREXT
+     * @param operation
+     * @return
+     * @throws Exception
+     */
+    private GLBackValueOperation createOperationExt(GLOperationProcessor processor, GLOperation operation) throws Exception {
+        return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence,connection) -> {
+            GLBackValueOperation operationBackValue = backValueRepository.findById(GLBackValueOperation.class, operation.getId());
+            processor.createOperationExt(operationBackValue);
+            return backValueRepository.update(operationBackValue);
+        });
+    }
+
+    public GLOperation processBackValue(EtlPosting posting) {
+        String msgCommon = format(" АЕ: '%s', ID_PST: '%s'", posting.getId(), posting.getAePostingId());
+        if (posting.getErrorCode() != null) { // && posting.getErrorCode() == 0) {  // Обрабатываем только совсем необработанные
+            auditController.info(Operation, "Проводка АЕ уже была обработана" + msgCommon, posting);
+            return null;
+        }
+        auditController.info(Operation, "Начало обработки проводки" + msgCommon, posting);
+        try {
+            IncomingPostingProcessor etlPostingProcessor = findPostingProcessor(posting);      // найти процессор сообщеиня
+            GLOperation operation;
+            try {
+                operation = createOperation(etlPostingProcessor, posting);
+                if (null == operation) {
+                    return null;            // ошибки валидации
+                }
+                etlPostingRepository.updatePostingStateSuccess(posting);
+            } catch (Throwable e) {
+                String msg = "Ошибка при создании операции по проводке";
+//                auditController.error(Operation, msg, posting, e);
+                postingErrorMessage(e, msg + msgCommon, posting, initSource());
+                return null;
+            }
+
+            try {
+                operation = enrichmentOperation(etlPostingProcessor, operation);
+            } catch (Throwable e) {
+                String msg = "Ошибка при заполнения данных операции по проводке";
+//                auditController.error(Operation, msg, operation, e);
+                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
+                return operation;
+            }
+
+            GLOperationProcessor operationProcessor = findOperationProcessor(operation);
+            try {
+                operation = createOperationExt(operationProcessor, operation);
+            } catch (Throwable e) {
+                String msg = "Ошибка при создании расширенных данных операции по проводке";
+//                auditController.error(Operation, msg, operation, e);
+                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
+                return operation;
+            }
+            auditController.info(Operation, "Завершена обработка проводки" + msgCommon, posting);
+            return operation;
+        } catch (Exception e) {
+            String msg = "Нераспознанная ошибка при обработке проводки";
+            auditController.error(Operation, msg + msgCommon, posting, e);
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
 
 }

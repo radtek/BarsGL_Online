@@ -89,6 +89,8 @@
         <class>ru.rbt.barsgl.ejb.entity.gl.GLBsaAccLock</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLManualOperation</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLOperation</class>
+        <class>ru.rbt.barsgl.ejb.entity.gl.GLOperationExt</class>
+        <class>ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLPd</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GlPdTh</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.GLPosting</class>
