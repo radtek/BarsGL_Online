@@ -34,16 +34,29 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
         return null != selectFirst(ActParm.class, "from ActParm T where T.id.accType = ?1", accType);
     }
 
-    public boolean isActParmExists(ActParmWrapper wrapper) throws ParseException {
+   /* public boolean isActParmExists(ActParmWrapper wrapper) throws ParseException {
         return  null != selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
         "T.id.term =?3 and T.id.acc2 =?4 and T.id.dtb =?5", wrapper.getAccType(), wrapper.getCusType(),
                 wrapper.getTerm(), wrapper.getAcc2(), dateUtils.onlyDateParse(wrapper.getDtb()));
+    }*/
+
+    public boolean isActParmExists(ActParmWrapper wrapper) throws ParseException {
+        return  null != selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
+                        "T.id.term =?3 and T.id.acc2 =?4 and  coalesce(T.plcode, '') =?5 and T.acod =?6 and T.ac_sq =?7",  wrapper.getAccType(), wrapper.getCusType(),
+                wrapper.getTerm(), wrapper.getAcc2(), wrapper.getPlcode() == null ? "" : wrapper.getPlcode(), wrapper.getAcod(), wrapper.getAc_sq());
     }
 
-    public boolean isParmDateClosed(ActParmWrapper wrapper) throws ParseException{
+    /*public boolean isParmDateClosed(ActParmWrapper wrapper) throws ParseException{
          return  null == selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
                         "T.id.term =?3 and T.id.acc2 =?4 and T.dte is null", wrapper.getAccType(), wrapper.getCusType(),
                 wrapper.getTerm(), wrapper.getAcc2());
+
+    }*/
+
+    public boolean isParmDateClosed(ActParmWrapper wrapper) throws ParseException{
+        return  null == selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
+                        "T.id.term =?3 and T.id.acc2 =?4 and (T.dte is null or T.dte >= ?5) order by T.id.dtb desc", wrapper.getAccType(), wrapper.getCusType(),
+                wrapper.getTerm(), wrapper.getAcc2(), dateUtils.onlyDateParse(wrapper.getDtb()));
 
     }
 

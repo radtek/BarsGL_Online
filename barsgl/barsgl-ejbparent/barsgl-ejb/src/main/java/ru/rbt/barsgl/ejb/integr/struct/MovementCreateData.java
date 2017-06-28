@@ -37,6 +37,10 @@ public class MovementCreateData implements Serializable{
     String messageUUID;
     String blockId;
 
+    //Информация по деталям платежа
+    private PaymentDetails creditPaymentDetails;
+    private PaymentDetails debitPaymentDetails;
+    
     public enum StateEnum{
         SUCCESS, ERROR, WARNING, SENT
     }
@@ -218,6 +222,21 @@ public class MovementCreateData implements Serializable{
         this.accountCBC = accountCBC;
     }
 
+    public PaymentDetails getCreditPaymentDetails() {
+        return creditPaymentDetails;
+    }
+
+    public void setCreditPaymentDetails(PaymentDetails creditPaymentDetails) {
+        this.creditPaymentDetails = creditPaymentDetails;
+    }
+
+    public PaymentDetails getDebitPaymentDetails() {
+        return debitPaymentDetails;
+    }
+
+    public void setDebitPaymentDetails(PaymentDetails debitPaymentDetails) {
+        this.debitPaymentDetails = debitPaymentDetails;
+    }
 
     @Override
     public String toString() {

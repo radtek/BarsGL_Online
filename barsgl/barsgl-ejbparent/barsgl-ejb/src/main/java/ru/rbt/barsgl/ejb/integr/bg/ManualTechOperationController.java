@@ -314,7 +314,8 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         posting.setProcDate(operdayController.getOperday().getCurrentDate());
         GLManualOperation operation = createOperation(posting);
         operation.setBsChapter("T");
-        operation.setAmountPosting(operation.getAmountDebit());
+        //operation.setAmountPosting(operation.getAmountDebit());
+        setExchengeParameters(operation);
         manualOperationRepository.save(operation,true);
         posting.setOperation(operation);
         postingRepository.save(posting);

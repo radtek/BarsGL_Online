@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
@@ -47,11 +48,6 @@ public class PostingDlg extends OperationDlg {
         }
     }
 
-   @Override
-    protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
-        return createCachedFilialListBox(name, filial, width, true, true);
-    }
-
     @Override
     protected void getOperDay() {
         getOperday(new IDataConsumer<OperDayWrapper>() {
@@ -82,12 +78,14 @@ public class PostingDlg extends OperationDlg {
         mDateValue.setValue((Date)getFieldValue("VDATE"));
 
         mDtCurrency.setSelectValue(getFieldText("CCY_DR"));
-        mDtFilial.setSelectValue(getFieldText("CBCC_DR"));
+
+        mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
         mDtSum.setValue(ifEmpty(getFieldValue("AMT_DR"), ""));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
-        mCrFilial.setSelectValue(getFieldText("CBCC_CR"));
+        mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
+
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
         mCrSum.setValue(ifEmpty(getFieldValue("AMT_CR"), ""));
 

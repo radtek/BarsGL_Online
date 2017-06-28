@@ -47,7 +47,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
     protected final String LABEL2_WIDTH = "85px";
     protected final String FIELD2_WIDTH = "80px";
 
-    protected final String LONG_WIDTH = "380px";
     protected final String BUTTON_WIDTH = "75px";
     protected final String LABELS_WIDTH = "80px";
     protected final String FIELDS_WIDTH = "185px";
@@ -118,7 +117,8 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         grid.setWidget(1, 0, createLabel("Валюта"));
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH,false,false));
+        grid.setWidget(2, 1, mFilial =  createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
+        //grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name() + "_" + label, null, FIELD2_WIDTH,false,false));
 
         //grid.setWidget(3, 0, createLabel("AccType"));
         grid.setWidget(3, 0, createAlignWidget(mButton = createAccTypedButton("AccType", BUTTON_WIDTH, isDebit), LABELS_WIDTH));

@@ -105,7 +105,7 @@ public class OperationTechHandsDlg extends PostingTechDlg {
     }
 
     private Boolean _exitFlag = false;
-    //private String _reasonOfDeny;
+
     @Override
     protected Boolean beforeReturn(final Object prm){
         ManualTechOperationWrapper wrapper = (ManualTechOperationWrapper) prm;

@@ -378,6 +378,10 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
             throw new Exception("Нет данных для формирования значения AccountingType");
         }
 
+        if (Utils.toStr(acctype.getValue()).startsWith("0") != tech_act.getValue()){
+            throw new Exception("Значение поля Технический счет не соответствует типу AccountingType");
+        }
+
         if (acctype.getValue() != null && !acctype.getValue().isEmpty()) {
             //check acctype
             checkAccType(!dbcheck);
@@ -821,7 +825,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         wrapper.setAcctypeName(accname.getValue());
         wrapper.setFl_ctrl(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
         wrapper.setPl_act(pl_act.getValue() ? BoolType.Y : BoolType.N);
-        wrapper.setTech_act(fl_ctrl.getValue() ? BoolType.Y : BoolType.N);
+        wrapper.setTech_act(tech_act.getValue() ? BoolType.Y : BoolType.N);
 
         return wrapper;
     }

@@ -10,6 +10,7 @@ import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import ru.rbt.shared.Assert;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 

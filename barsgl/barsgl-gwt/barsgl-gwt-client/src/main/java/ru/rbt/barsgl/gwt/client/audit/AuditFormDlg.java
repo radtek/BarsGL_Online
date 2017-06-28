@@ -71,6 +71,7 @@ public class AuditFormDlg extends DlgFrame {
         entity_id.setValue((String)row.getField(6).getValue());
         source.setValue((String) row.getField(7).getValue());
         srcBox.setValue((String)row.getField(8).getValue());
+        errorBox.setValue((String)row.getField(9).getValue());
         trans_id.setValue((String) row.getField(10).getValue());
         userName.setText((String) row.getField(11).getValue());
         userHost.setText((String) row.getField(12).getValue());
@@ -110,9 +111,9 @@ public class AuditFormDlg extends DlgFrame {
                switch (event.getItem()) {
                    case 1:
                        errorBox.setSize(gridWidth + "px", gridHeight + "px");
-                       if (!errorPageLoaded) {
-                          select(pagesEnum.ERROR_PAGE);
-                       }
+//                       if (!errorPageLoaded) {
+//                          select(pagesEnum.ERROR_PAGE);
+//                       }
                        break;
                    case 2:
                        srcBox.setSize(gridWidth + "px", gridHeight + "px");

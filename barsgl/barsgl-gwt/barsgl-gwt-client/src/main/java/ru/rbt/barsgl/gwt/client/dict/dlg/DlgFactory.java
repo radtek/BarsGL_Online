@@ -21,7 +21,6 @@ public class DlgFactory {
             case "AcodDlg": return new AcodDlg();
             case "AccountDlg": return new AccountDlg();
             case "PlAccountDlg": return new PlAccountDlg();
-            case "PostingTechDlg": return new PostingTechDlg();
             case "AccountTechDlg": return new AccountTechDlg();
             default: return null;
         }

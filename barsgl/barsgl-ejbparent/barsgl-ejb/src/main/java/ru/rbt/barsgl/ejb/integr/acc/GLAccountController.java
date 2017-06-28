@@ -150,16 +150,16 @@ public class GLAccountController {
     }
 
     @Lock(LockType.READ)
-    public GLAccount findGLPLAccountMnl(AccountKeys keys) {
-        return findGLPLAccountMnlnoLock(keys);
+    public GLAccount findGLPLAccountMnl(AccountKeys keys, Date dateOpen) {
+        return findGLPLAccountMnlnoLock(keys, dateOpen);
     }
 
-    private GLAccount findGLPLAccountMnlnoLock(AccountKeys keys) {
+    private GLAccount findGLPLAccountMnlnoLock(AccountKeys keys, Date dateOpen) {
         return glAccountRepository.findGLPLAccountMnl(
                 keys.getCurrency(), keys.getCustomerNumber(),
                 keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
                 keys.getPlCode(), keys.getAccount2(), keys.getCompanyCode(),
-                operdayController.getOperday().getCurrentDate());
+                dateOpen);
     }
 
     @Lock(LockType.WRITE)
@@ -499,7 +499,7 @@ public class GLAccountController {
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLPLAccountMnl(final AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
-        GLAccount glAccount = findGLPLAccountMnlnoLock(keys);     // счет создается вручную
+        GLAccount glAccount = findGLPLAccountMnlnoLock(keys, dateOpen);     // счет создается вручную
         if (null != glAccount) {
             return glAccount;
         }

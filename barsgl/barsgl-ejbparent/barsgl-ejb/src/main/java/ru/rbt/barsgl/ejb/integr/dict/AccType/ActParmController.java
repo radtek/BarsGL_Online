@@ -111,7 +111,9 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
                 }
 
                 if (!actParmRepository.isParmDateClosed(wrapper)) {
-                    return new RpcRes_Base<>(wrapper, true, format("Для параметров счета по AccType '%s' не закрыта дата!", wrapper.getAccType()));
+                    return new RpcRes_Base<>(wrapper, true, format("Данный набор параметров по AccType '%s' уже существует! \n" +
+                            "Установите сначала дату окончания действия существующего набора или \n" +
+                            "измените дату начала действия вводимых (изменяемых) параметров", wrapper.getAccType()));
                 }
             } catch (ParseException e) {
                 return new RpcRes_Base<>(wrapper, true, format("Ошибка при создании параметров счета. Ошибка преобразования формата даты начала '%s'", wrapper.getDtb()));
