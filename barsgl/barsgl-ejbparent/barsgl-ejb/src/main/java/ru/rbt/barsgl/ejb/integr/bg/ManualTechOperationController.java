@@ -115,7 +115,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     @EJB
     private GlPdThRepository glPdThRepository;
 
-    @Inject
+    @EJB
     private GLOperationRepository glOperationRepository;
 
     @Inject
@@ -560,7 +560,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 
     public void checkTechAccount(ManualTechOperationWrapper wrapper) throws ParseException {
 
-        if (null != wrapper.getFilialDebit() && null!=wrapper.getFilialCredit())
+        if (null != wrapper.getFilialDebit() && null!= wrapper.getFilialCredit())
         {
             if (!wrapper.getFilialDebit().equals(wrapper.getFilialCredit()))
             {
@@ -568,10 +568,10 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             }
         }
         else{
-            throw  new ValidationError(ErrorCode.FILIAL_NOT_FOUND,String.format("Не найден филиал по %s",wrapper.getFilialDebit()==null?"дебету":"кредиту"));
+            throw  new ValidationError(ErrorCode.FILIAL_NOT_FOUND,String.format("Не найден филиал по %s",wrapper.getFilialDebit()== null ? "дебету" : "кредиту"));
         }
 
-        if (null!=wrapper.getCurrencyDebit() && null!=wrapper.getCurrencyCredit())
+        if (null != wrapper.getCurrencyDebit() && null!= wrapper.getCurrencyCredit())
         {
             if (!wrapper.getCurrencyDebit().equalsIgnoreCase("RUR") && !wrapper.getCurrencyCredit().equalsIgnoreCase("RUR"))
             {

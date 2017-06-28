@@ -42,7 +42,7 @@ public class ManualOperationProcessor extends ValidationAwareHandler<BatchPostin
     @Inject
     private OrdinaryPostingProcessor ordinaryPostingProcessor;
 
-    @Inject
+    @EJB
     private GLOperationRepository glOperationRepository;
 
     @Inject
