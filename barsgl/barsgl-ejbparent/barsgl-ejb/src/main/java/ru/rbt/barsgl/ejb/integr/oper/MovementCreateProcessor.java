@@ -966,7 +966,6 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         sb.append("</ns2:MIDASSpecificParameters>");
         sb.append("</ns2:ABSSpecificParameters>");
 
-        /*@@@ TODO include in nest release!!!
         PaymentDetails debitPaymentDetails = item.getDebitPaymentDetails();
         PaymentDetails creditPaymentDetails = item.getCreditPaymentDetails();
         
@@ -987,7 +986,6 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
                 sb.append("<ns2:BenefCcy>").append(creditPaymentDetails.getCurrency()).append("</ns2:BenefCcy>");
             }
         sb.append("</ns2:PaymentDetails>");
-        */
     }
 
 /*

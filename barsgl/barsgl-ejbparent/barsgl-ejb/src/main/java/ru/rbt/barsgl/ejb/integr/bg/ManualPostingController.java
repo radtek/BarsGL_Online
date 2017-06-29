@@ -889,7 +889,7 @@ public class ManualPostingController {
             data.setAccountCBC(posting.getAccountCredit());
             data.setOperAmountC(posting.getAmountCredit());
         }        
-        /*@@@ TODO include in nest release!!!
+
         DataRecord drForDebit = getCustomerInfo(posting.getAccountDebit());
         
         PaymentDetails debitPaymentDetails = new PaymentDetails(posting.getCurrencyDebit().getCurrencyCode(), 
@@ -913,7 +913,7 @@ public class ManualPostingController {
         );
         
         data.setCreditPaymentDetails(creditPaymentDetails);
-        */
+
         data.setMessageUUID(ifEmpty(data.getOperIdD(), "") + "." + ifEmpty(data.getOperIdC(), "")); //+"."+UUID.randomUUID().toString().substring(0,6));
 
         data.setDestinationR(StringUtils.removeCtrlChars(posting.getRusNarrativeLong()));
