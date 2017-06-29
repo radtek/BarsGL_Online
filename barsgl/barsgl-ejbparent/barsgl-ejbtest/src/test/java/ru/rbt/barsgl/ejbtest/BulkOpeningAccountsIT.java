@@ -3,17 +3,19 @@
  */
 package ru.rbt.barsgl.ejbtest;
 
-import static java.lang.String.format;
+import org.junit.Assert;
+import org.junit.Test;
+import ru.rbt.barsgl.ejb.controller.operday.task.BulkOpeningAccountsTask;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.ejbcore.datarec.DataRecord;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.junit.Test;
-import ru.rbt.barsgl.ejb.controller.operday.task.BulkOpeningAccountsTask;
-import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.shared.Assert;
+
+import static java.lang.String.format;
 
 /**
  *
@@ -67,7 +69,7 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
                     GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                             "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
                     deleteAccountByAcid(acId);
-                    Assert.notNull(account);
+                    Assert.assertNotNull(account);
                 });                
             }            
         } finally {
@@ -91,7 +93,7 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
             GLAccount account = (GLAccount) baseEntityRepository.selectOne(GLAccount.class,
                     "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
             deleteAccountByAcid(acId);
-            Assert.notNull(account);
+            Assert.assertNotNull(account);
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
                     + "where BRANCH = '008' and CNUM = '00000083' and CCY = 'RUR' and ACOD = '3320' and SQ = '04'");
@@ -143,7 +145,7 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
                 GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                         "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
                 deleteAccountByAcid(acId);
-                Assert.notNull(account);
+                Assert.assertNotNull(account);
             });
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
@@ -153,11 +155,17 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
 
     @Test
     public void bulkOpeningAccountWithCNumAll() throws SQLException {
+        final String acctype = "863010200";
+        DataRecord record = baseEntityRepository.selectFirst("select * from gl_actparm where acctype = ?", acctype);
+        Assert.assertNotNull(record);
+        final String acc2 = record.getString("acc2");
+
         baseEntityRepository.executeNativeUpdate(
                 "insert into gl_openacc (ID, BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
                 //+ "('ALL',null,'EUR','3201','01','3201','01','91104','861010101','Банкноты в иностранной валюте, принятые на экспертизу или выявленные сомнительные банкноты, по которым требуется экспертиза','2015-02-26')"
-                + "(GL_OPENACC_SEQ.NEXTVAL, 'ALL',null,'RUR','3218','01','3218','01','91203','863010200','Сомнительные банкноты Банка России , направленные на экспертизу в Банк России','2015-02-26')"
+                + "(GL_OPENACC_SEQ.NEXTVAL, 'ALL',null,'RUR','3218','01','3218','01','" + acc2 +"','" + acctype
+                        + "','Сомнительные банкноты Банка России , направленные на экспертизу в Банк России','2015-02-26')"
         );
 
         try {
@@ -177,7 +185,7 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
                 GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                         "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
                 deleteAccountByAcid(acId);
-                Assert.notNull(account);
+                Assert.assertNotNull("account is not exists " + acId, account);
             });
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
@@ -213,7 +221,7 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
                 + aCod
                 + sq
                 + branch;
-        Assert.isTrue(20 == acId.length(), format("Неверная длина счета Майдас '%s' размер '%d'", acId, acId.length()));
+        Assert.assertTrue(format("Неверная длина счета Майдас '%s' размер '%d'", acId, acId.length()), 20 == acId.length());
         return acId;
     }
     
