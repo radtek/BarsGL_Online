@@ -246,8 +246,8 @@ public class EtlRateIT extends AbstractTimerJobIT {
                 "delete from currates where dat = ?", nextOperday));
 
         // вычищаем курсы за все выходные
-//        logger.info("deleted holidays: " + baseEntityRepository.executeNativeUpdate(
-//                "delete from currates where dat in (?,?)", nextHoliday, nextHoliday2));
+        logger.info("deleted holidays: " + baseEntityRepository.executeNativeUpdate(
+                "delete from currates where dat in (?,?)", nextHoliday, nextHoliday2));
 
         // устан ОД 13.03.2015 COB
         setOperday(currentOperdayCOB, previousDay
