@@ -500,7 +500,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         }
     }
 
-    private long getPcid(GLOperation operation) throws SQLException {
+    private Long getPcid(GLOperation operation) throws SQLException {
         return baseEntityRepository.selectFirst("select pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and o.gloid = ?"
                 , operation.getId()).getLong("pcid");
     }
