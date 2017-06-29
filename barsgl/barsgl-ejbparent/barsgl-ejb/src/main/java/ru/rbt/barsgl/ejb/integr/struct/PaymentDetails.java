@@ -4,6 +4,7 @@
 package ru.rbt.barsgl.ejb.integr.struct;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  *
@@ -16,14 +17,16 @@ public class PaymentDetails implements Serializable{
     private String narrativeCustomers; //P16/P016 Наименование плательщика 
     private String taxCustomers;//P17/P017 ИНН плательщика
 
-    public PaymentDetails() {
-    }
-
-    public PaymentDetails(String currency, boolean controlable, String narrativeCustomers, String taxCustomers) {
+    private String account;       //AC_?R;    //	P2	Счет ЦБ по ? операции
+    private BigDecimal operAmount;  //AMT_?R;  //  P3	сумма по ? операции    
+    
+    public PaymentDetails(String currency, boolean controlable, String narrativeCustomers, String taxCustomers, String account, BigDecimal operAmount) {
         this.currency = currency;
         this.controlable = controlable;
         this.narrativeCustomers = narrativeCustomers;
         this.taxCustomers = taxCustomers;
+        this.account = account;
+        this.operAmount = operAmount;
     }
     
     public String getCurrency() {
@@ -56,6 +59,22 @@ public class PaymentDetails implements Serializable{
 
     public void setControlable(boolean controlable) {
         this.controlable = controlable;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public BigDecimal getOperAmount() {
+        return operAmount;
+    }
+
+    public void setOperAmount(BigDecimal operAmount) {
+        this.operAmount = operAmount;
     }
     
 }

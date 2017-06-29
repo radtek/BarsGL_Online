@@ -889,13 +889,16 @@ public class ManualPostingController {
             data.setAccountCBC(posting.getAccountCredit());
             data.setOperAmountC(posting.getAmountCredit());
         }
-        /*
+        
         DataRecord drForDebit = getCustomerInfo(posting.getAccountDebit());
 
         PaymentDetails debitPaymentDetails = new PaymentDetails(posting.getCurrencyDebit().getCurrencyCode(), 
                 posting.isControllableDebit(), 
-                (drForDebit != null) ? drForDebit.getString("BXRUNM") : "", 
-                (drForDebit != null) ? drForDebit.getString("BXTPID") : "");
+                (drForDebit != null) ? drForDebit.getString("BXRUNM").trim() : "", 
+                (drForDebit != null) ? drForDebit.getString("BXTPID").trim() : "",
+                posting.getAccountDebit(),
+                posting.getAmountDebit()
+        );
                 
         data.setDebitPaymentDetails(debitPaymentDetails);
 
@@ -903,11 +906,14 @@ public class ManualPostingController {
         
         PaymentDetails creditPaymentDetails = new PaymentDetails(posting.getCurrencyCredit().getCurrencyCode(),
                 posting.isControllableCredit(), 
-                (drForCredit != null) ? drForCredit.getString("BXRUNM") : "", 
-                (drForCredit != null) ? drForCredit.getString("BXTPID") : "");
+                (drForCredit != null) ? drForCredit.getString("BXRUNM").trim() : "", 
+                (drForCredit != null) ? drForCredit.getString("BXTPID").trim() : "",
+                posting.getAccountCredit(),
+                posting.getAmountCredit()
+        );
         
         data.setCreditPaymentDetails(creditPaymentDetails);
-        */
+        
         data.setMessageUUID(ifEmpty(data.getOperIdD(), "") + "." + ifEmpty(data.getOperIdC(), "")); //+"."+UUID.randomUUID().toString().substring(0,6));
 
         data.setDestinationR(StringUtils.removeCtrlChars(posting.getRusNarrativeLong()));
@@ -930,7 +936,7 @@ public class ManualPostingController {
     public DataRecord getCustomerInfo(String accountNumber) {
         try {
             String sql = "SELECT BXRUNM, BXTPID FROM SDCUSTPD SD " +
-                            "JOIN BSAACC BSA ON BSA.BSAACNNUM = SD.BBCUST" +
+                            "JOIN BSAACC BSA ON BSA.BSAACNNUM = SD.BBCUST " +
                             "WHERE BSA.ID = ?";
             DataRecord res = postingRepository.selectFirst(sql, accountNumber);
             return res;
