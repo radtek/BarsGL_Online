@@ -56,12 +56,12 @@ public class TechAccountIT extends AbstractRemoteIT {
         closeAllTHAccount();
 
         //Добавление нового курса
-        List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
-        if (null==curDate)
+        List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
+        if (null==curDate || curRate.isEmpty())
         {
             CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
             baseEntityRepository.save(currencyRate);
-            curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
+            curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
         }
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
 
@@ -120,8 +120,8 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHStorno() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
-        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        Date curDate = DateUtils.parseDate("2017-06-01","yyy-MM-dd");
+        setOperday(curDate,DateUtils.addDays(curDate, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
         //Обрабатываем прямую операцию
