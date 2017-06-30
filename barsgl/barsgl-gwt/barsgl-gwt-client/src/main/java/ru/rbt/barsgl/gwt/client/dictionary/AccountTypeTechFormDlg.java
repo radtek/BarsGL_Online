@@ -11,6 +11,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 
@@ -24,6 +25,7 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
     protected Column colAccType;
     protected Column colCtype;
     protected Column colTerm;
+
 
     public AccountTypeTechFormDlg() {
         super("Выбор Accounting Type по техническим счетам");
@@ -49,7 +51,7 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
     class AccountTypeGridForm extends GridForm {
 
         public AccountTypeGridForm(boolean editMode) {
-            super("Выбор Accounting Type по техническим счетам");
+            super("План счетов по Accounting Type");
             reconfigure();
             ok.setVisible(editMode);
 
@@ -61,7 +63,7 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select * from GLVD_ACTYPE_TH"; //ACOD not in ('7920','7919','7903','7904','7907','7908')
+            return "select ACCTYPE, CUSTYPE, TERM, ACC2, ACOD, SQ, DTB, DTE, ACCNAME from V_GL_ACCUST_TH";
         }
 
         @Override
@@ -69,13 +71,12 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
             Table result = new Table();
 
             result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "Accounting Typе", 30));
-            result.addColumn(new Column("ACTYP_NAME", Column.Type.STRING, "Наименование Accounting Typе", 80));
-
             result.addColumn(colCtype = new Column("CUSTYPE", Column.Type.STRING, "Тип собств", 20, false, false));
-            result.addColumn(colTerm = new Column("TERM", Column.Type.STRING, "Код срока", 20, false,false));
+            result.addColumn(colTerm = new Column("TERM", Column.Type.STRING, "Код срока", 20, false, false));
             result.addColumn(new Column("ACC2", Column.Type.STRING, "Б/счет 2-го порядка", 20, false, false));
             result.addColumn(new Column("ACOD", Column.Type.STRING, "ACOD Midas", 20, false, false));
-            result.addColumn(new Column("AC_SQ", Column.Type.STRING, "SQ Midas", 20, false, false));
+            result.addColumn(new Column("SQ", Column.Type.STRING, "SQ Midas", 20, false, false));
+            result.addColumn(new Column("ACCNAME", Column.Type.STRING, "Наименование Accounting Typе", 80));
             result.addColumn(colDateBegin = new Column("DTB", Column.Type.DATE, "Дата начала", 25));
             result.addColumn(colDateEnd = new Column("DTE", Column.Type.DATE, "Дата конца", 25));
 
@@ -84,16 +85,15 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
 
         @Override
         public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
-            initialFilterParams = getInitialFilterParams();
+            Date currentDate = (Date)initialFilterParams[0];
+            String accType = (String)initialFilterParams[1];
+
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+            list.add(new FilterItem(colDateBegin, FilterCriteria.LE, currentDate, true, true));
+            list.add(new FilterItem(colDateEnd, FilterCriteria.IS_NULL, null, true, true));
 
-            if ((initialFilterParams!=null) && (initialFilterParams.length>0)) {
-                if (initialFilterParams[0]!=null) {
-                    String accType = initialFilterParams[0].toString();
+            if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.START_WITH, accType));
 
-                    if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.START_WITH, accType));
-                }
-            }
             return list;
         }
 
@@ -107,6 +107,7 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
         public ArrayList<SortItem> getInitialSortCriteria() {
             ArrayList<SortItem> list = new ArrayList<SortItem>();
             list.add(new SortItem("ACCTYPE", Column.Sort.ASC));
+            list.add(new SortItem("DTB", Column.Sort.ASC));
             return list;
         }
 

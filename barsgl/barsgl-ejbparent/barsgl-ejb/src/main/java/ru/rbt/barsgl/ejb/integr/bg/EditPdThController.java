@@ -113,8 +113,10 @@ public class EditPdThController {
             msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки по тех.счету c ID: " + listToString(pdList, ",");
             auditController.info(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
-        } catch (Exception e) {
-            String errMessage = operationWrapper.getErrorMessage();
+        } catch (Throwable e) {
+            String errMessage = operationWrapper.getErrorMessage() + "\n" + e.getMessage();
+            if (e.getCause() != null ) errMessage += "\n" + e.getCause().getMessage();
+            auditController.error(ManualOperation, errMessage, "GL_OPER", operationWrapper.getId().toString(), e);
             return new RpcRes_Base<ManualTechOperationWrapper>( operationWrapper, true, errMessage);
         }
     }

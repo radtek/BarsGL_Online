@@ -231,13 +231,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
         grid.setWidget(5, 0, createLabel("Сумма"));
 
-        BtnTxtBox mSum;
-        grid.setWidget(5,1,
-        mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
-                @Override
-                public void method() {
-                }
-            }));
+        TxtBox mSum;
+        grid.setWidget(5,1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
 
         if (isDebit) {
             mDtAccount = mAccount;

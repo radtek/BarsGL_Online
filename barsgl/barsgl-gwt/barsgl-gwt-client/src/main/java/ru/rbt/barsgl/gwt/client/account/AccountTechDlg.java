@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 
 /**
@@ -150,8 +151,6 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
         account.setDescription(check(mAccountDesc.getValue(),
                 "Наименование счета", "обязательно для заполнения, не более 255 символов \n(Для разблокировки нажмите на кнопку 'Accounting Type')",
                 new CheckStringLength(1, 255)));
-//            account.setDealId(check(mDealId.getValue(),
-//                    "Номер сделки", "обязательно для заполнения", new CheckNotEmptyString()));
         account.setDealSource(check((String) mDealSource.getValue(),
                 "Источник сделки", "обязательно для заполнения", new CheckNotEmptyString()));
 
@@ -192,7 +191,6 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
 
             mAccountDesc.setValue(getFieldText("DESCRIPTION"));
             mDealSource.setValue(getFieldValue("DEALSRS").toString());
-            //mDealSource.setValue("K+TP");
             mDateOpen.setValueSrv((Date)getFieldValue("DTO"));
             mDateClose.setValueSrv((Date)getFieldValue("DTC"));
         }
@@ -251,14 +249,6 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
             mDateOpen.setValue(operday);
     }
 
-    private String getCustomerTypeName(HashMap<String, Object> result) {
-        if (null == result.get("CTYPE"))
-            return "";
-        String custType = result.get("CTYPE").toString();
-        String ctypeName = (String)result.get("CTYPENAME");;
-        return custType + ": " + ctypeName;
-    }
-
     private Button createAccountTypeButton(String text, String width) {
         Button btn = new Button();
         btn.setText(text);
@@ -277,49 +267,25 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
 
                         @Override
                         protected Object[] getInitialFilterParams() {
-                            return new Object[] {mAccountType.getValue()};
+                            return new Object[] {operday, mAccountType.getValue()};
                         }
 
                         @Override
                         protected boolean setResultList(HashMap<String, Object> result) {
                             String acctype = result.get("ACCTYPE").toString();
+                            Date dateFrom = (Date)result.get("DTB");
+                            Date dateTo = (Date)result.get("DTE");
+
+                            Date dateOpen = (null != mDateOpen.getValue()) ? mDateOpen.getValue() : operday;
+                            if (dateOpen.before(dateFrom) || (null != dateTo && dateOpen.after(dateTo))) {
+                                showInfo("Ошибка", "Accounting Type " + acctype + " недействителен на дату " + mDateOpen.getText());
+                                return false;
+                            }
                             mAccountType.setValue(acctype);
-                            accountTypeDesc = (String)result.get("ACTYP_NAME");
+                            accountTypeDesc = (String)result.get("ACCNAME");
                             mAccountDesc.setValue(accountTypeDesc);
                             mAccountDesc.setEnabled(true);
-                            return true;
-                        }
-                    };
-                    dlg.setModal(true);
-                    dlg.show();
-                } catch (Exception e) {
-                    Window.alert(e.getMessage());
-                }
-            }
-        });
-        return btn;
-    }
 
-    private Button createCustomerButton(String text, String width) {
-        Button btn = new Button();
-        btn.setText(text);
-        btn.addStyleName("dlg-button");
-        btn.setWidth(width);
-        btn.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent clickEvent) {
-                try {
-                    GridFormDlgBase dlg = new CustomerFormDlg() {
-                        @Override
-                        protected Object[] getInitialFilterParams() {
-                            return new Object[] {null};
-                        }
-
-                        @Override
-                        protected boolean setResultList(HashMap<String, Object> result) {
-                            if (null != result) {
-                                clearAccountType();
-                            }
                             return true;
                         }
                     };
@@ -334,13 +300,6 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
     }
 
     private void setChangeHandlers() {
-        mDealSource.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent changeEvent) {
-                boolean srcKP = mDealSource.getText().equals(DealSource.KondorPlus.getLabel());
-            }
-        });
-
         mAccountType.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
@@ -348,12 +307,6 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
                 mAccountDesc.setEnabled(false);
             }
         });
-    }
-
-    void clearAccountType() {
-        mAccountType.clear();
-        mAccountDesc.clear();
-        mAccountDesc.setEnabled(false);
     }
 }
 

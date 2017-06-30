@@ -13,7 +13,6 @@ import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
-import ru.rbt.barsgl.gwt.client.dictionary.AccCustomerFormDlg;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
@@ -55,8 +54,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
 
     protected HashMap<String, IBoxValue> mapParam;
 
-    private static final DateBox.DefaultFormat DATE_FORMAT = new DateBox.DefaultFormat(DateTimeFormat.getFormat("dd.MM.yyyy"));
-
     protected DataListBoxEx mDtCurrency;
     protected DataListBoxEx mDtFilial;
     protected TxtBox mDtAccount;
@@ -90,7 +87,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
     public OperationTechDlgBase(String title, FormAction action, Columns columns) {
         super(columns, action);
         setCaption(title);
-        //rootLogger.addHandler(new ConsoleLogHandler());
     }
 
     @Override
@@ -104,11 +100,10 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         TxtBox mAccount;
         TxtBox mAccType;
         TxtBox mSum = null;
-        //BtnTxtBox mSum = null;
         Button mButton;
 
         boolean isDebit = side.equals(Side.DEBIT);
-        //Grid grid = new Grid(withSum ? 5 : 4, 2);
+
         Grid grid = new Grid(6, 2);
 
         grid.setWidget(0, 0, createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
@@ -117,9 +112,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
         grid.setWidget(2, 1, mFilial =  createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
-        //grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name() + "_" + label, null, FIELD2_WIDTH,false,false));
 
-        //grid.setWidget(3, 0, createLabel("AccType"));
         grid.setWidget(3, 0, createAlignWidget(mButton = createAccTypedButton("AccType", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
 
         if (side.equals(Side.DEBIT))
@@ -128,7 +121,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             grid.setWidget(3, 1, mAccType = createTxtBox(20, SUM_WIDTH));
 
         grid.setWidget(4, 0, createLabel("Счет"));
-        //grid.setWidget(3, 0, createAlignWidget(mButton = createBsaAcidButton("Счет", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
 
         if (side.equals(Side.DEBIT))
             grid.setWidget(4, 1, createAlignWidget(mAccount = createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
@@ -141,16 +133,9 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         mFilial.addChangeHandler(createFilialChangeHandler(side));
         mAccType.addChangeHandler(createAccTypeChangeHandler(side));
 
-
         if (withSum) {
             grid.setWidget(5, 0, createLabel("Сумма"));
             grid.setWidget(5, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
-           /* grid.setWidget(5, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
-                @Override
-                public void method() {
-                    btnClick(side);
-                }
-            }));*/
         }
 
         if (isDebit) {
@@ -177,16 +162,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         return createCachedFilialListBox(name, filial, width, false, true);
     }
 
-    protected Grid createParams(boolean enabled){
-        Grid grid = new Grid(2,6);
-        Object[] widgets;
-        widgets = createParams(grid, 0, enabled);
-        mNum1 = (TxtBox)widgets[0]; mDate1 = (DatePickerBox)widgets[1]; 
-        widgets = createParams(grid, 1, enabled);
-        mNum2 = (TxtBox)widgets[0]; mDate2 = (DatePickerBox)widgets[1]; 
-        return grid;
-    };
-
     protected ChangeHandler createFilialChangeHandler(final Side side) {
         return new ChangeHandler() {
             @Override
@@ -210,24 +185,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             public void onChange(ChangeEvent changeEvent){
                 TxtBox mAccType = (side == Side.DEBIT) ? mDtAccType : mCrAccType;
                 updateAccount(side, mAccType);
-            }
-        };
-    }
-
-    protected ChangeHandler createAccountChangeHandler(final Side side) {
-        return new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent changeEvent) {
-                TextBox mAccount = ((TextBox)changeEvent.getSource());
-                String account = mAccount.getValue();
-                if (null == account || account.length() < 20)
-                    return;
-                String ccyN = account.substring(5, 8);
-                String filialN = "00" + account.substring(11, 13);
-                DataListBoxEx mCurrency = (side == Side.DEBIT) ? mDtCurrency : mCrCurrency;
-                DataListBoxEx mFilial = (side == Side.DEBIT) ? mDtFilial : mCrFilial;
-                mCurrency.setParam("CCYN", ccyN);
-                mFilial.setParam("CBCCN", filialN);
             }
         };
     }
@@ -289,16 +246,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                 public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
                     if (!wrapper.isError()) {
                         mAccount.setValue(wrapper.getResult().getBsaAcid());
-
-                   /* if (!mAccount.hasValue())
-                    {
-                        if (side.equals(Side.DEBIT)) {
-                            DialogUtils.showInfo("Для выбранных параметров счёт по дебету не найден");
-                        }
-                        else {
-                            DialogUtils.showInfo("Для выбранных параметров счёт по кредиту не найден");
-                        }
-                    }*/
                     } else {
                         mAccount.clear();
                     }
@@ -328,11 +275,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         String filialDt = "";
         String filialCr = "";
 
-        if (null!=mDtFilial.getValue()) {
+        if (null != mDtFilial.getValue()) {
             filialDt = mDtFilial.getValue().toString();
         }
 
-        if (null!=mCrFilial.getValue()) {
+        if (null != mCrFilial.getValue()) {
             filialCr = mCrFilial.getValue().toString();
         }
 
@@ -348,7 +295,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             return false;
         }
 
-        if (mDtAccount.getValue()!=null && mCrAccount.getValue()!=null) {
+        if (mDtAccount.getValue() != null && mCrAccount.getValue()!=null) {
             String bsaccidDt = mDtAccount.getValue();
             String bsaccidCr = mCrAccount.getValue();
 
@@ -360,31 +307,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
 
         return true;
     }
-
-    private Object[] createParams(Grid grid, int ind, boolean enabled){
-    	String istr = Integer.toString(ind + 1);
-        TxtBox mNum;
-        DatePickerBox mDate;
-        String sNum = "[N" + istr + "]";
-        String sDate = "[D" + istr + "]";
-
-        grid.setWidget(ind, 0, createLabel("Поле " + sNum, "80px"));
-        grid.setWidget(ind, 1, createLabel("№", "25px"));
-        grid.setWidget(ind, 2, createAlignWidget(mNum = createTxtBox(20, "120px"), "165px"));
-        grid.setWidget(ind, 3, createLabel("Поле " + sDate, "70px"));
-        grid.setWidget(ind, 4, createLabel("Дата", "35px"));
-        grid.setWidget(ind, 5, mDate = createDateBox(null));
-        mDate.setWidth("115px");
-
-        if (null == mapParam)
-        	mapParam = new HashMap<String, IBoxValue>();
-        mapParam.put(sNum, mNum);
-        mapParam.put(sDate, mDate);
-
-        mNum.setEnabled(enabled);
-        mDate.setEnabled(enabled);
-        return new Object[] {mNum, mDate};
-    };
 
     protected Grid createDescriptions() {
         Grid grid = new Grid(2,2);
@@ -406,49 +328,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         return grid;
     }
 
-    private Button createBsaAcidButton(String text, String width, final boolean isDebit) {
-        Button btn = new Button();
-        btn.setText(text);
-        btn.addStyleName("dlg-button");
-        btn.setWidth(width);
-        btn.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent clickEvent) {
-                try {
-                    final TxtBox mAccount = isDebit ? mDtAccount : mCrAccount;
-                    final DataListBoxEx mCurrency = isDebit ? mDtCurrency : mCrCurrency;
-                    final DataListBoxEx mFilial = isDebit ? mDtFilial : mCrFilial;
-
-                    final String bsaAcid = mAccount.getValue();
-                    FormAction action = OperationTechDlgBase.this.action;
-                    boolean editAccount = (CREATE == action || UPDATE == action);
-                    GridFormDlgBase dlg = new AccCustomerFormDlg(!editAccount) {
-                        @Override
-                        protected boolean setResultList(HashMap<String, Object> result) {
-                            if (null != result) {
-                                mFilial.setParam("CBCCN", (String) result.get("CBCCN"));
-                                mCurrency.setParam("CCYN", (String) result.get("CCYN"));
-                                mAccount.setValue((String) result.get("BSAACID"));
-                            }
-                            return true;
-                        }
-
-                        @Override
-                        protected Object[] getInitialFilterParams() {
-                            return new Object[]{mCurrency.getValue(), mCurrency.getParam("CCYN"),
-                                    mFilial.getValue(), mFilial.getParam("CBCCN"), bsaAcid, getAccountDate()};
-                        }
-                    };
-                    dlg.setModal(true);
-                    dlg.show();
-                } catch (Exception e) {
-                    Window.alert(e.getMessage());
-                }
-            }
-        });
-        return btn;
-    }
-
     private Button createAccTypedButton(String text, String width, final boolean isDebit) {
         Button btn = new Button();
         btn.setText(text);
@@ -458,12 +337,9 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             @Override
             public void onClick(ClickEvent clickEvent) {
                 try {
-                    final TxtBox mAccount = isDebit ? mDtAccount : mCrAccount;
-                    final DataListBoxEx mCurrency = isDebit ? mDtCurrency : mCrCurrency;
-                    final DataListBoxEx mFilial = isDebit ? mDtFilial : mCrFilial;
+
                     final TxtBox mAccType = isDebit ? mDtAccType : mCrAccType;
 
-                    //final String bsaAcid = mAccount.getValue();
                     FormAction action = OperationTechDlgBase.this.action;
                     final boolean editAccount = (CREATE == action || UPDATE == action || mAccType.isEnabled());
 
@@ -479,9 +355,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                                 mAccType.setValue((String)result.get("ACCTYPE"));
                                 updateAccount(isDebit?Side.DEBIT:Side.CREDIT,mAccType);
 
-                                //mFilial.setParam("CBCCN", (String) result.get("CBCCN"));
-                                //mCurrency.setParam("CCYN", (String) result.get("CCYN"));
-                                //mAccount.setValue((String) result.get("BSAACID"));
                             }
                             return true;
                         }
@@ -489,8 +362,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                         @Override
                         protected Object[] getInitialFilterParams() {
                             return new Object[] {mAccType.getText()};
-                            /*return new Object[]{mCurrency.getValue(), mCurrency.getParam("CCYN"),
-                                    mFilial.getValue(), mFilial.getParam("CBCCN"), bsaAcid, getAccountDate()};*/
                         }
                     };
                     dlg.setModal(true);
@@ -502,7 +373,6 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         });
         return btn;
     }
-
 
     abstract protected Date getAccountDate();
 }

@@ -542,6 +542,14 @@ public class GLAccountService {
             Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
             String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт" : "Изменен";
 
+
+
+            DataRecord data = glAccountRepository.getAccountParams(Utils.fillUp(Long.toString(accountWrapper.getAccountType()), 9),
+                    "00", "00", dateOpen);
+            if (null == data) {
+                  throw new ValidationError(ACCOUNT_PARAMS_NOT_FOUND, "", accountWrapper.getAccountType().toString(), "00", "00", dateUtils.onlyDateString(dateOpen));
+            }
+
             String accType = org.apache.commons.lang3.StringUtils.leftPad(accountWrapper.getAccountType().toString(),9,"0");
             AccountingType accTypeGL = (AccountingType) accountingTypeRepository.findById(AccountingType.class,accType);
             String glCCY = accountWrapper.getCurrency();

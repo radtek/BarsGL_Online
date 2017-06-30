@@ -166,7 +166,7 @@ public class PostingFormTech extends GridForm {
 
     private GridAction editPostingTech(){
 
-        return new GridAction(grid, null, "Редактирование ручной проводки по тех. счетам", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
+        return new GridAction(grid, null, "Редактирование", new Image(ImageConstants.INSTANCE.edit24()), 10, true) {
             PostingTechDlg dlg;
 
             @Override
@@ -181,7 +181,7 @@ public class PostingFormTech extends GridForm {
                     return ;
                 }
 
-                dlg = new PostingTechDlg("Редактирование ручной проводки по тех. счетам", FormAction.UPDATE, table.getColumns());
+                dlg = new PostingTechDlg("Редактирование проводки по техническим счетам", FormAction.UPDATE, table.getColumns());
                 dlg.setDlgEvents(this);
                 dlg.show(row);
             }
@@ -218,7 +218,7 @@ public class PostingFormTech extends GridForm {
     }
 
     private GridAction deletePostingTech() {
-        return new GridAction(grid, null, "Подавить / восстановить проводку", new Image(ImageConstants.INSTANCE.close24()), 10, true) {
+        return new GridAction(grid, null, "Подавление / восстановление проводки", new Image(ImageConstants.INSTANCE.close24()), 10, true) {
             PostingTechDlg dlg;
 
             @Override
@@ -235,7 +235,7 @@ public class PostingFormTech extends GridForm {
                 boolean isInvisible = isInvisible(row);
                 String act = isInvisible ? "Отмена подавления" : "Подавление";
 
-                dlg = new PostingTechDlg(act + " проводки", FormAction.OTHER, table.getColumns());
+                dlg = new PostingTechDlg(act + " проводки по техническим счетам", FormAction.OTHER, table.getColumns());
                 dlg.setDlgEvents(this);
                 dlg.show(row);
             }
