@@ -72,7 +72,10 @@
         <class>ru.rbt.barsgl.ejb.entity.dict.SourcesDeals</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.TypesOfTerms</class>
-        
+        <class>ru.rbt.barsgl.ejb.entity.dict.BVSourceDeal</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.BVSourceDealView</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView</class>
+
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPackage</class>
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPosting</class>
         <class>ru.rbt.barsgl.ejb.entity.etl.EtlAccount</class>

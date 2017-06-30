@@ -32,6 +32,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.PRE_COB;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.cleanHeader;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 
 /**
  * Created by ER18837 on 18.06.15.
@@ -141,7 +142,7 @@ public class DwhUnloadTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
         pst.setPaymentRefernce(ref);
 

@@ -9,13 +9,22 @@ import javax.inject.Inject;
  * Created by ER18837 on 26.02.15.
  * Обработчик веерных проводок в режиме online
  */
-public class FanPostingProcessor extends IncomingPostingProcessor {
+@Deprecated
+public class FanPostingProcessor { //extends IncomingPostingProcessor {
 
+/*
     @Inject
     private OperdayController operdayController;
 
     @Inject
     private ru.rbt.ejbcore.util.DateUtils dateUtils;
+
+    @Override
+    public boolean isSupported(EtlPosting posting) {
+        return null != posting
+                && posting.isFan() && !posting.isStorno() && !posting.isTech();
+    }
+*/
 
     //@Override
     /**
@@ -39,12 +48,5 @@ public class FanPostingProcessor extends IncomingPostingProcessor {
                     dateUtils.onlyDateString(lastWorkingDay), operdayController.getOperday().getLastWorkdayStatus().name());
         }
     }*/
-
-    @Override
-    public boolean isSupported(EtlPosting posting) {
-        return null != posting
-                && posting.isFan() && !posting.isStorno() && !posting.isTech();
-    }
-
 
 }

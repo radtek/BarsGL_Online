@@ -37,6 +37,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -76,7 +77,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -167,7 +168,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -247,7 +248,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -352,7 +353,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -406,7 +407,7 @@ public class BufferModeTest extends AbstractRemoteTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);

@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 
 import static com.google.common.collect.Iterables.find;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -170,7 +171,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
                 pd.setSubdealId(wrapper.getSubdealId());
                 pd.setPaymentRef(wrapper.getDealId());
                 pd.setPref(pdRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
-                        GLOperation.srcPaymentHub.equals(wrapper.getDealSrc())));
+                        PaymentHub.getLabel().equals(wrapper.getDealSrc())));
                 pd.setPnar(pdRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));
             }
             pd.setVald(valueDate);

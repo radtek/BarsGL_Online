@@ -323,12 +323,15 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
         operExt.setManualStatus(BackValuePostStatus.CONTROL);
 
         // TODO где хранить эти даты и причину... в GLOperation ?
-        operExt.setManualReason(GLOperationExt.BackValueReason.OverDepth.getValue());
-        operExt.setBackCutDate(operation.getValueDate());
-        operExt.setCloseCutDate(operation.getValueDate());
-        operExt.setCloseLastDate(operation.getValueDate());
-//        operation.setOperExt(operExt);
+        BackValueParameters parameters = operation.getBackValueParameters();
+        if (null != parameters) {
+            operExt.setManualReason(parameters.getReason());
+            operExt.setDepthCutDate(parameters.getDepthCutDate());
+            operExt.setCloseCutDate(parameters.getCloseCutDate());
+            operExt.setCloseLastDate(parameters.getCloseLastDate());
+        }
 
+        operation.setOperExt(operExt);
         return operation;
     }
 }

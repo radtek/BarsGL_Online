@@ -16,7 +16,7 @@ public class GLOperationExt extends BaseEntity<Long> {
 
     public enum BackValueReason {
         OverDepth("1"),
-        ClosePeriod("2");
+        ClosedPeriod("2");
 
         private final String value;
 
@@ -39,7 +39,7 @@ public class GLOperationExt extends BaseEntity<Long> {
 
     public GLOperationExt(Long gloid, Date postdatePlan){
         this.id = gloid;
-        this.postdatePlan = postdatePlan;
+        this.postDatePlan = postdatePlan;
     }
 
     @Id
@@ -59,14 +59,14 @@ public class GLOperationExt extends BaseEntity<Long> {
 
     @Temporal(TemporalType.DATE)
     @Column(name = "POSTDATE_PLAN")
-    private Date postdatePlan;
+    private Date postDatePlan;
 
     @Column(name = "MNL_RSNCODE")
     private String manualReason;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "BV_CUTDATE")
-    private Date backCutDate;
+    private Date depthCutDate;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "PRD_LDATE")
@@ -89,12 +89,12 @@ public class GLOperationExt extends BaseEntity<Long> {
     @Column(name = "OTS_AU3")
     private Date confirmTimestamp;
 
-    public Date getPostdatePlan() {
-        return postdatePlan;
+    public Date getPostDatePlan() {
+        return postDatePlan;
     }
 
-    public void setPostdatePlan(Date postdatePlan) {
-        this.postdatePlan = postdatePlan;
+    public void setPostDatePlan(Date postDatePlan) {
+        this.postDatePlan = postDatePlan;
     }
 
     public String getManualReason() {
@@ -105,12 +105,12 @@ public class GLOperationExt extends BaseEntity<Long> {
         this.manualReason = manualReason;
     }
 
-    public Date getBackCutDate() {
-        return backCutDate;
+    public Date getDepthCutDate() {
+        return depthCutDate;
     }
 
-    public void setBackCutDate(Date backCutDate) {
-        this.backCutDate = backCutDate;
+    public void setDepthCutDate(Date depthCutDate) {
+        this.depthCutDate = depthCutDate;
     }
 
     public Date getCloseLastDate() {

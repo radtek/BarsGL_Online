@@ -528,7 +528,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
      * Создает счета BARS без привязки к счету ЦБ
      * @param glAccount
      */
-    public void createPureBarsAccounts(GLAccount glAccount) {
+    public void createPureBarsAccounts(GLAccount glAccount)  {
         // счет ЦБ
 
         BsaAcc bsaAcc = bsaAccRepository.findBsaAcc(glAccount.getBsaAcid())

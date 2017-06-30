@@ -63,7 +63,7 @@ public class ExchAccountTest extends AbstractRemoteTest {
 //        pst.setAmountDebit(new BigDecimal("2454900000.000"));
 //        pst.setCurrencyCredit(BankCurrency.USD);
 //        pst.setCurrencyDebit(BankCurrency.RUB);
-//        pst.setSourcePosting(GLOperation.srcKondorPlus);
+//        pst.setSourcePosting(KondorPlus.getLabel());
 //        pst.setDealId("981495");
 
 //        System.out.println("excacRlnRepository.findForPlcode7903");

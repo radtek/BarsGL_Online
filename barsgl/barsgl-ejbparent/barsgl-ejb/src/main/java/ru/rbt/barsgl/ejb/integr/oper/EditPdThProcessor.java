@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.DATE_AFTER_OPERDAY;
@@ -187,7 +188,7 @@ public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperatio
                 pd.setPaymentRef(wrapper.getDealId());
                 pd.setRusNarrLong(wrapper.getRusNarrativeLong());
                 pd.setProfitCenter(glPdThRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
-                        GLOperation.srcPaymentHub.equals(wrapper.getDealSrc())));
+                        PaymentHub.getLabel().equals(wrapper.getDealSrc())));
                 pd.setPnar(glPdThRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));
             }
             pd.setVald(valueDate);

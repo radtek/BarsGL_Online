@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
@@ -108,7 +109,7 @@ public class SuppressTboStornoDuplicatesTest extends AbstractRemoteTest {
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
         pst.setDealId(StringUtils.rsubstr(Long.toString(stamp), 4));
-        pst.setSourcePosting(SourcesDeals.SRCPST.KTP.getValue());
+        pst.setSourcePosting(KondorPlus.getLabel());
         return (EtlPosting) baseEntityRepository.save(pst);
     }
 

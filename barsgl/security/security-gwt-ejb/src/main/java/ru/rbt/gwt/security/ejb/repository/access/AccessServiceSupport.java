@@ -2,6 +2,7 @@ package ru.rbt.gwt.security.ejb.repository.access;
 
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.security.entity.access.PrmValueHistory;
@@ -45,6 +46,9 @@ public class AccessServiceSupport {
 
     @Inject
     private PrmValueRepository prmValueRepository;
+
+    @Inject
+    private BankCalendarDayRepository calendarRepository;
 
     @Inject
     private OperdayController operdayController;
@@ -205,6 +209,7 @@ public class AccessServiceSupport {
                     new SimpleDateFormat("dd.MM.yyyy").format(prm.getDateBegin()),
                     prm.getDateEnd() == null ? "" : "по " + new SimpleDateFormat("dd.MM.yyyy").format(prm.getDateEnd()));
 
+/*
         DataRecord rec = prmValueRepository.selectFirst(format("select min(d.dat) as dat\n" +
                 "from (\n" +
                 "\tselect dat \n" +
@@ -212,9 +217,10 @@ public class AccessServiceSupport {
                 "\twhere ccy='RUR' and thol not in ('X', 'T') and dat< (select curdate from dwh.gl_od)\n" +
                 "\torder by 1 desc\n" +
                 "\tfetch first %s rows only) d", prm.getPrmValue()));
-        Date bvDate = rec.getDate("dat");
+*/
+        Date bvDate = calendarRepository.getWorkDateBefore(operDay, Integer.parseInt(prm.getPrmValue()), false);
 
-        if (rec == null || bvDate.compareTo(date) == 1)
+        if (bvDate == null || bvDate.compareTo(date) == 1)
             throw new ValidationError(ErrorCode.POSTING_BACK_NOT_IN_DAYS, new SimpleDateFormat("dd.MM.yyyy").format(bvDate));
     }
 

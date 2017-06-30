@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
@@ -26,14 +27,19 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.util.Calendar.MONTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
 
 /**
@@ -73,7 +79,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -125,7 +131,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcPaymentHub);
+        pst.setSourcePosting(PaymentHub.getLabel());
         pst.setDealId("123");
         pst.setPaymentRefernce(null);
 
@@ -180,7 +186,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.EUR);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
@@ -633,11 +639,11 @@ public class EtlMessageTest extends AbstractTimerJobTest {
 
         long stamp = System.currentTimeMillis();
 
-        final Date longPrev = DateUtils.parseDate("18.01.2015", "dd.MM.yyyy");
-        Assert.assertFalse(remoteAccess.invoke(BankCalendarDayRepository.class, "isWorkday", longPrev));
-        Date prev = DateUtils.parseDate("24.01.2015", "dd.MM.yyyy");
-        Date hold = DateUtils.parseDate("25.01.2015", "dd.MM.yyyy");
-        Date curr = DateUtils.parseDate("27.01.2015", "dd.MM.yyyy");
+        // TODO подготовить календарь на январь-февраль 2015
+        Date prev = DateUtils.parseDate("13.02.2015", "dd.MM.yyyy");
+        Date hold = DateUtils.parseDate("14.02.2015", "dd.MM.yyyy");
+        Date curr = DateUtils.parseDate("16.02.2015", "dd.MM.yyyy");
+
         List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and thol <> 'X'"
                 , prev, curr);
         Assert.assertEquals(2, days.size());
@@ -659,7 +665,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -674,6 +680,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertEquals(operation.getPostDate()+"",curr, operation.getPostDate());
 
         // далеко назад выходной
+        final Date longPrev = DateUtils.parseDate("18.01.2015", "dd.MM.yyyy");
+        Assert.assertFalse(remoteAccess.invoke(BankCalendarDayRepository.class, "isWorkday", longPrev));
         pst.setValueDate(longPrev);
         operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
@@ -682,13 +690,12 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertEquals(OperState.POST, operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
+        Date nextWork = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", longPrev, false);
+        Assert.assertEquals(operation.getPostDate()+"", nextWork, operation.getPostDate());
 
         // переход через месяц
-        curr = DateUtils.parseDate("16.02.2015", "dd.MM.yyyy");
-        setOperday(curr, prev, ONLINE,OPEN);
-
-        pst.setValueDate(prev);
+        final Date monthPrev = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
+        pst.setValueDate(monthPrev);
         operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
@@ -696,7 +703,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertEquals(OperState.POST, operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", prev, operation.getPostDate());
+        Date prevWork = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", monthPrev, false);
+        Assert.assertEquals(operation.getPostDate()+"", prevWork, operation.getPostDate());
 
         // дата в будущем !!
         setOperday(curr, prev, ONLINE,OPEN);
@@ -740,7 +748,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -821,7 +829,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -882,7 +890,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);

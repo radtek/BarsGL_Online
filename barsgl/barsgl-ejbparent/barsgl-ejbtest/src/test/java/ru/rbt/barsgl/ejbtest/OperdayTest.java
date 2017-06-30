@@ -42,6 +42,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
 /**
@@ -494,7 +495,7 @@ public class OperdayTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);

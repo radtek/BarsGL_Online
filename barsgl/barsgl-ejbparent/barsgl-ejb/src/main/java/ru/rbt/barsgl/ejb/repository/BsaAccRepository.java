@@ -7,6 +7,7 @@ import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.inject.Inject;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Optional;
 
@@ -35,9 +36,16 @@ public class BsaAccRepository extends AbstractBaseEntityRepository<BsaAcc, Strin
         bsaAcc.setDateContractOpen(glAccount.getDateOpen());
         bsaAcc.setCustomerNumber(("00000000" + glAccount.getCustomerNumber()).substring(glAccount.getCustomerNumber().length()));
 
+
         Date dateTax = glAccount.getDateOpen();
-        for (int i = 0; i<3; i++) {                 // open + 3 work day
+/*        for (int i = 0; i<3; i++) {                 // open + 3 work day
             dateTax = calendarDayRepository.getWorkdayAfter(dateTax).getId().getCalendarDate();
+        }
+*/
+        try {
+            dateTax = calendarDayRepository.getWorkDateAfter(glAccount.getDateOpen(), 3, false);
+        } catch (SQLException e) {
+            e.printStackTrace();    // TODO !!!
         }
         bsaAcc.setDateTax(dateTax);
 
