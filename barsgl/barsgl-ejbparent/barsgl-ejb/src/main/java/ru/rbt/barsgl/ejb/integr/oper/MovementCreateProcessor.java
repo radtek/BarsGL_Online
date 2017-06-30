@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MovementCreate;
 import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
+import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
@@ -959,6 +960,27 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         sb.append("<ns2:ProjectNarrative>").append(ifEmpty(item.getPnar(), "")).append("</ns2:ProjectNarrative>");
         sb.append("</ns2:MIDASSpecificParameters>");
         sb.append("</ns2:ABSSpecificParameters>");
+
+        PaymentDetails debitPaymentDetails = item.getDebitPaymentDetails();
+        PaymentDetails creditPaymentDetails = item.getCreditPaymentDetails();
+        
+        // all elements has minOccurs = 0
+        sb.append("<ns2:PaymentDetails>");
+            if(debitPaymentDetails != null){
+                sb.append("<ns2:PayerName>").append(debitPaymentDetails.getNarrativeCustomers()).append("</ns2:PayerName>");
+                sb.append("<ns2:PayerTaxID>").append(debitPaymentDetails.getTaxCustomers()).append("</ns2:PayerTaxID>");
+                sb.append("<ns2:PayerAccount>").append(debitPaymentDetails.getAccount()).append("</ns2:PayerAccount>");
+                sb.append("<ns2:PayerAmount>").append(debitPaymentDetails.getOperAmount()).append("</ns2:PayerAmount>");
+                sb.append("<ns2:PayerCcy>").append(debitPaymentDetails.getCurrency()).append("</ns2:PayerCcy>");
+            }
+            if(creditPaymentDetails != null){
+                sb.append("<ns2:BenefName>").append(creditPaymentDetails.getNarrativeCustomers()).append("</ns2:BenefName>");
+                sb.append("<ns2:BenefTaxID>").append(creditPaymentDetails.getTaxCustomers()).append("</ns2:BenefTaxID>");
+                sb.append("<ns2:BenefAccount>").append(creditPaymentDetails.getAccount()).append("</ns2:BenefAccount>");
+                sb.append("<ns2:BenefAmount>").append(creditPaymentDetails.getOperAmount()).append("</ns2:BenefAmount>");
+                sb.append("<ns2:BenefCcy>").append(creditPaymentDetails.getCurrency()).append("</ns2:BenefCcy>");
+            }
+        sb.append("</ns2:PaymentDetails>");
     }
 
 /*

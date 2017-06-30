@@ -50,7 +50,6 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
     private final String LABEL_WIDTH = "130px";
     private final String FIELD_WIDTH = "120px";
     private final String LABEL_WIDTH2 = "125px";
-    private final String FIELD_WIDTH2 = "135px";
     private final String TEXT_WIDTH = "80px";
     private final String LONG_WIDTH = "390px";
 
@@ -80,9 +79,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
     }
 
-
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
-
         return new DataListBoxEventHandler(){
 
             @Override
@@ -103,7 +100,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
         Grid g0 = new Grid(2, 4);
         mainVP.add(g0);
         g0.setWidget(0, 0, createLabel("Филиал", LABEL_WIDTH));
-        g0.setWidget(0, 1, mFilial = createFilialListBox("","250px"));// createBranchAuthListBox("", "250px", true));
+        g0.setWidget(0, 1, mFilial = createFilialListBox("","250px"));
         g0.setWidget(0, 2, createLabel("Валюта", "50px"));
         g0.setWidget(0, 3, mCurrency = createCurrencyListBox("RUR", "70px"));
 
@@ -238,7 +235,7 @@ public class AccountTechDlg extends EditableDialog<ManualAccountWrapper> {
         mCurrency.setEnabled(action == FormAction.CREATE);
 
         mAccountTypeButton.setEnabled(action == FormAction.CREATE);
-        mAccountType.setEnabled(true);
+        mAccountType.setEnabled(action == FormAction.CREATE);
         mAccountDesc.setEnabled(action == FormAction.UPDATE);
         mDealSource.setEnabled(action == FormAction.CREATE);
 

@@ -27,14 +27,10 @@ import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
  * Created by ER18837 on 18.09.15.
  */
 public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
-
-//    private ManualAccountWrapper account = new ManualAccountWrapper();
-
     private TxtBox mBsaAcid;
     private TxtBox mDateOpen;
     private DatePickerBox mDateClose;
     private boolean isClosed;
-    private Columns columns;
     private String dealSource;
 
     public AccountCloseDlg(String caption, FormAction action, Columns columns) {
@@ -91,6 +87,7 @@ public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
         mBsaAcid.setValue(getFieldText("BSAACID"));
         mDateOpen.setValue(DateTimeFormat.getFormat(ManualAccountWrapper.dateFormat).format((Date)getFieldValue("DTO")));
         Date dateClose = (Date)getFieldValue("DTC");
+        mDateClose.setEnabled(true);
 
         isClosed = (dateClose != null);
         if (isClosed) {
@@ -111,5 +108,4 @@ public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
     private void setOperday(final String operDayStr) {
         mDateClose.setValue(DateTimeFormat.getFormat(ManualAccountWrapper.dateFormat).parse(operDayStr));
     }
-
 }

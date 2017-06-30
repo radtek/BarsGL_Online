@@ -131,8 +131,17 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
                 return null;
             });
             auditController.info(StamtUnloadBalDelta, format("Таблица с остатками создана. Кол-во счетов: %s"
-                    , repository.selectFirst("select count(1) from TMP_GL_BALSTMD").getLong(0)));
+                    , repository.selectFirst("select count(1) from session.GL_TMP_STMTBAL").getLong(0)));
+            
+            String updStmntBal = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_upd_select.sql");
+            repository.executeNativeUpdate(updStmntBal);
+            auditController.info(StamtUnloadBalDelta, format("Таблица с остатками обновлена. Кол-во счетов: %s"
+                    , repository.selectFirst("select count(1) from session.GL_TMP_STMTBAL").getLong(0)));
 
+            String chngStatus = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_chng_status.sql");
+            repository.executeNativeUpdate(chngStatus);
+            
+            repository.executeNativeUpdate("CREATE UNIQUE INDEX QTEMP.IDX_GL_TMP_STMTBAL ON SESSION.GL_TMP_STMTBAL(STATDATE,CBACCOUNT)");
             repository.executeTransactionally(connection -> {
                 String cbacc, precbacc = "";
                 java.sql.Date bdat, statdate, prebdat = new java.sql.Date(parseDate("01.01.2030", "dd.MM.yyyy").getTime());

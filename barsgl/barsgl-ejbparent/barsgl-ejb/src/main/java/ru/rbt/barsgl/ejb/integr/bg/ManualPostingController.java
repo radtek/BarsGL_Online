@@ -45,8 +45,10 @@ import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
+import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
@@ -887,7 +889,31 @@ public class ManualPostingController {
             data.setOperIdC(movementCr);
             data.setAccountCBC(posting.getAccountCredit());
             data.setOperAmountC(posting.getAmountCredit());
-        }
+        }        
+
+        DataRecord drForDebit = getCustomerInfo(posting.getAccountDebit());
+        
+        PaymentDetails debitPaymentDetails = new PaymentDetails(posting.getCurrencyDebit().getCurrencyCode(), 
+                posting.isControllableDebit(), 
+                (drForDebit != null) ? drForDebit.getString("BXRUNM").trim() : "", 
+                (drForDebit != null) ? drForDebit.getString("BXTPID").trim() : "",
+                posting.getAccountDebit(),
+                posting.getAmountDebit()
+        );
+                
+        data.setDebitPaymentDetails(debitPaymentDetails);
+
+        DataRecord drForCredit = getCustomerInfo(posting.getAccountCredit());
+        
+        PaymentDetails creditPaymentDetails = new PaymentDetails(posting.getCurrencyCredit().getCurrencyCode(),
+                posting.isControllableCredit(), 
+                (drForCredit != null) ? drForCredit.getString("BXRUNM").trim() : "", 
+                (drForCredit != null) ? drForCredit.getString("BXTPID").trim() : "",
+                posting.getAccountCredit(),
+                posting.getAmountCredit()
+        );
+        
+        data.setCreditPaymentDetails(creditPaymentDetails);
 
         data.setMessageUUID(ifEmpty(data.getOperIdD(), "") + "." + ifEmpty(data.getOperIdC(), "")); //+"."+UUID.randomUUID().toString().substring(0,6));
 
@@ -908,4 +934,16 @@ public class ManualPostingController {
         return data;
     }
 
+    public DataRecord getCustomerInfo(String accountNumber) {
+        try {
+            String sql = "SELECT BXRUNM, BXTPID FROM SDCUSTPD SD " +
+                            "JOIN BSAACC BSA ON BSA.BSAACNNUM = SD.BBCUST " +
+                            "WHERE BSA.ID = ?";
+            DataRecord res = postingRepository.selectFirst(sql, accountNumber);
+            return res;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+    
 }
