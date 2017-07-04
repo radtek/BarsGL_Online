@@ -7,6 +7,7 @@ import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 
@@ -20,19 +21,19 @@ public class GLTechOperationRepository extends AbstractBaseEntityRepository<GLOp
     public Long getStornoOperationID(GLOperation operation) throws SQLException {
 
         String sql = "select GLOID from GL_OPER where EVT_ID = ?" +
-                " and VALUE(DEAL_ID, '') = ? and VALUE(PMT_REF, '') = ?" +                // TODO проверка на null
+                " and NVL(DEAL_ID, '-') = ? and NVL(PMT_REF, '-') = ?" +                // TODO проверка на null
                 " and VDATE = ? and STATE in ('LOAD', 'POST', 'WTAC') " +
                 " and ACCKEY_DR = ? and AMT_DR = ? and ACCKEY_CR = ? and AMT_CR = ? ";
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         //and STATE in ('LOAD', 'POST', 'WTAC')
 //        String dealId = (null == operation.getDealId()) ? "" : operation.getDealId();
 //        String paymentRefernce = (null == operation.getPaymentRefernce()) ? "" : operation.getPaymentRefernce();
         DataRecord res = selectFirst(sql,
                 operation.getStornoReference(),
-                ifEmpty(operation.getDealId(), ""),             //operation.getDealId(),
-                ifEmpty(operation.getPaymentRefernce(), ""),    //operation.getPaymentRefernce(),
+                ifEmpty(operation.getDealId(), "-"),             //operation.getDealId(),
+                ifEmpty(operation.getPaymentRefernce(), "-"),    //operation.getPaymentRefernce(),
                 operation.getValueDate(),
-
                 operation.getAccountKeyCredit(), operation.getAmountCredit(),
                 operation.getAccountKeyDebit(), operation.getAmountDebit());
 

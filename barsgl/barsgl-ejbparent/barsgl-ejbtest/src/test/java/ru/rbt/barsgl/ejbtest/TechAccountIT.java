@@ -37,8 +37,8 @@ public class TechAccountIT extends AbstractRemoteIT {
 
     @Before public void init() {
 
-//        baseEntityRepository.executeNativeUpdate("delete from gl_btth");
 //        baseEntityRepository.executeNativeUpdate("delete from gl_pdth");
+//        baseEntityRepository.executeNativeUpdate("delete from gl_btth");
 //        baseEntityRepository.executeNativeUpdate("delete from gl_oper where bs_chapter = 'T'");
 //        baseEntityRepository.executeNativeUpdate("delete from gl_acc where rlntype = '9'");
     }
@@ -120,7 +120,7 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHStorno() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = DateUtils.parseDate("2017-06-01","yyy-MM-dd");
+        Date curDate = DateUtils.parseDate("2017-07-01","yyy-MM-dd");
         setOperday(curDate,DateUtils.addDays(curDate, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -299,8 +299,8 @@ public class TechAccountIT extends AbstractRemoteIT {
         Assert.assertTrue(pkg.getId() > 0);
 
         EtlPosting pst = newPosting(stamp, pkg);
-        pst.setValueDate(DateUtils.parseDate("2017-05-30","yyyy-MM-dd"));
-        pst.setOperationTimestamp(DateUtils.parseDate("2017-05-30 16:01:31.550000","yyyy-MM-dd HH:mm:ss.SSS"));
+        pst.setValueDate(DateUtils.parseDate("2017-06-30","yyyy-MM-dd"));
+        pst.setOperationTimestamp(DateUtils.parseDate("2017-06-30 16:01:31.550000","yyyy-MM-dd HH:mm:ss.SSS"));
 
         pst.setAccountKeyDebit(";RUR;;008010403;;;TH00000018;0001;;;;;K+TP;;");
         pst.setAccountKeyCredit(";RUR;;007010403;;;TH00000017;0001;;;;;K+TP;;");
@@ -333,8 +333,8 @@ public class TechAccountIT extends AbstractRemoteIT {
         Assert.assertTrue(pkg.getId() > 0);
 
         EtlPosting pst = newPosting(stamp, pkg);
-        pst.setValueDate(DateUtils.parseDate("2017-05-30","yyyy-MM-dd"));
-        pst.setOperationTimestamp(DateUtils.parseDate("2017-05-30 16:04:07.520000","yyyy-MM-dd HH:mm:ss.SSS"));
+        pst.setValueDate(DateUtils.parseDate("2017-06-30","yyyy-MM-dd"));
+        pst.setOperationTimestamp(DateUtils.parseDate("2017-06-30 16:04:07.520000","yyyy-MM-dd HH:mm:ss.SSS"));
 
         pst.setAccountKeyDebit(";RUR;;007010403;;;TH00000017;0001;;;;;K+TP;;");
         pst.setAccountKeyCredit(";RUR;;008010403;;;TH00000018;0001;;;;;K+TP;;");
