@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -214,7 +215,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         int days = (int)(Math.random()*30-50);
 
         for(GLAccount acc:accList) {
-            acc.setDateClose(DateUtils.addDays(new Date(),days));
+            acc.setDateClose(DateUtils.truncate(DateUtils.addDays(new Date(),days), Calendar.DATE));
             baseEntityRepository.update(acc);
             baseEntityRepository.executeNativeUpdate("delete from accrlnext x where x.bsaacid = ?",acc.getBsaAcid());
         }

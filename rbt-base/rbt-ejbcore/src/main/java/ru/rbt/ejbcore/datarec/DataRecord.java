@@ -232,8 +232,8 @@ public final class DataRecord implements Serializable {
         if (obj instanceof String) {
             try {
                 return new Short(Short.parseShort((String) obj));
-            } catch (Throwable ignore) {
-                throw new DataRecordException("String to Double conversion error");
+            } catch (Throwable e) {
+                throw new DataRecordException("String to Double conversion error", e);
             }
         }
         throw new DataRecordException("Error converting value of type " + obj.getClass().getName() + " to Double");
