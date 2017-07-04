@@ -320,6 +320,7 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
     public final GLOperation createOperationExt(GLBackValueOperation operation) {
 
         GLOperationExt operExt = new GLOperationExt(operation.getId(), operation.getPostDate());
+        operExt.setCreateTimestamp(operdayController.getSystemDateTime());
         operExt.setManualStatus(BackValuePostStatus.CONTROL);
 
         // TODO где хранить эти даты и причину... в GLOperation ?

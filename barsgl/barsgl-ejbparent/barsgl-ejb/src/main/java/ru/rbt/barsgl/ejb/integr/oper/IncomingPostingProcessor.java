@@ -621,7 +621,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             if ((InputMethod.AE == operation.getInputMethod())
                     && !isEmpty(dayType = calendarRepository.getDayType(operation.getValueDate()))) {
                 // попали в выходной день
-                return processHoliday(operation, dayType);
+                return processHolidayOld(operation, dayType);
             } else {
                 final DataRecord record = glOperationRepository.selectOne("select * from V_GL_OPER_POD where GLOID = ?", operation.getId());
                 final PostingDateType podType = PostingDateType.valueOf(record.getString("POD_TYPE"));
@@ -675,7 +675,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
      * Если дата валютирования попала на выходной
      * @return дата postdate
      */
-    private Date processHoliday(GLOperation operation, String dayType) {
+    private Date processHolidayOld(GLOperation operation, String dayType) {
         Operday operday = operdayController.getOperday();
 
         // Для ARMPRO разрешен технический опердень, но не ранее 14 лней назад
@@ -752,7 +752,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         } else
         if (!calendarRepository.isWorkday(valueDate, withTech(operation.getSourcePosting()))) {
             // выходной день
-            return processHoliday(operation, operday);
+            return processHoliday(operation);
         } else
         if (operation.isNonStandard()) {
             // нестандартная операция
@@ -769,7 +769,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         }
     }
 
-    public Date processHoliday(GLOperation operation, Operday operday) throws SQLException {
+    public Date processHoliday(GLOperation operation) throws SQLException {
         Calendar vdatecal = Calendar.getInstance();
         vdatecal.setTime(operation.getValueDate());
 

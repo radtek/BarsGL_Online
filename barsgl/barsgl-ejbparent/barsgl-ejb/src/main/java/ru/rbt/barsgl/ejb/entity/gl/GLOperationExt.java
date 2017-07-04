@@ -76,6 +76,10 @@ public class GLOperationExt extends BaseEntity<Long> {
     @Column(name = "PRD_CUTDATE")
     private Date closeCutDate;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "OTS_AUTO")
+    private Date createTimestamp;
+
     @Column(name = "MNL_NRT")
     private String manualNarrative;
 
@@ -159,5 +163,13 @@ public class GLOperationExt extends BaseEntity<Long> {
 
     public void setManualStatus(BackValuePostStatus manualStatus) {
         this.manualStatus = manualStatus;
+    }
+
+    public Date getCreateTimestamp() {
+        return createTimestamp;
+    }
+
+    public void setCreateTimestamp(Date createTimestamp) {
+        this.createTimestamp = createTimestamp;
     }
 }
