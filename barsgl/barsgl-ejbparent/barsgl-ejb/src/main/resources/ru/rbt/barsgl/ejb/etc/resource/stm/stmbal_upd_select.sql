@@ -2,7 +2,7 @@
  * Author:  er21775
  * Created: Jun 23, 2017
  */
-insert into session.GL_TMP_STMTBAL 
+insert into TMP_GL_BALSTMD 
 select statdate
        , stattype
        , hostsystem
@@ -61,7 +61,7 @@ select statdate
           , ac.custno fcccustnum
           , cast(ac.dealid as varchar(35)) fccaccount
           , get_fcc_br(ac.branch) fccbranch
-          , right(ac.custno, 6) ext_custid
+          , substr(ac.custno, -6) ext_custid
           , ac.branch accbrn
           , ac.bsaacid cbaccount
           , cast(ac.acctype as varchar(35)) acctype
@@ -72,26 +72,26 @@ select statdate
           , case
               when b.dat is null then 0
               when b.dat = p.pdt then
-                 cast(decimal(b.obac) / integer(power(10,cc.nbdp)) as decimal(22,2))
+                 cast((b.obac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
              else
-                 cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22,2))
+                 cast((b.obac + b.dtac + b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
             end openblnca
           , case
               when b.dat is null then 0
-              else cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
+              else cast((b.obac + b.dtac + b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22, 2))
             end closeblnca
           , GL_GETOPERCNT(ac.bsaacid, p.pdt, '1') dbdocnt
           , case
               when b.dat is null then 0
               when b.dat = p.pdt then
-                 abs(cast(decimal(b.dtac) / integer(power(10,cc.nbdp)) as decimal(22, 2)))
+                 abs(cast((b.dtac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22, 2)))
               else 0
             end dbturnovra
           , GL_GETOPERCNT(ac.bsaacid, p.pdt, '0') crdocnt
           , case
               when b.dat is null then 0
               when b.dat = p.pdt then
-                 cast(decimal(b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
+                 cast((b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22, 2))
               else 0
             end crturnovra
           , case
@@ -141,7 +141,7 @@ select statdate
           , ac.cbcc branch_id
           , ac.acid alt_ac_no
           , s.bbcrnm accname
-          , value(substr(ac.description,1,255),'') acodname
+          , nvl(substr(ac.description,1,255),'') acodname
           , cc.glccy||' '||cc.cynm currname
           , (select lwdate from GL_OD) dateunload
           , b.dat bdat
@@ -170,5 +170,5 @@ select statdate
     where ac.rlntype <> '1'
 ) t
 where not exists(
-    select 1 from session.GL_TMP_STMTBAL st where st.statdate = t.statdate and st.cbaccount = t.cbaccount
+    select 1 from TMP_GL_BALSTMD st where st.statdate = t.statdate and st.cbaccount = t.cbaccount
 )
