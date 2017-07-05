@@ -18,7 +18,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 public class ReplicateManualIT extends AbstractTimerJobIT{
 
     @Test
-    public void ReplicateManual() throws Exception {
+    public void replicateManual() throws Exception {
 
         setOperday(parseDate("07072014", "ddMMyyyy"), parseDate("04072014", "ddMMyyyy"), ONLINE, OPEN);
 

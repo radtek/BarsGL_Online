@@ -1,7 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
@@ -22,17 +20,15 @@ public class ReplicateManualTask extends AbstractJobHistoryAwareTask {
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
-    @EJB
-    private AuditController auditController;
+
     @Inject
     private BankCalendarDayRepository calendarDayRepository;
-    @Inject
-    private OperdayRepository operdayRepository;
-    @Inject
-    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @EJB
-    private OperdayController operdayController;
+    private OperdayRepository operdayRepository;
+
+    @Inject
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Override
     protected void initExec(String jobName, Properties properties) {
