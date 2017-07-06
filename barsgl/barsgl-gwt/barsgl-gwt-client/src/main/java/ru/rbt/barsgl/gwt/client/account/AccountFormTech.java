@@ -86,7 +86,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     protected Table prepareTable() {
         Table result = new Table();
-
+        result.addColumn(new Column("ID", LONG, "ID", 50, false, false));
         result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "Accounting Type", 60, true, false, Column.Sort.ASC, ""));// No Space
         colAccType.setFilterable(true);
         result.addColumn(new Column("BSAACID", STRING, "Псевдосчёт", 160));

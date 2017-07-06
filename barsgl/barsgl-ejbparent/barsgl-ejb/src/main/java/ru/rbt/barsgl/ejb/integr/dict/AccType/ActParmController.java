@@ -108,7 +108,7 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
                 data_begin = dateUtils.onlyDateParse(wrapper.getDtb());
 
                 if (actParmRepository.isActParmExists(wrapper)) {
-                    return new RpcRes_Base<>(wrapper, true, format("Параметры счета по AccType '%s' уже существует!", wrapper.getAccType()));
+                    return new RpcRes_Base<>(wrapper, true, format("Параметры счета по AccType '%s' уже существуют!", wrapper.getAccType()));
                 }
 
                 if (!actParmRepository.isParmDateClosed(wrapper)) {

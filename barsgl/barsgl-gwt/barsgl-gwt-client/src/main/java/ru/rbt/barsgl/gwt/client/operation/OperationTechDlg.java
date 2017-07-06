@@ -63,11 +63,11 @@ public class OperationTechDlg extends OperationTechDlgBase {
     @Override
     public void beforeCreateContent(){
         isAsyncListsCached = false;
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncThListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCached", true);
+        LocalDataStorage.putParam("isAsyncThListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -136,7 +136,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
         grid.setWidget(2, 1, mDateValue = createDateBox());
 
         grid.setWidget(0, 2, createAlignWidget(createLabel("Источник сделки"), LABEL2_WIDTH));
-        grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
+        grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name() + "_TH", null, FIELD2_WIDTH));
         grid.setWidget(1, 2, createAlignWidget(createLabel("N сделки/ платежа"), LABEL2_WIDTH));
         grid.setWidget(1, 3, mDealId = createTxtBox(20, SUM_WIDTH));
         grid.setWidget(2, 2, createAlignWidget(createLabel("N субсделки"), LABEL2_WIDTH));
@@ -190,9 +190,9 @@ public class OperationTechDlg extends OperationTechDlgBase {
         operation.setAccountTypeDebit(check(mDtAccType.getValue()
                 ,"AccType(дебет)","длина строки < 9 символов",new CheckStringExactLength(9)));
         operation.setAccountCredit(check(mCrAccount.getValue()
-                , "Счет (кредит)", "по заданным атрибутам не найден", new CheckStringExactLength(20)));
+                , "Счет (кредит)", "по заданным атрибутам счет не найден", new CheckStringExactLength(20)));
         operation.setAccountDebit(check(mDtAccount.getValue()
-                , "Счет (дебет)", "по заданным атрибутам не найден", new CheckStringExactLength(20)));
+                , "Счет (дебет)", "по заданным атрибутам счет не найден", new CheckStringExactLength(20)));
         operation.setAccountCredit(mCrAccount.getValue());
         operation.setAccountDebit(mDtAccount.getValue());
 
@@ -334,9 +334,12 @@ public class OperationTechDlg extends OperationTechDlgBase {
     }
 
     @Override
-    protected Date getAccountDate() {
-        return mDateValue.getValue();
+    protected Date getValueDate() {
+        return mDateOperation.getValue();
     }
+
+    @Override
+    protected Date getOperDate() {return mDateOperation.getValue(); }
 
     protected void setChangeHandlers() {
     	mDtSum.addChangeHandler(new ChangeHandler() {
@@ -354,7 +357,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
     }
 
     protected void checkSide(BigDecimal sum, BigDecimal sumRu, String currency, String bsaSecond, String side) {
-    	boolean trueSum = true;
+    	boolean trueSum;
     	if ("RUR".equals(currency)) {
     		trueSum = (sum.signum() > 0);
     	} else {

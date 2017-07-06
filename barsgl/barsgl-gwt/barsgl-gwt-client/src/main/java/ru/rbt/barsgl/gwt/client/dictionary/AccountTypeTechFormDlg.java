@@ -54,7 +54,6 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
             super("План счетов по Accounting Type");
             reconfigure();
             ok.setVisible(editMode);
-
         }
 
         private void reconfigure() {
@@ -110,8 +109,5 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
             list.add(new SortItem("DTB", Column.Sort.ASC));
             return list;
         }
-
-
-
     }
 }

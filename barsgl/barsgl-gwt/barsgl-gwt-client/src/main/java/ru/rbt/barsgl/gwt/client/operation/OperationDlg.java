@@ -358,7 +358,7 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected Date getAccountDate() {
-        return mDateValue.getValue();
+        return mDateOperation.getValue();
     }
 
     protected void setEnableSumRuHandler() {

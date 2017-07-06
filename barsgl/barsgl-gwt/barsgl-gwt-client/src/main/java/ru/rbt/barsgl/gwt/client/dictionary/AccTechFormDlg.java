@@ -16,6 +16,8 @@ import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import java.util.ArrayList;
 import java.util.Date;
 
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+
 
 /**
  * Created by ER18837 on 05.02.16.
@@ -24,30 +26,18 @@ public abstract class AccTechFormDlg extends GridFormDlgBase {
 
     private Column colBsaAcid;
     private Column colAccType;
-    private Column colAcc2;
-    private Column colAcid;
-    private Column colDealSrc;
-    private Column colDealId;
-    private Column colCustNo;
-    private Column colCustName;
     private Column colFilial;
     private Column colCurrency;
     private Column colDateOpen;
     private Column colDateClose;
-    private Column colRlnType;
 
-    protected AccCustomerQuickFilterAction quickFilterAction;
-    protected AccountQuickFilterParams quickFilterParams;
-
-    public AccTechFormDlg(boolean preview) {
+    public AccTechFormDlg() {
         super("Выбор счета (технические счета)");
-        setInitialFilter();
-        ok.setVisible(!preview);
     }
 
     @Override
     protected GridForm getGridForm() {
-        return new AccCustomerGridForm();
+        return new AccTechGridForm(this.getEditMode());
     }
 
     @Override
@@ -60,48 +50,38 @@ public abstract class AccTechFormDlg extends GridFormDlgBase {
         return "600px";
     }
 
-    protected abstract Object[] getInitialFilterParams();
+    protected abstract boolean getEditMode();
 
-    protected void setInitialFilter() {
-        if (null == quickFilterAction)
-            return;
-        AccountQuickFilterParams filterParams = (AccountQuickFilterParams)quickFilterAction.getFilterParams();
-        filterParams.setInitialFilterParams(getInitialFilterParams());
-    }
+    class AccTechGridForm extends GridForm {
 
-    class AccCustomerGridForm extends GridForm {
+        public AccTechGridForm(boolean editMode) {
+            super("Выбор счета");
+            reconfigure();
+            ok.setVisible(editMode);
+        }
 
-        public AccCustomerGridForm() {
-            super("Выбор счета", true);
-            quickFilterParams = createQuickFilterParams();
-            abw.addAction(quickFilterAction = new AccCustomerQuickFilterAction(grid, quickFilterParams) );
+        private void reconfigure() {
             abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         }
 
         @Override
         protected String prepareSql() {
-            return "select * from V_GL_ACC_TH";
+            return "select right('00000000' || ACCTYPE, 9) as ACCTYPE, BSAACID, CCY, CBCC, DESCRIPTION as ACCNAME, ACOD, SQ as AC_SQ, DTO, coalesce(DTC, Date('2029-01-01')) as DTC from GL_ACC " +
+                    "where RLNTYPE='9'";
         }
 
         @Override
         protected Table prepareTable() {
             Table result = new Table();
-            Column col;
-
-            result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.DECIMAL, "Account Type", 80,true, false, Column.Sort.ASC, "000000000"));
-            result.addColumn(colBsaAcid = new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 80));
-            result.addColumn(colAcid = new Column("ACID", Column.Type.STRING, "Счет Midas", 80));
-            result.addColumn(colAcc2 = new Column("ACC2", Column.Type.STRING, "Балансовый счет", 60, false, false));
-            result.addColumn(colCustNo = new Column("CUSTNO", Column.Type.STRING, "Номер клиента", 40));
-            result.addColumn(colCustName = new Column("CUSTNAME", Column.Type.STRING, "Имя клиента", 180));
-            result.addColumn(colFilial = new Column("CBCC", Column.Type.STRING, "Филиал", 30, false, false));
+            result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "AccTypе", 30));
+            result.addColumn(colBsaAcid = new Column("BSAACID", Column.Type.STRING, "Псевдосчёт ЦБ", 60));
             result.addColumn(colCurrency = new Column("CCY", Column.Type.STRING, "Валюта", 20));
-            result.addColumn(colDateOpen = new Column("DTO", Column.Type.DATE, "Дата открытия", 40));
-            result.addColumn(colDateClose = new Column("DTC", Column.Type.DATE, "Дата закрытия", 40, false, false));
-            result.addColumn(colDealSrc = new Column("DEALSRS", Column.Type.STRING, "Источник сделки", 40, false, false));
-            result.addColumn(colDealId = new Column("DEALID", Column.Type.STRING, "Номер сделки", 60));
-            result.addColumn(colRlnType = new Column("RLNTYPE", Column.Type.STRING, "Тип счета", 30, false, false));
-            result.addColumn(colCustName = new Column("DESCRIPTION", Column.Type.STRING, "Описание", 180));
+            result.addColumn(colFilial = new Column("CBCC", Column.Type.STRING, "Филиал", 20));
+            result.addColumn(new Column("ACCNAME", Column.Type.STRING, "Наименование счёта", 130));
+            result.addColumn(new Column("ACOD", Column.Type.STRING, "ACOD Midas", 20, false, false));
+            result.addColumn(new Column("AC_SQ", Column.Type.STRING, "SQ Midas", 20, false, false));
+            result.addColumn(colDateOpen = new Column("DTO", Column.Type.DATE, "Дата открытия", 30));
+            result.addColumn(colDateClose = new Column("DTC", Column.Type.DATE, "Дата закрытия", 30, false, false));
 
             return result;
         }
@@ -115,16 +95,27 @@ public abstract class AccTechFormDlg extends GridFormDlgBase {
 
         @Override
         public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
-            AccountQuickFilterParams params = (AccountQuickFilterParams)quickFilterAction.getFilterParams();
-            params.setInitialFilterParams(initialFilterParams);
-            String ccyN = params.getCurrencyN();
-            String filialN = params.getFilialN();
-            String bsaAcid = params.getAccount();
-            Date currentDate = params.getDateFrom();
+            Date postDate = (Date)initialFilterParams[0];
+            Date valueDate = (Date)initialFilterParams[1];
+            String accType = (String)initialFilterParams[2];
+            String filial = (String)initialFilterParams[3];
+            String currency = (String)initialFilterParams[4];
+            String bsaacid = (String)initialFilterParams[5];
 
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-            list.add(new FilterItem(colDateOpen, FilterCriteria.LE, currentDate, true));
-            list.add(new FilterItem(colDateClose, FilterCriteria.GE, currentDate, true));
+            if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.START_WITH, accType));
+            if (!isEmpty(filial)) list.add(new FilterItem(colFilial, FilterCriteria.EQ, filial));
+            if (!isEmpty(currency))  list.add(new FilterItem(colCurrency, FilterCriteria.EQ, currency));
+            if (!isEmpty(bsaacid)) list.add(new FilterItem(colBsaAcid, FilterCriteria.EQ, bsaacid));
+            FilterItem item;
+            if (valueDate != null) {
+                list.add(item = new FilterItem(colDateOpen, FilterCriteria.LE, valueDate));
+                item.setReadOnly(true);
+            }
+            if (postDate != null){
+                list.add(item = new FilterItem(colDateClose, FilterCriteria.GE, postDate));
+                item.setReadOnly(true);
+            }
 
             return list;
         }
@@ -134,32 +125,5 @@ public abstract class AccTechFormDlg extends GridFormDlgBase {
             return AccTechFormDlg.this.getInitialFilterParams();
         }
     }
-
-    private AccountQuickFilterParams createQuickFilterParams() {
-        return new AccountQuickFilterParams(colFilial, colCurrency, colAccType, colAcc2, colCustNo, colDealSrc, colDealId, colDateOpen, colDateClose) {
-            @Override
-            protected boolean isNumberCodeFilial() {
-                return true;
-            }
-
-            @Override
-            protected boolean isNumberCodeCurrency() {
-                return true;
-            }
-        };
-    }
-
-    class AccCustomerQuickFilterAction extends AccountBaseQuickFilterAction {
-        public AccCustomerQuickFilterAction(GridWidget grid, AccountQuickFilterParams params) {
-            super(grid, params);
-        }
-
-        @Override
-        public Object[] getInitialFilterParams(Date operday, Date prevday) {
-            return AccTechFormDlg.this.getInitialFilterParams();
-        }
-
-    }
-
 }
 

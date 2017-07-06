@@ -174,6 +174,11 @@ public class GlPdThRepository extends AbstractBaseEntityRepository<GlPdTh, Long>
         return res;
     }
 
+    public List<GlPdTh> getOperationPdThListByPcId(Long pcid) {
+        List<GlPdTh> res = select(GlPdTh.class, "from GlPdTh p where p.pcId ="+pcid.toString());
+        return res;
+    }
+
     public String getPrefManual(String dealId, String subDealId, String paymentRef, boolean fromPaymentHub) {
         if (fromPaymentHub) {                   // источник операция - PaymentHub
             return rsubstr(paymentRef, 15);         // другое

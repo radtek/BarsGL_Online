@@ -319,7 +319,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         GLManualOperation operation = createOperation(posting);
         operation.setBsChapter("T");
         //operation.setAmountPosting(operation.getAmountDebit());
-        setExchengeParameters(operation);
+        setAmountRu(operation);
         manualOperationRepository.save(operation,true);
         posting.setOperation(operation);
         postingRepository.save(posting);
@@ -347,17 +347,10 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return errorList;
     }
 
-    public void setExchengeParameters (GLManualOperation operation) {
+    public void setAmountRu (GLManualOperation operation) {
         // Основная валюта, сумма проводки в рублях
         BankCurrency ccyDebit = operation.getCurrencyDebit();
         BankCurrency ccyCredit = operation.getCurrencyCredit();
-
-        // курсовая разница
-        BigDecimal amountDebitRu = ( null != operation.getAmountDebitRu()) ?
-                operation.getAmountDebitRu() : operation.getEquivalentDebit();
-        BigDecimal amountCreditRu = ( null != operation.getAmountCreditRu()) ?
-                operation.getAmountCreditRu() : operation.getEquivalentCredit();
-        operation.setExchangeDifference(amountDebitRu.subtract(amountCreditRu));
 
         // основная валюта и сумма проводки
         if (RUB.equals(ccyDebit)) {         // Если ДЕБЕТ в рублях
@@ -365,11 +358,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             operation.setAmountPosting(operation.getAmountDebit());
         } else {                                        // Иначе
             operation.setCurrencyMain(ccyCredit);       // основная валюта по Кредиту
-            if (RUB.equals(ccyCredit)) {    // Если КРЕДИТ в рублях
-                operation.setAmountPosting(operation.getAmountCredit());
-            } else {                        // Иначе
-                operation.setAmountPosting(amountCreditRu);
-            }
+            operation.setAmountPosting(operation.getAmountCredit());
         }
     }
 
