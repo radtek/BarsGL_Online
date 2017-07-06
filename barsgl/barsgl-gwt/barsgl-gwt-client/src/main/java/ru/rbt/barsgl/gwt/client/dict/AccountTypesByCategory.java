@@ -4,6 +4,8 @@
  */
 package ru.rbt.barsgl.gwt.client.dict;
 
+import com.google.gwt.user.client.Window;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 
 import java.util.ArrayList;
@@ -15,8 +17,12 @@ import java.util.ArrayList;
 public class AccountTypesByCategory extends ActParm {
   @Override
   protected ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
-    return null;
+    ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+    FilterItem item = new FilterItem(colTechAct, FilterCriteria.EQ, "Нет");
+    list.add(item);
+    return list;
   }
+
 
   //for cache
  /* @Override

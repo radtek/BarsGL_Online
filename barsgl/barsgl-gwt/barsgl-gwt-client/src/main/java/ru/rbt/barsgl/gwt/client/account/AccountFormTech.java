@@ -86,7 +86,6 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     protected Table prepareTable() {
         Table result = new Table();
-        result.addColumn(new Column("ID", LONG, "ID", 50, false, false));
         result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "Accounting Type", 60, true, false, Column.Sort.ASC, ""));// No Space
         colAccType.setFilterable(true);
         result.addColumn(new Column("BSAACID", STRING, "Псевдосчёт", 160));
@@ -109,7 +108,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("DTO", DATE, "Дата открытия", 80));
         result.addColumn(new Column("DTC", DATE, "Дата закрытия", 80));
         Column colID;
-        result.addColumn(colID = new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.NONE, ""));
+        result.addColumn(colID = new Column("ID", LONG, "ID счета", 60, true, true, Column.Sort.NONE, ""));
         colID.setVisible(false);
         Column colDTR;
         result.addColumn(colDTR = new Column("DTR", DATE, "Дата регистрации", 80));
