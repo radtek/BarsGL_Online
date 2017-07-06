@@ -83,6 +83,7 @@ public class GLOperationExt extends BaseEntity<Long> {
     @Column(name = "MNL_NRT")
     private String manualNarrative;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "MNL_STATUS")
     private BackValuePostStatus manualStatus;
 

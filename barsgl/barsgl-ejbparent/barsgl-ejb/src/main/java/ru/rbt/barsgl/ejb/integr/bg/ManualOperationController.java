@@ -434,7 +434,7 @@ public class ManualOperationController {
         try {
             log.info("Начало пересчета/локализации " + ident);
             beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) ->
-            {journalController.recalculateBackvalueJournal(); return null;});
+                {journalController.recalculateBackvalueJournal(); return null;});
             log.info("Успешное окончание пересчета/локализации " + ident);
         } catch (Exception e) {
             auditController.error(Task, "Ошибка при пересчете остатков БС2/ локализации " + ident +

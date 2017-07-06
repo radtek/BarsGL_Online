@@ -7,7 +7,7 @@ import java.util.Date;
  * Created by er18837 on 30.06.2017.
  */
 public class BackValueParameters implements Serializable{
-    //================= параметры отсечения BACK_VALUE ===================
+    //================= параметры отсечения BACK VALUE ===================
 
     public String getReason() {
         return reason;

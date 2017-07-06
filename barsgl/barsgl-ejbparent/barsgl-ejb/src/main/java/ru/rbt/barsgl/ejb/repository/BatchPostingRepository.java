@@ -187,7 +187,7 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
 
     public List<Long> getPostingsForProcessing (int postingCount, Date curdate) {
         try {
-            List<DataRecord> res = selectMaxRows("select * from GL_BATPST where ID_PKG is NULL and STATE in (?, ?) and PROCDATE = ? and INVISIBLE = ? and TECH_ACT = ?" +
+            List<DataRecord> res = selectMaxRows("select ID from GL_BATPST where ID_PKG is NULL and STATE in (?, ?) and PROCDATE = ? and INVISIBLE = ? and TECH_ACT = ?" +
                             "ORDER BY ID WITH UR"
                     , postingCount, new Object[]{SIGNED.name(), SIGNEDDATE.name(), curdate, InvisibleType.N.name(),"N"});
             return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());

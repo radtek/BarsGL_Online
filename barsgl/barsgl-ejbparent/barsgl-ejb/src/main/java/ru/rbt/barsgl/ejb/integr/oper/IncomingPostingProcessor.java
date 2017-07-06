@@ -709,15 +709,19 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Integer depth = sourceRepository.getDepth(posting.getSourcePosting());
         Date depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
 
-        Date vdateCut = calendarRepository.isWorkday(valueDate, withTech(posting.getSourcePosting()))
-                ? valueDate
-                : calendarRepository.getWorkDateAfter(valueDate, false);
+        boolean withTech = withTech(posting.getSourcePosting());
+        Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
+                            ? valueDate
+                            : calendarRepository.getWorkDateAfter(valueDate, withTech); // TODO точно withTech?
         ClosedPeriodView period = closedPeriodRepository.getPeriod();
 
-        String reason = vdateCut.before(depthCutDate) ? OverDepth.getValue() :
-                        !valueDate.after(period.getLastDate()) ? ClosedPeriod.getValue() : null;
+        String reason = vdateCut.before(depthCutDate)
+                            ? OverDepth.getValue()
+                            : !valueDate.after(period.getLastDate())
+                                ? ClosedPeriod.getValue()
+                                : null;
 
-        GLOperation.OperClass operClass = null != reason ? BACK_VALUE : AUTOMATIC;
+        GLOperation.OperClass operClass = null != reason ? BV_MANUAL : AUTOMATIC;
 
         // TODO хорошо бы сохранить вычисленные значения reason, depthCutDate, prdLastDate, prdCutDate в EtlPosting
         if (null != reason) {

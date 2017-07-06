@@ -127,13 +127,11 @@ public class EtlPosting extends BaseEntity <Long> {
     @Column(name = "EMSG")
     private String errorMessage;
 
-    //================= параметры отсечения BACK_VALUE ===================
-
     @Transient
     private boolean isBackValue;
 
     @Transient
-    private BackValueParameters backValueParameters;
+    private BackValueParameters backValueParameters;    // параметры отсечения BACK VALUE
 
     @Override
     public Long getId() {

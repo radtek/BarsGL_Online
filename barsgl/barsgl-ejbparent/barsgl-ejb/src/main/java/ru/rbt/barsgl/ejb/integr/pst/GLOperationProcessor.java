@@ -15,6 +15,7 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -319,6 +320,7 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
 
     public final GLOperation createOperationExt(GLBackValueOperation operation) {
 
+        Assert.isTrue(null == operation.getOperExt(), String.format("По операции ID = '%d' уже есть запись в GL_OPEREXT", operation.getId()));
         GLOperationExt operExt = new GLOperationExt(operation.getId(), operation.getPostDate());
         operExt.setCreateTimestamp(operdayController.getSystemDateTime());
         operExt.setManualStatus(BackValuePostStatus.CONTROL);

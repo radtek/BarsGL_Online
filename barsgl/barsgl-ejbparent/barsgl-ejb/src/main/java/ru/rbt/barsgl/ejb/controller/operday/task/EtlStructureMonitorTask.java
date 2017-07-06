@@ -97,6 +97,9 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     @Inject
     private ProcessBatchOperationsTask processBatchOperationsTask;
 
+    @Inject
+    private ProcessBackValueOperationsTask processBackValueOperationsTask;
+
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         executeWork(
@@ -122,11 +125,13 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     public void executeWork(int etlPackageCount, int batPackageCount, int mnlPostingCount, boolean batchAllowed) throws Exception {
         if (checkOperdayState() && checkSetProcessingState()) {
             if (batchAllowed) {
-                // обработка ручных и пакетных операций
+                // обработка авторизованных ручных и пакетных операций
                 processBatchOperationsTask.executeWork(batPackageCount, mnlPostingCount);
             }
             // обработка пакетов из АЕ
             processEtlPackages(etlPackageCount);
+            // обработка авторизованных операций BackValue
+            processBackValueOperationsTask.executeWork(mnlPostingCount);
         }
     }
 

@@ -13,8 +13,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static java.math.BigDecimal.ZERO;
-import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
-import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BACK_VALUE;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
@@ -35,7 +33,7 @@ public class GLOperation extends BaseEntity<Long> {
     public static final String flagTechOper = "T";
 
     public enum OperClass {
-        AUTOMATIC, MANUAL, BACK_VALUE
+        AUTOMATIC, MANUAL, BV_MANUAL
     }
 
     public enum OperType {

@@ -7,7 +7,7 @@ import java.util.Date;
  * Created by er18837 on 27.06.2017.
  */
 @Entity
-@DiscriminatorValue("BACK_VALUE")
+@DiscriminatorValue("BV_MANUAL")
 public class GLBackValueOperation extends GLOperation {
 
     // GL_OPEREXT - Параметры авторизации BackValue ======
