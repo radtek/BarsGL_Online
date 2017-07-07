@@ -325,7 +325,8 @@ public class BufferModeIT extends AbstractRemoteIT {
 
         long pcid = getPcid(operation);
         List<DataRecord> bvrecs = baseEntityRepository.select("select * from gl_etlstmd");
-        log.info(format("gl_etlstmd list size %s <%s>", bvrecs.size(), bvrecs.stream().map(r -> "'" +r.getString("pcid") + "'")
+        log.info(format("Finding PCID '%s' gl_etlstmd list size %s <%s>"
+                , pcid, bvrecs.size(), bvrecs.stream().map(r -> "'" +r.getString("pcid") + "'")
                 .collect(Collectors.joining(","))));
         List<DataRecord> filtered = bvrecs.stream().filter(r -> r.getLong("pcid") == pcid).collect(Collectors.toList());
         Assert.assertEquals(1, filtered.size());
