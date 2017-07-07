@@ -27,11 +27,11 @@ public class BankCurrencyRepository extends AbstractBaseEntityRepository<BankCur
 
     public BankCurrency refreshCurrency(BankCurrency currency) {
         Assert.notNull(currency, "Не задана валюта");
-        currency = findById(BankCurrency.class, currency.getId());
-        if (null == currency) {
+        BankCurrency currency0 = findById(BankCurrency.class, currency.getId());
+        if (null == currency0) {
             throw new ValidationError(ErrorCode.CURRENCY_CODE_NOT_EXISTS, currency.getId());
         }
-        return refresh(currency);
+        return refresh(currency0);
     }
 
     /**

@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.LoadManagementAction;
@@ -13,6 +14,7 @@ import java.util.Date;
 /**
  * Created by SotnikovAV on 28.10.2016.
  */
+@Ignore("Интерфейс управления загрузчиком переделывается на другой платформе")
 public class LoadManagementIT extends AbstractRemoteIT {
 
     @Test
