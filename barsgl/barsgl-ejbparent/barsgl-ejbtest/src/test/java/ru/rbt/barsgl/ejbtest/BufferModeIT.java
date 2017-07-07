@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
@@ -228,6 +229,7 @@ public class BufferModeIT extends AbstractRemoteIT {
      */
     @Test
     public void testSyncIncrJob() throws Exception {
+        log.info("starting test testSyncIncrJob" );
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstms");
         baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
         baseEntityRepository.executeNativeUpdate("update gl_baltur set moved = 'N'");
@@ -323,6 +325,8 @@ public class BufferModeIT extends AbstractRemoteIT {
 
         long pcid = getPcid(operation);
         List<DataRecord> bvrecs = baseEntityRepository.select("select * from gl_etlstmd");
+        log.info(format("gl_etlstmd list size %s <%s>", bvrecs.size(), bvrecs.stream().map(r -> "'" +r.getString("pcid") + "'")
+                .collect(Collectors.joining(","))));
         List<DataRecord> filtered = bvrecs.stream().filter(r -> r.getLong("pcid") == pcid).collect(Collectors.toList());
         Assert.assertEquals(1, filtered.size());
 

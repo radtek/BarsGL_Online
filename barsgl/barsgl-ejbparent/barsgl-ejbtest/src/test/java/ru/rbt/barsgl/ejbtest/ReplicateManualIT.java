@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.ReplicateManualTask;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -15,6 +16,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 /**
  * Created by ER22317 on 03.03.2016.
  */
+@Ignore("удаленный запуск репликации - пока не реализоан")
 public class ReplicateManualIT extends AbstractTimerJobIT{
 
     @Test
