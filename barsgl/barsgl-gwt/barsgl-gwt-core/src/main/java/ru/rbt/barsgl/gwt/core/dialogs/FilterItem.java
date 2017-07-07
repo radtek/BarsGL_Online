@@ -7,11 +7,14 @@ package ru.rbt.barsgl.gwt.core.dialogs;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.shared.filter.IFilterItem;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class FilterItem implements Serializable, IsSerializable {
+public class FilterItem implements IFilterItem, Serializable, IsSerializable {
 	private static final long serialVersionUID = -3960734068373764479L;
 
 	public static final String DATE_FORMAT = "dd.MM.yyyy";

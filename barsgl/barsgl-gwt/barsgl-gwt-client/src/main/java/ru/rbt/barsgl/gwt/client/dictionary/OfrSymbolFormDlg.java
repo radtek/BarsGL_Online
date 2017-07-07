@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.dictionary;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.dict.OfrSymbolsBase;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 
 import java.util.ArrayList;

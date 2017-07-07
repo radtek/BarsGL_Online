@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.gwt.core.dialogs;
+package ru.rbt.barsgl.shared.filter;
 
 /**
  * Created by akichigi on 17.04.15.

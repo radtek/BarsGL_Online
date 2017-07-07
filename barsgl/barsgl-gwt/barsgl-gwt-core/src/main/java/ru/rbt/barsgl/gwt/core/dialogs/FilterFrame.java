@@ -8,6 +8,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.ui.*;
 import ru.rbt.barsgl.gwt.core.ui.LongBox;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
