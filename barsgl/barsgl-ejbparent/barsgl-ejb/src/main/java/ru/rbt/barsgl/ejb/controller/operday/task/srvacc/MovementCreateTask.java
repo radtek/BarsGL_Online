@@ -35,9 +35,10 @@ public class MovementCreateTask implements ParamsAwareRunnable {
         datas.add(data);
 
         datas.get(0).setAccountCBD("40807810000010496202");
-        //processor.process(datas);
-        processor.sendRequests(datas);
-        processor.putTestAnswer();
+        processor.processOld(datas);
+        data = datas.get(0);
+        //processor.sendRequests(datas);
+        //processor.putTestAnswer();
 //        processor.receiveResponses(datas);
         auditController.info(AuditRecord.LogCode.MovementCreate,"Status cb account: "+data.getState());
         /*List<DataRecord> records = coreRepository.select("SELECT bsaacid " +

@@ -135,7 +135,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 
     @Deprecated
     public void processOld(List<MovementCreateData> mcdList) {
-
+        
         try {
             loadQueueProperties();
             if (queueProperties == null) {
@@ -148,11 +148,13 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
                 createOneEnvelope(item);
             }
             // Debug if local
-            sendEnvelops(mcdList);
+            sendRequests(mcdList);
             if ("yes".equals(queueProperties.local)) {
                 putTestAnswer();
             }
-            receiveEnvelops(mcdList);
+            //receiveEnvelops(mcdList);
+            mcdList.clear();
+            mcdList.addAll(receiveResponses());
         } catch (Exception e) {
             log.info("MovementCreate ", e);
             auditController.error(MovementCreate, "Ошибка при выполнении задачи MovementCreate.", null, e);
@@ -1010,8 +1012,9 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             data.setPstDate(sdfDate.parse("2016-03-02"));
             data.setPnar("PHUB");
             data.setDeptId("ITD");
-            data.setProfitCenter("Test");
-
+            data.setProfitCenter("Test");            
+            
+            data.setMessageUUID(UUID.randomUUID().toString());
         } catch (ParseException e) {
             log.info("", e);
         }
