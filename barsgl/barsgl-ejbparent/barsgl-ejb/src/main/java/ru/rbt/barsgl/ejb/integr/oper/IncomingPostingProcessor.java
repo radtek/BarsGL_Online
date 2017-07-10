@@ -496,15 +496,13 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Date postDate = calculatePostingDate(operation);
         operation.setPostDate(postDate);
 
-        // валюты
-        operation.setCurrencyDebit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit()));
-        operation.setCurrencyCredit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit()));
-
         // параметры счетов - они нужны для определения филиала и главы баланса в случае отсутствифя счетов
-        if (isEmpty(operation.getAccountDebit()))
+        if (operation.getAccountKeyDebit() != null) {
             operation.createAccountParamDebit();
-        if (isEmpty(operation.getAccountCredit()))
+        }
+        if (operation.getAccountKeyCredit() != null) {
             operation.createAccountParamCredit();
+        }
 
         // филиалы по дебету и кредиту
         glOperationRepository.setFilials(operation);
@@ -512,6 +510,8 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         // глава балансового счета
         // Добавили определение также в processOperation, тк счет может быть не задан
         glOperationRepository.setBsChapter(operation);            // Глава баланса
+
+        setDateParameters(operation);
 
     }
 
@@ -521,6 +521,10 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
      * @throws SQLException
      */
     public final void setDateParameters(GLOperation operation) {
+        // валюты
+        operation.setCurrencyDebit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit()));
+        operation.setCurrencyCredit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit()));
+
         // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
         BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
         BigDecimal eqvDebit = rateRepository.getEquivalent(operation.getCurrencyDebit(), rateDebit, operation.getAmountDebit());

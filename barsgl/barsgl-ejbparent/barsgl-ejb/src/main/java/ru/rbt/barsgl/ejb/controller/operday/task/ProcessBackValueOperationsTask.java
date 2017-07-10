@@ -38,14 +38,10 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
-import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
 import static ru.rbt.barsgl.shared.enums.OperState.ERPROC;
-import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by er18837 on 05.07.2017.
@@ -153,11 +149,11 @@ public class ProcessBackValueOperationsTask implements ParamsAwareRunnable {
      */
     private int asyncProcessOperations(List<GLBackValueOperation> operations) throws Exception {
         final int[] errorCount = {0};
-        List<JpaAccessCallback<GLOperation>> callbacks = operations.stream().map(
-                operation -> (JpaAccessCallback<GLOperation>) persistence ->
+        List<JpaAccessCallback<Boolean>> callbacks = operations.stream().map(
+                operation -> (JpaAccessCallback<Boolean>) persistence ->
                         beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence1, connection) -> {
                             try {
-                                return operationController.processOperation(operation);
+                                return operationController.processBackValueOperation(operation);
                             } catch (Throwable e) {
                                 log.error(format("Error on processing of BackValue operation '%s'", operation.getId()), e);
                                 String errMessage = getErrorMessage(e);

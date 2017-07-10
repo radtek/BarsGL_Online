@@ -377,7 +377,7 @@ public class ManualOperationTest extends AbstractTimerJobTest {
 
         if (status != inputStatus) {
             baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ?, " +
-                    "USER_NAME = (select USER_NAME from GL_USER where ID = ?) where ID = ?", status.name(), userId, wrapper.getId());
+                    "USER_NAME = (select USER_NAME from GL_USER where ID_USER = ?) where ID = ?", status.name(), userId, wrapper.getId());
         }
         BatchPosting posting = (BatchPosting)baseEntityRepository.findById(BatchPosting.class, wrapper.getId());
         baseEntityRepository.refresh(posting, true);

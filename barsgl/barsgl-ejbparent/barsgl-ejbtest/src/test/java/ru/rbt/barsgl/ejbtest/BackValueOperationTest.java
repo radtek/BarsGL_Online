@@ -546,7 +546,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = ?2, o.equivalentCredit = ?3 where o.id = ?4",
                 getOperday().getLastWorkingDay(), null, null, operation.getId());
 
-        remoteAccess.invoke(BackValueOperationController.class, "processOperation", operation);
+        remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
         operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
 

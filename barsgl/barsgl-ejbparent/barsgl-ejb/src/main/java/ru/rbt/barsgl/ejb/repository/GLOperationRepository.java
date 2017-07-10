@@ -158,6 +158,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 
     public void setFilials(GLOperation operation) throws SQLException {
         if (isEmpty(operation.getFilialDebit())) {
+            // TODO зачем это здесь ?? логично перенести в заполнение счетов
             if (operation.getAccountKeyDebit()!=null) {
                 operation.createAccountParamDebit();
             }

@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackValueOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.ejb.integr.ValidationAwareHandler.validationErrorsToString;
 import static ru.rbt.barsgl.shared.enums.OperState.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
@@ -147,16 +148,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             }
 
             try {
-                operation = setDateParameters(etlPostingProcessor, operation);
-            } catch (Throwable e) {
-                String msg = "Ошибка при заполнения данных операции (зависящих от даты) по проводке";
-                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
-                return operation;
-            }
-
-            GLOperationProcessor processor = simpleOperationProcessor;  // findOperationProcessor(operation);
-
-            try {
+                GLOperationProcessor processor = simpleOperationProcessor;  // findOperationProcessor(operation); ??
                 operation = fillAccount(processor, operation, GLOperation.OperSide.D);
                 operation = fillAccount(processor, operation, GLOperation.OperSide.C);
             } catch (Throwable e) {
@@ -183,15 +175,15 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * Вадидирует операцию. Если только ошибка "Нет счета" = статус WTAC, иначе ERCHK
      * @param operationProcessor    - процессор для обработки операции
      * @param operation             - операция
-     * @param isFirstCall        - true - online обработка, false - обработка WTAC
+     * @param isWtacPreStage        - true - online обработка, false - обработка WTAC
      * @return                      - true - можно продолжить обработку
      */
-    private boolean validateOperation(GLOperationProcessor operationProcessor, GLOperation operation, boolean isFirstCall) throws Exception {
+    public boolean validateOperation(GLOperationProcessor operationProcessor, GLOperation operation, boolean isWtacPreStage) throws Exception {
         List<ValidationError> errors = operationProcessor.validate(operation, new ValidationContext());
         boolean toContinue = errors.isEmpty();
         if (!toContinue) {
             String msgCommon = format(" операции: '%s' ID_PST: '%s'", operation.getId(), operation.getAePostingId());
-            if (isFirstCall && isOpenLater(errors, operation)){
+            if (isWtacPreStage && isOpenLater(errors, operation)){
                 Date operDay = operdayController.getOperday().getCurrentDate();
                 Date lastWorkingDay = operdayController.getOperday().getLastWorkingDay();
                 Calendar vdAdd30 = Calendar.getInstance();
@@ -223,7 +215,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                     }
                 }
                 toContinue = true;
-            }else if (isFirstCall && isPureWtac(errors)) {
+            }else if (isWtacPreStage && isPureWtac(errors)) {
                 if (operation.isBackValue()) {
                     // TODO: статус BWTAC
                     createOperationExt(operationProcessor, operation, BWTAC);
@@ -239,7 +231,8 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             }
             else {
                 String msg = "Ошибка валидации" + msgCommon;
-                operationErrorMessage(errors, msg, operation, ERCHK, true);
+                OperState errState = BWTAC.equals(operation.getState()) ? BERWTAC : ERCHK;
+                operationErrorMessage(errors, msg, operation, errState, true);
             }
         }
         return toContinue;
@@ -260,19 +253,14 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * @param isWtacPreStage    true = первая обработка (пропустить WTAC)
      * @return                  true, если опеарция обработана, false - WTAC или ERCHK
      */
-    public boolean processOperation(GLOperation operation, boolean isWtacPreStage) throws Exception {
-        // TODO при вызове из reprocessWtacOperations надо сначала обновить procDate, filialDebit, filialCredit
+    private boolean processOperation(GLOperation operation, boolean isWtacPreStage) throws Exception {
         String msgCommon = format(" операции: '%s' ID_PST: '%s'", operation.getId(), operation.getAePostingId());
         boolean toContinue;
         GLOperationProcessor operationProcessor;
         try {
-            operationRepository.setFilials(operation);              // Филиалы
-            operationRepository.setBsChapter(operation);            // Глава баланса
-            if (!GLOperation.flagTechOper.equals(operation.getBsChapter())) {
-                correctAccounts9999(operation);
-            }
-            simpleOperationProcessor.setStornoOperation(operation); // надо найти сторнируемую ДО определения типа процессора
+            preProcessOperation(operation);
             operationProcessor = findOperationProcessor(operation);
+            operationProcessor.setStornoOperation(operation); // надо найти сторнируемую ДО определения типа процессора
             toContinue = validateOperation(operationProcessor, operation, isWtacPreStage);
         } catch ( Throwable e ) {
             String msg = "Ошибка валидации данных";
@@ -287,19 +275,39 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                 operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
                 return false;
             }
-            if (operation.isBackValue() && isWtacPreStage) {    // первый раз выходим на ручную обработку
-                createOperationExt(operationProcessor, operation, BLOAD);
-                return false;
+            if (operation.isBackValue()) {          // OPER_CALSS == BV_MANUAL
+                 if( isWtacPreStage ) {             // первый раз создаем расширенную операцию и выходим на ручную обработку
+                     createOperationExt(operationProcessor, operation, BLOAD);
+                     return false;
+                 }
+                 else {                             // больше сюда попадать не должны
+                     String msg = "Ошибка обработки операции BackValue";
+                     operationErrorMessage(new DefaultApplicationException("Неверный процесс обработки: BackValue операции должны обрабатываться в BackValueOperationController"),
+                             msg + msgCommon, operation, ERPROC, initSource());
+                     return false;
+                 }
             }
             try {
                 finalOperation(operationProcessor, operation);
                 return true;
             } catch ( Throwable e ) {
                 String msg = "Ошибка обработки";
-                operationErrorMessage(e, msg + msgCommon, operation, OperState.ERPOST, initSource());
+                operationErrorMessage(e, msg + msgCommon, operation, ERPOST, initSource());
             }
         }
         return false;
+    }
+
+    /**
+     * заполняет филиалы, главу баланса, сторно операцию, исправляет счета 9999
+     * @param operation
+     */
+    public void preProcessOperation(GLOperation operation) throws SQLException {
+        operationRepository.setFilials(operation);              // Филиалы
+        operationRepository.setBsChapter(operation);            // Глава баланса
+        if (!GLOperation.flagTechOper.equals(operation.getBsChapter())) {
+            correctAccounts9999(operation);
+        }
     }
 
     private void correctAccounts9999(GLOperation operation) throws SQLException {
@@ -382,8 +390,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         if (operations.size() > 0) {
             auditController.info(Operation, format("Найдено %d отложенных операций", operations.size()));
             for (GLOperation operation : operations) {
-                GLOperationProcessor processor = findOperationProcessor(operation);
-                if (!reprocessOperation(processor, operation, "Обработка отложенных (WTAC) операций")) {
+                if (!reprocessOperation(operation, "Обработка отложенных (WTAC) операций")) {
                     res.add(operation);
                 }
             }
@@ -401,6 +408,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      */
     public CobStepResult reprocessErckStorno(Date date1, Date date2) throws Exception {
         int cnt = 0;
+        // TODO убедиться, что в выборку попадают только автоматические операции (OPER_CLASS = AUTOMATIC)
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
                 "FROM GLOperation g WHERE g.state = ?1 AND g.valueDate IN (?2 , ?3) and g.storno = ?4 ORDER BY g.id"
                 , ERCHK, date1, date2, YesNo.Y);
@@ -408,7 +416,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
             String msg = format("Найдено %d отложенных СТОРНО операций", operations.size());
             auditController.info(Operation, msg);
             for (GLOperation operation : operations) {
-                if (reprocessOperation(findOperationProcessor(operation), operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
+                if (reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }
             }
@@ -419,9 +427,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         }
     }
 
-    public boolean reprocessOperation(GLOperationProcessor processor, GLOperation operation, String reason) throws Exception {
+    private boolean reprocessOperation(GLOperation operation, String reason) throws Exception {
         if (operation.getState() != POST) {
-            if (!refillAccounts(processor, operation)) {
+            if (!refillAccounts(operation)) {
                 return false;
             }
             operation = refreshOperationForcibly(operation);
@@ -525,7 +533,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * @param operation
      * @throws Exception
      */
-    private void updateOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
+    public void updateOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
         beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence,connection) -> {
             operation.setProcDate(operdayController.getOperday().getCurrentDate());
             operation.setPstScheme(operationProcessor.getOperationType());              // определить схему операции
@@ -543,7 +551,7 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * @param operation
      * @throws Exception
      */
-    private void finalOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
+    public void finalOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
         beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection,persistence) -> {
 
             if (operationProcessor instanceof TechOperationProcessor) {
@@ -644,8 +652,9 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
      * Повторный поиск, создание, заполнение счетов операции. Актуально при обработке операций в статусе <code>OperState.WTAC</code>.
      * @return <code>true</code> если не было ошибок, иначе <code>false</code>
      */
-    public boolean refillAccounts(GLOperationProcessor processor, GLOperation operation) throws Exception {
+    public boolean refillAccounts(GLOperation operation) throws Exception {
         try {
+            GLOperationProcessor processor = findOperationProcessor(operation);
             operation = fillAccount(processor, operation, GLOperation.OperSide.D);
             operation = fillAccount(processor, operation, GLOperation.OperSide.C);
             return true;
@@ -681,15 +690,13 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
         }
     }
 
-    //============================ тестируем BackValue ======================
-
     /**
      * создаем запись в таблице расширения GL_OPEREXT
      * @param operation
      * @return
      * @throws Exception
      */
-    private GLBackValueOperation createOperationExt(GLOperationProcessor processor, GLOperation operation, OperState state) throws Exception {
+    public GLBackValueOperation createOperationExt(GLOperationProcessor processor, GLOperation operation, OperState state) throws Exception {
         return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence,connection) -> {
             GLBackValueOperation operationBackValue = (GLBackValueOperation)operation;  // backValueRepository.findById(GLBackValueOperation.class, operation.getId());
             processor.createOperationExt(operationBackValue);
