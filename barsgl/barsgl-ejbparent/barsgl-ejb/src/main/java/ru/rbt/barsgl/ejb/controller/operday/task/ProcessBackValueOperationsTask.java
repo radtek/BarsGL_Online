@@ -4,19 +4,14 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
-import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperationExt;
-import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
+import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
-import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
@@ -33,7 +28,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -54,7 +48,7 @@ public class ProcessBackValueOperationsTask implements ParamsAwareRunnable {
     private BeanManagedProcessor beanManagedProcessor;
 
     @EJB
-    private BackValueOperationController operationController;
+    private BackValuePostingController operationController;
 
     @EJB
     private EtlPostingController etlPostingController;

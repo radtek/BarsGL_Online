@@ -1,37 +1,25 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
+import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperationExt;
-import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
-import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
-import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.shared.ExceptionUtils;
 
-import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.PersistenceException;
-import java.sql.DataTruncation;
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.shared.enums.OperState.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
@@ -40,26 +28,13 @@ import static ru.rbt.ejbcore.validation.ValidationError.initSource;
  */
 @Stateless
 @LocalBean
-public class BackValueOperationController extends EtlPostingController{
-    private static final Logger log = Logger.getLogger(BackValueOperationController.class);
+public class BackValuePostingController extends AbstractEtlPostingController{
+    private static final Logger log = Logger.getLogger(BackValuePostingController.class);
 
-//    @EJB
-//    private EtlPostingController etlPostingController;
-
-    @EJB
-    private AuditController auditController;
-
-    @Inject
-    private OrdinaryPostingProcessor ordinaryPostingProcessor;
-
-    @EJB
-    BackValueOperationRepository bvOperationRepository;
-
-    @Inject
-    GLOperationRepository operationRepository;
-
-    @Inject
-    private OperdayController operdayController;
+    @Override
+    public GLOperation processMessage(EtlPosting etlMessage) {
+        return null;
+    }
 
     /**
      * Обработка операции после авторизиции и подтверждения / изменения даты
@@ -125,7 +100,6 @@ public class BackValueOperationController extends EtlPostingController{
         try {
             preProcessOperation(operation);
             operationProcessor = findOperationProcessor(operation);
-            operationProcessor.setStornoOperation(operation); // надо найти сторнируемую ДО определения типа процессора
             toContinue = validateOperation(operationProcessor, operation, isWtacPreStage);
         } catch ( Throwable e ) {
             String msg = "Ошибка валидации данных";
@@ -239,16 +213,10 @@ public class BackValueOperationController extends EtlPostingController{
 
     private GLBackValueOperation refreshOperationForcibly(GLBackValueOperation operation) {
         try {
-            return bvOperationRepository.executeInNewTransaction(persistence -> bvOperationRepository.refresh(operation, true));
+            return operationRepository.executeInNewTransaction(persistence -> bvOperationRepository.refresh(operation, true));
         } catch (Exception e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
-    }
-
-    public String getErrorMessage(Throwable throwable) {
-        return ExceptionUtils.getErrorMessage(throwable,
-                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
-                PersistenceException.class);
     }
 
 }

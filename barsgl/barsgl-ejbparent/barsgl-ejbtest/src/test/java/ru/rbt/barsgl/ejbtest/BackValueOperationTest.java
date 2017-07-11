@@ -1,30 +1,30 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.sun.xml.internal.ws.util.CompletedFuture;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
+import ru.rbt.barsgl.ejb.controller.operday.task.ProcessBackValueOperationsTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
-import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
+import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
-import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
-import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static ru.rbt.barsgl.ejb.common.CommonConstants.BV_MANUAL_TASK;
-import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -546,7 +544,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = ?2, o.equivalentCredit = ?3 where o.id = ?4",
                 getOperday().getLastWorkingDay(), null, null, operation.getId());
 
-        remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
+        remoteAccess.invoke(BackValuePostingController.class, "processBackValueOperation", operation);
         operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
 
@@ -569,9 +567,8 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         int size = operations.size();
         Assert.assertTrue(size > 0);
 
-        SingleActionJob etlMonitor = (SingleActionJob) baseEntityRepository.selectOne(SingleActionJob.class
-                , "from SingleActionJob j where j.name = ?1", BV_MANUAL_TASK);
-        jobService.executeJob(etlMonitor);
+        // обработка созданных BV операций
+        jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessBackValueOperationsTask.class).build());
 
         for (GLBackValueOperation operation : operations) {
             GLBackValueOperation oper = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
@@ -584,6 +581,51 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
                     Assert.assertEquals(curdate, pd.getPod());
             }
         }
+    }
+
+    @Test
+    public void testReprocessWtac() throws Exception {
+        Operday od = getOperday();
+        BankCalendarDay prevWork = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkdayBefore", od.getLastWorkingDay());
+        setOperday(od.getLastWorkingDay(), prevWork.getId().getCalendarDate(), ONLINE, OPEN);
+
+        testCreatBackWtacOperation();
+        testCreatBackWtacOperation();
+
+        List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class,
+                "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.procDate <= ?3 ",
+                OperState.BWTAC, BackValuePostStatus.CONTROL, od.getLastWorkingDay());
+        Assert.assertTrue(gloids.size() >= 2);
+
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%2");
+        String ops = gloids.stream().map(op -> " " + op).collect(Collectors.joining(","));
+        baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1 where o.id in (" + ops + ")", bsaDt);
+        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0) + ")", BackValuePostStatus.SIGNEDDATE);
+
+        // обработка WTAC
+        setOperday(od.getCurrentDate(), od.getLastWorkingDay(), ONLINE, OPEN);
+        jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
+
+        GLBackValueOperation oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(0));
+        Assert.assertNotNull(oper1);
+        Assert.assertEquals(OperState.BLOAD, oper1.getState());
+
+        GLBackValueOperation oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(1));
+        Assert.assertNotNull(oper2);
+        Assert.assertEquals(OperState.BLOAD, oper2.getState());
+
+        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(1) + ")", BackValuePostStatus.SIGNEDDATE);
+
+        // обработка BLOAD
+        jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessBackValueOperationsTask.class).build());
+        oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, oper1.getId());
+        Assert.assertNotNull(oper1);
+        Assert.assertEquals(OperState.POST, oper1.getState());
+
+        oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, oper2.getId());
+        Assert.assertNotNull(oper1);
+        Assert.assertEquals(OperState.POST, oper1.getState());
+
     }
 
     private EtlPosting createEtlPosting(Date valueDate, String src,
