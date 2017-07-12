@@ -84,11 +84,11 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     @EJB
     private PreCobStepController preCobStepController;
 
-    @EJB
-    private EtlPostingController etlPostingController;
+//    @EJB
+//    private EtlPostingController etlPostingController;
 
     @EJB
-    BalturRecalculator balturRecalculator;
+    private BalturRecalculator balturRecalculator;
 
     @EJB
     private AuditController auditController;
@@ -287,9 +287,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     public CobStepResult reprocessStorno(Operday operday, Long idCob, CobPhase phase) {
         try {
             return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
-//                auditController.info(AuditRecord.LogCode.Operday, "Повторная обработка сторно");
                 return beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) ->
-                        etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
+                        closeLastWorkdayBalanceTask.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
             });
         } catch (Exception e) {
             return stepErrorResult(Error, "Ошибка при повторной обработке сторно", e);

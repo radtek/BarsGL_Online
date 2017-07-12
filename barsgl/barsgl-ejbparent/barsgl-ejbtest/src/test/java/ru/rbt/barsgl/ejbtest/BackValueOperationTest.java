@@ -8,6 +8,8 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ProcessBackValueOperationsTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -20,11 +22,13 @@ import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
+import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -38,15 +42,15 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
+import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.COMPLETED;
+import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.CONTROL;
 import static ru.rbt.barsgl.shared.enums.DealSource.*;
-import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
-import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
-import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by er18837 on 26.06.2017.
@@ -215,7 +219,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
 
         Assert.assertNotNull(operation.getOperExt());
-        Assert.assertEquals(BackValuePostStatus.CONTROL, operation.getOperExt().getManualStatus());
+        Assert.assertEquals(CONTROL, operation.getOperExt().getManualStatus());
         GLOperationExt operExt = (GLOperationExt) baseEntityRepository.findById(GLOperationExt.class, operation.getId());
         Assert.assertNotNull(operExt);
         Assert.assertEquals(operation.getPostDate(), operExt.getPostDatePlan());
@@ -245,7 +249,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
 
         Assert.assertNotNull(operation.getOperExt());
-        Assert.assertEquals(BackValuePostStatus.CONTROL, operation.getOperExt().getManualStatus());
+        Assert.assertEquals(CONTROL, operation.getOperExt().getManualStatus());
         operExt = (GLOperationExt) baseEntityRepository.findById(GLOperationExt.class, operation.getId());
         Assert.assertEquals(operation.getPostDate(), operExt.getPostDatePlan());
 
@@ -280,7 +284,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
 
         Assert.assertNotNull(operation.getOperExt());
-        Assert.assertEquals(BackValuePostStatus.CONTROL, operation.getOperExt().getManualStatus());
+        Assert.assertEquals(CONTROL, operation.getOperExt().getManualStatus());
         GLOperationExt operExt = (GLOperationExt) baseEntityRepository.findById(GLOperationExt.class, operation.getId());
         Assert.assertNotNull(operExt);
         Assert.assertEquals(operation.getPostDate(), operExt.getPostDatePlan());
@@ -469,7 +473,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.ERCHK, operation.getState());
+        Assert.assertEquals(ERCHK, operation.getState());
         Assert.assertNotNull(operation.getProcDate());
         Assert.assertEquals(curr, operation.getProcDate());
     }
@@ -556,7 +560,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         testPostingBV();
 
         List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class, "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2",
-                OperState.BLOAD, BackValuePostStatus.CONTROL);
+                OperState.BLOAD, CONTROL);
         Assert.assertFalse(gloids.isEmpty());
         String ops = gloids.stream().map(op -> " " + op).collect(Collectors.joining(","));
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = ?2, o.equivalentCredit = ?3 where o.id in (" + ops + ")",
@@ -594,7 +598,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
         List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class,
                 "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.procDate <= ?3 ",
-                OperState.BWTAC, BackValuePostStatus.CONTROL, od.getLastWorkingDay());
+                OperState.BWTAC, CONTROL, od.getLastWorkingDay());
         Assert.assertTrue(gloids.size() >= 2);
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%2");
@@ -608,11 +612,11 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
         GLBackValueOperation oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(0));
         Assert.assertNotNull(oper1);
-        Assert.assertEquals(OperState.BLOAD, oper1.getState());
+        Assert.assertEquals(BLOAD, oper1.getState());
 
         GLBackValueOperation oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(1));
         Assert.assertNotNull(oper2);
-        Assert.assertEquals(OperState.BLOAD, oper2.getState());
+        Assert.assertEquals(BLOAD, oper2.getState());
 
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(1) + ")", BackValuePostStatus.SIGNEDDATE);
 
@@ -620,11 +624,87 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessBackValueOperationsTask.class).build());
         oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, oper1.getId());
         Assert.assertNotNull(oper1);
-        Assert.assertEquals(OperState.POST, oper1.getState());
+        Assert.assertEquals(POST, oper1.getState());
+        Assert.assertEquals(COMPLETED, oper1.getOperExt().getManualStatus());
 
         oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, oper2.getId());
-        Assert.assertNotNull(oper1);
-        Assert.assertEquals(OperState.POST, oper1.getState());
+        Assert.assertNotNull(oper2);
+        Assert.assertEquals(POST, oper2.getState());
+        Assert.assertEquals(COMPLETED, oper2.getOperExt().getManualStatus());
+
+    }
+
+    @Test
+    public void testReprocessStorno() throws Exception {
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%8");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%9");
+        BigDecimal amtBv = new BigDecimal("18.65");
+        BigDecimal amt = new BigDecimal("218.65");
+        BankCurrency currency = AUD;
+
+        Operday operday = getOperday();
+
+        Date vdatePast = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", operday.getCurrentDate(), 10, false);
+        EtlPosting pstBv = createEtlPosting(vdatePast, ARMPRO.getLabel(), bsaDt, currency, amtBv, bsaCt, currency, amtBv);        // ARMPRO
+        EtlPackage pkg1 = pstBv.getEtlPackage();
+        EtlPosting pstBvSt = newStornoPosting(System.currentTimeMillis(), pkg1, pstBv);
+        pstBvSt.setValueDate(vdatePast);
+        pstBvSt = (EtlPosting) baseEntityRepository.save(pstBvSt);
+
+        Date vdatePrev = operday.getLastWorkingDay();
+        EtlPosting pst = createEtlPosting(vdatePrev, ARMPRO.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);        // ARMPRO
+        EtlPackage pkg2 = pst.getEtlPackage();
+        EtlPosting pstSt = newStornoPosting(System.currentTimeMillis(), pkg1, pst);
+        pstSt.setValueDate(vdatePrev);
+        pstSt = (EtlPosting) baseEntityRepository.save(pstSt);
+
+        // обработка пакета 1
+        TimerJob mon = SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build();
+        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p = ?2", LOADED, pkg1);
+        jobService.executeJob(mon);
+
+        GLBackValueOperation operBv = (GLBackValueOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+                "from GLBackValueOperation o where o.etlPostingRef = ?1 ", pstBv.getId());
+        Assert.assertEquals(BLOAD, operBv.getState());
+        Assert.assertEquals(CONTROL, operBv.getOperExt().getManualStatus());
+        GLBackValueOperation operBvSt = (GLBackValueOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+                "from GLBackValueOperation o where o.etlPostingRef = ?1 ", pstBvSt.getId());
+        Assert.assertEquals(ERCHK, operBvSt.getState());
+        Assert.assertNull(operBvSt.getOperExt());
+
+        GLOperation oper = (GLOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+                "from GLOperation o where o.etlPostingRef = ?1 ", pst.getId());
+        Assert.assertNull(oper);
+        GLOperation operSt = (GLOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+                "from GLOperation o where o.etlPostingRef = ?1 ", pstSt.getId());
+        Assert.assertEquals(ERCHK, operSt.getState());
+
+        // авторизуем operBv операцию
+        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + operBv.getId() + ")", BackValuePostStatus.SIGNEDDATE);
+
+        // обработка авторизованной операции и пакета 2
+        baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p = ?2", LOADED, pkg2);
+        jobService.executeJob(mon);
+
+        operBv = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operBv.getId());
+        Assert.assertEquals(POST, operBv.getState());
+        Assert.assertEquals(COMPLETED, operBv.getOperExt().getManualStatus());
+
+        oper = (GLOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+                "from GLOperation o where o.etlPostingRef = ?1 ", pst.getId());
+        Assert.assertEquals(POST, oper.getState());
+
+        remoteAccess.invoke(CloseLastWorkdayBalanceTask.class, "reprocessErckStorno", operday.getLastWorkingDay(), operday.getCurrentDate());
+        operBvSt = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operBvSt.getId());
+        Assert.assertEquals(POST, operBvSt.getState());
+        Assert.assertNull(operBvSt.getOperExt());
+        Assert.assertEquals(vdatePast, operBvSt.getValueDate());
+        Assert.assertEquals(operday.getCurrentDate(), operBvSt.getPostDate());
+
+        operSt = (GLOperation) baseEntityRepository.findById(GLOperation.class, operSt.getId());
+        Assert.assertEquals(POST, operSt.getState());
+        Assert.assertEquals(vdatePrev, operSt.getValueDate());
+        Assert.assertEquals(vdatePrev, operSt.getPostDate());
 
     }
 
@@ -635,6 +715,18 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
         EtlPackage pkg = newPackage(stamp, "BackValue");
         Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = createEtlPostingNotSaved(pkg, valueDate, src,
+                accountDebit, currencyDebit, amountDebit,
+                accountCredit, currencyCredit, amountCredit);
+
+        return (EtlPosting) baseEntityRepository.save(pst);
+    }
+
+    private EtlPosting createEtlPostingNotSaved(EtlPackage pkg, Date valueDate, String src,
+                                        String accountDebit, BankCurrency currencyDebit, BigDecimal amountDebit,
+                                        String accountCredit, BankCurrency currencyCredit, BigDecimal amountCredit) {
+        long stamp = System.currentTimeMillis();
 
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(valueDate);
@@ -649,7 +741,8 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         pst.setCurrencyCredit(currencyCredit);
         pst.setAmountCredit(amountCredit);
 
-        return (EtlPosting) baseEntityRepository.save(pst);
+        return pst;
     }
+
 
 }

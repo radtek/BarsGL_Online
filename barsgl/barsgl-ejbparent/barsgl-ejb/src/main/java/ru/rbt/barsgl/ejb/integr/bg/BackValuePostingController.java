@@ -15,11 +15,14 @@ import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.OperState.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
@@ -30,6 +33,9 @@ import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 @LocalBean
 public class BackValuePostingController extends AbstractEtlPostingController{
     private static final Logger log = Logger.getLogger(BackValuePostingController.class);
+
+    @Inject
+    EtlPostingController etlPostingController;
 
     @Override
     public GLOperation processMessage(EtlPosting etlMessage) {
@@ -131,57 +137,6 @@ public class BackValuePostingController extends AbstractEtlPostingController{
     }
 
     /**
-     * Повторная обработка опреаций со статусом WTAC
-     * @param date1 первая дата валютирования
-     * @return количество операций обработанных с ошибками
-     */
-    public int reprocessWtacBackValue(Date date1) throws Exception {
-        List<GLBackValueOperation> operations = bvOperationRepository.select(GLBackValueOperation.class,
-                // берем все операции раньше текущего опердня
-                "FROM GLBackValueOperation g WHERE g.state = ?1 AND g.procDate <= ?2 ORDER BY g.id", OperState.BWTAC, date1);
-        int res = 0;
-        if (operations.size() > 0) {
-            auditController.info(Operation, format("Найдено %d отложенных BackValue операций", operations.size()));
-            for (GLBackValueOperation operation : operations) {
-                if (!reprocessOperation(operation, "Обработка отложенных (BWTAC) операций"))
-                    res++;
-            }
-            return res;
-        } else {
-            auditController.info(Operation, "Не найдено отложенных BackValue операций");
-        }
-        return res;
-    }
-
-    /**
-     * Повторная обработка сторно
-     * @param date1 первая дата валютирования
-     * @param date2 вторая дата валютирования
-     * @return false в случае ошибок иначе true
-     */
-    public CobStepResult reprocessErckStorno(Date date1, Date date2) throws Exception {
-        int cnt = 0;
-        // TODO убедиться, что в выборку попадают только BackBalue операции (OPER_CLASS = BV_MANUAL)
-        // TODO среди них могут быть не дошедшие до авторизации и авторизованные - те, что упали после авторизации, пееробрабатывать не надо
-        // TODO что с датой ??
-        List<GLBackValueOperation> operations = bvOperationRepository.select(GLBackValueOperation.class,
-                "FROM GLBackValueOperation g WHERE g.state = ?1 AND g.procDate IN (?2 , ?3) and g.storno = ?4 ORDER BY g.id"
-                , ERCHK, date1, date2, YesNo.Y);
-        if (operations.size() > 0) {
-            String msg = format("Найдено %d отложенных СТОРНО операций BackValue", operations.size());
-            auditController.info(Operation, msg);
-            for (GLBackValueOperation operation : operations) {
-                if (reprocessOperation(operation, "Повторная обработка СТОРНО операций BackValue (ERCHK)")) {
-                    cnt++;
-                }
-            }
-            return new CobStepResult(CobStepStatus.Success, format("%s. Обработано успешно %d", msg, cnt));
-        } else {
-            return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");
-        }
-    }
-
-    /**
      * повторная
      * @param operation
      * @param reason
@@ -208,6 +163,89 @@ public class BackValuePostingController extends AbstractEtlPostingController{
             auditController.warning(Operation, format("Попытка повторной обработки операции BackValue в статусе '%s', ID '%s'. Причина '%s'."
                     , OperState.POST, operation.getId(), reason), operation, "");
             return false;
+        }
+    }
+
+    /**
+     * Повторная обработка опреаций со статусом WTAC
+     * @param prevdate день создания операции (предыдущий ОД)
+     * @return количество операций обработанных с ошибками
+     */
+    public int reprocessWtacBackValue(Date prevdate) throws Exception {
+        List<GLBackValueOperation> operations = bvOperationRepository.select(GLBackValueOperation.class,
+                // берем все операции раньше текущего опердня
+                "FROM GLBackValueOperation g WHERE g.state = ?1 AND g.currentDate = ?2 ORDER BY g.id", OperState.BWTAC, prevdate);
+        int res = 0;
+        if (operations.size() > 0) {
+            auditController.info(Operation, format("Найдено %d отложенных BackValue операций", operations.size()));
+            for (GLBackValueOperation operation : operations) {
+                if (!reprocessOperation(operation, "Обработка отложенных (BWTAC) операций"))
+                    res++;
+            }
+            return res;
+        } else {
+            auditController.info(Operation, "Не найдено отложенных BackValue операций");
+        }
+        return res;
+    }
+
+    /**
+     * Повторная обработка сторно, которые должны были выйти на ручную обработку
+     * @param prevdate предыдущий ОД
+     * @param curdate день создания операции (текущий ОД)
+     * @return false в случае ошибок иначе true
+     */
+    public int reprocessErckStornoMnl(Date prevdate, Date curdate) throws Exception {
+        int cnt = 0;
+        // TODO убедиться, что в выборку попадают только BackBalue операции (OPER_CLASS = BV_MANUAL)
+        // TODO среди них могут быть не дошедшие до авторизации и авторизованные - те, что упали после авторизации, пееробрабатывать не надо ???
+        List<GLBackValueOperation> operations = bvOperationRepository.select(GLBackValueOperation.class,
+                "FROM GLBackValueOperation g WHERE g.state = ?1 AND g.storno = ?2 AND g.currentDate = ?3 ORDER BY g.id"
+                , ERCHK, YesNo.Y, curdate);
+        if (operations.size() > 0) {
+            auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций BV_MANUAL", operations.size()));
+            for (GLBackValueOperation operation: operations ) {
+                // дата проводки в прошлом дне - пересчитать параметры
+                operation.setPostDate(curdate);
+                setDateParameters(ordinaryPostingProcessor, operation);
+                if (reprocessOperation(operation, "Повторная обработка СТОРНО операций BV_MANUAL (ERCHK)")) {
+                    cnt++;
+                }
+            }
+            return cnt;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Повторная обработка сторно BackValue, которые должны были быть обработаны автоматически (кроме нестандартных - вееров и К+ТР)
+     * @param prevdate предыдущий ОД
+     * @param curdate день создания операции (текущий ОД)
+     * @return false в случае ошибок иначе true
+     */
+    public int reprocessErckStornoAuto(Date prevdate, Date curdate) throws Exception {
+        int cnt = 0;
+        // TODO убедиться, что в выборку попадают только BackBalue операции (OPER_CLASS = BV_MANUAL)
+        // TODO среди них могут быть не дошедшие до авторизации и авторизованные - те, что упали после авторизации, пееробрабатывать не надо
+        // TODO что с датой ??
+        List<GLOperation> operations = operationRepository.select(GLOperation.class,
+                "FROM GLOperation g WHERE g.state = ?1 AND g.storno = ?2 AND g.operClass = ?3 AND g.currentDate = ?4" +
+                        " AND g.valueDate < ?5 AND g.fan <> ?6 AND g.sourcePosting <> ?7 ORDER BY g.id"
+                , ERCHK, YesNo.Y, AUTOMATIC, curdate, prevdate, YesNo.Y, KondorPlus.getLabel());
+        if (operations.size() > 0) {
+            auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций BackValue AUTOMATIC", operations.size()));
+            for (GLOperation operation: operations ) {
+                // дата проводки в прошлом дне - пересчитать параметры
+                operation.setPostDate(curdate);
+                setDateParameters(ordinaryPostingProcessor, operation);
+                if (etlPostingController.reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
+                    cnt++;
+                }
+            }
+            return cnt;
+        } else {
+            return 0;
         }
     }
 

@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.hssf.util.HSSFColor;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.shared.enums.OperState.*;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
@@ -141,6 +143,29 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
         return false;
     }
 
+    public boolean reprocessOperation(GLOperation operation, String reason) throws Exception {
+        if (operation.getState() != POST) {
+            if (!refillAccounts(operation)) {
+                return false;
+            }
+            operation = refreshOperationForcibly(operation);
+            if (processOperation(operation, false)) {
+                auditController.info(Operation,
+                        format("Успешное завершение повторной обработки операции '%s'. Причина '%s'.", operation.getId(), reason)
+                        , operation);
+                return true;
+            } else {
+                auditController.error(Operation, format("Ошибка повторной обработки операции '%s'. Причина '%s'."
+                        , operation.getId(), reason), operation, "");
+                return false;
+            }
+        } else {
+            auditController.warning(Operation, format("Попытка повторной обработки операции в статусе '%s', ID '%s'. Причина '%s'."
+                    , OperState.POST, operation.getId(), reason), operation, "");
+            return false;
+        }
+    }
+
     /**
      * Повторная обработка опреаций со статусом WTAC
      * @param date1 первая дата валютирования
@@ -171,47 +196,23 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
      * @param date2 вторая дата валютирования
      * @return false в случае ошибок иначе true
      */
-    public CobStepResult reprocessErckStorno(Date date1, Date date2) throws Exception {
+    public int reprocessErckStorno(Date date1, Date date2) throws Exception {
         int cnt = 0;
         // TODO убедиться, что в выборку попадают только автоматические операции (OPER_CLASS = AUTOMATIC)
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
-                "FROM GLOperation g WHERE g.state = ?1 AND g.valueDate IN (?2 , ?3) and g.storno = ?4 ORDER BY g.id"
-                , ERCHK, date1, date2, YesNo.Y);
+                "FROM GLOperation g WHERE g.state = ?1 AND g.storno = ?2 AND g.operClass = ?3 AND g.valueDate IN (?4 , ?5) ORDER BY g.id"
+                , ERCHK, YesNo.Y, AUTOMATIC, date1, date2);
         if (operations.size() > 0) {
-            String msg = format("Найдено %d отложенных СТОРНО операций", operations.size());
-            auditController.info(Operation, msg);
+            auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций", operations.size()));
             for (GLOperation operation : operations) {
                 if (reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }
             }
-            return new CobStepResult(CobStepStatus.Success, format("%s. Обработано успешно %d", msg, cnt));
+            return cnt;
         } else {
 //            auditController.info(Operation, "Не найдено сторно операций для повторной обработки");
-            return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");
-        }
-    }
-
-    private boolean reprocessOperation(GLOperation operation, String reason) throws Exception {
-        if (operation.getState() != POST) {
-            if (!refillAccounts(operation)) {
-                return false;
-            }
-            operation = refreshOperationForcibly(operation);
-            if (processOperation(operation, false)) {
-                auditController.info(Operation,
-                        format("Успешное завершение повторной обработки операции '%s'. Причина '%s'.", operation.getId(), reason)
-                        , operation);
-                return true;
-            } else {
-                auditController.error(Operation, format("Ошибка повторной обработки операции '%s'. Причина '%s'."
-                        , operation.getId(), reason), operation, "");
-                return false;
-            }
-        } else {
-            auditController.warning(Operation, format("Попытка повторной обработки операции в статусе '%s', ID '%s'. Причина '%s'."
-                    , OperState.POST, operation.getId(), reason), operation, "");
-            return false;
+            return 0;
         }
     }
 
