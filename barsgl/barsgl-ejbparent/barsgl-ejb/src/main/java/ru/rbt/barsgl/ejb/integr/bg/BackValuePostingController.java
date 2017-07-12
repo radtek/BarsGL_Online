@@ -49,7 +49,7 @@ public class BackValuePostingController extends AbstractEtlPostingController{
      * @throws Exception
      */
     public Boolean processBackValueOperation(GLBackValueOperation operation) throws Exception {
-        String msgCommon = format(" АЕ: '%s', ID_PST: '%s'", operation.getEtlPostingRef(), operation.getAePostingId());
+        String msgCommon = format(" BackValue операции: '%d', ID_PST: '%s'", operation.getId(), operation.getAePostingId());
         if (operation.getState() != POST ) {
             GLOperationExt operationExt = operation.getOperExt();
             if (null == operationExt) {
@@ -57,37 +57,33 @@ public class BackValuePostingController extends AbstractEtlPostingController{
                         , operation.getState(), operation.getId()), operation, "");
                 return false;
             }
-            auditController.info(Operation, "Начало обработки BackValue" + msgCommon, operation);
+            auditController.info(Operation, "Начало обработки" + msgCommon, operation);
             try {
                 if (!operationExt.getPostDatePlan().equals(operation.getPostDate())) {
                     // была изменена дата проводки - пересчитать параметры
                     operation = (GLBackValueOperation) setDateParameters(ordinaryPostingProcessor, operation);
                 }
             } catch (Throwable e) {
-                String msg = "Ошибка при заполнения данных BackValue операции (зависящих от даты) по проводке";
-                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
+                operationErrorMessage(e, "Ошибка при заполнения данных (зависящих от даты) по проводке" + msgCommon,
+                        operation, ERCHK, initSource());
                 return false;
             }
             try {
                 if (processOperation(operation)) {
                     bvOperationRepository.updateManualStatus(operation.getId(), BackValuePostStatus.COMPLETED);
-                    auditController.info(Operation,
-                            format("Успешное завершение обработки BackValue операции '%s'", operation.getId())
-                            , operation);
+                    auditController.info(Operation, "Успешное завершение обработки" + msgCommon, operation);
                     return true;
                 } else {
-                    auditController.error(Operation, format("Не выполнена обработка BackValue операции '%s'"
-                            , operation.getId()), operation, "");
+                    auditController.error(Operation, "Не выполнена обработка" + msgCommon, operation, "");
                     return false;
                 }
             } catch (Throwable e) {
-                String msg = "Ошибка при обработки BackValue операции (зависящих от даты) по проводке";
-                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
+                operationErrorMessage(e, "Ошибка при обработкe" + msgCommon, operation, ERCHK, initSource());
                 return false;
             }
         } else {
-            auditController.warning(Operation, format("Попытка обработки BackValue операции в статусе '%s', ID '%s'"
-                    , operation.getState(), operation.getId()), operation, "");
+            auditController.warning(Operation, format("Попытка обработки %s в статусе '%s'"
+                    , msgCommon, operation.getState()), operation, "");
             return false;
         }
     }

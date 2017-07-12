@@ -32,6 +32,7 @@ import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
@@ -66,6 +68,12 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
     @BeforeClass
     public static void beforeAll() {
+
+        try {
+            setOperday(DateUtils.parseDate("27.02.2015", "dd.MM.yyyy"), DateUtils.parseDate("25.02.2015", "dd.MM.yyyy"), ONLINE, OPEN);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         setCalendar2015_02();
 
         saveTable("GL_BVPARM");
@@ -556,8 +564,8 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
     @Test
     public  void testProcessingTask() throws Exception {
-        Date curdate = getOperday().getCurrentDate();
         testPostingBV();
+        Date curdate = getOperday().getCurrentDate();
 
         List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class, "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2",
                 OperState.BLOAD, CONTROL);
