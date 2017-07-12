@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -57,13 +58,17 @@ public class ActParm extends GridForm {
     private String  initAccType = null;
     private Column  accTypeColumn;
     private ActParmDlg dlg = null;
+    private String tech_flag;
 
-    public ActParm(String initSection, String initProduct, String initSubProduct, String initModifier){
+    protected Column colTechAct;
+
+    public ActParm(String initSection, String initProduct, String initSubProduct, String initModifier, String tech_flag){
         super("");
         this.initSection = initSection;
         this.initProduct = initProduct;
         this.initSubProduct = initSubProduct;
         this.initModifier = initModifier;
+        this.tech_flag = tech_flag;
         initAccType = initSection + initProduct + initSubProduct + initModifier;
         title.setText(Utils.Fmt(FORM_NAME, initAccType));
         exportToExcel.setFormTitle(title.getText());
@@ -118,7 +123,7 @@ public class ActParm extends GridForm {
                 if (dlg == null) dlg = new ActParmDlg();
                 dlg.setFormAction(FormAction.CREATE);
                 dlg.setDlgEvents(this);
-                dlg.show(initAccType);
+                dlg.show(new Object[] {initAccType, tech_flag});
             }
 
             @Override
@@ -202,7 +207,7 @@ public class ActParm extends GridForm {
         result.addColumn(new Column("DTB", Column.Type.DATE, FIELD_DTB, 25));
         result.addColumn(new Column("DTE", Column.Type.DATE, FIELD_DTE, 25));
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, FIELD_ACCNAME, 240));
-        Column colTechAct;
+
         result.addColumn(colTechAct = new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 20,false,false));
         colTechAct.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));
         colTechAct.setFilterable(true);

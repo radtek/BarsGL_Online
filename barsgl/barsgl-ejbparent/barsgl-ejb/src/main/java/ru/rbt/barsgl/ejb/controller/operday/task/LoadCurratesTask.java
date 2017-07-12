@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -9,14 +10,13 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRateId;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -29,11 +29,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.HardCurrency.*;
-import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.Operday;
-import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.OperdayToOpen;
-import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.RatesToLoad;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadRatesTask;
+import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.HardCurrency.*;
+import static ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask.LoadCurrencyPath.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -199,7 +197,15 @@ public class LoadCurratesTask extends AbstractJobHistoryAwareTask {
     }
 
     private BigDecimal getAmount(EtlCurrencyRate etlRate) {
-        return new BigDecimal(currencyRepository.findById(BankCurrency.class, etlRate.getId().getBankCurrency()).getScale());
+        return calcTenPow(2 - currencyRepository.findById(BankCurrency.class, etlRate.getId().getBankCurrency()).getScale().intValue());
+    }
+
+    private BigDecimal calcTenPow(int pow) {
+        if (pow >= 0) {
+            return BigDecimal.TEN.pow(pow);
+        } else {
+            return BigDecimal.ONE.divide(BigDecimal.TEN.pow(pow*-1));
+        }
     }
 
     private String decimalToString(BigDecimal decimal) {

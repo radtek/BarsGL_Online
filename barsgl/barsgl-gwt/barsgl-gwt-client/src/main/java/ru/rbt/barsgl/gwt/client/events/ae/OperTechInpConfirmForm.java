@@ -39,7 +39,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
     public static final String FORM_NAME = "Ввод и авторизация операций - техсчета";
     private GridAction _modify;
     private GridAction _create;
-    private GridAction _createFromTemplate;
     private GridAction _delete;
     private GridAction _forward;
     private GridAction _backward;
@@ -211,15 +210,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
                 wrapper.setStatus(status);
                 wrapper.setAction(calcAction(dlg.getOperationAction()));
 
-                //TODO  for debug
-                /*if (1==1){
-                    System.out.println("Action => " + wrapper.getAction().name());
-                    System.out.println("Prms => " + (wrapper.getReasonOfDeny()));
-                    dlg.hide();
-                    WaitingManager.hide();
-                    return;
-                }*/
-
                 BarsGLEntryPoint.operationService.processTechOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualTechOperationWrapper>>() {
                     @Override
                     public void onSuccess(RpcRes_Base<ManualTechOperationWrapper> wrapper) {
@@ -237,7 +227,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
         };
     }
 
-
     @Override
     protected Table prepareTable() {
         Table result = new Table();
@@ -247,16 +236,8 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус", 90));
         col.setList(getEnumLabelsList(BatchPostStatus.values()));
         result.addColumn(new Column("ECODE", Column.Type.INTEGER, "Код ошибки", 60));
-
-        //result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60));
-        //result.addColumn(new Column("NROW", Column.Type.INTEGER, "Строка в файле", 60, false, false));
-
-        //result.addColumn(new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
         result.addColumn(col = new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 80));
         col.setList(getEnumLabelsList(InputMethod.values()));
-
-        //result.addColumn(new Column("ID_PAR", Column.Type.LONG, "ID род. запроса", 80));
-        //result.addColumn(new Column("ID_PREV", Column.Type.LONG, "ID пред. запроса", 80));
         result.addColumn(new Column("SRC_PST", Column.Type.STRING, "Источник сделки", 80));
 
         result.addColumn(new Column("DEAL_ID", Column.Type.STRING, "ИД сделки", 70));
@@ -270,13 +251,13 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(col = new Column("POSTDATE", Column.Type.DATE, "Дата проводки", 72));
         col.setFormat("dd.MM.yyyy");
 
-        result.addColumn(new Column("ACCTYPE_DR", Column.Type.STRING, "AccountType ДБ", 160));
+        result.addColumn(new Column("ACCTYPE_DR", Column.Type.STRING, "AccountType ДБ", 120));
         result.addColumn(new Column("AC_DR", Column.Type.STRING, "Счет ДБ", 160));
         result.addColumn(new Column("CCY_DR", Column.Type.STRING, "Валюта ДБ", 60, false, false));
         result.addColumn(new Column("AMT_DR", Column.Type.DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("CBCC_DR", Column.Type.STRING, "Филиал ДБ", 60, false, false));
 
-        result.addColumn(new Column("ACCTYPE_CR", Column.Type.STRING, "AccountType КР", 160));
+        result.addColumn(new Column("ACCTYPE_CR", Column.Type.STRING, "AccountType КР", 120));
         result.addColumn(new Column("AC_CR", Column.Type.STRING, "Счет КР", 160));
         result.addColumn(new Column("CCY_CR", Column.Type.STRING, "Валюта КР", 60, false, false));
         result.addColumn(new Column("AMT_CR", Column.Type.DECIMAL, "Сумма КР", 100));
@@ -302,9 +283,6 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130, false, false));
         result.addColumn(new Column("USER_CHNG", Column.Type.STRING, "Логин изменения", 100, false, false));
         result.addColumn(new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130, false, false));
-        //result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 150));
-        //result.addColumn(new Column("SEND_SRV", Column.Type.DATETIME, "Запрос в АБС", 120, false, false));
-        //result.addColumn(new Column("OTS_SRV", Column.Type.DATETIME, "Ответ от АБС", 120));
 
         result.addColumn(new Column("DESCRDENY", Column.Type.STRING, "Причина возврата", 300, false, false));
 

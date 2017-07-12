@@ -215,7 +215,7 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
 
     public List<DataRecord> getBsaacidByAcid(CardXls card) throws SQLException {
         String vAcid = getAcid(card);
-        List<DataRecord> bsaacids = cardXlsRepository.select("select bsaacid from accrln where acid=? and drlnc='2029-01-01'", new Object[]{vAcid});
+        List<DataRecord> bsaacids = cardXlsRepository.select("select bsaacid from accrln where acid=? and drlnc='2029-01-01' and rlntype<>'1'", new Object[]{vAcid});
         return bsaacids;
     }
 

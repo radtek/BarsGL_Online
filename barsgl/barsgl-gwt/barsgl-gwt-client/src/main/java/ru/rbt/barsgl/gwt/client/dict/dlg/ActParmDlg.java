@@ -1,10 +1,8 @@
 package ru.rbt.barsgl.gwt.client.dict.dlg;
 
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.*;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -33,6 +31,7 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
@@ -97,6 +96,13 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         accType.setMaxLength(9);
         accType.setWidth("95px");
         accType.setMask("[0-9]");
+
+        accType.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                changeDate();
+            }
+        });
 
         grid.setWidget(1, 0, new Label(ActParm.FIELD_CUSTYPE));
         grid.setWidget(1, 1, cusType = new BtnTxtBox() {
@@ -165,7 +171,6 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         generator.setHeight("16px");
         generator.setWidth("16px");
         generator.setTitle("Следующий свободный ACOD");
-       // generator.getElement().getStyle().setLineHeight(16, Style.Unit.PX);
         generator.getElement().getStyle().setMarginTop(1, Style.Unit.PX);
 
         hp.add(acod);
@@ -191,6 +196,17 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
         return grid;
     }
 
+    private void changeDate(){
+        Date date ;
+        if (Utils.toStr(accType.getValue()).startsWith("0")){
+            //tech
+            date = new Date(117,1,22);
+        } else {
+           date = new Date(108, 0, 1);
+        }
+        dtb.setValue(date);
+    }
+
     private void initDteField(){
         Date d8 = new Date(108, 0, 1);
         Date d16 = new Date(116, 0, 1);
@@ -203,6 +219,7 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
             dtb.setValue(d8);
         }
     }
+
 
     private void lookUpAccType(){
         GridFormDlgBase dlg = new GridFormDlgBase("Справочник плана счетов по AccType") {
@@ -227,9 +244,8 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
             protected boolean setResultList(HashMap<String, Object> result) {
                 if (null != result) {
                     accType.setValue(Utils.value((String) result.get("ACCTYPE")));
-                    _isTech  = result.get("TECH_ACT").equals("Y");
                     cusType.setFocus(true);
-                    setTechFields(_isTech);
+                    changeDate();
                 }
                 return true;
             }
@@ -245,22 +261,29 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
 
     private void setTechFields(boolean isTech) {
         Date defDate = new Date(117,1,22);
-        if (!cusType.hasValue())
-            if (isTech) cusType.setValue("00"); else cusType.clear();
 
-        if (!term.hasValue())
-            if (isTech) term.setValue("00"); else term.clear();
+        if (Utils.toStr(Utils.value(cusType.getValue())).equalsIgnoreCase(""))
+            if (isTech) {
+                cusType.setValue("00");
+                cusType.setReadOnly(true);
+            } else cusType.clear();
 
-        if (!acc2.hasValue())
-            if ((isTech) && (accType.hasValue())) acc2.setValue("00"+accType.getValue().substring(0,3)); else acc2.clear();
+        if (Utils.toStr(Utils.value(term.getValue())).equalsIgnoreCase(""))
+            if (isTech) {
+                term.setValue("00");
+                term.setReadOnly(true);
+            } else term.clear();
+
+        if (Utils.toStr(Utils.value(acc2.getValue())).equalsIgnoreCase(""))
+            if (isTech && !Utils.toStr(Utils.value(accType.getValue())).equalsIgnoreCase("")) {
+                acc2.setValue("00" + accType.getValue().substring(0,3));
+                acc2.setReadOnly(true);
+            } else acc2.clear();
 
         if (!dtb.hasValue())
             if (isTech) dtb.setValue(defDate); else dtb.clear();
 
-        cusType.setReadOnly(isTech);
-        term.setReadOnly(isTech);
-        plcode.setReadOnly(isTech);
-        acc2.setReadOnly(isTech);
+        if(isTech) plcode.setReadOnly(true);
     }
 
     private void lookUpTerm(){
@@ -415,19 +438,37 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
 
             _isTech = Utils.value((String)row.getField(10).getValue()).equalsIgnoreCase("Y")?true:Utils.value((String)row.getField(10).getValue()).equalsIgnoreCase("Да");
 
+            if(_isTech) plcode.setReadOnly(true);
+
         }else{
              if (params != null){
-                 Row row = (Row) params;
-                 accType.setValue(row.getField(4).getValue().toString());
-                 accType.setReadOnly(true);
-                 _isTech = Utils.value((String)row.getField(8).getValue()).equalsIgnoreCase("Y");
-                 //accType.setValue((String) params);
-                 //accType.setReadOnly(true);
+                 if (params instanceof String){
+                     accType.setValue((String) params);
+                     accType.setReadOnly(true);
+                     dtb.setValue(new Date(108, 0, 1));
+                 } else {
+                     if (params instanceof Row) {
+                         Row row = (Row) params;
+                         accType.setValue(row.getField(4).getValue().toString());
+                         accType.setReadOnly(true);
+                         _isTech = Utils.value((String)row.getField(8).getValue()).equalsIgnoreCase("Y");
+                         if (!_isTech) dtb.setValue(new Date(108, 0, 1));
+                         setTechFields(_isTech);
+                     } else{
+                         Object[] obj = (Object[]) params;
+                         if ((obj[0] != null) && (obj[1] != null)){
+                             accType.setValue((String)obj[0]);
+                             accType.setReadOnly(true);
+                             _isTech = ((String)obj[1]).equalsIgnoreCase("Y");
+                             if (!_isTech) dtb.setValue(new Date(108, 0, 1));
+                             setTechFields(_isTech);
+                         } else {
+                             dtb.setValue(new Date(108, 0, 1));
+                         }
+                     }
+                 }
              }
-
-            if (!_isTech) dtb.setValue(new Date(108, 0, 1));
         }
-        setTechFields(_isTech);
     }
 
     private String checkRequeredString(String value, String columnCaption) {
@@ -516,31 +557,68 @@ public class ActParmDlg extends DlgFrame implements IAfterShowEvent {
     private void setWrapperFields(){
         wrapper.setAccType(checkLength(checkRequeredString(accType.getValue(), ActParm.FIELD_ACCTYPE), 9, ActParm.FIELD_ACCTYPE));
 
-        checkRequeredString(cusType.getValue(), ActParm.FIELD_CUSTYPE);
-        try {
-            String s = cusType.getValue().trim();
-            if (s.equals("0") || s.equals("00") || s.equals("000")) {
-                wrapper.setCusType("00");
-            } else{
-                Short val = Short.parseShort(s);
-                if (val < 1) throw new Exception("Неверный код");
-                wrapper.setCusType(val.toString());
-            }
-        }catch(Exception e){
-            showInfo("Ошибка", Utils.Fmt("Неверное значение в поле {0}. {1}", ActParm.FIELD_CUSTYPE, e.getMessage()));
-            throw new IllegalArgumentException("column");
-        }
+        _isTech = accType.getValue().startsWith("0");
 
-        wrapper.setTerm(checkLength(checkRequeredString(term.getValue(), ActParm.FIELD_TERM), 2, ActParm.FIELD_TERM));
-        wrapper.setAcc2(checkLength(!_isTech?checkRequeredString(acc2.getValue(), ActParm.FIELD_ACC2):acc2.getValue(), 5, ActParm.FIELD_ACC2));
+         if (_isTech){
+             try{
+                 if (!Utils.toStr(cusType.getValue()).trim().equalsIgnoreCase("00")) throw new Exception(Utils.Fmt("Для технического счета {0} поле Тип собств. должен быть 00", accType.getValue()));
+                 wrapper.setCusType(cusType.getValue());
+             } catch (Exception e){
+                 showInfo("Ошибка", e.getMessage());
+                 throw new IllegalArgumentException("column");
+             }
+
+             try{
+                 if (!Utils.toStr(term.getValue()).trim().equalsIgnoreCase("00")) throw new Exception(Utils.Fmt("Для технического счета {0} поле Код срока должен быть 00", accType.getValue()));
+                 wrapper.setTerm(term.getValue());
+             } catch (Exception e){
+                 showInfo("Ошибка", e.getMessage());
+                 throw new IllegalArgumentException("column");
+             }
+
+             try{
+                 if (!Utils.toStr(acc2.getValue()).trim().equalsIgnoreCase("00" + accType.getValue().substring(0,3))) throw new Exception(Utils.Fmt("Для технического счета {0} поле Б/счет 2-го порядка должен быть {1}", accType.getValue(), "00" + accType.getValue().substring(0,3)));
+                 wrapper.setAcc2(acc2.getValue());
+             } catch (Exception e){
+                 showInfo("Ошибка", e.getMessage());
+                 throw new IllegalArgumentException("column");
+             }
+
+         } else {
+             checkRequeredString(cusType.getValue(), ActParm.FIELD_CUSTYPE);
+             try {
+                 String s = cusType.getValue().trim();
+                 if (s.equals("0") || s.equals("00") || s.equals("000")) {
+                     wrapper.setCusType("00");
+                 } else{
+                     Short val = Short.parseShort(s);
+                     if (val < 1) throw new Exception("Неверный код");
+                     wrapper.setCusType(val.toString());
+                 }
+             }catch(Exception e){
+                 showInfo("Ошибка", Utils.Fmt("Неверное значение в поле {0}. {1}", ActParm.FIELD_CUSTYPE, e.getMessage()));
+                 throw new IllegalArgumentException("column");
+             }
+
+             wrapper.setTerm(checkLength(checkRequeredString(term.getValue(), ActParm.FIELD_TERM), 2, ActParm.FIELD_TERM));
+             wrapper.setAcc2(checkLength(checkRequeredString(acc2.getValue(), ActParm.FIELD_ACC2), 5, ActParm.FIELD_ACC2));
+         }
 
         wrapper.setPlcode(checkPlCode(plcode.getValue(), wrapper.getAcc2()));
 
         checkAcc70(wrapper.getAcc2(), wrapper.getPlcode());
         checkAcc706(wrapper.getAcc2(), wrapper.getPlcode());
 
-        wrapper.setAcod(!_isTech ? checkLength(checkRequeredString(acod.getValue(), ActParm.FIELD_ACOD), 4, ActParm.FIELD_ACOD) : acod.getValue());
-        wrapper.setAc_sq(!_isTech ? checkAcod_sq(checkLength(checkRequeredString(ac_sq.getValue(), ActParm.FIELD_AC_SQ), 2, ActParm.FIELD_AC_SQ)) : ac_sq.getValue());
+        if (_isTech && (acod.getValue() == null || acod.getValue().trim().isEmpty()) &&
+                       (ac_sq.getValue() == null || ac_sq.getValue().trim().isEmpty())) {
+
+            wrapper.setAcod(acod.getValue());
+            wrapper.setAc_sq(ac_sq.getValue());
+        } else{
+            wrapper.setAcod(checkLength(checkRequeredString(acod.getValue(), ActParm.FIELD_ACOD), 4, ActParm.FIELD_ACOD));
+            wrapper.setAc_sq(checkAcod_sq(checkLength(checkRequeredString(ac_sq.getValue(), ActParm.FIELD_AC_SQ), 2, ActParm.FIELD_AC_SQ)));
+        }
+
 
         wrapper.setDtb(ClientDateUtils.Date2String(check(dtb.getValue(),
                 "Дата начала", "поле не заполнено", new CheckNotNullDate())));

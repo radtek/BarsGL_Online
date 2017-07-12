@@ -92,7 +92,6 @@ public class PostingForm extends MDForm {
     protected String prepareMasterSql() {
         return "select * from (select a.*, a.BSAACID_DR || ' ' || a.BSAACID_CR as DR_CR from V_GL_PDLINK as a) tl "
                 + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
-        //return "select * from V_GL_PDLINK " + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
     }
 
     @Override
@@ -120,17 +119,6 @@ public class PostingForm extends MDForm {
 
 
     private Table prepareTable(boolean forMasterTable) {
-    /*
-	PAR_GLO, GLOID, INP_METHOD, SRC_PST, FAN, STRN, STRN_GLO,
-	POST_TYPE, PCID, ID_DR, ID_CR,
-	POD, VALD, PBR, INVISIBLE, FCHNG, PRFCNTR, DPMT,
-	ACID_DR, BSAACID_DR, CCY_DR, AMT_DR, AMTRU_DR, AMNT_DR, AMNTBC_DR,
-	ACID_CR, BSAACID_CR, CCY_CR, AMT_CR, AMTRU_CR, AMNT_CR, AMNTBC_CR,
-	CBCC_DR, CBCC_CR,
-	AMTRU, DEAL_ID, SUBDEALID, PMT_REF, PREF,
-	PNAR, RNARLNG, RNARSHT, NRT,
-	GLO_DR, GLO_CR, FAN_TYPE, MO_NO, PDMODE
-    */
         Table result = new Table();
         Column col;
 

@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -18,6 +19,7 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,7 +27,6 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.DATE_AFTER_OPERDAY;
@@ -38,7 +39,7 @@ import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ONE_OF;
  */
 public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperationWrapper> {
 
-    @Inject
+    @EJB
     private GlPdThRepository glPdThRepository;
 
     @Inject
@@ -161,6 +162,10 @@ public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperatio
         return glPdThRepository.getOperationPdThList(pdIdList);
     }
 
+    public List<GlPdTh> getOperationPdList(Long pcId) {
+        return glPdThRepository.getOperationPdThListByPcId(pcId);
+    }
+
     public void suppressAllPostings(ManualTechOperationWrapper wrapper, final List<GlPdTh> pdList)  throws Exception {
 
         // TODO при подавлении и изменении даты проводки (брать мин дату)
@@ -181,20 +186,22 @@ public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperatio
      */
     public void updateAllPostings(ManualTechOperationWrapper wrapper, List<GlPdTh> pdList) throws Exception {
         Date valueDate = checkDateFormat(wrapper.getValueDateStr(), "Дата валютирования");
+        Date postDate = checkDateFormat(wrapper.getPostDateStr(), "Дата проводки");
+
         for (GlPdTh pd : pdList) {
             if (InputMethod.AE != wrapper.getInputMethod()) {       // M || F
                 pd.setDealId(wrapper.getDealId());
                 pd.setSubdealId(wrapper.getSubdealId());
                 pd.setPaymentRef(wrapper.getDealId());
-                pd.setRusNarrLong(wrapper.getRusNarrativeLong());
-                pd.setProfitCenter(glPdThRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
-                        PaymentHub.getLabel().equals(wrapper.getDealSrc())));
                 pd.setPnar(glPdThRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));
             }
+
+            pd.setNarrative(wrapper.getNarrative());
+            pd.setRusNarrLong(wrapper.getRusNarrativeLong());
+            pd.setIsCorrection(YesNo.getValue(wrapper.isCorrection()));
             pd.setVald(valueDate);
-            pd.setProfitCenter(wrapper.getProfitCenter());  // TODO возможно, надо будет перенести в OnePosting
-        };
-    };
-
-
+            pd.setPod(postDate);
+            pd.setProfitCenter(wrapper.getProfitCenter());
+        }
+    }
 }

@@ -95,7 +95,6 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         DataListBoxEx mCurrency;
         DataListBoxEx mFilial;
         TxtBox mAccount;
-        //TxtBox mSum = null;
         BtnTxtBox mSum = null;
         Button mButton;
 
@@ -121,7 +120,6 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
 
         if (withSum) {
             grid.setWidget(4, 0, createLabel("Сумма"));
-           // grid.setWidget(4, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
             grid.setWidget(4, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
                 @Override
                 public void method() {
@@ -242,7 +240,8 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
 
                     final String bsaAcid = mAccount.getValue();
                     FormAction action = OperationDlgBase.this.action;
-                    boolean editAccount = (CREATE == action || UPDATE == action);
+                    boolean editAccount = (CREATE == action || UPDATE == action) && mAccount.isEnabled();
+
                     GridFormDlgBase dlg = new AccCustomerFormDlg(!editAccount) {
                         @Override
                         protected boolean setResultList(HashMap<String, Object> result) {

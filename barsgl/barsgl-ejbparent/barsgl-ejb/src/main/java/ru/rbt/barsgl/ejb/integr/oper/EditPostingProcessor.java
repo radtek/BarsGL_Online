@@ -230,7 +230,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
      * изменяет поля в операции, если меняются все проводки по операции
      */
     public void updateOperation(ManualOperationWrapper wrapper, GLOperation operation) {
-        if (InputMethod.M == wrapper.getInputMethod()) {
+        if (InputMethod.AE != wrapper.getInputMethod()) {       // M || F
             operation.setDealId(wrapper.getDealId());
             operation.setSubdealId(wrapper.getSubdealId());
             operation.setPaymentRefernce(wrapper.getPaymentRefernce());

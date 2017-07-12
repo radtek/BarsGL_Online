@@ -375,10 +375,6 @@ public class GLAccountService {
             if (null != (glAccount = glAccountController.findTechnicalAccountTH(accTypeGL,glCCY,cbCCN))) {
                 throw new ValidationError(ACCOUNTGLTH_ALREADY_EXISTS, glAccount.getBsaAcid());
             }
-            DataRecord data = glAccountRepository.getAccountTypeParams(accType);
-            if (data.getString("FL_CTRL").equals("Y")) {
-                throw new ValidationError(ACCOUNT_IS_CONTROLABLE, accType);
-            }
 
             BankCurrency bankCurrency  = bankCurrencyRepository.getCurrency(glCCY);
 
@@ -542,8 +538,15 @@ public class GLAccountService {
             Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
             String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт" : "Изменен";
 
+
+
+            DataRecord data = glAccountRepository.getAccountParams(Utils.fillUp(Long.toString(accountWrapper.getAccountType()), 9),
+                    "00", "00", dateOpen);
+            if (null == data) {
+                  throw new ValidationError(ACCOUNT_PARAMS_NOT_FOUND, "", accountWrapper.getAccountType().toString(), "00", "00", dateUtils.onlyDateString(dateOpen));
+            }
+
             String accType = org.apache.commons.lang3.StringUtils.leftPad(accountWrapper.getAccountType().toString(),9,"0");
-            AccountingType accTypeGL = (AccountingType) accountingTypeRepository.findById(AccountingType.class,accType);
             String glCCY = accountWrapper.getCurrency();
             String cbCCN = accountWrapper.getFilial();
 
@@ -554,6 +557,15 @@ public class GLAccountService {
                     .withCompanyCode(cbCCN).build();
 
             account.setDescription(accountWrapper.getDescription());
+
+            String msg;
+            msg = null != dateClose
+                    ? "Уже существует счет с такой датой закрытия. Установите другую дату закрытия"
+                    : "Уже существует открытый счет с таким номером.";
+            if (glAccountRepository.checkTechAccountExists(account.getBsaAcid() ,dateClose)){
+                throw new Exception(msg);
+            }
+
             GLAccount glAccount = glAccountController.updateGLAccountMnlTech(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
             auditController.info(Account, format("%s счет '%s' по ручному вводу",
                     act, glAccount.getBsaAcid()), glAccount);
@@ -583,13 +595,28 @@ public class GLAccountService {
                             accountWrapper, true, format( "У Вас нет достаточных прав производить операции над счетом с источником сделки: %s", accountWrapper.getDealSource()));
                 }
 
-                GLAccount account = glAccountController.findGLAccount(accountWrapper.getBsaAcid());
+                //GLAccount account = glAccountController.findGLAccount(accountWrapper.getBsaAcid());
+                GLAccount account = glAccountRepository.findById(GLAccount.class, accountWrapper.getId());
                 if (null == account) {      // Такого счета нет!
                     throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
                 }
                 String dateCloseStr = accountWrapper.getDateCloseStr();
                 Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
-                String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт счет" : "Отменено закрытие счета";
+
+                String act;
+                String msg;
+                //Проверка на существование счета с таким номером
+                if ((null == account.getDateClose() && null != dateClose)){
+                    act = "Закрыт счет";
+                     msg = "Уже существует счет с такой датой закрытия. Установите другую дату закрытия";
+                } else {
+                    act = "Отменено закрытие счета";
+                    msg = "Уже существует открытый счет с таким номером.";
+                }
+
+                if (glAccountRepository.checkTechAccountExists(accountWrapper.getBsaAcid() ,dateClose)){
+                    throw new Exception(msg);
+                }
                 GLAccount glAccount = glAccountController.closeGLAccountMnlTech(account, dateClose, accountWrapper.getErrorList());
                 auditController.info(Account, format("%s '%s' по ручному вводу",
                         act, glAccount.getBsaAcid()), glAccount);

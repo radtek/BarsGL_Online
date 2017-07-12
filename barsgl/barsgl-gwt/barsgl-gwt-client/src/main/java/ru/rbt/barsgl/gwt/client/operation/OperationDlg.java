@@ -6,6 +6,7 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
@@ -357,7 +358,7 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected Date getAccountDate() {
-        return mDateValue.getValue();
+        return mDateOperation.getValue();
     }
 
     protected void setEnableSumRuHandler() {
@@ -463,7 +464,7 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected void btnClick(Side side) {
-        /*exchange(side.equals(Side.DEBIT));*/
+        exchange(side.equals(Side.DEBIT));
     }
 
     private void exchange(boolean isDebit){

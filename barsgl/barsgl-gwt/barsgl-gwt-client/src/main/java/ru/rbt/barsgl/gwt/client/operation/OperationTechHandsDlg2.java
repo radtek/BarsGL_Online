@@ -90,7 +90,7 @@ public class OperationTechHandsDlg2 extends OperationTechDlg {
     }
 
     private Boolean _exitFlag = false;
-    //private String _reasonOfDeny;
+
     @Override
     protected Boolean beforeReturn(final Object prm){
         ManualTechOperationWrapper wrapper = (ManualTechOperationWrapper) prm;

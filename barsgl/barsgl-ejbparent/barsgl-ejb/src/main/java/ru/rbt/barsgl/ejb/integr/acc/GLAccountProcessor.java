@@ -417,8 +417,9 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
         dr = glAccountRepository.getActParamByAccType(keys.getAccountType());
         glAccount.setBalanceAccount2(dr.getString("ACC2"));
-        glAccount.setAccountCode(dr.getString("ACOD").trim().length()>0 ? dr.getShort("ACOD") : null);
-        glAccount.setAccountSequence(dr.getString("AC_SQ").trim().length()>0 ? dr.getShort("AC_SQ") : null);
+
+        glAccount.setAccountCode(dr.getString("ACOD") != null && dr.getString("ACOD").trim().length() > 0 ?  dr.getShort("ACOD") : null);
+        glAccount.setAccountSequence(dr.getString("AC_SQ") != null && dr.getString("AC_SQ").trim().length() > 0 ?  dr.getShort("AC_SQ") : null);
         glAccount.setAcid(null);
         glAccount.setPassiveActive(" ");
         glAccount.setDealSource(keys.getDealSource());

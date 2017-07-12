@@ -84,7 +84,6 @@ public class OperationHandsDlg extends OperationDlg {
     }
 
     private Boolean _exitFlag = false;
-    //private String _reasonOfDeny;
     @Override
     protected Boolean beforeReturn(final Object prm){
         ManualOperationWrapper wrapper = (ManualOperationWrapper) prm;

@@ -115,7 +115,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     @EJB
     private GlPdThRepository glPdThRepository;
 
-    @Inject
+    @EJB
     private GLOperationRepository glOperationRepository;
 
     @Inject
@@ -318,7 +318,8 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         posting.setProcDate(operdayController.getOperday().getCurrentDate());
         GLManualOperation operation = createOperation(posting);
         operation.setBsChapter("T");
-        operation.setAmountPosting(operation.getAmountDebit());
+        //operation.setAmountPosting(operation.getAmountDebit());
+        setAmountRu(operation);
         manualOperationRepository.save(operation,true);
         posting.setOperation(operation);
         postingRepository.save(posting);
@@ -346,17 +347,10 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return errorList;
     }
 
-    public void setExchengeParameters (GLManualOperation operation) {
+    public void setAmountRu (GLManualOperation operation) {
         // Основная валюта, сумма проводки в рублях
         BankCurrency ccyDebit = operation.getCurrencyDebit();
         BankCurrency ccyCredit = operation.getCurrencyCredit();
-
-        // курсовая разница
-        BigDecimal amountDebitRu = ( null != operation.getAmountDebitRu()) ?
-                operation.getAmountDebitRu() : operation.getEquivalentDebit();
-        BigDecimal amountCreditRu = ( null != operation.getAmountCreditRu()) ?
-                operation.getAmountCreditRu() : operation.getEquivalentCredit();
-        operation.setExchangeDifference(amountDebitRu.subtract(amountCreditRu));
 
         // основная валюта и сумма проводки
         if (RUB.equals(ccyDebit)) {         // Если ДЕБЕТ в рублях
@@ -364,11 +358,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             operation.setAmountPosting(operation.getAmountDebit());
         } else {                                        // Иначе
             operation.setCurrencyMain(ccyCredit);       // основная валюта по Кредиту
-            if (RUB.equals(ccyCredit)) {    // Если КРЕДИТ в рублях
-                operation.setAmountPosting(operation.getAmountCredit());
-            } else {                        // Иначе
-                operation.setAmountPosting(amountCreditRu);
-            }
+            operation.setAmountPosting(operation.getAmountCredit());
         }
     }
 
@@ -559,7 +549,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
 
     public void checkTechAccount(ManualTechOperationWrapper wrapper) throws ParseException {
 
-        if (null != wrapper.getFilialDebit() && null!=wrapper.getFilialCredit())
+        if (null != wrapper.getFilialDebit() && null!= wrapper.getFilialCredit())
         {
             if (!wrapper.getFilialDebit().equals(wrapper.getFilialCredit()))
             {
@@ -567,10 +557,10 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             }
         }
         else{
-            throw  new ValidationError(ErrorCode.FILIAL_NOT_FOUND,String.format("Не найден филиал по %s",wrapper.getFilialDebit()==null?"дебету":"кредиту"));
+            throw  new ValidationError(ErrorCode.FILIAL_NOT_FOUND,String.format("Не найден филиал по %s",wrapper.getFilialDebit()== null ? "дебету" : "кредиту"));
         }
 
-        if (null!=wrapper.getCurrencyDebit() && null!=wrapper.getCurrencyCredit())
+        if (null != wrapper.getCurrencyDebit() && null!= wrapper.getCurrencyCredit())
         {
             if (!wrapper.getCurrencyDebit().equalsIgnoreCase("RUR") && !wrapper.getCurrencyCredit().equalsIgnoreCase("RUR"))
             {

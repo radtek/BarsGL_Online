@@ -139,6 +139,15 @@ public class AccTypeDlg extends EditableDialog<AccTypeWrapper> implements IAfter
         cnw.setModifier(modifier);
         cnw.setAcctype(checkRequeredString(code.getValue(), AccType.FIELD_ACCTYPE));
 
+        try{
+            if (Utils.toStr(code.getValue()).startsWith("0") != tech_act.getValue()){
+                throw new Exception("Значение поля Технический счет не соответствует типу AccountingType");
+            }
+        }catch(Exception e){
+            showInfo("Ошибка",e.getMessage());
+            throw new IllegalArgumentException("column");
+        }
+
         checkRequeredString(name.getValue(), AccType.FIELD_ACCTYPENAME);
         try{
             if (name.getValue().length() > 255) throw new Exception("Количество символов превышает 255");

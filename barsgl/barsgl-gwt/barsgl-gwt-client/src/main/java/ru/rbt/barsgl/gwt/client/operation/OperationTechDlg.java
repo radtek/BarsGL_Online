@@ -6,28 +6,22 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
-import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
-import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
@@ -36,7 +30,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 
@@ -52,13 +45,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
     protected TxtBox mDateOperDay;
     protected DatePickerBox mDateOperation;
     protected DatePickerBox mDateValue;
-
-    //protected TxtBox mSumRu;
-    protected CheckBox mCheckSumRu;
     protected CheckBox mCheckCorrection;
-
-    protected boolean isRurDebit = false;
-    protected boolean isRurCredit = false;
 
     protected Date operday;
     protected String _reasonOfDeny;
@@ -76,11 +63,11 @@ public class OperationTechDlg extends OperationTechDlgBase {
     @Override
     public void beforeCreateContent(){
         isAsyncListsCached = false;
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCachedTech");
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncThListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCachedTech", true);
+        LocalDataStorage.putParam("isAsyncThListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -118,7 +105,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
         mDateOperDay.setReadOnly(true);
 
-        //setEnableSumRuHandler();
         setChangeHandlers();
 
         return mainVP;
@@ -150,7 +136,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
         grid.setWidget(2, 1, mDateValue = createDateBox());
 
         grid.setWidget(0, 2, createAlignWidget(createLabel("Источник сделки"), LABEL2_WIDTH));
-        grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
+        grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name() + "_TH", null, FIELD2_WIDTH));
         grid.setWidget(1, 2, createAlignWidget(createLabel("N сделки/ платежа"), LABEL2_WIDTH));
         grid.setWidget(1, 3, mDealId = createTxtBox(20, SUM_WIDTH));
         grid.setWidget(2, 2, createAlignWidget(createLabel("N субсделки"), LABEL2_WIDTH));
@@ -161,10 +147,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     protected Grid createSumRu() {
         Grid grid = new Grid(1,3);
-
-        //grid.setWidget(0, 0, createLabel("Сумма в рублях", LABEL2_WIDTH));
-        //grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
-        //grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без проводки по курсовой разнице"));
         grid.setCellSpacing(2);
         grid.setWidget(0, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
 
@@ -178,21 +160,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void setFields(ManualTechOperationWrapper operation) {
-
-//        if (!mDtAccount.hasValue() || !mCrAccount.hasValue())
-//        {
-//            final String msg = "для выбранных параметров счёт по %s не найден";
-//            List<String> msgList = new ArrayList<String>();
-//            msgList.add(!mDtAccount.hasValue()?"дебету\n":"");
-//            msgList.add(!mCrAccount.hasValue()?"кредиту\n":"");
-//            msgList.forEach(m->{
-//                if (m.length()>0) {
-//                    msgList.add(String.format(msg, m));
-//                }
-//                msgList.remove(m);
-//            });
-//            DialogUtils.showInfo("Ошибка",String.join("\n",msgList));
-//        }
 
         operation.setId(id);
         if (mDealSource.isEnabled()) {
@@ -223,9 +190,9 @@ public class OperationTechDlg extends OperationTechDlgBase {
         operation.setAccountTypeDebit(check(mDtAccType.getValue()
                 ,"AccType(дебет)","длина строки < 9 символов",new CheckStringExactLength(9)));
         operation.setAccountCredit(check(mCrAccount.getValue()
-                , "Счет (кредит)", "по заданным атрибутам не найден", new CheckStringExactLength(20)));
+                , "Счет (кредит)", "по заданным атрибутам счет не найден", new CheckStringExactLength(20)));
         operation.setAccountDebit(check(mDtAccount.getValue()
-                , "Счет (дебет)", "по заданным атрибутам не найден", new CheckStringExactLength(20)));
+                , "Счет (дебет)", "по заданным атрибутам счет не найден", new CheckStringExactLength(20)));
         operation.setAccountCredit(mCrAccount.getValue());
         operation.setAccountDebit(mDtAccount.getValue());
 
@@ -268,12 +235,10 @@ public class OperationTechDlg extends OperationTechDlgBase {
         mDealId.setValue(operation.getDealId());
         mSubDealId.setValue(operation.getSubdealId());
 
-
         mDateOperation.setValue(ClientDateUtils.String2Date(operation.getPostDateStr()));
         mDateValue.setValue(ClientDateUtils.String2Date(operation.getValueDateStr()));
         mDtAccType.setValue(operation.getAccountTypeDebit());
         mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
-        //mDtFilial.setSelectValue(operation.getFilialDebit());
 
         mDtFilial.setValue(operation.getFilialDebit());
         mDtAccount.setValue(operation.getAccountDebit());
@@ -285,11 +250,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
         mCrAccount.setValue(operation.getAccountCredit());
         mCrSum.setValue(getSumma(operation.getAmountCredit()));
 
-        BigDecimal amountRu = operation.getAmountRu();
-        boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
-                && (null != amountRu);
-        //mCheckSumRu.setValue(withoutDiff);
-        //mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "")
         mNarrativeEN.setValue(operation.getNarrative());
         mNarrativeEN.setValue(operation.getNarrative());
         mNarrativeRU.setValue(operation.getRusNarrativeLong());
@@ -306,7 +266,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     @Override
     protected void fillContent() {
-        //fillUp();
         if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
@@ -375,79 +334,17 @@ public class OperationTechDlg extends OperationTechDlgBase {
     }
 
     @Override
-    protected Date getAccountDate() {
-        return mDateValue.getValue();
+    protected Date getValueDate() {
+        return mDateOperation.getValue();
     }
 
-/*    protected void setEnableSumRuHandler() {
-        //mSumRu.setEnabled(false);
-        //mCheckSumRu.setValue(false);
-    	//mCheckSumRu.setEnabled(true);
-    	mCheckSumRu.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-
-			@Override
-			public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
-                boolean toOn = valueChangeEvent.getValue();
-                try {
-	                if (toOn) {     // разрешить редактирование
-	                	CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
-	                    mCheckSumRu.setValue(false);
-	                    String dtCurrency = (String)mDtCurrency.getValue();
-	                    String crCurrency = (String)mCrCurrency.getValue();
-	                    if (dtCurrency.equals(crCurrency)) {
-	                		showInfo("Ошибка", "Сумма в рублях вводится только для операции в разных валютах");
-	                		return;
-	                	} else if ("RUR".equals(dtCurrency)) {
-	                        //mSumRu.setValue(check(mDtSum.getValue(), "Дебет: сумма", "поле должно быть не 0", checkBigDecimal));
-	                    } else if ("RUR".equals(crCurrency)) {
-	                        //mSumRu.setValue(check(mCrSum.getValue(), "Кредит: сумма", "поле должно быть не 0", checkBigDecimal));
-	                	} else if (!checkBigDecimal.check(mDtSum.getValue()) || !checkBigDecimal.check(mCrSum.getValue())) {
-                            showInfo("Ошибка", "Сумма в валюте может быть равна 0 только для операций по курсовой разнице");
-                            return;
-                        } else {
-	                        //mSumRu.setEnabled(true);
-	                    }
-	                    mCheckSumRu.setValue(true);
-	                    isRurDebit = "RUR".equals(dtCurrency);
-	                    isRurCredit = "RUR".equals(crCurrency);
-	                } else {
-	                	//mSumRu.clear();
-	                    //mSumRu.setEnabled(false);
-	                    isRurDebit = false;
-	                    isRurCredit = false;
-	                }
-		    	} catch (IllegalArgumentException e){
-		    	}
-			}
-    	});
-    }*/
+    @Override
+    protected Date getOperDate() {return mDateOperation.getValue(); }
 
     protected void setChangeHandlers() {
-
-        /*mDtCurrency.addChangeHandler(new ChangeHandler() {
-			@Override
-			public void onChange(ChangeEvent event) {
-				if (isRurDebit || "RUR".equals(mDtCurrency.getValue())) 
-			        mCheckSumRu.setValue(false, true);
-			}
-    	});*/
-    	/*mCrCurrency.addChangeHandler(new ChangeHandler() {
-			@Override
-			public void onChange(ChangeEvent event) {
-				if (isRurCredit || "RUR".equals(mCrCurrency.getValue()))
-			        mCheckSumRu.setValue(false, true);
-			}
-    	});*/
     	mDtSum.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent event) {
-			/*	if (isRurDebit) {
-					if (new CheckNotZeroBigDecimal().check(mDtSum.getValue())) {
-                        //mSumRu.setValue(mDtSum.getValue());
-					} else {
-				        //mCheckSumRu.setValue(false, true);
-					}
-				}*/
                 correctSum(mDtSum, mCrSum);
 			}
     	});
@@ -460,7 +357,7 @@ public class OperationTechDlg extends OperationTechDlgBase {
     }
 
     protected void checkSide(BigDecimal sum, BigDecimal sumRu, String currency, String bsaSecond, String side) {
-    	boolean trueSum = true;
+    	boolean trueSum;
     	if ("RUR".equals(currency)) {
     		trueSum = (sum.signum() > 0);
     	} else {
@@ -477,56 +374,6 @@ public class OperationTechDlg extends OperationTechDlgBase {
     protected void btnClick(Side side) {
         super.btnClick(side);
 
-    }
-
-    private void exchange(boolean isDebit){
-        if (mDateOperation.getValue() == null){
-            showInfo("Ошибка", "Не заполнено поле 'Дата проводки'");
-            return;
-        }
-
-                if (!(((String)mDtCurrency.getValue()).equalsIgnoreCase("RUR") || ((String)mCrCurrency.getValue()).equalsIgnoreCase("RUR"))){
-            showInfo("Ошибка", "Валюта дебета или кредита должна быть RUR");
-            return;
-        }
-
-        String sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
-        CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
-
-        if (!checkBigDecimal.check(sum)) {
-            showInfo("Ошибка", Utils.Fmt("Сумма в валюте {0} должна быть заполнена и не равна нулю",
-                     isDebit ? "кредита" : "дебета"));
-            return;
-        }
-       //calculateSum(createCurExchangeWrapper(isDebit), isDebit);
-    }
-
-
-    private CurExchangeWrapper createCurExchangeWrapper(boolean isDebit){
-        CurExchangeWrapper wrapper = new CurExchangeWrapper();
-        wrapper.setDate(DateTimeFormat.getFormat("dd.MM.yyyy").format(mDateOperation.getValue()));
-        wrapper.setSourceCurrency(isDebit ? (String) mCrCurrency.getValue() : (String) mDtCurrency.getValue());
-        wrapper.setSourceSum(new BigDecimal(isDebit ? mCrSum.getValue() : mDtSum.getValue()));
-        wrapper.setTargetCurrency(isDebit ? (String) mDtCurrency.getValue() : (String) mCrCurrency.getValue());
-
-        return wrapper;
-    }
-
-    private void calculateSum(CurExchangeWrapper wrapper, final boolean isDebit){
-        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-        BarsGLEntryPoint.operationService.exchangeCurrency(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<CurExchangeWrapper>>() {
-            @Override
-            public void onSuccess(RpcRes_Base<CurExchangeWrapper> res) {
-                if (res.isError()) {
-                    DialogManager.error("Ошибка", "Конвертация валюты не удалась.\nОшибка: " + res.getMessage());
-                } else {
-                    CurExchangeWrapper res_wrapper = res.getResult();
-                    setSum(res_wrapper, isDebit);
-                    showInfo(res.getMessage());
-                }
-                WaitingManager.hide();
-            }
-        });
     }
 
     private void setSum(CurExchangeWrapper wrapper, boolean isDebit){

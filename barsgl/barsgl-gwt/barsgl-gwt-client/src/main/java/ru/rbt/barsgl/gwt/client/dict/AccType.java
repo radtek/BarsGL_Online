@@ -4,6 +4,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.dlg.AccTypeDlg;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.IAfterRefreshEvent;
@@ -128,7 +129,10 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
         return new GridAction(grid, null, "Параметры счета AccType", new Image(ImageConstants.INSTANCE.function()), 10, true) {
             @Override
             public void execute() {
-                FormManagerUI.show(new ActParm(initSection, initProduct, initSubProduct, initModifier));
+                Row row = grid.getCurrentRow();
+                String tech_flag = row != null ? (String)row.getField(8).getValue(): null;
+
+                FormManagerUI.show(new ActParm(initSection, initProduct, initSubProduct, initModifier, tech_flag));
             }
         };
     }

@@ -14,6 +14,7 @@ import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
+import ru.rbt.barsgl.gwt.client.dictionary.AccTechFormDlg;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -56,82 +57,63 @@ import static ru.rbt.shared.enums.SecurityActionCode.TechOperPstChngDate;
  */
 public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
-    protected final String LABEL_WIDTH = "130px";
-    protected final String LABEL2_WIDTH = "85px";
-    protected final String FIELD2_WIDTH = "80px";
+    private final String LABEL_WIDTH = "130px";
+    private final String LABEL2_WIDTH = "85px";
+    private final String FIELD2_WIDTH = "80px";
 
-    protected final String LONG_WIDTH = "380px";
-    protected final String BUTTON_WIDTH = "75px";
-    protected final String LABELS_WIDTH = "80px";
-    protected final String FIELDS_WIDTH = "185px";
-    protected final String SUM_WIDTH = "145px";
-    protected final String LABEL_DEP_WIDTH = "110px";
-    protected final String LONG_DEP_WIDTH = "400px";
-    protected final String TEXT_WIDTH = "80px";
+    private final String BUTTON_WIDTH = "75px";
+    private final String LABELS_WIDTH = "80px";
+    private final String FIELDS_WIDTH = "185px";
+    private final String SUM_WIDTH = "145px";
+    private final String LABEL_DEP_WIDTH = "110px";
+    private final String LONG_DEP_WIDTH = "400px";
+    private final String TEXT_WIDTH = "80px";
 
     public enum Side {DEBIT, CREDIT};
 
-    protected PostingChoice postingChoice;
-    protected Long idOperation;
+    private Long idOperation;
     protected String inputMethod;
-    protected String pdMode;
-    protected boolean isFan;
-    protected boolean isStorno;
-    protected boolean isCorrection;
-    protected boolean isInvisible;
-    protected DatePickerBox mDateValue;
+    private boolean isFan;
+    private boolean isStorno;
+    private boolean isInvisible;
+    private DatePickerBox mDateValue;
     protected TxtBox mDateOperDay;
     protected Date operday;
-    protected DataListBox mDealSource;
-    protected TxtBox mDealId;
-    protected TxtBox mSubDealId;
-    protected DatePickerBox mDateOperation;
-    protected boolean isRurDebit = false;
-    protected boolean isRurCredit = false;
-    protected Boolean isAsyncListsCached;
-    protected HandlerRegistration registration;
-    protected Timer timer;
-    protected TxtBox mAccountType;
-    protected Button mDrAccountTypeButton;
-    protected Button mCrAccountTypeButton;
-    protected String accountTypeDesc = null;
-    protected AreaBox mAccountDesc;
-    protected TxtBox mCustomerName;
-    protected TxtBox mCustomerType;
-    protected DatePickerBox mDateOpen;
-    protected BtnTxtBox mSum = null;
-    protected TxtBox mDtAccountType;
-    protected TxtBox mCrAccountType;
-    protected AreaBox mNarrativeRU;
-    protected AreaBox mNarrativeEN;
-    protected DataListBox mDepartment;
-    protected DataListBox mProfitCenter;
-    protected CheckBox mCheckFields;
-    protected DataListBoxEx mDtCurrency;
-    protected DataListBoxEx mDtFilial;
-    protected TxtBox mDtAccount;
-    protected TxtBox mDtSum;
-    protected DataListBoxEx mCrCurrency;
-    protected DataListBoxEx mCrFilial;
-    protected TxtBox mCrAccount;
-    protected TxtBox mCrSum;
-    protected CheckBox mCheckCorrection;
-
+    private DataListBox mDealSource;
+    private TxtBox mDealId;
+    private TxtBox mSubDealId;
+    private DatePickerBox mDateOperation;
+    private TxtBox mDtAccountType;
+    private TxtBox mCrAccountType;
+    private AreaBox mNarrativeRU;
+    private AreaBox mNarrativeEN;
+    private DataListBox mDepartment;
+    private DataListBox mProfitCenter;
+    private DataListBoxEx mDtCurrency;
+    private DataListBoxEx mDtFilial;
+    private TxtBox mDtAccount;
+    private TxtBox mDtSum;
+    private DataListBoxEx mCrCurrency;
+    private DataListBoxEx mCrFilial;
+    private TxtBox mCrAccount;
+    private TxtBox mCrSum;
+    private CheckBox mCheckCorrection;
     protected String _reasonOfDeny;
 
+    private Boolean isAsyncListsCached;
+    private HandlerRegistration registration;
+    private Timer timer;
 
-    private String acc2;
     private int asyncListCount = 7; /*count async lists:  mDtCurrency; mCrCurrency; mDtFilial; mCrFilial;
                                                           mDepartment; mProfitCenter; mDealSource*/
 
-
     @Override
     public void beforeCreateContent(){
-        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCachedTH");
+        isAsyncListsCached = (Boolean) LocalDataStorage.getParam("isAsyncListsCached");
         if (isAsyncListsCached != null && isAsyncListsCached) return;
         registration =  LocalEventBus.addHandler(DataListBoxEvent.TYPE, dataListBoxCreatedEventHandler());
         //save in local storage sign that async list is already cached
-        LocalDataStorage.putParam("isAsyncListsCachedTH", true);
+        LocalDataStorage.putParam("isAsyncListsCached", true);
     }
 
     private DataListBoxEventHandler dataListBoxCreatedEventHandler() {
@@ -157,19 +139,9 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         }
     }
 
-    public PostingTechDlg()
-    {
-        super();
-    }
 
-    protected DataListBoxEx createFilialListBox(String name, String filial, String width) {
-        //return createCache
-        // dFilialListBox(name, filial, width, true, true);
-        return  createFilialAuthListBox(filial, width, true, true);
-    }
-
-    protected Date getAccountDate() {
-        return mDateValue.getValue();
+    private DataListBoxEx createFilialListBox(String name, String filial, String width) {
+        return createCachedFilialListBox(name, filial, width, false, true);
     }
 
     protected void getOperDay() {
@@ -185,7 +157,6 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     public Widget createContent() {
-        //Window.alert("PostingTechDlg: createContent");
         VerticalPanel mainVP = new VerticalPanel();
         mainVP.setSpacing(15);
 
@@ -193,8 +164,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
         HorizontalPanel hp3 = new HorizontalPanel();
         hp3.setSpacing(0);
-        hp3.add(createOneSide("Дебет", PostingTechDlg.Side.DEBIT, true));
-        hp3.add(createOneSide("Кредит", PostingTechDlg.Side.CREDIT, true));
+        hp3.add(createOneSide("Дебет", PostingTechDlg.Side.DEBIT));
+        hp3.add(createOneSide("Кредит", PostingTechDlg.Side.CREDIT));
         mainVP.add(hp3);
 
         Grid grid = new Grid(2,2);
@@ -209,7 +180,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         return mainVP;
     }
 
-    protected Grid createDescriptions() {
+    private Grid createDescriptions() {
         Grid grid = new Grid(2,2);
         grid.setWidget(0, 0, createLabel("Основание ENG", LABEL_DEP_WIDTH));
         grid.setWidget(0, 1, mNarrativeEN = createAreaBox(LONG_DEP_WIDTH, "50px"));
@@ -218,39 +189,36 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         return grid;
     }
 
-    protected Grid createDepartments(boolean withCheck) {
+    private Grid createDepartments(boolean withCheck) {
         Grid grid = new Grid(2,4);
         grid.setWidget(0, 0, createLabel("Подразделение", LABEL_DEP_WIDTH));
-        //grid.setWidget(0, 1, mDepartment =  createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
-        grid.setWidget(0, 1, mDepartment =  createDepartmentListBox(CachedListEnum.Department.name(), "250px", true));
+        grid.setWidget(0, 1, mDepartment = createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
         grid.setWidget(1, 0, createLabel("Профит центр"));
-        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createProfitCenterListBox(CachedListEnum.ProfitCenter.name(),"250px"), "260px"));
+        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createCachedProfitCenterListBox(CachedListEnum.ProfitCenter.name(), null, "250px"), "260px"));
         if (withCheck)
-            grid.setWidget(1, 2, mCheckFields = new CheckBox("Основание проверено"));
+            grid.setWidget(1, 2, new CheckBox("Основание проверено"));
         return grid;
     }
 
-    protected Grid createOneSide(String label, final Side side, boolean withValute) {
+    private Grid createOneSide(String label, final Side side) {
         DataListBoxEx mCurrency;
         DataListBoxEx mFilial;
         TxtBox mAccount;
-        TxtBox mAccountType = null;
+        TxtBox mAccountType;
 
         boolean isDebit = side.equals(Side.DEBIT);
         Grid grid = new Grid( 6, 2);
 
         grid.setWidget(0, 0, createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
-
         grid.setWidget(1, 0, createLabel("Валюта"));
-        //grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
-        grid.setWidget(1, 1, mCurrency = createCurrencyListBox(CachedListEnum.Currency.name()+ "_" +label,  FIELD2_WIDTH, true));
+        grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
+        grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" + label /*+ "_Digit"*/, null, FIELD2_WIDTH));
         if (isDebit) {
-            grid.setWidget(3, 0, mDrAccountTypeButton = createDtAccountTypeButton("AccType", BUTTON_WIDTH));
+            grid.setWidget(3, 0, createDtAccountTypeButton("AccType", BUTTON_WIDTH));
         }
         else{
-            grid.setWidget(3, 0, mCrAccountTypeButton = createCrAccountTypeButton("AccType", BUTTON_WIDTH));
+            grid.setWidget(3, 0, createCrAccountTypeButton("AccType", BUTTON_WIDTH));
         }
         grid.setWidget(3, 1, mAccountType = createTxtIntBox(9, TEXT_WIDTH));
 
@@ -264,12 +232,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
         grid.setWidget(5, 0, createLabel("Сумма"));
 
-        grid.setWidget(5,1,
-        mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
-                @Override
-                public void method() {
-                }
-            }));
+        TxtBox mSum;
+        grid.setWidget(5,1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
 
         if (isDebit) {
             mDtAccount = mAccount;
@@ -287,7 +251,6 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         return grid;
     }
 
-
     private Button createDtAccountTypeButton(String text, String width) {
         Button btn = new Button();
         btn.setText(text);
@@ -297,16 +260,15 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             @Override
             public void onClick(ClickEvent clickEvent) {
                 try {
-                    GridFormDlgBase dlg = new AccountTypeTechFormDlg() {
+                    GridFormDlgBase dlg = new AccTechFormDlg() {
 
                         @Override
                         protected Object[] getInitialFilterParams() {
-                            if (action == FormAction.PREVIEW) {
-                                return new Object[]{mDtAccountType.getValue()};
-                            }
-                            else{
-                                return new Object[]{mDtAccountType.getValue()};
-                            }
+
+                            return new Object[]{null, null, mDtAccountType.getValue(),
+                                    mDtFilial.getParam("CBCC").toString(), mDtCurrency.getParam("CCY").toString(),
+                                    mDtAccount.getValue()};
+
                         }
 
                         @Override
@@ -346,17 +308,14 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             @Override
             public void onClick(ClickEvent clickEvent) {
                 try {
-                    GridFormDlgBase dlg = new AccountTypeTechFormDlg() {
+                    GridFormDlgBase dlg = new AccTechFormDlg() {
 
                         @Override
                         protected Object[] getInitialFilterParams()
                         {
-                            if (action == FormAction.PREVIEW ) {
-                                return new Object[]{mCrAccountType.getValue()};
-                            }
-                            else{
-                                return new Object[]{mCrAccountType.getValue()};
-                            }
+                            return new Object[]{null, null, mCrAccountType.getValue(),
+                                    mCrFilial.getParam("CBCC").toString(), mCrCurrency.getParam("CCY").toString(),
+                                    mCrAccount.getValue()};
                         }
 
                         @Override
@@ -387,8 +346,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         return btn;
     }
 
-
-    protected Grid createHeader() {
+    private Grid createHeader() {
         Grid grid = new Grid(3,4);
 
         grid.setWidget(0, 0, createLabel("Текущий опердень", LABEL_WIDTH));
@@ -400,8 +358,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         grid.setWidget(2, 1, mDateValue = createDateBox());
 
         grid.setWidget(0, 2, createAlignWidget(createLabel("Источник сделки"), LABEL2_WIDTH));
-        //grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), null, FIELD2_WIDTH));
-        grid.setWidget(0, 3, mDealSource =  createDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(), FIELD2_WIDTH));
+        grid.setWidget(0, 3, mDealSource =  createCachedDealSourceAuthListBox(CachedListEnum.AuthDealSources.name(),null, FIELD2_WIDTH));
         grid.setWidget(1, 2, createAlignWidget(createLabel("N сделки/ платежа"), LABEL2_WIDTH));
         grid.setWidget(1, 3, mDealId = createTxtBox(20, SUM_WIDTH));
         grid.setWidget(2, 2, createAlignWidget(createLabel("N субсделки"), LABEL2_WIDTH));
@@ -410,9 +367,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         return grid;
     }
 
-
-    protected void fillUp(){
-
+    private void fillUp(){
     	if (null == params)
     		return;
         row = (Row) params;
@@ -425,13 +380,12 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDealId.setValue(!dealId.isEmpty() ? dealId : paymentRef);
         mSubDealId.setValue(getFieldText("SUBDEALID"));
 
-        mDateOperation.setValue((Date)getFieldValue("PROCDATE"));
         mDateValue.setValue((Date)getFieldValue("VALD"));
-        mDateOperDay.setValue(getFieldValue("POD").toString());
+        mDateOperation.setValue((Date)getFieldValue("POD"));
 
-        Window.alert(getFieldText("CCY_DR"));
         mDtCurrency.setSelectValue(getFieldText("CCY_DR"));
         mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
+
         String accDtType = Utils.fillUp(getFieldText("ACCTYPE_DR"),9);
         mDtAccountType.setValue(accDtType);
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
@@ -440,36 +394,30 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
         mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
+
         String accCrType = Utils.fillUp(getFieldText("ACCTYPE_CR"),9);
         mCrAccountType.setValue(accCrType);
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
         mCrSum.setValue(ifEmpty(getFieldValue("AMNT_CR"), ""));
 
-        /*mSumRu.setValue(ifEmpty(getFieldValue("AMNTBC_DR"), ""));
-        mSumRu.setVisible(false);
-        mCheckSumRu.setValue(false);
-        mCheckSumRu.setVisible(false);*/
-
         mNarrativeEN.setValue(getFieldText("NRT"));
-        mNarrativeRU.setValue(getFieldText("RNARSHT"));
+        mNarrativeRU.setValue(getFieldText("RNARLNG"));
         mDepartment.setSelectValue(getFieldText("DEPT_ID"));
         mProfitCenter.setSelectValue(getFieldText("PRFCNTR"));
-        //mProfitCenter.setVisible(false);
 
-        pdMode = getFieldText("PDMODE");
         idOperation = getFieldValue("GLO_REF");
 
         isStorno = "Y".equals(getFieldText("STRN"));
-        isCorrection = "Y".equals(getFieldText("FCHNG"));
-        mCheckCorrection.setValue(isCorrection);
+
+        mCheckCorrection.setValue("Y".equals(getFieldText("FCHNG")));
         mCheckCorrection.setVisible(true);
 
-        disableAll();
+        enableAll(false);;
 
         isFan = "Y".equals(getFieldText("FAN"));
         inputMethod = getFieldText("INP_METHOD");
         if (action == FormAction.UPDATE) {
-	        setEnabled(!"AE".equals(inputMethod), postingChoice, isStorno && isCorrection, isFan );
+	        setEnabled(!"AE".equals(inputMethod));
             ok.setText("Сохранить");
         } else if (action == FormAction.OTHER) {
             isInvisible = "Y".equals(getFieldText("INVISIBLE"));
@@ -477,8 +425,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         }
     }
 
-    protected void setEnabled(boolean isManual, PostingChoice postingChoice, boolean disableCorrection, boolean isFan) {
-
+    protected void setEnabled(boolean isManual) {
         if (SecurityChecker.checkActions(TechOperPstChngDate)) {
             mDateValue.setEnabled(true);
             mDateOperation.setEnabled(true);
@@ -491,30 +438,17 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             mNarrativeRU.setEnabled(true);
             mProfitCenter.setEnabled(true);
             mCheckCorrection.setEnabled(isManual);
-
-            //mDrAccountTypeButton.setEnabled(isManual);
-            //mCrAccountTypeButton.setEnabled(isManual);
         }
-    }
-
-    protected void setControlsDisabled()
-    {
-        disableAll();
     }
 
     protected void setControlsEnabled(){};
 
-    protected void enableAll()
-    {
-        enableAll(true);
-    }
-
-    protected void disableAll()
+    protected void setControlsDisabled()
     {
         enableAll(false);
     }
 
-    protected void enableAll(boolean isEnabled) {
+    private void enableAll(boolean isEnabled) {
         mDealSource.setEnabled(isEnabled);
 
         mDateOperation.setEnabled(isEnabled);
@@ -540,15 +474,10 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDealId.setEnabled(isEnabled);
         mSubDealId.setEnabled(isEnabled);
         mCheckCorrection.setEnabled(isEnabled);
-
-        //mDrAccountTypeButton.setEnabled(false);
-        //mCrAccountTypeButton.setEnabled(false);
-
     }
 
     @Override
     protected boolean onClickOK() throws Exception {
-        //Window.alert("PostingTechDlg: onClickOK");
         boolean res = super.onClickOK();
         if (!res)
             return false;
@@ -562,8 +491,6 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
     }
 
     protected void setFields(ManualTechOperationWrapper operation) {
-
-        Window.alert("PostingTechDlg.setFields");
         operation.setId(idOperation);
         operation.setDealSrc(mDealSource.getText());
         operation.setDealId(mDealId.getValue());
@@ -582,24 +509,22 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         operation.setAccountTypeDebit(mDtAccountType.getValue());
         operation.setAccountTypeCredit(mCrAccountType.getValue());
         operation.setCurrencyCredit(mCrCurrency.getParam("CCY").toString());
-        operation.setCurrencyDebit(mCrCurrency.getParam("CCY").toString());
+        operation.setCurrencyDebit(mDtCurrency.getParam("CCY").toString());
         operation.setAmountDebit(new BigDecimal(mDtSum.getValue()));
         operation.setAmountCredit(new BigDecimal(mCrSum.getValue()));
 
         ArrayList<Long> pdList = new ArrayList<Long>();
         operation.setPdIdList(pdList);
 
-
         operation.setNarrative(mNarrativeEN.getValue());
         operation.setRusNarrativeLong(check(mNarrativeRU.getValue()
                 , "Основание RUS", "поле не заполнено", new CheckNotEmptyString()));
-        operation.setDeptId(mDepartment.getValue().toString());
+        operation.setDeptId((String) mDepartment.getValue());
         operation.setProfitCenter((String) mProfitCenter.getValue());
         operation.setCorrection(mCheckCorrection.getValue());
         operation.setStorno(isStorno);
         operation.setFan(isFan);
 
-        Window.alert(inputMethod);
         if (InputMethod.M.getLabel().equalsIgnoreCase(inputMethod))
         {
             operation.setInputMethod(InputMethod.M);
@@ -626,7 +551,6 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     @Override
     protected void fillContent() {
-
         if (isAsyncListsCached != null && isAsyncListsCached){
             //если закэшировано
             fillUp();
@@ -652,6 +576,5 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             timer.scheduleRepeating(100);
         }
     }
-
 }
 

@@ -22,7 +22,7 @@ insert into gl_etlstmd (
     d.ccy dcur, c.ccy ccur,                                                  -- валюта
     -decimal(d.amnt)/integer(power(10, dc.nbdp)) damount, decimal(c.amnt)/integer(power(10, cc.nbdp)) camount,     -- суммы в валюте
     -decimal(d.amntbc)/integer(power(10,2)) damount_rur,  decimal(c.amntbc)/integer(power(10, 2)) camount_rur,     -- суммы в рублях
-    m.bo_ind doc_type, m.mo_no doc_n,                                                                              -- мемордер
+    value(m.bo_ind, 0) doc_type, value(m.mo_no, 'BA' || value(get_fcc_br(d.bsaacid), '000') || right(cast (d.pcid as varchar(16)), 9)) doc_n,                                                                              -- мемордер
     cast(null as bigint) glo_ref,
     '1' post_type,
     cast(null as varchar(20)) evtp,
@@ -34,7 +34,7 @@ insert into gl_etlstmd (
       ) j
      join pd d on j.pcid = d.pcid and d.amntbc < 0
      join pd c on j.pcid = c.pcid and c.amntbc > 0
-     join pcid_mo m on d.pcid = m.pcid
+     left join pcid_mo m on d.pcid = m.pcid
      join currency dc on dc.glccy = d.ccy
      join currency cc on cc.glccy = c.ccy
      join bsaacc da on d.bsaacid = da.id

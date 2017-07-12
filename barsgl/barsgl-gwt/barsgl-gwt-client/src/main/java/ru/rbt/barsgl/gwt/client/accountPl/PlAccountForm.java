@@ -30,16 +30,8 @@ import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
  */
 public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
     public static final String FORM_NAME = "Счета ОФР по Accounting Type";
-    PopupPanel sidePanel;
 
-    private Column colFilial;
-    private Column colAccount;
-    private Column colAcc2;
-    private Column colDateOpen;
     private Column colDateClose;
-
-    AccountQuickFilterParams quickFilterParams;
-    GridAction quickFilterAction;
 
     public PlAccountForm() {
         super(FORM_NAME, false);
@@ -72,7 +64,7 @@ public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
     protected Table prepareTable() {
         Table result = new Table();
 
-        result.addColumn(colAccount = new Column("BSAACID", STRING, "Счет ЦБ", 160));
+        result.addColumn(new Column("BSAACID", STRING, "Счет ЦБ", 160));
         result.addColumn(new Column("PSAV", STRING, "А/ П", 25, false, false));
         result.addColumn(new Column("ACID", STRING, "Счет Midas", 160, false, false));
         result.addColumn(new Column("DEALSRS", STRING, "Источник сделки", 70, false, false));
@@ -85,10 +77,10 @@ public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("RLNTYPE", STRING, "Relation Type", 60, false, false));
 
         result.addColumn(new Column("CBCCN", STRING, "Код филиала", 60, false, false));
-        result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 60));
+        result.addColumn(new Column("CBCC", STRING, "Филиал", 60));
         result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
         result.addColumn(new Column("CUSTNO", STRING, "Номер клиента", 70, false, false));
-        result.addColumn(colDateOpen = new Column("DTO", DATE, "Дата открытия", 80));
+        result.addColumn(new Column("DTO", DATE, "Дата открытия", 80));
         result.addColumn(colDateClose = new Column("DTC", DATE, "Дата закрытия", 80, false, false));
         result.addColumn(new Column("DTR", DATE, "Дата регистрации", 80, false, false));
         result.addColumn(new Column("DTM", DATE, "Дата изменения", 80, false, false));
@@ -143,6 +135,5 @@ public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
         list.add(new FilterItem(colDateClose, FilterCriteria.IS_NULL, null));
         return list;
     }
-
 }
 

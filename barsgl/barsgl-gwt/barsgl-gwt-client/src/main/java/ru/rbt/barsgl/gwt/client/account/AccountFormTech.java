@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -44,13 +45,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     private Column colFilial;
     private Column colCurrency;
-    private Column colAccount;
-    private Column colAcc2;
     private Column colCustomer;
-    private Column colDealSource;
-    private Column colDealId;
-    private Column colDateOpen;
-    private Column colDateClose;
     private Column colAccType;
 
     AccountTechQuickFilterParams quickFilterParams;
@@ -91,18 +86,16 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     protected Table prepareTable() {
         Table result = new Table();
-
         result.addColumn(colAccType = new Column("ACCTYPE", Column.Type.STRING, "Accounting Type", 60, true, false, Column.Sort.ASC, ""));// No Space
         colAccType.setFilterable(true);
-        result.addColumn(colAccount = new Column("BSAACID", STRING, "Псевдосчёт", 160));
+        result.addColumn(new Column("BSAACID", STRING, "Псевдосчёт", 160));
         result.addColumn(colCurrency = new Column("CCY", STRING, "Валюта", 60));
         result.addColumn(new Column("BALANCE", DECIMAL, "Остаток", 120));
-        result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 60));
+        result.addColumn(new Column("DEALSRS", STRING, "Источник сделки", 60));
         Column colCBCCN;
         result.addColumn(colCBCCN = new Column("CBCCN", STRING, "Код филиала (цифровой)", 60));
         colCBCCN.setVisible(true);
         result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 60));
-        //result.addColumn(new Column("BRANCH", STRING, "Отделение", 60));
         Column colAcod;
         result.addColumn(colAcod = new Column("ACOD", STRING, "ACOD", 380));
         colAcod.setVisible(false);
@@ -112,10 +105,10 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("DESCRIPTION", STRING, "Название счета", 380));
         result.addColumn(colCustomer = new Column("CUSTNO", STRING, "Номер клиента", 70));
         colCustomer.setVisible(false);
-        result.addColumn(colDateOpen = new Column("DTO", DATE, "Дата открытия", 80));
-        result.addColumn(colDateClose = new Column("DTC", DATE, "Дата закрытия", 80));
+        result.addColumn(new Column("DTO", DATE, "Дата открытия", 80));
+        result.addColumn(new Column("DTC", DATE, "Дата закрытия", 80));
         Column colID;
-        result.addColumn(colID = new Column("ID", LONG, "ИД счета", 60, true, true, Column.Sort.NONE, ""));
+        result.addColumn(colID = new Column("ID", LONG, "ID счета", 60, true, true, Column.Sort.NONE, ""));
         colID.setVisible(false);
         Column colDTR;
         result.addColumn(colDTR = new Column("DTR", DATE, "Дата регистрации", 80));
@@ -298,6 +291,5 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         public Object[] getInitialFilterParams(Date operday, Date prevday) {
             return null;
         }
-
     }
 }

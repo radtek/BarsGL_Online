@@ -5,7 +5,7 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.dlg.*;
@@ -25,6 +25,7 @@ import ru.rbt.barsgl.shared.dict.*;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
@@ -56,11 +57,16 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
     private Column productColumn;
     private Column subProductColumn;
     private Column modifierColumn;
+    private Column techAct;
 
 
     public AccountingType() {
         super(FORM_NAME, null, "Параметры счета");
         reconfigure();
+        List<FilterItem>  filterItems = new ArrayList<>();
+        filterItems.add(new FilterItem(techAct, FilterCriteria.EQ, "N"));
+
+        masterGrid.setInitialFilterCriteria(filterItems);
     }
 
     private void reconfigure() {
@@ -395,7 +401,9 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, FIELD_ACCTYPENAME, 100));
         result.addColumn(new Column("PL_ACT", Column.Type.STRING, FIELD_PL_ACT, 10));
         result.addColumn(new Column("FL_CTRL", Column.Type.STRING, FIELD_FL_CTRL, 12));
-        result.addColumn(new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 12));
+        result.addColumn(techAct = new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 12));
+        techAct.setList(GLComponents.getArrayValuesList(new String[]{"Y", "N"}));
+        techAct.setFilterable(true);
 
 
         return result;
