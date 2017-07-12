@@ -300,6 +300,8 @@ public class OperdayTest extends AbstractTimerJobTest {
         calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
         calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
 
+        baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
+
         jobService.executeJob(calendarJob);
 
         Operday newOperday = getOperday();
