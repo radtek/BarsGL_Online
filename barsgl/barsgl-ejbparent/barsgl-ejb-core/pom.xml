@@ -65,6 +65,11 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ru.rbt</groupId>
+            <artifactId>rbt-audit</artifactId>
+            <type>ejb</type>
+        </dependency>
     </dependencies>
 
 </project>

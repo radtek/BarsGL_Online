@@ -998,11 +998,27 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public boolean checkTechAccountExists(String bsaAcid, Date date) {
+    public boolean checkTechAccountExists(Long glaccid, String bsaAcid, Date date) {
         try {
             DataRecord res = selectFirst("select count(1) from GL_ACC where BSAACID = ?" +
-                    " and coalesce(DTC, Date('2029-01-01')) = ?", bsaAcid,  date == null ? new Date(129, 0, 1) : date);
+                    " and coalesce(DTC, Date('2029-01-01')) = ? and ID <> ?", bsaAcid,  date == null ? new Date(129, 0, 1) : date,glaccid);
             return res.getInteger(0) > 0;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean checkTechAccountExistsInterval(Long glaccid, String bsaAcid, Date dateOpen, Date dateClose)
+    {
+        try {
+            DataRecord res = selectFirst("select count(1) from GL_ACC where BSAACID = ?" +
+                    " and DTO <= ? and coalesce(DTC, Date('2029-01-01')) >= ? and ID <> ?",
+                        bsaAcid, dateClose == null ? new Date(129, 0, 1) : dateClose, dateOpen, glaccid);
+
+            //" and (? between DTO and coalesce(DTC, Date('2029-01-01')) or ? between DTO and coalesce(DTC, Date('2029-01-01')) or ? <= DTO) and ID <> ?",
+
+            boolean result = res.getInteger(0) > 0;
+            return result;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

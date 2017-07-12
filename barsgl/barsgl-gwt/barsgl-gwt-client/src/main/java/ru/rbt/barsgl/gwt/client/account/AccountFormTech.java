@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -70,7 +69,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, SUBSTR(char(1000000000+ACCTYPE),2,9) as ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
+        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
                 "ACC2, PLCODE, ACOD, SQ, ACID, PSAV, DEALSRS, DEALID, SUBDEALID, DESCRIPTION, " +
                 "DTO, DTC, DTR, DTM, OPENTYPE, GLOID, GLO_DC, BALANCE " +
                 "from V_GL_ACC_TH"
@@ -150,7 +149,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
                 BarsGLEntryPoint.operationService.saveTechAccount(cnw, asyncCallbackImpl);
                 break;
             case UPDATE:
-                BarsGLEntryPoint.operationService.updateTechAccount (cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.operationService.updateTechAccount(cnw, asyncCallbackImpl);
                 break;
             case OTHER:
                 BarsGLEntryPoint.operationService.closeTechAccount(cnw, asyncCallbackImpl);

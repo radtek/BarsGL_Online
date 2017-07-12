@@ -49,19 +49,19 @@ public class TechAccountTest extends AbstractRemoteTest {
     @Test public void testTHCreateNewAccount() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = DateUtils.parseDate("2017-05-26","yyy-MM-dd");
+        Date curDate = DateUtils.parseDate("2017-06-26","yyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
         closeAllTHAccount();
 
         //Добавление нового курса
-        List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
+        List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
         if (null==curDate)
         {
-            CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
+            CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),curDate,BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
             baseEntityRepository.save(currencyRate);
-            curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",new Date());
+            curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
         }
         Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
 
