@@ -1,33 +1,30 @@
 package ru.rbt.gwt.security.ejb.repository.access;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.security.entity.access.Role;
-import ru.rbt.security.ejb.repository.access.RoleRepository;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.*;
-import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.security.ejb.repository.access.RoleRepository;
+import ru.rbt.security.entity.access.Role;
+import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.enums.PrmValueEnum;
 import ru.rbt.shared.enums.RoleSys;
+import ru.rbt.shared.security.RequestContext;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Role;
-
-
-import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 import static java.lang.String.format;
-import ru.rbt.shared.security.RequestContext;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Role;
+import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
 /**
  * Created by akichigi on 12.04.16.
@@ -195,8 +192,8 @@ public class RoleServiceSupport {
             }
 
             //History
-            String sql_history = format("insert into GL_AU_PRMVALH(id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, dt_sys, usr_sys, chng_type)\n" +
-                    "select id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, systimestamp, '%s', 'D'\n" +
+            String sql_history = format("insert into GL_AU_PRMVALH(id_hist, id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, dt_sys, usr_sys, chng_type)\n" +
+                    "select gl_au_prmvalh_seq.nextval, id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut, dt_aut, systimestamp, '%s', 'D'\n" +
                     "from GL_AU_PRMVAL where id_user=? and prm_code in ('Source', 'HeadBranch')", usr);
 
             roleRepository.executeNativeUpdate(sql_history, wrapper.getUserId());
@@ -208,8 +205,8 @@ public class RoleServiceSupport {
                     wrapper.getUserId()));
 
 
-            String sql_insert_PrmVal = "insert into GL_AU_PRMVAL(id_user, prm_code, prmval, dt_begin, dt_end, usr_aut)\n"+
-                                         "values(?, ?, ?, ?, null, ?)";
+            String sql_insert_PrmVal = "insert into GL_AU_PRMVAL(id_prm, id_user, prm_code, prmval, dt_begin, dt_end, usr_aut)\n"+
+                                         "values(gl_au_prmval_seq.nextval, ?, ?, ?, ?, null, ?)";
 
             Date currentDate = operdayController.getOperday().getCurrentDate();
 
@@ -245,7 +242,7 @@ public class RoleServiceSupport {
 
             if (all){
                  sql = "select  id_src,  lgnm from (\n" +
-                       "select '*'  as  id_src, 'Все'  as  lgnm from sysibm.sysdummy1\n" +
+                       "select '*'  as  id_src, 'Все'  as  lgnm from dual\n" +
                        "union\n" +
                        "select id_src, lgnm from GL_SRCPST) t\n" +
                        "where t. id_src not in (select id_src from V_GL_AU_USRPR where id_user=?)";
@@ -309,7 +306,7 @@ public class RoleServiceSupport {
 
             if (all){
                 sql = "select CCPCD, CCPNR, CCBBR from\n" +
-                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from sysibm.sysdummy1\n" +
+                      "(select '*'  as  CCPCD, 'Все'  as  CCPNR, 'Все'  as CCBBR  from dual\n" +
                       "union\n" +
                       "select CCPCD, CCPNR, CCBBR from IMBCBCMP) t\n" +
                       "where t.CCPCD not in (select CCPCD from  V_GL_AU_USRBR where id_user=?)";

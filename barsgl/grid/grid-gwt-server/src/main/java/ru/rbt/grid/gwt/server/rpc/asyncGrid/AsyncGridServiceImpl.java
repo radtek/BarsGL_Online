@@ -46,10 +46,12 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             for(DataRecord r: data) {
                 Row row = new Row();
                 for( int i = 0; i < columns.getColumnCount(); i++){
-                    if (columns.getColumnByIndex(i).getType() != Column.Type.LONG) {
-                        row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
-                    } else {
+                    if (columns.getColumnByIndex(i).getType() == Column.Type.LONG) {
                         row.addField(new Field(r.getLong(columns.getColumnByIndex(i).getName())));
+                    } else if (columns.getColumnByIndex(i).getType() == Column.Type.INTEGER) {
+                        row.addField(new Field(r.getInteger(columns.getColumnByIndex(i).getName())));
+                    } else {
+                        row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
                     }
                 }
 
@@ -112,29 +114,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
-        try {
-            List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, filterCriteriaAdapter(filterCriteria), pageSize,
-                                                        start + 1, sortCriteriaAdapter(sortCriteria));
-            List<Row> result = new ArrayList<Row>();
-
-            for(DataRecord r: data) {
-                Row row = new Row();
-                for( int i = 0; i < columns.getColumnCount(); i++){
-                    if (columns.getColumnByIndex(i).getType() != Column.Type.LONG) {
-                        row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
-                    } else {
-                        row.addField(new Field(r.getLong(columns.getColumnByIndex(i).getName())));
-                    }
-                }
-
-                result.add(row);
-            }
-
-            return result;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        return getAsyncRows(Repository.BARSGL, sql, columns, start, pageSize, filterCriteria, sortCriteria);
     }
 
     @Override
