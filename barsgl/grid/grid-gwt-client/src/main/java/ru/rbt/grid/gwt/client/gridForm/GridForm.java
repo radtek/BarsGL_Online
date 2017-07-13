@@ -27,7 +27,6 @@ import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Created by akichigi on 27.04.15.
