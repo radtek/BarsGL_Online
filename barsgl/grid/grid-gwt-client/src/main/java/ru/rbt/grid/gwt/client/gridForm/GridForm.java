@@ -16,17 +16,18 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.gwt.core.widgets.ActionBarWidget;
 import ru.rbt.barsgl.gwt.core.widgets.GridDataProvider;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
+import ru.rbt.grid.gwt.client.export.Export2ExcelAction;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.io.Serializable;
 import java.util.List;
-import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
-import ru.rbt.grid.gwt.client.GridEntryPoint;
-import ru.rbt.grid.gwt.client.export.Export2ExcelAction;
+import java.util.logging.Logger;
 
 /**
  * Created by akichigi on 27.04.15.
@@ -92,8 +93,9 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 				List<SortItem> sortItems = getSortCriteria();
 				List<FilterItem> filterItems = getFilterCriteria(initialFilterParams);
 				refreshGridParams(filterItems, sortItems);
+
 				GridEntryPoint.asyncGridService.getAsyncRows(sql_select, table.getColumns(), start, pageSize,
-						filterItems, sortItems, callback);
+							filterItems, sortItems, callback);
 			};
 		}, 30);
 	}

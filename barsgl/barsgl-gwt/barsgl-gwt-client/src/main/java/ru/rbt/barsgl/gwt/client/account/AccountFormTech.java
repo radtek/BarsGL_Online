@@ -27,6 +27,7 @@ import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.CREDIT;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.DEBIT;
@@ -41,6 +42,8 @@ import static ru.rbt.barsgl.shared.dict.FormAction.*;
 public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     public static final String FORM_NAME = "Лицевые счета (учёт по техническим счетам)";
     PopupPanel sidePanel;
+
+    private static Logger log  = Logger.getLogger("AccountFormTech");
 
     private Column colFilial;
     private Column colCurrency;
@@ -69,7 +72,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, SUBSTR(char(1000000000+ACCTYPE),2,9) as ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
+        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
                 "ACC2, PLCODE, ACOD, SQ, ACID, PSAV, DEALSRS, DEALID, SUBDEALID, DESCRIPTION, " +
                 "DTO, DTC, DTR, DTM, OPENTYPE, GLOID, GLO_DC, BALANCE " +
                 "from V_GL_ACC_TH"
