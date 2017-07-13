@@ -7,6 +7,7 @@ import org.xml.sax.SAXException;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.SCASAMCResponseStorage;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
+import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import ru.rbt.barsgl.ejb.jms.MessageContext;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.shared.enums.MovementErrorTypes;
@@ -35,7 +36,6 @@ import java.util.concurrent.ExecutionException;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MovementCreate;
 import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
-import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
@@ -162,6 +162,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
                 item.setErrType(MovementErrorTypes.ERR_REQUEST);
                 item.setState(MovementCreateData.StateEnum.ERROR);
             }
+            throw new RuntimeException(e);
         }
     }
 

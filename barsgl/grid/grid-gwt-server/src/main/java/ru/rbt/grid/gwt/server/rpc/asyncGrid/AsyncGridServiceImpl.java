@@ -1,25 +1,24 @@
 package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
+import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
 import ru.rbt.barsgl.shared.criteria.*;
-import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang3.ArrayUtils;
-import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 
 /**
  * Created by akichigi on 02.04.15.
@@ -47,7 +46,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             for(DataRecord r: data) {
                 Row row = new Row();
                 for( int i = 0; i < columns.getColumnCount(); i++){
-                    row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                    if (columns.getColumnByIndex(i).getType() != Column.Type.LONG) {
+                        row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                    } else {
+                        row.addField(new Field(r.getLong(columns.getColumnByIndex(i).getName())));
+                    }
                 }
 
                 result.add(row);
@@ -117,7 +120,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             for(DataRecord r: data) {
                 Row row = new Row();
                 for( int i = 0; i < columns.getColumnCount(); i++){
-                    row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                    if (columns.getColumnByIndex(i).getType() != Column.Type.LONG) {
+                        row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                    } else {
+                        row.addField(new Field(r.getLong(columns.getColumnByIndex(i).getName())));
+                    }
                 }
 
                 result.add(row);

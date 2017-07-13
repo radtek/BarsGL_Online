@@ -25,7 +25,6 @@ import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.tasks.gwt.client.TimerEntryPoint;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,8 +106,8 @@ public class TasksFormNew extends GridForm {
 
                 TimerJobWrapper timerJobs = new TimerJobWrapper();
 
-                //timerJobs.setId((Long) row.getField(0).getValue());
-                timerJobs.setId(((BigDecimal) row.getField(0).getValue()).longValueExact());
+                timerJobs.setId((Long) row.getField(0).getValue());
+//                timerJobs.setId(((BigDecimal) row.getField(0).getValue()).longValueExact());
                 timerJobs.setProperties((String)row.getField(2).getValue());
 
                 timerJobs.setStartupType(JobStartupType.valueOf(row.getField(5).getValue().toString()));
@@ -158,7 +157,8 @@ public class TasksFormNew extends GridForm {
                     public void onClick(ClickEvent clickEvent) {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                        TimerEntryPoint.timerJobService.startupJob(((BigDecimal) row.getField(0).getValue()).longValueExact(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+//                        TimerEntryPoint.timerJobService.startupJob(((BigDecimal) row.getField(0).getValue()).longValueExact(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
+                        TimerEntryPoint.timerJobService.startupJob((Long) row.getField(0).getValue(), new AuthCheckAsyncCallback<List<TimerJobWrapper>>() {
                             @Override
                             public void onFailureOthers(Throwable throwable) {
                                 WaitingManager.hide();

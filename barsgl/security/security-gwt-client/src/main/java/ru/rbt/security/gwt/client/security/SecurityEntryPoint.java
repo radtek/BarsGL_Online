@@ -7,26 +7,33 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
-import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
-import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
-import ru.rbt.shared.LoginResult;
 import ru.rbt.barsgl.shared.NotAuthorizedUserException;
-import static ru.rbt.barsgl.shared.NotAuthorizedUserException.NOT_AUTHORIZED_MESSAGE;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
-import ru.rbt.shared.user.AppUserWrapper;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
 import ru.rbt.security.gwt.server.rpc.auth.AuthorizationService;
 import ru.rbt.security.gwt.server.rpc.auth.AuthorizationServiceAsync;
+import ru.rbt.shared.GwtClientUtils;
+import ru.rbt.shared.LoginResult;
+import ru.rbt.shared.user.AppUserWrapper;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.shared.NotAuthorizedUserException.NOT_AUTHORIZED_MESSAGE;
 
 /**
  *
  * @author Andrew Samsonov
  */
 public class SecurityEntryPoint {
+
+    public static final Logger logger = Logger.getLogger("SecurityEntryPoint");
 
   public static AuthorizationServiceAsync authSrv;
 
@@ -84,6 +91,8 @@ public class SecurityEntryPoint {
 
         @Override
         public void onUncaughtException(Throwable throwable) {
+            logger.log(Level.SEVERE, "onUncaughtException: " + throwable.getMessage() + " : stackTrace size" + throwable.getStackTrace().length
+                    + "\n" + GwtClientUtils.getStacktrace2(throwable));
             WaitingManager.hide();
             if (isNotAuthorizedUserException(throwable)) {
                 showLoginForm();
