@@ -2,23 +2,43 @@ package ru.rbt.barsgl.ejb.integr.bg;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
+import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
+import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
+import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
+import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.page.SQL;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.criteria.Criteria;
+import ru.rbt.barsgl.shared.enums.BackValueMode;
 import ru.rbt.barsgl.shared.operation.BackValueWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackValueOperation;
 import static ru.rbt.barsgl.ejbcore.page.SqlPageSupportBean.prepareCommonSql;
+import static ru.rbt.barsgl.shared.enums.BackValueMode.ALL;
+import static ru.rbt.barsgl.shared.enums.BackValueMode.ONE;
+import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
+import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
+import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
 
 /**
  * Created by er18837 on 13.07.2017.
@@ -27,6 +47,24 @@ public class BackValuePostingController {
 
     @EJB
     private AuditController auditController;
+
+    @EJB
+    private BackValueOperationRepository bvOperationRepository;
+
+    @EJB
+    private ClosedPeriodCashedRepository closedPeriodRepository;
+
+    @Inject
+    private BankCalendarDayRepository calendarDayRepository;
+
+    @Inject
+    protected OperdayController operdayController;
+
+    @Inject
+    SecurityActionRepository actionRepository;
+
+    @Inject
+    private UserContext userContext;
 
     public RpcRes_Base<Integer> processOperationBv(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
@@ -60,6 +98,10 @@ public class BackValuePostingController {
         }
     }
 
+//    private Date parseDate(String dateStr, SimpleDateFormat format){
+//        return ;
+//    };
+
     private String getSqlString(BackValueWrapper wrapper, Criteria criteria) {
         SQL sql = prepareCommonSql(wrapper.getSql(), criteria);
         return sql.getQuery();
@@ -71,23 +113,78 @@ public class BackValuePostingController {
      * @return
      * @throws Exception
      */
-    public RpcRes_Base<Integer> authorizeOperations(BackValueWrapper wrapper) throws Exception {
+    public RpcRes_Base<Integer> authorizeOperations(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
-            /**
-             TODO
-             сформировать запрос (по списку или фильтру)
-             проверить, что список однородный и нет обработанных операций и статус (HOLD / CONTROL)
-             получить количество и postDatePlan операции
-             получить postDateNew из wrapper.postDateStr
-             поверить postDateNew >= valueDate && postDateNew <= postDatePlan
-             если postDateNew попадает в закрытый период
-                проверить права суперпользователя
-             в одной транзакции {
-                если postDatePlan <> postDateNew
-                    изменить GL_OPER.POSTDATE = postDate
-                изменить GL_OPEREXT: MNL_STATUS = SIGNEDDATE, USER_AU3, OTS_AU3
-             }
-             */
+            BackValueMode mode = wrapper.getMode();
+            SimpleDateFormat dateFormat = new SimpleDateFormat(wrapper.getDateFormat());
+
+//             TODO
+//             проверить, что список однородный (источник, дата, статус) и нет обработанных операций и статус (HOLD / CONTROL)
+            String gloidIn = "";
+            Object[] paramsIn = null;
+            if (ALL == wrapper.getMode()) {
+                // сформировать запрос по фильтру
+                SQL formSql = prepareCommonSql(wrapper.getSql(), criteria);
+                gloidIn = "select GLOID from (" + formSql.getQuery() + ")";
+                paramsIn = formSql.getParams();
+            } else {
+                // сформировать запрос по списку
+                gloidIn = StringUtils.listToString(wrapper.getGloIDs(), ", ");
+                paramsIn = new Object[0];
+            }
+            String stateIn = StringUtils.arrayToString(new Object[] {BLOAD, BWTAC}, ", ", "'");
+            String from = " from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID " +
+                    " where GLOID in (" + gloidIn + ") and o.STATE in (" + stateIn + ")";
+            // получить количество и postDatePlan операции
+            List<DataRecord> dictinct = bvOperationRepository.select("select distinct o.VDATE, e.POSTDATE_PLAN, o.SRC_PST, e.MNL_STATUS " + from, paramsIn);
+            if (dictinct.isEmpty()) {
+                throw new DefaultApplicationException("По заданному условию операции не найдены");
+            }
+            else if (dictinct.size() != 1) {
+                throw new DefaultApplicationException("По заданному условию найдены операции с различным набором параметров (источник, дата проводки, статус)");
+            }
+            DataRecord data = bvOperationRepository.selectFirst("select count(1) " + from, paramsIn);
+            int count = data.getInteger(0);
+            if (mode != ALL && wrapper.getGloIDs().size() != count) {
+                throw new DefaultApplicationException(String.format("По заданному условию найдено %d операций, ожидалось %d", count, wrapper.getGloIDs().size()));
+            }
+            Date valueDate = dictinct.get(0).getDate(0);
+            Date postDatePlan = dictinct.get(0).getDate(1);
+            String sourcePosting = dictinct.get(0).getString(2);
+            boolean withTech = withTechWorkDay(sourcePosting);
+            Date postDateNew = dateFormat.parse(wrapper.getPostDateStr());
+
+            // проверить postDateNew на выходной день
+            if(!calendarDayRepository.isWorkday(postDateNew, withTech)) {
+                throw new DefaultApplicationException(String.format("Подтверждение запрещено.\nВыбранная дата проводки '%s' – выходной"
+                        , wrapper.getPostDateStr()));   // добавить дату валютирования и плановую
+
+            }
+
+            // проверить postDateNew на допустимый диапазон
+            Date postDateMin = calendarDayRepository.isWorkday(valueDate, withTech)
+                        ? valueDate
+                        : calendarDayRepository.getWorkDateBefore(valueDate, withTech);
+            Date postDateMax = operdayController.getOperday().getCurrentDate();
+            if (postDateNew.before(postDateMin) || postDateNew.after(postDateMax)) {
+                throw new DefaultApplicationException(String.format("Подтверждение запрещено.\n" +
+                        "Дата проводки '%s' вышла за пределы допустимого диапазона с '%s' по '%s'"
+                        , wrapper.getPostDateStr(), dateFormat.format(postDateMin), dateFormat.format(postDateMax)));
+            }
+
+            // проверить postDateNew на закрытый период
+            ClosedPeriodView period = closedPeriodRepository.getPeriod();
+            if(!postDateNew.after(period.getLastDate()) &&                // разрешено только для суперпользователя
+                !actionRepository.getAvailableActions(userContext.getUserId()).contains(SecurityActionCode.Acc707Inp)) {
+                throw new DefaultApplicationException(String.format("Подтверждение запрещено.\n" +
+                                "Дата проводки '%s' попала в отчетный период до '%s', который зарыт '%s'"
+                        , wrapper.getPostDateStr(), dateFormat.format(period.getLastDate()), dateFormat.format(period.getCutDate())));
+            }
+//             в одной транзакции {
+//                если postDatePlan <> postDateNew
+//                    изменить GL_OPER.POSTDATE = postDate
+//                изменить GL_OPEREXT: MNL_STATUS = SIGNEDDATE, USER_AU3, OTS_AU3
+//             }
             String message = getWrapperID(wrapper, 1) + " авторизована";
             return new RpcRes_Base<Integer>(2, false, message);
         } catch (ValidationError e) {

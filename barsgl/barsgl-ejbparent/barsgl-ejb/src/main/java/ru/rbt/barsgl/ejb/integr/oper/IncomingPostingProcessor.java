@@ -42,6 +42,7 @@ import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.*;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
+import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -713,10 +714,10 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Integer depth = sourceRepository.getDepth(posting.getSourcePosting());
         Date depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
 
-        boolean withTech = withTech(posting.getSourcePosting());
+        boolean withTech = withTechWorkDay(posting.getSourcePosting());
         Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
                             ? valueDate
-                            : calendarRepository.getWorkDateAfter(valueDate, withTech); // TODO точно withTech?
+                            : calendarRepository.getWorkDateAfter(valueDate, withTech);
         ClosedPeriodView period = closedPeriodRepository.getPeriod();
 
         String reason = vdateCut.before(depthCutDate)
@@ -758,7 +759,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             // текущий опердень
             return valueDate;
         } else
-        if (!calendarRepository.isWorkday(valueDate, withTech(operation.getSourcePosting()))) {
+        if (!calendarRepository.isWorkday(valueDate, withTechWorkDay(operation.getSourcePosting()))) {
             // выходной день
             return processHoliday(operation);
         } else
@@ -781,7 +782,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Calendar vdatecal = Calendar.getInstance();
         vdatecal.setTime(operation.getValueDate());
 
-        Date nextWork = calendarRepository.getWorkDateAfter(operation.getValueDate(), withTech(operation.getSourcePosting()));
+        Date nextWork = calendarRepository.getWorkDateAfter(operation.getValueDate(), withTechWorkDay(operation.getSourcePosting()));
         Calendar vnextcal = Calendar.getInstance();
         vnextcal.setTime(nextWork);
 
@@ -790,12 +791,8 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             return nextWork;
         } else {
             // ОД находится в след месяце
-            return calendarRepository.getWorkDateBefore(operation.getValueDate(), withTech(operation.getSourcePosting()));
+            return calendarRepository.getWorkDateBefore(operation.getValueDate(), withTechWorkDay(operation.getSourcePosting()));
         }
-    }
-
-    private boolean withTech(String src) {
-        return ARMPRO.getLabel().equals(src);
     }
 
 }

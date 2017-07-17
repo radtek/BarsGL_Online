@@ -15,4 +15,8 @@ public enum DealSource {
     public String getLabel() {
         return label;
     }
+
+    public static boolean withTechWorkDay(String src) {
+        return ARMPRO.getLabel().equals(src);
+    }
 }
