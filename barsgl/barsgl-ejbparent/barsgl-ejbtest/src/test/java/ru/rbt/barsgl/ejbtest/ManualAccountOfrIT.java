@@ -63,7 +63,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
                 " join IMBCBHBPN bpn on ar.GLACOD = bpn.HBMIAC and ar.CTYPE = bpn.HBCTYP and bpn.DAT <= ?" +
                 " where RLNTYPE = '0' and CBCCY = '810'  and ? between DRLNO and DRLNC and GLACOD in " +
                 " (select ac.A5ACCD from SDACODPD ac join IMBCBHBPN pl on pl.HBMIAC=ac.A5ACCD  where pl.DATTO >= ?)" +
-                " fetch first " + rown + " rows only";
+                " and rownum <= " + rown;
 
         // получить счет Майдас из ACCRLN с RLNTYPE = 0
         List<DataRecord> dataList = baseEntityRepository.select(sql, dateOpen, dateOpen, dateOpen);
@@ -89,7 +89,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
         Assert.assertNotNull(res0);
         Assert.assertFalse(res0.isError());
         Assert.assertEquals(acid, res0.getResult().getAcid());
-        
+
         RpcRes_Base<ManualAccountWrapper> res1 = remoteAccess.invoke(OfrAccountService.class, "createOfrManualAccount", wrapper);
         Assert.assertNotNull(res1);
         ManualAccountWrapper wrapper1 = res1.getResult();
@@ -101,7 +101,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
         Assert.assertNotNull(res2);
         Assert.assertTrue(res2.isError());
         Assert.assertEquals(res1.getResult().getBsaAcid(), res2.getResult().getBsaAcid());
-        
+
         // удалить все счета
         deleteAccountCB(wrapper1.getAcid(), wrapper1.getBsaAcid(), false);
     }

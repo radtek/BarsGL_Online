@@ -78,7 +78,7 @@ public class BufferSyncForm extends BaseForm {
     private DataListBox createSyncRowsListBox() {
         Columns columns = new ColumnsBuilder().addColumn("ID_HIST", Column.Type.LONG).addColumn("ts", Column.Type.STRING).build();
         listBoxDataProvider = new ListBoxSqlDataProvider(true, "",
-                "select * from V_GL_LNGTSKINF order by id_hist desc fetch first 10 rows only", columns, null, null, new StringRowConverter(0, 1));
+                "select * from (select v.*, rownum rn from V_GL_LNGTSKINF v order by id_hist desc) where rn <= 10", columns, null, null, new StringRowConverter(0, 1));
         DataListBox listBox = new DataListBox(listBoxDataProvider);
         listBox.setWidth("600px");
         return listBox;
