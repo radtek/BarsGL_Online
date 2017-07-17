@@ -985,7 +985,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn, Date currentDate) {
         //and (DTC is null or DTC >= ?
-        List<GLAccount> accrecs = findNative(GLAccount.class, "select * from gl_acc a where a.acctype = ? and a.ccy = ? and a.cbccn = ? and a.rlntype = ?)"
+        List<GLAccount> accrecs = findNative(GLAccount.class, "select * from gl_acc a where a.acctype = ? and a.ccy = ? and a.cbccn = ? and a.rlntype = ?"
                 , 5, accountingType.getId(), glccy, cbccn, GLAccount.RelationType.NINE.getValue(),currentDate);
         if (accrecs.isEmpty()) {
             return null;
@@ -997,6 +997,18 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         } else {
             return accrecs.get(0);
         }
+    }
+
+    public GLAccount reopenAccountTH(GLAccount account)
+    {
+        if (account!=null) {
+            if (account.getDateClose()!=null) {
+                account.setDateClose(null);
+                account = save(account);
+            }
+        }
+
+        return account;
     }
 
     public boolean checkTechAccountExists(Long glaccid, String bsaAcid, Date date) {
@@ -1024,5 +1036,4 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
-
 }

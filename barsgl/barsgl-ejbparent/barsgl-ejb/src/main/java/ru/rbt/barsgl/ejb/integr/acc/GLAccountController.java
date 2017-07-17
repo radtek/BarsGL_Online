@@ -262,12 +262,8 @@ public class GLAccountController {
 
         if (null != glAccount) {
 
-            if (glAccount.getDateClose()!=null)
-            {
-                glAccount.setDateClose(null);
-                glAccountRepository.save(glAccount);
-            }
-            return glAccount;
+
+            return glAccountRepository.reopenAccountTH(glAccount);
         }
 
         /*
@@ -1147,7 +1143,9 @@ public class GLAccountController {
 
     @Lock(LockType.READ)
     public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
-        return glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+        GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+
+        return glAccountRepository.reopenAccountTH(account);
     }
 
     /**

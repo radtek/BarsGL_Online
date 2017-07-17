@@ -268,8 +268,8 @@ public class TechAccountTest extends AbstractRemoteTest {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(DateUtils.parseDate("2017-05-26","yyyy-MM-dd"));
 
-        pst.setAccountKeyDebit(";RUR;;058010103;;;TH00000001;0001;;;;;K+TP;;");
-        pst.setAccountKeyCredit(";RUR;;057010103;;;TH00000003;0001;;;;;K+TP;;");
+        pst.setAccountKeyDebit(";RUR;;001020204;;;TH00000001;0002;;;;;K+TP;;");
+        pst.setAccountKeyCredit(";RUR;;007010101;;;TH00000003;0002;;;;;K+TP;;");
         pst.setAmountCredit(new BigDecimal("20539.180"));
         pst.setAmountDebit(new BigDecimal("20539.180"));
         pst.setAmountCreditRu(pst.getAmountCredit());
