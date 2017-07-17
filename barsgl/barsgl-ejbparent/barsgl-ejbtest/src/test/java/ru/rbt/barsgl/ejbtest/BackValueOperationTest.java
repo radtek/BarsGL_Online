@@ -17,7 +17,7 @@ import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
-import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
+import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
@@ -28,7 +28,6 @@ import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -40,7 +39,6 @@ import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
@@ -556,7 +554,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = ?2, o.equivalentCredit = ?3 where o.id = ?4",
                 getOperday().getLastWorkingDay(), null, null, operation.getId());
 
-        remoteAccess.invoke(BackValuePostingController.class, "processBackValueOperation", operation);
+        remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
         operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
 

@@ -8,7 +8,6 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.shared.filter.IFilterItem;
 
 import java.io.Serializable;

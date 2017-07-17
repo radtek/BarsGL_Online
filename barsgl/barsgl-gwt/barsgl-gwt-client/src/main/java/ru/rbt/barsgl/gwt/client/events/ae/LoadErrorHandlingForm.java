@@ -2,7 +2,9 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.shared.operation.BackValueWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
@@ -19,15 +21,12 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.BoolType;
-import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourcePart;
@@ -107,6 +106,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         };
     }
 
+/*
     private void clickHandler(final DlgFrame dlg, final Object prms){
         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
@@ -114,6 +114,42 @@ public class LoadErrorHandlingForm  extends GridForm {
         Object[] res = (Object[]) prms;
 
         BarsGLEntryPoint.operationService.correctErrors((List<Long>) res[0], (String) res[1], (String) res[2], (ErrorCorrectType) res[3],
+                new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<Integer> res) {
+                        if (res.isError()) {
+                            // DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                            DialogUtils.showInfo("Ошибка", res.getMessage());
+
+                        } else {
+                            dlg.hide();
+                            refreshAction.execute();
+                            //DialogManager.message("Информация", res.getMessage());
+                            DialogUtils.showInfo("Информация", res.getMessage());
+                        }
+                        WaitingManager.hide();
+                    }
+                });
+    }
+*/
+
+    // TODO Тестируем фильтр
+    private void clickHandler(final DlgFrame dlg, final Object prms){
+        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+        //List<id_err>, comment, id_pst, ErrorCorrectType
+        Object[] res = (Object[]) prms;
+
+        BackValueWrapper wrapper = new BackValueWrapper();
+        wrapper.setAction(BackValueAction.SIGN);
+        wrapper.setMode(BackValueMode.ALL);
+        wrapper.setSql(prepareSql());
+        wrapper.setFilters(grid.getFilterCriteria());
+        wrapper.setBvStatus(BackValuePostStatus.CONTROL);
+        wrapper.setPostDateStr("18.02.2015");
+        wrapper.setComment((String) res[1]);
+
+        BarsGLEntryPoint.operationService.processOperationBv(wrapper,
                 new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
                     @Override
                     public void onSuccess(RpcRes_Base<Integer> res) {

@@ -1,5 +1,12 @@
 package ru.rbt.barsgl.shared;
 
+import ru.rbt.barsgl.shared.criteria.*;
+import ru.rbt.barsgl.shared.filter.IFilterItem;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by akichigi on 17.03.15.
  */
@@ -28,4 +35,64 @@ public class Utils {
     }
 
     public static String toStr(String val){ return val == null ? "" : val;}
+
+/*
+    public static Criterion filterCriteriaAdapter(List<IFilterItem> filterCriteria){
+        if (filterCriteria == null || filterCriteria.isEmpty()) return null;
+
+        List<Criterion> list = new ArrayList<Criterion>();
+
+        for (IFilterItem item: filterCriteria){
+            Operator operator;
+            Serializable value = item.getSqlValue();
+            switch (item.getCriteria()){
+                case GE:
+                    operator = Operator.GE;
+                    break;
+                case GT:
+                    operator = Operator.GT;
+                    break;
+                case LT:
+                    operator = Operator.LT;
+                    break;
+                case LE:
+                    operator = Operator.LE;
+                    break;
+                case NE:
+                    operator = Operator.NE;
+                    break;
+                case HAVE:
+                    operator = Operator.LIKE;
+                    value = "%" + value + "%";
+                    break;
+                case START_WITH:
+                    operator = Operator.LIKE;
+                    value = value + "%";
+                    break;
+                case LIKE:
+                    operator = Operator.LIKE;
+                    break;
+                case IS_NULL:
+                    operator = Operator.IS_NULL;
+                    break;
+                case NOT_NULL:
+                    operator = Operator.NOT_NULL;
+                    break;
+                case IS_EMPTY:
+                    operator = Operator.EQ;
+                    value = "";
+                    break;
+                case NOT_EMPTY:
+                    operator = Operator.NE;
+                    value = "";
+                    break;
+                default:
+                    operator = Operator.EQ;
+            }
+            list.add(CriterionColumn.createCriterion(item.getSqlName(), operator, value));
+        }
+        return new Criteria(CriteriaLogic.AND, list);
+    }
+*/
+
 }

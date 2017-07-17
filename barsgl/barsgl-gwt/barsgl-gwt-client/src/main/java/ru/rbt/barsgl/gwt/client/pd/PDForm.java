@@ -7,11 +7,8 @@ import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.shared.enums.OperState;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 

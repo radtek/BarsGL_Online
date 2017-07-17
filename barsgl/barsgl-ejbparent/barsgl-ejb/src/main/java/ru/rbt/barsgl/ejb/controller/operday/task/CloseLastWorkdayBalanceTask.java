@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
-import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
+import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
@@ -36,7 +36,7 @@ public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
     private EtlPostingController etlPostingController;
 
     @Inject
-    private BackValuePostingController bvPostingController;
+    private BackValueOperationController bvPostingController;
 
     @EJB
     private AuditController auditController;

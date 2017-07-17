@@ -5,7 +5,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
-import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
+import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
@@ -48,7 +48,7 @@ public class ProcessBackValueOperationsTask implements ParamsAwareRunnable {
     private BeanManagedProcessor beanManagedProcessor;
 
     @EJB
-    private BackValuePostingController operationController;
+    private BackValueOperationController operationController;
 
     @EJB
     private EtlPostingController etlPostingController;

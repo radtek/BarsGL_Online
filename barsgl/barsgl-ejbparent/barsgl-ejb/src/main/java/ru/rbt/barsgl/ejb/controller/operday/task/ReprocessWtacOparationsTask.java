@@ -4,7 +4,7 @@ import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
-import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
+import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
@@ -65,7 +65,7 @@ public class ReprocessWtacOparationsTask implements ParamsAwareRunnable {
     private PreCobStepController preCobStepController;
 
     @EJB
-    private BackValuePostingController backValuePostingController;
+    private BackValueOperationController backValueOperationController;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
@@ -111,7 +111,7 @@ public class ReprocessWtacOparationsTask implements ParamsAwareRunnable {
 
             auditController.info(RecalcWTAC
                     , format("Повторная обработка BackValue операций со статусом '%s' за день '%s'", OperState.WTAC, dateStr));
-            int errorCountBv = backValuePostingController.reprocessWtacBackValue(dateWtacPrev);
+            int errorCountBv = backValueOperationController.reprocessWtacBackValue(dateWtacPrev);
             if (errorCountBv > 0){
                 auditController.warning(RecalcWTAC, format("Обработано с ошибкой %d BackValue операций", errorCountBv), null, "");
             } else {

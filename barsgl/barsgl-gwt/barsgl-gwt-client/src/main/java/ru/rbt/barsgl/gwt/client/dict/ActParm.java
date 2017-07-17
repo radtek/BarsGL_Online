@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;

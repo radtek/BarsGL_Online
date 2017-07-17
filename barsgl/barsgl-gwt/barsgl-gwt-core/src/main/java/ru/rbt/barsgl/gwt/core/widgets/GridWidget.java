@@ -24,6 +24,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.events.GridEvents;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
+import ru.rbt.barsgl.shared.filter.IFilterItem;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

@@ -2,15 +2,12 @@ package ru.rbt.barsgl.gwt.client.dictionary;
 
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
-import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 
 import java.util.ArrayList;

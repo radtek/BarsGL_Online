@@ -4,7 +4,6 @@
  */
 package ru.rbt.barsgl.gwt.client.dict;
 
-import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 
