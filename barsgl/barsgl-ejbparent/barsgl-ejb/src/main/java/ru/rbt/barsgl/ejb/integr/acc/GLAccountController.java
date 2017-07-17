@@ -261,6 +261,12 @@ public class GLAccountController {
 
 
         if (null != glAccount) {
+
+            if (glAccount.getDateClose()!=null)
+            {
+                glAccount.setDateClose(null);
+                glAccountRepository.save(glAccount);
+            }
             return glAccount;
         }
 

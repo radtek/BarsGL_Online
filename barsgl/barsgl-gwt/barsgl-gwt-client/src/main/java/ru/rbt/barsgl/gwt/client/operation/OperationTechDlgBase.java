@@ -246,6 +246,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                 @Override
                 public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
                     if (!wrapper.isError()) {
+                        if (wrapper.getResult().getDateCloseStr()==null)
+                        {
+                            DialogUtils.showInfo("Запрещены операции с закрытым счётом!");
+                            return;
+                        }
                         mAccount.setValue(wrapper.getResult().getBsaAcid());
                     } else {
                         mAccount.clear();

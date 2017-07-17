@@ -102,11 +102,17 @@ public class StepChoiceDlg extends DlgFrame {
                    "Загрузка и передача на подпись");
         }
 
-        if (SecurityChecker.checkAction(SecurityActionCode.OperHand2) || SecurityChecker.checkAction(SecurityActionCode.TechOperHand2)) _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
+
 
         if (_formType!=ChoiseType.TECH) {
             if (SecurityChecker.checkAction(SecurityActionCode.OperHand3))
                 _steps.addItem(BatchPostStep.HAND3, "Подтверждение даты");
+            if (SecurityChecker.checkAction(SecurityActionCode.OperHand2))
+                _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
+        }
+        else {
+            if (SecurityChecker.checkAction(SecurityActionCode.TechOperHand2))
+                _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
         }
     }
 

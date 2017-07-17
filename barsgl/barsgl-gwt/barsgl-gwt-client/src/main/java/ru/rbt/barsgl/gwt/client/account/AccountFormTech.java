@@ -17,6 +17,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -46,6 +47,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     private Column colCurrency;
     private Column colCustomer;
     private Column colAccType;
+    private Column colDTC;
 
     AccountTechQuickFilterParams quickFilterParams;
     GridAction quickFilterAction;
@@ -105,7 +107,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(colCustomer = new Column("CUSTNO", STRING, "Номер клиента", 70));
         colCustomer.setVisible(false);
         result.addColumn(new Column("DTO", DATE, "Дата открытия", 80));
-        result.addColumn(new Column("DTC", DATE, "Дата закрытия", 80));
+        result.addColumn(colDTC = new Column("DTC", DATE, "Дата закрытия", 80));
         Column colID;
         result.addColumn(colID = new Column("ID", LONG, "ID счета", 60, true, true, Column.Sort.NONE, ""));
         colID.setVisible(false);
@@ -176,6 +178,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     }
 
     private GridAction createNewOperation() {
+
         sidePanel = new PopupPanel(true, true);
         VerticalPanel vp = new VerticalPanel();
         vp.add(new HTML("<b>Ввести операцию</b>"));
@@ -204,6 +207,17 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         return new GridAction(grid, null, "Ввести операцию", new Image(ImageConstants.INSTANCE.oper_go()), 10) {
             @Override
             public void execute() {
+
+                Row row = grid.getCurrentRow();
+                if (row!=null)
+                {
+                    if (!isEmpty(grid.getFieldText(colDTC.getName())))
+                    {
+                        DialogUtils.showInfo("Нельзя создать операцию по закрытому счёту!");
+                        return;
+                    }
+                }
+
                 final PushButton button = abw.getButton(this);
                 sidePanel.setPopupPositionAndShow(new PopupPanel.PositionCallback() {
 

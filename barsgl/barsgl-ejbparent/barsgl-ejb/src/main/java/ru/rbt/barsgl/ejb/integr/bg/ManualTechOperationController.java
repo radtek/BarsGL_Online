@@ -123,6 +123,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     @Inject
     private AccessServiceSupport accessServiceSupport;
 
+    @EJB
+    private GLAccountRepository glAccountRepository;
+
 
     public RpcRes_Base<ManualTechOperationWrapper> updateTechOperation(ManualTechOperationWrapper operationWrapper) {
 
@@ -367,6 +370,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     public RpcRes_Base<ManualOperationWrapper> saveOperationRq(ManualTechOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
+            checkOperationAccounts(wrapper);
         } catch (ValidationError e) {
             String msg = "Ошибка при сохранении запроса на операцию";
             if (null != wrapper.getId())
@@ -386,6 +390,26 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     public void checkUserPermission(ManualOperationWrapper wrapper) throws Exception {
         postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
         postingProcessor.checkBackvaluePermission(dateUtils.onlyDateParse(wrapper.getPostDateStr()), wrapper.getUserId());
+    }
+
+    public void checkOperationAccounts(ManualOperationWrapper wrapper)
+    {
+        String bsaacid = wrapper.getAccountDebit();
+        GLAccount account = glAccountRepository.findGLAccount(bsaacid);
+        if (null!=account && account.getDateClose()!=null)
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.YYYY");
+            throw new ValidationError(ACCOUNT_IS_CLOSED_BEFOR,"по дебету",account.getBsaAcid(), sdf.format(account.getDateClose()));
+        }
+
+        bsaacid = wrapper.getAccountCredit();
+        account = glAccountRepository.findGLAccount(bsaacid);
+        if (null!=account && account.getDateClose()!=null)
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.YYYY");
+            throw new ValidationError(ACCOUNT_IS_CLOSED_BEFOR,"по кредиту",account.getBsaAcid(), sdf.format(account.getDateClose()));
+        }
+
     }
 
     public String addOperationErrorMessage(Throwable e, String msg, ErrorList errorList, String source) {
