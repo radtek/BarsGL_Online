@@ -2,25 +2,21 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
-import javax.jms.BytesMessage;
-import javax.jms.TextMessage;
-import javax.jms.Message;
-import javax.jms.MessageListener;
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.JpaAccessCallback;
 
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.jms.JMSException;
+import javax.jms.*;
 import javax.persistence.EntityManager;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -31,9 +27,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
@@ -343,8 +336,8 @@ public class CommonQueueProcessor4 implements MessageListener {
                               + "/",
                               "true".equals(queueProperties.writeOut) ? outMessage : null);
                     });                    
-                } catch (Exception e) {
-                    log.error("Ошибка отправки ответа. ", e);
+                } catch (Throwable e) {
+                    auditController.error(AccountQuery, String.format("Ошибка отправки ответа: %s", e.getMessage()), null, e);
                     journalRepository.invokeAsynchronous(em -> {
                       return journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
                     });

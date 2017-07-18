@@ -6,15 +6,15 @@ import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.KeyValueStorage;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.JpaAccessCallback;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -283,8 +283,8 @@ public class CommonQueueProcessor implements javax.jms.MessageListener {
                 try {
                     sendToQueue(outMessage, queueProperties, incMessage, queue);
                     journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "");
-                } catch (Exception e) {
-                    log.error("Ошибка отправки ответа. ", e);
+                } catch (Throwable e) {
+                    auditController.error(AccountQuery, String.format("Ошибка отправки ответа: %s", e.getMessage()), null, e);
                     journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
                 }
             }
