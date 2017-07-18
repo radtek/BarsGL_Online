@@ -1145,6 +1145,13 @@ public class GLAccountController {
     public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
         GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
 
+        return account;
+    }
+
+    @Lock(LockType.READ)
+    public GLAccount findOrReopenTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
+        GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+
         return glAccountRepository.reopenAccountTH(account);
     }
 

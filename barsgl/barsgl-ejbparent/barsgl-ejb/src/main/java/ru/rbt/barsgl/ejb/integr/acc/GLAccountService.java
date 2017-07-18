@@ -161,7 +161,7 @@ public class GLAccountService {
             keys.setCurrencyDigital(currency.getDigitalCode());
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
-            return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
+            return Optional.ofNullable(glAccountController.findOrReopenTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
                 try {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
