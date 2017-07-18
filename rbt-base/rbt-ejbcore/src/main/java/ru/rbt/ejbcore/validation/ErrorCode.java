@@ -54,6 +54,7 @@ public enum ErrorCode {
     , ACCOUNT_TH_ACCTYPE_NOT_VALID(44,"Поле AccType по %s содержит неверный код типа счёта '%s'")
     , ACCOUNT_TECH_NOT_CORRECT(45, "Некорректный счет %s: '%s'.")
     , ANY_CURRNCY_IS_RUR(46,"Одна из валют должна быть RUR")
+    , ACCOUNT_TH_IS_CLOSED(47, "Счет %s закрыт: '%s' (дата закрытия: '%s')")
  
     /**
      * Ошибки при создании проводки (runtime)

@@ -267,7 +267,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 checkTechAccount(wrapper);
             }
 
-            checkOperationAccounts(wrapper);
+            if (wrapper.getAction()!=BatchPostAction.REFUSE) {
+                checkOperationAccounts(wrapper);
+            }
 
 //            checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
@@ -308,9 +310,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), errorMsg);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
-                addOperationErrorMessage(e, msg, wrapper.getErrorList(),"");
+                msg = addOperationErrorMessage(e, msg, wrapper.getErrorList(),"");
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
-                return new RpcRes_Base<>(wrapper, true, e.getMessage());
+                return new RpcRes_Base<>(wrapper, true, msg);
             }
         }
     }
@@ -401,7 +403,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         if (null!=account && account.getDateClose()!=null)
         {
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.YYYY");
-            throw new ValidationError(ACCOUNT_IS_CLOSED_BEFOR,"по дебету",account.getBsaAcid(), sdf.format(account.getDateClose()));
+            throw new ValidationError(ACCOUNT_TH_IS_CLOSED,"по дебету",account.getBsaAcid(), sdf.format(account.getDateClose()));
         }
 
         bsaacid = wrapper.getAccountCredit();
@@ -409,7 +411,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         if (null!=account && account.getDateClose()!=null)
         {
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.YYYY");
-            throw new ValidationError(ACCOUNT_IS_CLOSED_BEFOR,"по кредиту",account.getBsaAcid(), sdf.format(account.getDateClose()));
+            throw new ValidationError(ACCOUNT_TH_IS_CLOSED,"по кредиту",account.getBsaAcid(), sdf.format(account.getDateClose()));
         }
 
     }

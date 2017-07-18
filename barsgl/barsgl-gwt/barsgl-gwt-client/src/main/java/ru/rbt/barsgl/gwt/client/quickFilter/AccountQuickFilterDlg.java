@@ -103,7 +103,7 @@ public class AccountQuickFilterDlg extends DlgFrame {
         grid.setWidget(row++, 1, mCurrency = createCurrencyListBox("", FIELD_WIDTH, false, true));
 
         grid.setWidget(row, 0, lAccount = createLabel("Маска счета"));
-        grid.setWidget(row++, 1, mAccount = createTxtBox(10, ACCOUNT_WIDTH));
+        grid.setWidget(row++, 1, mAccount = createTxtBox(20, ACCOUNT_WIDTH));
         lAccount.setTitle("Маска счета" + hint);
         mAccount.setTitle("Маска счета" + hint);
 
