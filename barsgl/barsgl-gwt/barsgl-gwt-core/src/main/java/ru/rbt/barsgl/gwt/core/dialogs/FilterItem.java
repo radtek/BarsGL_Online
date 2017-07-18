@@ -14,7 +14,8 @@ import java.util.Date;
 public class FilterItem implements Serializable, IsSerializable {
 	private static final long serialVersionUID = -3960734068373764479L;
 
-	public static final String DATE_FORMAT = "dd.MM.yyyy";
+//	public static final String DATE_FORMAT = "dd.MM.yyyy";
+	public static final String DATE_FORMAT = "yyyy-MM-dd";
 
     private String sqlName;
     private Serializable sqlValue;

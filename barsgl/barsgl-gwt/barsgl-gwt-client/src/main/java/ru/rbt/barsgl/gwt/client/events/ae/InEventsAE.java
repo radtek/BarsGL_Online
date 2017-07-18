@@ -4,7 +4,6 @@
  */
 package ru.rbt.barsgl.gwt.client.events.ae;
 
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.AEDateQFAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AEDateQFParams;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -12,6 +11,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -89,7 +89,7 @@ InEventsAE extends GridForm {
   @Override
   protected String prepareSql() {
     return "select * from (" +
-           "select PST.ID_PKG, DATE(PKG.DT_LOAD) as DT_LOAD, PST.ECODE, PST.ID, PST.ID_PST, PST.SRC_PST, PST.EVTP, PST.VDATE, PST.DEAL_ID, PST.PMT_REF, " +
+           "select PST.ID_PKG, TRUNC(PKG.DT_LOAD) as DT_LOAD, PST.ECODE, PST.ID, PST.ID_PST, PST.SRC_PST, PST.EVTP, PST.VDATE, PST.DEAL_ID, PST.PMT_REF, " +
            "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.AMTRU_DR, PST.ACCKEY_DR, " +
            "PST.AC_CR, PST.CCY_CR, PST.AMT_CR, PST.AMTRU_CR, PST.ACCKEY_CR, PST.EMSG, " +
            "PST.RNRTS, PST.FAN, PST.STRN, PST.STRNRF " +
