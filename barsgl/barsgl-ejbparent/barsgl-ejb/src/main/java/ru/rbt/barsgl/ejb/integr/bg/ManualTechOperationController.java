@@ -266,6 +266,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             {
                 checkTechAccount(wrapper);
             }
+
+            checkOperationAccounts(wrapper);
+
 //            checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
                 case SAVE:              // сохранить - шаг 1 (INPUT)
@@ -305,7 +308,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), errorMsg);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
-                addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+                addOperationErrorMessage(e, msg, wrapper.getErrorList(),"");
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
                 return new RpcRes_Base<>(wrapper, true, e.getMessage());
             }
@@ -370,7 +373,6 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     public RpcRes_Base<ManualOperationWrapper> saveOperationRq(ManualTechOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
-            checkOperationAccounts(wrapper);
         } catch (ValidationError e) {
             String msg = "Ошибка при сохранении запроса на операцию";
             if (null != wrapper.getId())

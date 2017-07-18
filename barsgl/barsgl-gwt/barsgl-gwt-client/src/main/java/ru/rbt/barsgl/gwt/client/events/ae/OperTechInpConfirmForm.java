@@ -272,7 +272,7 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(new Column("PRFCNTR", Column.Type.STRING, "Профит центр", 100, false, false));
         result.addColumn(col = new Column("FCHNG", Column.Type.STRING, "Исправительная", 100, false, false));
         col.setList(getYesNoList());
-        result.addColumn(new Column("EMSG", Column.Type.STRING, "Описание ошибки", 800));
+        result.addColumn(new Column("EMSG", Column.Type.STRING, "Описание ошибки", 400));
 
         result.addColumn(new Column("USER_NAME", Column.Type.STRING, "Логин 1 руки", 100, false, false));
         result.addColumn(new Column("OTS", Column.Type.DATETIME, "Дата создания", 130, false, false));

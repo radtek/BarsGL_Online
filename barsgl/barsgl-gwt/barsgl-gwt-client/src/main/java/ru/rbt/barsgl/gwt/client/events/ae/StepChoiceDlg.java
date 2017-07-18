@@ -90,29 +90,26 @@ public class StepChoiceDlg extends DlgFrame {
     }
 
     private void initSteps(){
-        _steps.addItem(BatchPostStep.NOHAND, "");
-        if (_inpMethod == InputMethod.M ){
-            if (SecurityChecker.checkAction(SecurityActionCode.OperInp) ||
-                SecurityChecker.checkAction(SecurityActionCode.TechOperInp) ||
-                SecurityChecker.checkAction(SecurityActionCode.OperInpTmpl) ||
-                SecurityChecker.checkAction(SecurityActionCode.AccOperInp)) _steps.addItem(BatchPostStep.HAND1,
-                    "Ввод и передача на подпись");
-        }else {
-            if (SecurityChecker.checkAction(SecurityActionCode.OperFileLoad)) _steps.addItem(BatchPostStep.HAND1,
-                   "Загрузка и передача на подпись");
+        _steps.addItem(BatchPostStep.NOHAND, "Просмотр \u00A0\u00A0\u00A0\u00A0\u00A0");
+
+        if (_formType != ChoiseType.TECH) {
+            if (_inpMethod == InputMethod.M) {
+                if (SecurityChecker.checkAction(SecurityActionCode.OperInp) ||
+                        SecurityChecker.checkAction(SecurityActionCode.AccOperInp)) _steps.addItem(BatchPostStep.HAND1, "Ввод и передача на подпись");
+            } else {
+                if (SecurityChecker.checkAction(SecurityActionCode.OperFileLoad)) _steps.addItem(BatchPostStep.HAND1, "Загрузка и передача на подпись");
+            }
+
+            if (SecurityChecker.checkAction(SecurityActionCode.OperHand2)) _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
+            if (SecurityChecker.checkAction(SecurityActionCode.OperHand3)) _steps.addItem(BatchPostStep.HAND3, "Подтверждение даты");
         }
-
-
-
-        if (_formType!=ChoiseType.TECH) {
-            if (SecurityChecker.checkAction(SecurityActionCode.OperHand3))
-                _steps.addItem(BatchPostStep.HAND3, "Подтверждение даты");
-            if (SecurityChecker.checkAction(SecurityActionCode.OperHand2))
-                _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
-        }
-        else {
-            if (SecurityChecker.checkAction(SecurityActionCode.TechOperHand2))
-                _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
+        else{
+            if (_inpMethod == InputMethod.M) {
+                if (SecurityChecker.checkAction(SecurityActionCode.TechOperInp)) {
+                    _steps.addItem(BatchPostStep.HAND1, "Ввод и передача на подпись");
+                }
+            }
+            if (SecurityChecker.checkAction(SecurityActionCode.TechOperHand2)) _steps.addItem(BatchPostStep.HAND2, "Подпись (авторизация)");
         }
     }
 

@@ -239,6 +239,9 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             if (null != mAccType) {
                 accWrapper.setAccountType(mAccType.getValue() != null ? Long.parseLong(mAccType.getValue()) : null);
             }
+            else{
+                return;
+            }
             accWrapper.setCurrency(ccy);
             accWrapper.setFilial(cbccn);
 
@@ -246,7 +249,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                 @Override
                 public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
                     if (!wrapper.isError()) {
-                        if (wrapper.getResult().getDateCloseStr()==null)
+                        if (wrapper.getResult().getDateCloseStr()!=null)
                         {
                             DialogUtils.showInfo("Запрещены операции с закрытым счётом!");
                             return;
