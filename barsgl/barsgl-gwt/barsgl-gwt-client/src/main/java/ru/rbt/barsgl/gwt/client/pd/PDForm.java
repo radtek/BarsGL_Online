@@ -7,11 +7,8 @@ import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.shared.enums.OperState;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 
@@ -55,7 +52,7 @@ public class PDForm extends OperationPostingForm {
 
     @Override
     protected String prepareDetailSql() {
-        return  "select GLO_REF, POST_TYPE, PCID, ID, BSAACID, CCY, cast( (DECIMAL(AMNT)/INTEGER(POWER(10,CC.NBDP))) as decimal(19,2)) as AMNT, "
+        return  "select GLO_REF, POST_TYPE, PCID, ID, BSAACID, CCY, CAST( (AMNT/POWER(10,CC.NBDP)) AS number(19,2)) AS AMNT, "
                 + "AMNTBC * 0.01 as AMNTBC, PBR, PNAR, "
                 + "CASE WHEN INVISIBLE = 0 THEN 'Y' ELSE 'N' END AS INVISIBLE, "
                 + "PREF, MO_NO " +
