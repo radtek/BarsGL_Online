@@ -236,11 +236,11 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус", 90));
         col.setList(getEnumLabelsList(BatchPostStatus.values()));
         result.addColumn(new Column("ECODE", Column.Type.INTEGER, "Код ошибки", 60));
-        result.addColumn(col = new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 80));
+        result.addColumn(col = new Column("INP_METHOD", Column.Type.STRING, "Способ ввода", 50));
         col.setList(getEnumLabelsList(InputMethod.values()));
         result.addColumn(new Column("SRC_PST", Column.Type.STRING, "Источник сделки", 80));
 
-        result.addColumn(new Column("DEAL_ID", Column.Type.STRING, "ИД сделки", 70));
+        result.addColumn(new Column("DEAL_ID", Column.Type.STRING, "ИД сделки", 100));
         result.addColumn(new Column("SUBDEALID", Column.Type.STRING, "ИД субсделки", 80, false, false));
         result.addColumn(new Column("PMT_REF", Column.Type.STRING, "ИД платежа", 100, false, false));
 
@@ -251,13 +251,13 @@ public class OperTechInpConfirmForm extends OperTechBase{
         result.addColumn(col = new Column("POSTDATE", Column.Type.DATE, "Дата проводки", 72));
         col.setFormat("dd.MM.yyyy");
 
-        result.addColumn(new Column("ACCTYPE_DR", Column.Type.STRING, "AccType ДБ", 120));
+        result.addColumn(new Column("ACCTYPE_DR", Column.Type.STRING, "AccType ДБ", 80));
         result.addColumn(new Column("AC_DR", Column.Type.STRING, "Счет ДБ", 160));
         result.addColumn(new Column("CCY_DR", Column.Type.STRING, "Валюта ДБ", 60, false, false));
         result.addColumn(new Column("AMT_DR", Column.Type.DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("CBCC_DR", Column.Type.STRING, "Филиал ДБ", 60, false, false));
 
-        result.addColumn(new Column("ACCTYPE_CR", Column.Type.STRING, "AccType КР", 120));
+        result.addColumn(new Column("ACCTYPE_CR", Column.Type.STRING, "AccType КР", 80));
         result.addColumn(new Column("AC_CR", Column.Type.STRING, "Счет КР", 160));
         result.addColumn(new Column("CCY_CR", Column.Type.STRING, "Валюта КР", 60, false, false));
         result.addColumn(new Column("AMT_CR", Column.Type.DECIMAL, "Сумма КР", 100));
