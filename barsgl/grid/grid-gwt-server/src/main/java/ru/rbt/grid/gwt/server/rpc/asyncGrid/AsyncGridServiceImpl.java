@@ -34,7 +34,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
         } catch (Throwable e) {
             e.printStackTrace();
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе кол-ва записей для списка", null, e);
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе кол-ва записей для списка: " + sql, null, e);
             throw e;
         }
     }
@@ -64,7 +64,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return result;
         } catch (Throwable e) {
             e.printStackTrace();
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе записей для списка", null, e);
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе записей для списка: " + sql, null, e);
             throw e;
         }
     }
@@ -88,7 +88,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
         }catch (Throwable ex){
             ex.printStackTrace();
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки", null, ex);
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки: " + sql, null, ex);
             throw new RuntimeException(ex);
         }
     }
@@ -109,7 +109,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return fileName;
         } catch (Throwable e) {
             e.printStackTrace();
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при экспорте в Excel", null, e);
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при экспорте в Excel: " + sql, null, e);
             throw e;
         }
     }
@@ -139,7 +139,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return row;
 
         }catch (Exception ex){
-            ex.printStackTrace();
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки: " + sql, null, ex);
             throw new RuntimeException(ex);
         }
     }

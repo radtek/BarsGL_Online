@@ -391,7 +391,7 @@ public class MenuBuilder implements IMenuBuilder {
         }
     }
 
-    private MenuItem getUnSupportedMenuItem(UserMenuItemWrapper wrapper){
+    private MenuItem getUnSupportedMenuItem(final UserMenuItemWrapper wrapper){
         return new MenuItem("* Ошибка!!! *", false, new Command() {
             @Override
             public void execute() {
