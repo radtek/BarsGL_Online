@@ -387,15 +387,15 @@ public class MenuBuilder implements IMenuBuilder {
                 }
             });
 
-            default: return getUnSupportedMenuItem();
+            default: return getUnSupportedMenuItem(wrapper);
         }
     }
 
-    private MenuItem getUnSupportedMenuItem(){
+    private MenuItem getUnSupportedMenuItem(UserMenuItemWrapper wrapper){
         return new MenuItem("* Ошибка!!! *", false, new Command() {
             @Override
             public void execute() {
-                Window.alert("Неизвестный (нереализованный) пункт меню.");
+                Window.alert("Неизвестный (нереализованный) пункт меню: " + wrapper.getMenuCode() + ":" + wrapper.getMenuName());
             }
         });
     }

@@ -1,5 +1,7 @@
 package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -30,8 +32,9 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 //    	return 1000;
         try {
             return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе кол-ва записей для списка", null, e);
             throw e;
         }
     }
@@ -59,12 +62,14 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             }
 
             return result;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе записей для списка", null, e);
             throw e;
         }
     }
 
+    // TODO это что за дублирование с selectOne !? слить этот г-код
     @Override
     public Row selectOne(Repository repository, String sql, Serializable[] params) throws Exception {
         try{
@@ -81,35 +86,37 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             }
             return row;
 
-        }catch (Exception ex){
+        }catch (Throwable ex){
             ex.printStackTrace();
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки", null, ex);
             throw new RuntimeException(ex);
         }
     }
 
     @Override
     public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
-        List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
-        for (int i = 0; i < columns.getColumnCount(); i++) {
-            Column column = columns.getColumnByIndex(i);
-            if (column.isVisible())
-                xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+        try {
+            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
+            for (int i = 0; i < columns.getColumnCount(); i++) {
+                Column column = columns.getColumnByIndex(i);
+                if (column.isVisible())
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+            }
+
+            String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, repository, xlsColumns,
+                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
+
+            return fileName;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при экспорте в Excel", null, e);
+            throw e;
         }
-
-        String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, repository, xlsColumns,
-                filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
-
-        return fileName;
     }
 
     @Override
     public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Exception {
-        try {
-            return localInvoker.invoke(SqlPageSupport.class, "count", sql, filterCriteriaAdapter(filterCriteria));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        return getAsyncCount(Repository.BARSGL, sql, filterCriteria);
     }
 
     @Override
@@ -202,22 +209,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
-        try {
-            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
-            for (int i = 0; i < columns.getColumnCount(); i++) {
-                Column column = columns.getColumnByIndex(i);
-                if (column.isVisible())
-                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
-            }
-
-            String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, xlsColumns,
-                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
-
-            return fileName;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        return export2Excel(Repository.BARSGL, sql, columns, filterCriteria, sortCriteria, head);
     }
 
     public void Debug(String msg) {
