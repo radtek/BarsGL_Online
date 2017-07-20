@@ -48,56 +48,6 @@ insert into GL_BALSTMD (STATDATE
                         , ACODNAME
                         , CURRNAME
                         , DATEUNLOAD)
-insert into GL_BALSTMD (STATDATE
-                        , STATTYPE
-                        , HOSTSYSTEM
-                        , FCCCUSTNUM
-                        , FCCACCOUNT
-                        , FCCBRANCH
-                        , EXT_CUSTID
-                        , ACCBRN
-                        , CBACCOUNT
-                        , ACCTYPE
-                        , CURRCODE
-                        , SQNUMBER
-                        , CREATEDATE
-                        , TIMECREATE
-                        , OPENBLNCA
-                        , CLOSEBLNCA
-                        , DBDOCNT
-                        , DBTURNOVRA
-                        , CRDOCNT
-                        , CRTURNOVRA
-                        , OPENBLNCN
-                        , CLOSEBLNCN
-                        , DBTURNOVRN
-                        , CRTURNOVRN
-                        , RATE
-                        , INBDATE
-                        , OUTBDATE
-                        , RCUSTNAME
-                        , CUSTINN
-                        , ECUSTNAME
-                        , CSTADDRSW1
-                        , CSTADDRSW2
-                        , CSTADDRSW3
-                        , CSTADDRSW4
-                        , CSTADDRKL
-                        , CSTADDRKF
-                        , BCUSTBIC
-                        , RBANKNAME
-                        , EBANKNAME
-                        , BCSTCORRAC
-                        , BCUSTSWIFT
-                        , BCUSTINN
-                        , LSTOPERDAT
-                        , ED
-                        , BRANCH_ID
-                        , ALT_AC_NO
-                        , ACCNAME
-                        , ACODNAME
-                        , CURRNAME
-                        , DATEUNLOAD)
 with gl_tmp_curdate as (select cast(? as date) curdate from dual)
 select *
   from (

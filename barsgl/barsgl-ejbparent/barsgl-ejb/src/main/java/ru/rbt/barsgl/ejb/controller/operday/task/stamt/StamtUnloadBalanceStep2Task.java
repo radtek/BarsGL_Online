@@ -96,9 +96,9 @@ public class StamtUnloadBalanceStep2Task implements ParamsAwareRunnable {
                 return repository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ledger.sql")
                     , executeDate);
             });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             auditController.error(StamtUnload, "Ошибка при выгрузке остатков по лицевым счетам", null, e);
-            return 0;
+            throw e;
         }
     }
 

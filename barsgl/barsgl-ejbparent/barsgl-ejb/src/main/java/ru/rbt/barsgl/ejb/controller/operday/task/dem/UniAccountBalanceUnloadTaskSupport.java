@@ -6,6 +6,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.EJB;
@@ -45,6 +46,9 @@ public class UniAccountBalanceUnloadTaskSupport {
     @Inject
     private StamtUnloadController unloadController;
 
+    @Inject
+    private TextResourceController textResourceController;
+
     public void execute(Properties properties) throws Exception {
         final Date executeDate = getExecuteDate(properties);
         try {
@@ -69,73 +73,31 @@ public class UniAccountBalanceUnloadTaskSupport {
     }
 
     private int fillData(Date executeDate) throws Exception {
-//        beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-//            try (PreparedStatement createTableStmt = connection.prepareStatement(
-//                "DECLARE GLOBAL TEMPORARY TABLE SESSION.GL_BALTUR_SUMS (" +
-//                    "  BSAACID CHAR(20) NOT NULL, " +
-//                    "  sumamnt DECIMAL(19, 0), " +
-//                    "  sumamntbc DECIMAL(19, 0)) WITH REPLACE NOT LOGGED")) {
-//
-//                createTableStmt.execute();
-//            }
-//            return null;
-//        }, 60 * 60);
-
-        return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-//            unloadController.createTemporaryTableWithDate("GL_TMP_CURDATE", "curdate", executeDate);            
-            int updateResult = 0;
-            try (
-//                PreparedStatement createTableStmt = connection.prepareStatement(
-//                            "CREATE GLOBAL TEMPORARY TABLE GL_BALTUR_SUMS (" +
-//                                    "  BSAACID CHAR(20) NOT NULL, " +
-//                                    "  sumamnt DECIMAL(19, 0), " +
-//                                    "  sumamntbc DECIMAL(19, 0)) ON COMMIT DELETE ROWS");
-                PreparedStatement updateCurdate = connection.prepareStatement("INSERT INTO GL_TMP_CURDATE VALUES(?)");
-            ) {
-//                createTableStmt.execute();
-                updateCurdate.setDate(1, new java.sql.Date(executeDate.getTime()));
-                updateCurdate.executeUpdate();
+        return (int) repository.executeInNewTransaction((persistence) -> {
+            return repository.executeTransactionally(connection -> {
+                int updateResult = 0;
                 try (
-                        PreparedStatement fillTableStmt = connection.prepareStatement(
-                                "INSERT INTO GL_BALTUR_SUMS (BSAACID, SUMAMNT, SUMAMNTBC) " +
-                                        "  SELECT " +
-                                        "    BSAACID, " +
-                                        "    SUM(DTAC + CTAC), " +
-                                        "    SUM(DTBC + CTBC) " +
-                                        "  FROM GL_BALTUR " +
-                                        "  WHERE DAT <= ? " +
-                                        "  GROUP BY BSAACID");
-
-                        PreparedStatement statement = connection.prepareStatement(
-                                "INSERT INTO gl_accrest (dat,acid,acc2,bsaacid,ccy,cbcc,outbal,outbalrur,outbmid,outbrmid,psav,acctype,cnum,deal_id,subdealid)" +
-                                        "SELECT od.curdate, b.acid, a.acc2, b.bsaacid\n" +
-                                        "       , a.ccy, a.cbcc\n" +
-                                        "       , cast(cast((b.obac + b.dtac + b.ctac+nvl(s.sumamnt,0)) as DECIMAL)/cast(power(10,c.nbdp) as integer) AS DECIMAL(19,2)) outbal \n" +
-                                        "       , (b.obbc + b.dtbc + b.ctbc+nvl(s.sumamntbc,0))*0.01 outbalrur \n" +
-                                        "       , b.obac + b.dtac + b.ctac+nvl(s.sumamnt,0) outbmid\n" +
-                                        "       , b.obbc + b.dtbc + b.ctbc+nvl(s.sumamntbc,0) outbrmid\n" +
-                                        "       , a.psav, a.acctype, a.custno, a.dealid, a.subdealid \n" +
-                                        "  FROM baltur b LEFT OUTER JOIN GL_BALTUR_SUMS s ON b.bsaacid=s.bsaacid, \n" +
-                                        "          gl_acc a, currency c, (SELECT curdate FROM GL_TMP_CURDATE) od\n" +
-                                        " WHERE b.acid = a.acid\n" +
-                                        "   AND b.bsaacid = a.bsaacid\n" +
-                                        "   AND a.dto <= od.curdate\n" +
-                                        "   AND nvl(a.dtc, od.curdate) >= od.curdate\n" +
-                                        "   AND b.dat <= od.curdate\n" +
-                                        "   AND b.datto >= od.curdate\n" +
-                                        "   AND a.ccy = c.glccy");
-
-                        //PreparedStatement dropTableStmt = connection.prepareStatement("DROP TABLE GL_BALTUR_SUMS")
+                        PreparedStatement updateCurdate = connection.prepareStatement("INSERT INTO GL_TMP_CURDATE VALUES(?)");
                 ) {
-                    fillTableStmt.setDate(1, new java.sql.Date(executeDate.getTime()));
-                    fillTableStmt.execute();
-                    updateResult = statement.executeUpdate();
-                    //dropTableStmt.execute();
-                }
-            }
-            return updateResult;
+                    updateCurdate.setDate(1, new java.sql.Date(executeDate.getTime()));
+                    updateCurdate.executeUpdate();
+                    try (
+                            PreparedStatement fillTableStmt = connection.prepareStatement(textResourceController
+                                    .getContent("ru/rbt/barsgl/ejb/controller/operday/task/dem/uni_ins_sums.sql"));
 
-        }, 60 * 60);
+                            PreparedStatement restStatement = connection.prepareStatement(textResourceController
+                                    .getContent("ru/rbt/barsgl/ejb/controller/operday/task/dem/uni_ins_rest.sql"));
+
+                    ) {
+                        fillTableStmt.setDate(1, new java.sql.Date(executeDate.getTime()));
+                        fillTableStmt.execute();
+                        updateResult = restStatement.executeUpdate();
+                    }
+                }
+                return updateResult;
+
+            });
+        });
     }
 
     private int cleanOld() throws Exception {
