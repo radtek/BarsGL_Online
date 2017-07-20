@@ -38,6 +38,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.MovementCreate;
 import static ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueUtil.dateToXML;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by ER22228 on 02.06.2016.
@@ -908,10 +909,10 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             sb.append("<ns2:Movement>");
             sb.append("<ns2:RequestNumber>" + (++movementNum) + "</ns2:RequestNumber>");//todo
             sb.append("<ns2:MovementReference>");
-            sb.append("<ns2:SystemCode>" + SYSTEM_CODE + "</ns2:SystemCode>");
-            sb.append("<ns2:MovementID>").append(item.getOperIdD()).append("</ns2:MovementID>");
+            sb.append("<ns2:SystemCode>" + SYSTEM_CODE + "</ns2:SystemCode>");//<xsd:maxLength value="32"/>
+            sb.append("<ns2:MovementID>").append(substr(item.getOperIdD(),32)).append("</ns2:MovementID>");//<xsd:maxLength value="32"/>
             sb.append("</ns2:MovementReference>");
-            sb.append("<ns2:CBAccount>").append(item.getAccountCBD()).append("</ns2:CBAccount>");
+            sb.append("<ns2:CBAccount>").append(substr(item.getAccountCBD(),20)).append("</ns2:CBAccount>");//<xsd:maxLength value="20"/>
             sb.append("<ns2:MovementAmount>").append(item.getOperAmountD()).append("</ns2:MovementAmount>");
             createMovementCommonPart(item, sb, "D");
             sb.append("</ns2:Movement>");
@@ -921,10 +922,10 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             sb.append("<ns2:Movement>");
             sb.append("<ns2:RequestNumber>" + (++movementNum) + "</ns2:RequestNumber>");//todo
             sb.append("<ns2:MovementReference>");
-            sb.append("<ns2:SystemCode>" + SYSTEM_CODE + "</ns2:SystemCode>");
-            sb.append("<ns2:MovementID>").append(item.getOperIdC()).append("</ns2:MovementID>");
+            sb.append("<ns2:SystemCode>" + SYSTEM_CODE + "</ns2:SystemCode>");//<xsd:maxLength value="32"/>
+            sb.append("<ns2:MovementID>").append(substr(item.getOperIdC(),32)).append("</ns2:MovementID>");//<xsd:maxLength value="32"/>
             sb.append("</ns2:MovementReference>");
-            sb.append("<ns2:CBAccount>").append(item.getAccountCBC()).append("</ns2:CBAccount>");
+            sb.append("<ns2:CBAccount>").append(substr(item.getAccountCBC(),20)).append("</ns2:CBAccount>");//<xsd:maxLength value="20"/>
             sb.append("<ns2:MovementAmount>").append(item.getOperAmountC()).append("</ns2:MovementAmount>");
             createMovementCommonPart(item, sb, "C");
             sb.append("</ns2:Movement>");
@@ -934,13 +935,13 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         return sb.toString().replaceAll("&","&amp;");
     }
 
-    private void createMovementCommonPart(MovementCreateData item, StringBuilder sb, String drcr) {
-        sb.append("<ns2:ObjectReference>").append(ifEmpty(item.getDealId(), "")).append("</ns2:ObjectReference>");
-        sb.append("<ns2:ExtModule>").append(ifEmpty(item.getPstSource(), "")).append("</ns2:ExtModule>");
-        sb.append("<ns2:ExtOperationCode>" + EXT_OPERATION_CODE + "</ns2:ExtOperationCode>");
+    private void createMovementCommonPart(MovementCreateData item, StringBuilder sb, String drcr) {        
+        sb.append("<ns2:ObjectReference>").append(substr(item.getDealId(), 32)).append("</ns2:ObjectReference>");//<xsd:maxLength value="32"/>
+        sb.append("<ns2:ExtModule>").append(substr(item.getPstSource(), 32)).append("</ns2:ExtModule>");//<xsd:maxLength value="32"/>
+        sb.append("<ns2:ExtOperationCode>" + EXT_OPERATION_CODE + "</ns2:ExtOperationCode>");//<xsd:maxLength value="32"/>
         sb.append("<ns2:Priority>" + PRIORITY + "</ns2:Priority>");
         sb.append("<ns2:OperationTimestamp>").append(dateToXML(item.getOperCreate())).append("</ns2:OperationTimestamp>");
-        sb.append("<ns2:DrCr>" + drcr + "</ns2:DrCr>");
+        sb.append("<ns2:DrCr>" + drcr + "</ns2:DrCr>");//<xsd:maxLength value="1"/> (D||C)
         sb.append("<ns2:Narrative>").append(ifEmpty(item.getDestinationR(), "")).append("</ns2:Narrative>");
         sb.append("<ns2:UseOverdraft>true</ns2:UseOverdraft>");
         sb.append("<ns2:IgnoreBalance>false</ns2:IgnoreBalance>");
@@ -950,17 +951,17 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 
         sb.append("<ns2:ABSSpecificParameters>");
         sb.append("<ns2:MIDASSpecificParameters>");
-        sb.append("<ns2:SPOS>").append(ifEmpty(item.getPstSource(), "")).append("</ns2:SPOS>");
-        sb.append("<ns2:OTRF>").append(ifEmpty(item.getDealId(), "")).append("</ns2:OTRF>");
-        sb.append("<ns2:Department>").append(ifEmpty(item.getDeptId(), "")).append("</ns2:Department>");
-        sb.append("<ns2:ProfitCenter>").append(ifEmpty(item.getProfitCenter(), "")).append("</ns2:ProfitCenter>");
+        sb.append("<ns2:SPOS>").append(substr(item.getPstSource(), 7)).append("</ns2:SPOS>");//<xsd:maxLength value="7"/>
+        sb.append("<ns2:OTRF>").append(substr(item.getDealId(), 15)).append("</ns2:OTRF>");//<xsd:maxLength value="15"/>
+        sb.append("<ns2:Department>").append(substr(item.getDeptId(), 3)).append("</ns2:Department>");//<xsd:maxLength value="3"/>
+        sb.append("<ns2:ProfitCenter>").append(substr(item.getProfitCenter(), 4)).append("</ns2:ProfitCenter>");//<xsd:maxLength value="4"/>
         sb.append("<ns2:BookCode/>");
         sb.append("<ns2:PostingTrnTyp/>");
-        sb.append("<ns2:PostingNarrative>").append(ifEmpty(item.getPnar(), "")).append("</ns2:PostingNarrative>");
+        sb.append("<ns2:PostingNarrative>").append(substr(item.getPnar(), 30)).append("</ns2:PostingNarrative>");//<xsd:maxLength value="30"/>
 //        sb.append("<ns2:ProjectTrnTyp/>");
-        sb.append("<ns2:ProjectTrnTyp>GL</ns2:ProjectTrnTyp>");
+        sb.append("<ns2:ProjectTrnTyp>GL</ns2:ProjectTrnTyp>");//<xsd:maxLength value="2"/>
         sb.append("<ns2:ProjectTrnNbr/>");
-        sb.append("<ns2:ProjectNarrative>").append(ifEmpty(item.getPnar(), "")).append("</ns2:ProjectNarrative>");
+        sb.append("<ns2:ProjectNarrative>").append(substr(item.getPnar(), 30)).append("</ns2:ProjectNarrative>");//<xsd:maxLength value="30"/>
         sb.append("</ns2:MIDASSpecificParameters>");
         sb.append("</ns2:ABSSpecificParameters>");
 
@@ -970,18 +971,18 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
         // all elements has minOccurs = 0
         sb.append("<ns2:PaymentDetails>");
             if(debitPaymentDetails != null){
-                sb.append("<ns2:PayerName>").append(debitPaymentDetails.getNarrativeCustomers()).append("</ns2:PayerName>");
-                sb.append("<ns2:PayerTaxID>").append(debitPaymentDetails.getTaxCustomers()).append("</ns2:PayerTaxID>");
-                sb.append("<ns2:PayerAccount>").append(debitPaymentDetails.getAccount()).append("</ns2:PayerAccount>");
+                sb.append("<ns2:PayerName>").append(substr(debitPaymentDetails.getNarrativeCustomers(),255)).append("</ns2:PayerName>");//<xsd:maxLength value="255"/>
+                sb.append("<ns2:PayerTaxID>").append(substr(debitPaymentDetails.getTaxCustomers(),35)).append("</ns2:PayerTaxID>");//<xsd:maxLength value="35"/>
+                sb.append("<ns2:PayerAccount>").append(substr(debitPaymentDetails.getAccount(),35)).append("</ns2:PayerAccount>");//<xsd:maxLength value="35"/>
                 sb.append("<ns2:PayerAmount>").append(debitPaymentDetails.getOperAmount()).append("</ns2:PayerAmount>");
-                sb.append("<ns2:PayerCcy>").append(debitPaymentDetails.getCurrency()).append("</ns2:PayerCcy>");
+                sb.append("<ns2:PayerCcy>").append(substr(debitPaymentDetails.getCurrency(),3)).append("</ns2:PayerCcy>");//<xsd:maxLength value="3"/>
             }
             if(creditPaymentDetails != null){
-                sb.append("<ns2:BenefName>").append(creditPaymentDetails.getNarrativeCustomers()).append("</ns2:BenefName>");
-                sb.append("<ns2:BenefTaxID>").append(creditPaymentDetails.getTaxCustomers()).append("</ns2:BenefTaxID>");
-                sb.append("<ns2:BenefAccount>").append(creditPaymentDetails.getAccount()).append("</ns2:BenefAccount>");
+                sb.append("<ns2:BenefName>").append(substr(creditPaymentDetails.getNarrativeCustomers(),255)).append("</ns2:BenefName>");//<xsd:maxLength value="255"/>
+                sb.append("<ns2:BenefTaxID>").append(substr(creditPaymentDetails.getTaxCustomers(),35)).append("</ns2:BenefTaxID>");//<xsd:maxLength value="35"/>
+                sb.append("<ns2:BenefAccount>").append(substr(creditPaymentDetails.getAccount(),35)).append("</ns2:BenefAccount>");//<xsd:maxLength value="35"/>
                 sb.append("<ns2:BenefAmount>").append(creditPaymentDetails.getOperAmount()).append("</ns2:BenefAmount>");
-                sb.append("<ns2:BenefCcy>").append(creditPaymentDetails.getCurrency()).append("</ns2:BenefCcy>");
+                sb.append("<ns2:BenefCcy>").append(substr(creditPaymentDetails.getCurrency(),3)).append("</ns2:BenefCcy>");//<xsd:maxLength value="3"/>
             }
         sb.append("</ns2:PaymentDetails>");
     }
