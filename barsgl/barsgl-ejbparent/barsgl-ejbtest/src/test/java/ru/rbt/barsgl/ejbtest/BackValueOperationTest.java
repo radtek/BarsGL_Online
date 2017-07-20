@@ -62,8 +62,6 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     private static final String holidays =
             "'2015-02-01', '2015-02-07', '2015-02-08', '2015-02-14', '2015-02-15', '2015-02-21', '2015-02-22', '2015-02-23', '2015-02-28'";
 
-    // TODO проверить / заполнить таблицы GL_BVPARM, GL_CRPRD;
-
     @BeforeClass
     public static void beforeAll() {
 
@@ -86,7 +84,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         restoreTable("GL_CRPRD");
     }
 
-    private static void saveTable(String tblName) {
+    public static void saveTable(String tblName) {
         String tmpName = tblName + "_tmp";
         try {
             baseEntityRepository.executeNativeUpdate("drop table " + tmpName);
@@ -94,7 +92,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         baseEntityRepository.executeNativeUpdate("create table " + tmpName + " as (select * from " + tblName + ") with data");
     }
 
-    private static void restoreTable(String tblName) {
+    public static void restoreTable(String tblName) {
         String tmpName = tblName + "_tmp";
         baseEntityRepository.executeNativeUpdate("delete from " + tblName);
         baseEntityRepository.executeNativeUpdate("insert into " + tblName + " select * from " + tmpName);
@@ -102,14 +100,14 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     }
 
     // заполнить корректно календарь
-    private static void setCalendar2015_02() {
+    public static void setCalendar2015_02() {
         baseEntityRepository.executeNativeUpdate("update CAL set HOL = ' ', THOL = ' ' where " + daysCriteria + " and DAT not in (" + holidays + ")");
         baseEntityRepository.executeNativeUpdate("update CAL set HOL = 'X', THOL = 'X' where " + daysCriteria + " and DAT in (" + holidays + ")");
         baseEntityRepository.executeNativeUpdate("update CAL set HOL = ' ', THOL = 'T' where " + daysCriteria + " and DAT in ('2015-01-31')");
     }
 
     // заполнить параметры BackValue
-    private static void setBVparams() {
+    public static void setBVparams() {
         baseEntityRepository.executeNativeUpdate("delete from GL_BVPARM");
         baseEntityRepository.executeNativeUpdate("insert into GL_BVPARM (ID_SRC, BV_SHIFT, DTB, DTE) values ('ARMPRO',  3, '2015-01-01', '2016-12-31')");
         baseEntityRepository.executeNativeUpdate("insert into GL_BVPARM (ID_SRC, BV_SHIFT, DTB, DTE) values ('SECMOD', 14, '2015-01-01', '2016-12-31')");
@@ -202,7 +200,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     }
 
     @Test
-    public void testCreatBackValueOperation() throws SQLException {
+    public void testCreateBackValueOperation() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%1");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%3");
@@ -267,7 +265,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     }
 
     @Test
-    public void testCreatBackWtacOperation() throws SQLException {
+    public void testCreateBackWtacOperation() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%1");
         String bsaCt = "00000810000000000000";
@@ -599,8 +597,8 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         BankCalendarDay prevWork = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkdayBefore", od.getLastWorkingDay());
         setOperday(od.getLastWorkingDay(), prevWork.getId().getCalendarDate(), ONLINE, OPEN);
 
-        testCreatBackWtacOperation();
-        testCreatBackWtacOperation();
+        testCreateBackWtacOperation();
+        testCreateBackWtacOperation();
 
         List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class,
                 "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.procDate <= ?3 ",
@@ -714,7 +712,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
     }
 
-    private EtlPosting createEtlPosting(Date valueDate, String src,
+    public static EtlPosting createEtlPosting(Date valueDate, String src,
                                         String accountDebit, BankCurrency currencyDebit, BigDecimal amountDebit,
                                         String accountCredit, BankCurrency currencyCredit, BigDecimal amountCredit) {
         long stamp = System.currentTimeMillis();
@@ -729,7 +727,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         return (EtlPosting) baseEntityRepository.save(pst);
     }
 
-    private EtlPosting createEtlPostingNotSaved(EtlPackage pkg, Date valueDate, String src,
+    public static EtlPosting createEtlPostingNotSaved(EtlPackage pkg, Date valueDate, String src,
                                         String accountDebit, BankCurrency currencyDebit, BigDecimal amountDebit,
                                         String accountCredit, BankCurrency currencyCredit, BigDecimal amountCredit) {
         long stamp = System.currentTimeMillis();

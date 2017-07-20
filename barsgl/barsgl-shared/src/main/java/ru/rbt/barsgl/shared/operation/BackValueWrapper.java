@@ -7,6 +7,7 @@ import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.filter.IFilterItem;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -26,6 +27,9 @@ public class BackValueWrapper implements Serializable, IsSerializable {
     private String postDateStr;             // дата проводки
     private String comment;                 // Комментарийprivate
     private BackValuePostStatus bvStatus;   // текущий статус
+
+    //UserID для проверки ограничений для действий для конкретного пользователя
+    protected Long userId;
 
     public String getDateFormat() {
         return dateFormat;
@@ -101,5 +105,13 @@ public class BackValueWrapper implements Serializable, IsSerializable {
 
     public void setFilters(List<? extends IFilterItem> filters) {
         this.filters = filters;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
