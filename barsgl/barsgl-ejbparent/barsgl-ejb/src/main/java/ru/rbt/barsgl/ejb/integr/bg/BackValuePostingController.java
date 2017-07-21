@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
@@ -149,15 +148,15 @@ public class BackValuePostingController {
                 cnt = bvOperationRepository.updateOperationsSigneddate(wrapper.getBvStatus(), userContext.getUserName(), operdayController.getSystemDateTime(),
                         parameters.getGloidIn(), parameters.getSqlParams());
                 if (cnt != parameters.getOperCount()) {
-                    throw new DefaultApplicationException(format("Не удалось авторизовать операции, обновлено записей %d, ожидалось %d", cnt, parameters.getOperCount()));
+                    throw new DefaultApplicationException(format("Не удалось авторизовать операции: обновлено записей %d, ожидалось %d", cnt, parameters.getOperCount()));
                 }
                 return null;
             });
-            String message = getWrapperID(wrapper, parameters.getOperCount()) + " авторизована";
+            String message = getResultMessage(wrapper, parameters.getOperCount(), "авторизована", "авторизованы");
             auditController.info(BackValueOperation, message);
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
         } catch (ValidationError e) {
-            String msg = "Ошибка при авторизации " + getWrapperID(wrapper, 1);
+            String msg = "Ошибка при авторизации: " + getResultMessage(wrapper, 0);
             auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
             return new RpcRes_Base<>(0, true, getErrorMessage(e));
         }
@@ -174,15 +173,15 @@ public class BackValuePostingController {
                 cnt = bvOperationRepository.updateOperationsHold(parameters.getGloidIn(), wrapper.getComment(),
                         userContext.getUserName(), operdayController.getSystemDateTime(), parameters.getSqlParams());
                 if (cnt != parameters.getOperCount()) {
-                    throw new DefaultApplicationException(format("Не удалось изменить статус операций, обновлено записей %d, ожидалось %d", cnt, parameters.getOperCount()));
+                    throw new DefaultApplicationException(format("Не удалось изменить статус операций: обновлено записей %d, ожидалось %d", cnt, parameters.getOperCount()));
                 }
                 return null;
             });
-            String message = getWrapperID(wrapper, 1) + " задержана до выяснения";
+            String message = getResultMessage(wrapper, parameters.getOperCount(), "задержана", "задержаны") + " до выяснения";
             auditController.info(BackValueOperation, message);
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
         } catch (ValidationError e) {
-            String msg = "Ошибка при задержании " + getWrapperID(wrapper, 1);
+            String msg = "Ошибка при задержании: " + getResultMessage(wrapper, 0);
             auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
             return new RpcRes_Base<>(0, true, getErrorMessage(e));
         }
@@ -191,11 +190,11 @@ public class BackValuePostingController {
     public RpcRes_Base<Integer> getStatistics(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
             OperationParameters parameters = getOperationParameters(wrapper, criteria);
-            String message = "Всего операций: \nУсловие: ";
+            String message = format("Всего операций по условию: %d", parameters.getOperCount());
             auditController.info(BackValueOperation, message);
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
         } catch (ValidationError e) {
-            String msg = "Ошибка при получении статистики" + getWrapperID(wrapper, 1);
+            String msg = "Ошибка при получении статистики: " + getResultMessage(wrapper, 0);
             auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
             return new RpcRes_Base<>(0, true, getErrorMessage(e));
         }
@@ -214,24 +213,32 @@ public class BackValuePostingController {
              обратиться к EditPostingController
              }
              */
-            String message = getWrapperID(wrapper, 1) + ": изменена дата";
+            String message = getResultMessage(wrapper, 1) + ": изменена дата";
             return new RpcRes_Base<>(1, false, message);
         } catch (ValidationError e) {
-            String msg = "Ошибка при изменении даты " + getWrapperID(wrapper, 1);
+            String msg = "Ошибка при изменении даты: " + getResultMessage(wrapper, 0);
             auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
             return new RpcRes_Base<>(0, true, getErrorMessage(e));
         }
     }
 
-    public String getWrapperID(BackValueWrapper wrapper, int count) {
+    public String getResultMessage(BackValueWrapper wrapper, int count) {
+        return getResultMessage(wrapper, count, "", "");
+    }
+
+    public String getResultMessage(BackValueWrapper wrapper, int count, String one, String many) {
         List<Long> gloIDs = wrapper.getGloIDs();
+        String res = (count == 1) ? one : many;
         switch (wrapper.getMode()) {
-            case ONE:       return format("Операция ID = %d ", gloIDs.isEmpty() ? "" : gloIDs.get(0));
-            case VISIBLE:   return format("Операции в количестве %d ", gloIDs.size());
-            // TODO расшифровка фильтра и количество операций
-            case ALL:       return format("Операции по фильтру в количестве %d ", count);
+            case ONE:
+                return format("Операция ID = %d ", gloIDs.isEmpty() ? "" : gloIDs.get(0)) + res;
+            case VISIBLE:
+                return format("Операции в количестве %d ", count) + res;
+            case ALL:       // TODO расшифровка фильтра
+                return format("Операции по фильтру в количестве %d ", count) + res;
+            default:
+                return "Неверный режим обработки";
         }
-        return "Неверный режим обработки";
     }
 
     public String getErrorMessage(Throwable throwable) {
@@ -251,7 +258,7 @@ public class BackValuePostingController {
         if (ALL == wrapper.getMode()) {
             // сформировать запрос по фильтру
             SQL formSql = prepareCommonSql(wrapper.getSql(), criteria);
-            parameters.setGloidIn("select GLOID from (" + formSql.getQuery() + ")");
+            parameters.setGloidIn("select t.GLOID from (" + formSql.getQuery() + ") t ");
             parameters.setSqlParams(formSql.getParams());
         } else {
             // сформировать запрос по списку
