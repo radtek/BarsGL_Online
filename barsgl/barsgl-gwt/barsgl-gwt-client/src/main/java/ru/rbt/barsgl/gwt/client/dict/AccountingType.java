@@ -5,9 +5,11 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.dict.dlg.*;
+import ru.rbt.barsgl.gwt.client.dict.dlg.AccountingTypeCreateDlg;
+import ru.rbt.barsgl.gwt.client.dict.dlg.AccountingTypeDlg;
+import ru.rbt.barsgl.gwt.client.dict.dlg.ActParmDlg;
+import ru.rbt.barsgl.gwt.client.dict.dlg.LinkAccType2SourceDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.IAfterRefreshEvent;
@@ -20,7 +22,11 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
-import ru.rbt.barsgl.shared.dict.*;
+import ru.rbt.barsgl.shared.dict.AccTypeSourceWrapper;
+import ru.rbt.barsgl.shared.dict.AccTypeWrapper;
+import ru.rbt.barsgl.shared.dict.ActParmWrapper;
+import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
@@ -402,9 +408,12 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
 
     @Override
     protected String prepareMasterSql() {
-        return "select * from ( " +
-                "select left(ACCTYPE, 3) as SECTION, substr(ACCTYPE, 4, 2) as PRODUCT, substr(ACCTYPE, 6, 2) as SUBPRODUCT, " +
-                "right(ACCTYPE, 2) as MODIFIER, ACCTYPE, ACCNAME, PL_ACT, FL_CTRL, case when TECH_ACT='Y' then 'Y' else 'N' end as TECH_ACT from GL_ACTNAME) v";
+        return "select * from \n" +
+                "( \n" +
+                "  select substr(ACCTYPE, 1, 3) as SECTION, substr(ACCTYPE, 4, 2) as PRODUCT, substr(ACCTYPE, 6, 2) as SUBPRODUCT, \n" +
+                "         substr(ACCTYPE, -2) as MODIFIER, ACCTYPE, ACCNAME, PL_ACT, FL_CTRL, case when TECH_ACT='Y' then 'Y' else 'N' end as TECH_ACT \n" +
+                "    from GL_ACTNAME\n" +
+                ") v";
     }
 
     @Override

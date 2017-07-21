@@ -97,11 +97,11 @@ public class BatchPackageForm extends OperSuperBase {
     	String where = getSourceAndFilialPart("where", "", "FILIAL");
     	if (isEmpty(where))
     		where = " where 1=1";
-        return "select ID_PKG, DT_LOAD, STATE, DT_PRC, PKG.USER_NAME, FILE_NAME, CNT_PST, MVMNT_OFF, POSTDATE, PROCDATE,\n" +
+        return " SELECT ID_PKG, DT_LOAD, STATE, DT_PRC, PKG.USER_NAME, FILE_NAME, CNT_PST, MVMNT_OFF, POSTDATE, PROCDATE,\n" +
                 "PST_ALL, PST_OK, PST_ERR, SRV_ALL, SRV_OK, SRV_ERR,\n" +
-                "U.SURNAME || ' '  || VALUE(U.FIRSTNAME, '') || ' ' || VALUE(U.PATRONYMIC, '') as FIO, FILIAL,\n" +
+                "TRIM(REPLACE(U.SURNAME || ' '  || U.FIRSTNAME || ' ' || U.PATRONYMIC, '  ', ' ')) AS FIO, FILIAL,\n" +
                 "USER_AU2, OTS_AU2, USER_AU3, OTS_AU3, USER_CHNG, OTS_CHNG, DESCRDENY\n" +
-                "from V_GL_BATPKG_STAT PKG left join GL_USER U on U.USER_NAME = PKG.USER_NAME"
+                "FROM V_GL_BATPKG_STAT PKG LEFT JOIN GL_USER U ON U.USER_NAME = PKG.USER_NAME "
                 + where;
     }
 

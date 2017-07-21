@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -9,6 +8,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,7 +65,7 @@ public abstract class AccountTypePlFormDlg extends GridFormDlgBase {
         @Override
         protected String prepareSql() {
             return "select ACCTYPE, CUSTYPE, TERM, ACC2, PLCODE, ACOD, SQ, DTB, DTE, ACCNAME, TERMNAME, CTYPENAME, FL_CTRL" +
-                    " from V_GL_ACTPL where VALUE(PLCODE, '') <> '' and ACOD not in ('7920','7919','7903','7904','7907','7908')";
+                    " from V_GL_ACTPL where nvl(PLCODE, '-') <> '-' and ACOD not in ('7920','7919','7903','7904','7907','7908')";
         }
 
         @Override

@@ -2,7 +2,6 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -21,6 +20,7 @@ import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
@@ -260,7 +260,7 @@ public class BatchPostingForm extends OperBase {
                 "PST.AMTRU, PST.NRT, PST.RNRTL, PST.RNRTS, PST.DEPT_ID, PST.PRFCNTR, PST.FCHNG, PST.EMSG, " +
                 "PST.USER_NAME, PST.OTS, PST.HEADBRANCH, PST.USER_AU2, PST.OTS_AU2, PST.USER_AU3, PST.OTS_AU3, " +
                 "PST.USER_CHNG, PST.OTS_CHNG, PST.DESCRDENY, " +
-                "U.SURNAME || ' '  || VALUE(U.FIRSTNAME, '') || ' ' || VALUE(U.PATRONYMIC, '') as FIO, PKG.MVMNT_OFF " +
+                "U.SURNAME || ' '  || nvl(U.FIRSTNAME, '') || ' ' || nvl(U.PATRONYMIC, '') as FIO, PKG.MVMNT_OFF " +
                 "from GL_BATPKG PKG join GL_BATPST PST on PST.ID_PKG = PKG.ID_PKG " +
                 "left join GL_USER U on U.USER_NAME = PST.USER_NAME ";
     }

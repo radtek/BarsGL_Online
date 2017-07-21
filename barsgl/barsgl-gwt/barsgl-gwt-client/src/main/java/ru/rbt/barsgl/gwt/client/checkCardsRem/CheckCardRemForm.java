@@ -1,15 +1,12 @@
 package ru.rbt.barsgl.gwt.client.checkCardsRem;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
-import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Utils;
-
-import java.util.ArrayList;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 /**
  * Created by akichigi on 15.12.16.
@@ -20,7 +17,7 @@ public class CheckCardRemForm extends GridForm {
     private CheckCardRemFilterDlg dlg = null;
     private GridAction preFilterAction;
     private final String _sql =
-            "select a.branch, sum((value(b.obac,0) + value(b.dtac,0) + value(b.ctac,0) + value(c.dtac, 0) + value(c.ctac,0)) * 0.01) as sum, a.ccy, a.subdealid " +
+            "select a.branch, sum((nvl(b.obac,0) + nvl(b.dtac,0) + nvl(b.ctac,0) + nvl(c.dtac, 0) + nvl(c.ctac,0)) * 0.01) as sum, a.ccy, a.subdealid " +
             "from baltur b " +
             "left join gl_acc a on b.bsaacid = a.bsaacid " +
             "left join gl_baltur c on c.bsaacid = b.bsaacid and c.dat <= '{0}' " +
