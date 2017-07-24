@@ -5,11 +5,14 @@
 package ru.rbt.barsgl.ejb.integr.dict;
 
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.RpcRes_Base;
 
-import javax.ejb.EJB;
+import javax.annotation.PostConstruct;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -23,7 +26,6 @@ import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
  */
 public abstract class BaseDictionaryController<T extends Serializable, K extends Serializable, E extends BaseEntity<K>, U extends AbstractBaseEntityRepository<E, K>> implements DictionaryController<T> {
 
-  @EJB
   protected AuditController auditController;
 
   public RpcRes_Base<T> create(T wrapper, U repository, Class<E> clazz, K primaryKey,
@@ -110,5 +112,24 @@ public abstract class BaseDictionaryController<T extends Serializable, K extends
   public void afterUpdate(E entity){}
 
   public void beforeDelete(E entity){}
+
+  @PostConstruct
+  public void postConstruct() {
+    if (auditController == null) {
+      InitialContext ctx = null;
+      try {
+        ctx = new InitialContext();
+        auditController = (AuditController) ctx.lookup("java:global.barsgl.rbt-audit.AuditControllerEJBImpl!ru.rbt.audit.controller.AuditController");
+      } catch (NamingException e) {
+        throw new DefaultApplicationException(e.getMessage(), e);
+      } finally {
+        try {
+          if (null != ctx) ctx.close();
+        } catch (NamingException ignore) {
+          ignore.printStackTrace();
+        }
+      }
+    }
+  }
 
 }

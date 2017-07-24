@@ -1,37 +1,33 @@
 package ru.rbt.audit.controller;
 
+import org.apache.log4j.Logger;
+import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.audit.repository.AuditRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.security.RequestContext;
+
+import javax.ejb.*;
+import javax.inject.Inject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.DataTruncation;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.Optional;
-import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import org.apache.log4j.Logger;
-import ru.rbt.audit.entity.AuditRecord;
+
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
-import static ru.rbt.audit.entity.AuditRecord.LogLevel.Info;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.SysError;
-import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
-import ru.rbt.audit.repository.AuditRepository;
-import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.shared.ctx.UserRequestHolder;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.mapping.BaseEntity;
-import ru.rbt.shared.security.RequestContext;
 
 /**
  * Created by ER18837 on 03.06.15.
  */
 @SuppressWarnings("ALL")
-@Stateless
+@Stateless(mappedName = "AuditController")
 @LocalBean
 @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 public class AuditControllerEJBImpl implements AuditController {
