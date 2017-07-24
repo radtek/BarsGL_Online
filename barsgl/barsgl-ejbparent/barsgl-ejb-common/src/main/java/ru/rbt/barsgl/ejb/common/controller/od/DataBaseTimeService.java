@@ -18,7 +18,7 @@ public class DataBaseTimeService implements SystemTimeService {
     @Override
     public Date getCurrentTime() {
         try {
-            return repository.selectFirst("SELECT LOCALTIMESTAMP TS FROM DUAL").getDate("ts");
+            return repository.selectFirst("SELECT SYSTIMESTAMP TS FROM DUAL").getDate("ts");
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
