@@ -312,7 +312,9 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     }
 
     public void updateOperationParentStatus(Long operationId, OperState state) {
-        executeUpdate("update GLOperation o set o.state = ?1 where o.id = ?2 or o.parentOperation.id = ?3", state, operationId, operationId);
+//        executeUpdate("update GLOperation o set o.state = ?1 where o.id = ?2 or o.parentOperation.id = ?3", state, operationId, operationId);
+        // используем FUNCTIONAL INDEX
+        executeNativeUpdate("UPDATE GL_OPER O SET O.STATE = ? WHERE NVL(PAR_GLO,GLOID) = ?", state.name(), operationId);
     }
 
     public void updateOperationStatus(GLOperation operation, OperState state) {
