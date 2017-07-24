@@ -111,7 +111,7 @@ public class BatchPackageController {
             String msg = "Ошибка обработки пакета ID = " + wrapper.getPkgId();
             String errorMsg = wrapper.getErrorMessage();
             if (!isEmpty(errorMsg)) {
-                auditController.error(BatchOperation, msg, null, errorMsg);
+                auditController.error(BatchOperation, msg + ": " + errorMsg, null, e);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
                 auditController.error(BatchOperation, msg, null, e);
@@ -352,54 +352,55 @@ public class BatchPackageController {
         }
     }
 
-    public RpcRes_Base<ManualOperationWrapper> sendMovements(BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
+    public RpcRes_Base<ManualOperationWrapper> sendMovements(final BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
                                                              BatchPostStatus nextStatus) throws Exception {
         try {
-            auditController.info(BatchOperation, format("Пакет ID = '%d': запросов для отправки в сервис движений %d", pkg.getId(), postingsId.size()));
-            if (postingsId.size() == 0) {
-                return new RpcRes_Base<>( pkgWrapper, false, "Нет запросов для отправки в сервис");
-            }
-            BatchPostStep step = BatchPostStep.NOHAND;
-            List<MovementCreateData> movementData = new ArrayList<>();
-            for (Long postingId : postingsId) {
-                BatchPosting posting = postingRepository.findById(postingId);
-                step = posting.getStatus().getStep();
-                if (null != posting.getReceiveTimestamp()) {
-                    String msg = String.format("По запоросу ID = '%s' уже было выполнено движение в MovementCreate: '%s', время: '%s'",
-                            posting.getId().toString(), posting.getMovementId(), postingController.timeFormat.format(posting.getReceiveTimestamp()));
-                    auditController.info(BatchOperation, msg, posting);
-                    continue;
+            return postingRepository.executeInNewTransaction(persistence -> {
+                auditController.info(BatchOperation, format("Пакет ID = '%d': запросов для отправки в сервис движений %d", pkg.getId(), postingsId.size()));
+                if (postingsId.size() == 0) {
+                    return new RpcRes_Base<>( pkgWrapper, false, "Нет запросов для отправки в сервис");
                 }
-                ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
-                MovementCreateData data = postingController.createMovementData(posting, wrapper);
-                String movementId = data.getMessageUUID();
-                postingController.setOperationRqStatusSend(wrapper, movementId, WAITSRV, nextStatus);
-                movementData.add(data);
-            }
-            updatePackageState(pkg, ON_WAITSRV, IS_SIGNEDVIEW);
-            BatchProcessResult result = new BatchProcessResult(pkg.getId(), nextStatus);
-            result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
-            try {
-                movementProcessor.sendRequests(movementData);
-                result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), false);
-                return new RpcRes_Base<>( pkgWrapper, false, result.getPackageSendMessage());
-            } catch (Throwable e) {     // ошибка отправки
-                for (MovementCreateData data : movementData) {
-                    if (MovementCreateData.StateEnum.ERROR == data.getState() )
-                        postingController.receiveMovement(data);
+                BatchPostStep step = BatchPostStep.NOHAND;
+                List<MovementCreateData> movementData = new ArrayList<>();
+                for (Long postingId : postingsId) {
+                    BatchPosting posting = postingRepository.findById(postingId);
+                    step = posting.getStatus().getStep();
+                    if (null != posting.getReceiveTimestamp()) {
+                        String msg = String.format("По запоросу ID = '%s' уже было выполнено движение в MovementCreate: '%s', время: '%s'",
+                                posting.getId().toString(), posting.getMovementId(), postingController.timeFormat.format(posting.getReceiveTimestamp()));
+                        auditController.info(BatchOperation, msg, posting);
+                        continue;
+                    }
+                    ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
+                    MovementCreateData data = postingController.createMovementData(posting, wrapper);
+                    String movementId = data.getMessageUUID();
+                    postingController.setOperationRqStatusSend(wrapper, movementId, WAITSRV, nextStatus);
+                    movementData.add(data);
                 }
-                if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
-                    updatePackageState(pkg, ERROR, ON_WAITSRV);
+                updatePackageState(pkg, ON_WAITSRV, IS_SIGNEDVIEW);
+                BatchProcessResult result = new BatchProcessResult(pkg.getId(), nextStatus);
+                result.setProcessDate(SIGNEDDATE.equals(nextStatus) ? BT_PAST : BT_EMPTY);
+                try {
+                    movementProcessor.sendRequests(movementData);
+                    result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), false);
+                    return new RpcRes_Base<>( pkgWrapper, false, result.getPackageSendMessage());
+                } catch (Throwable e) {     // ошибка отправки
+                    for (MovementCreateData data : movementData) {
+                        if (MovementCreateData.StateEnum.ERROR == data.getState() )
+                            postingController.receiveMovement(data);
+                    }
+                    if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
+                        updatePackageState(pkg, ERROR, ON_WAITSRV);
+                    }
+                    result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), true);
+                    result.setPackageState(IS_ERRSRV);
+                    return new RpcRes_Base<>( pkgWrapper, false, result.getPackageProcessMessage());
                 }
-                result.setPackageStatistics(packageRepository.getPackageStatistics(pkg.getId()), true);
-                result.setPackageState(IS_ERRSRV);
-                return new RpcRes_Base<>( pkgWrapper, false, result.getPackageProcessMessage());
-            }
-        }
-        catch (Throwable e) {
-            pkg = packageRepository.findById(pkg.getId());
-            updatePackageState(pkg, ERROR, pkg.getPackageState());
-            throw new DefaultApplicationException(String.format("Ошибка при обращении к сервису движений для пакета ID = %s", pkg.getId()));
+            });
+        } catch (Throwable e) {
+            auditController.error(BatchOperation, "Ошибка при взаимодействии с сервисом движений: " + e.getMessage(), null, e);
+            postingRepository.executeInNewTransaction(persistence -> {updatePackageState(pkg, ERROR, pkg.getPackageState()); return null;});
+            throw new DefaultApplicationException(String.format("Ошибка при обращении к сервису движений для пакета ID = %s", pkg.getId()) + ":" + e.getMessage(), e);
         }
     }
 

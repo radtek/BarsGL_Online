@@ -2,12 +2,12 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -131,8 +131,8 @@ public class BatchPackageRepository extends AbstractBaseEntityRepository<BatchPa
         String fields = BatchPostingRepository.histfields;
         executeNativeUpdate("UPDATE GL_BATPST SET ID_PAR = ID WHERE ID_PKG = ? and INVISIBLE = ?", pkg.getId(), InvisibleType.N.name());
         executeNativeUpdate("" +
-                "INSERT INTO GL_BATPST (INVISIBLE, ID_PAR, " + fields + ")" +
-                " SELECT 'H', ID_PAR, " + fields + " FROM GL_BATPST WHERE ID_PKG = ? and INVISIBLE = ?",
+                "INSERT INTO GL_BATPST (ID, INVISIBLE, ID_PAR, " + fields + ")" +
+                " SELECT GL_BATPST_SEQ.NEXTVAL, 'H', ID_PAR, " + fields + " FROM GL_BATPST WHERE ID_PKG = ? and INVISIBLE = ?",
                 pkg.getId(), InvisibleType.N.name());
         return findById(pkg.getId());
     }
