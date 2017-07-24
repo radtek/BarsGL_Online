@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4:casa" xmlns:casa="urn:ucbru:gbo:v4:casa" xmlns:st="urn:ucbru:gbo:v4:st" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <!-- <xsd:import namespace="urn:ucbru:gbo:v4:st" schemaLocation="../st/SimpleTypes.mxsd"/> -->
+    <xsd:import namespace="urn:ucbru:gbo:v4:st" schemaLocation="../st/SimpleTypes.xsd"/>
+    <xsd:complexType name="PaymentDetails">
+        <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Информация по деталям платежа</xsd:documentation>
+    </xsd:annotation>
+        <xsd:sequence>
+      <xsd:element minOccurs="0" name="DocDate" type="xsd:date">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Дата документа</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerName">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Наименование плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="255"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerTaxID">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">ИНН плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation>
+            <xsd:documentation source="WMQI_DOCUMENTATION"/>
+          </xsd:annotation>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerAccount">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Счет плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerCorracc">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Корреспондентский счет банка плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerBIC">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">БИК банка плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerBank">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Наименование банка плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="255"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerAmount" type="xsd:decimal">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Сумма по счету плательщика</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="PayerCcy">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Валюта суммы по счету плательщика</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="3"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefName">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Наименование получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="255"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefTaxID">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">ИНН получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefAccount">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Счет получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefCorracc">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Корреспондентский счет банка получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefBIC">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">БИК банка получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="35"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefBank">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Наименование банка получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="255"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefAmount" type="xsd:decimal">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Сумма по счету получателя</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="BenefCcy">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Валюта суммы по счету получателя</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="3"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="Rate" type="xsd:decimal">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Курс конверсии</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="SwiftMsgType">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Тип SWIFT-сообщения</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="5"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+            <xsd:element minOccurs="0" name="CBRBatchNo">
+        <xsd:annotation>
+          <xsd:documentation source="WMQI_DOCUMENTATION">Номер рейса (для рублевых платежей)</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:annotation/>
+          <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="1"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+        </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4" xmlns:gbo="urn:ucbru:gbo:v4" xmlns:st="urn:ucbru:gbo:v4:st" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:import namespace="urn:ucbru:gbo:v4:st" schemaLocation="st/SimpleTypes.xsd"/>
+    <xsd:complexType name="ErrorDetails">
+		<xsd:sequence>
+			<xsd:element name="Code" type="st:ErrorCode">
+				<xsd:annotation>
+					<xsd:documentation>Код ошибки</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Description" type="st:ErrorDescription">
+				<xsd:annotation>
+					<xsd:documentation>Описание ошибки</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Source" type="st:ErrorSource">
+				<xsd:annotation>
+					<xsd:documentation>Источник ошибки</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Kind" type="st:ErrorKind">
+				<xsd:annotation>
+					<xsd:documentation>Тип ошибки, системная [SYSERR] или прикладная [ERROR]</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="DateTime" type="st:DateTime">
+				<xsd:annotation>
+					<xsd:documentation>Время возникновения ошибки</xsd:documentation>
+					
+				</xsd:annotation>
+			</xsd:element>
+        </xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

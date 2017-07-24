@@ -1,0 +1,1746 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4:st" xmlns:st="urn:ucbru:gbo:v4:st" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:simpleType name="ABS">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="ABSReferenceType">
+		<xsd:annotation>
+			<xsd:documentation>Референс в какой-либо банковской системе</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="16"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountClass">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Класс\sсчета</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="5"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountClearingBankCode">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountCode">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">4-значный\sкод\sсчета\sв\sномере\sсчета\sMIDAS</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountDescription">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Описание\sсчета</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountDormantParameter">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountGLCBLine">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountGLHOLine">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountGLValue">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountIMBCorBank">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountLimitLineId">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountMISGroup">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountMISGroupComponent">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountMISGroupLink">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Indicates the MIS Link is available to MIS group</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="G">
+				<xsd:annotation>
+					<xsd:documentation>Group</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="I">
+				<xsd:annotation>
+					<xsd:documentation>Individual</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountMISGroupTrans">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountMISPoolCode">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountName">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="100"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Номер\sсчета</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="18"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountOfficerCode">
+		<xsd:annotation>
+			<xsd:documentation>Код куратора клиента.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountOfficerName">
+		<xsd:annotation>
+			<xsd:documentation>пмя куратора клиента.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="250"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountPaymentAdditionalDetails">
+		<xsd:annotation>
+			<xsd:documentation>Additional payment details e.g. SWIFT bank to bank information</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountPaymentCrossRef">
+		<xsd:annotation>
+			<xsd:documentation>Customer's identification code for current payment instruction</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountPaymentDetails">
+		<xsd:annotation>
+			<xsd:documentation>The payment narrative with original payment language</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountSeqNum">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">2-значный\sпорядковый\sномер\sсчета\sв\sномере\sсчета\sMIDAS</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountSigMsg">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountSigNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountSigStatus">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountSpecial">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Класс/код\sсчета</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="5"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountStatus">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Indicates\sthe\sStatus\sof\sthe\sAccount\s[ACCSTAT].\s\r\nPossible\svalues\sare\s\r\n\tO\s-\sOpen\s\r\n\tC\s-\sClose</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="O"/>
+			<xsd:enumeration value="C"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountStmtCycle">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountStmtData">
+		<xsd:annotation>
+			<xsd:documentation>...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountStmtDateType">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="B">
+				<xsd:annotation>
+					<xsd:documentation source="WMQI_DOCUMENTATION">
+						Indicates whether the statement being requested is a Booking Dated (B) statement or a Value Dated (V) statement
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="V">
+				<xsd:annotation>
+					<xsd:documentation source="WMQI_DOCUMENTATION">Value Dated</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountStmtType">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountSweepType">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountTaxExemptModNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountTaxExemptReason">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountTaxExemptRemarks">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountTransDesc">
+		<xsd:annotation>
+			<xsd:documentation>Specifies transaction type</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountTransRef">
+		<xsd:annotation>
+			<xsd:documentation>Indicates the core-system reference number for the accounting entries</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountTransType">
+		<xsd:annotation>
+			<xsd:documentation>Indicates type transaction in accordance with SWIFT transaction types (see. SWIFT MT940 format)</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountType">
+		<xsd:annotation>
+			<xsd:documentation>Specifies Type of the Account [ACCTYPE]</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="S">
+				<xsd:annotation>
+					<xsd:documentation>Single</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="J">
+				<xsd:annotation>
+					<xsd:documentation>Joint</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ActivityType">
+		<xsd:annotation>
+			<xsd:documentation>Типа деятельности (код).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressFull">
+		<xsd:annotation>
+			<xsd:documentation>Полный адрес в одну строку.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="250"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressLine">
+		<xsd:annotation>
+			<xsd:documentation>Одна строка адреса.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressLongPart">
+		<xsd:annotation>
+			<xsd:documentation>Название насленного пункта, города, улицы и т.п.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="250"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressPartAbbreviation">
+		<xsd:annotation>
+			<xsd:documentation>Сокращение типа населенного пункта, улицы и т.п. Например, "г." и "ул."</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressShortPart">
+		<xsd:annotation>
+			<xsd:documentation>Номер дома, строения, квартиры и т.п.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="5"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressType">
+		<xsd:annotation>
+			<xsd:documentation>Тип адреса. Например, DOMICILE и PERMANENT.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AddressZipCode">
+		<xsd:annotation>
+			<xsd:documentation>Почтовый индекс.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AgreementNumber">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">N\sкредитного\sдоговора\sFCC</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="50"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ALMO">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AMLNarrative">
+		<xsd:annotation>
+			<xsd:documentation>Описание проблемы найденной в рамках (в ходе) борьбы с отмыванием денег.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="255"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AMLSearchResult">
+		<xsd:annotation>
+			<xsd:documentation>Результат поиска в "черном списке" стран или списке террористов. Возможные значения: FND - найден, NFND - не найден</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AMLTerrorNumber">
+		<xsd:annotation>
+			<xsd:documentation>Номер террориста.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:decimal"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="AMLTerrorRelevance">
+		<xsd:annotation>
+			<xsd:documentation>Степень совпадения с террористом.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:decimal"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="Amount">
+		<xsd:annotation>
+			<xsd:documentation>Количество средств (денег).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:decimal">
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ATMAccountNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Номер\sсчета\s...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="BalanceOfPayments">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:fractionDigits value="3"/>
+			<xsd:totalDigits value="22"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BankName">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="BarCode">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="128"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BIC">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="Bik">
+		<xsd:annotation>
+			<xsd:documentation>БпК (Банковский идентификационный код).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="9"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="BlockAmount">
+    <xsd:annotation/>
+    <xsd:restriction base="xsd:decimal">
+      <xsd:fractionDigits value="3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="BlockAuthId">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="6"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="BlockId">
+    <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Идентификатор\sблокировки</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="32"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="BlockPriority">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="([0-9]\.[0-9]{1,2}|[0-9])"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="BlockType">
+        <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Статус\sблокировки.\s\sA\s—\sподтверждённая;\sP\s—\sнеподтверждённая</xsd:documentation>
+    </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+      <xsd:length value="1"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="BranchCode">
+		<xsd:annotation>
+			<xsd:documentation>Код отделения.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardABSSerNo">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="16"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardDescription">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardId">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="25"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CardLastNumberMask">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CardNumber">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="25"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardProduct">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardSerno">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardStatus">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="CardTariff">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="25"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CBAccountNo">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CCDPassportNum">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="22"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CcyCode">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Код\sвалюты</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ChannelMessageType">
+		<xsd:annotation>
+			<xsd:documentation>Тип сообщения канала</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="16"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ChannelName">
+		<xsd:annotation>
+			<xsd:documentation>Наименование канала</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="16"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ChargeKind">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ChargeName">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="50"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ChargeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ClearingAccountNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Номер\sсчета\s...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="Comment">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="250"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CompanyCode">
+		<xsd:annotation>
+			<xsd:documentation>Код компании.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ContractNum">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Номер\sдоговора</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="ContractType">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Тип\sдоговора</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CorporateCustomerFullName">
+		<xsd:annotation>
+			<xsd:documentation>Полное название ЮЛ.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="160"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CorporateCustomerShortName">
+		<xsd:annotation>
+			<xsd:documentation>Короткое название ЮЛ.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="50"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CountryCbrCode">
+		<xsd:annotation>
+			<xsd:documentation>Код страны в формате ЦБ.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{3}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CountryCode">
+		<xsd:annotation>
+			<xsd:documentation>Код страны. Например, RU и US.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CountryName">
+		<xsd:annotation>
+			<xsd:documentation>Название страны.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="105"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CRBrn">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CreditRating">
+		<xsd:annotation>
+			<xsd:documentation>Кредитный рейтинг.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CRRef">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CRStatus">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CRUD">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Необязательное\sполе,\sопределяющее\sсоздание\sили\sизменение\sсделки\sв\sEMCDOC.\sПоведение\sсервиса\sпо\sумолчанию\s(при\sотсутствии\sэтого\sполя):\r\n-\sесли\sзапись\sс\sтаким\sидентификатором\sотсутствует,\sсоздать\sеё;\r\n-\sесли\sзапись\sсуществует,\sмодифицировать\sеё.\r\nПри\sзначении\s‘C’\sвыдавать\sошибку,\sесли\sзапись\sсуществует;\sпри\s‘U’\s–\sесли\sзапись\sне\sсуществует.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="1"/>
+			<xsd:enumeration value="C"/>
+			<xsd:enumeration value="R"/>
+			<xsd:enumeration value="U"/>
+			<xsd:enumeration value="D"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CSSerno">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="25"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CTStorageTime">
+		<xsd:restriction base="xsd:integer"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="CurrencyAlphaCode">
+		<xsd:annotation>
+			<xsd:documentation>Буквеный код вылюты.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="st:CurrencyCode">
+			<xsd:pattern value="[A-Za-z]{3}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CurrencyCode">
+		<xsd:annotation>
+			<xsd:documentation>Код валюты.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CurrencyDigitCode">
+		<xsd:annotation>
+			<xsd:documentation>Цифровой код вылюты.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="st:CurrencyCode">
+            <xsd:pattern value="[a-zA-Z0-9][0-9]{2}"/>
+        </xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CustomerBacaDescription">
+		<xsd:annotation>
+			<xsd:documentation/>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="50"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerBacaSegment">
+		<xsd:annotation>
+			<xsd:documentation>Классификатор клиентов для Банка Австрии (VCC code).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="6"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerCategory">
+		<xsd:annotation>
+			<xsd:documentation>Категория клиента. Возможные значения: PRIV, VIPP, STAF, CORP, BANK, ENTR и т.п.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerCbType">
+		<xsd:annotation>
+			<xsd:documentation>Тип клиента по ЦБ (форма собственности).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerChargeGroup">
+		<xsd:annotation>
+			<xsd:documentation>Тарификационная группа для платежей в иностранной/национальной валюте.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CustomerCodeword">
+		<xsd:annotation>
+			<xsd:documentation>Кодовое слово.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerDateOfBirth">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Дата\sрождения\sклиента</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:date"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerFirstName">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">пмя\sклиента</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerFullName">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="100"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerLastName">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Фамилия\sклиента</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerName">
+		<xsd:annotation>
+			<xsd:documentation>Короткое наименование клиента</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerNamePart">
+		<xsd:annotation>
+			<xsd:documentation>пмя, фамилия или отчество ФЛ.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerNameReq">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="160"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Номер\sклиента</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="8"/>
+			<xsd:minLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="CustomerNum">
+		<xsd:annotation>
+			<xsd:documentation>Номер/пдентификатор клиента.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="8"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerResidenceIndicator">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Признак\sтого,\sявляется\sли\sклиент\sрезидентом</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerRiskLevel">
+		<xsd:annotation>
+			<xsd:documentation>Уровень риска.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerSegment">
+		<xsd:annotation>
+			<xsd:documentation>Клиентский сегмент.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerShortName">
+		<xsd:annotation>
+			<xsd:documentation>Короткое имя клиента.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerStatus">
+		<xsd:annotation>
+			<xsd:documentation>Статус клиента. Возможные значения: O - открыт, C - закрыт.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CustomerType">
+		<xsd:annotation>
+			<xsd:documentation>Тип клиента. Возможные значения: I - физ. лицо, C - юр. лицо, B - юр. лицо банк.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DAccountNo">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Date">
+		<xsd:restriction base="xsd:date"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="DateTime">
+		<xsd:restriction base="xsd:dateTime"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="Day">
+		<xsd:annotation>
+			<xsd:documentation>День месяца.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:int">
+			<xsd:minInclusive value="1"/>
+			<xsd:maxInclusive value="31"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DB2DateTime">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="([0-9]{4}\-[0-9]{2}\-[0-9]{2}\-[0-2][0-9]\.[0-5][0-9]\.[0-5][0-9](\.)*([0-9])*)*"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="DebtAmountCCcy">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="22"/>
+			<xsd:fractionDigits value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DepartmentCode">
+		<xsd:annotation>
+			<xsd:documentation>Код отдела.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DepositDealRef">
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="18"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DepositDealType">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="5"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DepositInterestFreq">
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="1"/>
+			<xsd:enumeration value="D"/>
+			<xsd:enumeration value="M"/>
+			<xsd:enumeration value="Q"/>
+			<xsd:enumeration value="H"/>
+			<xsd:enumeration value="Y"/>
+			<xsd:enumeration value="L"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DepositInterestRate">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="15"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="DepositStatus">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DicCode">
+		<xsd:annotation>
+			<xsd:documentation>Код справочника</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="50"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DicName">
+		<xsd:annotation>
+			<xsd:documentation>Наименование справочника</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="255"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentCategory">
+		<xsd:annotation>
+			<xsd:documentation>Категодия документа. Возможные значения: PRIMARY_IDENTITY - основной документ удоставеряющий личность; RIGHT_OF_STAY - виза, вид на жительство, разрешение на временное пребывание.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentCode">
+		<xsd:annotation>
+			<xsd:documentation>Код документа.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentIssueAuthority">
+		<xsd:annotation>
+			<xsd:documentation>Кем выдан документ.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="160"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentIssueDepartmentCode">
+		<xsd:annotation>
+			<xsd:documentation>Код отделения выдавшего документ.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentIssuePlace">
+		<xsd:annotation>
+			<xsd:documentation>Место выдачи документа.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="250"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentNumber">
+		<xsd:annotation>
+			<xsd:documentation>Номер документа.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentSeries">
+		<xsd:annotation>
+			<xsd:documentation>Серия документа.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DocumentType">
+		<xsd:annotation>
+			<xsd:documentation>Тип документа.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DrCr">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Тип\s(дебет/кредит)\r\nD\s-\sdebit\r\nC\s-\scredit</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="1"/>
+			<xsd:enumeration value="D"/>
+			<xsd:enumeration value="C"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="EmailAddress">
+		<xsd:annotation>
+			<xsd:documentation>Адрес электронной почты.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="100"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ErrorCode">
+		<xsd:annotation>
+			<xsd:documentation>Код\sошибки</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="ErrorDescription">
+		<xsd:annotation>
+			<xsd:documentation>Описание\sошибки</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="ErrorKind">
+		<xsd:annotation>
+			<xsd:documentation>Тип(вид)\sошибки,\sсистемная\s(SYSERR)\sили\sприкладная\s(APPERR)</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="ErrorSource">
+		<xsd:annotation>
+			<xsd:documentation>псточник\sошибки</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="FaxNumber">
+		<xsd:annotation>
+			<xsd:documentation>Номер телефона.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FileBody">
+		<xsd:restriction base="xsd:base64Binary"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="FileName">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="100"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FileRef">
+		<xsd:restriction base="xsd:anyURI"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="FileType">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Flag">
+		<xsd:annotation>
+			<xsd:documentation/>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Y"/>
+			<xsd:enumeration value="N"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="GLAccountNo">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="IBAN">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="34"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="IBANAccountNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Номер\sсчета\s...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="IMBAccountNo">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="18"/>
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="INN">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="12"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Inn">
+		<xsd:annotation>
+			<xsd:documentation>пНН (пдентификационный номер налогоплательщика).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="12"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Kio">
+		<xsd:annotation>
+			<xsd:documentation>Код иностранной организации.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="5"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="KPP">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="KppCode">
+		<xsd:annotation>
+			<xsd:documentation>Код КПП (Код причины постановки на учет).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="9"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LanguageCode">
+		<xsd:annotation>
+			<xsd:documentation>Код языка. Например, RUS и ENG.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LegalFormFullName">
+		<xsd:annotation>
+			<xsd:documentation>Полное название организационно-правовой формы.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="160"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LegalFormId">
+		<xsd:annotation>
+			<xsd:documentation>пдентификатор организационно-правовой формы.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LegalFormShortName">
+		<xsd:annotation>
+			<xsd:documentation>Короткое название организационно-правовой формы.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoanAppCheckResult">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoanAppId">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoanApplicationId">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Уникальный\sидентификатор\sзаявки/сделки\sв\sпродуктовой\sсистеме-источнике</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="15"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="Media">
+		<xsd:annotation>
+			<xsd:documentation>Cпособ связи, например, с клиентом.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="15"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MISCompositeClass">
+		<xsd:annotation>
+			<xsd:documentation>MIS код для сложного MIS класса.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="MISCustomerClass">
+		<xsd:annotation>
+			<xsd:documentation>MIS код для клиентского MIS класса.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="MISGroup">
+		<xsd:annotation>
+			<xsd:documentation>Группа MIS.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="12"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="Module">
+    <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Модуль\sсистемы</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="32"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="Narrative">
+		<xsd:annotation>
+			<xsd:documentation>Комментарий</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="254"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NegativeInt">
+		<xsd:restriction base="xsd:int">
+			<xsd:maxExclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NonNegativeInt">
+		<xsd:restriction base="xsd:int">
+			<xsd:minInclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NonPositiveInt">
+		<xsd:restriction base="xsd:int">
+			<xsd:maxInclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NonResidentStateRegistrationNumber">
+		<xsd:annotation>
+			<xsd:documentation>Основной государственный регистрационный номер для не резидента.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="40"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="ObjectAccessType">
+		<xsd:annotation>
+			<xsd:documentation>Тип доступа к объекту.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Authorization">
+				<xsd:annotation>
+					<xsd:documentation>Авторизация</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="Modification">
+				<xsd:annotation>
+					<xsd:documentation>пзменение</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="Modification.Create">
+				<xsd:annotation>
+					<xsd:documentation>пзменение типа создание</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="Modification.Delete">
+				<xsd:annotation>
+					<xsd:documentation>пзменение типа удаление</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="Modification.Update">
+				<xsd:annotation>
+					<xsd:documentation>пзменение типа обновление</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="View">
+				<xsd:annotation>
+					<xsd:documentation>Просмотр</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ObjectIdentifier">
+		<xsd:annotation>
+			<xsd:documentation>пдентификатор объекта.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="ObjectReference">
+    <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Ссылка\sна\sобъект</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="32"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="ObjectType">
+		<xsd:annotation>
+			<xsd:documentation>Тип объекта.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="OGRN">
+		<xsd:union memberTypes="st:OGRN1 st:OGRN2"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="OGRN1">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{15}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OGRN2">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{13}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OkatoCode">
+		<xsd:annotation>
+			<xsd:documentation>Код ОКАТО (общероссийский классификатор объектов административно-территориального деления).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="12"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="OkpoCode">
+		<xsd:annotation>
+			<xsd:documentation>Номер юридического лица из ОКПО (общероссийский классификатор предприятий и организаций).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OkvedCode">
+		<xsd:annotation>
+			<xsd:documentation>Код из ОКВЭД (Общероссийский классификатор видов экономической деятельности).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="8"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="OkvedName">
+		<xsd:annotation>
+			<xsd:documentation>Описание из ОКВЭД.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="400"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="OlavCustomerNum">
+		<xsd:annotation>
+			<xsd:documentation>Сквозной клиентский номер для клиентов из Банка Австрии.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="8"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="OperationCode">
+    <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Код\sоперации</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="32"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="OrderStatus">
+		<xsd:annotation>
+			<xsd:documentation>Статус документа</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="16"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="PayerAccountNo">
+		<xsd:annotation>
+			<xsd:documentation>Номер счета</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="PayerName">
+		<xsd:annotation>
+			<xsd:documentation>Number of the original payment document</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="PaymentAmount">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:fractionDigits value="3"/>
+			<xsd:totalDigits value="22"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PaymentDocNumber">
+		<xsd:annotation>
+			<xsd:documentation>Number of the original payment document</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="PaymentPriority">
+		<xsd:restriction base="xsd:integer"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="PaymentRate">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:fractionDigits value="8"/>
+			<xsd:totalDigits value="19"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PhoneNumber">
+		<xsd:annotation>
+			<xsd:documentation>Номер телефона.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PositiveInt">
+		<xsd:restriction base="xsd:int">
+			<xsd:minExclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ProductGroup">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Код\sгруппы\sпродукта</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="32"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="ProductName">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Наименование\sкредитного\sпродукта\s(Продукт\sоднозначно\sидентифицирует\sГруппу\sпродуктов\s–\sАвто,\sпотребы,\sт.д.)</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="Percentage">
+        <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">процент\sот\sостатка\s(доля)</xsd:documentation>
+    </xsd:annotation>
+        <xsd:restriction base="xsd:decimal">
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="PublicOwnershipIndicator">
+		<xsd:annotation>
+			<xsd:documentation>Признак общественной (нечастной) собственности. Возможные значения: PUBS, OTHR.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="30"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Rate">
+		<xsd:annotation>
+			<xsd:documentation>Коэффициент/курс (курс валюты).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:decimal">
+			<xsd:fractionDigits value="8"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RateType">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="RegionCode">
+		<xsd:annotation>
+			<xsd:documentation>Код региона.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RegistrationSeries">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RequestId">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="40"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RequestSource">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="25"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ResponseCode">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ResponseDescription">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="60"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="S7CustomerNum">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Sex">
+		<xsd:annotation>
+			<xsd:documentation>Пол. Возможные значения: M - Мужской, F - Женский.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="M"/>
+			<xsd:enumeration value="F"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ShortComment">
+		<xsd:annotation>
+			<xsd:documentation>Комментарий.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="35"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="SigApprovalLimit">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="SigId">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="SigMsg">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="SigSolo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="SigStatus">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+    <xsd:simpleType name="SigType">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="SortType">
+		<xsd:restriction base="xsd:string">
+			<xsd:length value="1"/>
+			<xsd:enumeration value="a"/>
+			<xsd:enumeration value="A"/>
+			<xsd:enumeration value="d"/>
+			<xsd:enumeration value="D"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="SourceCode">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">Наименование\sсистемы-источника\sзапроса</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatementDate">
+		<xsd:restriction base="xsd:date"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatementNumber">
+		<xsd:restriction base="xsd:integer"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatementType">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="StateRegistrationNumber">
+		<xsd:annotation>
+			<xsd:documentation>Государственный регистрационный номер.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StateRegistrator">
+		<xsd:annotation>
+			<xsd:documentation>Орган государственной регистрации.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="160"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatusCode">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SUCCESS"/>
+			<xsd:enumeration value="WARNING"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatusDescription">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatusKind">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="StatusSource">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="SwiftCode">
+		<xsd:annotation>
+			<xsd:documentation>Код SWIFT.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="11"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="SystemCode">
+    <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Код\sсистемы</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="32"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="SystemName">
+		<xsd:annotation>
+			<xsd:documentation>Имя какой-либо системы в банке.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="SystemUser">
+		<xsd:annotation>
+			<xsd:documentation>Пользователь какой-либо системы в банке.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="TaxInspectionCode">
+		<xsd:annotation>
+			<xsd:documentation>Код налоговой инспекции.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TaxpayerRegistrationNumber">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="10"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TerritoryCode">
+		<xsd:annotation>
+			<xsd:documentation>Код территории.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Time">
+		<xsd:restriction base="xsd:time"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="Unit">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="UserName">
+		<xsd:restriction base="xsd:string"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="VAT">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AccountStmtNo">
+		<xsd:annotation>
+			<xsd:documentation source="WMQI_DOCUMENTATION">...</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<!-- TODO: добавить ограничения -->
+		</xsd:restriction>
+	</xsd:simpleType>
+    <xsd:simpleType name="MidasAccountNo">
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="18"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="MidasCustomerId">
+    <xsd:annotation>
+      <xsd:documentation source="WMQI_DOCUMENTATION">Аналог\sCNUM\sдля\sMidas.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:length value="6"/>
+            <xsd:pattern value="\d*"/>
+        </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="MasterSystemId">
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="15"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="AbsArrestId">
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="18"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="MovementId">
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="32"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="MovementAmount">
+    <xsd:restriction base="xsd:decimal">
+      <xsd:fractionDigits value="3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="CommisionType">
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="1"/>
+      <xsd:enumeration value="A"/>
+      <xsd:enumeration value="R"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+    <xsd:simpleType name="Amount22-3">
+    <xsd:restriction base="xsd:decimal">
+      <xsd:fractionDigits value="3"/>
+      <xsd:totalDigits value="22"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>

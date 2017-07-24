@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4:casa" xmlns:casa="urn:ucbru:gbo:v4:casa" xmlns:st="urn:ucbru:gbo:v4:st" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:import namespace="urn:ucbru:gbo:v4:st" schemaLocation="../st/SimpleTypes.xsd"/>
+    <xsd:complexType name="SCASAMovementExtension">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="Movement">
+        <xsd:complexType>
+          <xsd:sequence maxOccurs="1" minOccurs="1">
+                        <xsd:element minOccurs="0" name="BlockReference">
+              <xsd:complexType>
+                <xsd:sequence maxOccurs="1" minOccurs="1">
+                  <xsd:element name="SystemCode" type="st:SystemCode"/>
+                  <xsd:element name="BlockID" type="st:BlockId"/>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+                        <xsd:element minOccurs="0" name="MovementReference">
+              <xsd:complexType>
+                <xsd:sequence maxOccurs="1" minOccurs="1">
+                  <xsd:element name="SystemCode" type="st:SystemCode"/>
+                  <xsd:element name="MovementID" type="st:MovementId"/>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+                        <xsd:element minOccurs="0" name="ABSReference">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:maxLength value="20"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+                        <xsd:element name="ABS" type="xsd:string"/>
+                        <xsd:element name="CBAccount" type="st:CBAccountNo"/>
+                        <xsd:element minOccurs="0" name="Status">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="S"/>
+                  <xsd:enumeration value="R"/>
+                  <xsd:enumeration value="F"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+                        <xsd:element minOccurs="0" name="MovementAmount" type="st:MovementAmount"/>
+            <xsd:element minOccurs="0" name="ErrorCode" type="xsd:string"/>
+            <xsd:element minOccurs="0" name="ErrorDescription" type="xsd:string"/>
+                        <xsd:element minOccurs="0" name="AvailableBalance" type="st:MovementAmount">
+            </xsd:element>
+                    </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

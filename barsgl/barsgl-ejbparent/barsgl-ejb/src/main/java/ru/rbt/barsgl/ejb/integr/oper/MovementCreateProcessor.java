@@ -181,13 +181,13 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             MovementCreateData.StateEnum res = MovementCreateData.StateEnum.SUCCESS;
             MovementErrorTypes errType = null;
             String errDescr = null;
-            if (item.getDealId().equals("TIMEOUT")) {
+            if ("TIMEOUT".equals(item.getDealId())) {
                 continue;
-            } else if (item.getDealId().equals("ERROR")) {
+            } else if ("ERROR".equals(item.getDealId())) {
                 res = MovementCreateData.StateEnum.ERROR;
                 errType = MovementErrorTypes.ERR_SERVICE;
                 errDescr = "Error";
-            } else if (item.getDealId().equals("REFUSE")) {
+            } else if ("REFUSE".equals(item.getDealId())) {
                 res = MovementCreateData.StateEnum.ERROR;
                 errType = MovementErrorTypes.ERR_BUSINESS;
                 errDescr = "Insufficient balance";
@@ -199,6 +199,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             mcd.setState(res);
             mcd.setErrType(errType);
             mcd.setErrDescr(errDescr);
+            mcd.setEnvelopOutcoming(item.getEnvelopOutcoming());
             mcdList.add(mcd);
             log.info(String.format("MC Message UUID '%s' received", mcd.getMessageUUID()));
         }

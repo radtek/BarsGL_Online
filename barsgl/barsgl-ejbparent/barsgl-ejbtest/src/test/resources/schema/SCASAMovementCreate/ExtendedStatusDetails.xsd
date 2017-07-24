@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="urn:ucbru:gbo:v4" xmlns:gbo="urn:ucbru:gbo:v4" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:include schemaLocation="StatusDetails.xsd"/>
+    <xsd:include schemaLocation="StatusExtensionDetails.xsd"/>
+	<xsd:complexType name="ExtendedStatusDetails">
+		<xsd:sequence>
+			<xsd:element form="qualified" name="StatusDetails" type="gbo:StatusDetails"/>
+			<xsd:element form="qualified" minOccurs="0" name="StatusExtension" type="gbo:StatusExtensionDetails"/>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

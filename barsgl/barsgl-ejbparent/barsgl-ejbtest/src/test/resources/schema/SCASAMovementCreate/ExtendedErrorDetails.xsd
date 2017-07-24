@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="urn:ucbru:gbo:v4" xmlns:gbo="urn:ucbru:gbo:v4" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:include schemaLocation="ErrorDetails.xsd"/>
+	<xsd:include schemaLocation="ErrorExtensionDetails.xsd"/>
+	<xsd:complexType name="ExtendedErrorDetails">
+		<xsd:sequence>
+			<xsd:element form="qualified" name="ErrorDetails" type="gbo:ErrorDetails"/>
+			<xsd:element form="qualified" minOccurs="0" name="ErrorExtension" type="gbo:ErrorExtensionDetails"/>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

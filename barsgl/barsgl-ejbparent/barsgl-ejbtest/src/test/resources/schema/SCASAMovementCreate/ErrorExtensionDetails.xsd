@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="urn:ucbru:gbo:v4" xmlns:gbo="urn:ucbru:gbo:v4" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="ErrorExtensionDetails">
+    <xsd:sequence>
+      <xsd:any maxOccurs="unbounded" minOccurs="0" processContents="lax"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

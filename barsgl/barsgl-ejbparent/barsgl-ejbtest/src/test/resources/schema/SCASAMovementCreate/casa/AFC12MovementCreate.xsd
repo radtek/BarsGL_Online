@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4:casa" xmlns:casa="urn:ucbru:gbo:v4:casa" xmlns:st="urn:ucbru:gbo:v4:st" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:include schemaLocation="PaymentDetails.xsd"/>
+    <xsd:import namespace="urn:ucbru:gbo:v4:st" schemaLocation="../st/SimpleTypes.xsd"/>
+    <xsd:complexType name="AFC12MovementCreate">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="Movement">
+        <xsd:complexType>
+          <xsd:sequence maxOccurs="1" minOccurs="1">
+            <xsd:element name="RequestNumber" type="xsd:int"/>
+            <xsd:element minOccurs="0" name="BlockReference">
+              <xsd:complexType>
+                <xsd:sequence maxOccurs="1" minOccurs="1">
+                  <xsd:element name="SystemCode" type="st:SystemCode"/>
+                  <xsd:element name="BlockID" type="st:BlockId"/>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="MovementReference">
+              <xsd:complexType>
+                <xsd:sequence maxOccurs="1" minOccurs="1">
+                  <xsd:element name="SystemCode" type="st:SystemCode"/>
+                  <xsd:element name="MovementID" type="st:MovementId"/>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="CBAccount" type="st:CBAccountNo"/>
+            <xsd:element name="MovementAmount" type="st:Amount">
+            </xsd:element>
+            <xsd:element minOccurs="0" name="ObjectReference" type="st:ObjectReference"/>
+                        <xsd:element minOccurs="0" name="EDNo">
+              <xsd:annotation>
+                <xsd:documentation source="WMQI_DOCUMENTATION">Номер уникального электронного документа в выписке по НОСТРО счету банка-корреспондента</xsd:documentation>
+              </xsd:annotation>
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:maxLength value="40"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+                        <xsd:element minOccurs="0" name="DocNum" type="st:DocumentNumber">
+              <xsd:annotation>
+                <xsd:documentation source="WMQI_DOCUMENTATION">Номер документа из внешней системы</xsd:documentation>
+              </xsd:annotation>
+            </xsd:element>
+                        <xsd:element minOccurs="0" name="ExtModule">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:maxLength value="32"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element minOccurs="0" name="ExtOperationCode">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:maxLength value="32"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element name="Priority" type="st:BlockPriority">
+            </xsd:element>
+            <xsd:element name="OperationDate" type="xsd:date"/>
+            <xsd:element name="DrCr" type="st:DrCr">
+            </xsd:element>
+            <xsd:element minOccurs="0" name="Narrative">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:maxLength value="255"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element minOccurs="0" name="UseOverdraft" type="xsd:boolean"/>
+            <xsd:element minOccurs="0" name="IgnoreBalance" type="xsd:boolean"/>
+            <xsd:element minOccurs="0" name="IgnoreBlockFlag" type="xsd:boolean"/>
+            <xsd:element minOccurs="0" name="UseFAFO" type="xsd:boolean"/>
+            <xsd:element minOccurs="0" name="ValueDate" type="st:Date"/>
+            <xsd:element minOccurs="0" name="PrimeBlockID">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:maxLength value="6"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element minOccurs="0" name="Storno" type="xsd:boolean"/>
+                        <xsd:element minOccurs="0" name="PaymentDetails" type="casa:PaymentDetails">
+              <xsd:annotation>
+                <xsd:documentation source="WMQI_DOCUMENTATION">Информация по деталям платежа</xsd:documentation>
+              </xsd:annotation>
+            </xsd:element>
+                        <xsd:element name="Branch" type="st:BranchCode"/>
+                    </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4" xmlns:gbo="urn:ucbru:gbo:v4" xmlns:st="urn:ucbru:gbo:v4:st" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:complexType name="SOAPHeaders">
+		<xsd:sequence>
+			<xsd:element minOccurs="0" name="Correlation">
+				<xsd:annotation>
+					<xsd:documentation>данные, обеспечивающие соотнесение запроса и ответа/ответов</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element minOccurs="0" name="XRef" type="xsd:string">
+							<xsd:annotation>
+								<xsd:documentation>уникальный идентификатор запроса</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element minOccurs="0" name="Segmentation">
+							<xsd:complexType>
+								<xsd:sequence>
+									<xsd:element default="false" minOccurs="0" name="CanSegmentResponse" type="xsd:boolean">
+										<xsd:annotation>
+											<xsd:documentation>признак, определяющий возможность отправки ответа в сегментированном виде</xsd:documentation>
+										</xsd:annotation>
+									</xsd:element>
+								</xsd:sequence>
+							</xsd:complexType>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Security">
+				<xsd:annotation>
+					<xsd:documentation>данные для аутентификации/авторизации</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:any maxOccurs="unbounded" minOccurs="0"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Audit">
+				<xsd:annotation>
+					<xsd:documentation>данные для протоколирования вызова и работы сервиса, отслеживания путей прохождения сообщений</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element minOccurs="0" name="MessagePath">
+							<xsd:annotation>
+								<xsd:documentation>узлы, через которые проходит сообщение</xsd:documentation>
+							</xsd:annotation>
+							<xsd:complexType>
+								<xsd:sequence>
+									<xsd:element maxOccurs="unbounded" minOccurs="0" name="Step">
+										<xsd:complexType>
+											<xsd:sequence>
+												<xsd:element minOccurs="0" name="Application.Module" type="xsd:string">
+													<xsd:annotation>
+														<xsd:documentation>наименование узла</xsd:documentation>
+													</xsd:annotation>
+												</xsd:element>
+												<xsd:element minOccurs="0" name="VersionId" type="xsd:string">
+													<xsd:annotation>
+														<xsd:documentation>идентификатор версии узла</xsd:documentation>
+													</xsd:annotation>
+												</xsd:element>
+												<xsd:element minOccurs="0" name="TimeStamp" type="xsd:dateTime">
+													<xsd:annotation>
+														<xsd:documentation>время прохождения узла</xsd:documentation>
+													</xsd:annotation>
+												</xsd:element>
+												<xsd:element minOccurs="0" name="RoutingRole">
+													<xsd:annotation>
+														<xsd:documentation>роль узла: для обрабатывающего сервиса ставятся как минимум 2 записи – в начале обработки ‘START’, в конце ‘SUCCESS’ или ‘ERROR’ (в Comment пишется сообщение об ошибке) и т.д.; для промежуточных узлов – одна запись со значением ‘ROUTE’ назначение маршрутизации – в Comment.</xsd:documentation>
+													</xsd:annotation>
+													<xsd:simpleType>
+														<xsd:union memberTypes="xsd:string">
+															<xsd:simpleType>
+																<xsd:restriction base="xsd:string">
+																	<xsd:enumeration value="START"/>
+																	<xsd:enumeration value="SUCCESS"/>
+																	<xsd:enumeration value="ERROR"/>
+																	<xsd:enumeration value="ROUTE"/>
+																</xsd:restriction>
+															</xsd:simpleType>
+														</xsd:union>
+													</xsd:simpleType>
+												</xsd:element>
+												<xsd:element minOccurs="0" name="Comment" type="xsd:string"/>
+											</xsd:sequence>
+										</xsd:complexType>
+									</xsd:element>
+								</xsd:sequence>
+							</xsd:complexType>
+						</xsd:element>
+						<xsd:element minOccurs="0" name="ProcessInfo">
+							<xsd:annotation>
+								<xsd:documentation>информация о бизнес процессе</xsd:documentation>
+							</xsd:annotation>
+							<xsd:complexType>
+								<xsd:sequence>
+									<xsd:element minOccurs="0" name="Name" type="xsd:string">
+										<xsd:annotation>
+											<xsd:documentation>название процесса в каталоге бизнес процессов</xsd:documentation>
+										</xsd:annotation>
+									</xsd:element>
+									<xsd:element minOccurs="0" name="InstanceId" type="xsd:string">
+										<xsd:annotation>
+											<xsd:documentation>идентификатор конкретного экземпляра бизнес-процесса</xsd:documentation>
+										</xsd:annotation>
+									</xsd:element>
+								</xsd:sequence>
+							</xsd:complexType>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Usability">
+				<xsd:annotation>
+					<xsd:documentation>данные для предоставления ответа в наиболее удобном для пользователя виде</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element minOccurs="0" name="Internationalization">
+							<xsd:complexType>
+								<xsd:sequence>
+									<xsd:element minOccurs="0" name="Language">
+										<xsd:annotation>
+											<xsd:documentation>2-символьный код языка стандарта ISO 639-1</xsd:documentation>
+										</xsd:annotation>
+										<xsd:simpleType>
+											<xsd:restriction base="xsd:string">
+												<xsd:length value="2"/>
+											</xsd:restriction>
+										</xsd:simpleType>
+									</xsd:element>
+								</xsd:sequence>
+							</xsd:complexType>
+						</xsd:element>
+						<xsd:element minOccurs="0" name="Fetch">
+							<xsd:complexType>
+								<xsd:sequence>
+									<xsd:element minOccurs="0" name="MaxRecords" type="xsd:integer">
+										<xsd:annotation>
+											<xsd:documentation>ограничение на максимальный размер возвращаемого массива</xsd:documentation>
+										</xsd:annotation>
+									</xsd:element>
+									<xsd:element minOccurs="0" name="MoreRecordsAvailable" type="xsd:boolean">
+										<xsd:annotation>
+											<xsd:documentation>признак того, что вернулись не все элементы массива</xsd:documentation>
+										</xsd:annotation>
+									</xsd:element>
+									<xsd:element minOccurs="0" name="RecordCount" type="xsd:integer">
+										<xsd:annotation>
+											<xsd:documentation>количество оставшихся элементов массива</xsd:documentation>
+										</xsd:annotation>
+									</xsd:element>
+								</xsd:sequence>
+							</xsd:complexType>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element minOccurs="0" name="Tools">
+				<xsd:annotation>
+					<xsd:documentation>вспомогательные блоки</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element minOccurs="0" name="Environment">
+							<xsd:complexType>
+								<xsd:sequence>
+									<xsd:any maxOccurs="unbounded" minOccurs="0" processContents="lax"/>
+								</xsd:sequence>
+							</xsd:complexType>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+            <xsd:element minOccurs="0" name="Composite">
+        <xsd:complexType>
+          <xsd:sequence maxOccurs="1" minOccurs="1">
+            <xsd:element minOccurs="0" name="Orchestration">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="SERVICE_RESPONSIBLE"/>
+                  <xsd:enumeration value="CONSUMING_APP_OPTIMISTIC"/>
+                  <xsd:enumeration value="CONSUMING_APP_PESSIMISTIC"/>
+                  <xsd:enumeration value="SERVICE_DR_FIRST_OPTIMISTIC"/>
+                  <xsd:enumeration value="SERVICE_DR_FIRST_PESSIMISTIC"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+        </xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

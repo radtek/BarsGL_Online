@@ -1,10 +1,12 @@
 package ru.rbt.barsgl.ejbtest;
 
+import java.util.List;
 import com.ibm.jms.JMSBytesMessage;
 import com.ibm.jms.JMSMessage;
 import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
+import java.io.ByteArrayInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.MovementCreateTask;
@@ -15,9 +17,19 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.junit.Assert.fail;
+import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
+import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 
 /**
  * Created by ER22228
@@ -75,6 +87,9 @@ commit;
 
                 .build();
         jobService.executeJob(job);
+        
+        // Clear responses if debug true
+        remoteAccess.invoke(MovementCreateProcessor.class, "receiveResponses", new Object[]{});
 
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
@@ -85,6 +100,35 @@ commit;
 
     }
 
+    @Test
+    public void validateXml(){
+        SingleActionJob job =
+                SingleActionJobBuilder.create()
+                        .withClass(MovementCreateTask.class)
+                        .build();
+        
+        try {
+            jobService.executeJob(job);
+                        
+            List<MovementCreateData> list = remoteAccess.invoke(MovementCreateProcessor.class, "receiveResponses", new Object[]{});
+            
+            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = factory.newSchema(new Source[]{
+                new StreamSource(new File(getClass().getResource("/schema/envelope.xml").getFile())),
+                new StreamSource(new File(getClass().getResource("/schema/SCASAMovementCreate/SOAPHeaders.xsd").getFile())),
+                new StreamSource(new File(getClass().getResource("/schema/SCASAMovementCreate/casa/SCASAMovementCreate.xsd").getFile()))
+            });
+            Validator validator = schema.newValidator();
+            
+            for (MovementCreateData movementCreateData : list) {
+                validator.validate(new StreamSource(new ByteArrayInputStream(movementCreateData.getEnvelopOutcoming().getBytes())));
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(MovementCreateIT.class.getName()).log(Level.SEVERE, null, ex);
+            fail(ex.getMessage());
+        }
+    }
+    
     private void receiveFromQueue(MQQueueConnectionFactory cf, String queueName) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);

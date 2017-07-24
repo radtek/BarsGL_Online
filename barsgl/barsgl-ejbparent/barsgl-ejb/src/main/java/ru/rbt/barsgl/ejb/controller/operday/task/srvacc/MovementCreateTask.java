@@ -37,6 +37,10 @@ public class MovementCreateTask implements ParamsAwareRunnable {
         datas.get(0).setAccountCBD("40807810000010496202");
         processor.processOld(datas);
         data = datas.get(0);
+
+        // Debug if local -- resend for xml validation
+        processor.sendRequests(datas);
+        
         //processor.sendRequests(datas);
         //processor.putTestAnswer();
 //        processor.receiveResponses(datas);

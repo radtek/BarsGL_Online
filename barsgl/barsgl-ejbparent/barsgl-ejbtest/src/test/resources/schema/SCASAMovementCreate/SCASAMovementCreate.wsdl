@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="urn:ucbru:gbo:v4" xmlns:casa="urn:ucbru:gbo:v4:casa" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns="urn:ucbru:gbo:v4:st" targetNamespace="urn:ucbru:gbo:v4">
+	<wsdl:types>
+		<s:schema elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4">
+			<s:include schemaLocation="SOAPHeaders.xsd"/>
+			<s:include schemaLocation="ExtendedStatusDetails.xsd"/>
+			<s:include schemaLocation="ExtendedErrorDetails.xsd"/>
+			<s:element name="UCBRUHeaders" type="tns:SOAPHeaders"/>
+			<s:element name="ExtendedStatus" type="tns:ExtendedStatusDetails"/>
+			<s:element name="ExtendedError" type="tns:ExtendedErrorDetails"/>
+		</s:schema>
+		<s:schema elementFormDefault="qualified" targetNamespace="urn:ucbru:gbo:v4:casa">
+			<s:include schemaLocation="casa/SCASAMovementCreate.xsd"/>
+			<s:element name="SCASAMovementCreate" type="casa:SCASAMovementCreate"/>
+		</s:schema>
+	</wsdl:types>
+	<wsdl:message name="SCASAMovementCreate">
+		<wsdl:part name="header" element="tns:UCBRUHeaders"/>
+		<wsdl:part name="SCASAMovementCreate" element="casa:SCASAMovementCreate"/>
+	</wsdl:message>
+	<wsdl:message name="ExtendedStatus">
+		<wsdl:part name="header" element="tns:UCBRUHeaders"/>
+		<wsdl:part name="ExtendedStatus" element="tns:ExtendedStatus"/>
+	</wsdl:message>
+	<wsdl:message name="ExtendedError">
+		<wsdl:part name="ExtendedError" element="tns:ExtendedError"/>
+	</wsdl:message>
+	<wsdl:portType name="SCASAMovementCreate">
+		<wsdl:operation name="SCASAMovementCreate">
+			<wsdl:input message="tns:SCASAMovementCreate"/>
+			<wsdl:output message="tns:ExtendedStatus"/>
+			<wsdl:fault name="Fault" message="tns:ExtendedError"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="SCASAMovementCreateJMSBinding" type="tns:SCASAMovementCreate" xmlns:soapjms="http://www.w3.org/2010/soapjms/">
+		<soap:binding style="document" transport="http://www.w3.org/2010/soapjms/"/>
+		<wsdl:operation name="SCASAMovementCreate">
+			<soap:operation/>
+			<wsdl:input>
+				<soap:body parts="SCASAMovementCreate" use="literal" wsdl:required="true"/>
+				<soap:header message="tns:SCASAMovementCreate" part="header" use="literal" wsdl:required="true"/>
+			</wsdl:input>
+			<wsdl:fault name="Fault">
+				<soap:fault name="Fault" use="literal" wsdl:required="true"/>
+			</wsdl:fault>
+			<wsdl:output>
+				<soap:body parts="ExtendedStatus" use="literal" wsdl:required="true"/>
+				<soap:header message="tns:ExtendedStatus" part="header" use="literal" wsdl:required="true"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:binding name="SCASAMovementCreateHTTPBinding" type="tns:SCASAMovementCreate">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="SCASAMovementCreate">
+			<soap:operation soapAction="http://www.w3.org/2001/XMLSchema:#SCASAMovementCreate"/>
+			<wsdl:input>
+				<soap:body parts="SCASAMovementCreate" use="literal" wsdl:required="true"/>
+				<soap:header message="tns:SCASAMovementCreate" part="header" use="literal" wsdl:required="true"/>
+			</wsdl:input>
+			<wsdl:fault name="Fault">
+				<soap:fault name="Fault" use="literal" wsdl:required="true"/>
+			</wsdl:fault>
+			<wsdl:output>
+				<soap:body parts="ExtendedStatus" use="literal" wsdl:required="true"/>
+				<soap:header message="tns:ExtendedStatus" part="header" use="literal" wsdl:required="true"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="SCASAMovementCreate">
+		<wsdl:port name="SCASAMovementCreatePort_jms" binding="tns:SCASAMovementCreateJMSBinding">
+			<soap:address location="jms:jndi:UCBRU.SCASA.V4.MOCRFRBL.REQUEST?jndiConnectionFactoryName=GWSConnectionFactory&amp; jndiInitialContextFactory=com.sun.jndi.fscontext.RefFSContextFactory&amp;jndiURL=file:/C:/Program Files/IBM/JMS&amp;timeToLive=30000"/>
+		</wsdl:port>
+		<wsdl:port name="SCASAMovementCreatePort_http" binding="tns:SCASAMovementCreateHTTPBinding">
+			<soap:address location="http://example.com/SCASAMovementCreate"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
