@@ -2,11 +2,14 @@ package ru.rbt.barsgl.gwt.client.comp;
 
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.TextBox;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
+import ru.rbt.barsgl.gwt.core.comp.Components;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.ColumnsBuilder;
-import ru.rbt.barsgl.gwt.core.ui.*;
+import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
+import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.Utils;
@@ -19,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import ru.rbt.barsgl.gwt.core.comp.Components;
 
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Sort.ASC;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.LONG;
@@ -128,7 +130,7 @@ public class GLComponents {
     public static DataListBoxEx createBranchAuthListBox(String ccy, String width, boolean withEmptyValue){
         AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
         if (wrapper != null) {
-            Columns columns = new ColumnsBuilder().addColumn("BRANCH", LONG).addColumn("NAME", STRING)
+            Columns columns = new ColumnsBuilder().addColumn("BRANCH", STRING).addColumn("NAME", STRING)
                     .addColumn("CNUM", STRING).addColumn("CBCCN", STRING).build();
             List<SortItem> sort = new ArrayList<>();
             sort.add(new SortItem("BRANCH", ASC));
