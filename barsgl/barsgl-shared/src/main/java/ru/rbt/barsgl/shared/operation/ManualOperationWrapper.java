@@ -73,6 +73,8 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     protected BatchPostStatus status;
     protected BatchPostAction action;
     protected String reasonOfDeny;
+    protected boolean isBalanceError;
+    protected boolean noCheckBalance;
 
     //UserID для проверки ограничений для действий со счетом для конкретного пользователя
     protected Long userId;
@@ -409,5 +411,21 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
 
     public void setWithCheck(boolean withCheck) {
         this.withCheck = withCheck;
+    }
+
+    public boolean isBalanceError() {
+        return isBalanceError;
+    }
+
+    public void setBalanceError(boolean balanceError) {
+        isBalanceError = balanceError;
+    }
+
+    public boolean isNoCheckBalance() {
+        return noCheckBalance;
+    }
+
+    public void setNoCheckBalance(boolean noCheckBalance) {
+        this.noCheckBalance = noCheckBalance;
     }
 }

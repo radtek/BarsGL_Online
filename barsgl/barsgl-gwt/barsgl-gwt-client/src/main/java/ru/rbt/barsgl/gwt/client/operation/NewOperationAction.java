@@ -1,7 +1,9 @@
 package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -15,7 +17,9 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
+import static ru.rbt.barsgl.gwt.client.BarsGLEntryPoint.operationService;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
 /**
@@ -81,7 +85,36 @@ public class NewOperationAction extends GridAction {
             @Override
             public void onSuccess(RpcRes_Base<ManualOperationWrapper> operationWrappers) {
                 if (operationWrappers.isError()) {
-                    showInfo("Ошибка", operationWrappers.getMessage());
+                    if (operationWrappers.getResult().isBalanceError()) {
+                        final ManualOperationWrapper w1 = operationWrappers.getResult();
+                        showConfirm("Красное сальдо !!!!", operationWrappers.getMessage(), new IDlgEvents() {
+                                    @Override
+                                    public void onDlgOkClick(Object p) throws Exception {
+                                        w1.setNoCheckBalance(true);
+                                        w1.setBalanceError(false);
+                                        w1.getErrorList().clear();
+                                        operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+                                        {
+                                            @Override
+                                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+                                                if (w2.isError())
+                                                {
+                                                    showInfo("Ошибка", w2.getMessage());
+                                                }
+                                                else {
+                                                    dlg.hide();
+                                                    showInfo("Информация", w2.getMessage());
+                                                    grid.refresh();
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                                , null);
+                    }
+                    else {
+                        showInfo("Ошибка", operationWrappers.getMessage());
+                    }
                 } else {
                     showInfo("Информация", operationWrappers.getMessage());
                     dlg.hide();

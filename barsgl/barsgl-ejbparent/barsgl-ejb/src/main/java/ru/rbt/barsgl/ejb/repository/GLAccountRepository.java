@@ -152,6 +152,27 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public DataRecord checkAccountBalance(String bsaAcid, String acid, Date operDate, BigDecimal amount)
+    {
+        try {
+            DataRecord res = selectFirst("with ACC_TOVER as (" +
+                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
+                    "UNION ALL " +
+                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
+                    ") " +
+                    "select * " +
+                    "FROM " +
+                    "( " +
+                    "select dat, bac,abs((select sum(bac) from acc_tover a where a.dat <= o.dat)) - ? as outrest " +
+                    "from ACC_TOVER o " +
+                    ")t " +
+                    "where outrest < 0 ",operDate,bsaAcid,acid,operDate,bsaAcid,acid,operDate, amount);
+            return res;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
     public boolean checkAccountRlnExists(String bsaAcid, String acid, String rlntype) {
         try {
             DataRecord res = selectFirst("select count(1) from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?", bsaAcid, acid, rlntype);

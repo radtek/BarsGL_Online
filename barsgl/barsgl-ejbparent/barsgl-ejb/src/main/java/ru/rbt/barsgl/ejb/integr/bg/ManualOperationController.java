@@ -1,9 +1,11 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -13,43 +15,50 @@ import ru.rbt.barsgl.ejb.integr.oper.ManualOperationProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.OrdinaryPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.pst.GLOperationProcessor;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.account.CheckAccountWrapper;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.*;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
-import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.ERRPROC;
-import ru.rbt.security.ejb.repository.AppUserRepository;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by ER18837 on 11.01.17.
@@ -112,6 +121,9 @@ public class ManualOperationController {
 
     @EJB
     private PropertiesRepository propertiesRepository;
+
+    @Inject
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     // ====================================================
     // Обработка сообщений
@@ -442,5 +454,27 @@ public class ManualOperationController {
         }
     }
 
+    public RpcRes_Base<CheckAccountWrapper> checkAmountBalance(CheckAccountWrapper checkAccountWrapper) throws ParseException {
+        String bsaacid = checkAccountWrapper.getBsaAcid();
+        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy");
+        Date dateOper = df.parse(checkAccountWrapper.getDateOperStr());
+        BigDecimal amount = checkAccountWrapper.getAmount();
 
+        GLAccount account = accountRepository.findGLAccount(bsaacid);
+
+        if (account != null) {
+
+            DataRecord res = accountRepository.checkAccountBalance(bsaacid, account.getAcid(), dateOper, amount);
+
+            if (res != null && res.getInteger(2) < 0) {
+                checkAccountWrapper.getErrorList().addErrorDescription(String.format("Красное сальдо!!!! На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s(с учётом операции = %s)", bsaacid, res.getDate(0), res.getBigDecimal(1), res.getBigDecimal(2)));
+                return new RpcRes_Base<>(checkAccountWrapper, true, checkAccountWrapper.getErrorMessage());
+            } else {
+                return new RpcRes_Base<>(checkAccountWrapper, false, "");
+            }
+        }
+        else {
+            return new RpcRes_Base<>(checkAccountWrapper, false, "");
+        }
+    }
 }

@@ -1,9 +1,8 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
@@ -13,6 +12,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
+import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
@@ -23,12 +23,15 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
 import java.util.ArrayList;
 
+import static ru.rbt.barsgl.gwt.client.BarsGLEntryPoint.operationService;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
 
@@ -237,11 +240,40 @@ public class OperInpConfirmForm extends OperBase {
                     return;
                 }*/
 
-                BarsGLEntryPoint.operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+                operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
                     @Override
                     public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
                         if (wrapper.isError()) {
-                            showInfo("Ошибка", wrapper.getMessage());
+                            if (wrapper.getResult().isBalanceError()) {
+                                final ManualOperationWrapper w1 = wrapper.getResult();
+                                showConfirm("Красное сальдо !!!!", wrapper.getMessage(), new IDlgEvents() {
+                                            @Override
+                                            public void onDlgOkClick(Object p) throws Exception {
+                                                w1.setNoCheckBalance(true);
+                                                w1.setBalanceError(false);
+                                                w1.getErrorList().clear();
+                                                operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+                                                {
+                                                    @Override
+                                                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+                                                        if (w2.isError())
+                                                        {
+                                                            showInfo("Ошибка", w2.getMessage());
+                                                        }
+                                                        else {
+                                                            dlg.hide();
+                                                            showInfo("Информация", w2.getMessage());
+                                                            grid.refresh();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }
+                                        , null);
+                            }
+                            else {
+                                showInfo("Ошибка", wrapper.getMessage());
+                            }
                         } else {
                             dlg.hide();
                             showInfo("Информация", wrapper.getMessage());
