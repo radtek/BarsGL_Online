@@ -55,6 +55,7 @@ public enum ErrorCode {
     , ACCOUNT_TECH_NOT_CORRECT(45, "Некорректный счет %s: '%s'.")
     , ANY_CURRNCY_IS_RUR(46,"Одна из валют должна быть RUR")
     , ACCOUNT_TH_IS_CLOSED(47, "Счет %s закрыт: '%s' (дата закрытия: '%s')")
+    , ACCOUNT_BALANCE_ERROR(48,"На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)")
  
     /**
      * Ошибки при создании проводки (runtime)

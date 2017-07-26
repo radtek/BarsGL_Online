@@ -156,7 +156,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try {
             DataRecord res = selectFirst("with ACC_TOVER as (" +
-                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
+                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
                     "UNION ALL " +
                     "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
                     ") " +
