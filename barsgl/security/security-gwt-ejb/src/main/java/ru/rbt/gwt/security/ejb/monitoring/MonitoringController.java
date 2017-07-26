@@ -2,16 +2,19 @@ package ru.rbt.gwt.security.ejb.monitoring;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.monitoring.OperTableItem;
+import ru.rbt.barsgl.shared.monitoring.ReplTableItem2;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.monitoring.*;
-
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Monitoring;
 
 import javax.ejb.EJB;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Monitoring;
 import static ru.rbt.ejbcore.util.DateUtils.dateTimeString;
 import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
@@ -45,7 +48,7 @@ public class MonitoringController {
                                 "count(case when IS_PROCESSED=0 then 1 else null end) is_wait, "+
                                 "count(case when IS_PROCESSED=1 then 1 else null end) is_proc, "+
                                 "count(case when IS_PROCESSED=-1 then 1 else null end) is_err "+
-                                "FROM DWH.BARS_JRN GROUP BY TABLE_NAME order by TABLE_NAME with NC ";
+                                "FROM BARS_JRN GROUP BY TABLE_NAME order by TABLE_NAME ";
 
     private final String oper_sql =
             "select state, fan, cnt " +

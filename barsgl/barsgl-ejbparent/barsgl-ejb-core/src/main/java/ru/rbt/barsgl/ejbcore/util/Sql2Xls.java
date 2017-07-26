@@ -16,11 +16,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by ER18837 on 16.02.16.
  */
 public class Sql2Xls {
+
+    public static final Logger logger = Logger.getLogger(Sql2Xls.class.getName());
+
     private final String query;
     private final ArrayList<Object> params;
     private List<XlsColumn> columns = new ArrayList();
@@ -84,7 +89,11 @@ public class Sql2Xls {
                     cell.setCellValue(columns.get(e).getCaption());
                 }
                 for(int e = 0; e < this.columns.size(); ++e) {
-                    curSheet.autoSizeColumn(e, true);
+                    try {
+                        curSheet.autoSizeColumn(e, true);
+                    } catch (Throwable t) {
+                        logger.log(Level.SEVERE, "Error on autosizing column: " + e, t);
+                    }
                 }
                 writeHead(curSheet);
 

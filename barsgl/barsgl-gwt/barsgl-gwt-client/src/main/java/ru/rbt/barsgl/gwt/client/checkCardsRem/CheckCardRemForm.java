@@ -21,7 +21,7 @@ public class CheckCardRemForm extends GridForm {
             "from baltur b " +
             "left join gl_acc a on b.bsaacid = a.bsaacid " +
             "left join gl_baltur c on c.bsaacid = b.bsaacid and c.dat <= '{0}' " +
-            "where b.bsaacid in ( select t.bsaacid from  dwh.gl_acc t " +
+            "where b.bsaacid in ( select t.bsaacid from  gl_acc t " +
             "where t.cbccn ='{1}' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2')) " +
                    // "where t.cbccn ='{1}' ) " +
             "and b.dat <= '{0}' and b.datto >= '{0}' " +

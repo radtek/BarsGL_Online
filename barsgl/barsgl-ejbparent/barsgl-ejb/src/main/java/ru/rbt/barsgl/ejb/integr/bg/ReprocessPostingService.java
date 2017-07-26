@@ -1,20 +1,20 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.ErrorList;
-import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.ExceptionUtils;
 
 import javax.ejb.EJB;
 import javax.persistence.PersistenceException;
@@ -22,7 +22,7 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.util.List;
 
-import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.*;
+import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.EDIT;
 
 /**
  * Created by ER18837 on 01.03.17.
@@ -111,17 +111,21 @@ public class ReprocessPostingService {
             return String.format("По данному ID_PST '%s' более одной операции (%d) в статусе 'POST'", idPstCorr, opers.size());
         GLOperation operCorr = opers.get(0);
         EtlPosting postingCorr = etlPostingRepository.findById(EtlPosting.class, operCorr.getEtlPostingRef());
-        // SRC_PST, EVT_ID, DEAL_ID, SUBDEALID, PMT_REF, NRT
-        boolean suitable = isEqual(postingCorr.getEventId(), postingErr.getEventId())
-                        || isEqual(postingCorr.getDealId(), postingErr.getDealId())
-                        || isEqual(postingCorr.getPaymentRefernce(), postingErr.getPaymentRefernce())
-                        || isEqual(postingCorr.getNarrative(), postingErr.getNarrative())
-                ;
-        if (!suitable) {
-            return String.format("Для сообщение АЕ с ID_PST '%s' найдена операция в статусе 'POST' c GLOID = %d" +
-                    "\nУ исправительной и ошибочной операции должно совпадать хотя бы одно значение: " +
-                    "\nИД события, ИД сделки (субделки), ИД платежа, Описание" +
-                    "\nИсправительная операция не соответсвует ошибочному сообщению АЕ", idPstCorr, operCorr.getId());
+        if (postingCorr == null) {
+            return String.format("Не найдена проводка GL_ETLPST по PST_REF %s для сопоставления данных", operCorr.getEtlPostingRef());
+        } else {
+            // SRC_PST, EVT_ID, DEAL_ID, SUBDEALID, PMT_REF, NRT
+            boolean suitable = isEqual(postingCorr.getEventId(), postingErr.getEventId())
+                    || isEqual(postingCorr.getDealId(), postingErr.getDealId())
+                    || isEqual(postingCorr.getPaymentRefernce(), postingErr.getPaymentRefernce())
+                    || isEqual(postingCorr.getNarrative(), postingErr.getNarrative())
+                    ;
+            if (!suitable) {
+                return String.format("Для сообщение АЕ с ID_PST '%s' найдена операция в статусе 'POST' c GLOID = %d" +
+                        "\nУ исправительной и ошибочной операции должно совпадать хотя бы одно значение: " +
+                        "\nИД события, ИД сделки (субделки), ИД платежа, Описание" +
+                        "\nИсправительная операция не соответсвует ошибочному сообщению АЕ", idPstCorr, operCorr.getId());
+            }
         }
         return null;
     }
