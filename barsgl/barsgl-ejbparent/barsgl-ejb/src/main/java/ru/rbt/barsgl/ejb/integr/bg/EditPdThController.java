@@ -83,7 +83,7 @@ public class EditPdThController {
         Assert.isTrue(null != pdIdList, ()-> new DefaultApplicationException(format("Для операции '%d' не %s ни одной проводки"
                 , operationWrapper.getId(), "найдено")));
 
-        List<GlPdTh> pdList = editPdThProcessor.getOperationPdList(pdIdList);
+        List<GlPdTh> pdList = editPdThProcessor.getOperationPdList(pdIdList.get(0));
 
         editPdThProcessor.suppressAllPostings(operationWrapper, pdList);
         editPdThProcessor.updatePd(pdList);
@@ -102,19 +102,21 @@ public class EditPdThController {
 
             } catch (ValidationError e) {
                 String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-                auditController.warning(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), e);
+                auditController.warning(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
                 return new RpcRes_Base<>( operationWrapper, true, errMessage);
             } catch (Exception e){
-                auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), e);
+                auditController.error(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
                 return new RpcRes_Base<>(operationWrapper, true, e.getMessage());
             }
 
             List<GlPdTh> pdList = suppressPdTh(operationWrapper);
             msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки по тех.счету c ID: " + listToString(pdList, ",");
-            auditController.info(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString());
+            auditController.info(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
-        } catch (Exception e) {
-            String errMessage = operationWrapper.getErrorMessage();
+        } catch (Throwable e) {
+            String errMessage = operationWrapper.getErrorMessage() + "\n" + e.getMessage();
+            if (e.getCause() != null ) errMessage += "\n" + e.getCause().getMessage();
+            auditController.error(ManualOperation, errMessage, "GL_PDTH", operationWrapper.getId().toString(), e);
             return new RpcRes_Base<ManualTechOperationWrapper>( operationWrapper, true, errMessage);
         }
     }
@@ -158,7 +160,7 @@ public class EditPdThController {
                 if (editDay.after(newDate))
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
-                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.OperPstChngDate) ) {
+                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.TechOperPstChngDate) ) {
                     Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
                     Date minDate = newDate.before(oldDate) ? newDate : oldDate;
                     accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
@@ -166,16 +168,16 @@ public class EditPdThController {
 
             } catch (ValidationError e) {
                 String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-                auditController.warning(ManualOperation, msg, "PD", operationWrapper.getId().toString(), e);
+                auditController.warning(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
                 return new RpcRes_Base<>( operationWrapper, true, errMessage);
             } catch (Exception e){
-                auditController.error(ManualOperation, msg, "PD", operationWrapper.getId().toString(), e);
+                auditController.error(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
                 return new RpcRes_Base<>(operationWrapper, true, e.getMessage());
             }
 
             List<GlPdTh> pdList = updatePdTh(operationWrapper);
             msg = "Изменены полупроводки c ID: " + listToString(pdList, ",") + operationWrapper.getErrorMessage();
-            auditController.info(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString());
+            auditController.info(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
         } catch (Exception e) {
             String errMessage = operationWrapper.getErrorMessage();

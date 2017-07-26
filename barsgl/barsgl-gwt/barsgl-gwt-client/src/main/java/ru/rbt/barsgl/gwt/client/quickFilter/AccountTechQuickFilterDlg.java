@@ -82,7 +82,7 @@ public class AccountTechQuickFilterDlg extends DlgFrame {
         int row = 0;
 
         grid.setWidget(row, 0, createLabel("Accounting Type", LABEL_WIDTH));
-        grid.setWidget(row++, 1, mAccType = createTxtBox(20, FIELD_WIDTH));
+        grid.setWidget(row++, 1, mAccType = createTxtBox(10, FIELD_WIDTH));
 
         grid.setWidget(row, 0, createLabel("Филиал"));
         grid.setWidget(row++, 1, mFilial = createFilialAuthListBox("", FIELD_WIDTH, false, true));

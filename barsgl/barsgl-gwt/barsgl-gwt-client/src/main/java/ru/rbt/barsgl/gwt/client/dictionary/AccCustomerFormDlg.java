@@ -27,11 +27,9 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
 
     private Column colBsaAcid;
     private Column colAcc2;
-    private Column colAcid;
     private Column colDealSrc;
     private Column colDealId;
     private Column colCustNo;
-    private Column colCustName;
     private Column colFilial;
     private Column colCurrency;
     private Column colDateOpen;
@@ -102,13 +100,12 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
         @Override
         protected Table prepareTable() {
             Table result = new Table();
-            Column col;
 
             result.addColumn(colBsaAcid = new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 80));
-            result.addColumn(colAcid = new Column("ACID", Column.Type.STRING, "Счет Midas", 80));
+            result.addColumn(new Column("ACID", Column.Type.STRING, "Счет Midas", 80));
             result.addColumn(colAcc2 = new Column("ACC2", Column.Type.STRING, "Балансовый счет", 60, false, false));
             result.addColumn(colCustNo = new Column("CUSTNO", Column.Type.STRING, "Номер клиента", 40));
-            result.addColumn(colCustName = new Column("CUSTNAME", Column.Type.STRING, "Имя клиента", 180));
+            result.addColumn(new Column("CUSTNAME", Column.Type.STRING, "Имя клиента", 180));
             result.addColumn(colFilial = new Column("CBCCN", Column.Type.STRING, "Филиал", 30, false, false));
             result.addColumn(colCurrency = new Column("CCYN", Column.Type.STRING, "Валюта", 20));
             result.addColumn(colDateOpen = new Column("DRLNO", Column.Type.DATE, "Дата открытия", 40));
@@ -184,8 +181,6 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
         public Object[] getInitialFilterParams(Date operday, Date prevday) {
             return AccCustomerFormDlg.this.getInitialFilterParams();
         }
-
     }
-
 }
 

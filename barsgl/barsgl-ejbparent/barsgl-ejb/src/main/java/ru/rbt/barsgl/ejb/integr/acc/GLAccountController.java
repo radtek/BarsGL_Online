@@ -266,7 +266,9 @@ public class GLAccountController {
 
 
         if (null != glAccount) {
-            return glAccount;
+
+
+            return glAccountRepository.reopenAccountTH(glAccount);
         }
 
         /*
@@ -405,7 +407,7 @@ public class GLAccountController {
     }
 
     @Lock(LockType.WRITE)
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public GLAccount updateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
 
@@ -1145,7 +1147,16 @@ public class GLAccountController {
 
     @Lock(LockType.READ)
     public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
-        return glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+        GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+
+        return account;
+    }
+
+    @Lock(LockType.READ)
+    public GLAccount findOrReopenTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
+        GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+
+        return glAccountRepository.reopenAccountTH(account);
     }
 
     /**

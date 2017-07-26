@@ -14,6 +14,7 @@ import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.client.comp.ICallMethod;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
+import ru.rbt.barsgl.gwt.client.dictionary.AccTechFormDlg;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -232,13 +233,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
         grid.setWidget(5, 0, createLabel("Сумма"));
 
-        BtnTxtBox mSum;
-        grid.setWidget(5,1,
-        mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
-                @Override
-                public void method() {
-                }
-            }));
+        TxtBox mSum;
+        grid.setWidget(5,1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
 
         if (isDebit) {
             mDtAccount = mAccount;
@@ -265,16 +261,15 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             @Override
             public void onClick(ClickEvent clickEvent) {
                 try {
-                    GridFormDlgBase dlg = new AccountTypeTechFormDlg() {
+                    GridFormDlgBase dlg = new AccTechFormDlg() {
 
                         @Override
                         protected Object[] getInitialFilterParams() {
-                            if (action == FormAction.PREVIEW) {
-                                return new Object[]{mDtAccountType.getValue()};
-                            }
-                            else{
-                                return new Object[]{mDtAccountType.getValue()};
-                            }
+
+                            return new Object[]{null, null, mDtAccountType.getValue(),
+                                    mDtFilial.getParam("CBCC").toString(), mDtCurrency.getParam("CCY").toString(),
+                                    mDtAccount.getValue()};
+
                         }
 
                         @Override
@@ -314,17 +309,14 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
             @Override
             public void onClick(ClickEvent clickEvent) {
                 try {
-                    GridFormDlgBase dlg = new AccountTypeTechFormDlg() {
+                    GridFormDlgBase dlg = new AccTechFormDlg() {
 
                         @Override
                         protected Object[] getInitialFilterParams()
                         {
-                            if (action == FormAction.PREVIEW ) {
-                                return new Object[]{mCrAccountType.getValue()};
-                            }
-                            else{
-                                return new Object[]{mCrAccountType.getValue()};
-                            }
+                            return new Object[]{null, null, mCrAccountType.getValue(),
+                                    mCrFilial.getParam("CBCC").toString(), mCrCurrency.getParam("CCY").toString(),
+                                    mCrAccount.getValue()};
                         }
 
                         @Override
@@ -518,7 +510,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         operation.setAccountTypeDebit(mDtAccountType.getValue());
         operation.setAccountTypeCredit(mCrAccountType.getValue());
         operation.setCurrencyCredit(mCrCurrency.getParam("CCY").toString());
-        operation.setCurrencyDebit(mCrCurrency.getParam("CCY").toString());
+        operation.setCurrencyDebit(mDtCurrency.getParam("CCY").toString());
         operation.setAmountDebit(new BigDecimal(mDtSum.getValue()));
         operation.setAmountCredit(new BigDecimal(mCrSum.getValue()));
 

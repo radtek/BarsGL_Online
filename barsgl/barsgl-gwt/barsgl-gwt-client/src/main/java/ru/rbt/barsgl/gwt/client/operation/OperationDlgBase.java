@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import ru.rbt.barsgl.gwt.core.comp.Components;
+import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
 import static ru.rbt.barsgl.shared.dict.FormAction.CREATE;
 import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
 
@@ -103,28 +104,25 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         boolean isDebit = side.equals(Side.DEBIT);
         Grid grid = new Grid(withSum ? 5 : 4, 2);
 
-        grid.setWidget(0, 0, Components.createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
+        grid.setWidget(0, 0, createAlignWidget(new HTML("<b>" + label + "</b>"), LABELS_WIDTH));
 
-        grid.setWidget(1, 0, Components.createLabel("Валюта"));
-        //grid.setWidget(1, 1, mCurrency = createCurrencyListBox("RUR", FIELD2_WIDTH));
+        grid.setWidget(1, 0, createLabel("Валюта"));
         grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() + "_" + label,  "RUR", FIELD2_WIDTH, false, false));
-        grid.setWidget(2, 0, Components.createLabel(("Филиал")));
-        //grid.setWidget(2, 1, mFilial = createFilialListBox("", FIELD2_WIDTH));
+        grid.setWidget(2, 0, createLabel(("Филиал")));
         grid.setWidget(2, 1, mFilial = createFilialListBox(CachedListEnum.Filials.name() + "_" +label, null, FIELD2_WIDTH));
 
-        grid.setWidget(3, 0, Components.createLabel("Счет"));
-        grid.setWidget(3, 0, Components.createAlignWidget(mButton = createBsaAcidButton("Счет", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
+        grid.setWidget(3, 0, createLabel("Счет"));
+        grid.setWidget(3, 0, createAlignWidget(mButton = createBsaAcidButton("Счет", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
         if (side.equals(Side.DEBIT))
-            grid.setWidget(3, 1, Components.createAlignWidget(mAccount = Components.createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
+            grid.setWidget(3, 1, createAlignWidget(mAccount = createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
         else
-            grid.setWidget(3, 1, mAccount = Components.createTxtBox(20, SUM_WIDTH));
+            grid.setWidget(3, 1, mAccount = createTxtBox(20, SUM_WIDTH));
         mAccount.setName(side.name());
 
         mAccount.addChangeHandler(createAccountChangeHandler(side));
 
         if (withSum) {
-            grid.setWidget(4, 0, Components.createLabel("Сумма"));
-           // grid.setWidget(4, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
+            grid.setWidget(4, 0, createLabel("Сумма"));
             grid.setWidget(4, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
                 @Override
                 public void method() {
@@ -192,12 +190,12 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         String sNum = "[N" + istr + "]";
         String sDate = "[D" + istr + "]";
 
-        grid.setWidget(ind, 0, Components.createLabel("Поле " + sNum, "80px"));
-        grid.setWidget(ind, 1, Components.createLabel("№", "25px"));
-        grid.setWidget(ind, 2, Components.createAlignWidget(mNum = Components.createTxtBox(20, "120px"), "165px"));
-        grid.setWidget(ind, 3, Components.createLabel("Поле " + sDate, "70px"));
-        grid.setWidget(ind, 4, Components.createLabel("Дата", "35px"));
-        grid.setWidget(ind, 5, mDate = Components.createDateBox(null));
+        grid.setWidget(ind, 0, createLabel("Поле " + sNum, "80px"));
+        grid.setWidget(ind, 1, createLabel("№", "25px"));
+        grid.setWidget(ind, 2, createAlignWidget(mNum = createTxtBox(20, "120px"), "165px"));
+        grid.setWidget(ind, 3, createLabel("Поле " + sDate, "70px"));
+        grid.setWidget(ind, 4, createLabel("Дата", "35px"));
+        grid.setWidget(ind, 5, mDate = createDateBox(null));
         mDate.setWidth("115px");
 
         if (null == mapParam)
@@ -212,21 +210,19 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
 
     protected Grid createDescriptions() {
         Grid grid = new Grid(2,2);
-        grid.setWidget(0, 0, Components.createLabel("Основание ENG", LABEL_DEP_WIDTH));
-        grid.setWidget(0, 1, mNarrativeEN = Components.createAreaBox(LONG_DEP_WIDTH, "50px"));
+        grid.setWidget(0, 0, createLabel("Основание ENG", LABEL_DEP_WIDTH));
+        grid.setWidget(0, 1, mNarrativeEN = createAreaBox(LONG_DEP_WIDTH, "50px"));
         grid.setWidget(1, 0, new Label("Основание RUS"));
-        grid.setWidget(1, 1, mNarrativeRU = Components.createAreaBox(LONG_DEP_WIDTH, "50px"));
+        grid.setWidget(1, 1, mNarrativeRU = createAreaBox(LONG_DEP_WIDTH, "50px"));
         return grid;
     }
 
     protected Grid createDepartments(boolean withCheck) {
         Grid grid = new Grid(2,4);
-        grid.setWidget(0, 0, Components.createLabel("Подразделение", LABEL_DEP_WIDTH));
-        //grid.setWidget(0, 1, mDepartment = createDepartmentListBox("", "250px", true));   // TODO для операции MSO
+        grid.setWidget(0, 0, createLabel("Подразделение", LABEL_DEP_WIDTH));
         grid.setWidget(0, 1, mDepartment = createCachedDepartmentListBox(CachedListEnum.Department.name(), null, "250px", true));
-        grid.setWidget(1, 0, Components.createLabel("Профит центр"));
-        //grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createProfitCenterListBox("", "250px"), "260px"));
-        grid.setWidget(1, 1, Components.createAlignWidget(mProfitCenter = createCachedProfitCenterListBox(CachedListEnum.ProfitCenter.name(), null, "250px"), "260px"));
+        grid.setWidget(1, 0, createLabel("Профит центр"));
+        grid.setWidget(1, 1, createAlignWidget(mProfitCenter = createCachedProfitCenterListBox(CachedListEnum.ProfitCenter.name(), null, "250px"), "260px"));
         if (withCheck) 
         	grid.setWidget(1, 2, mCheckFields = new CheckBox("Основание проверено"));
         return grid;

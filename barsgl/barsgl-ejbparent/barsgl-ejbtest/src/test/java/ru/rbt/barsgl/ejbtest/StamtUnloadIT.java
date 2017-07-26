@@ -490,26 +490,38 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         setOperday(operdate, lwdate, ONLINE, OPEN);
 
         List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum < 3");
-        Assert.assertEquals(2, pds.size());
+        Assert.assertEquals(4, pds.size());
 
         String bsaacid1 = pds.get(0).getString("bsaacid");
-        String bsaacid2 = pds.get(0).getString("bsaacid");
+        String bsaacid2 = pds.get(1).getString("bsaacid");
+        String bsaacid3 = pds.get(0).getString("bsaacid");
+        String bsaacid4 = pds.get(1).getString("bsaacid");
 
         registerForStamtUnload(bsaacid1);
         registerForStamtUnload(bsaacid2);
 
-        long pcid = remoteAccess.invoke(PdRepository.class, "getNextId");
+        long pcid1 = remoteAccess.invoke(PdRepository.class, "getNextId");
+        long pcid2 = remoteAccess.invoke(PdRepository.class, "getNextId");
 
         // два раза чтоб отработал триггер по старому значению PCID
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid, pds.get(1).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid, pds.get(1).getLong("id"));
+        // проводки с мемордерами
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
 
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo where rownum < 2");
         Assert.assertNotNull(pcidMo);
 
-        baseEntityRepository.executeNativeUpdate("update pcid_mo set pcid = ? where pcid = ?", pcid, pcidMo.getLong("pcid"));
+        baseEntityRepository.executeNativeUpdate("update pcid_mo set pcid = ? where pcid = ?", pcid1, pcidMo.getLong("pcid"));
+
+        // проводки без мемордеров
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
+
+        baseEntityRepository.executeNativeUpdate("delete from pcid_mo where pcid in (?, ?)", pds.get(2).getLong("pcid"), pds.get(3).getLong("pcid"));
 
         checkCreateStep("MI4GL", lwdate, "O");
 
@@ -524,9 +536,13 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
 
         List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd");
-        Assert.assertEquals(1, records.size());
+        Assert.assertEquals(2, records.size());
         Assert.assertEquals(bsaacid1, records.get(0).getString("dcbaccount"));
         Assert.assertEquals(bsaacid2, records.get(0).getString("ccbaccount"));
+        Assert.assertEquals(pcid1 + "", records.get(0).getString("pcid"));
+        Assert.assertEquals(pcid2 + "", records.get(1).getString("pcid"));
+
+        // повторный запуск в текущем ОД не производится
         jobService.executeJob(job);
         DataRecord header2 = getLastUnloadHeader(UnloadStamtParams.POSTING_TECHOVER);
         Assert.assertEquals(header.getLong("id"), header2.getLong("id"));
@@ -537,7 +553,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
             baseEntityRepository.executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype,INCLUDEBLN) values (?, '1', 'B','1')"
                     , bsaacid.substring(0,5));
         } catch (Exception e) {
-            log.log(Level.CONFIG, "ошибка вставки в параметры", e);
+            log.log(Level.WARNING, "ошибка вставки в параметры", e.getMessage());
         }
     }
 

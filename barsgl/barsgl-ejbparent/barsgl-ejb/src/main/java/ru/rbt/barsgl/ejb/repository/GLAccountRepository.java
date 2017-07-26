@@ -7,10 +7,10 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
@@ -28,8 +28,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
+import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
@@ -980,7 +979,42 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         } else {
             return accrecs.get(0);
         }
-
     }
 
+    public GLAccount reopenAccountTH(GLAccount account)
+    {
+        if (account!=null) {
+            if (account.getDateClose()!=null) {
+                account.setDateClose(null);
+                account = save(account);
+            }
+        }
+        return account;
+    }
+
+    public boolean checkTechAccountExists(Long glaccid, String bsaAcid, Date date) {
+        try {
+            DataRecord res = selectFirst("select count(1) from GL_ACC where BSAACID = ?" +
+                    " and coalesce(DTC, Date('2029-01-01')) = ? and ID <> ?", bsaAcid,  date == null ? new Date(129, 0, 1) : date,glaccid);
+            return res.getInteger(0) > 0;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean checkTechAccountExistsInterval(Long glaccid, String bsaAcid, Date dateOpen, Date dateClose)
+    {
+        try {
+            DataRecord res = selectFirst("select count(1) from GL_ACC where BSAACID = ?" +
+                    " and DTO <= ? and coalesce(DTC, Date('2029-01-01')) >= ? and ID <> ?",
+                        bsaAcid, dateClose == null ? new Date(129, 0, 1) : dateClose, dateOpen, glaccid);
+
+            //" and (? between DTO and coalesce(DTC, Date('2029-01-01')) or ? between DTO and coalesce(DTC, Date('2029-01-01')) or ? <= DTO) and ID <> ?",
+
+            boolean result = res.getInteger(0) > 0;
+            return result;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 }

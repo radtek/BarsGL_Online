@@ -24,6 +24,7 @@ import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -43,7 +44,6 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -123,6 +123,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     @Inject
     private AccessServiceSupport accessServiceSupport;
 
+    @EJB
+    private GLAccountRepository glAccountRepository;
+
 
     public RpcRes_Base<ManualTechOperationWrapper> updateTechOperation(ManualTechOperationWrapper operationWrapper) {
 
@@ -135,7 +138,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 if (editDay.after(newDate))
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
-                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.OperPstChngDate) ) {
+                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.TechOperPstChngDate) ) {
                     Date oldDate = manualOperationRepository.findById(GLManualOperation.class, operationWrapper.getId()).getPostDate();
                     Date minDate = newDate.before(oldDate) ? newDate : oldDate;
                     accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
@@ -263,6 +266,11 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             {
                 checkTechAccount(wrapper);
             }
+
+            if (wrapper.getAction()!=BatchPostAction.REFUSE) {
+                checkOperationAccounts(wrapper);
+            }
+
 //            checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
                 case SAVE:              // сохранить - шаг 1 (INPUT)
@@ -302,9 +310,9 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), errorMsg);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
-                addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+                msg = addOperationErrorMessage(e, msg, wrapper.getErrorList(),"");
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
-                return new RpcRes_Base<>(wrapper, true, e.getMessage());
+                return new RpcRes_Base<>(wrapper, true, msg);
             }
         }
     }
@@ -315,7 +323,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         GLManualOperation operation = createOperation(posting);
         operation.setBsChapter("T");
         //operation.setAmountPosting(operation.getAmountDebit());
-        setExchengeParameters(operation);
+        setAmountRu(operation);
         manualOperationRepository.save(operation,true);
         posting.setOperation(operation);
         postingRepository.save(posting);
@@ -343,17 +351,10 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return errorList;
     }
 
-    public void setExchengeParameters (GLManualOperation operation) {
+    public void setAmountRu (GLManualOperation operation) {
         // Основная валюта, сумма проводки в рублях
         BankCurrency ccyDebit = operation.getCurrencyDebit();
         BankCurrency ccyCredit = operation.getCurrencyCredit();
-
-        // курсовая разница
-        BigDecimal amountDebitRu = ( null != operation.getAmountDebitRu()) ?
-                operation.getAmountDebitRu() : operation.getEquivalentDebit();
-        BigDecimal amountCreditRu = ( null != operation.getAmountCreditRu()) ?
-                operation.getAmountCreditRu() : operation.getEquivalentCredit();
-        operation.setExchangeDifference(amountDebitRu.subtract(amountCreditRu));
 
         // основная валюта и сумма проводки
         if (RUB.equals(ccyDebit)) {         // Если ДЕБЕТ в рублях
@@ -361,11 +362,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             operation.setAmountPosting(operation.getAmountDebit());
         } else {                                        // Иначе
             operation.setCurrencyMain(ccyCredit);       // основная валюта по Кредиту
-            if (RUB.equals(ccyCredit)) {    // Если КРЕДИТ в рублях
-                operation.setAmountPosting(operation.getAmountCredit());
-            } else {                        // Иначе
-                operation.setAmountPosting(amountCreditRu);
-            }
+            operation.setAmountPosting(operation.getAmountCredit());
         }
     }
 
@@ -397,6 +394,26 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
     public void checkUserPermission(ManualOperationWrapper wrapper) throws Exception {
         postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
         postingProcessor.checkBackvaluePermission(dateUtils.onlyDateParse(wrapper.getPostDateStr()), wrapper.getUserId());
+    }
+
+    public void checkOperationAccounts(ManualOperationWrapper wrapper)
+    {
+        String bsaacid = wrapper.getAccountDebit();
+        GLAccount account = glAccountRepository.findGLAccount(bsaacid);
+        if (null!=account && account.getDateClose()!=null)
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.YYYY");
+            throw new ValidationError(ACCOUNT_TH_IS_CLOSED,"по дебету",account.getBsaAcid(), sdf.format(account.getDateClose()));
+        }
+
+        bsaacid = wrapper.getAccountCredit();
+        account = glAccountRepository.findGLAccount(bsaacid);
+        if (null!=account && account.getDateClose()!=null)
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.YYYY");
+            throw new ValidationError(ACCOUNT_TH_IS_CLOSED,"по кредиту",account.getBsaAcid(), sdf.format(account.getDateClose()));
+        }
+
     }
 
     public String addOperationErrorMessage(Throwable e, String msg, ErrorList errorList, String source) {

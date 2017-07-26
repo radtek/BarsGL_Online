@@ -11,7 +11,7 @@ import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
-import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.shared.enums.Repository;
 
 import javax.ejb.EJB;
 import javax.sql.DataSource;
@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

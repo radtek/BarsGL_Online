@@ -32,6 +32,7 @@ public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
     private DatePickerBox mDateClose;
     private boolean isClosed;
     private String dealSource;
+    private Long id;
 
     public AccountCloseDlg(String caption, FormAction action, Columns columns) {
         super(columns, action);
@@ -71,6 +72,7 @@ public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
 
     @Override
     protected void setFields(ManualAccountWrapper cnw) {
+        cnw.setId(id);
         cnw.setBsaAcid(mBsaAcid.getValue());
         cnw.setDateOpenStr(mDateOpen.getValue());
         cnw.setDateCloseStr(isClosed ? null : DateTimeFormat.getFormat(ManualAccountWrapper.dateFormat).format(mDateClose.getValue()));
@@ -83,6 +85,7 @@ public class AccountCloseDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     protected void fillContent() {
         row = (Row) params;
+        id = (Long) getFieldValue("ID");
         dealSource = getFieldValue("DEALSRS");
         mBsaAcid.setValue(getFieldText("BSAACID"));
         mDateOpen.setValue(DateTimeFormat.getFormat(ManualAccountWrapper.dateFormat).format((Date)getFieldValue("DTO")));

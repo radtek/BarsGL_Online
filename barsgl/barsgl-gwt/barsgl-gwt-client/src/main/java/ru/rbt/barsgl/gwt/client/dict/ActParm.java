@@ -60,6 +60,8 @@ public class ActParm extends GridForm {
     private ActParmDlg dlg = null;
     private String tech_flag;
 
+    protected Column colTechAct;
+
     public ActParm(String initSection, String initProduct, String initSubProduct, String initModifier, String tech_flag){
         super("");
         this.initSection = initSection;
@@ -205,7 +207,7 @@ public class ActParm extends GridForm {
         result.addColumn(new Column("DTB", Column.Type.DATE, FIELD_DTB, 25));
         result.addColumn(new Column("DTE", Column.Type.DATE, FIELD_DTE, 25));
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, FIELD_ACCNAME, 240));
-        Column colTechAct;
+
         result.addColumn(colTechAct = new Column("TECH_ACT", Column.Type.STRING, FIELD_TECH_ACT, 20,false,false));
         colTechAct.setList(GLComponents.getArrayValuesList(new String[]{"Да", "Нет"}));
         colTechAct.setFilterable(true);
