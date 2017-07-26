@@ -25,8 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import ru.rbt.barsgl.gwt.core.comp.Components;
-import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
+import static ru.rbt.barsgl.gwt.core.comp.Components.*;
 import static ru.rbt.barsgl.shared.dict.FormAction.CREATE;
 import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
 
