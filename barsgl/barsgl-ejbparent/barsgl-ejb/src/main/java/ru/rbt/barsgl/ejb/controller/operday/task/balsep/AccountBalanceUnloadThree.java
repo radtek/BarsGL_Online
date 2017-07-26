@@ -1,16 +1,16 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.balsep;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountBalanceUnloadTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -27,12 +27,12 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountOvervaluedBalanceUnload;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.SUCCEDED;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.controller.operday.task.balsep.AccountBalanceRegisteredUnloadTask.CHECK_RUN_KEY;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountOvervaluedBalanceUnload;
 import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
 
 /**
@@ -171,7 +171,7 @@ public class AccountBalanceUnloadThree implements ParamsAwareRunnable {
                 try (PreparedStatement query = connection.prepareStatement(
                         "select b.acid, min(b.dat) min_pod, max(b.dat) max_pod \n" +
                         "  from glvd_bal2 b\n" +
-                        " where value(b.bsaacid, '') = ''\n" +
+                        " where nvl(b.bsaacid, '-') = '-'\n" +
                         " group by b.acid"); ResultSet rsRoot = query.executeQuery()) {
                     while (rsRoot.next()) {
                         try (PreparedStatement queryBaltur = connection.prepareStatement(

@@ -3,7 +3,7 @@ SELECT  PDID                                                      -- PD.ID
             WHEN W.ACOD IS NULL AND VALUE(A.RLNTYPE,'0') <> '2' THEN A.ID ELSE NULL
           END GLACID
 --        , SUBSTRING(T.ACID, 1, 8) CNUM                            -- Номер клиента
-        , VALUE( A.CUSTNO,  value(SUBSTRING(a.ACID, 1, 8),SUBSTRING(t.ACID, 1, 8) ))  CNUM
+        , nvl( A.CUSTNO,  nvl(SUBSTRING(a.ACID, 1, 8),SUBSTRING(t.ACID, 1, 8) ))  CNUM
         , T.CNUM_asoc
         , T.CCY                                                   -- Валюта
 --        , CAST (SUBSTRING(T.ACID, 12, 4) AS NUMERIC(4, 0)) ACOD
@@ -14,7 +14,7 @@ SELECT  PDID                                                      -- PD.ID
         , PSTARUR
         , CAST (DRCR AS NUMERIC(1, 0)) DRCR                       -- 0 - Дебет, 1 - Кредит
 --        , CAST (SUBSTRING(T.ACID, 18, 3) AS CHARACTER(3)) BRCA    -- Бранч
-        , value(a.BRANCH,substr(t.acid,18,3))  BRCA
+        , nvl(a.BRANCH,substr(t.acid,18,3))  BRCA
         , CAST (PREF AS VARCHAR(20)) PREF                         -- ID платежа
         , CAST (DLREF AS VARCHAR(20)) DLREF                       -- ID сделки
         , CAST (OTRF  AS VARCHAR(20)) OTRF                        -- ID в источнике
@@ -30,7 +30,7 @@ SELECT  PDID                                                      -- PD.ID
         , SPOS
         , dpmt
         , RNARLNG
-        , value(a.rev_fl,'') rev_fl
+        , nvl(a.rev_fl,'') rev_fl
         , a.BSAACID absaacid
         , rv.date_upl
         , t.pdpod

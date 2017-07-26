@@ -19,7 +19,7 @@ select t.PDID
         ,t.ACID pacid
         ,'' jacid
         ,rv.date_upl
-        ,value(a.rev_fl,'') rev_fl
+        ,nvl(a.rev_fl,'') rev_fl
 FROM (
         SELECT  D.ID PDID,
             D.ACID ACID,

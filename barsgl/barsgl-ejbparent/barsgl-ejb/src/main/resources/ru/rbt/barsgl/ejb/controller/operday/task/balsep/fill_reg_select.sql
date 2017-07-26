@@ -7,7 +7,7 @@ from baltur b, cal c,
          and p.invisible <> '1'
          and o.procdate = od.curdate
          and acc.acid = p.acid and acc.bsaacid = p.bsaacid
-         and (value(acc.plcode, '') = '' or (value(acc.plcode, '') <> '' AND VALUE(REV_FL, 'N') <> 'Y')
+         and (nvl(acc.plcode, '-') = '-' or (nvl(acc.plcode, '-') <> '-' AND VALUE(REV_FL, 'N') <> 'Y')
                                             and acc.bsaacid not in (
      SELECT ACC.BSAACID
      FROM GL_SHACOD , GL_ACC ACC , GL_OD OD

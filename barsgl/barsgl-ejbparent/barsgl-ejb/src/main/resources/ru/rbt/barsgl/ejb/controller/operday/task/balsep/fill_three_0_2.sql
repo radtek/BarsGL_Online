@@ -27,5 +27,5 @@ select m.dat, b.acid, b.bsaacid, m.glacid
 where m.acid = b.acid
   and m.bsaacid = b.bsaacid
   and m.dat between b.dat and b.datto
-  and value(m.bsaacid,'') <> ''
+  and nvl(m.bsaacid,'-') <> '-'
 

@@ -37,7 +37,7 @@ select b.acid, substr(b.acid, 9, 3) ccy
            else null
          end
        ) ctrnrur
-  from baltur b, accrln r, (select value(?, date('2029-01-01')) curdate from DUAL) od
+  from baltur b, accrln r, (select nvl(?, to_date('2029-01-01')) curdate from DUAL) od
  where b.acid = r.acid
    and r.acid = ?
    and r.rlntype = ?

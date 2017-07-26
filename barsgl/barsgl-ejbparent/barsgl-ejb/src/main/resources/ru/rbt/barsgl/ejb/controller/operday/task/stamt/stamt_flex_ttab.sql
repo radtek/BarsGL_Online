@@ -5,7 +5,7 @@ declare global temporary table tmp_stmflx_ledger_bsass as (
       select distinct ac.bsaacid cbaccount, p.pdt statdate
       from gl_acc ac
        join gl_balacc bc on ac.acctype = bc.acctype
-       join (select value(?, current date) pdt from DUAL) p on ac.dto <= p.pdt and value(ac.dtc, p.pdt) >= p.pdt
+       join (select nvl(?, current date) pdt from DUAL) p on ac.dto <= p.pdt and nvl(ac.dtc, p.pdt) >= p.pdt
        join pd d on d.bsaacid = ac.bsaacid and d.pod = p.pdt and d.pbr like '@@IF%'
        where not exists (select 1 from GL_BALSTMD mdm where mdm.statdate = p.pdt and mdm.cbaccount = ac.bsaacid)
       ) ac0

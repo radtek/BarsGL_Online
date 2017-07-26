@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
+import static ru.rbt.ejbcore.util.StringUtils.rightPad;
+
 /**
  * Created by akichigi on 24.08.16.
  */
@@ -34,7 +36,7 @@ public class ActParmId implements Serializable {
 
     public ActParmId(String accType, String cusType, String term, String acc2, Date dtb) {
         this.accType = accType;
-        this.cusType = cusType;
+        this.cusType = rightPad(cusType, 3, " ");
         this.term = term;
         this.acc2 = acc2;
         this.dtb = dtb;
@@ -53,7 +55,7 @@ public class ActParmId implements Serializable {
     }
 
     public void setCusType(String cusType) {
-        this.cusType = cusType;
+        this.cusType = rightPad(cusType, 3, " ");
     }
 
     public String getTerm() {

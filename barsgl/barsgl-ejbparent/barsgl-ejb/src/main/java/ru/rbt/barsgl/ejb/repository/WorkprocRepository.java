@@ -65,7 +65,7 @@ public class WorkprocRepository extends AbstractBaseEntityRepository {
      * @return
      */
     public int updateWorkproc(EntityManager persistence, String stepName, Date operdate, WorkprocState state, String message) {
-        return executeNativeUpdate(persistence, "update workproc p set result = ?, msg = ?, count = value(count,0) + 1, endtime = systimestamp where dat = ? and id = ?"
+        return executeNativeUpdate(persistence, "update workproc p set result = ?, msg = ?, count = nvl(count,0) + 1, endtime = systimestamp where dat = ? and id = ?"
             , state.getValue(), message, operdate, stepName);
     }
 

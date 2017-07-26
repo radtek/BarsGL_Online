@@ -2,21 +2,21 @@ select t.PDID
         ,t.pcid
         ,CASE  WHEN W.ACOD IS NULL and a.rev_fl='Y' AND VALUE(A.RLNTYPE,'0') <> '2' THEN A.ID
                ELSE NULL END GLACID
-        ,VALUE( A.CUSTNO,  value(SUBSTRING(a.ACID, 1, 8),SUBSTRING(t.ACID, 1, 8) )) CNUM
+        ,nvl( A.CUSTNO,  nvl(SUBSTRING(a.ACID, 1, 8),SUBSTRING(t.ACID, 1, 8) )) CNUM
         ,T.CCY
-        ,VALUE( A.ACOD, CAST (SUBSTRING(t.ACID, 12, 4) AS NUMERIC(4, 0))) ACOD
-        ,VALUE( A.SQ, CAST (SUBSTRING(t.ACID, 16, 2) AS NUMERIC(4, 0))) ACSQ
+        ,nvl( A.ACOD, CAST (SUBSTRING(t.ACID, 12, 4) AS NUMERIC(4, 0))) ACOD
+        ,nvl( A.SQ, CAST (SUBSTRING(t.ACID, 16, 2) AS NUMERIC(4, 0))) ACSQ
         ,CAST (PSTA AS NUMERIC(13, 0)) PSTA
         ,t.PSTARUR
         ,CAST (DRCR AS NUMERIC(1, 0)) DRCR
-        ,value(a.BRANCH, substr(t.acid,18,3)) BRCA
+        ,nvl(a.BRANCH, substr(t.acid,18,3)) BRCA
         ,CAST (OTRF  AS VARCHAR(20)) OTRF
         ,PSTB PSTB
         ,t.BSAACID
         ,t.POD
         ,t.ACID PACID
         ,t.JACID
-        ,value(a.rev_fl,'') rev_fl
+        ,nvl(a.rev_fl,'') rev_fl
         ,a.BSAACID absaacid
         ,rv.date_upl
         ,t.pdpod
@@ -51,7 +51,7 @@ where j.operday = ?
    and j.UNF != 'Y'
    and j.id > ?
    and j.pod < ?
-   and j.chseq = value((select min(j2.chseq) from gl_pdjchgr j2 where j2.id=j.id),j.chseq)
+   and j.chseq = nvl((select min(j2.chseq) from gl_pdjchgr j2 where j2.id=j.id),j.chseq)
    and ( ( a2.bsaacid is not null and (A2.RLNTYPE <> '2' or A2.RLNTYPE is null)) or 
                       (S.ACOD is not null and (d.ACID is not null or  d.ACID<>'' or d.ACID is not null) ) )
 ) t

@@ -1,16 +1,15 @@
 package ru.rbt.barsgl.ejb.repository.dict.AccType;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParmId;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.Acod;
 import ru.rbt.barsgl.ejb.repository.dict.AcodRepository;
+import ru.rbt.barsgl.shared.dict.ActParmWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.dict.ActParmWrapper;
 
 import javax.inject.Inject;
 import java.sql.SQLException;
@@ -83,8 +82,8 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
 
     public boolean isPlCodeExists(ActParmWrapper wrapper){
         try{
-            String sql = "select 1 from gl_plcode where plcode=? and dat <= date('" + wrapper.getDtb() +
-                         "') and value(datto, date('2029-01-01')) >= date('" + wrapper.getDtb() + "')";
+            String sql = "select 1 from gl_plcode where plcode=? and dat <= to_date('" + wrapper.getDtb() +
+                         "', 'dd.mm.yyyy') and nvl(datto, to_date('2029-01-01', 'yyyy-mm-dd')) >= to_date('" + wrapper.getDtb() + "', 'dd.mm.yyyy')";
             return null != selectFirst(sql, wrapper.getPlcode());
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -102,11 +101,11 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
     }
 
     public boolean isActParmInAcc(ActParmWrapper wrapper){
-       String sql = "select id\n" +
-                    "from gl_acc \n" +
-                    "where ACCTYPE = ? and acc2 = ? and \n" +
-                    "((VALUE(CBCUSTTYPE, 0) = CAST(? as Decimal(3,0))) or (VALUE(CBCUSTTYPE, 0) = 0) or (CAST(? as Decimal(3,0)) = 0)) and  \n" +
-                    "((VALUE(TERM, 0) = CAST(? as Decimal(2,0))) or ((VALUE(TERM,0) = 0) or (CAST(? as Decimal(2,0)) = 0)))";
+       String sql = "SELECT ID\n" +
+               "FROM GL_ACC \n" +
+               "WHERE ACCTYPE = ? AND ACC2 = ? AND\n" +
+               "((NVL(CBCUSTTYPE, 0) = CAST(? AS NUMBER(3,0))) OR (NVL(CBCUSTTYPE, 0) = 0) OR (CAST(? AS NUMBER(3,0)) = 0)) AND  \n" +
+               "((NVL(TERM, 0) = CAST(? AS NUMBER(2,0))) OR ((NVL(TERM,0) = 0) OR (CAST(? AS NUMBER(2,0)) = 0)))";
        try {
             return null != selectFirst(sql, wrapper.getAccType(), wrapper.getAcc2(), wrapper.getCusType(), wrapper.getCusType(),
                     wrapper.getTerm(), wrapper.getTerm());
