@@ -28,6 +28,7 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
@@ -118,7 +119,9 @@ commit;
             Validator validator = schema.newValidator();
             
             for (MovementCreateData movementCreateData : list) {
-                validator.validate(new StreamSource(new ByteArrayInputStream(movementCreateData.getEnvelopOutcoming().getBytes())));
+                String envelop = movementCreateData.getEnvelopOutcoming();
+                assertNotNull(envelop);
+                validator.validate(new StreamSource(new ByteArrayInputStream(envelop.getBytes())));
             }
         } catch (Exception ex) {
             Logger.getLogger(MovementCreateIT.class.getName()).log(Level.SEVERE, null, ex);
