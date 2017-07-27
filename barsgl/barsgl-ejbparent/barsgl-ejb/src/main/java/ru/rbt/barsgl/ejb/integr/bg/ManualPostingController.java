@@ -5,16 +5,14 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
-import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
+import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
-import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
-import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
-import ru.rbt.barsgl.ejb.repository.ManualOperationRepository;
-import ru.rbt.barsgl.ejb.repository.PdRepository;
+import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
@@ -98,8 +96,11 @@ public class ManualPostingController {
     @Inject
     private DateUtils dateUtils;
 
-    @EJB
-    private GLAccountRepository glAccountRepository;
+    @Inject
+    private AccRlnRepository accRlnRepository;
+
+    @Inject
+    private BankCurrencyRepository bankCurrencyRepository;
 
 
     /**
@@ -179,35 +180,52 @@ public class ManualPostingController {
      * @param wrapper
      * @throws ParseException
      */
-    private void checkAccountsBalance(ManualOperationWrapper wrapper) throws ParseException {
-
+    private void checkAccountsBalance(ManualOperationWrapper wrapper) throws ParseException, SQLException {
         if (wrapper.isNoCheckBalance()) {
             wrapper.setBalanceError(false);
             return;
         }
 
-        GLAccount accountDr = glAccountRepository.findGLAccount(wrapper.getAccountDebit());
-        GLAccount accountСr = glAccountRepository.findGLAccount(wrapper.getAccountCredit());
+        GlAccRln accountDr = accRlnRepository.findAccRlnAccount(wrapper.getAccountDebit());
+        GlAccRln accountСr = accRlnRepository.findAccRlnAccount(wrapper.getAccountCredit());
 
         Date postDate = dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
-        if (accountDr!=null) {
-            DataRecord resDr = glAccountRepository.checkAccountBalance(accountDr.getBsaAcid(), accountDr.getAcid(), postDate, wrapper.getAmountDebit());
-            if (resDr != null && resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO)<0) {
+        if (accountDr != null) {
+            if (!"АП".contains(accountDr.getPassiveActive())) return;
+            BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
+            BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
+            BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
+            DataRecord resDr = accRlnRepository.checkAccountBalance(accountDr.getId().getBsaAcid(), accountDr.getId().getAcid(), postDate, amountDr);
+            if (resDr != null && resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0) {
                 wrapper.setBalanceError(true);
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getBsaAcid(), resDr.getDate(0), resDr.getBigDecimal(1), resDr.getBigDecimal(2)));
-                throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, accountDr.getBsaAcid(), resDr.getDate(0).toString(), resDr.getBigDecimal(1).toString(), resDr.getBigDecimal(2).toString());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(), resDr.getDate(0), resDr.getBigDecimal(1), resDr.getBigDecimal(2)));
+                throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, accountDr.getId().getBsaAcid(), resDr.getDate(0).toString(), convertFromScale(resDr.getBigDecimal(1),currencyDr.getScale().intValue()).toString(), convertFromScale(resDr.getBigDecimal(2),currencyDr.getScale().intValue()).multiply(n).toString());
             }
         }
 
-        if (accountСr!=null) {
-            DataRecord resCr = glAccountRepository.checkAccountBalance(accountСr.getBsaAcid(), accountСr.getAcid(), postDate, wrapper.getAmountCredit());
-            if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO)<0) {
+        if (accountСr != null) {
+            if (!"АП".contains(accountСr.getPassiveActive())) return;
+            BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
+            BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
+            BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
+            DataRecord resCr = accRlnRepository.checkAccountBalance(accountСr.getId().getBsaAcid(), accountСr.getId().getAcid(), postDate, amountCr);
+            if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0) {
                 wrapper.setBalanceError(true);
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountСr.getBsaAcid(), resCr.getDate(0), resCr.getBigDecimal(1), resCr.getBigDecimal(2)));
-                throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, accountСr.getBsaAcid(), resCr.getDate(0).toString(), resCr.getBigDecimal(1).toString(), resCr.getBigDecimal(2).toString());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountСr.getId().getBsaAcid(), resCr.getDate(0), resCr.getBigDecimal(1), resCr.getBigDecimal(2)));
+                throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, accountСr.getId().getBsaAcid(), resCr.getDate(0).toString(), convertFromScale(resCr.getBigDecimal(1),currencyCr.getScale().intValue()).toString(), convertFromScale(resCr.getBigDecimal(2),currencyCr.getScale().intValue()).multiply(n).toString());
             }
         }
+    }
+
+    private BigDecimal convertToScale(BigDecimal amount,int scale)
+    {
+        return amount.multiply(BigDecimal.TEN.pow(scale));
+    }
+
+    private BigDecimal convertFromScale(BigDecimal amount,int scale)
+    {
+        return amount.divide(BigDecimal.TEN.pow(scale));
     }
 
     /**

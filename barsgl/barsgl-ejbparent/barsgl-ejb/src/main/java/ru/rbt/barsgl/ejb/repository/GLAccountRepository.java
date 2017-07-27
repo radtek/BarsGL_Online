@@ -7,10 +7,10 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
@@ -152,26 +153,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public DataRecord checkAccountBalance(String bsaAcid, String acid, Date operDate, BigDecimal amount)
-    {
-        try {
-            DataRecord res = selectFirst("with ACC_TOVER as (" +
-                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
-                    "UNION ALL " +
-                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
-                    ") " +
-                    "select * " +
-                    "FROM " +
-                    "( " +
-                    "select dat, bac,abs((select sum(bac) from acc_tover a where a.dat <= o.dat)) - ? as outrest " +
-                    "from ACC_TOVER o " +
-                    ")t " +
-                    "where outrest < 0 ",operDate,bsaAcid,acid,operDate,bsaAcid,acid,operDate, amount);
-            return res;
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
+
 
     public boolean checkAccountRlnExists(String bsaAcid, String acid, String rlntype) {
         try {
@@ -718,7 +700,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
-
 
 
     public boolean isExistsGLAccountByOpenType(String bsaAcid) {
