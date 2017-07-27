@@ -22,6 +22,8 @@ import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
+import ru.rbt.barsgl.gwt.client.operBackValue.OperAuthBVForm;
+import ru.rbt.barsgl.gwt.client.operBackValue.OperNotAuthBVForm;
 import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateForm;
@@ -396,6 +398,27 @@ public class MenuBuilder implements IMenuBuilder {
                 @Override
                 public void execute() {
                     formLoad( new OperTechEventHistoryForm());
+                }
+            });
+
+            case OperBackValue: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad( new OperTechEventHistoryForm());
+                }
+            });
+
+            case OperNotAuthBV: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperNotAuthBVForm());
+                }
+            });
+
+            case OperAuthBV: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new OperAuthBVForm());
                 }
             });
 

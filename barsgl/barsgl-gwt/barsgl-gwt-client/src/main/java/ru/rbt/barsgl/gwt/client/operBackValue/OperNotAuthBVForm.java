@@ -1,0 +1,416 @@
+package ru.rbt.barsgl.gwt.client.operBackValue;
+
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
+import ru.rbt.barsgl.gwt.core.actions.GridAction;
+import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
+import ru.rbt.barsgl.gwt.core.comp.PopupMenuBuilder;
+import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.barsgl.gwt.core.datafields.Table;
+import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
+import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.ClientDateUtils;
+import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.barsgl.shared.enums.InputMethod;
+import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.shared.enums.OperType;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+
+/**
+ * Created by er17503 on 24.07.2017.
+ */
+public class OperNotAuthBVForm extends GridForm {
+    private static final String _title = "Неавторизованные операции";
+    private String _select = "select * from (" +
+                             "select op.*, ex.POSTDATE_PLAN, ex.MNL_RSNCODE, ex.BV_CUTDATE, ex.PRD_LDATE, ex.PRD_CUTDATE, ex.MNL_NRT, " +
+                             "ex.MNL_STATUS, ex.USER_AU3, ex.OTS_AU3, ex.OTS_AUTO, " +
+                             "u.SURNAME || ' ' ||  LEFT(u.FIRSTNAME, 1) || '.' || LEFT(COALESCE(u.PATRONYMIC, ''), 1) || " +
+                             "case when COALESCE(u.PATRONYMIC, '') = '' then '' else '.' end as AUTHOR\n" +
+                             "from (select a.*, a.AC_DR || ' ' || a.AC_CR as dr_cr from V_GL_OPERCUST as a) op \n" +
+                             "join GL_OPEREXT ex on op.GLOID = ex.GLOID \n" +
+                             "left join GL_USER u on ex.USER_AU3 = u.USER_NAME) v ";
+
+
+    private GridAction _modeChoiceAction;
+    private GridAction _waitingReazonAction;
+    private GridAction _operAuthorizationAction;
+    private GridAction _waitingReazonListAction;
+    private GridAction _operAuthorizationListAction;
+    private GridAction _statisticsAction;
+
+    protected BVModeChoiceDlg.ModeType _mode = BVModeChoiceDlg.ModeType.NONE;
+    protected BVModeChoiceDlg.StateType _state = BVModeChoiceDlg.StateType.ALL;
+    protected Boolean _ownMessages;
+
+    public OperNotAuthBVForm() {
+        //super(_title, true);
+        super(_title);
+
+        reconfigure();
+        doActionVisibility();
+    }
+
+
+    private void reconfigure() {
+        abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
+        abw.addAction(createPreview());
+        abw.addAction(_modeChoiceAction = createModeChoice());
+        abw.addAction(_waitingReazonAction = createwWitingReazonAction());
+        abw.addAction(_operAuthorizationAction = createOperAuthorizationAction());
+        abw.addAction(_waitingReazonListAction = createWitingReazonListAction());
+        abw.addAction(_operAuthorizationListAction = createOperAuthorizationListAction());
+        abw.addAction(_statisticsAction = createStatisticsAction());
+    }
+
+    private void doActionVisibility(){
+        _operAuthorizationAction.setVisible(_mode == BVModeChoiceDlg.ModeType.SINGLE);
+        _waitingReazonAction.setVisible(_mode == BVModeChoiceDlg.ModeType.SINGLE);
+        _waitingReazonListAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
+        _operAuthorizationListAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
+        _statisticsAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
+    }
+
+    /*Actions*/
+
+    private GridAction createPreview(){
+        return new GridAction(grid, null, "Просмотр", new Image(ImageConstants.INSTANCE.preview()), 10, true) {
+            @Override
+            public void execute() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+
+                OperationDlg dlg = new OperationDlg("Просмотр бухгалтерской операции GL", FormAction.PREVIEW, table.getColumns());
+                dlg.setDlgEvents(this);
+                dlg.show(rowToWrapper());
+            }
+        };
+    }
+
+    private ManualOperationWrapper rowToWrapper(){
+        ManualOperationWrapper wrapper = new ManualOperationWrapper();
+
+        wrapper.setId((Long) getValue("GLOID"));
+
+        wrapper.setPostDateStr(ClientDateUtils.Date2String((Date) getValue("POSTDATE")));
+        wrapper.setValueDateStr(ClientDateUtils.Date2String((Date) getValue("VDATE")));
+
+        wrapper.setDealSrc((String) getValue("SRC_PST"));
+        wrapper.setDealId((String) getValue("DEAL_ID"));
+        wrapper.setSubdealId((String) getValue("SUBDEALID"));
+
+        wrapper.setCurrencyDebit((String) getValue("CCY_DR"));
+        wrapper.setFilialDebit((String) getValue("CBCC_DR"));
+        wrapper.setAccountDebit((String) getValue("AC_DR"));
+        wrapper.setAmountDebit((BigDecimal) getValue("AMT_DR"));
+
+        wrapper.setCurrencyCredit((String) getValue("CCY_CR"));
+        wrapper.setFilialCredit((String) getValue("CBCC_CR"));
+        wrapper.setAccountCredit((String) getValue("AC_CR"));
+        wrapper.setAmountCredit((BigDecimal) getValue("AMT_CR"));
+
+        wrapper.setAmountRu((BigDecimal) getValue("AMTRU_DR"));
+        wrapper.setCorrection("Y".equals(((String) getValue("FCHNG")))); //TODO некошерно
+
+        wrapper.setNarrative((String) getValue("NRT"));
+        wrapper.setRusNarrativeLong((String) getValue("RNRTL"));
+
+        wrapper.setDeptId((String) getValue("DEPT_ID"));
+        wrapper.setProfitCenter((String) getValue("PRFCNTR"));
+
+        String errorMessage = (String) getValue("EMSG");
+        if (!isEmpty(errorMessage))
+            wrapper.getErrorList().addErrorDescription(errorMessage);
+
+        return wrapper;
+    }
+
+
+    private GridAction createModeChoice(){
+        return new GridAction(grid, null, "Выбор способа обработки", new Image(ImageConstants.INSTANCE.site_map()), 10) {
+            BVModeChoiceDlg dlg;
+
+            @Override
+            public void execute() {
+                dlg = new BVModeChoiceDlg();
+                dlg.setDlgEvents(this);
+                Object[] prms = new Object[] {_mode, _ownMessages, _state};
+                dlg.show(prms);
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms){
+                dlg.hide();
+
+                _mode = (BVModeChoiceDlg.ModeType)((Object[])prms)[0];
+                _ownMessages = (Boolean)((Object[])prms)[1];
+                _state = (BVModeChoiceDlg.StateType)((Object[])prms)[2];
+
+                StatusBarManager.ChangeStatusBarText(getStatusBarText(), StatusBarManager.MessageReason.MSG);
+               doActionVisibility();
+/*
+                changeWhereStepPart();
+                changeWhereMessageTypePart();
+                changeWhereOwnMessagesPart();
+
+                setSql(sql());*/
+                //System.out.println(sql());
+                refreshAction.execute();
+            }
+
+            private String getStatusBarText(){
+                String pattern = "Способ обработки: [{0}]. Состояние: [{1}]";
+
+                return Utils.Fmt(pattern, _mode.getLabel(), _state.getLabel());
+            }
+        };
+    }
+
+    private GridAction createwWitingReazonAction() {
+        return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
+
+            @Override
+            public void execute() {
+
+            }
+        };
+    }
+
+    private GridAction createOperAuthorizationAction() {
+        return new GridAction(grid, null, "Авторизовать дату операции", new Image(ImageConstants.INSTANCE.back_value()), 10) {
+
+            @Override
+            public void execute() {
+
+            }
+        };
+    }
+
+    private GridAction createWitingReazonListAction(){
+        final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Задержать операцию",  new Image(ImageConstants.INSTANCE.locked()));
+
+        MenuItem itemVisibleList = new MenuItem("Видимый список", new Command() {
+           // DlgFrame ErrorHandlingEditDlg = null;
+
+            @Override
+            public void execute() {
+                builder.hidePopup();
+                Window.alert("Visible List WR");
+             /*   executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorHandlingEditDlg()
+                        : ErrorHandlingEditDlg).execute();*/
+            }
+        });
+
+        MenuItem itemAllList = new MenuItem("Полный список", new Command() {
+           // DlgFrame ErrorHandlingEditListDlg = null;
+
+            @Override
+            public void execute() {
+                builder.hidePopup();
+                Window.alert("All List WR");
+                /*executeEditAction(ErrorHandlingEditListDlg == null ? ErrorHandlingEditListDlg = new ErrorHandlingEditListDlg()
+                        : ErrorHandlingEditListDlg).execute();*/
+            }
+        });
+
+        builder.addItem(itemVisibleList);
+        builder.addSeparator();
+        builder.addItem(itemAllList);
+        return  builder.toAction(grid);
+    }
+
+    private GridAction createOperAuthorizationListAction(){
+        final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Авторизовать дату операции",  new Image(ImageConstants.INSTANCE.back_value()));
+
+        MenuItem itemVisibleList = new MenuItem("Видимый список", new Command() {
+            // DlgFrame ErrorHandlingEditDlg = null;
+
+            @Override
+            public void execute() {
+                builder.hidePopup();
+                Window.alert("Visible List Auth");
+             /*   executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorHandlingEditDlg()
+                        : ErrorHandlingEditDlg).execute();*/
+            }
+        });
+
+        MenuItem itemAllList = new MenuItem("Полный список", new Command() {
+            // DlgFrame ErrorHandlingEditListDlg = null;
+
+            @Override
+            public void execute() {
+                builder.hidePopup();
+                Window.alert("All List Auth");
+                /*executeEditAction(ErrorHandlingEditListDlg == null ? ErrorHandlingEditListDlg = new ErrorHandlingEditListDlg()
+                        : ErrorHandlingEditListDlg).execute();*/
+            }
+        });
+
+        builder.addItem(itemVisibleList);
+        builder.addSeparator();
+        builder.addItem(itemAllList);
+        return  builder.toAction(grid);
+    }
+
+    private GridAction createStatisticsAction() {
+        return new GridAction(grid, null, "Статистика", new Image(ImageConstants.INSTANCE.statistics()), 10) {
+
+            @Override
+            public void execute() {
+
+            }
+        };
+    }
+
+    Column c1, c2, c3, c4;
+
+    @Override
+    protected Table prepareTable() {
+        Table result = new Table();
+        Column col;
+
+        HashMap<Serializable, String> yesNoList = getYesNoList();
+        result.addColumn(c1=new Column("GLOID", LONG, "ID операции", 70));// No Space
+        result.addColumn(new Column("PST_REF", LONG, "ID запроса", 70, false, false));
+        result.addColumn(new Column("ID_PST", STRING, "ИД сообщ АЕ", 70));
+        result.addColumn(col = new Column("INP_METHOD", STRING, "Способ ввода", 70, false, false));
+        col.setList(getEnumLabelsList(InputMethod.values()));
+        c2 = col;
+        result.addColumn(c3 = new Column("SRC_PST", STRING, "Источник сделки", 70));
+        result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
+        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120, false, false));
+        result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 70));
+
+        result.addColumn(col = new Column("STATE", STRING, "Статус", 70, false, false));
+        col.setList(getEnumValuesList(OperState.values()));
+        c4 = col;
+        result.addColumn(col = new Column("PST_SCHEME", STRING, "Схема проводок", 70, false, false));
+        col.setList(getEnumLabelsList(OperType.values()));
+
+        result.addColumn(new Column("MNL_STATUS", STRING, "Статус руч. обработки", 120));
+        result.addColumn(new Column("MNL_RSNCODE", STRING, "Причина руч. обработки", 120));
+
+        result.addColumn(col = new Column("PROCDATE", DATE, "Дата опердня", 80));
+        col.setFormat("dd.MM.yyyy");
+        result.addColumn(col = new Column("VDATE", DATE, "Дата валютирования", 80));
+        col.setFormat("dd.MM.yyyy");
+        result.addColumn(col = new Column("POSTDATE", DATE, "Дата проводки", 80));
+        col.setFormat("dd.MM.yyyy");
+        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Первичная дата проводки", 80, false, false));
+        col.setFormat("dd.MM.yyyy");
+
+        result.addColumn(new Column("AC_DR", STRING, "Счет ДБ", 160));
+        result.addColumn(new Column("CCY_DR", STRING, "Валюта ДБ", 60));
+        result.addColumn(new Column("AMT_DR", DECIMAL, "Сумма ДБ", 100));
+        result.addColumn(new Column("AMTRU_DR", DECIMAL, "Сумма в рублях ДБ", 100, false, false));
+        result.addColumn(new Column("RATE_DR", DECIMAL, "Курс ДБ", 100, false, false));
+        result.addColumn(new Column("EQV_DR", DECIMAL, "Руб.экв. ДБ", 100, false, false));
+        result.addColumn(new Column("CBCC_DR", STRING, "Филиал ДБ", 60));
+
+        result.addColumn(new Column("AC_CR", STRING, "Счет КР", 160));
+        result.addColumn(new Column("CCY_CR", STRING, "Валюта КР", 60));
+        result.addColumn(new Column("AMT_CR", DECIMAL, "Сумма КР", 100));
+        result.addColumn(new Column("AMTRU_CR", DECIMAL, "Сумма в рублях КР", 100, false, false));
+        result.addColumn(new Column("RATE_CR", DECIMAL, "Курс КР", 100, false, false));
+        result.addColumn(new Column("EQV_CR", DECIMAL, "Руб.экв. КР", 100, false, false));
+        result.addColumn(new Column("CBCC_CR", STRING, "Филиал КР", 60));
+
+        result.addColumn(new Column("BS_CHAPTER", STRING, "Глава", 50, false, false));
+        result.addColumn(col = new Column("FAN", STRING, "Веер", 50));
+        col.setList(yesNoList);
+        result.addColumn(new Column("PAR_GLO", LONG, "Голова веера", 70, false, false));
+        result.addColumn(new Column("PAR_RF", STRING, "ИД веера", 70, false, false));
+        result.addColumn(col = new Column("STRN", STRING, "Сторно", 50));
+        col.setList(yesNoList);
+        result.addColumn(new Column("STRN_GLO", LONG, "Сторно операция", 70, false, false));
+        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1200));
+        result.addColumn(new Column("CUSTNO_DR", STRING, "Клиент ДБ", 400));
+        result.addColumn(new Column("CUSTNO_CR", STRING, "Клиент КР", 400));
+
+        result.addColumn(new Column("NRT", STRING, "Основание ENG", 300, false, false));
+        result.addColumn(new Column("RNRTL", STRING, "Основание RUS", 300, false, false));
+        result.addColumn(new Column("RNRTS", STRING, "Основание короткое", 100, false, false));
+
+        result.addColumn(new Column("DEPT_ID", STRING, "Подразделение", 100, false, false));
+        result.addColumn(new Column("PRFCNTR", STRING, "Профит центр", 100, false, false));
+        result.addColumn(col = new Column("FCHNG", STRING, "Исправительная", 50, false, false));
+        col.setList(yesNoList);
+
+        result.addColumn(new Column("USER_NAME", STRING, "Пользователь", 100, false, false));
+        //вычисляемое поле для фильтра по условию "ИЛИ"
+        result.addColumn(new Column("DR_CR", STRING, "Счета Дт/Кр", 70, false, false));
+
+        //OperExt
+        result.addColumn(new Column("OTS_AUTO", Column.Type.DATETIME, "Время авт. обновления", 130, false, false));
+
+
+        result.addColumn(col = new Column("BV_CUTDATE", DATE, "Пороговая дата backvalue ", 80, false, false));
+        col.setFormat("dd.MM.yyyy");
+        result.addColumn(col = new Column("PRD_LDATE", DATE, "Закрытый период", 80, false, false));
+        col.setFormat("dd.MM.yyyy");
+        result.addColumn(col = new Column("PRD_CUTDATE", DATE, "Дата закрытия периода", 80, false, false));
+        col.setFormat("dd.MM.yyyy");
+        result.addColumn(new Column("MNL_NRT", STRING, "Комментарий руч. обработки", 300, false, false));
+
+        result.addColumn(col = new Column("AUTHOR", STRING, "Исполнитель", 180));
+        col.setFilterable(false);
+        result.addColumn(new Column("USER_AU3", STRING, "Логин исполнителя", 180, false, false));
+        result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Время руч. обработки", 130, false, false));
+
+        return result;
+    }
+
+    @Override
+    protected String prepareSql() {
+        return _select/* null*/;
+    }
+
+    @Override
+    protected ArrayList<SortItem> getInitialSortCriteria() {
+        ArrayList<SortItem> list = new ArrayList<SortItem>();
+        list.add(new SortItem("GLOID", Column.Sort.DESC));
+        return list;
+    }
+
+    @Override
+    public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
+        ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+        list.add(new FilterItem(c3, FilterCriteria.EQ, "PH", false, false, true));
+
+
+        list.add(new FilterItem(c4, FilterCriteria.EQ, "BLOAD", false, false, false));
+        list.add(new FilterItem(c1, FilterCriteria.EQ, 43444L, false, true, true));
+
+       list.add(new FilterItem(c2, FilterCriteria.EQ, "AE", false, true, false));
+
+
+
+
+
+        return list;
+    }
+}

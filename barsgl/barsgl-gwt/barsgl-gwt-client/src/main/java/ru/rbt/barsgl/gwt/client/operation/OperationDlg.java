@@ -74,6 +74,9 @@ public class OperationDlg extends OperationDlgBase {
 
     public OperationDlg(String title, FormAction action, Columns columns) {
         super(title, action, columns);
+        if (action == FormAction.PREVIEW) {
+            ok.setVisible(false);
+        }
     }
 
     @Override
@@ -127,6 +130,11 @@ public class OperationDlg extends OperationDlgBase {
     }
 
     protected void setControlsEnabled(){
+        if ( action == FormAction.DELETE || action == FormAction.SEND || action == FormAction.SIGN ||
+                action == FormAction.RETURN || action == FormAction.CONFIRM || action == FormAction.PREVIEW){
+            //TODO блокировка полей на UPDATE (HAND2)
+            setControlsDisabled();
+        }
     }
 
     protected void getOperDay() {
