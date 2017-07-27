@@ -149,7 +149,11 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
                 createOneEnvelope(item);
             }
             // Debug if local
+            if(isMovementDebug()){
+                responseStorage.clear();
+            }
             sendRequests(mcdList);
+            
             if ("yes".equals(queueProperties.local)) {
                 putTestAnswer();
             }
