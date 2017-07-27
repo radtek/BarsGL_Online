@@ -15,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -22,6 +23,7 @@ import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -489,7 +491,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date lwdate = DateUtils.addDays(operdate, -1);
         setOperday(operdate, lwdate, ONLINE, OPEN);
 
-        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum < 3");
+        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4");
         Assert.assertEquals(4, pds.size());
 
         String bsaacid1 = pds.get(0).getString("bsaacid");
@@ -521,6 +523,12 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
         baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
 
+        long ts = System.currentTimeMillis();
+
+        baseEntityRepository.executeNativeUpdate(String.format("update pcid_mo set mo_no = '@T%s' where pcid in (?)"
+                , StringUtils.rsubstr(ts + "", 7)), pds.get(2).getLong("pcid"));
+        baseEntityRepository.executeNativeUpdate(String.format("update pcid_mo set mo_no = '@T%s' where pcid in (?)"
+                , StringUtils.rsubstr((ts+1) + "", 7)), pds.get(3).getLong("pcid"));
         baseEntityRepository.executeNativeUpdate("delete from pcid_mo where pcid in (?, ?)", pds.get(2).getLong("pcid"), pds.get(3).getLong("pcid"));
 
         checkCreateStep("MI4GL", lwdate, "O");
@@ -740,14 +748,14 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         jobService.executeJob(SingleActionJobBuilder.create().withClass(StamtUnloadPstIncrementTask.class).build());
     }
 
-    private EtlPosting createSimple(long stamp, EtlPackage pkg, String accCredit, String accDebit) {
+    private EtlPosting createSimple(long stamp, EtlPackage pkg, String accCredit, String accDebit) throws SQLException {
         EtlPosting pst = newPosting(stamp + 1, pkg);
         pst.setAccountCredit(accCredit);
         pst.setAccountDebit(accDebit);
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
-        pst.setCurrencyCredit(BankCurrency.AUD);
-        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setCurrencyCredit(remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", getCurrencyCodeByDigital(accCredit.substring(5, 8))));
+        pst.setCurrencyDebit(remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", getCurrencyCodeByDigital(accDebit.substring(5, 8))));
         pst.setValueDate(getOperday().getCurrentDate());
         pst.setSourcePosting("K+TP");
         return (EtlPosting) baseEntityRepository.save(pst);
@@ -787,6 +795,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
     private long getPcid(GLOperation operation) throws SQLException {
         return baseEntityRepository.selectFirst("select pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and o.gloid = ?"
                 , operation.getId()).getLong("pcid");
+    }
+
+    private String getCurrencyCodeByDigital(String cbccy) throws SQLException {
+        return baseEntityRepository.selectOne("select glccy from currency where cbccy = ?", cbccy).getString("glccy");
     }
 
 }
