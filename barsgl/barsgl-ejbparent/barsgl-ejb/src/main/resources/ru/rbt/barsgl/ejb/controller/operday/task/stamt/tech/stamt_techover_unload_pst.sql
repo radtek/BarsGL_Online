@@ -22,7 +22,7 @@ insert into gl_etlstmd (
      d.ccy dcur, c.ccy ccur,                                                  -- валюта
      -(d.amnt)/cast(power(10, dc.nbdp) as number(4)) damount, (c.amnt)/cast(power(10, cc.nbdp) as number(4)) camount,     -- суммы в валюте
      -(d.amntbc)/cast(power(10,2) as number(4)) damount_rur,  (c.amntbc)/cast(power(10, 2) as number(4)) camount_rur,     -- суммы в рублях
-     m.bo_ind doc_type, m.mo_no doc_n,                                                                              -- мемордер
+     nvl(m.bo_ind, 0) doc_type, nvl(m.mo_no, 'BA' || nvl(get_fcc_br(d.bsaacid), '000') || substr(cast (d.pcid as varchar2(16)), -9)) doc_n, -- мемордер
      cast(null as number(10)) glo_ref,
      '1' post_type,
      cast(null as varchar2(20)) evtp,

@@ -162,6 +162,10 @@ public class EditPdThProcessor extends ValidationAwareHandler<ManualTechOperatio
         return glPdThRepository.getOperationPdThList(pdIdList);
     }
 
+    public List<GlPdTh> getOperationPdList(Long pcId) {
+        return glPdThRepository.getOperationPdThListByPcId(pcId);
+    }
+
     public void suppressAllPostings(ManualTechOperationWrapper wrapper, final List<GlPdTh> pdList)  throws Exception {
 
         // TODO при подавлении и изменении даты проводки (брать мин дату)

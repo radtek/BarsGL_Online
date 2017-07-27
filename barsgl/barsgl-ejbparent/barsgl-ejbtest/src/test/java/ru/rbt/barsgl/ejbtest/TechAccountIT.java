@@ -38,8 +38,8 @@ public class TechAccountIT extends AbstractRemoteIT {
 
     @Before public void init() {
 
-//        baseEntityRepository.executeNativeUpdate("delete from gl_pdth");
 //        baseEntityRepository.executeNativeUpdate("delete from gl_btth");
+//        baseEntityRepository.executeNativeUpdate("delete from gl_pdth");
 //        baseEntityRepository.executeNativeUpdate("delete from gl_oper where bs_chapter = 'T'");
 //        baseEntityRepository.executeNativeUpdate("delete from gl_acc where rlntype = '9'");
     }

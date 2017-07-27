@@ -250,6 +250,10 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
             mSQ.setValue(getFieldText("SQ"));
             mDateOpen.setValueSrv((Date)getFieldValue("DTO"));
             mDateClose.setValueSrv((Date)getFieldValue("DTC"));
+
+            boolean isPlAccount = !isEmpty((String)getFieldValue("PLCODE"));
+            if (isPlAccount)
+                setControlsDisabled();
         }
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
@@ -262,6 +266,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
     @Override
     protected void fillContent() {
         clearContent();
+
         setControlsEnabled();
 
         if (asyncListCount == 0) {
@@ -306,6 +311,34 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDateOpen.setEnabled(true);
         mDateClose.setEnabled(action == FormAction.UPDATE);
         mDateOperDay.setEnabled(false);
+
+        ok.setEnabled(true);
+    }
+
+    private void setControlsDisabled(){
+        mBranch.setEnabled(false);
+        mCurrency.setEnabled(false);
+
+        mCustomerButton.setEnabled(false);
+        mCustomerNumber.setEnabled(false);
+        mCustomerType.setEnabled(false);
+        mCustomerName.setEnabled(false);
+        mTerm.setEnabled(false);
+
+        mAccountTypeButton.setEnabled(false);
+        mAccountType.setEnabled(false);
+        mAccountDesc.setEnabled(false);
+
+        mDealSource.setEnabled(false);
+        mDealId.setEnabled(false);
+        mSubdealId.setEnabled(false);
+        mSQ.setEnabled(false);
+
+        mDateOpen.setEnabled(false);
+        mDateClose.setEnabled(false);
+        mDateOperDay.setEnabled(false);
+
+        ok.setEnabled(false);
     }
 
     private void setOperday(final String operDayStr) {

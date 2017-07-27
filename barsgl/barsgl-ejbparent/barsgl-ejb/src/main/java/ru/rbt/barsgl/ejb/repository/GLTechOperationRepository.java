@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
@@ -38,5 +39,22 @@ public class GLTechOperationRepository extends AbstractBaseEntityRepository<GLOp
                 operation.getAccountKeyDebit(), operation.getAmountDebit());
 
         return (null != res) ? res.getLong(0) : null;
+    }
+
+    /**
+     * Определяет филиал, в котором открыт счет
+     *
+     * @param bsaAcid - номер счета ЦБ
+     * @return - филиал (3 буквы)
+     * @throws SQLException
+     */
+    public String getFilialByAccount(String bsaAcid) {
+        try {
+            String sql = "select CBCC from GL_ACC where BSAACID = ?";
+            DataRecord res = selectFirst(sql, bsaAcid);
+            return (null != res) ? res.getString("CBCC") : "";
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 }

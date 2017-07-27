@@ -463,7 +463,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     public Integer getOperationsByAccountAfter(String bsaAcid, Date date) {
         try {
             DataRecord data = selectFirst("select count(1) from GL_OPER where (AC_DR = ? or AC_CR = ?)" +
-                                              " and (POSTDATE > ? and STATE <> ? or STATE = ?)",
+                                               " and (POSTDATE > ? and STATE <> ? or STATE = ?)",
                 bsaAcid, bsaAcid, date, OperState.ERCHK.name(), OperState.LOAD.name());
             return (null == data) ? 0 : data.getInteger(0);
         } catch (SQLException e) {

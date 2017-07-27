@@ -31,7 +31,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
  * Created by akichigi on 03.06.16.
  */
 public class OperTechEventHistoryForm extends OperTechSuperBase {
-    public static final String FORM_NAME = "История создания операций";
+    public static final String FORM_NAME = "История создания операций по техническим счетам";
 
     private Column colProcDate;
     private Column colInvisible;

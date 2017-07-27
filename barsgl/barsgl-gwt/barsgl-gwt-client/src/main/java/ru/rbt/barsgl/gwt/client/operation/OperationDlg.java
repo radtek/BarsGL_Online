@@ -360,7 +360,7 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected Date getAccountDate() {
-        return mDateValue.getValue();
+        return mDateOperation.getValue();
     }
 
     protected void setEnableSumRuHandler() {
@@ -466,7 +466,7 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected void btnClick(Side side) {
-        /*exchange(side.equals(Side.DEBIT));*/
+        exchange(side.equals(Side.DEBIT));
     }
 
     private void exchange(boolean isDebit){
