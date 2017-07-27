@@ -17,6 +17,7 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.XMLConstants;
@@ -88,9 +89,6 @@ commit;
                 .build();
         jobService.executeJob(job);
         
-        // Clear responses if debug true
-        remoteAccess.invoke(MovementCreateProcessor.class, "receiveResponses", new Object[]{});
-
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
@@ -102,15 +100,14 @@ commit;
 
     @Test
     public void validateXml(){
-        SingleActionJob job =
-                SingleActionJobBuilder.create()
-                        .withClass(MovementCreateTask.class)
-                        .build();
-        
         try {
-            jobService.executeJob(job);
-                        
-            List<MovementCreateData> list = remoteAccess.invoke(MovementCreateProcessor.class, "receiveResponses", new Object[]{});
+            MovementCreateData data = remoteAccess.invoke(MovementCreateProcessor.class, "fillTestData", new Object[]{});
+            data.setAccountCBD("40807810000010496202");
+
+            List<MovementCreateData> list = new ArrayList<>();        
+            list.add(data);
+        
+            list = remoteAccess.invoke(MovementCreateProcessor.class, "processOld", new Object[]{list});
             
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = factory.newSchema(new Source[]{

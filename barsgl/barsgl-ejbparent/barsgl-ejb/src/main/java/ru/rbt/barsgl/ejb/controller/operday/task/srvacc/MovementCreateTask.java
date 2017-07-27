@@ -38,9 +38,6 @@ public class MovementCreateTask implements ParamsAwareRunnable {
         processor.processOld(datas);
         data = datas.get(0);
 
-        // Debug if local -- resend for xml validation
-        processor.sendRequests(datas);
-        
         //processor.sendRequests(datas);
         //processor.putTestAnswer();
 //        processor.receiveResponses(datas);

@@ -135,7 +135,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
 */
 
     @Deprecated
-    public void processOld(List<MovementCreateData> mcdList) {
+    public List<MovementCreateData> processOld(List<MovementCreateData> mcdList) {
         
         try {
             loadQueueProperties();
@@ -165,6 +165,7 @@ INSERT INTO DWH.GL_PRPRP (ID_PRP, ID_PRN, REQUIRED, PRPTP, DESCRP, STRING_VALUE)
             }
             throw new RuntimeException(e);
         }
+        return mcdList;
     }
 
     private void sendRequestsDebug(List<MovementCreateData> mcdList) {
