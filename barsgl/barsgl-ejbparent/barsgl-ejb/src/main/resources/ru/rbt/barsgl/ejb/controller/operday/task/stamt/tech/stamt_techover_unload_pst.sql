@@ -34,7 +34,7 @@ insert into gl_etlstmd (
       ) j
      join pd d on j.pcid = d.pcid and d.amntbc < 0
      join pd c on j.pcid = c.pcid and c.amntbc > 0
-     join pcid_mo m on d.pcid = m.pcid
+     left join pcid_mo m on d.pcid = m.pcid
      join currency dc on dc.glccy = d.ccy
      join currency cc on cc.glccy = c.ccy
      join bsaacc da on d.bsaacid = da.id
