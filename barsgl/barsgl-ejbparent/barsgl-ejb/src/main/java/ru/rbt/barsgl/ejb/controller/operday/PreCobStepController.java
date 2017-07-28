@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.operday;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -11,18 +12,17 @@ import ru.rbt.barsgl.ejb.integr.bg.FanStornoBackvalueOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.FanStornoOnedayOperationController;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
+import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -34,10 +34,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.collect.Iterables.all;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.PreCob;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
@@ -270,7 +270,7 @@ public class PreCobStepController {
      * @throws SQLException
      * @return                          - true - операция обработана успешно
      */
-    private boolean processFanOperation(String parentRef, FanOperationController fanOperationController, boolean isWtacPreStage) throws SQLException {
+    public boolean processFanOperation(String parentRef, FanOperationController fanOperationController, boolean isWtacPreStage) throws SQLException {
         boolean res = false;
         String msg = format(" обработки частичных операций веера по референсу '%s'", parentRef);
         auditController.info(PreCob, "Начало" + msg);
@@ -282,8 +282,10 @@ public class PreCobStepController {
                     List<GLOperation> operList = fanOperationController.processOperations(parentRef);
                     return !operList.isEmpty();
                 });
+                auditController.info(PreCob, "Успешное завершение" + msg);
+            } else {
+                auditController.warning(PreCob, format("Обработка веерной операции по референсу '%s' не выполнена из-за ошибок валидации", parentRef));
             }
-            auditController.info(PreCob, "Успешное завершение" + msg);
         } catch (Throwable e) {
             auditController.info(PreCob, "Ошибка " + msg);
         }
@@ -314,8 +316,8 @@ public class PreCobStepController {
             // получить все входные сообщения по вееру
             List<EtlPosting> etl = operationRepository.getFanPostingByRef(parentRef, fanOperationController.getStorno());
             // убедиться, что все загружены нормально
-            Assert.isTrue(all(etl, input -> 0 == input.getErrorCode())
-                    , format("Для референса '%s' найдены веерные проводки, загруженные с ошибкой", parentRef));
+            Assert.isTrue(etl.stream().allMatch(input -> Objects.equals(0L, input.getErrorCode()))
+                    , format("Для референса '%s' найдены веерные проводки, загруженные с ошибкой или необработанные", parentRef));
 
             // получить все операции по вееру
 //            List<GLOperation> fans = operationRepository.getFanOperationByRef(parentRef, fanOperationController.getStorno());
