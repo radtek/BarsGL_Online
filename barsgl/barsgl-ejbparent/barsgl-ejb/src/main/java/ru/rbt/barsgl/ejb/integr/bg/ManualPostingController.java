@@ -185,37 +185,53 @@ public class ManualPostingController {
             wrapper.setBalanceError(false);
             return;
         }
-
-        GlAccRln accountDr = accRlnRepository.findAccRlnAccount(wrapper.getAccountDebit());
-        GlAccRln accountСr = accRlnRepository.findAccRlnAccount(wrapper.getAccountCredit());
+        GlAccRln accountDr = accRlnRepository.checkAccointIsPair(wrapper.getAccountDebit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountDebit());
+        GlAccRln accountCr = accRlnRepository.checkAccointIsPair(wrapper.getAccountCredit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountCredit());
 
         Date postDate = dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
-        if (accountDr != null) {
-            if (!"АП".contains(accountDr.getPassiveActive())) return;
+        if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
+            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
+            if (tehoverAcc!=null)
+            {
+
+            }
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
             BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
-            DataRecord resDr = accRlnRepository.checkAccountBalance(accountDr.getId().getBsaAcid(), accountDr.getId().getAcid(), postDate, amountDr);
-            if (resDr != null && resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0) {
+            DataRecord resDr = null;
+            if (tehoverAcc!=null) {
+                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr,tehoverAcc);
+            }
+            else {
+                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr);
+            }
+            if (resDr != null && (resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0)) {
                 wrapper.setBalanceError(true);
                 wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(), resDr.getDate(0), resDr.getBigDecimal(1), resDr.getBigDecimal(2)));
-                throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, accountDr.getId().getBsaAcid(), resDr.getDate(0).toString(), convertFromScale(resDr.getBigDecimal(1),currencyDr.getScale().intValue()).toString(), convertFromScale(resDr.getBigDecimal(2),currencyDr.getScale().intValue()).multiply(n).toString());
             }
         }
 
-        if (accountСr != null) {
-            if (!"АП".contains(accountСr.getPassiveActive())) return;
+        if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
+            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getId().getBsaAcid(),accountCr.getId().getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
             BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
-            DataRecord resCr = accRlnRepository.checkAccountBalance(accountСr.getId().getBsaAcid(), accountСr.getId().getAcid(), postDate, amountCr);
-            if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0) {
+            DataRecord resCr = null;
+            if (tehoverAcc!=null) {
+                resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr,tehoverAcc);
+            }
+            else {
+                resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr);
+            }
+            if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO) > 0) {
                 wrapper.setBalanceError(true);
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountСr.getId().getBsaAcid(), resCr.getDate(0), resCr.getBigDecimal(1), resCr.getBigDecimal(2)));
-                throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, accountСr.getId().getBsaAcid(), resCr.getDate(0).toString(), convertFromScale(resCr.getBigDecimal(1),currencyCr.getScale().intValue()).toString(), convertFromScale(resCr.getBigDecimal(2),currencyCr.getScale().intValue()).multiply(n).toString());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountCr.getId().getBsaAcid(), resCr.getDate(0), resCr.getBigDecimal(1), resCr.getBigDecimal(2)));
             }
         }
+
+        if (wrapper.isBalanceError())
+            throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, wrapper.getErrorMessage());
     }
 
     private BigDecimal convertToScale(BigDecimal amount,int scale)

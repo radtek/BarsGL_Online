@@ -446,4 +446,5 @@ public class ManualOperationController {
                     "\nЗаписи не прошедшие пересчет/локализацию в таблице GL_BVJRNL.STATE = 'ERROR'", null, e);
         }
     }
+
 }

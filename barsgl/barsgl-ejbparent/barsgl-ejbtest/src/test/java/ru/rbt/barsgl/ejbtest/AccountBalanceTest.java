@@ -51,4 +51,21 @@ public class AccountBalanceTest extends AbstractRemoteTest {
 
     }
 
+    @Test
+    public void testCheckRedSaldoWithTehoverAccountBalance()
+    {
+        Date currentDate = new Date();
+        CheckAccountWrapper wrapper = new CheckAccountWrapper();
+        wrapper.setBsaAcid("40702810200013770574");
+        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy");
+        wrapper.setDateOperStr(df.format(DateUtils.addDays(currentDate, -30)));
+        wrapper.setAmount(BigDecimal.valueOf(10000L));
+
+        RpcRes_Base<CheckAccountWrapper> res =  remoteAccess.invoke(ManualOperationController.class,"checkAmountBalance",wrapper);
+
+
+        Assert.assertFalse(res.isError());
+
+    }
+
 }

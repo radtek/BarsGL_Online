@@ -188,22 +188,74 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
         }
     }
 
-    public DataRecord checkAccountBalance(String bsaAcid, String acid, Date operDate, BigDecimal amount)
+    public DataRecord checkAccountBalance(GlAccRln account, Date operDate, BigDecimal amount)
+    {
+        try{
+            DataRecord res = selectFirst("with ACC_TOVER as (" +
+                        "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
+                        "UNION ALL " +
+                        "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
+                        ") " +
+                        "select * " +
+                        "FROM " +
+                        "( " +
+                        "select dat, bac,abs((select sum(bac) from acc_tover a where a.dat <= o.dat)) - ? as outrest " +
+                        "from ACC_TOVER o " +
+                        ")t " +
+                        "where outrest < 0 ", operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
+            return res;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public DataRecord checkAccountBalance(GlAccRln account, Date operDate, BigDecimal amount,GlAccRln tehover)
     {
         try {
-            DataRecord res = selectFirst("with ACC_TOVER as (" +
-                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
-                    "UNION ALL " +
-                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
-                    ") " +
-                    "select * " +
-                    "FROM " +
-                    "( " +
-                    "select dat, bac,abs((select sum(bac) from acc_tover a where a.dat <= o.dat)) - ? as outrest " +
-                    "from ACC_TOVER o " +
-                    ")t " +
-                    "where outrest < 0 ",operDate,bsaAcid,acid,operDate,bsaAcid,acid,operDate, amount);
+            String where = "П".equalsIgnoreCase(account.getPassiveActive())?"outrest<0":"outrest>0";
+            String sql = String.format("with ACC_TOVER as (" +
+                    "SELECT DAT,SUM(BAC) as bac " +
+                    "FROM(" +
+                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ?" +
+                    " UNION ALL " +
+                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ?" +
+                    ") T1 " +
+                    " GROUP BY DAT " +
+                    " UNION ALL " +
+                    "SELECT dat,sum(bac) as bac " +
+                    "FROM(" +
+                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1" +
+                    " UNION ALL " +
+                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1" +
+                    ") t2" +
+                    " group by dat) " +
+                    "select * FROM (" +
+                    "select dat, bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) - ? as outrest " +
+                    "from ACC_TOVER o)t " +
+                    " where %s ",where);
+            DataRecord res = selectFirst(sql, operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate,operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, amount);
             return res;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean checkAccointIsPair(String bsaAcid)
+    {
+        try {
+            DataRecord res = selectFirst("SELECT * FROM ACCOCREP WHERE RECNTR <> 'КОРСЧ' and recbac = ?",bsaAcid.substring(1,5));
+            return res!=null?true:false;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public GlAccRln findAccountTehover(String bsaAcid, String acid)
+    {
+        try {
+            DataRecord data = selectFirst("select * from ACCPAIR where bsaacid = ? and acid = ? and datto='2029-01-01'", bsaAcid,acid);
+
+            return (null == data) ? null : findById(GlAccRln.class, new AccRlnId(data.getString("PAIRACID"), data.getString("PAIRBSAACID")));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
