@@ -192,19 +192,15 @@ public class ManualPostingController {
 
         if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
-            if (tehoverAcc!=null)
-            {
-
-            }
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
             BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
             DataRecord resDr = null;
             if (tehoverAcc!=null) {
-                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr,tehoverAcc);
+                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)),tehoverAcc);
             }
             else {
-                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr);
+                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)));
             }
             if (resDr != null && (resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0)) {
                 wrapper.setBalanceError(true);

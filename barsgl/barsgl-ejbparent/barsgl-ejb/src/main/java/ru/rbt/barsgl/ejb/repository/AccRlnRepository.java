@@ -191,7 +191,8 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
     public DataRecord checkAccountBalance(GlAccRln account, Date operDate, BigDecimal amount)
     {
         try{
-            DataRecord res = selectFirst("with ACC_TOVER as (" +
+            String where = "П".equalsIgnoreCase(account.getPassiveActive())?"outrest<0":"outrest>0";
+            DataRecord res = selectFirst(String.format("with ACC_TOVER as (" +
                         "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
                         "UNION ALL " +
                         "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
@@ -199,10 +200,10 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                         "select * " +
                         "FROM " +
                         "( " +
-                        "select dat, bac,abs((select sum(bac) from acc_tover a where a.dat <= o.dat)) - ? as outrest " +
+                        "select dat, bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                         "from ACC_TOVER o " +
                         ")t " +
-                        "where outrest < 0 ", operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
+                        "where %s ",where), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -230,7 +231,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                     ") t2" +
                     " group by dat) " +
                     "select * FROM (" +
-                    "select dat, bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) - ? as outrest " +
+                    "select dat, bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                     "from ACC_TOVER o)t " +
                     " where %s ",where);
             DataRecord res = selectFirst(sql, operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate,operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, amount);
