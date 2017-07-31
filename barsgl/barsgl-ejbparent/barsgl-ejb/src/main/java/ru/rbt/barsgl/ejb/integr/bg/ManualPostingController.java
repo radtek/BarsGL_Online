@@ -1,33 +1,37 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
-import ru.rbt.security.entity.AppUser;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
-import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.ManualOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.security.UserContext;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.barsgl.shared.enums.BatchPostStatus;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.security.entity.AppUser;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.*;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -40,18 +44,15 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
-import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
+import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
+import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
-import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.shared.enums.SecurityActionCode;
 
 /**
  * Created by ER18837 on 13.08.15.
