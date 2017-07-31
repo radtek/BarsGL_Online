@@ -3,8 +3,11 @@ package ru.rbt.barsgl.gwt.client.operBackValue;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.comp.PopupMenuBuilder;
@@ -15,6 +18,10 @@ import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.events.CommonEvents;
+import ru.rbt.barsgl.gwt.core.events.CommonEventsHandler;
+import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
@@ -29,6 +36,8 @@ import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.CommonEntryPoint;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -37,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
+import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
@@ -55,24 +65,35 @@ public class OperNotAuthBVForm extends GridForm {
                              "join GL_OPEREXT ex on op.GLOID = ex.GLOID \n" +
                              "left join GL_USER u on ex.USER_AU3 = u.USER_NAME) v ";
 
-
     private GridAction _modeChoiceAction;
-    private GridAction _waitingReazonAction;
+    private GridAction _waitingReasonAction;
     private GridAction _operAuthorizationAction;
-    private GridAction _waitingReazonListAction;
+    private GridAction _waitingReasonListAction;
     private GridAction _operAuthorizationListAction;
     private GridAction _statisticsAction;
 
-    protected BVModeChoiceDlg.ModeType _mode = BVModeChoiceDlg.ModeType.NONE;
-    protected BVModeChoiceDlg.StateType _state = BVModeChoiceDlg.StateType.ALL;
-    protected Boolean _ownMessages;
+    private BVModeChoiceDlg.ModeType _mode = BVModeChoiceDlg.ModeType.NONE;
+    private BVModeChoiceDlg.StateType _state = BVModeChoiceDlg.StateType.ALL;
+    private Boolean _owner = false;
+
+    private String user;
+
+    private Column vDate;
+    private Column source;
+    private Column status;
 
     public OperNotAuthBVForm() {
-        //super(_title, true);
-        super(_title);
+        super(_title, true);
 
+        AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+        user = wrapper == null ? "" : wrapper.getUserName();
+
+        setSql(sql());
+        //Window.alert(sql());
         reconfigure();
         doActionVisibility();
+
+        _modeChoiceAction.execute();
     }
 
 
@@ -80,17 +101,17 @@ public class OperNotAuthBVForm extends GridForm {
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addAction(createPreview());
         abw.addAction(_modeChoiceAction = createModeChoice());
-        abw.addAction(_waitingReazonAction = createwWitingReazonAction());
+        abw.addAction(_waitingReasonAction = createWaitingReasonAction());
         abw.addAction(_operAuthorizationAction = createOperAuthorizationAction());
-        abw.addAction(_waitingReazonListAction = createWitingReazonListAction());
+        abw.addAction(_waitingReasonListAction = createWaitingReasonListAction());
         abw.addAction(_operAuthorizationListAction = createOperAuthorizationListAction());
         abw.addAction(_statisticsAction = createStatisticsAction());
     }
 
     private void doActionVisibility(){
         _operAuthorizationAction.setVisible(_mode == BVModeChoiceDlg.ModeType.SINGLE);
-        _waitingReazonAction.setVisible(_mode == BVModeChoiceDlg.ModeType.SINGLE);
-        _waitingReazonListAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
+        _waitingReasonAction.setVisible(_mode == BVModeChoiceDlg.ModeType.SINGLE);
+        _waitingReasonListAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
         _operAuthorizationListAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
         _statisticsAction.setVisible(_mode == BVModeChoiceDlg.ModeType.LIST);
     }
@@ -158,7 +179,7 @@ public class OperNotAuthBVForm extends GridForm {
             public void execute() {
                 dlg = new BVModeChoiceDlg();
                 dlg.setDlgEvents(this);
-                Object[] prms = new Object[] {_mode, _ownMessages, _state};
+                Object[] prms = new Object[] {_mode, _owner, _state};
                 dlg.show(prms);
             }
 
@@ -167,30 +188,81 @@ public class OperNotAuthBVForm extends GridForm {
                 dlg.hide();
 
                 _mode = (BVModeChoiceDlg.ModeType)((Object[])prms)[0];
-                _ownMessages = (Boolean)((Object[])prms)[1];
+                _owner = (Boolean)((Object[])prms)[1];
                 _state = (BVModeChoiceDlg.StateType)((Object[])prms)[2];
 
                 StatusBarManager.ChangeStatusBarText(getStatusBarText(), StatusBarManager.MessageReason.MSG);
-               doActionVisibility();
-/*
-                changeWhereStepPart();
-                changeWhereMessageTypePart();
-                changeWhereOwnMessagesPart();
-
-                setSql(sql());*/
-                //System.out.println(sql());
-                refreshAction.execute();
+                doActionVisibility();
+             //   Window.alert("Before: " + sql());
+                setSql(sql());
+                filterTuning();
+             //   Window.alert("After: " + sql());
             }
 
             private String getStatusBarText(){
                 String pattern = "Способ обработки: [{0}]. Состояние: [{1}]";
-
                 return Utils.Fmt(pattern, _mode.getLabel(), _state.getLabel());
+            }
+
+            HandlerRegistration registration;
+
+            private void filterTuning(){
+                ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+                filterAction.clearFilterCriteria(true);
+
+                switch (_mode) {
+                    case NONE:
+                        grid.setInitialFilterCriteria(null);
+                        refreshAction.setFilterCriteria(null);
+                        refreshAction.execute();
+                        break;
+                    case SINGLE:
+                        registration =  LocalEventBus.addHandler(CommonEvents.TYPE, filterCanceledEventHandler());
+                        list.add(new FilterItem(vDate, FilterCriteria.LT, CommonEntryPoint.CURRENT_OPER_DAY, false, false, true));
+                        grid.setInitialFilterCriteria(list);
+                        filterAction.execute(true);
+                        break;
+                    case LIST:
+                        registration =  LocalEventBus.addHandler(CommonEvents.TYPE, filterCanceledEventHandler());
+                        list.add(new FilterItem(vDate, FilterCriteria.EQ, CommonEntryPoint.CURRENT_WORKDAY, false, true, true));
+                        list.add(new FilterItem(source, FilterCriteria.EQ, "", false, true, true));
+                        list.add(new FilterItem(status, FilterCriteria.EQ, "CONTROL", false, true, true));
+                        grid.setInitialFilterCriteria(list);
+                        filterAction.execute(true);
+                        break;
+                }
+            }
+
+            private CommonEventsHandler filterCanceledEventHandler(){
+                return new CommonEventsHandler() {
+                    @Override
+                    public void event(String id, Object data) {
+                        if (id.equalsIgnoreCase("FilterCanceled")) {
+                            if (_mode == BVModeChoiceDlg.ModeType.LIST){
+                                ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+                                list.add(new FilterItem(vDate, FilterCriteria.EQ, CommonEntryPoint.CURRENT_WORKDAY, false, true, true));
+                                list.add(new FilterItem(source, FilterCriteria.EQ, "", false, true, true));
+                                list.add(new FilterItem(status, FilterCriteria.EQ, "CONTROL", false, true, true));
+                                grid.setInitialFilterCriteria(list);
+                                refreshAction.setFilterCriteria(list);
+
+                            }else {
+                                grid.setInitialFilterCriteria(null);
+                                refreshAction.setFilterCriteria(null);
+                            }
+                            refreshAction.execute();
+                            if (registration != null) registration.removeHandler();
+                        }
+                        else if (id.equalsIgnoreCase("FilterOKed")){
+                            if (registration != null) registration.removeHandler();
+                        }
+                    }
+                };
             }
         };
     }
 
-    private GridAction createwWitingReazonAction() {
+    private GridAction createWaitingReasonAction() {
         return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
 
             @Override
@@ -210,7 +282,7 @@ public class OperNotAuthBVForm extends GridForm {
         };
     }
 
-    private GridAction createWitingReazonListAction(){
+    private GridAction createWaitingReasonListAction(){
         final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Задержать операцию",  new Image(ImageConstants.INSTANCE.locked()));
 
         MenuItem itemVisibleList = new MenuItem("Видимый список", new Command() {
@@ -286,44 +358,45 @@ public class OperNotAuthBVForm extends GridForm {
         };
     }
 
-    Column c1, c2, c3, c4;
-
     @Override
     protected Table prepareTable() {
         Table result = new Table();
         Column col;
 
         HashMap<Serializable, String> yesNoList = getYesNoList();
-        result.addColumn(c1=new Column("GLOID", LONG, "ID операции", 70));// No Space
+        result.addColumn(new Column("GLOID", LONG, "ID операции", 70));// No Space
         result.addColumn(new Column("PST_REF", LONG, "ID запроса", 70, false, false));
         result.addColumn(new Column("ID_PST", STRING, "ИД сообщ АЕ", 70));
         result.addColumn(col = new Column("INP_METHOD", STRING, "Способ ввода", 70, false, false));
         col.setList(getEnumLabelsList(InputMethod.values()));
-        c2 = col;
-        result.addColumn(c3 = new Column("SRC_PST", STRING, "Источник сделки", 70));
+
+        result.addColumn(source = new Column("SRC_PST", STRING, "Источник сделки", 70));
         result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
         result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120, false, false));
         result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 70));
 
         result.addColumn(col = new Column("STATE", STRING, "Статус", 70, false, false));
         col.setList(getEnumValuesList(OperState.values()));
-        c4 = col;
+
         result.addColumn(col = new Column("PST_SCHEME", STRING, "Схема проводок", 70, false, false));
         col.setList(getEnumLabelsList(OperType.values()));
 
-        result.addColumn(new Column("MNL_STATUS", STRING, "Статус руч. обработки", 120));
+        result.addColumn(status = new Column("MNL_STATUS", STRING, "Статус руч. обработки", 120));
+        status.setList(GLComponents.getArrayValuesList(new String[]{"", "COMPLETED", "CONTROL", "HOLD", "SIGNEDDATE"}));
         result.addColumn(new Column("MNL_RSNCODE", STRING, "Причина руч. обработки", 120));
 
         result.addColumn(col = new Column("PROCDATE", DATE, "Дата опердня", 80));
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("VDATE", DATE, "Дата валютирования", 80));
-        col.setFormat("dd.MM.yyyy");
+        result.addColumn(vDate = new Column("VDATE", DATE, "Дата валютирования", 80));
+        vDate.setFormat("dd.MM.yyyy");
         result.addColumn(col = new Column("POSTDATE", DATE, "Дата проводки", 80));
         col.setFormat("dd.MM.yyyy");
         result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Первичная дата проводки", 80, false, false));
         col.setFormat("dd.MM.yyyy");
 
         result.addColumn(new Column("AC_DR", STRING, "Счет ДБ", 160));
+        result.addColumn(new Column("ACCTYPE_DR", STRING, "Тип счета ДБ", 100, false, false));
+        result.addColumn(new Column("ACC2_DR", STRING, "Счет 2 порядка ДБ", 100, false, false));
         result.addColumn(new Column("CCY_DR", STRING, "Валюта ДБ", 60));
         result.addColumn(new Column("AMT_DR", DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("AMTRU_DR", DECIMAL, "Сумма в рублях ДБ", 100, false, false));
@@ -332,6 +405,8 @@ public class OperNotAuthBVForm extends GridForm {
         result.addColumn(new Column("CBCC_DR", STRING, "Филиал ДБ", 60));
 
         result.addColumn(new Column("AC_CR", STRING, "Счет КР", 160));
+        result.addColumn(new Column("ACCTYPE_CR", STRING, "Тип счета КР", 100, false, false));
+        result.addColumn(new Column("ACC2_CR", STRING, "Счет 2 порядка КР", 100, false, false));
         result.addColumn(new Column("CCY_CR", STRING, "Валюта КР", 60));
         result.addColumn(new Column("AMT_CR", DECIMAL, "Сумма КР", 100));
         result.addColumn(new Column("AMTRU_CR", DECIMAL, "Сумма в рублях КР", 100, false, false));
@@ -364,10 +439,7 @@ public class OperNotAuthBVForm extends GridForm {
         //вычисляемое поле для фильтра по условию "ИЛИ"
         result.addColumn(new Column("DR_CR", STRING, "Счета Дт/Кр", 70, false, false));
 
-        //OperExt
         result.addColumn(new Column("OTS_AUTO", Column.Type.DATETIME, "Время авт. обновления", 130, false, false));
-
-
         result.addColumn(col = new Column("BV_CUTDATE", DATE, "Пороговая дата backvalue ", 80, false, false));
         col.setFormat("dd.MM.yyyy");
         result.addColumn(col = new Column("PRD_LDATE", DATE, "Закрытый период", 80, false, false));
@@ -384,9 +456,69 @@ public class OperNotAuthBVForm extends GridForm {
         return result;
     }
 
+    /*Prepare sql statement*/
+
+    public void setSql(String text){
+        sql_select = text;
+        setExcelSql(sql_select);
+    }
+
+    private String sql(){
+        return new StringBuilder()
+                .append(_select )
+                .append(whereBuilder()).toString();
+    }
+
+    private String whereBuilder(){
+        String where = getModeWherePart();
+        if (where == "") {
+            where = getStateWherePart();
+        }
+        String whereOwher = getOwnerWherePart();
+        if (whereOwher != "") {
+            where = where + " and " + whereOwher;
+        }
+
+        return "where " + where + getAuthWherePart();
+    }
+
+    private String getModeWherePart(){
+        return _mode == BVModeChoiceDlg.ModeType.NONE ?  "" : "MNL_STATUS in ('CONTROL', 'HOLD')";
+    }
+
+    private String getStateWherePart(){
+        String res = "";
+        switch (_state) {
+            case ALL:
+                res =  Utils.Fmt("(MNL_STATUS in ('HOLD', 'SIGNEDDATE', 'COMPLETED') or (MNL_STATUS='CONTROL' and  PROCDATE='{0}'))",
+                       ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
+                break;
+            case COMPLETED:
+                res = Utils.Fmt("MNL_STATUS='COMPLETED' and PROCDATE='{0}'", ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
+                break;
+            case WORKING:
+                res = "MNL_STATUS='SIGNEDDATE' and STATE in ('BLOAD', 'BWTAC')";
+                break;
+            case NOTCOMPLETED:
+                res = "(MNL_STATUS in ('CONTROL', 'HOLD') or (MNL_STATUS='SIGNEDDATE' and STATE not in ('BLOAD', 'POST', 'BWTAC')))";
+                break;
+        }
+
+        return res;
+    }
+
+    private String getOwnerWherePart(){
+        return _owner ? Utils.Fmt("USER_AU3='{0}'", user) : "";
+    }
+
+    private String getAuthWherePart(){
+        return getSourceAndFilialPart("and", "SRC_PST", "CBCC_CR", "CBCC_DR");
+    }
+
+
     @Override
     protected String prepareSql() {
-        return _select/* null*/;
+        return  null;
     }
 
     @Override
@@ -396,7 +528,7 @@ public class OperNotAuthBVForm extends GridForm {
         return list;
     }
 
-    @Override
+   /* @Override
     public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
         list.add(new FilterItem(c3, FilterCriteria.EQ, "PH", false, false, true));
@@ -412,5 +544,5 @@ public class OperNotAuthBVForm extends GridForm {
 
 
         return list;
-    }
+    }*/
 }

@@ -47,7 +47,7 @@ public class BVModeChoiceDlg extends DlgFrame {
     }
 
     private ValuesBox _mode;
-    private CheckBox _ownMessages;
+    private CheckBox _owner;
     private ValuesBox _state;
 
     public BVModeChoiceDlg(){
@@ -81,8 +81,8 @@ public class BVModeChoiceDlg extends DlgFrame {
         grid.getElement().getStyle().setMarginBottom(8, Style.Unit.PX);
 
         panel.add(grid);
-        panel.add(_ownMessages = new CheckBox("Только свои"));
-        _ownMessages.setValue(true);
+        panel.add(_owner = new CheckBox("Только свои"));
+        _owner.setValue(true);
 
         return panel;
     }
@@ -102,14 +102,14 @@ public class BVModeChoiceDlg extends DlgFrame {
     @Override
     protected void fillContent() {
         _mode.setValue((BVModeChoiceDlg.ModeType)((Object[])params)[0]);
-        _ownMessages.setValue((Boolean)((Object[])params)[1]);
+        _owner.setValue((Boolean)((Object[])params)[1]);
         _state.setValue((BVModeChoiceDlg.StateType)((Object[])params)[2]);
         _state.setEnabled(_mode.getValue() == ModeType.NONE);
     }
 
     @Override
     protected boolean onClickOK() throws Exception {
-        params = new Object[] {_mode.getValue(), _ownMessages.getValue(), _state.getValue()};
+        params = new Object[] {_mode.getValue(), _owner.getValue(), _state.getValue()};
         return true;
     }
 }

@@ -246,11 +246,13 @@ public class FilterFrame  extends Composite {
         rows = 0;
     }
 
-    public void clearAllFilterCriteria(){
+    public void clearAllFilterCriteria(boolean force){
         int i = 0;
         while ( i < grid.getRowCount() ) {
-            if (!isConditionPined(i))
+            if (!isConditionPined(i) || force){
                 grid.removeRow(i);
+            }
+
             else
                 i++;
         }
