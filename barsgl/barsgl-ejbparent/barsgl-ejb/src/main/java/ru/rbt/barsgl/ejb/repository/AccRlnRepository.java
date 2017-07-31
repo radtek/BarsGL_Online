@@ -200,7 +200,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                         "select * " +
                         "FROM " +
                         "( " +
-                        "select dat, bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
+                        "select dat,(select sum(bac) from acc_tover a where a.dat <= o.dat) as bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                         "from ACC_TOVER o " +
                         ")t " +
                         "where %s ",where), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
@@ -231,7 +231,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                     ") t2" +
                     " group by dat) " +
                     "select * FROM (" +
-                    "select dat, bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
+                    "select dat,(select sum(bac) from acc_tover a where a.dat <= o.dat) as bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                     "from ACC_TOVER o)t " +
                     " where %s ",where);
             DataRecord res = selectFirst(sql, operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate,operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, amount);

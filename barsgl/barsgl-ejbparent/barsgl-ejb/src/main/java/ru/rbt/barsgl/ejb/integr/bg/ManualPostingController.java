@@ -188,7 +188,7 @@ public class ManualPostingController {
         GlAccRln accountDr = accRlnRepository.checkAccointIsPair(wrapper.getAccountDebit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountDebit());
         GlAccRln accountCr = accRlnRepository.checkAccointIsPair(wrapper.getAccountCredit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountCredit());
 
-        Date postDate = dateUtils.onlyDateParse(wrapper.getPostDateStr());
+        Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
         if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
@@ -204,7 +204,9 @@ public class ManualPostingController {
             }
             if (resDr != null && (resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0)) {
                 wrapper.setBalanceError(true);
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(), resDr.getDate(0), resDr.getBigDecimal(1), resDr.getBigDecimal(2)));
+                BigDecimal bac = convertFromScale(resDr.getBigDecimal(1),currencyDr.getScale().intValue());
+                BigDecimal outrest = convertFromScale(resDr.getBigDecimal(2),currencyDr.getScale().intValue());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(), resDr.getDate(0),  bac, outrest));
             }
         }
 
@@ -222,7 +224,9 @@ public class ManualPostingController {
             }
             if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO) > 0) {
                 wrapper.setBalanceError(true);
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountCr.getId().getBsaAcid(), resCr.getDate(0), resCr.getBigDecimal(1), resCr.getBigDecimal(2)));
+                BigDecimal bac = convertFromScale(resCr.getBigDecimal(1),currencyCr.getScale().intValue());
+                BigDecimal outrest = convertFromScale(resCr.getBigDecimal(2),currencyCr.getScale().intValue());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountCr.getId().getBsaAcid(), resCr.getDate(0), bac, outrest));
             }
         }
 
