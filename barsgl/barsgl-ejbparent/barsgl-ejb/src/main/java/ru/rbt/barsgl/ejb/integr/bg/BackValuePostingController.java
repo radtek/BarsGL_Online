@@ -124,16 +124,14 @@ public class BackValuePostingController {
         try {
             BackValueMode mode = wrapper.getMode();
 
-            // сформировать запрос
-            // проверить, что список однородный (источник, дата, статус) и нет обработанных операций и статус (HOLD / CONTROL)
-            // получить ключевые параметры операций
+            // получить параметры операций
             OperationParameters parameters = getOperationParameters(wrapper, criteria);
 
             // проверить postDateNew на выходной день и на допустимый диапазон
             checkPostDate(wrapper, parameters);
 
             // проверить postDateNew на закрытый период
-            chackClosedPeriod(wrapper, parameters);
+            checkClosedPeriod(wrapper, parameters);
 
             bvOperationRepository.executeInNewTransaction(persistence -> {
                 int cnt = 0;
@@ -165,8 +163,7 @@ public class BackValuePostingController {
 
     public RpcRes_Base<Integer> holdOperations(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
-             // сформировать запрос (по списку или фильтру)
-             // проверить, что список однородный и нет обработанных операций и статус = CONTROL
+            // получить параметры операций
             OperationParameters parameters = getOperationParameters(wrapper, criteria);
             bvOperationRepository.executeInNewTransaction(persistence -> {
                 int cnt = 0;
@@ -249,7 +246,7 @@ public class BackValuePostingController {
     }
 
     /**
-     * проверяет совместимость списка операций
+     * проверяет однородность списка операций
      * @param wrapper
      * @param criteria
      * @throws SQLException
@@ -312,8 +309,7 @@ public class BackValuePostingController {
         // проверить postDateNew на выходной день
         if(!calendarDayRepository.isWorkday(postDateNew, withTech)) {
             throw new DefaultApplicationException(String.format("Подтверждение запрещено.\nВыбранная дата проводки '%s' – выходной"
-                    , wrapper.getPostDateStr()));   // добавить дату валютирования и плановую
-
+                    , wrapper.getPostDateStr()));
         }
 
         // проверить postDateNew на допустимый диапазон
@@ -326,12 +322,13 @@ public class BackValuePostingController {
                             "Дата проводки '%s' вышла за пределы допустимого диапазона с '%s' по '%s'"
                     , wrapper.getPostDateStr(), dateUtils.onlyDateString(postDateMin), dateUtils.onlyDateString(postDateMax)));
         }
-
     }
 
-    private void chackClosedPeriod(BackValueWrapper wrapper, OperationParameters parameters) {
+    private void checkClosedPeriod(BackValueWrapper wrapper, OperationParameters parameters) {
         ClosedPeriodView period = closedPeriodRepository.getPeriod();
-        Long userId = wrapper.getUserId();  // TODO userContext.getUserId()
+        Long userId = userContext.getUserId();
+        if (null == userId)
+            userId = wrapper.getUserId();
         if(!parameters.getPostDateNew().after(period.getLastDate()) &&                // разрешено только для суперпользователя
                 !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
             throw new DefaultApplicationException(String.format("Подтверждение запрещено.\n" +
