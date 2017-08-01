@@ -117,7 +117,7 @@ public class BackvalueJournalController {
         auditController.info(Task, format("Записей для локализации backvalue %s", accs));
         try {
             journalRepository.executeInNewTransaction(pers -> {
-                journalRepository.executeNativeUpdate("call GL_CORRLOCAL");
+                journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
                 return null;
             });
         } catch (Exception e) {

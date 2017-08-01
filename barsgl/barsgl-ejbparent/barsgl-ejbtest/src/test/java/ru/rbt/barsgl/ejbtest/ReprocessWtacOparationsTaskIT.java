@@ -19,13 +19,18 @@ import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.time.DateUtils;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask.DEFAULT_STEP_NAME;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.setOperday;
 import static ru.rbt.barsgl.ejbtest.ReprocessErrorIT.getOperationErrorRecord;
 
 /**
@@ -37,7 +42,9 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
     public static final Logger logger = Logger.getLogger(ReprocessWtacOparationsTaskIT.class.getName());
 
     @BeforeClass
-    public static void init() {
+    public static void init() throws ParseException {
+        Date curDate = DateUtils.parseDate("2015-02-26","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         initCorrectOperday();
     }
 

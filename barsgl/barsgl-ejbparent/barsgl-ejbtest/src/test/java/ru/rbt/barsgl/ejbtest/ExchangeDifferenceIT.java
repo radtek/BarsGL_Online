@@ -42,7 +42,6 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
 
     @Before
     public void beforeClass() throws ParseException {
-        //Date curDate = DateUtils.parseDate("2017-05-26","yyy-MM-dd");
         Date curDate = DateUtils.parseDate("2017-02-10","yyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
