@@ -25,6 +25,7 @@ import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,6 +33,11 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.getOperday;
 import static ru.rbt.barsgl.ejbtest.AccountOpenAePostingsIT.checkDefinedAccount;
 import static ru.rbt.barsgl.ejbtest.AccountOpenAePostingsIT.delateSQvalue;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteAccountByBsaAcid;
@@ -47,6 +53,22 @@ public class ManualAccountIT extends AbstractRemoteIT {
     private static final Long USER_ID = 1L;
 
     private static List<String> bsaList = new ArrayList<String>();
+
+    private static Operday oldOperday;
+    
+    @BeforeClass
+    public static void beforeClass() throws ParseException{
+        oldOperday = getOperday();
+        Date curDate = DateUtils.parseDate("2017-05-26","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);        
+    }
+
+    @AfterClass
+    public static void afterClass(){
+            setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);        
+    }
 
     @Before
     public void before() {
