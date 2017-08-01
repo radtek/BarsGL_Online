@@ -262,6 +262,8 @@ public class OperNotAuthBVForm extends GridForm {
         };
     }
 
+
+
     private GridAction createWaitingReasonAction() {
         return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
             WaitingReasonDlg dlg;
@@ -285,31 +287,35 @@ public class OperNotAuthBVForm extends GridForm {
                gloids.add((Long)getFieldByName("GLOID").getValue());
                String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
                BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, BackValueMode.ONE, postDate, (String)prms);
-
-                BarsGLEntryPoint.operationService.processOperationBv(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
-
-                    @Override
-                    public void onSuccess(RpcRes_Base<Integer> res) {
-                        if (res.isError()){
-                            DialogManager.error("Ошибка", "Операция задержания не удалась.\nОшибка: " + res.getMessage());
-                        } else {
-                            dlg.hide();
-                            refreshAction.execute();
-                            showInfo(res.getMessage());
-                        }
-                        WaitingManager.hide();
-                    }
-                });
+               methodCaller(dlg, "Операция задержания не удалась.", wrapper);
             }
         };
     }
 
+
+
     private GridAction createOperAuthorizationAction() {
         return new GridAction(grid, null, "Авторизовать дату операции", new Image(ImageConstants.INSTANCE.back_value()), 10) {
-
+            BVPostDateAuthDlg dlg;
             @Override
             public void execute() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
 
+                dlg = new BVPostDateAuthDlg("Авторизация даты бухгалтерской операции GL", FormAction.PREVIEW, table.getColumns());
+                dlg.setDlgEvents(this);
+                dlg.show(rowToWrapper());
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms){
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                ManualOperationWrapper manualOperationWrapper = (ManualOperationWrapper) prms;
+                List<Long> gloids = new ArrayList<>();
+                gloids.add((Long)getFieldByName("GLOID").getValue());
+                String postDate = manualOperationWrapper.getPostDateStr();
+                BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, BackValueMode.ONE, postDate, (String)getFieldByName("MNL_NRT").getValue());
+                methodCaller(dlg, "Операция авторизации даты бухгалтерской операции не удалась.", wrapper);
             }
         };
     }
@@ -403,6 +409,24 @@ public class OperNotAuthBVForm extends GridForm {
         wrapper.setBvStatus(BackValuePostStatus.valueOf((String)getFieldByName("MNL_STATUS").getValue())) ;
 
         return wrapper;
+    }
+
+    /*Method caller*/
+    private void methodCaller(final DlgFrame dlg, final String message, final BackValueWrapper wrapper) {
+        BarsGLEntryPoint.operationService.processOperationBv(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+
+            @Override
+            public void onSuccess(RpcRes_Base<Integer> res) {
+                if (res.isError()){
+                    DialogManager.error("Ошибка", message + "\nОшибка: " + res.getMessage());
+                } else {
+                    dlg.hide();
+                    refreshAction.execute();
+                    showInfo(res.getMessage());
+                }
+                WaitingManager.hide();
+            }
+        });
     }
 
     @Override
