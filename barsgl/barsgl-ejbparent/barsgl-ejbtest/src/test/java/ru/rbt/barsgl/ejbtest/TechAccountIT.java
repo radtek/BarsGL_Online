@@ -54,38 +54,41 @@ public class TechAccountIT extends AbstractRemoteIT {
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
-        closeAllTHAccount();
+        try{
+            closeAllTHAccount();
 
-        //Добавление нового курса
-        List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
-        if (null==curDate || curRate.isEmpty())
-        {
-            CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
-            baseEntityRepository.save(currencyRate);
-            curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
+            //Добавление нового курса
+            List<CurrencyRate> curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
+            if (null==curDate || curRate.isEmpty())
+            {
+                CurrencyRate currencyRate = new CurrencyRate(new BankCurrency("USD"),new Date(),BigDecimal.valueOf(58.95),BigDecimal.valueOf(1.0));
+                baseEntityRepository.save(currencyRate);
+                curRate = baseEntityRepository.select(CurrencyRate.class,"from CurrencyRate cr where cr.id.rateDt = ?1",curDate);
+            }
+            Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
+
+            EtlPosting pst_2 = this.getPosting_RUR_RUR();
+            pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
+            GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
+            Assert.assertNotNull(operation_2);
+            Assert.assertTrue(0 < operation_2.getId());
+            operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
+            Assert.assertEquals(OperState.POST, operation_2.getState());
+            //Проверяем наличие счёта по дебету
+            List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
+            Assert.assertFalse("Отсутствует и не создан счёт по дебету.",accListDebit.isEmpty());
+
+            //Проверяем наличе счёта по кредиту
+            List<GLAccount> accListCredit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountCredit());
+            Assert.assertFalse("Отсутствует и не создан счёт по кредиту.",accListCredit.isEmpty());
+
+            List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
+            Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        }finally{
+            setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
         }
-        Assert.assertFalse("Не найден курс на текущую дату. Раскоментируйте код добавления курса.",curRate.isEmpty());
-
-        EtlPosting pst_2 = this.getPosting_RUR_RUR();
-        pst_2 = (EtlPosting) baseEntityRepository.save(pst_2);
-        GLOperation operation_2 = (GLOperation) postingController.processMessage(pst_2);
-        Assert.assertNotNull(operation_2);
-        Assert.assertTrue(0 < operation_2.getId());
-        operation_2 = (GLOperation) baseEntityRepository.findById(operation_2.getClass(), operation_2.getId());
-        Assert.assertEquals(OperState.POST, operation_2.getState());
-        //Проверяем наличие счёта по дебету
-        List<GLAccount> accListDebit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountDebit());
-        Assert.assertFalse("Отсутствует и не создан счёт по дебету.",accListDebit.isEmpty());
-
-        //Проверяем наличе счёта по кредиту
-        List<GLAccount> accListCredit = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.bsaAcid = ?1",operation_2.getAccountCredit());
-        Assert.assertFalse("Отсутствует и не создан счёт по кредиту.",accListCredit.isEmpty());
-
-        List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
-        Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
-
-        setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
-        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
     }
 
 
@@ -211,14 +214,26 @@ public class TechAccountIT extends AbstractRemoteIT {
     {
         List<GLAccount> accList = baseEntityRepository.select(GLAccount.class,"from GLAccount a where a.relationType = '9' and a.dateClose is null");
 
-
-        int days = (int)(Math.random()*30-50);
+        int daysCount = 30;
 
         for(GLAccount acc:accList) {
-            acc.setDateClose(DateUtils.truncate(DateUtils.addDays(new Date(),days), Calendar.DATE));
-            baseEntityRepository.update(acc);
-            baseEntityRepository.executeNativeUpdate("delete from accrlnext x where x.bsaacid = ?",acc.getBsaAcid());
+            int retry = 30;
+            while(retry-- > 0){
+                int days = (int)(Math.random()*daysCount-50);
+                try{
+                    closeAccount(acc, days);
+                    break;
+                }catch(Exception ex){
+                    System.out.println("Close account failed(id = "+acc.getId()+"), try again. Try count is "+retry);
+                }
+            }
         }
+    }
+
+    private void closeAccount(GLAccount acc, int days) {
+        acc.setDateClose(DateUtils.truncate(DateUtils.addDays(new Date(),days), Calendar.DATE));
+        baseEntityRepository.update(acc);
+        baseEntityRepository.executeNativeUpdate("delete from accrlnext x where x.bsaacid = ?",acc.getBsaAcid());
     }
 
 
