@@ -203,7 +203,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                         "select dat,(select sum(bac) from acc_tover a where a.dat <= o.dat) as bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                         "from ACC_TOVER o " +
                         ")t " +
-                        "where %s ",where), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
+                        "where %s order by dat",where), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
