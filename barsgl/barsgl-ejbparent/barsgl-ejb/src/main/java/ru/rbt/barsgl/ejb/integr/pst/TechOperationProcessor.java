@@ -4,7 +4,9 @@ import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
+import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLPostingRepository;
+import ru.rbt.barsgl.ejb.repository.GLTechOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -24,10 +26,16 @@ public class TechOperationProcessor extends GLOperationProcessor
     private GLPostingRepository glPostingRepository;
 
     @Inject
-    private GlPdThRepository glPdThRepository;
+    private GLTechOperationRepository glTechOperationRepository;
 
     @Inject
     private SourcesDealsRepository sourcesDealsRepository;
+
+    @Inject
+    private GLOperationRepository glOperationRepository;
+
+    @Inject
+    private GlPdThRepository glPdThRepository;
 
     //Берём все технические в том числе и стороно
     @Override
@@ -50,10 +58,9 @@ public class TechOperationProcessor extends GLOperationProcessor
 
     @Override
     public List<GLPosting> createPosting(GLOperation operation) throws Exception {
-
-
         return null;
     }
+
 
     /**
      * Создает 1 проводку (2 полупроводки) в одном филиале с одной валютой
