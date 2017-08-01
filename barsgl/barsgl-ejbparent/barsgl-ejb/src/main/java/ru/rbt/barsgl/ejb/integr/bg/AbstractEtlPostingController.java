@@ -454,7 +454,7 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
      * @param operation
      * @return
      */
-    protected GLOperationProcessor findOperationProcessor(GLOperation operation) throws Exception {
+    public GLOperationProcessor findOperationProcessor(GLOperation operation) throws Exception {
         return findSupported(cachedOperationProcessors, p -> p.isSupported(operation)
                 , () -> new DefaultApplicationException(format("Не найдено обработчика для операции '%s'", operation))
                 , () -> new DefaultApplicationException(format("Найдено больше одного обработчика для операции '%s'", operation)));

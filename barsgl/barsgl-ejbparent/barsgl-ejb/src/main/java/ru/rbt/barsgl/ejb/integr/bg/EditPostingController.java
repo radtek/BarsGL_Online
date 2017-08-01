@@ -27,6 +27,7 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -151,7 +152,6 @@ public class EditPostingController {
                 operationRepository.update(operation);
             }
 
-
             return editPostingProcessor.getOperationPdList(pdIdList);
         } else {
             // TODO
@@ -163,6 +163,8 @@ public class EditPostingController {
         Operday.PdMode pdMode = Operday.PdMode.valueOf(operationWrapper.getPdMode());
         EditPostingProcessor editPostingProcessor =
                 (pdMode == Operday.PdMode.DIRECT) ? editPdProcessor : editGLPdProcessor;
+
+        GLOperation operation = operationRepository.findById(GLOperation.class, operationWrapper.getId());
 
         List<Long> pdIdList = null;
         boolean toGetPd = (operationWrapper.getPostingChoice() == PST_ALL);
@@ -190,6 +192,31 @@ public class EditPostingController {
 
     private boolean isBufferMode() {
         return operdayController.getOperday().getPdMode().equals(Operday.PdMode.BUFFER);
+    }
+
+    public List<? extends AbstractPd> updatePostingsDate(ManualOperationWrapper operationWrapper) throws Exception {
+        if (operationWrapper.getPostingChoice() == PST_ONE_OF) {
+            throw new DefaultApplicationException(format("Недопустимый режим обработки: '%s'", operationWrapper.getPostingChoice().name()));        }
+
+        EditPostingProcessor editPostingProcessor = editGLPdProcessor;
+        List<Long> pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
+        if (null == pdIdList) {
+            editPostingProcessor = editPdProcessor;
+            pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
+        }
+        Assert.isTrue(null != pdIdList, ()-> new DefaultApplicationException(format("Для операции '%d' не %s ни одной проводки"
+                , operationWrapper.getId(), "найдено")));
+
+        List<? extends AbstractPd> pdList = editPostingProcessor.getOperationPdList(pdIdList);
+
+        editPostingProcessor.updateWithMemorder(operationWrapper, pdList, isBufferMode());
+        editPostingProcessor.updatePd(pdList);
+
+        GLOperation operation = operationRepository.findById(GLOperation.class, operationWrapper.getId());
+        editPostingProcessor.updateOperation(operationWrapper, operation);
+        operationRepository.update(operation);
+
+        return editPostingProcessor.getOperationPdList(pdIdList);
     }
 
     public RpcRes_Base<ManualOperationWrapper> updatePostingsWrapper(ManualOperationWrapper operationWrapper) {

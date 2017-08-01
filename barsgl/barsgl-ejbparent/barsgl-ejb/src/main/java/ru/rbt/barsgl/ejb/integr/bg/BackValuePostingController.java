@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
+import org.apache.commons.lang3.ArrayUtils;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -10,6 +11,7 @@ import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.page.SQL;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.criteria.Criteria;
+import ru.rbt.barsgl.shared.enums.BackValueAction;
 import ru.rbt.barsgl.shared.enums.BackValueMode;
 import ru.rbt.barsgl.shared.operation.BackValueWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -35,6 +37,8 @@ import java.util.List;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackValueOperation;
 import static ru.rbt.barsgl.ejbcore.page.SqlPageSupportBean.prepareCommonSql;
+import static ru.rbt.barsgl.shared.enums.BackValueAction.SIGN;
+import static ru.rbt.barsgl.shared.enums.BackValueAction.TO_HOLD;
 import static ru.rbt.barsgl.shared.enums.BackValueMode.ALL;
 import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
 import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
@@ -44,6 +48,9 @@ import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
  * Created by er18837 on 13.07.2017.
  */
 public class BackValuePostingController {
+
+    final private String operStateNotAuth = StringUtils.arrayToString(new Object[] {BLOAD, BWTAC}, ", ", "'");;
+    final private BackValueAction[] actionNotAuth = new BackValueAction[]{SIGN, TO_HOLD};
 
     @EJB
     private AuditController auditController;
@@ -126,19 +133,13 @@ public class BackValuePostingController {
             checkPostDate(wrapper, parameters);
 
             // проверить postDateNew на закрытый период
-            ClosedPeriodView period = closedPeriodRepository.getPeriod();
-            Long userId = wrapper.getUserId();  // TODO userContext.getUserId()
-            if(!parameters.getPostDateNew().after(period.getLastDate()) &&                // разрешено только для суперпользователя
-                !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
-                throw new DefaultApplicationException(String.format("Подтверждение запрещено.\n" +
-                                "Дата проводки '%s' попала в отчетный период до '%s', который закрыт '%s'"
-                        , wrapper.getPostDateStr(), dateUtils.onlyDateString(period.getLastDate()), dateUtils.onlyDateString(period.getCutDate())));
-            }
+            chackClosedPeriod(wrapper, parameters);
+
             bvOperationRepository.executeInNewTransaction(persistence -> {
                 int cnt = 0;
                 if (!parameters.getPostDate().equals(parameters.getPostDateNew())) {
                     // изменить GL_OPER.POSTDATE = postDate
-                    cnt = bvOperationRepository.updatePostDate(parameters.getPostDateNew(), parameters.getPostDate(), parameters.getOperState(),
+                    cnt = bvOperationRepository.updatePostDate(parameters.getPostDateNew(), parameters.getPostDate(), operStateNotAuth,
                             parameters.getGloidIn(), parameters.getSqlParams());
                     if (cnt != parameters.getOperCount()) {
                         throw new DefaultApplicationException(format("Не удалось изменить дату проводки, обновлено записей %d, ожидалось %d", cnt, parameters.getOperCount()));
@@ -265,8 +266,10 @@ public class BackValuePostingController {
             parameters.setGloidIn(StringUtils.listToString(wrapper.getGloIDs(), ", "));
             parameters.setSqlParams(new Object[0]);
         }
+        boolean notAuthorized = ArrayUtils.contains(actionNotAuth, wrapper.getAction());
         String from = " from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID " +
-                " where o.GLOID in (" + parameters.getGloidIn() + ") and o.STATE in (" + parameters.getOperState() + ")";
+                " where o.GLOID in (" + parameters.getGloidIn() + ")" +
+                (notAuthorized ? " and o.STATE in (" + operStateNotAuth + ")" : "");
 
         // получить общие параметры операций
         List<DataRecord> dictinct = bvOperationRepository.select("select distinct o.VDATE, o.POSTDATE, e.POSTDATE_PLAN, o.SRC_PST, e.MNL_STATUS "
@@ -326,20 +329,30 @@ public class BackValuePostingController {
 
     }
 
+    private void chackClosedPeriod(BackValueWrapper wrapper, OperationParameters parameters) {
+        ClosedPeriodView period = closedPeriodRepository.getPeriod();
+        Long userId = wrapper.getUserId();  // TODO userContext.getUserId()
+        if(!parameters.getPostDateNew().after(period.getLastDate()) &&                // разрешено только для суперпользователя
+                !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
+            throw new DefaultApplicationException(String.format("Подтверждение запрещено.\n" +
+                            "Дата проводки '%s' попала в отчетный период до '%s', который закрыт '%s'"
+                    , wrapper.getPostDateStr(), dateUtils.onlyDateString(period.getLastDate()), dateUtils.onlyDateString(period.getCutDate())));
+        }
+    }
+
     private class OperationParameters implements Serializable{
+
         private String sourcePosting;           // источник
         private Date valueDate;                 // дата валютирования
         private Date postDate;                  // дата проводки
         private Date postDatePlan;              // плановая дата проводки
         private Date postDateNew;               // заданная дата проводки
 
-        String gloidIn;
-        Object[] sqlParams;
-        String operState;
-        int operCount;
+        private String gloidIn;
+        private Object[] sqlParams;
+        private int operCount;
 
         public OperationParameters() {
-            operState = StringUtils.arrayToString(new Object[] {BLOAD, BWTAC}, ", ", "'");
             operCount = 0;
         }
 
@@ -397,10 +410,6 @@ public class BackValuePostingController {
 
         public void setSqlParams(Object[] sqlParams) {
             this.sqlParams = sqlParams;
-        }
-
-        public String getOperState() {
-            return operState;
         }
 
         public int getOperCount() {

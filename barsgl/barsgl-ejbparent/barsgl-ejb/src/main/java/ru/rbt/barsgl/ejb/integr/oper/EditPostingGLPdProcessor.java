@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.integr.oper;
 
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPd;
+import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.repository.GLPdRepository;
 
 import javax.inject.Inject;
@@ -25,11 +26,10 @@ public class EditPostingGLPdProcessor extends EditPostingProcessor {
     }
 
     @Override
-    public void updateMemOrder(Date pod, boolean isCorrection, AbstractPd debit, AbstractPd credit) {
-        ((GLPd)debit).setMemorderNumber(memorderController.nextMemorderNumber(pod, debit.getBsaAcid(), isCorrection));
-        ((GLPd)debit).setDocType(memorderController.getDocTypeNotFan(isCorrection, debit.getBsaAcid(), credit.getBsaAcid(), pod));
+    public void updateMemOrder(AbstractPd debit, String memorderNumber, Memorder.DocType docType) {
+        ((GLPd)debit).setMemorderNumber(memorderNumber);
+        ((GLPd)debit).setDocType(docType);
     }
-
 
     @Override
     public void updatePd(List<? extends AbstractPd> pdList) {

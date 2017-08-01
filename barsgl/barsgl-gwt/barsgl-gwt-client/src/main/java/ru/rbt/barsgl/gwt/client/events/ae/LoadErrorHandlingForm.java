@@ -141,7 +141,7 @@ public class LoadErrorHandlingForm  extends GridForm {
         Object[] res = (Object[]) prms;
 
         BackValueWrapper wrapper = new BackValueWrapper();
-        wrapper.setAction(BackValueAction.SIGN);
+        wrapper.setAction(BackValueAction.STAT);
         wrapper.setMode(BackValueMode.ALL);
         wrapper.setSql(prepareSql());
         wrapper.setFilters(grid.getFilterCriteria());
