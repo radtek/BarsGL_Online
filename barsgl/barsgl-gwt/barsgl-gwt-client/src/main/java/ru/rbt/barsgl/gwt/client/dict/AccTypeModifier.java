@@ -98,7 +98,7 @@ public class AccTypeModifier extends EditableDictionary<AccTypeModifierWrapper> 
         return new GridAction(grid, "Счет AccType", "Управление счетом AccType", null, 10, true) {
             @Override
             public void execute() {
-                Field fieldModifier = getFieldByName(AccTypeModifier.FIELD_MODIFIER);
+                Field fieldModifier = getFieldByCaption(AccTypeModifier.FIELD_MODIFIER);
                 if (fieldModifier == null) return;
                 FormManagerUI.show(new AccType(initSection, initProduct, initSubProduct, (String)fieldModifier.getValue()));
             }

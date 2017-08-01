@@ -84,7 +84,7 @@ public class AccTypeProduct extends EditableDictionary<AccTypeProductWrapper> {
         return new GridAction(grid, "Подпродукты", "Управление подпродуктами", null, 10, true) {
             @Override
             public void execute() {
-                Field fieldProduct = getFieldByName(AccTypeProduct.FIELD_PRODUCT);
+                Field fieldProduct = getFieldByCaption(AccTypeProduct.FIELD_PRODUCT);
                 if (fieldProduct == null) return;
 
                 FormManagerUI.show(new AccTypeSubProduct(initSection, (String)fieldProduct.getValue()));

@@ -71,7 +71,7 @@ public class AccTypeSection  extends EditableDictionary<AccTypeSectionWrapper> {
         return new GridAction(grid, "Продукты", "Управление продуктами", null, 10, true) {
             @Override
             public void execute() {
-                Field field = getFieldByName(AccTypeSection.FIELD_SECTION);
+                Field field = getFieldByCaption(AccTypeSection.FIELD_SECTION);
                 if (field == null) return;
 
                 FormManagerUI.show(new AccTypeProduct((String) field.getValue()));

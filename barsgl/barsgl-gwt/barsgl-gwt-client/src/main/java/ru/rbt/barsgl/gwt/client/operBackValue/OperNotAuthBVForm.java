@@ -12,12 +12,10 @@ import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.comp.PopupMenuBuilder;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.events.CommonEvents;
 import ru.rbt.barsgl.gwt.core.events.CommonEventsHandler;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -27,12 +25,12 @@ import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.ClientDateUtils;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.barsgl.shared.enums.InputMethod;
-import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.shared.enums.OperType;
+import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.shared.operation.BackValueWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
@@ -44,12 +42,14 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
 /**
  * Created by er17503 on 24.07.2017.
@@ -264,10 +264,42 @@ public class OperNotAuthBVForm extends GridForm {
 
     private GridAction createWaitingReasonAction() {
         return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
-
+            WaitingReasonDlg dlg;
             @Override
             public void execute() {
+                Field field = getFieldByName("MNL_NRT");
+                if (field == null) return;
 
+                dlg = dlg == null ? new WaitingReasonDlg() : dlg;
+                dlg.setOkButtonCaption("Подтвердить");
+                dlg.setCaption("Основание для задержания");
+                dlg.setDlgEvents(this);
+                dlg.show(field.getValue());
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms) throws Exception{
+               WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+               List<Long> gloids = new ArrayList<>();
+               gloids.add((Long)getFieldByName("GLOID").getValue());
+               String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
+               BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, BackValueMode.ONE, postDate, (String)prms);
+
+                BarsGLEntryPoint.operationService.processOperationBv(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<Integer> res) {
+                        if (res.isError()){
+                            DialogManager.error("Ошибка", "Операция задержания не удалась.\nОшибка: " + res.getMessage());
+                        } else {
+                            dlg.hide();
+                            refreshAction.execute();
+                            showInfo(res.getMessage());
+                        }
+                        WaitingManager.hide();
+                    }
+                });
             }
         };
     }
@@ -356,6 +388,21 @@ public class OperNotAuthBVForm extends GridForm {
 
             }
         };
+    }
+
+    /*Wrapper*/
+    private BackValueWrapper createWrapper(List<Long> gloIDs, BackValueAction action, BackValueMode mode, String postDate, String comment){
+        BackValueWrapper wrapper = new BackValueWrapper();
+        wrapper.setGloIDs(gloIDs);
+        wrapper.setFilters(grid.getFilterCriteria());
+        wrapper.setSql(sql());
+        wrapper.setAction(action);
+        wrapper.setMode(mode);
+        wrapper.setPostDateStr(postDate);
+        wrapper.setComment(comment);
+        wrapper.setBvStatus(BackValuePostStatus.valueOf((String)getFieldByName("MNL_STATUS").getValue())) ;
+
+        return wrapper;
     }
 
     @Override
@@ -515,7 +562,6 @@ public class OperNotAuthBVForm extends GridForm {
         return getSourceAndFilialPart("and", "SRC_PST", "CBCC_CR", "CBCC_DR");
     }
 
-
     @Override
     protected String prepareSql() {
         return  null;
@@ -527,22 +573,4 @@ public class OperNotAuthBVForm extends GridForm {
         list.add(new SortItem("GLOID", Column.Sort.DESC));
         return list;
     }
-
-   /* @Override
-    public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
-        ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-        list.add(new FilterItem(c3, FilterCriteria.EQ, "PH", false, false, true));
-
-
-        list.add(new FilterItem(c4, FilterCriteria.EQ, "BLOAD", false, false, false));
-        list.add(new FilterItem(c1, FilterCriteria.EQ, 43444L, false, true, true));
-
-       list.add(new FilterItem(c2, FilterCriteria.EQ, "AE", false, true, false));
-
-
-
-
-
-        return list;
-    }*/
 }

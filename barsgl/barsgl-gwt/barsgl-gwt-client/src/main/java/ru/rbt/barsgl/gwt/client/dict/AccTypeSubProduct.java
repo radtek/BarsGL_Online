@@ -88,7 +88,7 @@ public class AccTypeSubProduct extends EditableDictionary<AccTypeSubProductWrapp
         return new GridAction(grid, "Модификатор", "Управление модификаторами", null, 10, true) {
             @Override
             public void execute() {
-                Field fieldSubProduct = getFieldByName(AccTypeSubProduct.FIELD_SUBPRODUCT);
+                Field fieldSubProduct = getFieldByCaption(AccTypeSubProduct.FIELD_SUBPRODUCT);
                 if (fieldSubProduct == null) return;
                 FormManagerUI.show(new AccTypeModifier(initSection, initProduct, (String)fieldSubProduct.getValue()));
             }

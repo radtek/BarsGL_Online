@@ -20,8 +20,7 @@ public class BackValueWrapper implements Serializable, IsSerializable {
 
     private List<Long> gloIDs;              // видимый список или 1 операция
     private List<? extends IFilterItem> filters;      // критерии фильтра
-    private String sql;                     // TODO для выбора по фильтру - может и не надо
-    private Boolean ownMessage;             // свои
+    private String sql;                     // sql для выбора по фильтру
     private BackValueAction action;         // действие
     private BackValueMode mode;             // режим обработки
     private String postDateStr;             // дата проводки
@@ -49,14 +48,6 @@ public class BackValueWrapper implements Serializable, IsSerializable {
 
     public void setSql(String sql) {
         this.sql = sql;
-    }
-
-    public Boolean getOwnMessage() {
-        return ownMessage;
-    }
-
-    public void setOwnMessage(Boolean ownMessage) {
-        this.ownMessage = ownMessage;
     }
 
     public BackValueAction getAction() {
