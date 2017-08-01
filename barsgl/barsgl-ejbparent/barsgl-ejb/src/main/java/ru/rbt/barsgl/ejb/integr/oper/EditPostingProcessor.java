@@ -189,14 +189,14 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
      * @param wrapper
      * @param pdList
      */
-    public void updateWithMemorder(ManualOperationWrapper wrapper, final List<? extends AbstractPd> pdList, boolean isBuffer) throws Exception {
+    public Date updateWithMemorder(ManualOperationWrapper wrapper, final List<? extends AbstractPd> pdList, boolean isBuffer) throws Exception {
         YesNo isCorrection = YesNo.getValue(wrapper.isCorrection());
         Date postDate = postingProcessor.checkDateFormat(wrapper.getPostDateStr(), "Дата проводки");
         Date pod = pdList.get(0).getPod();
         boolean changeDate = !pod.equals(postDate);
         boolean changeCorrection = (pdList.get(0).getIsCorrection() != isCorrection);
         if (!changeDate && !changeCorrection)      // дата и признак коррекции не изменились
-            return ;
+            return postDate;
 
         checkStornoDate(wrapper, postDate); // проверить дату со сторно
         if (changeDate) {
@@ -235,6 +235,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
             Memorder.DocType docTyoe = memorderController.getDocType(wrapper.isCorrection(), debits, credits, pdDebit.getPod());
             updateMemOrder(pdDebit, memorderNumber, docTyoe);
         }
+        return postDate;
     }
 
     /**

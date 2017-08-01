@@ -80,6 +80,12 @@ public class EditPostingController {
     @Inject
     private SecurityActionRepository actionRepository;
 
+    /**
+     * отработка действия на форме "Проводки"
+     * @param operationWrapper
+     * @param postingAction
+     * @return
+     */
     public List<? extends AbstractPd> processMessage(ManualOperationWrapper operationWrapper, PostingAction postingAction) {
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
@@ -116,6 +122,12 @@ public class EditPostingController {
         }
     }
 
+    /**
+     * редактирование проводок
+     * @param operationWrapper
+     * @return
+     * @throws Exception
+     */
     public List<? extends AbstractPd> updatePostings(ManualOperationWrapper operationWrapper) throws Exception {
         Operday.PdMode pdMode = Operday.PdMode.valueOf(operationWrapper.getPdMode());
         EditPostingProcessor editPostingProcessor =
@@ -159,14 +171,18 @@ public class EditPostingController {
         }
     }
 
+    /**
+     * подавление проводок
+     * @param operationWrapper
+     * @return
+     * @throws Exception
+     */
     public List<? extends AbstractPd> suppressPostings(ManualOperationWrapper operationWrapper) throws Exception {
         Operday.PdMode pdMode = Operday.PdMode.valueOf(operationWrapper.getPdMode());
         EditPostingProcessor editPostingProcessor =
                 (pdMode == Operday.PdMode.DIRECT) ? editPdProcessor : editGLPdProcessor;
 
-        GLOperation operation = operationRepository.findById(GLOperation.class, operationWrapper.getId());
-
-        List<Long> pdIdList = null;
+        List<Long> pdIdList;
         boolean toGetPd = (operationWrapper.getPostingChoice() == PST_ALL);
         if (toGetPd)
             pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
@@ -190,10 +206,12 @@ public class EditPostingController {
         return editPostingProcessor.getOperationPdList(pdIdList);
     }
 
-    private boolean isBufferMode() {
-        return operdayController.getOperday().getPdMode().equals(Operday.PdMode.BUFFER);
-    }
-
+    /**
+     * изменение даты проводки с формы BackValue (проверка корректности даты проводки  - снаружи)
+     * @param operationWrapper
+     * @return
+     * @throws Exception
+     */
     public List<? extends AbstractPd> updatePostingsDate(ManualOperationWrapper operationWrapper) throws Exception {
         if (operationWrapper.getPostingChoice() == PST_ONE_OF) {
             throw new DefaultApplicationException(format("Недопустимый режим обработки: '%s'", operationWrapper.getPostingChoice().name()));        }
@@ -204,19 +222,21 @@ public class EditPostingController {
             editPostingProcessor = editPdProcessor;
             pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
         }
-        Assert.isTrue(null != pdIdList, ()-> new DefaultApplicationException(format("Для операции '%d' не %s ни одной проводки"
-                , operationWrapper.getId(), "найдено")));
+        Assert.isTrue(null != pdIdList, ()-> new DefaultApplicationException(format("Для операции '%d' не найдено ни одной проводки"
+                , operationWrapper.getId())));
 
         List<? extends AbstractPd> pdList = editPostingProcessor.getOperationPdList(pdIdList);
 
-        editPostingProcessor.updateWithMemorder(operationWrapper, pdList, isBufferMode());
+        Date postDate = editPostingProcessor.updateWithMemorder(operationWrapper, pdList, isBufferMode());
         editPostingProcessor.updatePd(pdList);
 
-        GLOperation operation = operationRepository.findById(GLOperation.class, operationWrapper.getId());
-        editPostingProcessor.updateOperation(operationWrapper, operation);
-        operationRepository.update(operation);
+        operationRepository.updateOperationParentPostDate(operationWrapper.getId(), postDate);
 
         return editPostingProcessor.getOperationPdList(pdIdList);
+    }
+
+    private boolean isBufferMode() {
+        return operdayController.getOperday().getPdMode().equals(Operday.PdMode.BUFFER);
     }
 
     public RpcRes_Base<ManualOperationWrapper> updatePostingsWrapper(ManualOperationWrapper operationWrapper) {

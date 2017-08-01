@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.integr.bg;
 import org.apache.commons.lang3.ArrayUtils;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
@@ -11,14 +12,16 @@ import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.page.SQL;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.criteria.Criteria;
-import ru.rbt.barsgl.shared.enums.BackValueAction;
-import ru.rbt.barsgl.shared.enums.BackValueMode;
+import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.BackValueWrapper;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.shared.enums.SecurityActionCode;
@@ -36,20 +39,27 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackValueOperation;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejbcore.page.SqlPageSupportBean.prepareCommonSql;
 import static ru.rbt.barsgl.shared.enums.BackValueAction.SIGN;
 import static ru.rbt.barsgl.shared.enums.BackValueAction.TO_HOLD;
 import static ru.rbt.barsgl.shared.enums.BackValueMode.ALL;
+import static ru.rbt.barsgl.shared.enums.BackValueMode.ONE;
+import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.CONTROL;
+import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.HOLD;
 import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
 import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
 import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
+import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by er18837 on 13.07.2017.
  */
 public class BackValuePostingController {
 
-    final private String operStateNotAuth = StringUtils.arrayToString(new Object[] {BLOAD, BWTAC}, ", ", "'");;
+    final private String operStateAuth = POST.name();
+    final private String operStateNotAuth = StringUtils.arrayToString(new Object[] {BLOAD, BWTAC}, ", ", "'");
     final private BackValueAction[] actionNotAuth = new BackValueAction[]{SIGN, TO_HOLD};
 
     @EJB
@@ -68,7 +78,16 @@ public class BackValuePostingController {
     protected OperdayController operdayController;
 
     @Inject
+    private EditPostingController editPostingController;
+
+    @Inject
+    private ManualPostingController manualPostingController;
+
+    @Inject
     SecurityActionRepository actionRepository;
+
+    @Inject
+    private AccessServiceSupport accessServiceSupport;
 
     @Inject
     private UserContext userContext;
@@ -78,6 +97,8 @@ public class BackValuePostingController {
 
     public RpcRes_Base<Integer> processOperationBv(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
+            if (null == wrapper.getUserId())
+                wrapper.setUserId(userContext.getUserId());
 
             switch (wrapper.getAction()) {
                 case SIGN:              //("Подтвердить дату"),
@@ -122,16 +143,20 @@ public class BackValuePostingController {
      */
     public RpcRes_Base<Integer> authorizeOperations(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
-            BackValueMode mode = wrapper.getMode();
-
             // получить параметры операций
-            OperationParameters parameters = getOperationParameters(wrapper, criteria);
+            OperationParameters parameters = getOperationsParameters(wrapper, criteria);
+
+            // проверить корректность статуса
+            checkOperationStatus(wrapper, parameters, CONTROL, HOLD);
 
             // проверить postDateNew на выходной день и на допустимый диапазон
             checkPostDate(wrapper, parameters);
 
             // проверить postDateNew на закрытый период
             checkClosedPeriod(wrapper, parameters);
+
+            // проверить права доступа к прошлой дате
+            checkUserAccessToBackValue(wrapper, parameters);
 
             bvOperationRepository.executeInNewTransaction(persistence -> {
                 int cnt = 0;
@@ -164,7 +189,11 @@ public class BackValuePostingController {
     public RpcRes_Base<Integer> holdOperations(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
             // получить параметры операций
-            OperationParameters parameters = getOperationParameters(wrapper, criteria);
+            OperationParameters parameters = getOperationsParameters(wrapper, criteria);
+
+            // проверить корректность статуса
+            checkOperationStatus(wrapper, parameters, CONTROL);
+
             bvOperationRepository.executeInNewTransaction(persistence -> {
                 int cnt = 0;
                 // изменить GL_OPEREXT: MNL_STATUS = HOLD, MNL_NARRATIVE = wrapper.comment, USER_AU3, OTS_AU3
@@ -187,7 +216,7 @@ public class BackValuePostingController {
 
     public RpcRes_Base<Integer> getStatistics(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
-            OperationParameters parameters = getOperationParameters(wrapper, criteria);
+            OperationParameters parameters = getOperationsParameters(wrapper, criteria);
             String message = format("Всего операций по условию: %d", parameters.getOperCount());
             auditController.info(BackValueOperation, message);
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
@@ -199,18 +228,38 @@ public class BackValuePostingController {
     }
 
     public RpcRes_Base<Integer> editDateOperation(BackValueWrapper wrapper) throws Exception {
+
+        Operday operday = operdayController.getOperday();
+        if (ONLINE != operday.getPhase()) {
+            throw new DefaultApplicationException(format("Изменение даты проводки невозможна. Операционный день в статусе: '%s'"
+                    , operdayController.getOperday().getPhase()));
+        }
+
+        if ( !operdayController.isProcessingAllowed()) {
+            throw new DefaultApplicationException("Изменение даты проводки невозможно. Выполняется синхронизация проводок,\n повторите попытку через несколько минут");
+        }
+
         try {
-            /**
-             TODO
-             проверить возможность редактирования - ONLINE ALLOWED;
-             получить postDatePlan операции
-             получить postDateNew из wrapper.postDateStr
-             поверить postDateNew >= valueDate && postDateNew <= postDatePlan
-             если postDateNew попадает в закрытый период
-                проверить права суперпользователя
-             обратиться к EditPostingController
-             }
-             */
+            // получить параметры операций
+            OperationParameters parameters = getOperationParameters(wrapper);
+
+            // проверить postDateNew на выходной день и на допустимый диапазон
+            checkPostDate(wrapper, parameters);
+
+            // проверить postDateNew на закрытый период
+            checkClosedPeriod(wrapper, parameters);
+
+            // проверить права доступа к прошлой дате
+            checkUserAccessToBackValue(wrapper, parameters);
+
+            // заполнить ManualOperationWrapper как при редактировании проводки
+            ManualOperationWrapper operationWrapper = new ManualOperationWrapper();
+            operationWrapper.setPostingChoice(PostingChoice.PST_SINGLE);
+            operationWrapper.setId(wrapper.getGloIDs().get(0));
+            operationWrapper.setPostDateStr(wrapper.getPostDateStr());
+            operationWrapper.setCorrection(YesNo.Y.name().equals(parameters.getIsCorrection()));
+
+            editPostingController.updatePostingsDate(operationWrapper);
             String message = getResultMessage(wrapper, 1) + ": изменена дата";
             return new RpcRes_Base<>(1, false, message);
         } catch (ValidationError e) {
@@ -246,12 +295,13 @@ public class BackValuePostingController {
     }
 
     /**
-     * проверяет однородность списка операций
+     * получает основные параметры операций
+     * проверяет однородность списка операций для неавторизованных
      * @param wrapper
      * @param criteria
      * @throws SQLException
      */
-    private OperationParameters getOperationParameters(BackValueWrapper wrapper, Criteria criteria) throws SQLException, ParseException {
+    private OperationParameters getOperationsParameters(BackValueWrapper wrapper, Criteria criteria) throws SQLException, ParseException {
         OperationParameters parameters = new OperationParameters();
         if (ALL == wrapper.getMode()) {
             // сформировать запрос по фильтру
@@ -263,32 +313,28 @@ public class BackValuePostingController {
             parameters.setGloidIn(StringUtils.listToString(wrapper.getGloIDs(), ", "));
             parameters.setSqlParams(new Object[0]);
         }
+        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
+
+        // from ... where ...
         boolean notAuthorized = ArrayUtils.contains(actionNotAuth, wrapper.getAction());
-        String from = " from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID " +
-                " where o.GLOID in (" + parameters.getGloidIn() + ")" +
-                (notAuthorized ? " and o.STATE in (" + operStateNotAuth + ")" : "");
+        String from = format(" from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s)%s", parameters.getGloidIn(),
+                notAuthorized ? " and o.STATE in (" + operStateNotAuth + ")" : "");
 
         // получить общие параметры операций
-        List<DataRecord> dictinct = bvOperationRepository.select("select distinct o.VDATE, o.POSTDATE, e.POSTDATE_PLAN, o.SRC_PST, e.MNL_STATUS "
+        List<DataRecord> commonParams = bvOperationRepository.select("select distinct o.SRC_PST, o.VDATE, o.POSTDATE, e.POSTDATE_PLAN, e.MNL_STATUS "
                 + from, parameters.getSqlParams());
-        if (dictinct.isEmpty()) {
-            throw new DefaultApplicationException("По заданному условию операции не найдены");
+        if (commonParams.isEmpty()) {
+            throw new DefaultApplicationException(format("По заданному условию операции%s не найдены", notAuthorized ? (" в статусе " + operStateNotAuth) : ""));
         }
-        else if (dictinct.size() != 1) {
+        else if (commonParams.size() != 1) {
             throw new DefaultApplicationException("По заданному условию найдены операции с различным набором параметров (источник, дата проводки, статус)");
         }
-        DataRecord rec = dictinct.get(0);
-        String status = rec.getString(4);
-        if (!wrapper.getBvStatus().name().equals(status)) {
-            throw new DefaultApplicationException(format("Статус операции изменен: '%s', ожидается '%s'. Обновите список операций",
-                    status, wrapper.getBvStatus().name()) );
-        }
-
-        parameters.setValueDate(rec.getDate(0));
-        parameters.setPostDate(rec.getDate(1));
-        parameters.setPostDatePlan(rec.getDate(2));
-        parameters.setSourcePosting(rec.getString(3));
-        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
+        DataRecord rec = commonParams.get(0);
+        parameters.setSourcePosting(rec.getString(0));
+        parameters.setValueDate(rec.getDate(1));
+        parameters.setPostDate(rec.getDate(2));
+        parameters.setPostDatePlan(rec.getDate(3));
+        parameters.setBvStatus(BackValuePostStatus.valueOf(rec.getString(4)));
 
         // сравнить количество
         DataRecord data = bvOperationRepository.selectFirst("select count(1) " + from, parameters.getSqlParams());
@@ -299,6 +345,59 @@ public class BackValuePostingController {
         parameters.setOperCount(count);
 
         return parameters;
+    }
+
+    /**
+     * получает основные параметры операции (при редактировании)
+     * @param wrapper
+     * @throws SQLException
+     */
+    private OperationParameters getOperationParameters(BackValueWrapper wrapper) throws SQLException, ParseException {
+        OperationParameters parameters = new OperationParameters();
+        if (ONE != wrapper.getMode()) {
+            throw new DefaultApplicationException(format("Неверный режим обработки операций - ожидается '%s'", ONE.name()));
+        }
+
+        parameters.setGloidIn(StringUtils.listToString(wrapper.getGloIDs(), ", "));
+        parameters.setSqlParams(new Object[0]);
+        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
+
+        // получить общие параметры операций
+        List<DataRecord> params = bvOperationRepository.select(format("select o.SRC_PST, o.VDATE, o.POSTDATE, o.FCHNG" +
+                " from GL_OPER o where o.GLOID in (%s) and o.STATE in (%s)", parameters.getGloidIn()), operStateAuth);
+        if (params.isEmpty()) {
+            throw new DefaultApplicationException(format("По заданному условию операции в статусе %s не найдены", operStateAuth));
+        }
+        else if (params.size() != 1) {
+            throw new DefaultApplicationException(format("По заданному условию найдено несколько операций: %d", params.size()));
+        }
+        DataRecord rec = params.get(0);
+
+        parameters.setSourcePosting(rec.getString(0));
+        parameters.setValueDate(rec.getDate(1));
+        parameters.setPostDate(rec.getDate(2));
+        parameters.setIsCorrection(rec.getString(3));
+
+        parameters.setOperCount(1);
+
+        return parameters;
+    }
+
+    private boolean checkOperationStatus(BackValueWrapper wrapper, OperationParameters parameters, BackValuePostStatus... enabledStatus) {
+        BackValuePostStatus statusIs = parameters.getBvStatus();
+        if (!statusIs.equals(wrapper.getBvStatus())) {
+            throw new DefaultApplicationException(format("%s, статус: '%s' ('%s').\n Обновите информацию и выполните действие повторно",
+                    getResultMessage(wrapper, parameters.getOperCount(), "изменена", "изменены"), statusIs.name(), statusIs.getLabel()));
+        }
+        if (enabledStatus.length == 0)
+            return true;
+        for (BackValuePostStatus status : enabledStatus) {
+            if (status.equals(statusIs)) {
+                return true;
+            }
+        }
+        throw new DefaultApplicationException(format("Нельзя '%s' операции в статусе: '%s' ('%s')",
+                wrapper.getAction().getLabel(), statusIs.name(), statusIs.getLabel()));
     }
 
     private void checkPostDate(BackValueWrapper wrapper, OperationParameters parameters) throws SQLException {
@@ -326,14 +425,21 @@ public class BackValuePostingController {
 
     private void checkClosedPeriod(BackValueWrapper wrapper, OperationParameters parameters) {
         ClosedPeriodView period = closedPeriodRepository.getPeriod();
-        Long userId = userContext.getUserId();
-        if (null == userId)
-            userId = wrapper.getUserId();
+        Long userId = wrapper.getUserId();
         if(!parameters.getPostDateNew().after(period.getLastDate()) &&                // разрешено только для суперпользователя
                 !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
             throw new DefaultApplicationException(String.format("Подтверждение запрещено.\n" +
                             "Дата проводки '%s' попала в отчетный период до '%s', который закрыт '%s'"
                     , wrapper.getPostDateStr(), dateUtils.onlyDateString(period.getLastDate()), dateUtils.onlyDateString(period.getCutDate())));
+        }
+    }
+
+    public void checkUserAccessToBackValue(BackValueWrapper wrapper, OperationParameters parameters) throws Exception {
+        if (!actionRepository.getAvailableActions(wrapper.getUserId()).contains(SecurityActionCode.OperPstChngDate) ) {
+            Date oldDate = parameters.getPostDate();
+            Date newDate = parameters.getPostDateNew();
+            Date minDate = newDate.before(oldDate) ? newDate : oldDate;
+            accessServiceSupport.checkUserAccessToBackValueDate(minDate, wrapper.getUserId());
         }
     }
 
@@ -344,6 +450,8 @@ public class BackValuePostingController {
         private Date postDate;                  // дата проводки
         private Date postDatePlan;              // плановая дата проводки
         private Date postDateNew;               // заданная дата проводки
+        private String isCorrection;            // сторно
+        private BackValuePostStatus bvStatus;   // текущий статус обработки
 
         private String gloidIn;
         private Object[] sqlParams;
@@ -415,6 +523,22 @@ public class BackValuePostingController {
 
         public void setOperCount(int operCount) {
             this.operCount = operCount;
+        }
+
+        public String getIsCorrection() {
+            return isCorrection;
+        }
+
+        public void setIsCorrection(String isCorrection) {
+            this.isCorrection = isCorrection;
+        }
+
+        public BackValuePostStatus getBvStatus() {
+            return bvStatus;
+        }
+
+        public void setBvStatus(BackValuePostStatus bvStatus) {
+            this.bvStatus = bvStatus;
         }
     }
 }
