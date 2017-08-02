@@ -9,13 +9,10 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
-import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
@@ -33,15 +30,18 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 
 /**
  * Created by akichigi on 19.03.15.
@@ -464,34 +464,44 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected void btnClick(Side side) {
+        Window.alert("btnClick()");
         exchange(side.equals(Side.DEBIT));
     }
 
     private void exchange(boolean isDebit){
+        Window.alert("exchange() 1");
         if (mDateOperation.getValue() == null){
             showInfo("Ошибка", "Не заполнено поле 'Дата проводки'");
             return;
         }
 
+        Window.alert("exchange() 2");
         if (((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
             showInfo("Ошибка", "Для конвертации валюта дебета не должна быть равна валюте кредита");
             return;
         }
+        Window.alert("exchange() 3");
 
         if (!(((String)mDtCurrency.getValue()).equalsIgnoreCase("RUR") || ((String)mCrCurrency.getValue()).equalsIgnoreCase("RUR"))){
             showInfo("Ошибка", "Валюта дебета или кредита должна быть RUR");
             return;
         }
+        Window.alert("exchange() 4");
 
         String sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
+
+        Window.alert("exchange() 4");
 
         if (!checkBigDecimal.check(sum)) {
             showInfo("Ошибка", Utils.Fmt("Сумма в валюте {0} должна быть заполнена и не равна нулю",
                      isDebit ? "кредита" : "дебета"));
             return;
         }
+        Window.alert("exchange() 5");
         calculateSum(createCurExchangeWrapper(isDebit), isDebit);
+
+        Window.alert("exchange() 6");
     }
 
 

@@ -110,6 +110,7 @@ public class ManualPostingController {
      * @throws Exception
      */
     public RpcRes_Base<ManualOperationWrapper> processOperationRq(ManualOperationWrapper wrapper) throws Exception {
+
         try {
 //            checkOperdayOnline(wrapper.getErrorList());
             switch (wrapper.getAction()) {
@@ -190,7 +191,7 @@ public class ManualPostingController {
 
         Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
-        if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim()) && !accRlnRepository.checkAccointIsPair(accountDr.getId().getBsaAcid())) {
+        if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
@@ -210,11 +211,11 @@ public class ManualPostingController {
             }
         }
 
-        if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim()) && !accRlnRepository.checkAccointIsPair(accountCr.getId().getBsaAcid())) {
+        if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getId().getBsaAcid(),accountCr.getId().getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
-            BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
+            BigDecimal n = "А".equalsIgnoreCase(accountCr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
             DataRecord resCr = null;
             if (tehoverAcc!=null) {
                 resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr,tehoverAcc);
