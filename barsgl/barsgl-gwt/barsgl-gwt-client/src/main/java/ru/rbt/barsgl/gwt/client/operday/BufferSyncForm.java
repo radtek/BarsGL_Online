@@ -5,12 +5,11 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.core.SecurityChecker;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.ListBoxSqlDataProvider;
 import ru.rbt.barsgl.gwt.client.comp.StringRowConverter;
+import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.actions.RefreshAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
@@ -22,6 +21,7 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
@@ -78,7 +78,7 @@ public class BufferSyncForm extends BaseForm {
     private DataListBox createSyncRowsListBox() {
         Columns columns = new ColumnsBuilder().addColumn("ID_HIST", Column.Type.LONG).addColumn("ts", Column.Type.STRING).build();
         listBoxDataProvider = new ListBoxSqlDataProvider(true, "",
-                "select * from (select v.*, rownum rn from V_GL_LNGTSKINF v order by id_hist desc) where rn <= 10", columns, null, null, new StringRowConverter(0, 1));
+                "select * from (select v.*, row_number() over (order by id_hist desc) rn from V_GL_LNGTSKINF v) where rn <= 10", columns, null, null, new StringRowConverter(0, 1));
         DataListBox listBox = new DataListBox(listBoxDataProvider);
         listBox.setWidth("600px");
         return listBox;

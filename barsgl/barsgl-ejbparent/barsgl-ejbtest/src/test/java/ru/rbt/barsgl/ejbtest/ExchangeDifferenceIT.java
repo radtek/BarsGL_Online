@@ -21,8 +21,10 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import org.apache.commons.lang3.time.DateUtils;
 
 import static ru.rb.ucb.util.StringUtils.isEmpty;
+import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.setOperday;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 
 /**
@@ -39,7 +41,9 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
 
 
     @Before
-    public void beforeClass() {
+    public void beforeClass() throws ParseException {
+        Date curDate = DateUtils.parseDate("2017-02-10","yyy-MM-dd");
+        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
 
