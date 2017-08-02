@@ -216,7 +216,9 @@ public class BackValuePostingController {
 
     public RpcRes_Base<Integer> getStatistics(BackValueWrapper wrapper, Criteria criteria) throws Exception {
         try {
-            OperationParameters parameters = getOperationsParameters(wrapper, criteria);
+            OperationParameters parameters = createOperationsParameters(wrapper, criteria);
+            DataRecord data = bvOperationRepository.selectFirst("select count(1) " + parameters.getFrom(), parameters.getSqlParams());
+            parameters.setOperCount(data.getInteger(0));
             String message = format("Всего операций по условию: %d", parameters.getOperCount());
             auditController.info(BackValueOperation, message);
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
@@ -294,14 +296,7 @@ public class BackValuePostingController {
                     PersistenceException.class);
     }
 
-    /**
-     * получает основные параметры операций
-     * проверяет однородность списка операций для неавторизованных
-     * @param wrapper
-     * @param criteria
-     * @throws SQLException
-     */
-    private OperationParameters getOperationsParameters(BackValueWrapper wrapper, Criteria criteria) throws SQLException, ParseException {
+    private OperationParameters createOperationsParameters(BackValueWrapper wrapper, Criteria criteria) {
         OperationParameters parameters = new OperationParameters();
         if (ALL == wrapper.getMode()) {
             // сформировать запрос по фильтру
@@ -313,18 +308,31 @@ public class BackValuePostingController {
             parameters.setGloidIn(StringUtils.listToString(wrapper.getGloIDs(), ", "));
             parameters.setSqlParams(new Object[0]);
         }
-        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
 
         // from ... where ...
         boolean notAuthorized = ArrayUtils.contains(actionNotAuth, wrapper.getAction());
-        String from = format(" from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s)%s", parameters.getGloidIn(),
-                notAuthorized ? " and o.STATE in (" + operStateNotAuth + ")" : "");
+        parameters.setFrom(format(" from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s)%s", parameters.getGloidIn(),
+                notAuthorized ? " and o.STATE in (" + operStateNotAuth + ")" : ""));
+
+        return parameters;
+    }
+
+    /**
+     * получает основные параметры операций
+     * проверяет однородность списка операций для неавторизованных
+     * @param wrapper
+     * @param criteria
+     * @throws SQLException
+     */
+    private OperationParameters getOperationsParameters(BackValueWrapper wrapper, Criteria criteria) throws SQLException, ParseException {
+        OperationParameters parameters = createOperationsParameters(wrapper, criteria);
 
         // получить общие параметры операций
         List<DataRecord> commonParams = bvOperationRepository.select("select distinct o.SRC_PST, o.VDATE, o.POSTDATE, e.POSTDATE_PLAN, e.MNL_STATUS "
-                + from, parameters.getSqlParams());
+                + parameters.getFrom(), parameters.getSqlParams());
+
         if (commonParams.isEmpty()) {
-            throw new DefaultApplicationException(format("По заданному условию операции%s не найдены", notAuthorized ? (" в статусе " + operStateNotAuth) : ""));
+            throw new DefaultApplicationException(format("По заданному условию операции%s не найдены", parameters.isNotAuthorized() ? (" в статусе " + operStateNotAuth) : ""));
         }
         else if (commonParams.size() != 1) {
             throw new DefaultApplicationException("По заданному условию найдены операции с различным набором параметров (источник, дата проводки, статус)");
@@ -336,8 +344,10 @@ public class BackValuePostingController {
         parameters.setPostDatePlan(rec.getDate(3));
         parameters.setBvStatus(BackValuePostStatus.valueOf(rec.getString(4)));
 
+        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
+
         // сравнить количество
-        DataRecord data = bvOperationRepository.selectFirst("select count(1) " + from, parameters.getSqlParams());
+        DataRecord data = bvOperationRepository.selectFirst("select count(1) " + parameters.getFrom(), parameters.getSqlParams());
         int count = data.getInteger(0);
         if (wrapper.getMode() != ALL && wrapper.getGloIDs().size() != count) {
             throw new DefaultApplicationException(String.format("По заданному условию найдено %d операций, ожидалось %d", count, wrapper.getGloIDs().size()));
@@ -353,14 +363,11 @@ public class BackValuePostingController {
      * @throws SQLException
      */
     private OperationParameters getOperationParameters(BackValueWrapper wrapper) throws SQLException, ParseException {
-        OperationParameters parameters = new OperationParameters();
         if (ONE != wrapper.getMode()) {
             throw new DefaultApplicationException(format("Неверный режим обработки операций - ожидается '%s'", ONE.name()));
         }
 
-        parameters.setGloidIn(StringUtils.listToString(wrapper.getGloIDs(), ", "));
-        parameters.setSqlParams(new Object[0]);
-        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
+        OperationParameters parameters = createOperationsParameters(wrapper, null);
 
         // получить общие параметры операций
         List<DataRecord> params = bvOperationRepository.select(format("select o.SRC_PST, o.VDATE, o.POSTDATE, o.FCHNG" +
@@ -378,6 +385,7 @@ public class BackValuePostingController {
         parameters.setPostDate(rec.getDate(2));
         parameters.setIsCorrection(rec.getString(3));
 
+        parameters.setPostDateNew(new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr()));
         parameters.setOperCount(1);
 
         return parameters;
@@ -454,7 +462,9 @@ public class BackValuePostingController {
         private BackValuePostStatus bvStatus;   // текущий статус обработки
 
         private String gloidIn;
+        private String from;
         private Object[] sqlParams;
+        private boolean notAuthorized;
         private int operCount;
 
         public OperationParameters() {
@@ -539,6 +549,22 @@ public class BackValuePostingController {
 
         public void setBvStatus(BackValuePostStatus bvStatus) {
             this.bvStatus = bvStatus;
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public void setFrom(String from) {
+            this.from = from;
+        }
+
+        public boolean isNotAuthorized() {
+            return notAuthorized;
+        }
+
+        public void setNotAuthorized(boolean notAuthorized) {
+            this.notAuthorized = notAuthorized;
         }
     }
 }

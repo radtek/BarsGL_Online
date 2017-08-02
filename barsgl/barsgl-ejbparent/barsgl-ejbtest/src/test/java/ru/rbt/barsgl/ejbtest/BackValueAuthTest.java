@@ -57,6 +57,7 @@ import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 public class BackValueAuthTest extends AbstractTimerJobTest {
 
     public static final Logger log = Logger.getLogger(BackValueAuthTest.class.getName());
+    private final Long USER_ID = 2L;
 
     @BeforeClass
     public static void beforeAll() {
@@ -283,6 +284,7 @@ public class BackValueAuthTest extends AbstractTimerJobTest {
         wrapper.setAction(action);
         wrapper.setMode(mode);
         wrapper.setGloIDs(Arrays.asList(opers).stream().map(operation -> operation.getId()).collect(Collectors.toList()));
+        wrapper.setUserId(USER_ID);
         return wrapper;
     }
 
