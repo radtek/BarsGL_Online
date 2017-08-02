@@ -42,6 +42,7 @@ public class TechOperationProcessor extends GLOperationProcessor
     public boolean isSupported(GLOperation operation) {
         return     !operation.isFan()                                           // не веер
                 && !operation.isInterFilial()                                   // филиал один
+                && !isStornoOneday(operation)
                 && !operation.isExchangeDifferenceA()                           // нет курсовой разницы или не глава А
                 && operation.isTech();                                         // операция по техническим счетам
     }
@@ -136,7 +137,7 @@ public class TechOperationProcessor extends GLOperationProcessor
             pdth.setAmountBC(amntс);
         }
 
-        pdth.setPnar(operation.getNarrative().length()>30?operation.getNarrative().substring(0,29):operation.getNarrative());
+        pdth.setPnar(operation.getNarrative());
         pdth.setDepartment(operation.getDeptId()!=null ? operation.getDeptId() : " ");
         pdth.setRusNarrLong(operation.getRusNarrativeLong());
         pdth.setRusNarrShort(operation.getRusNarrativeShort());
