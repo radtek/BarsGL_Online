@@ -37,48 +37,50 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
         Date operday = DateUtils.parseDate("26.02.2015", "dd.MM.yyyy");
         setOperday(operday, workday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 
-        baseEntityRepository.executeNativeUpdate("update gl_etlpkg set state = 'ERROR' where state = 'LOADED'");
+        try{
+            baseEntityRepository.executeNativeUpdate("update gl_etlpkg set state = 'ERROR' where state = 'LOADED'");
 
-        baseEntityRepository.executeNativeUpdate("update workday set workday = ?", workday);
-        emulateWorkprocStep(workday, "MI3GL");
+            baseEntityRepository.executeNativeUpdate("update workday set workday = ?", workday);
+            emulateWorkprocStep(workday, "MI3GL");
 
-        TransitNdsReference reference = createTransitAccount();
-        Assert.assertNotNull(reference);
+            TransitNdsReference reference = createTransitAccount();
+            Assert.assertNotNull(reference);
 
-        String transAcid = baseEntityRepository.selectFirst("select acid from accrln where bsaacid = ?"
-                , reference.getTransitAccount()).getString(0);
-        Assert.assertTrue(!StringUtils.isEmpty(transAcid));
+            String transAcid = baseEntityRepository.selectFirst("select acid from accrln where bsaacid = ?"
+                    , reference.getTransitAccount()).getString(0);
+            Assert.assertTrue(!StringUtils.isEmpty(transAcid));
 
-        Pd pd = createPd(workday, reference.getTransitAccount(), transAcid);
-        Assert.assertNotNull(pd);
+            Pd pd = createPd(workday, reference.getTransitAccount(), transAcid);
+            Assert.assertNotNull(pd);
 
-        jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessFlexFanTask.class).build());
+            jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessFlexFanTask.class).build());
 
-        List<NdsPosting> postings = baseEntityRepository.select(NdsPosting.class, "from NdsPosting p where p.id = ?1", pd.getId());
-        Assert.assertEquals(1, postings.size());
+            List<NdsPosting> postings = baseEntityRepository.select(NdsPosting.class, "from NdsPosting p where p.id = ?1", pd.getId());
+            Assert.assertEquals(1, postings.size());
 
-        List<FanNdsPosting> drafts = baseEntityRepository.select(FanNdsPosting.class, "from FanNdsPosting p where p.evtId = ?1", pd.getId());
-        Assert.assertEquals(2, drafts.size());
-        Assert.assertTrue(drafts.stream().allMatch(r -> r.getProcessed() == YesNo.Y));
+            List<FanNdsPosting> drafts = baseEntityRepository.select(FanNdsPosting.class, "from FanNdsPosting p where p.evtId = ?1", pd.getId());
+            Assert.assertEquals(2, drafts.size());
+            Assert.assertTrue(drafts.stream().allMatch(r -> r.getProcessed() == YesNo.Y));
 
-        List<EtlPosting> psts = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.eventId like ?1", pd.getId()+"%");
-        Assert.assertEquals(2, psts.size());
+            List<EtlPosting> psts = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.eventId like ?1", pd.getId()+"%");
+            Assert.assertEquals(2, psts.size());
 
-        jobService.executeJob(SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build());
+            jobService.executeJob(SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build());
 
-        psts = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.eventId like ?1", pd.getId()+"%");
-        Assert.assertTrue(psts.stream().allMatch(r -> 0 == r.getErrorCode()));
+            psts = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.eventId like ?1", pd.getId()+"%");
+            Assert.assertTrue(psts.stream().allMatch(r -> 0 == r.getErrorCode()));
 
-        List<GLOperation> opers = baseEntityRepository.select(GLOperation.class, "from GLOperation o where o.eventId like ?1", pd.getId()+"%");
-        Assert.assertTrue(opers.stream().allMatch(r -> r.getState() == OperState.LOAD));
+            List<GLOperation> opers = baseEntityRepository.select(GLOperation.class, "from GLOperation o where o.eventId like ?1", pd.getId()+"%");
+            Assert.assertTrue(opers.stream().allMatch(r -> r.getState() == OperState.LOAD));
 
-        remoteAccess.invoke(PreCobStepController.class, "processFan");
-        opers = baseEntityRepository.select(GLOperation.class, "from GLOperation o where o.eventId like ?1", pd.getId()+"%");
-        Assert.assertTrue(opers.stream().allMatch(r -> r.getState() == OperState.POST));
-
-        // удаляем все - не должно падать
-        log.info("deleted: " + baseEntityRepository.executeNativeUpdate("delete from pd where pbr like '@@IF%' and pod = ?", workday));
-        jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessFlexFanTask.class).build());
+            remoteAccess.invoke(PreCobStepController.class, "processFan");
+            opers = baseEntityRepository.select(GLOperation.class, "from GLOperation o where o.eventId like ?1", pd.getId()+"%");
+            Assert.assertTrue(opers.stream().allMatch(r -> r.getState() == OperState.POST));
+        }finally{
+            // удаляем все - не должно падать
+            log.info("deleted: " + baseEntityRepository.executeNativeUpdate("delete from pd where pbr like '@@IF%' and pod = ?", workday));
+            jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessFlexFanTask.class).build());
+        }
     }
 
     private TransitNdsReference createTransitAccount() throws SQLException {

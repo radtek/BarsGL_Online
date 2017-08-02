@@ -316,7 +316,7 @@ public class PreCobStepController {
             // получить все входные сообщения по вееру
             List<EtlPosting> etl = operationRepository.getFanPostingByRef(parentRef, fanOperationController.getStorno());
             // убедиться, что все загружены нормально
-            Assert.isTrue(etl.stream().allMatch(input -> Objects.equals(0L, input.getErrorCode()))
+            Assert.isTrue(etl.stream().allMatch(input -> Objects.equals(0, input.getErrorCode()))
                     , format("Для референса '%s' найдены веерные проводки, загруженные с ошибкой или необработанные", parentRef));
 
             // получить все операции по вееру
