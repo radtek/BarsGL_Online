@@ -244,7 +244,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
     public boolean checkAccointIsPair(String bsaAcid)
     {
         try {
-            DataRecord res = selectFirst("SELECT * FROM ACCOCREP WHERE RECNTR <> 'КОРСЧ' and recbac = ?",bsaAcid.substring(1,5));
+            DataRecord res = selectFirst("SELECT * FROM ACCOCREP WHERE RECNTR <> 'КОРСЧ' and recbac = ?",bsaAcid.substring(0,5));
             return res!=null?true:false;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

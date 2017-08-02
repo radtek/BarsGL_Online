@@ -190,7 +190,7 @@ public class ManualPostingController {
 
         Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
-        if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
+        if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim()) && !accRlnRepository.checkAccointIsPair(accountDr.getId().getBsaAcid())) {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
@@ -210,7 +210,7 @@ public class ManualPostingController {
             }
         }
 
-        if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
+        if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim()) && !accRlnRepository.checkAccointIsPair(accountCr.getId().getBsaAcid())) {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getId().getBsaAcid(),accountCr.getId().getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
