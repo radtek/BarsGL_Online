@@ -138,6 +138,7 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     }
 
     public void processEtlPackages(int packageCount) throws Exception {
+        try {
             beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
                 // T0: читаем пакеты в LOADED с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
                 Date from = addDays(truncate(operdayController.getSystemDateTime(), Calendar.DATE), -7);
@@ -165,7 +166,11 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
                 }
                 return null;
             }), 60 * 60);
+        } catch (Throwable e) {
+            auditController.error(Package, "Ошибка при выполнении задачи обработки входящих сообщений АЕ", null, e);
+            throw e;
         }
+    }
 
     public void processEtlPackage(EtlPackage loadedPackage) {
         logger.info(format("Обрабатывается пакет с ИД '%s' в транзакции: '%s'", loadedPackage.getId(), etlPostingRepository.getTransactionKey()));
