@@ -2,7 +2,8 @@ package ru.rbt.barsgl.gwt.client.operBackValue;
 
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.MenuItem;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.GLComponents;
@@ -12,17 +13,14 @@ import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.comp.PopupMenuBuilder;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
-import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.events.CommonEvents;
 import ru.rbt.barsgl.gwt.core.events.CommonEventsHandler;
-import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
-import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -39,7 +37,10 @@ import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
@@ -79,7 +80,8 @@ public class OperNotAuthBVForm extends GridForm {
     private Column source;
     private Column status;
 
-    private  WaitingReasonDlg reasonDlg;;
+    private  WaitingReasonDlg reasonDlg;
+    private BVPostDateAuthListDlg postDateAuthListDlg;
 
     public OperNotAuthBVForm() {
         super(_title, true);
@@ -265,27 +267,8 @@ public class OperNotAuthBVForm extends GridForm {
         return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
             @Override
             public void execute() {
-              /*  Field field = getFieldByName("MNL_NRT");
-                if (field == null) return;
-
-                reasonDlg = reasonDlg == null ? new WaitingReasonDlg() : reasonDlg;
-                reasonDlg.setOkButtonCaption("Подтвердить");
-                reasonDlg.setCaption("Основание для задержания операции");
-                reasonDlg.setDlgEvents(this);
-                reasonDlg.show(field.getValue());*/
                 executeWaitingAction(BackValueMode.ONE).execute();
             }
-
-           /* @Override
-            public void onDlgOkClick(Object prms) throws Exception{
-               WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-
-               List<Long> gloids = new ArrayList<>();
-               gloids.add((Long)getFieldByName("GLOID").getValue());
-               String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
-               BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, BackValueMode.ONE, postDate, (String)prms);
-               methodCaller(reasonDlg, "Задержание операции не удалась.", wrapper, true);
-            }*/
         };
     }
 
@@ -346,26 +329,20 @@ public class OperNotAuthBVForm extends GridForm {
         final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Авторизовать дату операции",  new Image(ImageConstants.INSTANCE.back_value()));
 
         MenuItem itemVisibleList = new MenuItem("Видимый список", new Command() {
-            // DlgFrame ErrorHandlingEditDlg = null;
 
             @Override
             public void execute() {
                 builder.hidePopup();
-                Window.alert("Visible List Auth");
-             /*   executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorHandlingEditDlg()
-                        : ErrorHandlingEditDlg).execute();*/
+                executePostDateAuthListAction(BackValueMode.VISIBLE).execute();
             }
         });
 
         MenuItem itemAllList = new MenuItem("Полный список", new Command() {
-            // DlgFrame ErrorHandlingEditListDlg = null;
 
             @Override
             public void execute() {
                 builder.hidePopup();
-                Window.alert("All List Auth");
-                /*executeEditAction(ErrorHandlingEditListDlg == null ? ErrorHandlingEditListDlg = new ErrorHandlingEditListDlg()
-                        : ErrorHandlingEditListDlg).execute();*/
+                executePostDateAuthListAction(BackValueMode.ALL).execute();
             }
         });
 
@@ -445,6 +422,37 @@ public class OperNotAuthBVForm extends GridForm {
                 String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
                 BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, mode, postDate, (String)prms);
                 methodCaller(reasonDlg, Utils.Fmt("Задержание операции{0}не удалось.", mode == BackValueMode.ONE ? " " : " списком "), wrapper, true);
+            }
+        };
+    }
+
+    private GridAction executePostDateAuthListAction(final BackValueMode mode) {
+        return new GridAction(grid, "", "", null, 0) {
+
+            @Override
+            public void execute() {
+                if (mode == BackValueMode.ONE) return;
+
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+
+                postDateAuthListDlg = new BVPostDateAuthListDlg();
+                postDateAuthListDlg.setDlgEvents(this);
+                postDateAuthListDlg.show(CommonEntryPoint.CURRENT_WORKDAY);
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms) throws Exception{
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                List<Long> gloids = null;
+                if (mode == BackValueMode.VISIBLE) {
+                    gloids = rows2GloIDs(grid.getVisibleItems());
+                }
+
+                String postDate = ClientDateUtils.Date2String((Date)prms);
+                BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, mode, postDate, null);
+                methodCaller(postDateAuthListDlg, "Авторизация даты бухгалтерской операции списком не удалась.", wrapper, true);
             }
         };
     }
