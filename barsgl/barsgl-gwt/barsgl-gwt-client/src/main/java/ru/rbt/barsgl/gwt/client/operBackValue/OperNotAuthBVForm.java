@@ -39,10 +39,7 @@ import ru.rbt.shared.user.AppUserWrapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
@@ -81,6 +78,8 @@ public class OperNotAuthBVForm extends GridForm {
     private Column vDate;
     private Column source;
     private Column status;
+
+    private  WaitingReasonDlg reasonDlg;;
 
     public OperNotAuthBVForm() {
         super(_title, true);
@@ -264,20 +263,20 @@ public class OperNotAuthBVForm extends GridForm {
 
     private GridAction createWaitingReasonAction() {
         return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
-            WaitingReasonDlg dlg;
             @Override
             public void execute() {
-                Field field = getFieldByName("MNL_NRT");
+              /*  Field field = getFieldByName("MNL_NRT");
                 if (field == null) return;
 
-                dlg = dlg == null ? new WaitingReasonDlg() : dlg;
-                dlg.setOkButtonCaption("Подтвердить");
-                dlg.setCaption("Основание для задержания");
-                dlg.setDlgEvents(this);
-                dlg.show(field.getValue());
+                reasonDlg = reasonDlg == null ? new WaitingReasonDlg() : reasonDlg;
+                reasonDlg.setOkButtonCaption("Подтвердить");
+                reasonDlg.setCaption("Основание для задержания операции");
+                reasonDlg.setDlgEvents(this);
+                reasonDlg.show(field.getValue());*/
+                executeWaitingAction(BackValueMode.ONE).execute();
             }
 
-            @Override
+           /* @Override
             public void onDlgOkClick(Object prms) throws Exception{
                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
@@ -285,8 +284,8 @@ public class OperNotAuthBVForm extends GridForm {
                gloids.add((Long)getFieldByName("GLOID").getValue());
                String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
                BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, BackValueMode.ONE, postDate, (String)prms);
-               methodCaller(dlg, "Операция задержания не удалась.", wrapper, true);
-            }
+               methodCaller(reasonDlg, "Задержание операции не удалась.", wrapper, true);
+            }*/
         };
     }
 
@@ -311,7 +310,7 @@ public class OperNotAuthBVForm extends GridForm {
                 gloids.add((Long)getFieldByName("GLOID").getValue());
                 String postDate = manualOperationWrapper.getPostDateStr();
                 BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, BackValueMode.ONE, postDate, (String)getFieldByName("MNL_NRT").getValue());
-                methodCaller(dlg, "Операция авторизации даты бухгалтерской операции не удалась.", wrapper, true);
+                methodCaller(dlg, "Авторизация даты бухгалтерской операции не удалась.", wrapper, true);
             }
         };
     }
@@ -320,26 +319,20 @@ public class OperNotAuthBVForm extends GridForm {
         final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Задержать операцию",  new Image(ImageConstants.INSTANCE.locked()));
 
         MenuItem itemVisibleList = new MenuItem("Видимый список", new Command() {
-           // DlgFrame ErrorHandlingEditDlg = null;
 
             @Override
             public void execute() {
                 builder.hidePopup();
-                Window.alert("Visible List WR");
-             /*   executeEditAction(ErrorHandlingEditDlg == null ? ErrorHandlingEditDlg = new ErrorHandlingEditDlg()
-                        : ErrorHandlingEditDlg).execute();*/
+                executeWaitingAction(BackValueMode.VISIBLE).execute();
             }
         });
 
         MenuItem itemAllList = new MenuItem("Полный список", new Command() {
-           // DlgFrame ErrorHandlingEditListDlg = null;
 
             @Override
             public void execute() {
                 builder.hidePopup();
-                Window.alert("All List WR");
-                /*executeEditAction(ErrorHandlingEditListDlg == null ? ErrorHandlingEditListDlg = new ErrorHandlingEditListDlg()
-                        : ErrorHandlingEditListDlg).execute();*/
+                executeWaitingAction(BackValueMode.ALL).execute();
             }
         });
 
@@ -391,7 +384,7 @@ public class OperNotAuthBVForm extends GridForm {
                 if (row == null) return;
 
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                BackValueWrapper wrapper = createWrapper(null, BackValueAction.SIGN, BackValueMode.ONE, "", "");
+                BackValueWrapper wrapper = createWrapper(null, BackValueAction.STAT, BackValueMode.ALL, "", "");
                 methodCaller(null, "Операция получения статистики не удалась.", wrapper, false);
             }
         };
@@ -412,8 +405,61 @@ public class OperNotAuthBVForm extends GridForm {
         return wrapper;
     }
 
+    private GridAction executeWaitingAction(final BackValueMode mode) {
+        return new GridAction(grid, "", "", null, 0) {
+
+            @Override
+            public void execute() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+                Object value = null;
+                if (mode == BackValueMode.ONE){
+                    value = getFieldByName("MNL_NRT").getValue();
+                }
+
+                reasonDlg = reasonDlg == null ? new WaitingReasonDlg() : reasonDlg;
+                reasonDlg.setOkButtonCaption("Подтвердить");
+                reasonDlg.setCaption("Основание для задержания операции");
+                reasonDlg.setDlgEvents(this);
+
+                reasonDlg.show(value);
+            }
+
+            @Override
+            public void onDlgOkClick(Object prms) throws Exception{
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
+                List<Long> gloids = null;
+                switch (mode) {
+                    case ONE:
+                        gloids = new ArrayList<>();
+                        gloids.add((Long)getFieldByName("GLOID").getValue());
+                        break;
+                    case VISIBLE:
+                        gloids = rows2GloIDs(grid.getVisibleItems());
+                        break;
+                    case ALL:
+                        gloids = null;
+                }
+
+                String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
+                BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, mode, postDate, (String)prms);
+                methodCaller(reasonDlg, Utils.Fmt("Задержание операции{0}не удалось.", mode == BackValueMode.ONE ? " " : " списком "), wrapper, true);
+            }
+        };
+    }
+
+    private List<Long> rows2GloIDs(List<Row> rows){
+        List<Long> res = new ArrayList<>();
+        for (Row row: rows){
+            res.add((Long)row.getField(0).getValue());
+        }
+
+        return res;
+    }
+
     /*Method caller*/
-    private void methodCaller(final DlgFrame dlg, final String message, final BackValueWrapper wrapper, boolean isRefredh) {
+    private void methodCaller(final DlgFrame dlg, final String message, final BackValueWrapper wrapper, final boolean isRefredh) {
         BarsGLEntryPoint.operationService.processOperationBv(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
 
             @Override
