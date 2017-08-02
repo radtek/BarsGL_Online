@@ -50,7 +50,7 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHCreateNewAccount() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = DateUtils.parseDate("2017-05-26","yyy-MM-dd");
+        Date curDate = DateUtils.parseDate("2017-05-26","yyyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -95,7 +95,7 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHFindExistingAccount() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
+        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -124,7 +124,7 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHStorno() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = DateUtils.parseDate("2017-07-01","yyy-MM-dd");
+        Date curDate = DateUtils.parseDate("2017-07-01","yyyy-MM-dd");
         setOperday(curDate,DateUtils.addDays(curDate, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -173,7 +173,7 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHStornoEmptyStornoRef() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
+        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -191,7 +191,7 @@ public class TechAccountIT extends AbstractRemoteIT {
     @Test public void testTHStornoDirectNotFound() throws ParseException {
 
         Operday oldOperday = getOperday();
-        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyy-MM-dd");
+        Date curDate = new Date();///DateUtils.parseDate("2017-05-13","yyyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -422,7 +422,7 @@ public class TechAccountIT extends AbstractRemoteIT {
 
             //Сохраняем дату опердня и меняем на свою
             Operday oldOperday = getOperday();
-            Date curDate = DateUtils.parseDate("2017-03-13","yyy-MM-dd");
+            Date curDate = DateUtils.parseDate("2017-03-13","yyyy-MM-dd");
             setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
             updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 
@@ -466,7 +466,7 @@ public class TechAccountIT extends AbstractRemoteIT {
 
             //Сохраняем дату опердня и меняем на свою
             Operday oldOperday = getOperday();
-            Date curDate = DateUtils.parseDate("2017-02-20","yyy-MM-dd");
+            Date curDate = DateUtils.parseDate("2017-02-20","yyyy-MM-dd");
             setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
             updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
 

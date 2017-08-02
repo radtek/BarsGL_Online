@@ -59,7 +59,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
     @BeforeClass
     public static void beforeClass() throws ParseException{
         oldOperday = getOperday();
-        Date curDate = DateUtils.parseDate("2017-05-26","yyy-MM-dd");
+        Date curDate = DateUtils.parseDate("2017-05-26","yyyy-MM-dd");
         setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);        
     }

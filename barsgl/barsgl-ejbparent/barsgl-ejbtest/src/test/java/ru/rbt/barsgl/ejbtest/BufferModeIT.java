@@ -33,6 +33,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import java.text.ParseException;
+import org.apache.commons.lang3.time.DateUtils;
+import org.junit.BeforeClass;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
@@ -40,6 +43,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
+import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.setOperday;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -49,6 +53,13 @@ public class BufferModeIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(BufferModeIT.class.getName());
 
+    @BeforeClass
+    public static void init() throws ParseException {
+        Date curDate = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
+        setOperday(curDate, DateUtils.addDays(curDate, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        initCorrectOperday();
+    }
+    
     @Before
     public void before() {
         baseEntityRepository.executeNativeUpdate("delete from gl_baltur");

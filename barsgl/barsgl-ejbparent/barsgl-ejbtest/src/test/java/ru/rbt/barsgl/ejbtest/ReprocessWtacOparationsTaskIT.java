@@ -43,8 +43,8 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
 
     @BeforeClass
     public static void init() throws ParseException {
-        Date curDate = DateUtils.parseDate("2015-02-26","yyy-MM-dd");
-        setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        Date curDate = DateUtils.parseDate("2015-02-26","yyyy-MM-dd");
+        setOperday(curDate, DateUtils.addDays(curDate, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         initCorrectOperday();
     }
 
