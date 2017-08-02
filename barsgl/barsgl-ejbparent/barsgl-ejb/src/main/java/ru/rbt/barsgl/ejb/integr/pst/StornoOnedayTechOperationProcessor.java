@@ -2,8 +2,10 @@ package ru.rbt.barsgl.ejb.integr.pst;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLTechOperationRepository;
+import ru.rbt.barsgl.ejb.repository.GlPdThRepository;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.validation.ValidationError;
 
@@ -23,6 +25,9 @@ public class StornoOnedayTechOperationProcessor extends GLOperationProcessor
 
     @Inject
     private GLTechOperationRepository glTechOperationRepository;
+
+    @Inject
+    private GlPdThRepository glPdThRepository;
 
     @Override
     public GLOperation.OperType getOperationType() {
@@ -59,12 +64,12 @@ public class StornoOnedayTechOperationProcessor extends GLOperationProcessor
 
         // Операция должна быть обработана
         if ( operState.equals(OperState.POST) ) {
-            List<GLPosting> stornoList = glOperationRepository.getPostings(stornoOperation);
+            List<GlPdTh> stornoList = glPdThRepository.getPostings(stornoOperation);
             if (null == stornoList || stornoList.isEmpty()) {
                 throw new ValidationError(STORNO_REF_NOT_VALID,
                         stornoOperation.getId().toString(), operState.name() + " (нет проводок)", OperState.POST.name());
             }
-            glTechOperationRepository.updatePdInvisible(true, stornoList);
+            int i = glTechOperationRepository.updatePdInvisible(true, stornoList);
         }
         // или не обработана из-за отсутствия счета
         else if ( !operState.equals(OperState.WTAC) ) {
