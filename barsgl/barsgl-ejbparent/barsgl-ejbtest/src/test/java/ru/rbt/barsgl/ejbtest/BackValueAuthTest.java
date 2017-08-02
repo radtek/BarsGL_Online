@@ -10,11 +10,10 @@ import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
-import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperationExt;
+import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.BackValuePostingController;
+import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -22,7 +21,9 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.criteria.*;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.BackValueWrapper;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -38,18 +39,19 @@ import java.util.stream.Collectors;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import static ru.rbt.barsgl.ejbtest.BackValueOperationTest.*;
 import static ru.rbt.barsgl.shared.criteria.CriterionColumn.createCriterion;
-import static ru.rbt.barsgl.shared.enums.BackValueAction.SIGN;
-import static ru.rbt.barsgl.shared.enums.BackValueAction.STAT;
-import static ru.rbt.barsgl.shared.enums.BackValueAction.TO_HOLD;
+import static ru.rbt.barsgl.shared.enums.BackValueAction.*;
 import static ru.rbt.barsgl.shared.enums.BackValueMode.ALL;
 import static ru.rbt.barsgl.shared.enums.BackValueMode.ONE;
 import static ru.rbt.barsgl.shared.enums.BackValueMode.VISIBLE;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.*;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
+import static ru.rbt.barsgl.shared.enums.OperState.POST;
 
 /**
  * Created by er18837 on 20.07.2017.
@@ -159,7 +161,7 @@ public class BackValueAuthTest extends AbstractTimerJobTest {
 
             remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
             operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
-            Assert.assertEquals(OperState.POST, operation.getState());
+            Assert.assertEquals(POST, operation.getState());
             Assert.assertEquals(COMPLETED, operation.getOperExt().getManualStatus());
             Assert.assertEquals(rate2, operation.getRateCredit());
         }
@@ -252,10 +254,101 @@ public class BackValueAuthTest extends AbstractTimerJobTest {
 
         for (int i = 1; i < operations.length; i++) {
             operation = (GLBackValueOperation) baseEntityRepository.findById(operations[i].getClass(), operations[i].getId());
-            Assert.assertEquals(OperState.POST, operation.getState());
+            Assert.assertEquals(POST, operation.getState());
             Assert.assertEquals(COMPLETED, operation.getOperExt().getManualStatus());
             Assert.assertEquals(rate2, operation.getRateCredit());
         }
+    }
+
+    @Test
+    public void testEditAeOperation() throws SQLException {
+
+        /**
+         * создать операцию BV в статусе CONTROL
+         * авторизовать
+         * запустить обработку
+         */
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40806810_0001%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0016%");
+        BigDecimal amt = new BigDecimal("897.65");
+        BankCurrency currency = RUB;
+
+        Date curdate = getOperday().getCurrentDate();
+        Date vdate = DateUtils.addDays(curdate, -21);
+        EtlPosting pst = createEtlPosting(vdate, KondorPlus.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);
+        Assert.assertNotNull(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(curdate, operation.getPostDate());
+        Assert.assertEquals(POST, operation.getState());
+
+        BackValueWrapper wrapper = createWrapper(vdate, null, EDIT_DATE, ONE, new GLOperation[]{operation});
+        wrapper.setPostDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(vdate));
+        RpcRes_Base<Integer> res = remoteAccess.invoke(BackValuePostingController.class, "processOperationBv", wrapper, null);
+        System.out.println(res.getMessage());
+        Assert.assertFalse(res.isError());
+        Assert.assertEquals(1, res.getResult().intValue());
+
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
+
+
+        // =================================
+/*        GLOperation operation = createMfoExchOperation();
+        List<GLPosting> postList = getPostings(operation);
+        Assert.assertNotNull(postList);
+        final String dealId = operation.getDealId();
+        final String subDealId = operation.getSubdealId();
+        postList.forEach(post -> checkCommonParams(operation, getPdList(post), dealId, subDealId, null));
+
+        final ArrayList<Long> idList = new ArrayList<>();
+        final GLPosting postEdit = postList.get(0);
+        getPdList(postEdit).forEach(pd -> idList.add(pd.getId()));
+        ManualOperationWrapper wrapper = newOperationWrapper(operation);
+        wrapper.setPdIdList(idList);
+        wrapper.setPostingChoice(PostingChoice.PST_ALL);
+        wrapper.setPdMode(getOperday().getPdMode().name());
+
+        // изменить общие параметры и коррекция
+        final String dealId2 = "DD_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 4);
+        final String subDealId2 = "SD_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 4);
+        wrapper.setSubdealId(subDealId2);
+        wrapper.setDealId(dealId2);
+        boolean isCorrection = true;
+        wrapper.setCorrection(isCorrection);
+
+        RpcRes_Base<ManualOperationWrapper> res2 = remoteAccess.invoke(EditPostingController.class, "updatePostingsWrapper", wrapper);
+        Assert.assertFalse(res2.isError());
+        postList.forEach(post -> checkCommonParams(operation, getPdList(post), dealId, subDealId, null));  // не должны измениться
+        checkMemorder(postList, isCorrection);
+
+        // отменить коррекцию
+        isCorrection = false;
+        wrapper.setCorrection(isCorrection);
+
+        RpcRes_Base<ManualOperationWrapper> res3 = remoteAccess.invoke(EditPostingController.class, "updatePostingsWrapper", wrapper);
+        Assert.assertFalse(res2.isError());
+        checkMemorder(postList, isCorrection);
+
+        // изменить основане для первой проводки
+        List<String> engList = new ArrayList<>();
+        List<String> rusList = new ArrayList<>();
+        postList.forEach(post -> {
+            AbstractPd pd = getPdList(post).get(0);
+            engList.add(pd.getNarrative());
+            rusList.add(pd.getRusNarrLong());
+        });
+        wrapper.setNarrative("CHG_" + engList.get(0));
+        wrapper.setRusNarrativeLong("CHG_" + rusList.get(0));
+        wrapper.setPostingChoice(PostingChoice.PST_ONE_OF);
+
+        RpcRes_Base<ManualOperationWrapper> res4 = remoteAccess.invoke(EditPostingController.class, "updatePostingsWrapper", wrapper);
+        Assert.assertFalse(res2.isError());
+        checkNarrative(getPdList(postEdit), wrapper.getNarrative(), wrapper.getRusNarrativeLong());
+        for (int i = 1; i < postList.size(); i++) {
+            checkNarrative(getPdList(postList.get(i)), engList.get(i), rusList.get(i));
+        }*/
     }
 
     private void createOperationsBv(EtlPosting[] postings, GLBackValueOperation operations[], DealSource src, Date vdate, BigDecimal amt, BigDecimal plus) throws SQLException {

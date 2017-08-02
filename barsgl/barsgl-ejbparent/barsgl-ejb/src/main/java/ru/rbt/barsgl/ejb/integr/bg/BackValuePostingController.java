@@ -58,7 +58,7 @@ import static ru.rbt.ejbcore.validation.ValidationError.initSource;
  */
 public class BackValuePostingController {
 
-    final private String operStateAuth = POST.name();
+    final private String operStateAuth = format("'%s'", POST.name());
     final private String operStateNotAuth = StringUtils.arrayToString(new Object[] {BLOAD, BWTAC}, ", ", "'");
     final private BackValueAction[] actionNotAuth = new BackValueAction[]{SIGN, TO_HOLD};
 
@@ -310,9 +310,9 @@ public class BackValuePostingController {
         }
 
         // from ... where ...
-        boolean notAuthorized = ArrayUtils.contains(actionNotAuth, wrapper.getAction());
+        parameters.setNotAuthorized(ArrayUtils.contains(actionNotAuth, wrapper.getAction()));
         parameters.setFrom(format(" from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s)%s", parameters.getGloidIn(),
-                notAuthorized ? " and o.STATE in (" + operStateNotAuth + ")" : ""));
+                parameters.isNotAuthorized() ? " and o.STATE in (" + operStateNotAuth + ")" : ""));
 
         return parameters;
     }
@@ -371,7 +371,7 @@ public class BackValuePostingController {
 
         // получить общие параметры операций
         List<DataRecord> params = bvOperationRepository.select(format("select o.SRC_PST, o.VDATE, o.POSTDATE, o.FCHNG" +
-                " from GL_OPER o where o.GLOID in (%s) and o.STATE in (%s)", parameters.getGloidIn()), operStateAuth);
+                " from GL_OPER o where o.GLOID in (%s) and o.STATE in (%s)", parameters.getGloidIn(), operStateAuth));
         if (params.isEmpty()) {
             throw new DefaultApplicationException(format("По заданному условию операции в статусе %s не найдены", operStateAuth));
         }

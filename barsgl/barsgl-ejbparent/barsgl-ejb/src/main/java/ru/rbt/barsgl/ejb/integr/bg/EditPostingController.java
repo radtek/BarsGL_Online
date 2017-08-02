@@ -218,11 +218,11 @@ public class EditPostingController {
 
         EditPostingProcessor editPostingProcessor = editGLPdProcessor;
         List<Long> pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
-        if (null == pdIdList) {
+        if (pdIdList.isEmpty()) {
             editPostingProcessor = editPdProcessor;
             pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
         }
-        Assert.isTrue(null != pdIdList, ()-> new DefaultApplicationException(format("Для операции '%d' не найдено ни одной проводки"
+        Assert.isTrue(null != pdIdList && !pdIdList.isEmpty(), ()-> new DefaultApplicationException(format("Для операции '%d' не найдено ни одной проводки"
                 , operationWrapper.getId())));
 
         List<? extends AbstractPd> pdList = editPostingProcessor.getOperationPdList(pdIdList);
