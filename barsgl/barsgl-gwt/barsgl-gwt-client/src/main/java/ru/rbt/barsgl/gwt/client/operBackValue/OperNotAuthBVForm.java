@@ -262,8 +262,6 @@ public class OperNotAuthBVForm extends GridForm {
         };
     }
 
-
-
     private GridAction createWaitingReasonAction() {
         return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
             WaitingReasonDlg dlg;
@@ -287,12 +285,10 @@ public class OperNotAuthBVForm extends GridForm {
                gloids.add((Long)getFieldByName("GLOID").getValue());
                String postDate = ClientDateUtils.Date2String((Date)getFieldByName("POSTDATE").getValue());
                BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.TO_HOLD, BackValueMode.ONE, postDate, (String)prms);
-               methodCaller(dlg, "Операция задержания не удалась.", wrapper);
+               methodCaller(dlg, "Операция задержания не удалась.", wrapper, true);
             }
         };
     }
-
-
 
     private GridAction createOperAuthorizationAction() {
         return new GridAction(grid, null, "Авторизовать дату операции", new Image(ImageConstants.INSTANCE.back_value()), 10) {
@@ -315,7 +311,7 @@ public class OperNotAuthBVForm extends GridForm {
                 gloids.add((Long)getFieldByName("GLOID").getValue());
                 String postDate = manualOperationWrapper.getPostDateStr();
                 BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, BackValueMode.ONE, postDate, (String)getFieldByName("MNL_NRT").getValue());
-                methodCaller(dlg, "Операция авторизации даты бухгалтерской операции не удалась.", wrapper);
+                methodCaller(dlg, "Операция авторизации даты бухгалтерской операции не удалась.", wrapper, true);
             }
         };
     }
@@ -391,7 +387,12 @@ public class OperNotAuthBVForm extends GridForm {
 
             @Override
             public void execute() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
 
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                BackValueWrapper wrapper = createWrapper(null, BackValueAction.SIGN, BackValueMode.ONE, "", "");
+                methodCaller(null, "Операция получения статистики не удалась.", wrapper, false);
             }
         };
     }
@@ -412,7 +413,7 @@ public class OperNotAuthBVForm extends GridForm {
     }
 
     /*Method caller*/
-    private void methodCaller(final DlgFrame dlg, final String message, final BackValueWrapper wrapper) {
+    private void methodCaller(final DlgFrame dlg, final String message, final BackValueWrapper wrapper, boolean isRefredh) {
         BarsGLEntryPoint.operationService.processOperationBv(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Integer>>() {
 
             @Override
@@ -420,8 +421,8 @@ public class OperNotAuthBVForm extends GridForm {
                 if (res.isError()){
                     DialogManager.error("Ошибка", message + "\nОшибка: " + res.getMessage());
                 } else {
-                    dlg.hide();
-                    refreshAction.execute();
+                    if (dlg != null) dlg.hide();
+                    if (isRefredh) refreshAction.execute();
                     showInfo(res.getMessage());
                 }
                 WaitingManager.hide();
