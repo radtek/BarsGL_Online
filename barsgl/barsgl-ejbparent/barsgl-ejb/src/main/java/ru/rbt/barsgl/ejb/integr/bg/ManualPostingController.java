@@ -195,7 +195,6 @@ public class ManualPostingController {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
-            BigDecimal n = "А".equalsIgnoreCase(accountDr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
             DataRecord resDr = null;
             if (tehoverAcc!=null) {
                 resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)),tehoverAcc);
@@ -215,7 +214,6 @@ public class ManualPostingController {
             GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getId().getBsaAcid(),accountCr.getId().getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
-            BigDecimal n = "А".equalsIgnoreCase(accountCr.getPassiveActive())? BigDecimal.valueOf(-1):BigDecimal.valueOf(1);
             DataRecord resCr = null;
             if (tehoverAcc!=null) {
                 resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr,tehoverAcc);
