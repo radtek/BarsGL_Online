@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.operBackValue;
 
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -26,6 +27,8 @@ public class BVPostDateAuthListDlg extends DlgFrame {
         grid.setWidget(0, 0, new Label("Дата проводки"));
         grid.setWidget(0, 1, _postDate = new DatePickerBox());
 
+        grid.getElement().getStyle().setMarginTop(10, Style.Unit.PX);
+        grid.getElement().getStyle().setMarginBottom(10, Style.Unit.PX);
         return grid;
     }
 

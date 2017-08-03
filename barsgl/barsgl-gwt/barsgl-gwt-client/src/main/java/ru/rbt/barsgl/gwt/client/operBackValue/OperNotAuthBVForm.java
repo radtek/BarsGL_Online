@@ -1,5 +1,7 @@
 package ru.rbt.barsgl.gwt.client.operBackValue;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
@@ -21,6 +23,7 @@ import ru.rbt.barsgl.gwt.core.events.CommonEventsHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
+import ru.rbt.barsgl.gwt.core.widgets.IGridRowChanged;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -94,6 +97,7 @@ public class OperNotAuthBVForm extends GridForm {
         reconfigure();
         doActionVisibility();
 
+        setRowChangeEventHandler();
         _modeChoiceAction.execute();
     }
 
@@ -438,11 +442,22 @@ public class OperNotAuthBVForm extends GridForm {
 
                 postDateAuthListDlg = new BVPostDateAuthListDlg();
                 postDateAuthListDlg.setDlgEvents(this);
-                postDateAuthListDlg.show(CommonEntryPoint.CURRENT_WORKDAY);
+                postDateAuthListDlg.show((Date)grid.getFieldValue("VDATE"));
             }
 
             @Override
             public void onDlgOkClick(Object prms) throws Exception{
+                final String postDate = ClientDateUtils.Date2String((Date)prms);
+
+                DialogManager.confirm("Авторизация даты", Utils.Fmt("Авторизовать дату проводки {0} для всего списка операций?", postDate), "Да", "Нет", new ClickHandler() {
+                    @Override
+                    public void onClick(ClickEvent clickEvent) {
+                        caller(postDate);
+                    }
+                }, null);
+            }
+
+            private void caller(String postDate){
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
                 List<Long> gloids = null;
@@ -450,7 +465,6 @@ public class OperNotAuthBVForm extends GridForm {
                     gloids = rows2GloIDs(grid.getVisibleItems());
                 }
 
-                String postDate = ClientDateUtils.Date2String((Date)prms);
                 BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, mode, postDate, null);
                 methodCaller(postDateAuthListDlg, "Авторизация даты бухгалтерской операции списком не удалась.", wrapper, true);
             }
@@ -616,7 +630,7 @@ public class OperNotAuthBVForm extends GridForm {
         String res = "";
         switch (_state) {
             case ALL:
-                res =  Utils.Fmt("(MNL_STATUS in ('HOLD', 'SIGNEDDATE', 'COMPLETED') or (MNL_STATUS='CONTROL' and  PROCDATE='{0}'))",
+                res =  Utils.Fmt("(MNL_STATUS in ('HOLD', 'SIGNEDDATE', 'CONTROL') or (MNL_STATUS='COMPLETED' and PROCDATE='{0}'))",
                        ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
                 break;
             case COMPLETED:
@@ -651,5 +665,17 @@ public class OperNotAuthBVForm extends GridForm {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("GLOID", Column.Sort.DESC));
         return list;
+    }
+
+    private void setRowChangeEventHandler(){
+        grid.setRowChangedEvent(new IGridRowChanged() {
+            @Override
+            public void onRowChanged(Row row) {
+                if (_mode == BVModeChoiceDlg.ModeType.NONE) return;
+                boolean controlFlag = ((String) getFieldByName("MNL_STATUS").getValue()).equals(BackValuePostStatus.CONTROL.name());
+                if (_waitingReasonAction.isVisible()) _waitingReasonAction.setEnable(controlFlag);
+                if (_waitingReasonListAction.isVisible()) _waitingReasonListAction.setEnable(controlFlag);
+            }
+        });
     }
 }
