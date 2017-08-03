@@ -671,7 +671,7 @@ public class OperNotAuthBVForm extends GridForm {
         grid.setRowChangedEvent(new IGridRowChanged() {
             @Override
             public void onRowChanged(Row row) {
-                if (_mode == BVModeChoiceDlg.ModeType.NONE) return;
+                if (_mode == BVModeChoiceDlg.ModeType.NONE || grid.getCurrentRow() == null) return;
                 boolean controlFlag = ((String) getFieldByName("MNL_STATUS").getValue()).equals(BackValuePostStatus.CONTROL.name());
                 if (_waitingReasonAction.isVisible()) _waitingReasonAction.setEnable(controlFlag);
                 if (_waitingReasonListAction.isVisible()) _waitingReasonListAction.setEnable(controlFlag);
