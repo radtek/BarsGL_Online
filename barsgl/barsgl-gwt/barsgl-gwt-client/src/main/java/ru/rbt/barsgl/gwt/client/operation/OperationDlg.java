@@ -9,15 +9,13 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
-import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -33,15 +31,21 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 
 /**
  * Created by akichigi on 19.03.15.
