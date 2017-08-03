@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,10 +22,8 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import org.apache.commons.lang3.time.DateUtils;
 
 import static ru.rb.ucb.util.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.setOperday;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 
 /**
@@ -83,7 +82,8 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
 
     @Test
     public void shouldThrowException() throws Exception {
-        GLOperation glOperation = (GLOperation) baseEntityRepository.selectFirst(GLOperation.class, "from GLOperation o");
+        GLOperation glOperation = (GLOperation) baseEntityRepository.findById(GLOperation.class
+                , baseEntityRepository.selectFirst("select gloid from gl_oper where rownum <= 1").getLong("gloid"));
         glOperation.setValueDate(getOperday().getCurrentDate());
 
         AccountKeys accountKeys = new AccountKeys(
