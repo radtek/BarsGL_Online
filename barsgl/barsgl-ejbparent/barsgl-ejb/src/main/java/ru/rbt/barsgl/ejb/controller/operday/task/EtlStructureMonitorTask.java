@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
@@ -13,18 +14,17 @@ import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.barsgl.shared.enums.EnumUtils;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -39,10 +39,11 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 import static org.apache.commons.lang3.time.DateUtils.truncate;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
 
@@ -131,6 +132,7 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     }
 
     public void processEtlPackages(int packageCount) throws Exception {
+        try {
             beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
                 // T0: читаем пакеты в LOADED с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
                 Date from = addDays(truncate(operdayController.getSystemDateTime(), Calendar.DATE), -7);
@@ -158,7 +160,11 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
                 }
                 return null;
             }), 60 * 60);
+        } catch (Throwable e) {
+            auditController.error(Package, "Ошибка при выполнении задачи обработки входящих сообщений АЕ", null, e);
+            throw e;
         }
+    }
 
     public void processEtlPackage(EtlPackage loadedPackage) {
         logger.info(format("Обрабатывается пакет с ИД '%s' в транзакции: '%s'", loadedPackage.getId(), etlPostingRepository.getTransactionKey()));

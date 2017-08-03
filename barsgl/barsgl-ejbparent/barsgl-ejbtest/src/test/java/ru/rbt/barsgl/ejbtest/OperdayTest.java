@@ -2,35 +2,38 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.*;
+import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
+import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
+import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
@@ -53,11 +56,17 @@ public class OperdayTest extends AbstractTimerJobTest {
 
     public static final String FLEX_FINAL_STEP_NAME = "FLEX";
 
+    private static final Logger logger = Logger.getLogger(OperdayTest.class.getName());
+
     @BeforeClass public static void beforeClass() {
         initCorrectOperday();
-        baseEntityRepository.executeNativeUpdate("update gl_oper o set VDATE = VDATE - 20 DAY, POSTDATE = POSTDATE - 20 DAY");
+        baseEntityRepository.executeNativeUpdate("update gl_oper o set VDATE = VDATE - 20 DAY, POSTDATE = POSTDATE - 20 DAY where vdate = ?", getOperday().getCurrentDate());
     }
 
+    @AfterClass
+    public static void afterClass() {
+        stopProcessing();
+    }
 
     @Before
     public void before() {
@@ -262,14 +271,7 @@ public class OperdayTest extends AbstractTimerJobTest {
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, OPEN);
 
-        if (EnumUtils.contains(new ProcessingStatus[]{ProcessingStatus.ALLOWED, ProcessingStatus.STARTED}
-                , previosOperday.getProcessingStatus())) {
-            try {
-                remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.REQUIRED);
-            } catch (Exception e) {
-                remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.STOPPED);
-            }
-        }
+        stopProcessing();
 
         // задача мониторинга ETL
         checkCreateEtlStructureMonitor();
@@ -427,6 +429,92 @@ public class OperdayTest extends AbstractTimerJobTest {
         Assert.assertTrue(remoteAccess.invoke(OpenOperdayTask.class, "checkRun", "Open1", properties));
     }
 
+    /**
+     * выравнивание даты последней операции
+     * @throws Exception
+     */
+    @Test public void correctBalturDATL() throws Exception {
+
+        updateOperday(ONLINE, OPEN);
+
+        AccRlnId rlnId = findAccRln("47422810%");
+
+        logger.info("deleted BALTUR entries: " + baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ? and acid = ?"
+            , rlnId.getBsaAcid(), rlnId.getAcid()));
+
+        logger.info("deleted GL_PDJCHG entries: " + baseEntityRepository.executeNativeUpdate("delete from GL_PDJCHG where bsaacid = ? and acid = ?"
+            , rlnId.getBsaAcid(), rlnId.getAcid()));
+
+        Date day1 = DateUtils.parseDate("2017-07-01", "yyyy-MM-dd");
+        Date day2 = DateUtils.parseDate("2017-07-04", "yyyy-MM-dd");
+        Date day3 = DateUtils.parseDate("2017-07-10", "yyyy-MM-dd");
+
+        Long id1 = createPd(day1, rlnId.getAcid(), rlnId.getBsaAcid(), "RUR", "@@GL123");
+        Long id2 = createPd(day2, rlnId.getAcid(), rlnId.getBsaAcid(), "RUR", "@@GL123");
+        Long id3 = createPd(day3, rlnId.getAcid(), rlnId.getBsaAcid(), "RUR", "@@GL123");
+
+        logger.info(id1 + ":" + id2 + ":" + id3);
+
+        TreeMap<Date, Long> ids = new TreeMap<>();
+        ids.put(day1, id1);
+        ids.put(day3, id3);
+        ids.put(day2, id2);
+
+        Date[] dateArr = ids.keySet().toArray(new Date[]{});
+        Assert.assertEquals(dateArr[0], day1);
+        Assert.assertEquals(dateArr[1], day2);
+        Assert.assertEquals(dateArr[2], day3);
+
+        List<DataRecord> balturs = getBalturList(rlnId);
+
+        Assert.assertEquals(3, balturs.size());
+        Assert.assertTrue("Все записи baltur DAT = DATL перед удаление проводок", balturs.stream().allMatch(r -> r.getDate("DATL").equals(r.getDate("DAT"))));
+
+        // удалить среднюю проводку DATL будет равна из предыдущей записи
+        baseEntityRepository.executeNativeUpdate("delete from pd where id = ?", id2);
+
+        List<DataRecord> pdjrns = baseEntityRepository.select("select * from GL_PDJCHG where bsaacid = ? and acid = ? "
+            , rlnId.getBsaAcid(), rlnId.getAcid());
+        Assert.assertEquals(1, pdjrns.size());
+
+        Assert.assertEquals(new Long(1), remoteAccess.invoke(DatLCorrector.class, "correctDatL"));
+
+        balturs = getBalturList(rlnId);
+        Assert.assertEquals(day1, balturs.get(0).getDate("DATL"));
+        Assert.assertEquals(day1, balturs.get(1).getDate("DATL"));
+        Assert.assertEquals(day3, balturs.get(2).getDate("DATL"));
+
+        // давим первую проводку
+        baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id1);
+        Assert.assertEquals(new Long(2), remoteAccess.invoke(DatLCorrector.class, "correctDatL"));
+
+        balturs = getBalturList(rlnId);
+        Assert.assertNull(balturs.get(0).getDate("DATL"));
+        Assert.assertNull(balturs.get(1).getDate("DATL"));
+        Assert.assertEquals(day3, balturs.get(2).getDate("DATL"));
+
+        stopProcessing();
+
+        Long idCobOld = remoteAccess.invoke(CobStatRepository.class, "getMaxRunCobId", getOperday().getCurrentDate());
+        if (null != idCobOld) {
+            logger.info("updated statistics to success: " + baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set status = 'Success' where ID_COB = ?", idCobOld));
+        }
+
+        baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id3);
+
+        SingleActionJob job = SingleActionJobBuilder.create()
+                .withClass(ExecutePreCOBTaskNew.class).withName(System.currentTimeMillis() + "").build();
+        baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
+
+        jobService.executeJob(job);
+
+        balturs = getBalturList(rlnId);
+        Assert.assertNull(balturs.get(0).getDate("DATL"));
+        Assert.assertNull(balturs.get(1).getDate("DATL"));
+        Assert.assertNull(balturs.get(2).getDate("DATL"));
+
+    }
+
     private Date getOperDayToOpen(Date current) {
         return ((BankCalendarDay)remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkdayAfter", current)).getId().getCalendarDate();
     }
@@ -505,6 +593,31 @@ public class OperdayTest extends AbstractTimerJobTest {
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
 
+    }
+
+    private static void stopProcessing() {
+        setProcessingFlag(ProcessingStatus.STOPPED);
+    }
+
+    private static void startProcessing() {
+        setProcessingFlag(ProcessingStatus.STARTED);
+    }
+
+    private static void setProcessingFlag(ProcessingStatus status) {
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", status.name());
+        refreshOperdayState();
+    }
+
+    private long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
+        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
+        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234");
+        return id;
+    }
+
+    private List<DataRecord> getBalturList(AccRlnId rlnId) throws SQLException {
+        return baseEntityRepository.select("select * from baltur where bsaacid = ? and acid = ? order by dat"
+                , rlnId.getBsaAcid(), rlnId.getAcid());
     }
 
 }
