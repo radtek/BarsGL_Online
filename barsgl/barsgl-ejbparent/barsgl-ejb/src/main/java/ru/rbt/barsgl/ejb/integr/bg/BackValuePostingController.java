@@ -26,6 +26,7 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
@@ -36,6 +37,7 @@ import ru.rbt.shared.enums.SecurityActionCode;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import javax.validation.ValidationException;
 import java.io.Serializable;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
@@ -60,6 +62,7 @@ import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
 import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ONE_OF;
+import static ru.rbt.ejbcore.validation.ErrorCode.BV_MANUAL_ERROR;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
@@ -126,28 +129,11 @@ public class BackValuePostingController {
                     return editDateOperation(wrapper);
             }
             return new RpcRes_Base<>(0, true, "Неверное действие");
-//            return new RpcRes_Base<Integer>(0, true, "Сформирован запрос:\n" + getSqlString(wrapper, criteria));
 
         } catch (Throwable t) {
-            String msg = getErrorMessage(t);
-            if (null != ExceptionUtils.findException(t, ValidationError.class)) {
-                auditController.warning(BackValueOperation, msg);
-                msg = ValidationError.getErrorText(msg);
-            }
-            else {
-                auditController.error(BackValueOperation, getErrorMessage(t), null, t);
-            }
-            return new RpcRes_Base<Integer>(0, true, msg);
+            auditController.error(BackValueOperation, "Ошибка при ручной обработке операций BackValue", null, t);
+            return new RpcRes_Base(0, true, getErrorMessage(t));
         }
-    }
-
-//    private Date parseDate(String dateStr, SimpleDateFormat format){
-//        return ;
-//    };
-
-    private String getSqlString(BackValueWrapper wrapper, Criteria criteria) {
-        SQL sql = prepareCommonSql(wrapper.getSql(), criteria);
-        return sql.getQuery();
     }
 
     /**
@@ -196,8 +182,8 @@ public class BackValuePostingController {
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
         } catch (ValidationError e) {
             String msg = "Ошибка при авторизации: " + getResultMessage(wrapper, 0);
-            auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
-            return new RpcRes_Base<>(0, true, getErrorMessage(e));
+            auditController.error(BackValueOperation, msg, null, e.getMessage(), e);  // TODO Таблица и ID
+            return new RpcRes_Base<>(0, true, ValidationError.getErrorText(e.getMessage()));
         }
     }
 
@@ -224,8 +210,8 @@ public class BackValuePostingController {
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
         } catch (ValidationError e) {
             String msg = "Ошибка при задержании: " + getResultMessage(wrapper, 0);
-            auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
-            return new RpcRes_Base<>(0, true, getErrorMessage(e));
+            auditController.error(BackValueOperation, msg, null, e.getMessage(), e);  // TODO Таблица и ID
+            return new RpcRes_Base<>(0, true, ValidationError.getErrorText(e.getMessage()));
         }
     }
 
@@ -239,8 +225,8 @@ public class BackValuePostingController {
             return new RpcRes_Base<>(parameters.getOperCount(), false, message);
         } catch (ValidationError e) {
             String msg = "Ошибка при получении статистики: " + getResultMessage(wrapper, 0);
-            auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
-            return new RpcRes_Base<>(0, true, getErrorMessage(e));
+            auditController.error(BackValueOperation, msg, null, e.getMessage(), e);  // TODO Таблица и ID
+            return new RpcRes_Base<>(0, true, ValidationError.getErrorText(e.getMessage()));
         }
     }
 
@@ -248,12 +234,11 @@ public class BackValuePostingController {
 
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
-            throw new DefaultApplicationException(format("Изменение даты проводки невозможна. Операционный день в статусе: '%s'"
-                    , operdayController.getOperday().getPhase()));
+            throw new ValidationError(ErrorCode.OPERDAY_NOT_ONLINE, operdayController.getOperday().getPhase().name());
         }
 
         if ( !operdayController.isProcessingAllowed()) {
-            throw new DefaultApplicationException("Изменение даты проводки невозможно. Выполняется синхронизация проводок,\n повторите попытку через несколько минут");
+            throw new ValidationError(ErrorCode.OPERDAY_IN_SYNCHRO);
         }
 
         try {
@@ -277,8 +262,8 @@ public class BackValuePostingController {
             return new RpcRes_Base<>(1, false, message);
         } catch (ValidationError e) {
             String msg = "Ошибка при изменении даты: " + getResultMessage(wrapper, 0);
-            auditController.error(BackValueOperation, msg, null, null, e);  // TODO Таблица и ID
-            return new RpcRes_Base<>(0, true, getErrorMessage(e));
+            auditController.error(BackValueOperation, msg, null, e.getMessage(), e);  // TODO Таблица и ID
+            return new RpcRes_Base<>(0, true, ValidationError.getErrorText(e.getMessage()));
         }
     }
 
@@ -301,8 +286,8 @@ public class BackValuePostingController {
             editPostingProcessor = editPdProcessor;
             pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
         }
-        Assert.isTrue(null != pdIdList && !pdIdList.isEmpty(), ()-> new DefaultApplicationException(format("Для операции '%d' не найдено ни одной проводки"
-                , operationWrapper.getId())));
+        Assert.isTrue(null != pdIdList && !pdIdList.isEmpty(),
+                ()-> new ValidationError(BV_MANUAL_ERROR, format("Для операции '%d' не найдено ни одной проводки", operationWrapper.getId())));
 
         List<? extends AbstractPd> pdList = editPostingProcessor.getOperationPdList(pdIdList);
 
@@ -377,11 +362,14 @@ public class BackValuePostingController {
         List<DataRecord> commonParams = bvOperationRepository.select("select distinct o.SRC_PST, o.VDATE, o.POSTDATE, e.POSTDATE_PLAN, e.MNL_STATUS "
                 + parameters.getFrom(), parameters.getSqlParams());
 
+        String inStatus = parameters.isNotAuthorized() ? (" в статусе " + operStateNotAuth) : "";
         if (commonParams.isEmpty()) {
-            throw new DefaultApplicationException(format("По заданному условию операции%s не найдены", parameters.isNotAuthorized() ? (" в статусе " + operStateNotAuth) : ""));
+            throw new ValidationError(BV_MANUAL_ERROR,
+                    format("По заданному условию операции%s не найдены", inStatus));
         }
         else if (commonParams.size() != 1) {
-            throw new DefaultApplicationException("По заданному условию найдены операции с различным набором параметров (источник, дата проводки, статус)");
+            throw new ValidationError(BV_MANUAL_ERROR,
+                    "По заданному условию найдены операции с различным набором параметров (источник, дата проводки, статус)");
         }
         DataRecord rec = commonParams.get(0);
         parameters.setSourcePosting(rec.getString(0));
@@ -396,7 +384,8 @@ public class BackValuePostingController {
         DataRecord data = bvOperationRepository.selectFirst("select count(1) " + parameters.getFrom(), parameters.getSqlParams());
         int count = data.getInteger(0);
         if (wrapper.getMode() != ALL && wrapper.getGloIDs().size() != count) {
-            throw new DefaultApplicationException(String.format("По заданному условию найдено %d операций, ожидалось %d", count, wrapper.getGloIDs().size()));
+            throw new ValidationError(BV_MANUAL_ERROR,
+                    format("По заданному условию найдено %d операций%s, ожидалось %d", count, inStatus, wrapper.getGloIDs().size()));
         }
         parameters.setOperCount(count);
 
@@ -410,7 +399,7 @@ public class BackValuePostingController {
      */
     private OperationParameters getOperationParameters(BackValueWrapper wrapper) throws SQLException, ParseException {
         if (ONE != wrapper.getMode()) {
-            throw new DefaultApplicationException(format("Неверный режим обработки операций - ожидается '%s'", ONE.name()));
+            throw new ValidationError(BV_MANUAL_ERROR, format("Неверный режим обработки операций - ожидается '%s'", ONE.name()));
         }
 
         OperationParameters parameters = createOperationsParameters(wrapper, null);
@@ -419,7 +408,7 @@ public class BackValuePostingController {
 
         GLOperation operation = operationRepository.findById(GLOperation.class, wrapper.getGloIDs().get(0));
         if (null == operation || POST != operation.getState()) {
-            throw new DefaultApplicationException(format("По заданному условию операции в статусе '%s' не найдены", POST));
+            throw new ValidationError(BV_MANUAL_ERROR, format("По заданному условию операция в статусе '%s' не найдена", POST.name()));
         }
         parameters.setSourcePosting(operation.getSourcePosting());
         parameters.setValueDate(operation.getValueDate());
@@ -436,7 +425,7 @@ public class BackValuePostingController {
     private boolean checkOperationStatus(BackValueWrapper wrapper, OperationParameters parameters, BackValuePostStatus... enabledStatus) {
         BackValuePostStatus statusIs = parameters.getBvStatus();
         if (!statusIs.equals(wrapper.getBvStatus())) {
-            throw new DefaultApplicationException(format("%s, статус: '%s' ('%s').\n Обновите информацию и выполните действие повторно",
+            throw new ValidationError(BV_MANUAL_ERROR, format("%s, статус: '%s' ('%s').\n Обновите информацию и выполните действие повторно",
                     getResultMessage(wrapper, parameters.getOperCount(), "изменена", "изменены"), statusIs.name(), statusIs.getLabel()));
         }
         if (enabledStatus.length == 0)
@@ -446,7 +435,7 @@ public class BackValuePostingController {
                 return true;
             }
         }
-        throw new DefaultApplicationException(format("Нельзя '%s' операции в статусе: '%s' ('%s')",
+        throw new ValidationError(BV_MANUAL_ERROR, format("Нельзя '%s' операции в статусе: '%s' ('%s')",
                 wrapper.getAction().getLabel(), statusIs.name(), statusIs.getLabel()));
     }
 
@@ -455,7 +444,7 @@ public class BackValuePostingController {
 
         // проверить postDateNew на выходной день
         if(!calendarDayRepository.isWorkday(postDateNew, withTech)) {
-            throw new DefaultApplicationException(String.format("Действие запрещено.\nВыбранная дата проводки '%s' – выходной"
+            throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено. выбранная дата проводки '%s' – выходной"
                     , dateUtils.onlyDateString(postDateNew)));
         }
 
@@ -465,7 +454,7 @@ public class BackValuePostingController {
                 : calendarDayRepository.getWorkDateBefore(valueDate, withTech);
         Date postDateMax = operdayController.getOperday().getCurrentDate();
         if (postDateNew.before(postDateMin) || postDateNew.after(postDateMax)) {
-            throw new DefaultApplicationException(String.format("Действие запрещено.\n" +
+            throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено.\n" +
                             "Дата проводки '%s' вышла за пределы допустимого диапазона с '%s' по '%s'"
                     , dateUtils.onlyDateString(postDateNew), dateUtils.onlyDateString(postDateMin), dateUtils.onlyDateString(postDateMax)));
         }
@@ -475,8 +464,8 @@ public class BackValuePostingController {
         ClosedPeriodView period = closedPeriodRepository.getPeriod();
         if(!postDateNew.after(period.getLastDate()) &&                // разрешено только для суперпользователя
                 !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
-            throw new DefaultApplicationException(String.format("Действие запрещено.\n" +
-                            "Дата проводки '%s' попадает в закрытый отчетный период до '%s', закрыт с '%s'"
+            throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено.\n" +
+                            "Дата проводки '%s' попадает в закрытый отчетный период до '%s', который закрыт с '%s'"
                     , dateUtils.onlyDateString(postDateNew)
                     , dateUtils.onlyDateString(period.getLastDate())
                     , dateUtils.onlyDateString(period.getCutDate())));
