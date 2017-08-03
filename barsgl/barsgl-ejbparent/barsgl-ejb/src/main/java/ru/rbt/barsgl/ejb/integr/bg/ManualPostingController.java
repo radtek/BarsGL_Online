@@ -267,8 +267,8 @@ public class ManualPostingController {
             if (!glAccount.getDealId().equals(wrapper.getDealId()) ||
                 !glAccount.getSubDealId().equals(wrapper.getSubdealId()) ){
                 wrapper.getErrorList().addErrorDescription(
-                        String.format("Операция по счету %s\nВ операции: № сделки/субсделки = %s/%s\nВ счете:    № сделки / субсделки %s/%s",
-                                bsaacid, wrapper.getDealId(), wrapper.getSubdealId(), glAccount.getDealId(), glAccount.getSubDealId()),
+                        String.format("Операция по счету %s\nВ операции: № сделки / субсделки = %s / %s\nВ счете:    № сделки / субсделки = %s / %s",
+                                bsaacid, wrapper.getDealId(), wrapper.getSubdealId(), glAccount.getDealId()==null?"":glAccount.getDealId(), glAccount.getSubDealId()==null?"":glAccount.getSubDealId()),
                         ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
                 throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
 //                return true;

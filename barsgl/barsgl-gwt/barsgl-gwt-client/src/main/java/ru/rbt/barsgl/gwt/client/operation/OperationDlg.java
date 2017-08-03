@@ -53,6 +53,11 @@ import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 public class OperationDlg extends OperationDlgBase {
 
     protected DataListBox mDealSource;
+
+    public TxtBox getmDealId() {
+        return mDealId;
+    }
+
     protected TxtBox mDealId;
     protected TxtBox mSubDealId;
 

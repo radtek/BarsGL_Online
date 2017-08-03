@@ -9,6 +9,7 @@ import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.AccDealsWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -32,6 +33,10 @@ public class AccDealsDict extends EditableDictionary<AccDealsWrapper> {
     public AccDealsDict() {
         super(FORM_NAME);
         reconfigure();
+    }
+    @Override
+    public ArrayList<SortItem> getInitialSortCriteria() {
+        return null;
     }
 
     private void reconfigure() {
@@ -84,6 +89,6 @@ public class AccDealsDict extends EditableDictionary<AccDealsWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ad.acc2,  BSS.ACC1NAM ||' '|| BSS.ACC2NAM name, case when flag_off='N' then '' else flag_off end flag_off from GL_ACCDEALS ad, bss bss where bss.acc2=ad.acc2";
+        return "select ad.acc2,  BSS.ACC1NAM ||' '|| BSS.ACC2NAM name, case when flag_off='N' then '' else flag_off end flag_off from GL_ACCDEALS ad, bss bss where bss.acc2=ad.acc2 order by dtr desc";
     }
 }

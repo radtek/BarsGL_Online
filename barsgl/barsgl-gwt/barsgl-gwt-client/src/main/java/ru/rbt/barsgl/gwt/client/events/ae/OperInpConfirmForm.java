@@ -226,55 +226,153 @@ public class OperInpConfirmForm extends OperBase {
             @Override
             public void onDlgOkClick(Object prms){
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                ManualOperationWrapper wrapper = (ManualOperationWrapper) prms;
+                ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
 
                 BatchPostStatus status = BatchPostStatus.valueOf((String) getValue("STATE"));
-                wrapper.setStatus(status);
-                wrapper.setAction(calcAction(dlg.getOperationAction()));
+                operationWrapper.setStatus(status);
+                operationWrapper.setAction(calcAction(dlg.getOperationAction()));
+                operationWrapper.setNoCheckAccDeals(false);
+                operationWrapper.setNoCheckBalance(false);
+                OperationRq(operationWrapper);
 
-                operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+//                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//                ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
+//
+//                operationWrapper.setStatus(BatchPostStatus.NONE);
+//                operationWrapper.setAction( dlg.getOperationAction() == OperationHandsDlg.ButtonOperAction.OK ?
+//                        BatchPostAction.SAVE : BatchPostAction.SAVE_CONTROL);
+//                operationWrapper.setNoCheckAccDeals(false);
+//                operationWrapper.setNoCheckBalance(false);
+//                OperationRq(operationWrapper);
+            }
+            private void OperationRq(final ManualOperationWrapper operationWrapper) {
+                operationService.processOperationRq(operationWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
                     @Override
-                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
-                        if (wrapper.isError()) {
-                            if (wrapper.getResult().isBalanceError()) {
-                                final ManualOperationWrapper w1 = wrapper.getResult();
-                                showConfirm("Красное сальдо !!!!", wrapper.getMessage(), new IDlgEvents() {
+                    public void onFailureOthers(Throwable throwable) {
+                        WaitingManager.hide();
+
+                        showInfo("Системная ошибка", "Возможено, операция не сохранена\nПроверьте наличие проводок по операции в нижней части окна" + throwable.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> operationWrappers) {
+                        final ManualOperationWrapper w1 = operationWrappers.getResult();
+                        //final StringBuffer isAccDealOk = new StringBuffer();
+                        //log.info("operationWrappers.isError()= "+ operationWrappers.isError());
+                        if (operationWrappers.isError()) {
+                            if (w1.getErrorList().getErrorCode().equals("FIELDS_DEAL_SUBDEAL")){
+                                showConfirm("Несоответствие параметров сделки !!!", w1.getErrorList().getErrorMessage(0),
+                                        new IDlgEvents() {
+                                            @Override
+                                            public void onDlgOkClick(Object p) throws Exception {
+                                                w1.setNoCheckAccDeals(true);
+                                                w1.getErrorList().clear();
+                                                //isAccDealOk.append("Y");
+                                                //log.info("onDlgOkClick = " + w1.isNoCheckAccDeals() + " " + isAccDealOk);
+                                                OperationRq(w1);
+                                            }
+                                        }
+                                        , new IAfterCancelEvent() {
+                                            @Override
+                                            public void afterCancel() {
+                                                dlg.getmDealId().setFocus(true);
+                                            }
+                                        } , null);
+//                        log.info("after onDlgOkClick = "+isAccDealOk);
+                            }
+                            else if (operationWrappers.getResult().isBalanceError()) {
+                                showConfirm("Красное сальдо !!!!", operationWrappers.getMessage(), new IDlgEvents() {
                                             @Override
                                             public void onDlgOkClick(Object p) throws Exception {
                                                 w1.setNoCheckBalance(true);
                                                 w1.setBalanceError(false);
                                                 w1.getErrorList().clear();
-                                                operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
-                                                {
-                                                    @Override
-                                                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
-                                                        if (w2.isError())
-                                                        {
-                                                            showInfo("Ошибка", w2.getMessage());
-                                                        }
-                                                        else {
-                                                            dlg.hide();
-                                                            showInfo("Информация", w2.getMessage());
-                                                            grid.refresh();
-                                                        }
-                                                    }
-                                                });
+                                                OperationRq(w1);
+//                                        operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+//                                        {
+//                                            @Override
+//                                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+//                                                if (w2.isError())
+//                                                {
+//                                                    showInfo("Ошибка", w2.getMessage());
+//                                                }
+//                                                else {
+//                                                    dlg.hide();
+//                                                    showInfo("Информация", w2.getMessage());
+//                                                    grid.refresh();
+//                                                }
+//                                            }
+//                                        });
                                             }
                                         }
                                         , null);
                             }
                             else {
-                                showInfo("Ошибка", wrapper.getMessage());
+                                showInfo("Ошибка", operationWrappers.getMessage());
                             }
                         } else {
+                            showInfo("Информация", operationWrappers.getMessage());
                             dlg.hide();
-                            showInfo("Информация", wrapper.getMessage());
-                            grid.refresh();
+                            grid.refresh(); // TODO refreshAction.execute();
                         }
                         WaitingManager.hide();
                     }
                 });
+
             }
+
+//            @Override
+//            public void onDlgOkClick(Object prms){
+//                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//                ManualOperationWrapper wrapper = (ManualOperationWrapper) prms;
+//
+//                BatchPostStatus status = BatchPostStatus.valueOf((String) getValue("STATE"));
+//                wrapper.setStatus(status);
+//                wrapper.setAction(calcAction(dlg.getOperationAction()));
+//
+//                operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+//                    @Override
+//                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
+//                        if (wrapper.isError()) {
+//                            if (wrapper.getResult().isBalanceError()) {
+//                                final ManualOperationWrapper w1 = wrapper.getResult();
+//                                showConfirm("Красное сальдо !!!!", wrapper.getMessage(), new IDlgEvents() {
+//                                            @Override
+//                                            public void onDlgOkClick(Object p) throws Exception {
+//                                                w1.setNoCheckBalance(true);
+//                                                w1.setBalanceError(false);
+//                                                w1.getErrorList().clear();
+//                                                operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+//                                                {
+//                                                    @Override
+//                                                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+//                                                        if (w2.isError())
+//                                                        {
+//                                                            showInfo("Ошибка", w2.getMessage());
+//                                                        }
+//                                                        else {
+//                                                            dlg.hide();
+//                                                            showInfo("Информация", w2.getMessage());
+//                                                            grid.refresh();
+//                                                        }
+//                                                    }
+//                                                });
+//                                            }
+//                                        }
+//                                        , null);
+//                            }
+//                            else {
+//                                showInfo("Ошибка", wrapper.getMessage());
+//                            }
+//                        } else {
+//                            dlg.hide();
+//                            showInfo("Информация", wrapper.getMessage());
+//                            grid.refresh();
+//                        }
+//                        WaitingManager.hide();
+//                    }
+//                });
+//            }
         };
     }
 
