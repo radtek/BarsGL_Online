@@ -382,8 +382,12 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                 int cnt2 = suppressDuplication.suppress();
                 statInfo(idCob, phase, format("Подавлено дублирующихся проводок по сделкам TBO: %s", cnt2));
 
-                long cnt3 = balturCorrector.correctDatL();
-                statInfo(idCob, phase, format("Скорректировано BALTUR.DATL (дата последней операции): %s", cnt3));
+                try {
+                    long cnt3 = (long) repository.executeInNewTransaction(persistence1 -> balturCorrector.correctDatL());
+                    statInfo(idCob, phase, format("Скорректировано BALTUR.DATL (дата последней операции): %s", cnt3));
+                } catch (Throwable e) {
+                    auditController.error(PreCob, "Ошибка при корректировке дат последней операции в балансе", null, e);
+                }
                 return null;
             });
         } catch (Exception e) {
