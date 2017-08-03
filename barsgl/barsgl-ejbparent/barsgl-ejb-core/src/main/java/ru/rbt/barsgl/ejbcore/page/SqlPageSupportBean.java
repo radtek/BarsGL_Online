@@ -124,7 +124,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
     }
 
     private String preparePaging(String query, List<Object> params, int pageSize, int startWith, OrderByColumn orderBy) {
-        String orderByColumn = orderBy != null ? orderBy.getColumn() + " " + orderBy.getOrder() : "1";
+        String orderByColumn = orderBy != null ? orderBy.getColumn() + " " + orderBy.getOrder() : " null ";
         String orderByString = orderBy != null ? " order by " + orderByColumn : "";
         if (pageSize > 0 ) {
             if (startWith > 1) {

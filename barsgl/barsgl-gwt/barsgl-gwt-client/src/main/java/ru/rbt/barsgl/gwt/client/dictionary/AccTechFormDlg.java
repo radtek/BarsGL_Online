@@ -63,7 +63,7 @@ public abstract class AccTechFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select right('00000000' || ACCTYPE, 9) as ACCTYPE, BSAACID, CCY, CBCC, DESCRIPTION as ACCNAME, ACOD, SQ as AC_SQ, DTO, coalesce(DTC, Date('2029-01-01')) as DTC from GL_ACC " +
+            return "select substr('00000000' || ACCTYPE, -9) as ACCTYPE, BSAACID, CCY, CBCC, DESCRIPTION as ACCNAME, ACOD, SQ as AC_SQ, DTO, coalesce(DTC, cast('2029-01-01' as date)) as DTC from GL_ACC \n" +
                     "where RLNTYPE='9'";
         }
 

@@ -28,4 +28,25 @@ public class Utils {
     }
 
     public static String toStr(String val){ return val == null ? "" : val;}
+
+    public static String rightPad(String string, int length, CharSequence pad) {
+        if (null == string) {
+            return null;
+        } else
+        if ((string + pad).length() < length) {
+            StringBuilder result = new StringBuilder(string);
+            while (result.length() < length) {
+                result.append(pad);
+            }
+            return substring(result.toString(), length);
+        } else {
+            return substring(string + pad, length);
+        }
+    }
+
+    private static String substring(String string, int length) {
+        int l = string.length() < length ? string.length() : length;
+        return string.substring(0, l);
+    }
+
 }

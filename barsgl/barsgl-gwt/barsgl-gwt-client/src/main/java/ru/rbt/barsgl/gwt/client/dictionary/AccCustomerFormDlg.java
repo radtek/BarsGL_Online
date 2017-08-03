@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountBaseQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.AccountQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
@@ -14,6 +13,8 @@ import ru.rbt.barsgl.gwt.core.events.GridEvents;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.Utils;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -94,7 +95,7 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select * from V_GL_ACCRLN where ACC2 <>'' ";
+            return "select * from V_GL_ACCRLN ";
         }
 
         @Override
@@ -128,7 +129,7 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
             AccountQuickFilterParams params = (AccountQuickFilterParams)quickFilterAction.getFilterParams();
             params.setInitialFilterParams(initialFilterParams);
             String ccyN = params.getCurrencyN();
-            String filialN = params.getFilialN();
+            String filialN = Utils.rightPad(params.getFilialN(), 4, " ");
             String bsaAcid = params.getAccount();
             Date currentDate = params.getDateFrom();
 
