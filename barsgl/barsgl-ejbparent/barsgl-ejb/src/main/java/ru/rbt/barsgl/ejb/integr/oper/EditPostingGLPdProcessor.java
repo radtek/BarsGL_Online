@@ -17,10 +17,12 @@ public class EditPostingGLPdProcessor extends EditPostingProcessor {
     @Inject
     private GLPdRepository glPdRepository;
 
+    @Override
     public List<Long> getOperationPdIdList(long parentId) {
         return glPdRepository.getOperationPdIdList(parentId);
     }
 
+    @Override
     public List<? extends AbstractPd> getOperationPdList(List<Long> pdIdList) {
         return glPdRepository.getOperationPdList(pdIdList);
     }

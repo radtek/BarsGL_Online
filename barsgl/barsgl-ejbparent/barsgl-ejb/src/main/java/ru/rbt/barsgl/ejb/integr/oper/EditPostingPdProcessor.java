@@ -18,10 +18,12 @@ public class EditPostingPdProcessor extends EditPostingProcessor {
     @EJB
     private MemorderRepository memorderRepository;
 
+    @Override
     public List<Long> getOperationPdIdList(long parentId) {
         return pdRepository.getOperationPdIdList(parentId);
     }
 
+    @Override
     public List<? extends AbstractPd> getOperationPdList(List<Long> pdIdList) {
         return pdRepository.getOperationPdList(pdIdList);
     }
