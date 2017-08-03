@@ -3,6 +3,9 @@ package ru.rbt.barsgl.ejb.integr.bg;
 import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
+import ru.rbt.barsgl.shared.ErrorDescriptor;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.audit.entity.AuditRecord;
@@ -36,6 +39,7 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -80,6 +84,9 @@ public class ManualPostingController {
 
     @Inject
     private OperdayController operdayController;
+
+    @Inject
+    private GLAccountRepository glAccountRepository;
 
     @EJB
     private PdRepository pdRepository;
@@ -166,6 +173,51 @@ public class ManualPostingController {
     }
 
     /**
+     * Проверка полей Deal, SubDeal на соответствие с GL_ACC
+     * @param wrapper
+     * @throws ParseException
+     * @throws SQLException
+     */
+    private void checkAccDeals(ManualOperationWrapper wrapper) throws ParseException, SQLException {
+        if (wrapper.isNoCheckAccDeals()) {
+            return;
+        }
+        //если Дб удовлетворил, то Кт не проверять
+        if (isEqualAccDeal( wrapper, wrapper.getAccountDebit())) return;
+        isEqualAccDeal( wrapper, wrapper.getAccountCredit());
+    }
+
+    private boolean isEqualAccDeal(ManualOperationWrapper wrapper, String bsaacid){
+        GLAccount glAccount = glAccountRepository.getDealSubDealGlAcc(bsaacid);
+        if (glAccount != null){
+            if (!glAccount.getDealId().equals(wrapper.getDealId()) ||
+                !glAccount.getSubDealId().equals(wrapper.getSubdealId()) ){
+                wrapper.getErrorList().addErrorDescription(
+                        String.format("Операция по счету %s\nВ операции: № сделки/субсделки = %s/%s\nВ счете:    № сделки / субсделки %s/%s",
+                                bsaacid, wrapper.getDealId(), wrapper.getSubdealId(), glAccount.getDealId(), glAccount.getSubDealId()),
+                        ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
+                throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
+//                return true;
+            }
+        }
+        return false;
+    }
+//    private boolean isEqualAccDeal(ManualOperationWrapper wrapper, String bsaacid){
+//        DataRecord res = glAccountRepository.getDealSubDealGlAcc(bsaacid);
+//        if (res != null){
+//            if (!res.getString(0).trim().equals(wrapper.getDealId()) ||
+//                !res.getString(1).trim().equals(wrapper.getSubdealId()) ) {
+//                wrapper.getErrorList().addErrorDescription(
+//                        String.format("Операция по счету %s\nВ операции: № сделки/субсделки = %s/%s\nВ счете:    № сделки / субсделки %s/%s",
+//                                bsaacid, wrapper.getDealId(), wrapper.getSubdealId(), res.getString(0), res.getString(1)),
+//                        ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
+//                throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
+//            }else return true;
+//        }
+//        return false;
+//    }
+
+    /**
      * Интерфейс: Создает запрос на операцию с проверкой прав
      * @param wrapper
      * @return
@@ -174,6 +226,7 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> saveOperationRq(ManualOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
+            checkAccDeals(wrapper);
         } catch (ValidationError e) {
             String msg = "Ошибка при сохранении запроса на операцию";
             if (null != wrapper.getId())
@@ -210,6 +263,9 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> updateOperationRq(ManualOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
+            if (newStatus.equals(BatchPostAction.UPDATE) || newStatus.equals(BatchPostAction.UPDATE_CONTROL)){
+                checkAccDeals(wrapper);
+            }
         } catch (ValidationError e) {
             String msg = "Ошибка при изменении запроса на операцию ID = " + wrapper.getId();
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -258,6 +314,7 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> forSignOperationRq(ManualOperationWrapper wrapper) throws Exception {
         try {
             checkUserPermission(wrapper);
+            checkAccDeals(wrapper);
         } catch (ValidationError e) {
             String msg = "Ошибка при передаче запроса на операцию ID = " + wrapper.getId() + " на подпись";
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());

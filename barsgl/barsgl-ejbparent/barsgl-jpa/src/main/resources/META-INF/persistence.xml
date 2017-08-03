@@ -60,6 +60,7 @@
         <class>ru.rbt.barsgl.ejb.entity.dict.AccType.Product</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.AccType.Section</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.AccType.SubProduct</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.AccType.GlAccDeals</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.AccountingType</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.Acod</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.BankCurrency</class>

@@ -20,26 +20,27 @@ public class GlAccDeals extends BaseEntity<String> {
     private String flag_off;
 
     @Column(name = "DTR")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date dtr;
 
     @Column(name = "USRR")
     private String usrr;
 
     @Column(name = "DTM")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date dtm;
 
     @Column(name = "USRM")
     private String usrm;
 
-    public GlAccDeals(String acc2, String flag_off, String usrr) {
+    public GlAccDeals(){}
+
+    //только для create
+    public GlAccDeals(String acc2, String flag_off) {
         this.acc2 = acc2;
         this.flag_off = flag_off;
-//        this.dtr = dtr;
-        this.usrr = usrr;
-//        this.dtm = dtm;
-//        this.usrm = usrm;
+        this.dtr = new Date();
+        this.usrr = "sys";
     }
 
     @Override
@@ -62,9 +63,6 @@ public class GlAccDeals extends BaseEntity<String> {
     public void setFlag_off(String flag_off) {
         this.flag_off = flag_off;
     }
-//    public void setFlag_off(boolean flag_off) {
-//        this.flag_off = flag_off? "Y": "N";
-//    }
 
     public Date getDtr() {
         return dtr;
@@ -98,5 +96,4 @@ public class GlAccDeals extends BaseEntity<String> {
         this.usrm = usrm;
     }
 
-//    BSS.ACC1NAM ||' '|| BSS.ACC2NAM name,
 }

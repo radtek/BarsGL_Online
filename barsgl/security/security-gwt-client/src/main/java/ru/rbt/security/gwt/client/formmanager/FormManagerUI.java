@@ -1,5 +1,8 @@
 package ru.rbt.security.gwt.client.formmanager;
 
+import com.google.gwt.logging.client.ConsoleLogHandler;
+import com.google.gwt.user.client.Window;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
 import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
 import com.google.gwt.core.client.GWT;
@@ -9,6 +12,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
@@ -22,8 +27,13 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 
+import java.util.ArrayList;
+import java.util.logging.Logger;
+
 
 public class FormManagerUI extends Composite {
+    static Logger log = Logger.getLogger("FormManagerUI");
+
     private static FormManagerUIBinder uiBinder = GWT.create(FormManagerUIBinder.class);
 
     public interface FormManagerUIBinder extends UiBinder<Widget, FormManagerUI> { }
@@ -143,6 +153,8 @@ public class FormManagerUI extends Composite {
         operdayPanel.add(operdayDate);
 
         showOperday();
+
+        loadAcc2forDeals();
     }
 
     private void showOperday() {
@@ -155,6 +167,30 @@ public class FormManagerUI extends Composite {
                 LocalDataStorage.putParam("current_od_date", operDayWrapper.getCurrentODDate());
             }
         });
+    }
+
+    public static void loadAcc2forDeals(){
+        try {
+            CommonEntryPoint.monitorService.getAcc2ForDeals(new AuthCheckAsyncCallback<RpcRes_Base<ArrayList>>() {
+                @Override
+                public void onFailureOthers(Throwable throwable) {
+                    Window.alert("Операция не удалась loadAcc2forDeals().\nОшибка: " + throwable.getLocalizedMessage());
+                }
+
+                @Override
+                public void onSuccess(RpcRes_Base<ArrayList> res) {
+                    log.info("loadAcc2forDeals() onSuccess");
+                    if (res.isError()){
+                        DialogManager.error("Ошибка loadAcc2forDeals()", "Операция не удалась.\nОшибка: " + res.getMessage());
+                    } else {
+                        log.info("indexOf(\"45204\") = "+res.getResult().indexOf("45204"));
+                        LocalDataStorage.putParam("Acc2ForDeals", res.getResult());
+                    }
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void setBrowserWindowTitle(String text){

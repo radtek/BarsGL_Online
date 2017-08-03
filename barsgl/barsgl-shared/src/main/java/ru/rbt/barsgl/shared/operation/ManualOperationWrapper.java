@@ -79,6 +79,7 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     // ID пакета
     protected Long pkgId;
 
+    protected boolean noCheckAccDeals;
     // список ошибок
     protected ErrorList errorList = new ErrorList();
 
@@ -410,4 +411,13 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     public void setWithCheck(boolean withCheck) {
         this.withCheck = withCheck;
     }
+
+    public boolean isNoCheckAccDeals() {
+        return noCheckAccDeals;
+    }
+
+    public void setNoCheckAccDeals(boolean noCheckAccDeals) {
+        this.noCheckAccDeals = noCheckAccDeals;
+    }
+
 }

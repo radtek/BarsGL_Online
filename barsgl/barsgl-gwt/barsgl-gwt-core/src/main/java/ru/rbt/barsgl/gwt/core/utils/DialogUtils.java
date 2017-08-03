@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.core.utils;
 
 import ru.rbt.barsgl.gwt.core.dialogs.ConfirmDlg;
+import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.dialogs.InfoDlg;
 
@@ -75,6 +76,14 @@ public class DialogUtils {
         ConfirmDlg msg = getConfirmDlg();
         msg.setCaption(caption);
         msg.setDlgEvents(dlgEvents);
+        msg.setParams(params);
+        msg.show(text);
+    }
+    public static void showConfirm(String caption, String text, IDlgEvents dlgEvents, IAfterCancelEvent afterCancelEvent, Object params) {
+        ConfirmDlg msg = getConfirmDlg();
+        msg.setCaption(caption);
+        msg.setDlgEvents(dlgEvents);
+        msg.setAfterCancelEvent(afterCancelEvent);
         msg.setParams(params);
         msg.show(text);
     }

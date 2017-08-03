@@ -77,6 +77,7 @@ public enum ErrorCode {
     , STORNO_POST_NOT_FOUND_BUFFER(1017, "%s")
     , BALANSE_SECOND_NOT_EXISTS(1018, "Балансовый счет 2-го порядка для счета %s: '%s' не существует")
     , FAN_INVALID_STATE(1019, "Для референса '%s' найдены частичные веерные операции не в статусе '%s': '%s'")
+    , FIELDS_DEAL_SUBDEAL(1020, "Не соответствие DealId/SudDealId данным в таблице gl_acc")
 
     /**
      * Ошибки при валидации и создании счета

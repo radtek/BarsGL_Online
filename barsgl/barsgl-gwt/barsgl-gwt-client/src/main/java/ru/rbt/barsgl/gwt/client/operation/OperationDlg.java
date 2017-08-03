@@ -5,10 +5,13 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.logging.client.ConsoleLogHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import com.google.web.bindery.event.shared.HandlerRegistration;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
@@ -35,8 +38,13 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.shared.user.AppUserWrapper;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
@@ -47,6 +55,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
  * Created by akichigi on 19.03.15.
  */
 public class OperationDlg extends OperationDlgBase {
+    static Logger log = Logger.getLogger("OperationDlg");
 
     protected DataListBox mDealSource;
     protected TxtBox mDealId;
@@ -71,6 +80,7 @@ public class OperationDlg extends OperationDlgBase {
     private HandlerRegistration registration;
     private Boolean isAsyncListsCached;
     private Timer timer;
+//    private String dbTableDeal="", dbTableSubDeal="", crTableDeal="", crTableSubDeal="";
 
     public OperationDlg(String title, FormAction action, Columns columns) {
         super(title, action, columns);
@@ -109,8 +119,11 @@ public class OperationDlg extends OperationDlgBase {
 
         HorizontalPanel hp3 = new HorizontalPanel();
         hp3.setSpacing(0);
+        log.info("hp3.add");
         hp3.add(createOneSide("Дебет", OperationDlgBase.Side.DEBIT, true));
+        mAccount.addChangeHandler(create_mAccount_ChangeHandler());
         hp3.add(createOneSide("Кредит", OperationDlgBase.Side.CREDIT, true));
+        mAccount.addChangeHandler(create_mAccount_ChangeHandler());
         mainVP.add(hp3);
 
         mainVP.add(createSumRu());
@@ -125,6 +138,57 @@ public class OperationDlg extends OperationDlgBase {
 
         return mainVP;
     }
+
+//    List glAccDeals = Arrays.asList(new String[]{"45201"});
+//45204810620150000063
+    protected ChangeHandler create_mAccount_ChangeHandler() {
+        return new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                setDeals(((TextBox) changeEvent.getSource()).getValue());
+            }
+        };
+    }
+
+    @Override
+    public void setDeals(final String account){
+        String smDealId = mDealId.getValue();
+        String smSubDealId = mSubDealId.getValue();
+        if (!(smDealId == null || smDealId.isEmpty()) || !(smSubDealId == null || smSubDealId.isEmpty()))
+            return;
+//                log.info("mAccount");
+//                log.info("mAccount = "+mAccount.getValue());
+
+        if (null == account || account.length() < 20 || ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(account.substring(0,5)) < 1) return;
+        GridEntryPoint.asyncGridService.selectFirst("select DEALID, SUBDEALID from gl_acc where bsaacid=?",new Serializable[]{account}, new AuthCheckAsyncCallback<Row>() {
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                WaitingManager.hide();
+                Window.alert("Операция не удалась. select DEALID, SUBDEALID from gl_acc where bsaacid="+account+"\n Ошибка: " + throwable.getLocalizedMessage());
+                WaitingManager.hide();
+            }
+            @Override
+            public void onSuccess(Row row) {
+                if (row.getFieldsCount() != 0) {
+//                    if (isDebit) {
+//                        dbTableDeal = row.getField(0).getValue().toString();
+//                        dbTableSubDeal = row.getField(1).getValue().toString();
+//                    }else{
+//                        crTableDeal = row.getField(0).getValue().toString();
+//                        crTableSubDeal = row.getField(1).getValue().toString();
+//                    }
+                    mDealId.setValue(row.getField(0).getValue().toString());
+                    mSubDealId.setValue(row.getField(1).getValue().toString());
+//                }else{
+//                    dbTableDeal = ""; dbTableSubDeal = ""; crTableDeal = ""; crTableSubDeal = "";
+                }
+                WaitingManager.hide();
+            }
+        });
+
+    };
+
+
 
     protected void setControlsEnabled(){
     }
@@ -177,6 +241,7 @@ public class OperationDlg extends OperationDlgBase {
 
     @Override
     protected void setFields(ManualOperationWrapper operation) {
+        log.info("setFields");
         operation.setId(id);
         if (mDealSource.isEnabled()) {
             operation.setDealSrc(check(mDealSource.getText()
@@ -237,6 +302,17 @@ public class OperationDlg extends OperationDlgBase {
         operation.setProfitCenter((String) mProfitCenter.getValue());
         operation.setCorrection(mCheckCorrection.getValue());
         operation.setInputMethod(InputMethod.M);
+
+        //set Deals
+//        if ( ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(mDtAccount.getValue().substring(0,5)) >= 0){
+//            if (!dbTableDeal.equals(mDealId.getValue()) || !dbTableSubDeal.equals(mSubDealId.getValue())){
+//
+//            }
+//        }else if ( ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(mCrAccount.getValue().substring(0,5)) >= 0){
+//            if (!crTableDeal.equals(mDealId.getValue()) || !crTableSubDeal.equals(mSubDealId.getValue())){
+//
+//            }
+//        }
 
         // Для проверки прав по филиалам
         AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");

@@ -11,10 +11,10 @@ public class AccDealsWrapper  implements Serializable,IsSerializable {
     private String acc2;
     private String name;
     private boolean flagOff;
-    private String dtr;
-    private String usrr;
-    private String dtm;
-    private String usrm;
+//    private String dtr;
+//    private String usrr;
+//    private String dtm;
+//    private String usrm;
 
 
     public String getName() {
@@ -36,37 +36,37 @@ public class AccDealsWrapper  implements Serializable,IsSerializable {
         return this.flagOff? "N": "Y";
     }
 
-    public String getDtr() {
-        return dtr;
-    }
-
-    public void setDtr(String dtr) {
-        this.dtr = dtr;
-    }
-
-    public String getUsrr() {
-        return usrr;
-    }
-
-    public void setUsrr(String usrr) {
-        this.usrr = usrr;
-    }
-
-    public String getDtm() {
-        return dtm;
-    }
-
-    public void setDtm(String dtm) {
-        this.dtm = dtm;
-    }
-
-    public String getUsrm() {
-        return usrm;
-    }
-
-    public void setUsrm(String usrm) {
-        this.usrm = usrm;
-    }
+//    public String getDtr() {
+//        return dtr;
+//    }
+//
+//    public void setDtr(String dtr) {
+//        this.dtr = dtr;
+//    }
+//
+//    public String getUsrr() {
+//        return usrr;
+//    }
+//
+//    public void setUsrr(String usrr) {
+//        this.usrr = usrr;
+//    }
+//
+//    public String getDtm() {
+//        return dtm;
+//    }
+//
+//    public void setDtm(String dtm) {
+//        this.dtm = dtm;
+//    }
+//
+//    public String getUsrm() {
+//        return usrm;
+//    }
+//
+//    public void setUsrm(String usrm) {
+//        this.usrm = usrm;
+//    }
 
     public String getAcc2() {
         return acc2;

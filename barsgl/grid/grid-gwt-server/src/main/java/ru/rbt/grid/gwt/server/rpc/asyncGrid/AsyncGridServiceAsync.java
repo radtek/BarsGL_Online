@@ -19,6 +19,7 @@ public interface AsyncGridServiceAsync {
     void getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria,
                       List<SortItem> sortCriteria, AsyncCallback<List<Row>> callback);
     void selectOne(String sql, Serializable[] params, AsyncCallback<Row> callback);
+    void selectFirst(String sql, Serializable[] params, AsyncCallback<Row> callback);
     void Debug(String msg,  AsyncCallback<Void> callback);
     void export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria,
                       List<SortItem> sortCriteria, ExcelExportHead head, AsyncCallback<String> callback);
