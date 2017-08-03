@@ -20,6 +20,7 @@ import ru.rbt.barsgl.gwt.client.backvalue.BackValueForm;
 import ru.rbt.barsgl.gwt.client.bal.OndemandBalanceUnloadForm;
 import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
+import ru.rbt.barsgl.gwt.client.dict.AccDealsDict;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
 import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
 import ru.rbt.security.gwt.client.monitoring.Monitor;
@@ -333,6 +334,12 @@ public class MenuBuilder implements IMenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new StamtUnloadParamDict());
+                }
+            });
+            case Acc2Deals: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccDealsDict());
                 }
             });
 

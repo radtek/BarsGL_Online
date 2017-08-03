@@ -53,10 +53,10 @@ public class ErrorList  implements Serializable, IsSerializable {
     public String getErrorCode() {
         return errorList.isEmpty() ? "" : errorList.get(0).getCode();
     }
+    public String getErrorMessage(int row){return errorList.get(row).getMessatge();}
 
     public boolean isEmpty() {
         return errorList.isEmpty();
     }
-
 }
 

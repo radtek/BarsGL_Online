@@ -120,6 +120,23 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+
+    public GLAccount getDealSubDealGlAcc(String bsaAcid){
+        try{
+            return selectFirst(GLAccount.class, "select a from GlAccDeals d, GLAccount a where a.bsaAcid=?1 and d.acc2=substring(a.bsaAcid,1, 5) and d.flag_off='N'", new Object[]{bsaAcid});
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+//    public DataRecord getDealSubDealGlAcc(String bsaAcid){
+//        try{
+//           return selectFirst("select dealid, subdealid from GL_ACCDEALS d, gl_acc a where a.bsaacid=? and d.acc2=substr(a.bsaacid,1, 5) and d.flag_off='N'", bsaAcid);
+//        } catch (SQLException e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
+
     public ResultCode checkBsaAccountGlAcc(String bsaAcid)
     {
         try {

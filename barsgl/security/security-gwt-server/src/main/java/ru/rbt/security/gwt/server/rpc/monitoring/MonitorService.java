@@ -16,6 +16,8 @@ public interface MonitorService extends RemoteService{
     RpcRes_Base<HashMap> getBuff() throws Exception;
     RpcRes_Base<ArrayList> getOper() throws Exception;
     RpcRes_Base<HashMap> getRepl() throws Exception;
+
+    RpcRes_Base<ArrayList> getAcc2ForDeals() throws Exception;
 }
 
 

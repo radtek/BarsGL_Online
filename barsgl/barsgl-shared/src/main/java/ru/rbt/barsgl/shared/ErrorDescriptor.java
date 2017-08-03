@@ -35,4 +35,20 @@ public class ErrorDescriptor implements Serializable, IsSerializable{
         return code;
     }
 
+//    public enum ErrorCode implements HasLabel {
+//        AccDeals("Не соответствие DealID/SubDealId"),
+//        OK("");
+//
+//        private String label;
+//
+//        ErrorCode(String label) {
+//            this.label = label;
+//        }
+//
+//        @Override
+//        public String getLabel() {
+//            return label;
+//        }
+//    }
+
 }

@@ -82,6 +82,11 @@ public class ManualDictionaryServiceImpl extends AbstractGwtService implements M
   }
 
   @Override
+  public RpcRes_Base<AccDealsWrapper> saveAccDeals(AccDealsWrapper wrapper, FormAction action) throws Exception {
+        return save("saveAccDeals", wrapper, action);
+  }
+
+  @Override
   public RpcRes_Base<ManualOperationWrapper> saveOperationTemplate(ManualOperationWrapper wrapper, FormAction action) throws Exception {
     return save("saveOperationTemplate", wrapper, action);
   }

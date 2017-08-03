@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import com.google.gwt.logging.client.ConsoleLogHandler;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
@@ -26,6 +27,7 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.BarsGLEntryPoint.operationService;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
@@ -56,7 +58,6 @@ public class OperInpConfirmForm extends OperBase {
     @Override
     protected void reconfigure() {
         super.reconfigure();
-
         abw.addAction(_modify = createModify());
         abw.addAction(_create = createNewOperation());
         abw.addAction(_createFromTemplate = createTemplateOperation());

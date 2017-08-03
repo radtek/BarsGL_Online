@@ -42,6 +42,9 @@ public class ManualDictionaryService {
   private StamtUnloadParamsController stamtUnloadParamsController;
 
   @Inject
+  private AccDealsController accDealsController;
+
+  @Inject
   private OperationTemplateController operationTemplateController;
 
   @Inject
@@ -91,6 +94,10 @@ public class ManualDictionaryService {
   
   public RpcRes_Base<StamtUnloadParamWrapper> saveStamtUnloadParam(StamtUnloadParamWrapper wrapper, FormAction action) {
     return save(stamtUnloadParamsController, wrapper, action);
+  }
+
+  public RpcRes_Base<AccDealsWrapper> saveAccDeals(AccDealsWrapper wrapper, FormAction action) {
+    return save(accDealsController, wrapper, action);
   }
 
   public RpcRes_Base<ManualOperationWrapper> saveOperationTemplate(ManualOperationWrapper wrapper, FormAction action) {
