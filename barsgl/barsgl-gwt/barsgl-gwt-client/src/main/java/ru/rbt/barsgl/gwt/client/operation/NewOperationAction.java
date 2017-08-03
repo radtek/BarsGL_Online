@@ -69,9 +69,9 @@ public class NewOperationAction extends GridAction {
 
         operationWrapper.setStatus(BatchPostStatus.NONE);
         operationWrapper.setAction( dlg.getOperationAction() == OperationHandsDlg.ButtonOperAction.OK ?
-                BatchPostAction.SAVE : BatchPostAction.SAVE_CONTROL);
+                                    BatchPostAction.SAVE : BatchPostAction.SAVE_CONTROL);
         operationWrapper.setNoCheckAccDeals(false);
-
+        operationWrapper.setNoCheckBalance(false);
         OperationRq(operationWrapper);
     }
 
@@ -117,21 +117,22 @@ public class NewOperationAction extends GridAction {
                                         w1.setNoCheckBalance(true);
                                         w1.setBalanceError(false);
                                         w1.getErrorList().clear();
-                                        operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
-                                        {
-                                            @Override
-                                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
-                                                if (w2.isError())
-                                                {
-                                                    showInfo("Ошибка", w2.getMessage());
-                                                }
-                                                else {
-                                                    dlg.hide();
-                                                    showInfo("Информация", w2.getMessage());
-                                                    grid.refresh();
-                                                }
-                                            }
-                                        });
+                                        OperationRq(w1);
+//                                        operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+//                                        {
+//                                            @Override
+//                                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+//                                                if (w2.isError())
+//                                                {
+//                                                    showInfo("Ошибка", w2.getMessage());
+//                                                }
+//                                                else {
+//                                                    dlg.hide();
+//                                                    showInfo("Информация", w2.getMessage());
+//                                                    grid.refresh();
+//                                                }
+//                                            }
+//                                        });
                                     }
                                 }
                                 , null);

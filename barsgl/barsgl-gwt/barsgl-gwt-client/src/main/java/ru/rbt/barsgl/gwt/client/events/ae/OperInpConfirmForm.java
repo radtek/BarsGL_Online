@@ -232,15 +232,6 @@ public class OperInpConfirmForm extends OperBase {
                 wrapper.setStatus(status);
                 wrapper.setAction(calcAction(dlg.getOperationAction()));
 
-                //TODO  for debug
-                /*if (1==1){
-                    System.out.println("Action => " + wrapper.getAction().name());
-                    System.out.println("Prms => " + (wrapper.getReasonOfDeny()));
-                    dlg.hide();
-                    WaitingManager.hide();
-                    return;
-                }*/
-
                 operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
                     @Override
                     public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
