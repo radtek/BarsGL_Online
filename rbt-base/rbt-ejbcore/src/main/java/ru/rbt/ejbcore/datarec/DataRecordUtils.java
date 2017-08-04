@@ -1,6 +1,5 @@
 package ru.rbt.ejbcore.datarec;
 
-import ru.rbt.ejbcore.datarec.DataRecord;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,35 +14,13 @@ import java.util.List;
  */
 public class DataRecordUtils {
 
+    public static final int DEFAULT_QUERY_TIMEOUT = 15 * 60;
+
     public static int executeUpdate(Connection connection, String sql, Object[] objects) throws SQLException {
         PreparedStatement statement = null;
         try {
             statement = connection.prepareStatement(sql);
-            if (null != objects) {
-                for (int i = 0; i < objects.length; i++) {
-                    Object param = objects[i];
-                    if (null == param) {
-                        statement.setObject(i + 1, null);
-                    } else
-                    if (param instanceof String) {
-                        statement.setString(i + 1, (String)param);
-                    } else
-                    if (param instanceof Date) {
-                        statement.setDate(i + 1, new java.sql.Date(((Date)param).getTime()));
-                    } else
-                    if (param instanceof Long) {
-                        statement.setLong(i + 1, ((Long)param).longValue());
-                    } else
-                    if (param instanceof BigDecimal) {
-                        statement.setBigDecimal(i + 1, (BigDecimal) param);
-                    } else
-                    if (param instanceof Integer) {
-                        statement.setInt(i + 1, ((Integer) param).intValue());
-                    } else {
-                        statement.setObject(i + 1, param);
-                    }
-                }
-            }
+            bindParameters(statement, objects);
             return statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -87,7 +64,7 @@ public class DataRecordUtils {
                 ps.setQueryTimeout(timeout);
             } else if (ps.getQueryTimeout() == 0) {
                 // по умолчанию 15 минут, если таймаут не установлен сервером приложений по умолчанию
-                ps.setQueryTimeout(15 * 60);
+                ps.setQueryTimeout(DEFAULT_QUERY_TIMEOUT);
             }
             if (params != null) {
                 for (int i = 0; i < params.length; i++) {
@@ -106,6 +83,34 @@ public class DataRecordUtils {
                 }
             }
             return result;
+        }
+    }
+
+    public static void bindParameters(PreparedStatement statement, Object[] objects) throws SQLException {
+        if (null != objects) {
+            for (int i = 0; i < objects.length; i++) {
+                Object param = objects[i];
+                if (null == param) {
+                    statement.setObject(i + 1, null);
+                } else
+                if (param instanceof String) {
+                    statement.setString(i + 1, (String)param);
+                } else
+                if (param instanceof Date) {
+                    statement.setDate(i + 1, new java.sql.Date(((Date)param).getTime()));
+                } else
+                if (param instanceof Long) {
+                    statement.setLong(i + 1, ((Long)param).longValue());
+                } else
+                if (param instanceof BigDecimal) {
+                    statement.setBigDecimal(i + 1, (BigDecimal) param);
+                } else
+                if (param instanceof Integer) {
+                    statement.setInt(i + 1, ((Integer) param).intValue());
+                } else {
+                    statement.setObject(i + 1, param);
+                }
+            }
         }
     }
 }

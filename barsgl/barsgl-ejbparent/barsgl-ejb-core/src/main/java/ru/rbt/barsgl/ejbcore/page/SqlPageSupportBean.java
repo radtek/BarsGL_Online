@@ -10,6 +10,7 @@ import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
 
@@ -20,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,11 +85,14 @@ public class SqlPageSupportBean implements SqlPageSupport {
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
         try {
             SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
-            String sqlDummy = "select * from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
-            String resultSql = "select count(*) cnt from (" + sqlDummy + " ) " + COUNT_ALIAS;
 
-            DataSource dataSource = repository.getDataSource(rep);
-            int cnt = repository.selectFirst(dataSource, resultSql, sql.getParams()).getInteger("cnt");
+            String resultSql;
+            if (isWherePresents(sql.getQuery())) {
+                resultSql = "select 1 from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
+            } else {
+                resultSql = "select 1 from (" + sql.getQuery() + " where rownum <= " + (MAX_ROW_COUNT + 1) + ")";
+            }
+            int cnt = calculateCount(rep, resultSql, sql.getParams());
             if (MAX_ROW_COUNT + 1 == cnt)
                 cnt = -MAX_ROW_COUNT;       // свыше MAX_ROW_COUNT
             return cnt;
@@ -215,5 +221,23 @@ public class SqlPageSupportBean implements SqlPageSupport {
         else if (orderBy != null)
             return orderStr;
         else return "";
+    }
+
+    private int calculateCount(Repository dbRepository, String sql, Object[] params) throws Exception {
+        return (int) repository.executeTransactionally(repository.getDataSource(dbRepository), connection -> {
+            int cnt = 0;
+            try (PreparedStatement query = connection.prepareStatement(sql)){
+                DataRecordUtils.bindParameters(query, params);
+                if (query.getQueryTimeout() == 0) {
+                    query.setQueryTimeout(DataRecordUtils.DEFAULT_QUERY_TIMEOUT);
+                }
+                try (ResultSet resultSet = query.executeQuery()) {
+                    while (resultSet.next()) {
+                        cnt++;
+                    }
+                }
+            }
+            return cnt;
+        });
     }
 }
