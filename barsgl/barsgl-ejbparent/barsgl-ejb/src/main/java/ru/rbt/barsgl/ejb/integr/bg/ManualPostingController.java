@@ -266,10 +266,14 @@ public class ManualPostingController {
         if (glAccount != null){
             if (!glAccount.getDealId().equals(wrapper.getDealId()) ||
                 !glAccount.getSubDealId().equals(wrapper.getSubdealId()) ){
+//                &nbsp;&nbsp;&nbsp;&nbsp;
                 wrapper.getErrorList().addErrorDescription(
-                        String.format("Операция по счету %s\nВ операции: № сделки / субсделки = %s / %s\nВ счете:    № сделки / субсделки = %s / %s",
-                                bsaacid, wrapper.getDealId(), wrapper.getSubdealId(), glAccount.getDealId()==null?"":glAccount.getDealId(), glAccount.getSubDealId()==null?"":glAccount.getSubDealId()),
-                        ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
+                        String.format("Операция по счету %s\nВ операции: № сделки / субсделки = %s / %s\nВ счете:&nbsp;&nbsp;&nbsp;&nbsp;№ сделки / субсделки = %s / %s",
+                                bsaacid, ifEmpty(wrapper.getDealId(), ""),
+                                ifEmpty(wrapper.getSubdealId(), ""),
+                                ifEmpty(glAccount.getDealId(), ""),
+                                ifEmpty(glAccount.getSubDealId(), "")),
+                                ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
                 throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
 //                return true;
             }
@@ -340,7 +344,7 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> updateOperationRq(ManualOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
-
+            checkAccDeals(wrapper);
             //Проверка на deal subdeal
             if (newStatus.equals(BatchPostAction.UPDATE) || newStatus.equals(BatchPostAction.UPDATE_CONTROL)){
                 checkAccDeals(wrapper);

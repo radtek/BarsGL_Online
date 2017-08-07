@@ -50,6 +50,7 @@ public class OperInpConfirmForm extends OperBase {
     private GridAction _backward;
     private GridAction _sign;
     private GridAction _confirmDate;
+    Logger log = Logger.getLogger("OperInpConfirmForm");
 
     public OperInpConfirmForm() {
         super(FORM_NAME);
@@ -225,6 +226,7 @@ public class OperInpConfirmForm extends OperBase {
 
             @Override
             public void onDlgOkClick(Object prms){
+                log.info("onDlgOkClick");
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
                 ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
 
@@ -258,8 +260,10 @@ public class OperInpConfirmForm extends OperBase {
                     public void onSuccess(RpcRes_Base<ManualOperationWrapper> operationWrappers) {
                         final ManualOperationWrapper w1 = operationWrappers.getResult();
                         //final StringBuffer isAccDealOk = new StringBuffer();
-                        //log.info("operationWrappers.isError()= "+ operationWrappers.isError());
+                        log.info("edit operationWrappers.isError()= "+ operationWrappers.isError());
                         if (operationWrappers.isError()) {
+                            log.info("w1.getErrorList().getErrorListLen() = "+ w1.getErrorList().getErrorListLen());
+                            log.info("w1.getErrorList().getErrorCode()= "+ w1.getErrorList().getErrorCode());
                             if (w1.getErrorList().getErrorCode().equals("FIELDS_DEAL_SUBDEAL")){
                                 showConfirm("Несоответствие параметров сделки !!!", w1.getErrorList().getErrorMessage(0),
                                         new IDlgEvents() {

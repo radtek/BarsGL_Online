@@ -15,6 +15,8 @@ import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
+import java.util.logging.Logger;
+
 import static ru.rbt.barsgl.gwt.client.BarsGLEntryPoint.operationService;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
@@ -26,6 +28,8 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 public class NewOperationAction extends GridAction {
      private OperationHandsDlg dlg;
     private boolean isExtended;
+    Logger log = Logger.getLogger("NewOperationAction");
+
 
     public NewOperationAction(GridWidget grid, ImageResource imageRecource) {
         this(grid, imageRecource, false);
@@ -64,6 +68,8 @@ public class NewOperationAction extends GridAction {
 
     @Override
     public void onDlgOkClick(Object prms){
+        log.info("onDlgOkClick");
+
         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
         ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
 
@@ -88,8 +94,10 @@ public class NewOperationAction extends GridAction {
             public void onSuccess(RpcRes_Base<ManualOperationWrapper> operationWrappers) {
                 final ManualOperationWrapper w1 = operationWrappers.getResult();
                 //final StringBuffer isAccDealOk = new StringBuffer();
-                //log.info("operationWrappers.isError()= "+ operationWrappers.isError());
+                log.info("insert operationWrappers.isError()= "+ operationWrappers.isError());
                 if (operationWrappers.isError()) {
+                    log.info("w1.getErrorList().getErrorListLen() = "+ w1.getErrorList().getErrorListLen());
+                    log.info("w1.getErrorList().getErrorCode()= "+ w1.getErrorList().getErrorCode());
                     if (w1.getErrorList().getErrorCode().equals("FIELDS_DEAL_SUBDEAL")){
                         showConfirm("Несоответствие параметров сделки !!!", w1.getErrorList().getErrorMessage(0),
                                 new IDlgEvents() {
@@ -98,7 +106,7 @@ public class NewOperationAction extends GridAction {
                                         w1.setNoCheckAccDeals(true);
                                         w1.getErrorList().clear();
                                         //isAccDealOk.append("Y");
-                                        //log.info("onDlgOkClick = " + w1.isNoCheckAccDeals() + " " + isAccDealOk);
+                                        log.info("onDlgOkClick = " + w1.isNoCheckAccDeals());
                                         OperationRq(w1);
                                     }
                                 }

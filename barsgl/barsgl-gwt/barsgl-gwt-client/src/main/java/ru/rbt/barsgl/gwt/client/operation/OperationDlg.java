@@ -168,17 +168,10 @@ public class OperationDlg extends OperationDlgBase {
             @Override
             public void onSuccess(Row row) {
                 if (row.getFieldsCount() != 0) {
-//                    if (isDebit) {
-//                        dbTableDeal = row.getField(0).getValue().toString();
-//                        dbTableSubDeal = row.getField(1).getValue().toString();
-//                    }else{
-//                        crTableDeal = row.getField(0).getValue().toString();
-//                        crTableSubDeal = row.getField(1).getValue().toString();
-//                    }
-                    mDealId.setValue(row.getField(0).getValue().toString());
-                    mSubDealId.setValue(row.getField(1).getValue().toString());
-//                }else{
-//                    dbTableDeal = ""; dbTableSubDeal = ""; crTableDeal = ""; crTableSubDeal = "";
+//                    log.info("row.getField(0) = "+row.getField(0).getValue().toString());
+//                    log.info("row.getField(1) = "+row.getField(1).getValue().toString());
+                    mDealId.setValue(row.getField(0).getValue() == null? "":row.getField(0).getValue().toString());
+                    mSubDealId.setValue(row.getField(1).getValue() == null? "":row.getField(1).getValue().toString());
                 }
                 WaitingManager.hide();
             }

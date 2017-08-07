@@ -19,6 +19,8 @@ import ru.rbt.shared.enums.SecurityActionCode;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import static ru.rbt.barsgl.gwt.core.datafields.Column.Sort.ASC;
+
 /**
  * Created by er22317 on 17.07.2017.
  */
@@ -36,7 +38,10 @@ public class AccDealsDict extends EditableDictionary<AccDealsWrapper> {
     }
     @Override
     public ArrayList<SortItem> getInitialSortCriteria() {
-        return null;
+        ArrayList<SortItem> cols = new ArrayList<SortItem>();
+        cols.add(new SortItem( "acc2", ASC));
+        return cols;
+//        return null;
     }
 
     private void reconfigure() {
@@ -75,7 +80,7 @@ public class AccDealsDict extends EditableDictionary<AccDealsWrapper> {
         }
         LocalDataStorage.putParam("Acc2ForDeals", Acc2ForDeals);
 //        FormManagerUI.loadAcc2forDeals();
-        log.info("indexOf(\"45204\") + "+((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf("45204"));
+//        log.info("indexOf(\"45204\") + "+((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf("45204"));
     }
 
     @Override
@@ -89,6 +94,6 @@ public class AccDealsDict extends EditableDictionary<AccDealsWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ad.acc2,  BSS.ACC1NAM ||' '|| BSS.ACC2NAM name, case when flag_off='N' then '' else flag_off end flag_off from GL_ACCDEALS ad, bss bss where bss.acc2=ad.acc2 order by dtr desc";
+        return "select ad.acc2,  BSS.ACC1NAM ||' '|| BSS.ACC2NAM name, case when flag_off='N' then '' else flag_off end flag_off from GL_ACCDEALS ad, bss bss where bss.acc2=ad.acc2";
     }
 }
