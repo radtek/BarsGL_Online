@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import ru.rbt.barsgl.ejb.entity.dict.CloseLwdBalance;
-import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
+import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.ejbcore.repository.AbstractCachedRepository;
 
 import javax.annotation.PostConstruct;
@@ -19,10 +18,10 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @AccessTimeout(unit = TimeUnit.MINUTES, value = 15)
 @Lock(LockType.READ)
-public class CloseBalanceCachedRepository extends AbstractCachedRepository<CloseLwdBalance, Date> {
+public class LwdCutCachedRepository extends AbstractCachedRepository<LwdBalanceCutView, Date> {
     @Override
-    protected Class<CloseLwdBalance> getEntityClass() {
-        return CloseLwdBalance.class;
+    protected Class<LwdBalanceCutView> getEntityClass() {
+        return LwdBalanceCutView.class;
     }
 
     @Lock(LockType.WRITE)
@@ -31,8 +30,8 @@ public class CloseBalanceCachedRepository extends AbstractCachedRepository<Close
         super.flushCache();
     }
 
-    public CloseLwdBalance getRecord() {
-        List<CloseLwdBalance> res = getAllObjectsCached();
+    public LwdBalanceCutView getRecord() {
+        List<LwdBalanceCutView> res = getAllObjectsCached();
         if (!res.isEmpty()) {
             return res.get(0);
         } else {

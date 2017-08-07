@@ -5,15 +5,15 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ProcessBackValueOperationsTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
+import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
+import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
@@ -22,6 +22,7 @@ import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
+import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -32,6 +33,8 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -710,6 +713,37 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         Assert.assertEquals(vdatePrev, operSt.getValueDate());
         Assert.assertEquals(vdatePrev, operSt.getPostDate());
 
+    }
+
+    @Test
+    public void testCloseLwdBalance() {
+        Operday operday = getOperday();
+        setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, OPEN, Operday.PdMode.BUFFER);
+        Date currentDT = remoteAccess.invoke(OperdayController.class, "getSystemDateTime");
+        Date currentDate = org.apache.commons.lang3.time.DateUtils.truncate(currentDT, Calendar.DATE);
+
+        baseEntityRepository.executeNativeUpdate("delete from GL_LWDCUT");
+        baseEntityRepository.executeNativeUpdate("insert into GL_LWDCUT (RUNDATE, CUTOFFTIME) values (?, ?)",
+                currentDate, new SimpleDateFormat(LwdBalanceCutView.getTimeFormat()).format(currentDT));
+
+        remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "executeWork");
+        Operday operday2 = getOperday();
+        Assert.assertEquals(CLOSED, operday2.getLastWorkdayStatus());
+        LwdBalanceCutView cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
+        Assert.assertNotNull(cutView.getCloseDateTime());
+
+        baseEntityRepository.executeNativeUpdate("update GL_LWDCUT set OTS_CLOSE = null");
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "executeWork");
+        cutView = (LwdBalanceCutView) baseEntityRepository.findById(LwdBalanceCutView.class, currentDate);
+        Assert.assertNull(cutView.getCloseDateTime());
+
+        remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "executeWork");
+        cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
+        Assert.assertNotNull(cutView.getCloseDateTime());
+
+        setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, operday.getLastWorkdayStatus(), Operday.PdMode.BUFFER);
     }
 
     public static EtlPosting createEtlPosting(Date valueDate, String src,

@@ -75,6 +75,8 @@
         <class>ru.rbt.barsgl.ejb.entity.dict.BVSourceDeal</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.BVSourceDealView</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut</class>
 
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPackage</class>
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPosting</class>
