@@ -45,11 +45,13 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
+import static ru.rbt.barsgl.ejbtest.ValidationTest.checkOperErrorRecord;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.COMPLETED;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.CONTROL;
 import static ru.rbt.barsgl.shared.enums.DealSource.*;
@@ -69,7 +71,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     public static void beforeAll() {
 
         try {
-            setOperday(DateUtils.parseDate("27.02.2015", "dd.MM.yyyy"), DateUtils.parseDate("25.02.2015", "dd.MM.yyyy"), ONLINE, OPEN);
+            setOperday(DateUtils.parseDate("27.02.2015", "dd.MM.yyyy"), DateUtils.parseDate("25.02.2015", "dd.MM.yyyy"), ONLINE, OPEN, Operday.PdMode.BUFFER);
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -745,6 +747,44 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, operday.getLastWorkdayStatus(), Operday.PdMode.BUFFER);
     }
+
+    /**
+     * Проверка корреспонденции счетов - разная глава баланса (ошибка операции)
+     * @fsd 7.4.1
+     */
+    @Test public void testBvOperationError() throws ParseException, SQLException {
+
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40502840%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425840%");
+        String bsaCt9 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "91418840%");
+        BigDecimal amt = new BigDecimal("331.56");
+        BankCurrency currency = USD;
+
+        Operday operday = getOperday();
+        Date vdatePast = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", operday.getCurrentDate(), 10, false);
+
+        EtlPosting pst = createEtlPosting(vdatePast, ARMPRO.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);        // ARMPRO
+        Assert.assertNotNull(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        operation = (GLBackValueOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
+        Assert.assertEquals(BLOAD, operation.getState());
+
+        baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1, o.bsChapter = null where o.id = ?2", bsaCt9, operation.getId());
+        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id = ?2", BackValuePostStatus.SIGNEDDATE, operation.getId());
+        operation = (GLBackValueOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+
+        remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
+        operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
+        Assert.assertEquals(OperState.BERCHK, operation.getState());
+
+
+        checkOperErrorRecord(operation, "1005", OperState.BERCHK);
+
+        // TODO  reprocess BERCHK
+    }
+
 
     public static EtlPosting createEtlPosting(Date valueDate, String src,
                                         String accountDebit, BankCurrency currencyDebit, BigDecimal amountDebit,

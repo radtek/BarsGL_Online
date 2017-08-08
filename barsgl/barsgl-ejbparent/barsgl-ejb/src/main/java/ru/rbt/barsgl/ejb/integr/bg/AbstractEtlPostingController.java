@@ -166,7 +166,9 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
             }
             else {
                 String msg = "Ошибка валидации" + msgCommon;
-                OperState errState = BWTAC.equals(operation.getState()) ? BERWTAC : ERCHK;
+                OperState errState = BWTAC.equals(operation.getState()) ? BERWTAC
+                            : BLOAD.equals(operation.getState()) ? BERCHK
+                            : ERCHK;
                 operationErrorMessage(errors, msg, operation, errState, true);
             }
         }

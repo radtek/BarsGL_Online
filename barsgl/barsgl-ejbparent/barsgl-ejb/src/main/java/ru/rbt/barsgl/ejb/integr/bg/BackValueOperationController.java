@@ -63,7 +63,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
                 }
             } catch (Throwable e) {
                 operationErrorMessage(e, "Ошибка при заполнения данных (зависящих от даты) по проводке" + msgCommon,
-                        operation, ERCHK, initSource());
+                        operation, BERCHK, initSource());
                 return false;
             }
             try {
@@ -76,7 +76,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
                     return false;
                 }
             } catch (Throwable e) {
-                operationErrorMessage(e, "Ошибка при обработкe" + msgCommon, operation, ERCHK, initSource());
+                operationErrorMessage(e, "Ошибка при обработкe" + msgCommon, operation, BERCHK, initSource());
                 return false;
             }
         } else {
@@ -103,7 +103,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
             toContinue = validateOperation(operationProcessor, operation, isWtacPreStage);
         } catch ( Throwable e ) {
             String msg = "Ошибка валидации данных";
-            operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
+            operationErrorMessage(e, msg + msgCommon, operation, BERCHK, initSource());
             return false;
         }
         if ( toContinue ) {
@@ -111,7 +111,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
                 updateOperation(operationProcessor, operation);
             } catch ( Throwable e ) {
                 String msg = "Ошибка заполнения данных";
-                operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
+                operationErrorMessage(e, msg + msgCommon, operation, BERCHK, initSource());
                 return false;
             }
             if (BWTAC.equals(operation.getState())) {

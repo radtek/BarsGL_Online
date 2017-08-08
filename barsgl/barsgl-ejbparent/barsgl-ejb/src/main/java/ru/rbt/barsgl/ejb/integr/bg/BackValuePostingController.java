@@ -342,8 +342,13 @@ public class BackValuePostingController {
 
         // from ... where ...
         parameters.setNotAuthorized(ArrayUtils.contains(actionNotAuth, wrapper.getAction()));
-        parameters.setFrom(format(" from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s)%s", parameters.getGloidIn(),
-                parameters.isNotAuthorized() ? " and o.STATE in (" + operStateNotAuth + ")" : ""));
+        if (parameters.isNotAuthorized()) {
+            parameters.setFrom(format(" from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s) and o.STATE in (%s)"
+                    , parameters.getGloidIn(), operStateNotAuth));
+        } else {
+            parameters.setFrom(format(" from GL_OPER o left join GL_OPEREXT e on o.GLOID = e.GLOID where o.GLOID in (%s)"
+                    , parameters.getGloidIn()));
+        }
 
         return parameters;
     }

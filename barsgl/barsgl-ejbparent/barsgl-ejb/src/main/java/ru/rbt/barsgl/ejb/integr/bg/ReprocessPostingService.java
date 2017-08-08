@@ -61,7 +61,11 @@ public class ReprocessPostingService {
             if (codes.size() != 1) {
                 errorList.addErrorDescription("В списке разные комбинации кодов ошибок");   // + StringUtils.listToString(codes, ", ", "'"));
             }
-            List<String> opers = errorRepository.getOperPostList(idList, OperState.WTAC);
+            List<String> states = errorRepository.getOperStateList(idList);
+            if (states.size() != 1) {
+                errorList.addErrorDescription("В списке разные статусы операций: " + StringUtils.listToString(states, ", ", "'"));
+            }
+            List<String> opers = errorRepository.getIdPstList(idList, OperState.WTAC);
             if (opers.size() != 0) {
                 errorList.addErrorDescription("В списке есть операции со статусом 'WTAC', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
             }
@@ -76,7 +80,7 @@ public class ReprocessPostingService {
 
             auditController.info(AuditRecord.LogCode.ReprocessAEOper, String.format("Начало оброаботки '%s' ошибок ID : %s",
                     correctType.getTypeLabel(), idList));
-            int cnt = reprocessController.correctPostingErrors(errorIdList, comment, idPstCorr, correctType);
+            int cnt = reprocessController.correctPostingErrors(errorIdList, comment, idPstCorr, correctType, OperState.valueOf(states.get(0)));
             String msg = String.format("Сообщения АЕ (%d) %s\nДата опердня: '%s'\nИсточник сделки: '%s'", cnt,
                     correctType.getTypeMessage(), dates.get(0), sources.get(0));
             auditController.info(AuditRecord.LogCode.ReprocessAEOper, msg);
