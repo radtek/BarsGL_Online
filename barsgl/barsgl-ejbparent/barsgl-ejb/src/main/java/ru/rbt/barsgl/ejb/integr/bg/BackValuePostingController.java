@@ -80,7 +80,7 @@ public class BackValuePostingController {
     @EJB
     private BackValueOperationRepository bvOperationRepository;
 
-    @Inject
+    @EJB
     private GLOperationRepository operationRepository;
 
     @EJB
@@ -447,12 +447,6 @@ public class BackValuePostingController {
     public void checkPostDate(String sourcePosting, Date postDateNew, Date valueDate) throws SQLException {
         boolean withTech = withTechWorkDay(sourcePosting);
 
-        // проверить postDateNew на выходной день
-        if(!calendarDayRepository.isWorkday(postDateNew, withTech)) {
-            throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено. выбранная дата проводки '%s' – выходной"
-                    , dateUtils.onlyDateString(postDateNew)));
-        }
-
         // проверить postDateNew на допустимый диапазон
         Date postDateMin = calendarDayRepository.isWorkday(valueDate, withTech)
                 ? valueDate
@@ -462,6 +456,12 @@ public class BackValuePostingController {
             throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено.\n" +
                             "Дата проводки '%s' вышла за пределы допустимого диапазона с '%s' по '%s'"
                     , dateUtils.onlyDateString(postDateNew), dateUtils.onlyDateString(postDateMin), dateUtils.onlyDateString(postDateMax)));
+        }
+
+        // проверить postDateNew на выходной день
+        if(!calendarDayRepository.isWorkday(postDateNew, withTech)) {
+            throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено. выбранная дата проводки '%s' – выходной"
+                    , dateUtils.onlyDateString(postDateNew)));
         }
     }
 
