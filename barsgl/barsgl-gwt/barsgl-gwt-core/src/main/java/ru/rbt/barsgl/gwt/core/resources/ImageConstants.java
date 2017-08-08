@@ -155,4 +155,7 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"locked.png"})
     public abstract ImageResource locked();
 
+    @ClientBundle.Source({"nonauthoriz.png"})
+    public abstract ImageResource nonauthoriz();
+
 }

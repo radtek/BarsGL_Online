@@ -31,12 +31,12 @@ import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilterCriteria {
     protected GridWidget masterGrid;
     protected Table masterTable;
-    private String masterSql;
-    private FilterAction  masterFilterAction;
+    protected String masterSql;
+    protected FilterAction  masterFilterAction;
     protected ActionBarWidget masterActionBar;
     protected RefreshAction masterRefreshAction;
-    private Export2ExcelAction masterExport2Excel;
-    private Export2ExcelAction detailExport2Excel;
+    protected Export2ExcelAction masterExport2Excel;
+    protected Export2ExcelAction detailExport2Excel;
 
 
     protected GridWidget detailGrid;
@@ -249,5 +249,13 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
 
     public GridWidget getDetailGrid() {
         return detailGrid;
+    }
+
+    public void setMasterExcelSql(String sql) {
+        masterExport2Excel.setSql(sql);
+    }
+
+    public void setDetailExcelSql(String sql) {
+        detailExport2Excel.setSql(sql);
     }
 }

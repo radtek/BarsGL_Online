@@ -175,7 +175,6 @@ public class OperNotAuthBVForm extends GridForm {
         return wrapper;
     }
 
-
     private GridAction createModeChoice(){
         return new GridAction(grid, null, "Выбор способа обработки", new Image(ImageConstants.INSTANCE.site_map()), 10) {
             BVModeChoiceDlg dlg;
@@ -268,7 +267,7 @@ public class OperNotAuthBVForm extends GridForm {
     }
 
     private GridAction createWaitingReasonAction() {
-        return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10) {
+        return new GridAction(grid, null, "Задержать операцию", new Image(ImageConstants.INSTANCE.locked()), 10, true) {
             @Override
             public void execute() {
                 executeWaitingAction(BackValueMode.ONE).execute();
@@ -277,14 +276,14 @@ public class OperNotAuthBVForm extends GridForm {
     }
 
     private GridAction createOperAuthorizationAction() {
-        return new GridAction(grid, null, "Авторизовать дату операции", new Image(ImageConstants.INSTANCE.back_value()), 10) {
+        return new GridAction(grid, null, "Авторизовать дату проводки", new Image(ImageConstants.INSTANCE.back_value()), 10, true) {
             BVPostDateAuthDlg dlg;
             @Override
             public void execute() {
                 final Row row = grid.getCurrentRow();
                 if (row == null) return;
 
-                dlg = new BVPostDateAuthDlg("Авторизация даты бухгалтерской операции GL", FormAction.PREVIEW, table.getColumns());
+                dlg = new BVPostDateAuthDlg("Авторизация даты проводки", FormAction.PREVIEW, table.getColumns());
                 dlg.setDlgEvents(this);
                 dlg.show(rowToWrapper());
             }
@@ -297,7 +296,7 @@ public class OperNotAuthBVForm extends GridForm {
                 gloids.add((Long)getFieldByName("GLOID").getValue());
                 String postDate = manualOperationWrapper.getPostDateStr();
                 BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, BackValueMode.ONE, postDate, (String)getFieldByName("MNL_NRT").getValue());
-                methodCaller(dlg, "Авторизация даты бухгалтерской операции не удалась.", wrapper, true);
+                methodCaller(dlg, "Авторизация даты проводки не удалась.", wrapper, true);
             }
         };
     }
@@ -330,7 +329,7 @@ public class OperNotAuthBVForm extends GridForm {
     }
 
     private GridAction createOperAuthorizationListAction(){
-        final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Авторизовать дату операции",  new Image(ImageConstants.INSTANCE.back_value()));
+        final PopupMenuBuilder builder = new PopupMenuBuilder(abw, "Авторизовать дату проводки",  new Image(ImageConstants.INSTANCE.back_value()));
 
         MenuItem itemVisibleList = new MenuItem("Видимый список", new Command() {
 
@@ -357,7 +356,7 @@ public class OperNotAuthBVForm extends GridForm {
     }
 
     private GridAction createStatisticsAction() {
-        return new GridAction(grid, null, "Статистика", new Image(ImageConstants.INSTANCE.statistics()), 10) {
+        return new GridAction(grid, null, "Статистика", new Image(ImageConstants.INSTANCE.statistics()), 10, true) {
 
             @Override
             public void execute() {
@@ -449,7 +448,7 @@ public class OperNotAuthBVForm extends GridForm {
             public void onDlgOkClick(Object prms) throws Exception{
                 final String postDate = ClientDateUtils.Date2String((Date)prms);
 
-                DialogManager.confirm("Авторизация даты", Utils.Fmt("Авторизовать дату проводки {0} для всего списка операций?", postDate), "Да", "Нет", new ClickHandler() {
+                DialogManager.confirm("Авторизация даты проводки", Utils.Fmt("Авторизовать дату проводки {0} для всего списка операций?", postDate), "Да", "Нет", new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent clickEvent) {
                         caller(postDate);
@@ -466,7 +465,7 @@ public class OperNotAuthBVForm extends GridForm {
                 }
 
                 BackValueWrapper wrapper = createWrapper(gloids, BackValueAction.SIGN, mode, postDate, null);
-                methodCaller(postDateAuthListDlg, "Авторизация даты бухгалтерской операции списком не удалась.", wrapper, true);
+                methodCaller(postDateAuthListDlg, "Авторизация даты проводки списком не удалась.", wrapper, true);
             }
         };
     }
@@ -512,8 +511,8 @@ public class OperNotAuthBVForm extends GridForm {
 
         result.addColumn(source = new Column("SRC_PST", STRING, "Источник сделки", 70));
         result.addColumn(new Column("DEAL_ID", STRING, "ИД сделки", 120));
-        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 120, false, false));
-        result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 70));
+        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 180, false, false));
+        result.addColumn(new Column("PMT_REF", STRING, "ИД платежа", 120));
 
         result.addColumn(col = new Column("STATE", STRING, "Статус", 70, false, false));
         col.setList(getEnumValuesList(OperState.values()));
@@ -605,7 +604,7 @@ public class OperNotAuthBVForm extends GridForm {
 
     private String sql(){
         return new StringBuilder()
-                .append(_select )
+                .append(_select)
                 .append(whereBuilder()).toString();
     }
 
@@ -671,8 +670,13 @@ public class OperNotAuthBVForm extends GridForm {
         grid.setRowChangedEvent(new IGridRowChanged() {
             @Override
             public void onRowChanged(Row row) {
-                if (_mode == BVModeChoiceDlg.ModeType.NONE || grid.getCurrentRow() == null) return;
-                boolean controlFlag = ((String) getFieldByName("MNL_STATUS").getValue()).equals(BackValuePostStatus.CONTROL.name());
+                if (_mode == BVModeChoiceDlg.ModeType.NONE) return;
+                boolean controlFlag;
+                if (grid.getCurrentRow() == null) {
+                    controlFlag = false;
+                }else{
+                    controlFlag = ((String) getFieldByName("MNL_STATUS").getValue()).equals(BackValuePostStatus.CONTROL.name());
+                }
                 if (_waitingReasonAction.isVisible()) _waitingReasonAction.setEnable(controlFlag);
                 if (_waitingReasonListAction.isVisible()) _waitingReasonListAction.setEnable(controlFlag);
             }
