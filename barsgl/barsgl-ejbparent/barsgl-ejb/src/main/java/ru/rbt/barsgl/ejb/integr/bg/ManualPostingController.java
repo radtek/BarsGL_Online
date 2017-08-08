@@ -289,9 +289,7 @@ public class ManualPostingController {
         try {
             checkUserPermission(wrapper);
             checkAccDeals(wrapper);
-            if (newStatus==CONTROL) {
-                checkAccountsBalance(wrapper);
-            }
+
         } catch (ValidationError e) {
             String msg = "Ошибка при сохранении запроса на операцию";
             if (null != wrapper.getId())
@@ -687,6 +685,10 @@ public class ManualPostingController {
      */
     private BatchPosting createPosting(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
         validateOperationRq(wrapper);
+
+        if (status==CONTROL) {
+            checkAccountsBalance(wrapper);
+        }
 
         try {
             BatchPosting posting = postingProcessor.createPosting(wrapper);       // создать операцию
