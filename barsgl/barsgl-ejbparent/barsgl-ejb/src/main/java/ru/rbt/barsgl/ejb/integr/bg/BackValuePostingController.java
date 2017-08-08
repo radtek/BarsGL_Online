@@ -257,7 +257,7 @@ public class BackValuePostingController {
             List<? extends AbstractPd> pdList = updatePostingsDate(wrapper, parameters);
             String message = String.format("%s: изменена дата проводки в полупроводках с ID %s \n(была: '%s', стала: '%s')",
                     getResultMessage(wrapper, 1),
-                    StringUtils.listToString(pdList, ","),
+                    StringUtils.listToString(pdList, ", "),
                     dateUtils.onlyDateString(parameters.getPostDate()), wrapper.getPostDateStr());
             return new RpcRes_Base<>(1, false, message);
         } catch (ValidationError e) {

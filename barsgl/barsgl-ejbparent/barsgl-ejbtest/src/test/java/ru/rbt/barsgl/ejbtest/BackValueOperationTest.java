@@ -17,16 +17,21 @@ import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
+import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
+import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
+import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
+import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
@@ -34,6 +39,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -51,6 +57,7 @@ import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
+import static ru.rbt.barsgl.ejbtest.ReprocessErrorTest.getPostingErrorRecord;
 import static ru.rbt.barsgl.ejbtest.ValidationTest.checkOperErrorRecord;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.COMPLETED;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.CONTROL;
@@ -752,7 +759,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
      * Проверка корреспонденции счетов - разная глава баланса (ошибка операции)
      * @fsd 7.4.1
      */
-    @Test public void testBvOperationError() throws ParseException, SQLException {
+    @Test public void testReprocessBERCHK() throws Exception {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40502840%");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425840%");
@@ -777,12 +784,28 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
         remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
         operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
-        Assert.assertEquals(OperState.BERCHK, operation.getState());
-
-
         checkOperErrorRecord(operation, "1005", OperState.BERCHK);
 
-        // TODO  reprocess BERCHK
+        baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1, o.bsChapter = null where o.id = ?2", bsaCt, operation.getId());
+
+        GLErrorRecord err = getOperationErrorRecord(operation);
+        List<Long> errorIdList = new ArrayList<>();
+        errorIdList.add(err.getId());
+        // correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType correctType)
+        RpcRes_Base<Integer> res = remoteAccess.invoke(ReprocessPostingService.class, "correctErrors",
+                errorIdList, "testReprocessOne", null, ErrorCorrectType.REPROCESS_ONE);
+
+        Assert.assertFalse(res.isError());
+        System.out.println(res.getMessage());
+        operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
+        Assert.assertEquals(BLOAD, operation.getState());
+
+        // обработка BLOAD
+        jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessBackValueOperationsTask.class).build());
+        GLBackValueOperation bvOperation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
+        Assert.assertNotNull(bvOperation);
+        Assert.assertEquals(POST, bvOperation.getState());
+        Assert.assertEquals(COMPLETED, bvOperation.getOperExt().getManualStatus());
     }
 
 
@@ -820,6 +843,19 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         pst.setAmountCredit(amountCredit);
 
         return pst;
+    }
+
+    public static GLErrorRecord getOperationErrorRecord(GLOperation operation) {
+        Assert.assertNotNull(operation);
+        Long gloid = operation.getId();
+        GLOperation oper = (GLOperation) baseEntityRepository.refresh(operation, true);
+        Assert.assertNotEquals(POST, oper.getState());
+        String errorMessage = oper.getErrorMessage();
+        Assert.assertNotNull(errorMessage);
+
+        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", null, gloid);
+        Assert.assertNotNull(errorRecord);
+        return errorRecord;
     }
 
 
