@@ -68,7 +68,7 @@ public class AccDealsDict extends EditableDictionary<AccDealsWrapper> {
     @Override
     protected void save(AccDealsWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<AccDealsWrapper>> asyncCallbackImpl) throws Exception {
         BarsGLEntryPoint.dictionaryService.saveAccDeals(cnw, action, asyncCallbackImpl);
-        log.info("save loadAcc2forDeals()");
+//        log.info("save loadAcc2forDeals()");
         ArrayList Acc2ForDeals =((ArrayList)LocalDataStorage.getParam("Acc2ForDeals"));
         if (action.equals(FormAction.CREATE) && cnw.isFlagOff()) {
             Acc2ForDeals.add(cnw.getAcc2());

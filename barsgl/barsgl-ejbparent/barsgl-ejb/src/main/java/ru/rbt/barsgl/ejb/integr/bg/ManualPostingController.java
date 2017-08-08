@@ -264,36 +264,20 @@ public class ManualPostingController {
     private boolean isEqualAccDeal(ManualOperationWrapper wrapper, String bsaacid){
         GLAccount glAccount = glAccountRepository.getDealSubDealGlAcc(bsaacid);
         if (glAccount != null){
-            if (!glAccount.getDealId().equals(wrapper.getDealId()) ||
-                !glAccount.getSubDealId().equals(wrapper.getSubdealId()) ){
-//                &nbsp;&nbsp;&nbsp;&nbsp;
+            if (!ifEmpty(glAccount.getDealId(), "").equals(ifEmpty(wrapper.getDealId(), "")) ||
+                !ifEmpty(glAccount.getSubDealId(), "").equals(ifEmpty(wrapper.getSubdealId(), "")) ){
                 wrapper.getErrorList().addErrorDescription(
-                        String.format("Операция по счету %s\nВ операции: № сделки / субсделки = %s / %s\nВ счете:&nbsp;&nbsp;&nbsp;&nbsp;№ сделки / субсделки = %s / %s",
+                        String.format("Операция по счету %s\nВ операции: № сделки / субсделки = %s / %s\nВ счете:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;№ сделки / субсделки = %s / %s",
                                 bsaacid, ifEmpty(wrapper.getDealId(), ""),
                                 ifEmpty(wrapper.getSubdealId(), ""),
                                 ifEmpty(glAccount.getDealId(), ""),
                                 ifEmpty(glAccount.getSubDealId(), "")),
                                 ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
                 throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
-//                return true;
-            }
+            }else return true;
         }
         return false;
     }
-//    private boolean isEqualAccDeal(ManualOperationWrapper wrapper, String bsaacid){
-//        DataRecord res = glAccountRepository.getDealSubDealGlAcc(bsaacid);
-//        if (res != null){
-//            if (!res.getString(0).trim().equals(wrapper.getDealId()) ||
-//                !res.getString(1).trim().equals(wrapper.getSubdealId()) ) {
-//                wrapper.getErrorList().addErrorDescription(
-//                        String.format("Операция по счету %s\nВ операции: № сделки/субсделки = %s/%s\nВ счете:    № сделки / субсделки %s/%s",
-//                                bsaacid, wrapper.getDealId(), wrapper.getSubdealId(), res.getString(0), res.getString(1)),
-//                        ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
-//                throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
-//            }else return true;
-//        }
-//        return false;
-//    }
 
     /**
      * Интерфейс: Создает запрос на операцию с проверкой прав
