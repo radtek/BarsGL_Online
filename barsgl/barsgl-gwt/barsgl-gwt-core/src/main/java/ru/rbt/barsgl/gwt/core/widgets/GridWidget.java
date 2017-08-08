@@ -8,6 +8,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.cellview.client.*;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.Handler;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -17,9 +18,7 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
-import ru.rbt.barsgl.gwt.core.datafields.Columns;
-import ru.rbt.barsgl.gwt.core.datafields.Row;
-import ru.rbt.barsgl.gwt.core.datafields.Table;
+import ru.rbt.barsgl.gwt.core.datafields.*;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.events.GridEvents;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
@@ -439,30 +438,44 @@ public class GridWidget extends Composite implements IProviderEvents{
 		prepareColumns();
 	}
 
+	private void hideColumn(String columnName){
+        ru.rbt.barsgl.gwt.core.datafields.Column col = table.getColumn(columnName);
+        col.setVisible(false);
+        col.setFilterable(false);
+        col.setEditable(false);
+    }
+
+    private void showColumn(String columnName){
+        ru.rbt.barsgl.gwt.core.datafields.Column col = table.getColumn(columnName);
+        col.setVisible(true);
+        col.setFilterable(true);
+        col.setEditable(true);
+    }
+
 	public void hideColumns(String... columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(0);
+            hideColumn(columnName);
 		}
 		rebuildGrid();
 	}
 
 	public void hideColumns(List<String> columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(0);
+            hideColumn(columnName);
 		}
 		rebuildGrid();
 	}
 
 	public void showColumns(String... columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(table.getColumn(columnName).getOrigin_width());
+            showColumn(columnName);
 		}
 		rebuildGrid();
 	}
 
 	public void showColumns(List<String> columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(table.getColumn(columnName).getOrigin_width());
+            showColumn(columnName);
 		}
 		rebuildGrid();
 	}
