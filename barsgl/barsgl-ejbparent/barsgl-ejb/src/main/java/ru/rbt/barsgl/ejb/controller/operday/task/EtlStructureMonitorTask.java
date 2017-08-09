@@ -70,9 +70,6 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
     @Inject
     private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
-    @Inject
-    private GLOperationRepository operationRepository;
-
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
 

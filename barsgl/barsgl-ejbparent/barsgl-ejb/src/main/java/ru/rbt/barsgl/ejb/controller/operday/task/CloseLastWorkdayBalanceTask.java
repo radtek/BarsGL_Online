@@ -24,6 +24,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.Operday;
  * Created by Ivan Sevastyanov
  * Закрытие баланса предыдущего операционного дня
  */
+@Deprecated
 public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
 
     @Inject

@@ -13,9 +13,11 @@ import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
@@ -428,6 +431,44 @@ public class OperdayTest extends AbstractTimerJobTest {
         properties.put(OpenOperdayContextKey.CURRENT_OD, operday);
         properties.put(OpenOperdayContextKey.TARGET_PD_MODE, Operday.PdMode.BUFFER);
         Assert.assertTrue(remoteAccess.invoke(OpenOperdayTask.class, "checkRun", "Open1", properties));
+    }
+
+    @Test
+    public void testCloseLwdBalanceCut() {
+        Operday operday = getOperday();
+        try {
+            setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, OPEN, BUFFER);
+            updateOperdayMode(BUFFER, ProcessingStatus.STOPPED);
+            Date currentDT = remoteAccess.invoke(OperdayController.class, "getSystemDateTime");
+            Date currentDate = org.apache.commons.lang3.time.DateUtils.truncate(currentDT, Calendar.DATE);
+
+            baseEntityRepository.executeNativeUpdate("delete from GL_LWDCUT");
+            baseEntityRepository.executeNativeUpdate("insert into GL_LWDCUT (RUNDATE, CUTOFFTIME) values (?, ?)",
+                    currentDate, new SimpleDateFormat(LwdBalanceCutView.getTimeFormat()).format(currentDT));
+
+            remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
+            remoteAccess.invoke(CloseLwdBalanceCutTask.class, "execWork", null, null);
+            Operday operday2 = getOperday();
+            Assert.assertEquals(CLOSED, operday2.getLastWorkdayStatus());
+            LwdBalanceCutView cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
+            Assert.assertNotNull(cutView.getCloseDateTime());
+
+/*
+            baseEntityRepository.executeNativeUpdate("update GL_LWDCUT set OTS_CLOSE = null");
+            remoteAccess.invoke(CloseLwdBalanceCutTask.class, "execWork", null, null);
+            cutView = (LwdBalanceCutView) baseEntityRepository.findById(LwdBalanceCutView.class, currentDate);
+            Assert.assertNull(cutView.getCloseDateTime());
+
+            remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
+            remoteAccess.invoke(CloseLwdBalanceCutTask.class, "execWork", null, null);
+            cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
+            Assert.assertNotNull(cutView.getCloseDateTime());
+*/
+        } finally {
+            setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, operday.getLastWorkdayStatus(), BUFFER);
+            updateOperdayMode(BUFFER, ProcessingStatus.STARTED);
+        }
+
     }
 
     private Date getOperDayToOpen(Date current) {

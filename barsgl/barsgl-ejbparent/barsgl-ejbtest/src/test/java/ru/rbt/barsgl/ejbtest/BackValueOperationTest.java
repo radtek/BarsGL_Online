@@ -33,6 +33,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
@@ -78,7 +80,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     public static void beforeAll() {
 
         try {
-            setOperday(DateUtils.parseDate("27.02.2015", "dd.MM.yyyy"), DateUtils.parseDate("25.02.2015", "dd.MM.yyyy"), ONLINE, OPEN, Operday.PdMode.BUFFER);
+            setOperday(DateUtils.parseDate("27.02.2015", "dd.MM.yyyy"), DateUtils.parseDate("25.02.2015", "dd.MM.yyyy"), ONLINE, OPEN, BUFFER);
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -724,37 +726,6 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
     }
 
-    @Test
-    public void testCloseLwdBalance() {
-        Operday operday = getOperday();
-        setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, OPEN, Operday.PdMode.BUFFER);
-        Date currentDT = remoteAccess.invoke(OperdayController.class, "getSystemDateTime");
-        Date currentDate = org.apache.commons.lang3.time.DateUtils.truncate(currentDT, Calendar.DATE);
-
-        baseEntityRepository.executeNativeUpdate("delete from GL_LWDCUT");
-        baseEntityRepository.executeNativeUpdate("insert into GL_LWDCUT (RUNDATE, CUTOFFTIME) values (?, ?)",
-                currentDate, new SimpleDateFormat(LwdBalanceCutView.getTimeFormat()).format(currentDT));
-
-        remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
-        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "executeWork");
-        Operday operday2 = getOperday();
-        Assert.assertEquals(CLOSED, operday2.getLastWorkdayStatus());
-        LwdBalanceCutView cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
-        Assert.assertNotNull(cutView.getCloseDateTime());
-
-        baseEntityRepository.executeNativeUpdate("update GL_LWDCUT set OTS_CLOSE = null");
-        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "executeWork");
-        cutView = (LwdBalanceCutView) baseEntityRepository.findById(LwdBalanceCutView.class, currentDate);
-        Assert.assertNull(cutView.getCloseDateTime());
-
-        remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
-        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "executeWork");
-        cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
-        Assert.assertNotNull(cutView.getCloseDateTime());
-
-        setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, operday.getLastWorkdayStatus(), Operday.PdMode.BUFFER);
-    }
-
     /**
      * Проверка корреспонденции счетов - разная глава баланса (ошибка операции)
      * @fsd 7.4.1
@@ -857,6 +828,5 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         Assert.assertNotNull(errorRecord);
         return errorRecord;
     }
-
 
 }

@@ -97,7 +97,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     private BeanManagedProcessor beanManagedProcessor;
 
     @Inject
-    private CloseLastWorkdayBalanceTask closeLastWorkdayBalanceTask;
+    private CloseLwdBalanceCutTask closeLastWorkdayBalanceTask;
 
     @Inject
     private EtlStructureMonitorTask monitorTask;
@@ -306,7 +306,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                     , dateUtils.onlyDateString(operday.getCurrentDate())));
             try {
                 beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                    closeLastWorkdayBalanceTask.executeWork(false);
+                    closeLastWorkdayBalanceTask.closeBalance(false);
                     return null;
                 }, 60 * 60);
             } catch (Exception e) {
