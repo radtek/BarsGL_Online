@@ -26,6 +26,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Ivan Sevastyanov
@@ -59,16 +60,16 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
         try {
-            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
             final List<Object> params = new ArrayList<>();
             if (null != sql.getParams()) {
                 params.addAll(Arrays.asList(sql.getParams()));
             }
 
-            String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith, orderBy);
+            String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith);
 
-            log.debug("SQL[selectRows] => " + resultSql);
-            params.forEach(p -> log.debug("Param = " + p));
+            log.info("SQL[selectRows] => " + resultSql);
+            log.info("Parameters list: " + params.stream().map(p -> "param = " + p).collect(Collectors.joining(":")));
             DataSource dataSource = repository.getDataSource(rep);
             return repository.selectMaxRows(dataSource, resultSql, MAX_ROW_COUNT, params.toArray());
         } catch (Exception e) {
@@ -84,7 +85,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
         try {
-            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
 
             String resultSql;
             if (isWherePresents(sql.getQuery())) {
@@ -109,7 +110,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
         return nativeSql.toLowerCase().contains("where");
     }
 
-    private static SQL prepareCommonSql(final String nativeSql, Criterion criterion) {
+    /*private static SQL prepareCommonSql(final String nativeSql, Criterion criterion) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
 
         SQL whereClause = null;
@@ -127,25 +128,45 @@ public class SqlPageSupportBean implements SqlPageSupport {
         // применяем where
         resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
         return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
+    }*/
+
+    private static SQL prepareCommonSql2(final String nativeSql, Criterion criterion, OrderByColumn orderBy) {
+        Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
+
+        String uppersql = nativeSql.trim().toUpperCase();
+        final boolean isWherePresents = isWherePresents(uppersql);
+
+        SQL whereClause = null;
+
+        if (criterion != null) {
+            whereClause = WhereInterpreter.interpret(criterion, isWherePresents ? WHERE_ALIAS : null);
+        }
+
+        String resultSql = "select " + WHERE_ALIAS + ".*, rownum rn from (" + uppersql + ") " + WHERE_ALIAS + " ";
+
+        // применяем where
+        resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
+
+        if (null != orderBy) {
+            resultSql += " order by " + orderBy.getColumn() + orderBy.getOrder();
+        }
+        return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
     }
 
-    private String preparePaging(String query, List<Object> params, int pageSize, int startWith, OrderByColumn orderBy) {
-        String orderByColumn = orderBy != null ? orderBy.getColumn() + " " + orderBy.getOrder() : " null ";
-        String orderByString = orderBy != null ? " order by " + orderByColumn : "";
+    private String preparePaging(String query, List<Object> params, int pageSize, int startWith) {
         if (pageSize > 0 ) {
             if (startWith > 1) {
-                String pagingString = "row_number() over (order by " + orderByColumn + ") rn";
-                String resultSql = "select * from (select aaa.*, " + pagingString + " from (" + query + ") aaa) v where v.rn between ? and ?";
+                String resultSql = "select * from (" + query + ") v where v.rn >= ?  and v.rn <= ?";
                 params.add(startWith);
                 params.add(startWith + pageSize - 1);
                 return resultSql;
             } else {
-                String resultSql = "select * from (" + query + ") v where rownum <=" + pageSize + orderByString;
+                String resultSql = "select * from (" + query + ") v where v.rn <= ?";
+                params.add(startWith + pageSize - 1);
                 return resultSql;
             }
-        } else {
-            return orderBy != null ? "select * from (" + query + ") v " + orderByString  : query;
         }
+        return query;
     }
 
     private static String defineSql(String sql) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
@@ -168,7 +189,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
         String pagingString = buildRowNnumberMarker2(orderBy, pgSize);
         try {
-               SQL sql = prepareCommonSql(defineSql(nativeSql), criterion);
+               SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
                final ArrayList<Object> params = new ArrayList<>();
                if (null != sql.getParams()) {
                    params.addAll(Arrays.asList(sql.getParams()));
@@ -224,9 +245,12 @@ public class SqlPageSupportBean implements SqlPageSupport {
     }
 
     private int calculateCount(Repository dbRepository, String sql, Object[] params) throws Exception {
+        final long CNT_TIMEOUT_MS = 3*60*1000; // 3 минуты на расчет кол-ва строк
         return (int) repository.executeTransactionally(repository.getDataSource(dbRepository), connection -> {
             int cnt = 0;
+            long till_to = System.currentTimeMillis() + CNT_TIMEOUT_MS;
             try (PreparedStatement query = connection.prepareStatement(sql)){
+                query.setFetchSize(1);
                 DataRecordUtils.bindParameters(query, params);
                 if (query.getQueryTimeout() == 0) {
                     query.setQueryTimeout(DataRecordUtils.DEFAULT_QUERY_TIMEOUT);
@@ -234,6 +258,9 @@ public class SqlPageSupportBean implements SqlPageSupport {
                 try (ResultSet resultSet = query.executeQuery()) {
                     while (resultSet.next()) {
                         cnt++;
+                        if (System.currentTimeMillis() >= till_to) {
+                            return cnt > 0 ? -cnt : -MAX_ROW_COUNT;
+                        }
                     }
                 }
             }

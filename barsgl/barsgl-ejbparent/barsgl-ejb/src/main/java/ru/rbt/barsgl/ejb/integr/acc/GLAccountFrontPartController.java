@@ -163,23 +163,23 @@ public class GLAccountFrontPartController {
         if (isEmpty(plCode)) {
             // блокировка
             int cnt = repository.
-                    executeNativeUpdate("update GL_ACNOCNT set COUNT = COUNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD IS NULL",
+                    executeNativeUpdate("update GL_ACNOCNT set COUNT = COUNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD = lpad(' ', 5, ' ')",
                             requiredNotEmpty(acc2, "empty acc2"), requiredNotEmpty(currencyCodeAlpha, "empty currencyCodeAlpha")
                             , requiredNotEmpty(companyCode, "empty companyCode"));
             GLAccountCounterType type = GLAccountCounterType.ASSET_LIABILITY;
             String result;
             if (0 == cnt) {
-                repository.executeNativeUpdate("insert into GL_ACNOCNT (ACC2, CCYN, CBCCN, PLCOD, COUNT) values (?,?,?,NULL,?)"
+                repository.executeNativeUpdate("insert into GL_ACNOCNT (ACC2, CCYN, CBCCN, PLCOD, COUNT) values (?,?,?,lpad(' ', 5, ' '),?)"
                         , acc2, currencyCodeAlpha, companyCode
                         , Integer.toString(type.getStartNumber()));
                 result = type.getDecimalFormat().format(type.getStartNumber());
             } else {
-                DataRecord record = repository.selectOne("select * from GL_ACNOCNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD IS NULL",
+                DataRecord record = repository.selectOne("select * from GL_ACNOCNT where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD = lpad(' ', 5, ' ')",
                         acc2, currencyCodeAlpha
                         , companyCode);
                 int count = getNextNumberExcludesAware(type, record.getInteger("count"));
                 cnt = repository.
-                        executeNativeUpdate("update GL_ACNOCNT set COUNT = ? where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD IS NULL",
+                        executeNativeUpdate("update GL_ACNOCNT set COUNT = ? where ACC2 = ? and  CCYN = ? and CBCCN = ? and PLCOD = lpad(' ', 5, ' ')",
                                 count, acc2, currencyCodeAlpha
                                 , companyCode);
                 Assert.assertThat(1 == cnt);

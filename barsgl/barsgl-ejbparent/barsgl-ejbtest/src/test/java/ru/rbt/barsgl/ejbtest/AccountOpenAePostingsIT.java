@@ -77,78 +77,85 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      */
     @Test
     public void testFrontPart() throws Exception {
-        executeAutonomic("create table GL_ACNOCNT_tmp as (select * from GL_ACNOCNT)");
 
-        int cntDeleted = baseEntityRepository.executeNativeUpdate("delete from GL_ACNOCNT");
-        ru.rb.ucb.util.GLAccountCounterType type1 = ru.rb.ucb.util.GLAccountCounterType.PROFIT_LOSS;
-        AccountKeys keys1 = AccountKeysBuilder.create()
-                .withAcc2("47023")
-                .withCurrency("810")
-                .withCompanyCode("8237")
-                .withPlCode("12333")
-                .build();
-        logger.info("deleted GL_ACNOCNT: " + cntDeleted);
+        try {
+            try {
+                executeAutonomic("drop table GL_ACNOCNT_tmp");
+            } catch (Exception e) {}
 
-        String frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
-                , keys1.getAccount2()
-                , keys1.getCurrency()
-                , keys1.getCompanyCode()
-                , keys1.getPlCode());
-        Assert.assertEquals(type1.getDecimalFormat().format(type1.getStartNumber()), frontPart);
+            executeAutonomic("create table GL_ACNOCNT_tmp as (select * from GL_ACNOCNT)");
 
-        frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
-                , keys1.getAccount2()
-                , keys1.getCurrency()
-                , keys1.getCompanyCode()
-                , keys1.getPlCode());
-        Assert.assertEquals(type1.getDecimalFormat().format(type1.getStartNumber()+ type1.getIncrementValue()), frontPart);
+            int cntDeleted = baseEntityRepository.executeNativeUpdate("delete from GL_ACNOCNT");
+            ru.rb.ucb.util.GLAccountCounterType type1 = ru.rb.ucb.util.GLAccountCounterType.PROFIT_LOSS;
+            AccountKeys keys1 = AccountKeysBuilder.create()
+                    .withAcc2("47023")
+                    .withCurrency("810")
+                    .withCompanyCode("8237")
+                    .withPlCode("12333")
+                    .build();
+            logger.info("deleted GL_ACNOCNT: " + cntDeleted);
 
-        frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
-                , keys1.getAccount2()
-                , keys1.getCurrency()
-                , keys1.getCompanyCode()
-                , keys1.getPlCode());
-        Assert.assertEquals(type1.getDecimalFormat().format(type1.getStartNumber()+ type1.getIncrementValue() + type1.getIncrementValue()), frontPart);
+            String frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
+                    , keys1.getAccount2()
+                    , keys1.getCurrency()
+                    , keys1.getCompanyCode()
+                    , keys1.getPlCode());
+            Assert.assertEquals(type1.getDecimalFormat().format(type1.getStartNumber()), frontPart);
 
-        // без plcode
-        GLAccountCounterType type = GLAccountCounterType.ASSET_LIABILITY;
-        AccountKeys keys2 = AccountKeysBuilder.create()
-                .withAcc2("47023")
-                .withCurrency("810")
-                .withCompanyCode("8237")
-                .build();
-        logger.info("deleted GL_ACNOCNT: " + cntDeleted);
-        frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
-                , keys2.getAccount2()
-                , keys2.getCurrency()
-                , keys2.getCompanyCode()
-                , keys2.getPlCode());
-        Assert.assertEquals(type.getDecimalFormat().format(type.getStartNumber()), frontPart);
-        frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
-                , keys2.getAccount2()
-                , keys2.getCurrency()
-                , keys2.getCompanyCode()
-                , keys2.getPlCode());
-        Assert.assertEquals(type.getDecimalFormat().format(type.getStartNumber()+ 1), frontPart);
+            frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
+                    , keys1.getAccount2()
+                    , keys1.getCurrency()
+                    , keys1.getCompanyCode()
+                    , keys1.getPlCode());
+            Assert.assertEquals(type1.getDecimalFormat().format(type1.getStartNumber()+ type1.getIncrementValue()), frontPart);
 
-        // исключения
-        type = GLAccountCounterType.ASSET_LIABILITY;
-        List<GLAccountExcludeInterval> sorted = type.getExcludes();
-        Collections.sort(sorted, (t1, t2) -> t1.getEndNumber() < t2.getEndNumber() ? 1 : t1.getEndNumber() == t2.getEndNumber() ? 0 : -1);
-        baseEntityRepository.executeNativeUpdate(
-                "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD IS NULL"
-                , sorted.get(0).getStartNumber() - 1, keys2.getAccount2(), keys2.getCurrency()
-                , keys2.getCompanyCode());
-        frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
-                , keys2.getAccount2()
-                , keys2.getCurrency()
-                , keys2.getCompanyCode()
-                , keys2.getPlCode());
-        Assert.assertEquals(type.getDecimalFormat().format(sorted.get(0).getEndNumber() + 1), frontPart);
+            frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
+                    , keys1.getAccount2()
+                    , keys1.getCurrency()
+                    , keys1.getCompanyCode()
+                    , keys1.getPlCode());
+            Assert.assertEquals(type1.getDecimalFormat().format(type1.getStartNumber()+ type1.getIncrementValue() + type1.getIncrementValue()), frontPart);
 
-        executeAutonomic("delete from GL_ACNOCNT");
-        executeAutonomic("insert into GL_ACNOCNT select * from GL_ACNOCNT_tmp");
-        executeAutonomic("drop table GL_ACNOCNT_tmp");
+            // без plcode
+            GLAccountCounterType type = GLAccountCounterType.ASSET_LIABILITY;
+            AccountKeys keys2 = AccountKeysBuilder.create()
+                    .withAcc2("47023")
+                    .withCurrency("810")
+                    .withCompanyCode("8237")
+                    .build();
+            logger.info("deleted GL_ACNOCNT: " + cntDeleted);
+            frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
+                    , keys2.getAccount2()
+                    , keys2.getCurrency()
+                    , keys2.getCompanyCode()
+                    , keys2.getPlCode());
+            Assert.assertEquals(type.getDecimalFormat().format(type.getStartNumber()), frontPart);
+            frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
+                    , keys2.getAccount2()
+                    , keys2.getCurrency()
+                    , keys2.getCompanyCode()
+                    , keys2.getPlCode());
+            Assert.assertEquals(type.getDecimalFormat().format(type.getStartNumber()+ 1), frontPart);
+
+            // исключения
+            type = GLAccountCounterType.ASSET_LIABILITY;
+            List<GLAccountExcludeInterval> sorted = type.getExcludes();
+            Collections.sort(sorted, (t1, t2) -> t1.getEndNumber() < t2.getEndNumber() ? 1 : t1.getEndNumber() == t2.getEndNumber() ? 0 : -1);
+            baseEntityRepository.executeNativeUpdate(
+                    "update GL_ACNOCNT set COUNT = ? where ACC2 = ? and CCYN = ? and CBCCN = ? and PLCOD = lpad(' ', 5, ' ')"
+                    , sorted.get(0).getStartNumber() - 1, keys2.getAccount2(), keys2.getCurrency()
+                    , keys2.getCompanyCode());
+            frontPart = remoteAccess.invoke(GLAccountFrontPartController.class, "getNextFrontPartNumber"
+                    , keys2.getAccount2()
+                    , keys2.getCurrency()
+                    , keys2.getCompanyCode()
+                    , keys2.getPlCode());
+            Assert.assertEquals(frontPart, type.getDecimalFormat().format(sorted.get(0).getEndNumber() + 1));
+        } finally {
+            executeAutonomic("delete from GL_ACNOCNT");
+            executeAutonomic("insert into GL_ACNOCNT select * from GL_ACNOCNT_TMP");
+            executeAutonomic("drop table GL_ACNOCNT_TMP");
+        }
     }
 
     /**
