@@ -9,16 +9,16 @@ import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.InputMethod;
+import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.InputMethod;
-import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -214,6 +214,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
                 if (isBuffer) {
                     // запись в журнал для пересчета и локазизации по счету
                     backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), dateMin);
+                    backvalueRepository.registerChanged(pd);
                 }
             }
         };
@@ -256,6 +257,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
             balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), pd.getPod());
             if (isBuffer) {
                 backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), pd.getPod());
+                backvalueRepository.registerChanged(pd);
             }
         };
     }

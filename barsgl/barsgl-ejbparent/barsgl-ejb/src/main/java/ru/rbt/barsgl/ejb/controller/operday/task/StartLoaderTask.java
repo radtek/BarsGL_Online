@@ -1,12 +1,12 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.inject.Inject;
 import java.util.Date;
@@ -68,7 +68,7 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
     }
 
     @Override
-    protected Date getOperday(Properties properties) {
+    public Date getOperday(Properties properties) {
         try {
             return TaskUtils.getDateFromGLOD(properties, jobHistoryRepository, null);
         }catch(Exception e){
