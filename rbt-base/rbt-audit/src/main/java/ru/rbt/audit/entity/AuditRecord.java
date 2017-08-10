@@ -81,6 +81,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , ReprocessAEOper
         , BulkOpeningAccountsTask
         , Acc2ForDeals
+        , StamtPstDeleted
     }
 
     public enum LogLevel {

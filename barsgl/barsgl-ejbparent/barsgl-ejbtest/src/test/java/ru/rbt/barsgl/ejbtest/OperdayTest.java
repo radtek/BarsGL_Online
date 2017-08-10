@@ -608,13 +608,6 @@ public class OperdayTest extends AbstractTimerJobTest {
         refreshOperdayState();
     }
 
-    private long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
-        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
-        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234");
-        return id;
-    }
-
     private List<DataRecord> getBalturList(AccRlnId rlnId) throws SQLException {
         return baseEntityRepository.select("select * from baltur where bsaacid = ? and acid = ? order by dat"
                 , rlnId.getBsaAcid(), rlnId.getAcid());
