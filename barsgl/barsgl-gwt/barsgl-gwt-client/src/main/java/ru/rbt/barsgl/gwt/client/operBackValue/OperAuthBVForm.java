@@ -7,7 +7,6 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
-import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -36,7 +35,7 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.shared.enums.SecurityActionCode;
-import ru.rbt.shared.user.AppUserWrapper;
+
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -60,14 +59,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 public class OperAuthBVForm extends MDForm {
     public static final String FORM_NAME = "Авторизованные операции";
 
-    private String _masterSelect = "select * from (" +
-            "select op.*, ex.POSTDATE_PLAN, ex.MNL_RSNCODE, ex.BV_CUTDATE, ex.PRD_LDATE, ex.PRD_CUTDATE, ex.MNL_NRT, " +
-            "ex.MNL_STATUS, ex.USER_AU3, ex.OTS_AU3, ex.OTS_AUTO, " +
-            "u.SURNAME || ' ' ||  LEFT(u.FIRSTNAME, 1) || '.' || LEFT(COALESCE(u.PATRONYMIC, ''), 1) || " +
-            "case when COALESCE(u.PATRONYMIC, '') = '' then '' else '.' end as AUTHOR\n" +
-            "from (select a.*, a.AC_DR || ' ' || a.AC_CR as dr_cr from V_GL_OPERCUST as a) op \n" +
-            "join GL_OPEREXT ex on op.GLOID = ex.GLOID \n" +
-            "left join GL_USER u on ex.USER_AU3 = u.USER_NAME) v ";
+
 
     private String _detailSelect =  "select * from V_GL_PDLINK ";
 
@@ -85,18 +77,17 @@ public class OperAuthBVForm extends MDForm {
     private boolean _owner = true;
 
     private boolean _detailFanMode = true;
-    private String user;
+    private AuthBVSqlBuilder _builder;
 
 
     public OperAuthBVForm() {
         super(FORM_NAME, null, "Проводки по операции", true);
         setLazyDetailRefresh(true);
 
-        AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
-        user = wrapper == null ? "" : wrapper.getUserName();
+        _builder = new AuthBVSqlBuilder();
+        _builder.setConsolidateFAN(! _detailFanMode);
+        setSql(_builder.buildSql(_mode, _spec, _owner));
 
-        setSql(sql());
-        //Window.alert(sql());
         reconfigure();
         doActionVisibility();
 
@@ -155,11 +146,11 @@ public class OperAuthBVForm extends MDForm {
                 changeFanMode(_changeFanModeAction, _detailFanMode = true);
 
                 doActionVisibility();
-                //   Window.alert("Before: " + sql());
-                setSql(sql());
+                _builder.setConsolidateFAN(! _detailFanMode);
+                setSql(_builder.buildSql(_mode, _spec, _owner));
+                changeColumnVisibility();
+                // Window.alert("Before Filter SQL: " + masterSql);
                 filterTuning();
-
-                //   Window.alert("After: " + sql());
             }
 
             private String getStatusBarText(){
@@ -248,6 +239,9 @@ public class OperAuthBVForm extends MDForm {
             public void execute() {
                 _detailFanMode = ! _detailFanMode;
                 changeFanMode(this, _detailFanMode);
+                _builder.setConsolidateFAN(! _detailFanMode);
+                setSql(_builder.buildSql(_mode, _spec, _owner));
+                masterRefreshAction.execute();
             }
         };
     }
@@ -257,24 +251,13 @@ public class OperAuthBVForm extends MDForm {
         setMasterExcelSql(masterSql);
     }
 
-    private String sql(){
-        return new StringBuilder()
-                .append(_masterSelect)
-                .append(whereBuilder()).toString();
-    }
-
-    private String whereBuilder(){
-       return "";
-    }
-
-
     @Override
     protected Table prepareMasterTable() {
         Table result = new Table();
         Column col;
 
         HashMap<Serializable, String> yesNoList = getYesNoList();
-        result.addColumn(new Column("GLOID", LONG, "ID операции", 70));// No Space
+        result.addColumn(new Column("GLOID", LONG, "ID операции", 70));
         result.addColumn(new Column("PST_REF", LONG, "ID запроса", 70, false, false));
         result.addColumn(new Column("ID_PST", STRING, "ИД сообщ АЕ", 70));
         result.addColumn(col = new Column("INP_METHOD", STRING, "Способ ввода", 70, false, false));
@@ -291,9 +274,9 @@ public class OperAuthBVForm extends MDForm {
         result.addColumn(col = new Column("PST_SCHEME", STRING, "Схема проводок", 70, false, false));
         col.setList(getEnumLabelsList(OperType.values()));
 
-        result.addColumn(col = new Column("MNL_STATUS", STRING, "Статус руч. обработки", 120));
+        result.addColumn(col = new Column("MNL_STATUS", STRING, "Статус руч. обработки", 120));  //ext
         col.setList(GLComponents.getArrayValuesList(new String[]{"", "COMPLETED", "CONTROL", "HOLD", "SIGNEDDATE"}));
-        result.addColumn(new Column("MNL_RSNCODE", STRING, "Причина руч. обработки", 120));
+        result.addColumn(new Column("MNL_RSNCODE", STRING, "Причина руч. обработки", 120));  //ext
 
         result.addColumn(procDate = new Column("PROCDATE", DATE, "Дата опердня", 80));
         procDate.setFormat("dd.MM.yyyy");
@@ -301,8 +284,9 @@ public class OperAuthBVForm extends MDForm {
         vDate.setFormat("dd.MM.yyyy");
         result.addColumn(col = new Column("POSTDATE", DATE, "Дата проводки", 80));
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Первичная дата проводки", 80, false, false));
+        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Первичная дата проводки", 80));  //ext
         col.setFormat("dd.MM.yyyy");
+        result.addColumn(new Column("PDATE_CHNG", STRING, "Дата проводки изменена", 100, false, false)); //ext
 
         result.addColumn(new Column("AC_DR", STRING, "Счет ДБ", 160));
         result.addColumn(new Column("ACCTYPE_DR", STRING, "Тип счета ДБ", 100, false, false));
@@ -349,26 +333,26 @@ public class OperAuthBVForm extends MDForm {
         //вычисляемое поле для фильтра по условию "ИЛИ"
         result.addColumn(new Column("DR_CR", STRING, "Счета Дт/Кр", 70, false, false));
 
-        result.addColumn(new Column("OTS_AUTO", Column.Type.DATETIME, "Время авт. обновления", 130, false, false));
-        result.addColumn(col = new Column("BV_CUTDATE", DATE, "Пороговая дата backvalue ", 80, false, false));
+        result.addColumn(new Column("OTS_AUTO", Column.Type.DATETIME, "Время авт. обновления", 130, false, false));  //ext
+        result.addColumn(col = new Column("BV_CUTDATE", DATE, "Пороговая дата backvalue ", 80, false, false));  //ext
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("PRD_LDATE", DATE, "Закрытый период", 80, false, false));
+        result.addColumn(col = new Column("PRD_LDATE", DATE, "Закрытый период", 80, false, false));  //ext
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("PRD_CUTDATE", DATE, "Дата закрытия периода", 80, false, false));
+        result.addColumn(col = new Column("PRD_CUTDATE", DATE, "Дата закрытия периода", 80, false, false));  //ext
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(new Column("MNL_NRT", STRING, "Комментарий руч. обработки", 300, false, false));
+        result.addColumn(new Column("MNL_NRT", STRING, "Комментарий руч. обработки", 300, false, false));  //ext
 
-        result.addColumn(col = new Column("AUTHOR", STRING, "Исполнитель", 180));
+        result.addColumn(col = new Column("AUTHOR", STRING, "Исполнитель", 180));  //ext
         col.setFilterable(false);
-        result.addColumn(new Column("USER_AU3", STRING, "Логин исполнителя", 180, false, false));
-        result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Время руч. обработки", 130, false, false));
+        result.addColumn(new Column("USER_AU3", STRING, "Логин исполнителя", 180, false, false));  //ext
+        result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Время руч. обработки", 130, false, false));  //ext
 
         return result;
     }
 
     @Override
     protected String prepareMasterSql() {
-        return _masterSelect;
+        return null;
     }
 
     @Override
@@ -509,6 +493,18 @@ public class OperAuthBVForm extends MDForm {
     private void changeFanMode(Action action, boolean detail){
         action.setImage(detail ? new Image(ImageConstants.INSTANCE.nonauthoriz()) : new Image(ImageConstants.INSTANCE.authoriz()));
         action.setHint(detail ? "Режим: Детальный" : "Режим: Сводный");
+    }
+
+    private void changeColumnVisibility(){
+        masterGrid.showColumns("MNL_STATUS", "MNL_RSNCODE", "POSTDATE_PLAN", "AUTHOR");
+        masterGrid.showColumns(false, true, true,"PDATE_CHNG", "OTS_AUTO",
+                                "BV_CUTDATE", "PRD_LDATE", "PRD_CUTDATE", "MNL_NRT", "USER_AU3", "OTS_AU3");
+        if (_mode == BVOperChoiceDlg.ModeType.STANDARD && _spec == BVOperChoiceDlg.SpecType.MANUAL)  return;
+
+        masterGrid.hideColumns("MNL_STATUS", "MNL_RSNCODE", "POSTDATE_PLAN", "AUTHOR", "PDATE_CHNG", "OTS_AUTO",
+                                              "BV_CUTDATE", "PRD_LDATE", "PRD_CUTDATE", "MNL_NRT", "USER_AU3", "OTS_AU3");
+
+
     }
 }
 

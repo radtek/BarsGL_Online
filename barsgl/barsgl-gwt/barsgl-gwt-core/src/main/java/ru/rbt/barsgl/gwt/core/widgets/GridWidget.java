@@ -452,7 +452,7 @@ public class GridWidget extends Composite implements IProviderEvents{
         col.setEditable(true);
     }
 
-	public void hideColumns(String... columnNames){
+    public void hideColumns(String... columnNames){
 		for (String columnName: columnNames){
             hideColumn(columnName);
 		}
@@ -479,4 +479,18 @@ public class GridWidget extends Composite implements IProviderEvents{
 		}
 		rebuildGrid();
 	}
+
+    private void showColumn(String columnName, boolean gridVisible, boolean filterVisible, boolean propVisible){
+        ru.rbt.barsgl.gwt.core.datafields.Column col = table.getColumn(columnName);
+        col.setVisible(gridVisible);
+        col.setFilterable(filterVisible);
+        col.setEditable(propVisible);
+    }
+
+    public void showColumns(boolean gridVisible, boolean filterVisible, boolean propVisible, String... columnNames){
+        for (String columnName: columnNames){
+            showColumn(columnName, gridVisible, filterVisible, propVisible);
+        }
+        rebuildGrid();
+    }
 }

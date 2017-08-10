@@ -61,9 +61,9 @@ public class OperNotAuthBVForm extends GridForm {
                              "select op.*, ex.POSTDATE_PLAN, ex.MNL_RSNCODE, ex.BV_CUTDATE, ex.PRD_LDATE, ex.PRD_CUTDATE, ex.MNL_NRT, " +
                              "ex.MNL_STATUS, ex.USER_AU3, ex.OTS_AU3, ex.OTS_AUTO, " +
                              "u.SURNAME || ' ' ||  LEFT(u.FIRSTNAME, 1) || '.' || LEFT(COALESCE(u.PATRONYMIC, ''), 1) || " +
-                             "case when COALESCE(u.PATRONYMIC, '') = '' then '' else '.' end as AUTHOR\n" +
-                             "from (select a.*, a.AC_DR || ' ' || a.AC_CR as dr_cr from V_GL_OPERCUST as a) op \n" +
-                             "join GL_OPEREXT ex on op.GLOID = ex.GLOID \n" +
+                             "case when COALESCE(u.PATRONYMIC, '') = '' then '' else '.' end as AUTHOR " +
+                             "from V_GL_OPERCUST as op " +
+                             "join GL_OPEREXT ex on op.GLOID = ex.GLOID " +
                              "left join GL_USER u on ex.USER_AU3 = u.USER_NAME) v ";
 
     private GridAction _modeChoiceAction;
