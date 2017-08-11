@@ -60,7 +60,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
         try {
-            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
+            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, orderBy);
             final List<Object> params = new ArrayList<>();
             if (null != sql.getParams()) {
                 params.addAll(Arrays.asList(sql.getParams()));
@@ -133,8 +133,8 @@ public class SqlPageSupportBean implements SqlPageSupport {
     private static SQL prepareCommonSql2(final String nativeSql, Criterion criterion, OrderByColumn orderBy) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
 
-        String uppersql = nativeSql.trim().toUpperCase();
-        final boolean isWherePresents = isWherePresents(uppersql);
+        String upperSql = nativeSql.trim().toUpperCase();
+        final boolean isWherePresents = isWherePresents(upperSql);
 
         SQL whereClause = null;
 
@@ -142,14 +142,12 @@ public class SqlPageSupportBean implements SqlPageSupport {
             whereClause = WhereInterpreter.interpret(criterion, isWherePresents ? WHERE_ALIAS : null);
         }
 
-        String resultSql = "select " + WHERE_ALIAS + ".*, rownum rn from (" + uppersql + ") " + WHERE_ALIAS + " ";
+        String resultSql = upperSql + (null != orderBy ? (" order by " + orderBy.getColumn() + " " + orderBy.getOrder()) : "");
+        resultSql = "select " + WHERE_ALIAS + ".*, rownum rn from (" + resultSql + ") " + WHERE_ALIAS + " ";
 
         // применяем where
         resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
 
-        if (null != orderBy) {
-            resultSql += " order by " + orderBy.getColumn() + orderBy.getOrder();
-        }
         return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
     }
 
