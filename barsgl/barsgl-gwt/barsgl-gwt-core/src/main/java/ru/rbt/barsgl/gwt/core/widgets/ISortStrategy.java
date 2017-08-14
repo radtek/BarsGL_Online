@@ -8,5 +8,5 @@ import java.util.ArrayList;
  * Created by akichigi on 21.04.15.
  */
 public interface ISortStrategy {
-    public ArrayList<SortItem> getSortCriteria(ColumnSortEvent event);
+     ArrayList<SortItem> getSortCriteria(ColumnSortEvent event);
 }

@@ -72,7 +72,6 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         masterTable = prepareMasterTable();
         masterSql = prepareMasterSql();
 
-        //System.out.println(masterSql);
         detailTable = prepareDetailTable();
         detailSql = prepareDetailSql();
 
@@ -258,4 +257,5 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
     public void setDetailExcelSql(String sql) {
         detailExport2Excel.setSql(sql);
     }
+
 }

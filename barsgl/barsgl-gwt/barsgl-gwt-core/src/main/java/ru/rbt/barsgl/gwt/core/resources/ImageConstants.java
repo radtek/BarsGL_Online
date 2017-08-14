@@ -158,4 +158,5 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"nonauthoriz.png"})
     public abstract ImageResource nonauthoriz();
 
+
 }

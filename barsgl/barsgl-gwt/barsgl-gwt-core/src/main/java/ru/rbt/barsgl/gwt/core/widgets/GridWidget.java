@@ -41,6 +41,7 @@ public class GridWidget extends Composite implements IProviderEvents{
     private ISortStrategy sortStrategy;
 	private ISortEvents sortEvents;
 	private IGridRowChanged rowChangedEvent;
+	private IRefreshEvent refreshEvent;
     private String id;
 
     private List<SortItem> sortCriteria = null;
@@ -70,6 +71,10 @@ public class GridWidget extends Composite implements IProviderEvents{
     }
 
     private ICellValueEvent cellValueEventHandler;
+
+	public void setRefreshEvent(IRefreshEvent refreshEvent) {
+		this.refreshEvent = refreshEvent;
+	}
 
 	public interface TableResources extends DataGrid2.Resources {
 		interface TableStyle extends DataGrid2.Style {}
@@ -309,6 +314,11 @@ public class GridWidget extends Composite implements IProviderEvents{
 		}
 	}
 
+	public void clear(){
+		grid.setRowCount(0);
+		LocalEventBus.fireEvent(new GridEvents(id, GridEvents.EventType.LOAD_DATA, grid.getRowCount()));
+	}
+
 	public ISortStrategy getSortStrategy(){
 		return sortStrategy;
 	}
@@ -359,6 +369,7 @@ public class GridWidget extends Composite implements IProviderEvents{
 			grid.setKeyboardSelectedRow(0);
 		}
 		LocalEventBus.fireEvent(new GridEvents(id, GridEvents.EventType.LOAD_DATA, grid.getRowCount()));
+		if (refreshEvent != null) refreshEvent.refresh();
 	}
 
 	public List<FilterItem> getFilterCriteria() {

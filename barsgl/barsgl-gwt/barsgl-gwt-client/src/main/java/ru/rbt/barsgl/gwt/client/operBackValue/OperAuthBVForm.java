@@ -23,6 +23,7 @@ import ru.rbt.barsgl.gwt.core.events.CommonEventsHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
+import ru.rbt.barsgl.gwt.core.widgets.IGridRowChanged;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -90,7 +91,7 @@ public class OperAuthBVForm extends MDForm {
 
         reconfigure();
         doActionVisibility();
-
+        mdWidget.setUseCurtain(true);
         _modeOperationAction.execute();
     }
 
@@ -503,8 +504,6 @@ public class OperAuthBVForm extends MDForm {
 
         masterGrid.hideColumns("MNL_STATUS", "MNL_RSNCODE", "POSTDATE_PLAN", "AUTHOR", "PDATE_CHNG", "OTS_AUTO",
                                               "BV_CUTDATE", "PRD_LDATE", "PRD_CUTDATE", "MNL_NRT", "USER_AU3", "OTS_AU3");
-
-
     }
 }
 
