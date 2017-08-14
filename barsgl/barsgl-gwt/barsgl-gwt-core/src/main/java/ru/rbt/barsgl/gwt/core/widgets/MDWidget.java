@@ -165,7 +165,6 @@ public class MDWidget extends Composite{
         div.getStyle().setLeft(0, Unit.PX);
         div.getStyle().setTop(0, Unit.PX);
         div.getStyle().setPosition(Style.Position.ABSOLUTE);
-        //div.getStyle().setZIndex(77777);
         return div;
     }
 }
