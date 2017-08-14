@@ -59,6 +59,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
+        String resultSql = null;
         try {
             SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, orderBy);
             final List<Object> params = new ArrayList<>();
@@ -66,14 +67,14 @@ public class SqlPageSupportBean implements SqlPageSupport {
                 params.addAll(Arrays.asList(sql.getParams()));
             }
 
-            String resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith);
+            resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith);
 
             log.info("SQL[selectRows] => " + resultSql);
             log.info("Parameters list: " + params.stream().map(p -> "param = " + p).collect(Collectors.joining(":")));
             DataSource dataSource = repository.getDataSource(rep);
             return repository.selectMaxRows(dataSource, resultSql, MAX_ROW_COUNT, params.toArray());
         } catch (Exception e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
+            throw new DefaultApplicationException(e.getMessage() + (resultSql != null ? (" sql: " + resultSql) : ""), e);
         }
     }
 
@@ -84,10 +85,10 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
+        String resultSql = null;
         try {
             SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
 
-            String resultSql;
             if (isWherePresents(sql.getQuery())) {
                 resultSql = "select 1 from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
             } else {
@@ -98,7 +99,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
                 cnt = -MAX_ROW_COUNT;       // свыше MAX_ROW_COUNT
             return cnt;
         } catch (Exception e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
+            throw new DefaultApplicationException(e.getMessage() + (resultSql != null ? (" sql: " + resultSql) : ""), e);
         }
     }
 
