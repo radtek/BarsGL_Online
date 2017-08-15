@@ -31,11 +31,12 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
     public BVSourceDeal() {
     }
 
-    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, String user) {
+    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, String user, Date createTimestamp) {
         this.id = id;
         this.endDate = endDate;
         this.shift = shift;
         this.user = user;
+        this.createTimestamp = createTimestamp;
     }
 
     public BVSourceDealId getId() {

@@ -1,5 +1,8 @@
 package ru.rbt.barsgl.ejb.integr.dict;
 
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.entity.dict.BVSourceDeal;
+import ru.rbt.barsgl.ejb.entity.dict.BVSourceDealId;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedReportPeriodRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
@@ -25,21 +28,61 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
     private ClosedReportPeriodRepository repository;
 
     @Inject
+    OperdayController operdayController;
+
+    @Inject
     private UserContext userContext;
+
+    @Inject
+    ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Override
     public RpcRes_Base<ClosedReportPeriodWrapper> create(ClosedReportPeriodWrapper wrapper) {
-        return null;
+        String errorMessage = validate(wrapper);
+        if(!isEmpty(errorMessage)){
+            return new RpcRes_Base<>(wrapper, true, errorMessage);
+        }
+
+        return create(wrapper, repository, ClosedReportPeriod.class, wrapper.getLastDate(),
+                format("Отчетный период с датой закрытия '%d' уже существует", wrapper.getLastDate()),
+                format("Создан отчетный период с датой закрытия '%s' и датой отсечения '%s'", wrapper.getLastDate(), wrapper.getCutDate()),
+                format("Ошибка при создании отчетного периода с датой закрытия '%s'", wrapper.getLastDate()),
+                () -> new ClosedReportPeriod(wrapper.getLastDate()
+                        , wrapper.getCutDate()
+                        , userContext.getUserName()
+                        , operdayController.getSystemDateTime()));
     }
 
     @Override
     public RpcRes_Base<ClosedReportPeriodWrapper> update(ClosedReportPeriodWrapper wrapper) {
-        return null;
+        String errorMessage = validate(wrapper);
+        if(!isEmpty(errorMessage)){
+            return new RpcRes_Base<>(wrapper, true, errorMessage);
+        }
+
+        return update(wrapper, repository, ClosedReportPeriod.class, wrapper.getLastDate(),
+                format("Отчетный период с датой закрытия '%d' не найден", wrapper.getLastDate()),
+                format("Изменен отчетный период с датой закрытия '%s' и датой отсечения '%s'", wrapper.getLastDate(), wrapper.getCutDate()),
+                format("Ошибка при изменении отчетного периода с датой закрытия '%s'", wrapper.getLastDate()),
+                (param) -> {
+                    param.setCutDate(wrapper.getCutDate());
+                    param.setUser(userContext.getUserName());
+                    param.setCreateTimestamp(operdayController.getSystemDateTime());
+                });
     }
 
     @Override
     public RpcRes_Base<ClosedReportPeriodWrapper> delete(ClosedReportPeriodWrapper wrapper) {
-        return null;
+        String parseError = parseDates(wrapper);
+        if (!isEmpty(parseError))
+            return new RpcRes_Base<>(wrapper, true, parseError);
+        if (!wrapper.getLastDate().after(operdayController.getOperday().getCurrentDate()))
+            return new RpcRes_Base<>(wrapper, true, "Нельзя удалить отчетный с датой отсечения <= текущего опердня");;
+
+        return delete(wrapper, repository, ClosedReportPeriod.class, wrapper.getLastDate(),
+                format("Отчетный период с датой закрытия '%d' не найден", wrapper.getLastDate()),
+                format("Удален отчетный период с датой закрытия '%s' и датой отсечения '%s'", wrapper.getLastDate(), wrapper.getCutDate()),
+                format("Ошибка при удаления отчетного периода с датой закрытия '%s'", wrapper.getLastDate()));
     }
 
     private String parseDates(ClosedReportPeriodWrapper wrapper) {
@@ -65,11 +108,18 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
             if (!isEmpty(parseError))
                 return parseError;
 
-            // TODO
             // cutDate >= текущий ОД
+            if (wrapper.getCutDate().before(operdayController.getOperday().getCurrentDate()))
+                errorList.add(format(""));
             // cutDate > lastDate
-            //
-
+            if (!wrapper.getCutDate().after(wrapper.getLastDate()))
+                errorList.add(format(""));
+            // проверка непересечения периодов
+            ClosedReportPeriod intersected = repository.findIntersectedRecord(wrapper);
+            if (null != intersected)
+                errorList.add(format("Найден отчетный период с датой закрытия '%s' и датой отсечения '%s', перекрывающий заданный"
+                        , dateUtils.onlyDateString(intersected.getLastDate())
+                        , dateUtils.onlyDateString(intersected.getCutDate())));
         } catch (Exception e) {
             errorList.add(e.getMessage());
         }

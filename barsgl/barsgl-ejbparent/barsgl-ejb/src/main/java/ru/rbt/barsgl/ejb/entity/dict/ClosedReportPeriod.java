@@ -28,6 +28,16 @@ public class ClosedReportPeriod extends BaseEntity<Date> {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createTimestamp;
 
+    public ClosedReportPeriod() {
+    }
+
+    public ClosedReportPeriod(Date lastDate, Date cutDate, String user, Date createTimestamp) {
+        this.lastDate = lastDate;
+        this.cutDate = cutDate;
+        this.user = user;
+        this.createTimestamp = createTimestamp;
+    }
+
     @Override
     public Date getId() {
         return lastDate;
