@@ -54,7 +54,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
 
         BVSourceDealId id = new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate());
         return create(wrapper, repository, BVSourceDeal.class, id,
-                format("Настройка глубины BackValue для источника '%d' c даты '%s' уже существует", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
+                format("Настройка глубины BackValue для источника '%s' c даты '%s' уже существует", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Создана настройка глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Ошибка при создании настройки глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 () -> new BVSourceDeal(id
@@ -78,7 +78,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
         }
 
         return update(wrapper, repository, BVSourceDeal.class, new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate()),
-                format("Настройка глубины BackValue для источника '%d' c даты '%s' не найдена", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
+                format("Настройка глубины BackValue для источника '%s' c даты '%s' не найдена", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Изменена настройка глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Ошибка при изменении настройки глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 (param) -> {
@@ -104,7 +104,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                 , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
 
         return delete(wrapper, repository, BVSourceDeal.class, new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate()),
-                format("Настройка глубины BackValue для источника '%d' c даты '%s' не найдена", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
+                format("Настройка глубины BackValue для источника '%s' c даты '%s' не найдена", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Удалена настройка глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Ошибка при удалении настройки глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr())
                 );

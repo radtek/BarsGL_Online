@@ -13,15 +13,20 @@ import java.util.Date;
 public class BVSourceDealRepository extends AbstractBaseEntityRepository<BVSourceDeal, BVSourceDealId> {
 
     public void closePreviousRecord(BVSourceDeal newRecord, Date dateClose) {
-        executeUpdate("update BVSourceDeal s set s.dateEnd = ?1 where s.id.sourceDeal = ?2 and s.dateEnd is null"
+        executeUpdate("update BVSourceDeal s set s.endDate = ?1 where s.id.sourceDeal = ?2 and s.endDate is null"
                         , dateClose, newRecord.getId().getSourceDeal());
     }
 
     public BVSourceDeal findIntersectedRecord(BVSourceDealWrapper wrapper) {
-        String startAfter = null == wrapper.getEndDate() ? "" : " and s.id.dateStart <= ?3";
-        return selectFirst(BVSourceDeal.class, "from BVSourceDeal s where s.id.sourceDeal = ?1 and " +
-                        " (not s.dateEnd is null and s.dateEnd >= ?2" +
-                        " or s.id.dateStart >= ?2" + startAfter + ")"
-                , wrapper.getSourceDeal(), wrapper.getStartDate(), wrapper.getEndDate());
+        String sql = "from BVSourceDeal s where s.id.sourceDeal = ?1 " +
+                " and (not s.endDate is null and s.endDate >= ?2 or s.id.startDate > ?2";
+        if (null == wrapper.getEndDate()) {
+            return selectFirst(BVSourceDeal.class, sql + ")"
+                    , wrapper.getSourceDeal(), wrapper.getStartDate());
+
+        } else {
+            return selectFirst(BVSourceDeal.class, sql + " and s.id.startDate <= ?3)"
+                    , wrapper.getSourceDeal(), wrapper.getStartDate(), wrapper.getEndDate());
+        }
     }
 }

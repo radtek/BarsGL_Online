@@ -15,7 +15,7 @@ public class ClosedReportPeriodRepository extends AbstractBaseEntityRepository<C
 
     public ClosedReportPeriod findIntersectedRecord(ClosedReportPeriodWrapper wrapper) {
         return selectFirst(ClosedReportPeriod.class, "from ClosedReportPeriod p where" +
-                " (p.cutDate > ?1 and p.lastDate <= ?2) or" +
-                " (p.cutDate < ?1 and p.lastDate >= ?2)", wrapper.getCutDate(), wrapper.getLastDate());
+                " (p.cutDate > ?1 and p.lastDate < ?2) or" +
+                " (p.cutDate < ?1 and p.lastDate > ?2)", wrapper.getCutDate(), wrapper.getLastDate());
     }
 }
