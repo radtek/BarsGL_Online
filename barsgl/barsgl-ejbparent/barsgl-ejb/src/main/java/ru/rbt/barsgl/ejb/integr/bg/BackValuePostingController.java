@@ -5,7 +5,7 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.oper.EditPostingGLPdProcessor;
@@ -37,11 +37,9 @@ import ru.rbt.shared.enums.SecurityActionCode;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-import javax.validation.ValidationException;
 import java.io.Serializable;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -61,7 +59,6 @@ import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
 import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
 import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
-import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ONE_OF;
 import static ru.rbt.ejbcore.validation.ErrorCode.BV_MANUAL_ERROR;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
@@ -466,7 +463,7 @@ public class BackValuePostingController {
     }
 
     public void checkClosedPeriod(Long userId, Date postDateNew) {
-        ClosedPeriodView period = closedPeriodRepository.getPeriod();
+        ClosedReportPeriodView period = closedPeriodRepository.getPeriod();
         if(!postDateNew.after(period.getLastDate()) &&                // разрешено только для суперпользователя
                 !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
             throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено.\n" +

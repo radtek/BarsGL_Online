@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.repository.dict;
 
-import ru.rbt.barsgl.ejb.entity.dict.BVSourceDealView;
-import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
 import ru.rbt.ejbcore.repository.AbstractCachedRepository;
 
 import javax.annotation.PostConstruct;
@@ -19,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @AccessTimeout(unit = TimeUnit.MINUTES, value = 15)
 @Lock(LockType.READ)
-public class ClosedPeriodCashedRepository extends AbstractCachedRepository<ClosedPeriodView, Date> {
+public class ClosedPeriodCashedRepository extends AbstractCachedRepository<ClosedReportPeriodView, Date> {
 
     @Override
-    protected Class<ClosedPeriodView> getEntityClass() {
-        return ClosedPeriodView.class;
+    protected Class<ClosedReportPeriodView> getEntityClass() {
+        return ClosedReportPeriodView.class;
     }
 
     @Lock(LockType.WRITE)
@@ -32,8 +31,8 @@ public class ClosedPeriodCashedRepository extends AbstractCachedRepository<Close
         super.flushCache();
     }
 
-    public ClosedPeriodView getPeriod() {
-        List<ClosedPeriodView> period = getAllObjectsCached();
+    public ClosedReportPeriodView getPeriod() {
+        List<ClosedReportPeriodView> period = getAllObjectsCached();
         if (!period.isEmpty()) {
             return period.get(0);
         } else {

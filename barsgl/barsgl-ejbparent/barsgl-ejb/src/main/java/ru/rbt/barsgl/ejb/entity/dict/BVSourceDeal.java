@@ -16,7 +16,7 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
 
     @Column(name = "DTE")
     @Temporal(TemporalType.DATE)
-    private Date dateEnd;
+    private Date endDate;
 
     @Column(name = "BV_SHIFT")
     Integer shift;
@@ -28,6 +28,16 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createTimestamp;
 
+    public BVSourceDeal() {
+    }
+
+    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, String user) {
+        this.id = id;
+        this.endDate = endDate;
+        this.shift = shift;
+        this.user = user;
+    }
+
     public BVSourceDealId getId() {
         return id;
     }
@@ -36,12 +46,12 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
         this.id = id;
     }
 
-    public Date getDateEnd() {
-        return dateEnd;
+    public Date getEndDate() {
+        return endDate;
     }
 
-    public void setDateEnd(Date dateEnd) {
-        this.dateEnd = dateEnd;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     public Integer getShift() {

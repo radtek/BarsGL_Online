@@ -306,7 +306,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                     , dateUtils.onlyDateString(operday.getCurrentDate())));
             try {
                 beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                    closeLastWorkdayBalanceTask.closeBalance(false);
+                    closeLastWorkdayBalanceTask.closeBalance(false, false);
                     return null;
                 }, 60 * 60);
             } catch (Exception e) {
@@ -464,9 +464,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     }
 
     protected boolean checkRun(String jobName, Properties properties, List<String> errList) throws Exception {
-        return !(!checkChronology(operdayController.getOperday().getCurrentDate()
-                , operdayController.getSystemDateTime(), properties, errList)
-                || !checkPackagesToloadExists(properties, errList));
+        Date curdate = operdayController.getOperday().getCurrentDate();
+        return !(!checkChronology(curdate, operdayController.getSystemDateTime(), properties, errList)
+                || !checkPackagesToloadExists(properties, errList)
+                || !closeLastWorkdayBalanceTask.checkNotRunOther(curdate, this.getClass(), PdSyncTask.class, CloseLwdBalanceCutTask.class).getResult());
 
     }
 

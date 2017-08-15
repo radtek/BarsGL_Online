@@ -7,26 +7,25 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.dict.LwdBalanceCutRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
-import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.shared.Assert;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
-import javax.ejb.EJB;
+import javax.ejb.*;
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operday;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -34,7 +33,11 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 /**
  * Created by er18837 on 07.08.2017.
  */
+@Singleton
+@AccessTimeout(value = 5, unit = MINUTES)
 public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
+
+    final private String myTaskName = CloseLwdBalanceCutTask.class.getSimpleName();
 
     @Inject
     private OperdayController operdayController;
@@ -62,14 +65,19 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
 
     @Override
     public boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
+        LwdBalanceCutView cutRecord = lwdCutCachedRepository.getRecord();
+        auditController.info(AuditRecord.LogCode.Operday, String.format("Задача '%s': Требуется автоматическое закрытие БАЛАНСА предыдущего дня: дата '%s', время '%s'",
+                myTaskName, dateUtils.onlyDateString(cutRecord.getRunDate()), cutRecord.getCutTime()));
+
         Operday operday = operdayController.getOperday();
         final Date currentDateTime = operdayController.getSystemDateTime();
         final Date currentDate = DateUtils.onlyDate(currentDateTime);
+        final String curDateStr = dateUtils.onlyDateString(operday.getCurrentDate());
+        final String prevDateStr = dateUtils.onlyDateString(operday.getLastWorkingDay());
         if (OPEN == operday.getLastWorkdayStatus()) {
             try {
-                return (boolean) lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
-                    // TODO остановить обработку
-                    if (closeBalance(true)) {
+                lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
+                    if (closeBalance(true, true).getResult()) {
                         lwdBalanceCutRepository.updateCloseTimestamp(currentDate, currentDateTime);
                         lwdCutCachedRepository.flushCache();
                         return true;
@@ -77,43 +85,52 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
                         return false;
                 });
             } catch (Throwable e) {
-                auditController.error(Operday, format("Ошибка закрытия БАЛАНСА предыдущего ОД из задачи принудительного закрытия баланса. Текущий ОД '%s'"
-                        , dateUtils.onlyDateString(operday.getCurrentDate())), null, e);
+                auditController.error(Operday, format("Ошибка закрытия БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'"
+                        , prevDateStr, curDateStr), null, e);
                 return false;
             }
         } else {
-            auditController.info(Operday, "Баланс предыдущего дня уже был закрыт вне задачи принудительного закрытия");
+            auditController.info(Operday, format("БАЛАНС предыдущего ОД '%s' уже был закрыт. Текущий ОД '%s'"
+                    , prevDateStr, curDateStr));
             try {
-                return (boolean) lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
+                lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
                     lwdBalanceCutRepository.updateCloseTimestamp(currentDate, currentDateTime);
                     lwdCutCachedRepository.flushCache();
                     return true;
                 });
             } catch (Throwable e) {
-                auditController.error(Operday, format("Ошибка закрытия БАЛАНСА предыдущего ОД из задачи принудительного закрытия баланса. Текущий ОД '%s'"
-                        , dateUtils.onlyDateString(operday.getCurrentDate())), null, e);
+                auditController.error(Operday, format("Ошибка закрытия БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'"
+                        , prevDateStr, curDateStr), null, e);
                 return false;
             }
         }
-    }
-
-    public boolean checkRunOther(Date operday, Class myTask, Class ... otherTasks) {
-        for (Class other : otherTasks) {
-            if (jobHistoryRepository.isAlreadyRunning(other.getSimpleName(), operday)) {
-                auditController.warning(Operday, format("Нельзя запустить задачу '%s': выполняется задача '%s'"
-                        , myTask.getSimpleName(), other.getSimpleName() ));
-                return false;
-            }
-        }
+        auditController.info(AuditRecord.LogCode.Operday, format("Успешное завершение залачи '%s'", myTaskName));
         return true;
     }
 
+    // проверяет запуск конкурирующих задач
+    public RpcRes_Base<Boolean> checkNotRunOther(Date operday, Class myTask, Class ... otherTasks) {
+        for (Class other : otherTasks) {
+            if (jobHistoryRepository.isAlreadyRunning(other.getSimpleName(), operday)) {
+                String msg = format("Нельзя запустить задачу '%s': выполняется задача '%s'", myTask.getSimpleName(), other.getSimpleName());
+                auditController.warning(Operday, msg);
+                return new RpcRes_Base<>(false, true, msg);
+            }
+        }
+        return new RpcRes_Base<>(true, false, "");
+    }
+
+    // проверить запуск PdSync u PreCOB
+    private RpcRes_Base<Boolean> checkNotRunOther(Date operdate) {
+        return checkNotRunOther(operdate, this.getClass(), PdSyncTask.class, ExecutePreCOBTaskNew.class);
+    }
+
     @Override
-    protected boolean checkRun(String jobName, Properties properties) throws Exception {
+    public boolean checkRun(String jobName, Properties properties) throws Exception {
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
             auditController.warning(Operday, format("Нельзя запустить задачу '%s': опердень в статусе '%s'"
-                    , this.getClass().getSimpleName(), operday.getPhase().name() ));
+                    , myTaskName, operday.getPhase().name() ));
             return false;
         }
 
@@ -121,13 +138,13 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
         final Date currentDate = DateUtils.onlyDate(currentDateTime);
 
         LwdBalanceCutView cutRecord = lwdCutCachedRepository.getRecord();
-        boolean needClose = null != cutRecord                               // есть запись
-                && currentDate.equals(cutRecord.getRunDate())               // надо закрыть сегодня
-                && !currentDateTime.before(cutRecord.getCutDateTime());     // пришло время!
+        boolean needRun = null != cutRecord                                         // есть запись
+                && null != cutRecord.getCutDateTime()                               // установлено время
+                && currentDate.equals(cutRecord.getRunDate())                       // надо закрыть сегодня
+                && !currentDateTime.before(cutRecord.getCutDateTime());             // пришло время!
 
-        // проверить запуск PdSync u PreCOB
-        boolean isRunOther = checkRunOther(operday.getCurrentDate(), this.getClass(), PdSyncTask.class, ExecutePreCOBTaskNew.class);
-        return needClose && !isRunOther;
+        boolean notRunOther = checkNotRunOther(operday.getCurrentDate()).getResult();
+        return needRun && notRunOther;
     }
 
     @Override
@@ -137,20 +154,29 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
 
     // ======== перенесено из CloseLastWorkdayBalanceTask =========
 
-    // был executeWork
-    public boolean closeBalance(boolean withStorno) {
+    @Lock(LockType.WRITE)
+    // измененный вариант CloseLastWorkdayBalanceTask.executeWork
+    public RpcRes_Base<Boolean> closeBalance(boolean withStorno, boolean stopProcessing) {
         final Operday operday = operdayController.getOperday();
-        String curdate = dateUtils.onlyDateString(operday.getLastWorkingDay());
-        String prevdate = dateUtils.onlyDateString(operday.getCurrentDate());
+        String curDateStr = dateUtils.onlyDateString(operday.getLastWorkingDay());
+        String prevDateStr = dateUtils.onlyDateString(operday.getCurrentDate());
         try {
-            final boolean isWasProcessingAllowed = operdayController.isProcessingAllowed();
-            if (!synchronizationController.waitStopProcessing()) {
-                auditController.error(Operday, format("Не удалось остановить обработку проводок. Закрытие баланса предыдущего ОД '%s' прервано. Текущий ОД '%s'"
-                                , prevdate, curdate), null, "");
-                return false;
+            // проверим, что не запущены конкурирующие задачи
+            RpcRes_Base<Boolean> res = checkNotRunOther(operday.getCurrentDate());
+            if (!res.getResult())
+                return res;
+
+            auditController.info(AuditRecord.LogCode.Operday, format("Закрытие БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'.", prevDateStr, curDateStr));
+
+            boolean isWasProcessingAllowed = false;
+            if (stopProcessing) {
+                isWasProcessingAllowed = operdayController.isProcessingAllowed();
+                if (!synchronizationController.waitStopProcessing()) {
+                    String msg = format("Не удалось остановить обработку проводок. Закрытие БАЛАНСА предыдущего ОД '%s' прервано. Текущий ОД '%s'", prevDateStr, curDateStr);
+                    auditController.error(Operday, msg, null, "");
+                    return new RpcRes_Base<>(false, true, msg);
+                }
             }
-            auditController.info(AuditRecord.LogCode.Operday, format("Закрытие баланса предыдущего ОД '%s'. Текущий ОД '%s'."
-                    , prevdate, curdate));
 
             checkOperdayStatus(operdayController.getOperday());
 
@@ -164,13 +190,13 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
                 operdayController.setProcessingStatus(ProcessingStatus.ALLOWED);
             }
 
-            auditController.info(AuditRecord.LogCode.Operday, format("Успешное окончание закрытия баланса предыдущего ОД '%s'. Текущий ОД '%s'."
-                    , prevdate, curdate));
-            return true;
+            String msg = format("Успешное закрытие БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'", prevDateStr, curDateStr);
+            auditController.info(AuditRecord.LogCode.Operday, msg);
+            return new RpcRes_Base<>(true, false, msg);
         } catch (Throwable e) {
-            auditController.error(AuditRecord.LogCode.Operday, format("Ошибка закрытия баланса предыдущего ОД '%s'. Текущий ОД '%s'."
-                    , prevdate, curdate), null, e);
-            return false;
+            String msg = format("Ошибка закрытия БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'", prevDateStr, curDateStr);
+            auditController.error(AuditRecord.LogCode.Operday, msg, null, e);
+            return new RpcRes_Base<>(false, true, msg);
         }
     }
 

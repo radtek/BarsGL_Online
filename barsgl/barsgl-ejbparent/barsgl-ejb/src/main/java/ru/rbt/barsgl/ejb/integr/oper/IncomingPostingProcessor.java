@@ -5,7 +5,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BackValueParameters;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -718,7 +718,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
                             ? valueDate
                             : calendarRepository.getWorkDateAfter(valueDate, withTech);
-        ClosedPeriodView period = closedPeriodRepository.getPeriod();
+        ClosedReportPeriodView period = closedPeriodRepository.getPeriod();
 
         String reason = vdateCut.before(depthCutDate)
                             ? OverDepth.getValue()

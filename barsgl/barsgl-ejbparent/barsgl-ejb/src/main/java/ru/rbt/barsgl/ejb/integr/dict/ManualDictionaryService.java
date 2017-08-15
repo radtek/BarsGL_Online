@@ -32,6 +32,12 @@ public class ManualDictionaryService {
   @EJB
   private SourcesDealsController sourcesDealsController;
 
+  @Inject
+  private BVSourceDealController bvSourceDealController;
+
+  @Inject
+  private ClosedReportPeriodController closedReportPeriodController;
+
   @EJB
   private TypesOfTermsController typesOfTermsController;
 
@@ -78,7 +84,14 @@ public class ManualDictionaryService {
 
   public RpcRes_Base<ExtCodeNameWrapper> saveSourcesDeals(ExtCodeNameWrapper wrapper, FormAction action) {
     return save(sourcesDealsController, wrapper, action);
+  }
 
+  public RpcRes_Base<BVSourceDealWrapper> saveBVSourceDeal(BVSourceDealWrapper wrapper, FormAction action) {
+    return save(bvSourceDealController, wrapper, action);
+  }
+
+  public RpcRes_Base<ClosedReportPeriodWrapper> saveClosedReportPeriod(ClosedReportPeriodWrapper wrapper, FormAction action) {
+    return save(closedReportPeriodController, wrapper, action);
   }
 
   public RpcRes_Base<CodeNameWrapper> saveTypesOfTerms(CodeNameWrapper wrapper, FormAction action) {

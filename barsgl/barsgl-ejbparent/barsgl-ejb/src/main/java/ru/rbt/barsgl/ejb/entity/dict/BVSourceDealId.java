@@ -13,7 +13,7 @@ public class BVSourceDealId implements Serializable {
 
     @Column(name = "DTB")
     @Temporal(TemporalType.DATE)
-    private Date dateBegin;
+    private Date startDate;
 
     @Column(name = "ID_SRC")
     private String sourceDeal;
@@ -21,14 +21,14 @@ public class BVSourceDealId implements Serializable {
     public BVSourceDealId() {
     }
 
-    public BVSourceDealId(String sourceDeal, Date dateBegin) {
-        this.dateBegin = dateBegin;
+    public BVSourceDealId(String sourceDeal, Date startDate) {
+        this.startDate = startDate;
         this.sourceDeal = sourceDeal;
     }
 
 
-    public Date getDateBegin() {
-        return dateBegin;
+    public Date getStartDate() {
+        return startDate;
     }
 
     public String getSourceDeal() {

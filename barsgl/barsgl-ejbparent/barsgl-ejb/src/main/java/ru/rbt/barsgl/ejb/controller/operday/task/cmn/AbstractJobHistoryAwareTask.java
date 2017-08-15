@@ -49,7 +49,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
     }
 
     @Override
-    public final void run(String jobName, Properties properties) throws Exception {
+    public void run(String jobName, Properties properties) throws Exception {   // final
         try {
             jobHistoryRepository.executeInNewTransaction(persistence -> {
                 initExecPrivate(jobName, properties);

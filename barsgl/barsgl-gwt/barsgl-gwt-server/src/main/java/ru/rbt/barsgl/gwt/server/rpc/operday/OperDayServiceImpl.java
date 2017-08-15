@@ -5,10 +5,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
-import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.CloseLwdBalanceCutTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
-import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
@@ -89,8 +86,8 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
                     throw new RuntimeException("Флаг мониторинга в недопустимом для закрытия дня статусе." +
                             "\n Вероятно, обработка проводок еще не закончена");
                 }
-                // TODO CloseLwdBalanceCutTask
-                return runTask(CloseLastWorkdayBalanceTask.class.getSimpleName(), "Закрытие баланса предыдущего операционного дня");
+
+                return localInvoker.invoke(CloseLwdBalanceCutTask.class, "closeBalance", true, true);
             }
         }.process();
     }

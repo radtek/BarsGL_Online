@@ -769,11 +769,12 @@ public class OperdaySynchronizationController {
             if (ProcessingStatus.STARTED == operdayController.getProcessingStatus()) {
                 pdRepository.executeInNewTransaction(p ->  {operdayController.setProcessingStatus(ProcessingStatus.REQUIRED); return null; });
             }
-            int timeout = (int)(long)propertiesRepository.getNumberDef(PropertyName.STOP_PROC_TIMEOUT.getName(), 3L);
+            int timeout = (int)(long)propertiesRepository.getNumberDef(PropertyName.STOP_PROC_TIMEOUT.getName(), 3L) * 6;   // интервалов по 10 секунд
             int tryCount = 0;
             while (tryCount < timeout) {
                 tryCount++;
-                TimeUnit.MINUTES.sleep(1);
+//                TimeUnit.MINUTES.sleep(1);
+                TimeUnit.SECONDS.sleep(10);
                 if (ProcessingStatus.STOPPED == operdayController.getProcessingStatus()) {
                     return true;
                 }

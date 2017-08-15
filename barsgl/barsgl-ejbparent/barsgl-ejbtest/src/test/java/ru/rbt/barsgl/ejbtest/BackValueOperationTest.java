@@ -5,15 +5,12 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.dict.ClosedPeriodView;
-import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
-import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
@@ -25,7 +22,6 @@ import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
-import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -33,15 +29,12 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -59,7 +52,6 @@ import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
-import static ru.rbt.barsgl.ejbtest.ReprocessErrorTest.getPostingErrorRecord;
 import static ru.rbt.barsgl.ejbtest.ValidationTest.checkOperErrorRecord;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.COMPLETED;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.CONTROL;
@@ -149,7 +141,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
 
         DataRecord data1 = baseEntityRepository.selectFirst("select PRD_LDATE, PRD_CUTDATE from V_GL_CRPRD");
 
-        ClosedPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
+        ClosedReportPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
 
         Assert.assertEquals(data1.getDate(0), period.getLastDate());
         Assert.assertEquals(data1.getDate(1), period.getCutDate());
@@ -198,7 +190,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         // SECMOD в закрытый период
         Integer shiftSEC = remoteAccess.invoke(BVSouceCachedRepository.class, "getDepth", SECMOD.getLabel());
         Assert.assertNotNull(shiftSEC);
-        ClosedPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
+        ClosedReportPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
         Assert.assertNotNull(period);
         Date operday = period.getCutDate();
         Date lwdate = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", operday, 1, false);
@@ -220,7 +212,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%3");
         BigDecimal amt = new BigDecimal("98.76");
 
-        ClosedPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
+        ClosedReportPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
         Assert.assertNotNull(period);
 
         Operday operday = getOperday();
@@ -285,7 +277,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         String bsaCt = "00000810000000000000";
         BigDecimal amt = new BigDecimal("98.76");
 
-        ClosedPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
+        ClosedReportPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
         Assert.assertNotNull(period);
 
         Operday operday = getOperday();

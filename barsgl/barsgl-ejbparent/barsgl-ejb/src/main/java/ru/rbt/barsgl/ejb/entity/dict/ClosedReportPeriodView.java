@@ -10,7 +10,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "V_GL_CRPRD")
-public class ClosedPeriodView extends BaseEntity<Date> {
+public class ClosedReportPeriodView extends BaseEntity<Date> {
 
     @Id
     @Column(name = "PRD_LDATE")
@@ -20,6 +20,13 @@ public class ClosedPeriodView extends BaseEntity<Date> {
     @Column(name = "PRD_CUTDATE")
     @Temporal(TemporalType.DATE)
     private Date cutDate;
+
+    @Column(name = "USER")
+    String user;
+
+    @Column(name = "OTS")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createTimestamp;
 
     @Override
     public Date getId() {

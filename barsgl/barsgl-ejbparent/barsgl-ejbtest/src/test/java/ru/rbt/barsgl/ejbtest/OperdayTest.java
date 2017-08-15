@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -27,6 +28,7 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -34,6 +36,7 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
@@ -44,6 +47,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
+import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STARTED;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
@@ -130,37 +134,6 @@ public class OperdayTest extends AbstractTimerJobTest {
         newOperday = getOperday();
         Assert.assertEquals(ONLINE, newOperday.getPhase());
         Assert.assertEquals(DIRECT, newOperday.getPdMode());
-    }
-
-    /**
-     * Выполнение задачи закрытие баланса предыдущего рабочего дня
-     * @fsd 5.3.4
-     * @throws Exception
-     */
-    @Test public void closeLastWorkdayBalance() throws Exception {
-
-        updateOperday(ONLINE, OPEN);
-
-        Operday previosOperday = getOperday();
-
-        CalendarJob calendarJob = new CalendarJob();
-        calendarJob.setDelay(0L);
-        calendarJob.setDescription("test calendar job");
-        calendarJob.setRunnableClass(CloseLastWorkdayBalanceTask.class.getName());
-        calendarJob.setStartupType(MANUAL);
-        calendarJob.setState(STOPPED);
-        calendarJob.setName(System.currentTimeMillis() + "");
-        calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
-
-        registerJob(calendarJob);
-
-        jobService.executeJob(calendarJob);
-
-        Operday newOperday = getOperday();
-
-        Assert.assertEquals(newOperday, previosOperday);
-        Assert.assertEquals(newOperday.getLastWorkdayStatus(), Operday.LastWorkdayStatus.CLOSED);
-        Assert.assertEquals(previosOperday.getLastWorkdayStatus(), Operday.LastWorkdayStatus.OPEN);
     }
 
     /**
@@ -433,42 +406,97 @@ public class OperdayTest extends AbstractTimerJobTest {
         Assert.assertTrue(remoteAccess.invoke(OpenOperdayTask.class, "checkRun", "Open1", properties));
     }
 
+    /**
+     * выполнение задачи закрытия баланса пред дня по расписанию
+     */
     @Test
-    public void testCloseLwdBalanceCut() {
-        Operday operday = getOperday();
+    public void testCloseLwdBalanceCut() throws InterruptedException {
         try {
-            setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, OPEN, BUFFER);
-            updateOperdayMode(BUFFER, ProcessingStatus.STOPPED);
-            Date currentDT = remoteAccess.invoke(OperdayController.class, "getSystemDateTime");
-            Date currentDate = org.apache.commons.lang3.time.DateUtils.truncate(currentDT, Calendar.DATE);
+            updateOperday(ONLINE, OPEN);
+            Operday operday = getOperday();
+            startupEtlStructureMonitor();                               // запустить обработку проводок
+            shutdownJob(CloseLwdBalanceCutTask.class.getSimpleName());  // остановить задачу закрытия баланса
 
-            baseEntityRepository.executeNativeUpdate("delete from GL_LWDCUT");
-            baseEntityRepository.executeNativeUpdate("insert into GL_LWDCUT (RUNDATE, CUTOFFTIME) values (?, ?)",
-                    currentDate, new SimpleDateFormat(LwdBalanceCutView.getTimeFormat()).format(currentDT));
+            // установить текущее время как время отсечки
+            setLwdCut();
 
-            remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
+            boolean chk = remoteAccess.invoke(CloseLwdBalanceCutTask.class, "checkRun", null, null);
+            Assert.assertTrue(chk);
+
+            // запустить однократно задачу закрытия баланса
             remoteAccess.invoke(CloseLwdBalanceCutTask.class, "execWork", null, null);
             Operday operday2 = getOperday();
+
+            Assert.assertEquals(operday, operday2);
             Assert.assertEquals(CLOSED, operday2.getLastWorkdayStatus());
             LwdBalanceCutView cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
             Assert.assertNotNull(cutView.getCloseDateTime());
+            TimeUnit.SECONDS.sleep(20);
+            Operday operday3 = getOperday();
+            Assert.assertEquals(ProcessingStatus.STARTED, operday3.getProcessingStatus());
 
-/*
-            baseEntityRepository.executeNativeUpdate("update GL_LWDCUT set OTS_CLOSE = null");
-            remoteAccess.invoke(CloseLwdBalanceCutTask.class, "execWork", null, null);
-            cutView = (LwdBalanceCutView) baseEntityRepository.findById(LwdBalanceCutView.class, currentDate);
-            Assert.assertNull(cutView.getCloseDateTime());
-
-            remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
-            remoteAccess.invoke(CloseLwdBalanceCutTask.class, "execWork", null, null);
-            cutView = remoteAccess.invoke(LwdCutCachedRepository.class, "getRecord");
-            Assert.assertNotNull(cutView.getCloseDateTime());
-*/
         } finally {
-            setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), ONLINE, operday.getLastWorkdayStatus(), BUFFER);
+            updateOperday(ONLINE, OPEN);
             updateOperdayMode(BUFFER, ProcessingStatus.STARTED);
         }
+    }
 
+    /**
+     * Выполнение задачи закрытие баланса предыдущего рабочего как задачи
+     */
+    @Test public void testCloseLwdBalanceCutJob() throws Exception {
+
+        try {
+            startupEtlStructureMonitor();                               // запустить обработку проводок
+            shutdownJob(CloseLwdBalanceCutTask.class.getSimpleName());  // остановить задачу закрытия баланса
+            setLwdCut();                                                // установить текущее время как время отсечки
+
+            updateOperday(ONLINE, OPEN);
+            Operday operday = getOperday();
+            Assert.assertEquals(OPEN, operday.getLastWorkdayStatus());
+
+            CalendarJob closeBalanceJob = createCloseLwdBalanceCutJob();
+
+            // симулируем запуск PdSyncTask
+            JobHistory pdSyncJob = createJobHistory(PdSyncTask.class.getSimpleName(), operday.getCurrentDate());
+            jobService.executeJob(closeBalanceJob);
+            // закрытие баланса НЕ должно выполниться
+            Operday operday2 = getOperday();
+            Assert.assertEquals(operday2, operday);
+            Assert.assertEquals(OPEN, operday2.getLastWorkdayStatus());
+            List<JobHistory> histories = baseEntityRepository.select(JobHistory.class, "from JobHistory h where h.jobName = ?1", closeBalanceJob.getName());
+            Assert.assertEquals(0, histories.size());
+
+            // симулируем завершение PdSyncTask
+            updateJobHistory(pdSyncJob, DwhUnloadStatus.SUCCEDED);
+            jobService.executeJob(closeBalanceJob);
+            // закрытие баланса ДОЛЖНО выполниться
+            Operday operday3 = getOperday();
+            Assert.assertEquals(operday3, operday);
+            Assert.assertEquals(CLOSED, operday3.getLastWorkdayStatus());
+            histories = baseEntityRepository.select(JobHistory.class, "from JobHistory h where h.jobName = ?1", closeBalanceJob.getName());
+            Assert.assertEquals(1, histories.size());
+
+            updateOperday(ONLINE, OPEN);
+            jobService.executeJob(closeBalanceJob);
+            // повторное закрытие баланса НЕ должно выполниться
+            Operday operday4 = getOperday();
+            Assert.assertEquals(operday4, operday);
+            Assert.assertEquals(OPEN, operday4.getLastWorkdayStatus());
+
+        } finally {
+            updateOperday(ONLINE, OPEN);
+            updateOperdayMode(BUFFER, ProcessingStatus.STARTED);
+        }
+    }
+
+    private void setLwdCut() {
+        Date currentDT = remoteAccess.invoke(OperdayController.class, "getSystemDateTime");
+        Date currentDate = org.apache.commons.lang3.time.DateUtils.truncate(currentDT, Calendar.DATE);
+        baseEntityRepository.executeNativeUpdate("delete from GL_LWDCUT");
+        baseEntityRepository.executeNativeUpdate("insert into GL_LWDCUT (RUNDATE, CUTOFFTIME) values (?, ?)",
+                currentDate, new SimpleDateFormat(LwdBalanceCutView.getTimeFormat()).format(currentDT));
+        remoteAccess.invoke(LwdCutCachedRepository.class, "flushCache");
     }
 
     private Date getOperDayToOpen(Date current) {
@@ -493,7 +521,36 @@ public class OperdayTest extends AbstractTimerJobTest {
         return StringUtils.leftPad(Integer.toString(hourOrMinute) + "", 2);
     }
 
-    private void checkCreateEtlStructureMonitor() {
+    private CalendarJob createCloseLwdBalanceCutJob() {
+        CalendarJob calendarJob = new CalendarJob();
+        calendarJob.setDelay(0L);
+        calendarJob.setDescription("test closeBalance job");
+        calendarJob.setRunnableClass(CloseLwdBalanceCutTask.class.getName());
+        calendarJob.setStartupType(MANUAL);
+        calendarJob.setState(STOPPED);
+        calendarJob.setName(CloseLwdBalanceCutTask.class.getSimpleName());  // System.currentTimeMillis() + "");
+        calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
+
+        registerJob(calendarJob);
+        return calendarJob;
+    }
+
+    private JobHistory createJobHistory(String jobName, Date operdate) {
+        JobHistory job = new JobHistory();
+        job.setJobName(jobName);
+        job.setOperday(operdate);
+        job.setResult(DwhUnloadStatus.STARTED);
+        job.setStarttime(new Date());
+        return (JobHistory) baseEntityRepository.save(job);
+    }
+
+    private JobHistory updateJobHistory(JobHistory job, DwhUnloadStatus result) {
+        job.setResult(result);
+        job.setEndtime(new Date());
+        return (JobHistory) baseEntityRepository.update(job);
+    }
+
+    public static void checkCreateEtlStructureMonitor() {
         TimerJob etlStructureMonitorJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
                 , "from TimerJob j where j.name = ?1", ETL_MONITOR_TASK);
         if (null == etlStructureMonitorJob) {
@@ -509,6 +566,23 @@ public class OperdayTest extends AbstractTimerJobTest {
             jobService.startupJob(etlMonitor);
             registerJob(etlMonitor);
         }
+    }
+
+    public static void startupEtlStructureMonitor() {
+        checkCreateEtlStructureMonitor();
+        startupJob(ETL_MONITOR_TASK);
+    }
+
+    public static void startupJob(String jobName) {
+        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", jobName);
+        if (null != job)
+            remoteAccess.invoke(BackgroundJobsController.class, "startupJob", job);
+    }
+
+    public static void shutdownJob(String jobName) {
+        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", jobName);
+        if (null != job)
+            remoteAccess.invoke(BackgroundJobsController.class, "shutdownJob", job);
     }
 
     private Operday.PdMode calculatePdMode(Properties properties) {
