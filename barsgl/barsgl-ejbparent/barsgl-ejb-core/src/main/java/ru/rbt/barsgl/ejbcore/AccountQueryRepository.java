@@ -35,7 +35,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND A.DTC IS NULL "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, null);
             return dataRecords;            
         } catch (SQLException e) {
@@ -85,7 +85,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACOD IN (" + glacods + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
               return dataRecords;
         } catch (SQLException e) {
@@ -111,8 +111,8 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACCTYPE IN (" + acctypes + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
-                , Integer.MAX_VALUE, new Object[]{customerNo});
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
+                , 100, new Object[]{customerNo});
 
             return dataRecords;
         } catch (SQLException e) {
@@ -128,7 +128,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
-                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','RRRR-DD-MM'))) < 12 "
+                        + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
             return dataRecords;
         } catch (SQLException e) {
