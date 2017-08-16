@@ -35,6 +35,7 @@ public enum SecurityActionCode {
     , ReferAccTypeChng("Изменение Плана счетов AccType  ")
     , ReferAccTypeDel("Удаление записей из Плана счетов AccType")
     , ReferAccSTAMT("Настройка списка счетов для выгрузки в STAMT")
+    , ReferBackValue("Настройка доступа к BackValue")
     , UserLook("Просмотр списка пользователей")
     , UserChng("Изменение учетной карточки пользователя")
     , UserCntl("Назначение роли")

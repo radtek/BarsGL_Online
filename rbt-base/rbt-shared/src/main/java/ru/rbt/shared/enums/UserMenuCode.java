@@ -12,6 +12,8 @@ public enum UserMenuCode {
     , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
     , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
     , TechOperInpConfirm, ErrorView, ErrorHandling, TechOperInpHistory, OperBackValue, OperNotAuthBV, OperAuthBV
+    , BackValueParamsSetting, BackValuePeriodClosing, BackValueDepth
+
 
 
     /* Дополнительные коды меню, которые строятся всегда! */
