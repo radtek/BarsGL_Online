@@ -70,40 +70,62 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
 
     @Test
     public void testBVSourceDeal() {
-        Operday operday = getOperday();
-        Date startDate = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", operday.getCurrentDate(), false);
         String src = DealSource.PaymentHub.getLabel();
+        Operday operday = getOperday();
+        Date start1 = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", operday.getCurrentDate(), false);
+        Date start2 = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", start1, 7, false);
+        BVSourceDealId id1 = new BVSourceDealId(src, start1);
+        BVSourceDealId id2 = new BVSourceDealId(src, start2);
+        baseEntityRepository.executeUpdate("delete from BVSourceDeal d where d.id.sourceDeal = ?1 and d.id.startDate in (?2, ?3)", src, start1, start2);
 
+        // создать период 1
         BVSourceDealWrapper wrapper = new BVSourceDealWrapper();
         SimpleDateFormat dateFormat = new SimpleDateFormat(wrapper.getDateFormat());
         wrapper.setSourceDeal(src);
         wrapper.setDepth(3);
-        wrapper.setStartDateStr(dateFormat.format(startDate));
-
-        BVSourceDealId id = new BVSourceDealId(src, startDate);
-        baseEntityRepository.executeUpdate("delete from BVSourceDeal d where d.id = ?1", id);
-
+        wrapper.setStartDateStr(dateFormat.format(start1));
         RpcRes_Base<ClosedReportPeriodWrapper> res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.CREATE);
         if (!isEmpty(res.getMessage()))
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
+        BVSourceDeal sourceDeal1 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id1);
+        Assert.assertNotNull(sourceDeal1);
+        Assert.assertEquals(3, (int)sourceDeal1.getShift());
+        Assert.assertNull(sourceDeal1.getEndDate());
+        Assert.assertNotNull(sourceDeal1.getCreateTimestamp());
 
-        BVSourceDeal sourceDeal = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id);
-        Assert.assertNotNull(sourceDeal);
-        Assert.assertEquals(3, (int)sourceDeal.getShift());
-        Assert.assertNull(sourceDeal.getEndDate());
-        Assert.assertNotNull(sourceDeal.getCreateTimestamp());
+        // создать период 2 после периода 1
+        wrapper.setDepth(4);
+        wrapper.setStartDateStr(dateFormat.format(start2));
+        res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.CREATE);
+        if (!isEmpty(res.getMessage()))
+            System.out.println(res.getMessage());
+        Assert.assertFalse(res.isError());
+        BVSourceDeal sourceDeal2 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id2);
+        Assert.assertNotNull(sourceDeal2);
+        Assert.assertEquals(4, (int)sourceDeal2.getShift());
+        Assert.assertNull(sourceDeal2.getEndDate());
+        Assert.assertNotNull(sourceDeal2.getCreateTimestamp());
+        sourceDeal1 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id1);
+        Assert.assertTrue(sourceDeal1.getEndDate().before(start2));
 
+        // изменить период 2
         wrapper.setDepth(5);
-
         res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.UPDATE);
         if (!isEmpty(res.getMessage()))
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
+        sourceDeal2 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id2);
+        Assert.assertNotNull(sourceDeal2);
+        Assert.assertEquals(5, (int)sourceDeal2.getShift());
 
-        sourceDeal = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id);
-        Assert.assertNotNull(sourceDeal);
-        Assert.assertEquals(5, (int)sourceDeal.getShift());
+        // удалить период 2
+        res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.DELETE);
+        if (!isEmpty(res.getMessage()))
+            System.out.println(res.getMessage());
+        Assert.assertFalse(res.isError());
+        sourceDeal2 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id2);
+        Assert.assertNull(sourceDeal2);
 
     }
 

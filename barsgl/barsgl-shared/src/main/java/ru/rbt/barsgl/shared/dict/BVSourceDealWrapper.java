@@ -71,4 +71,10 @@ public class BVSourceDealWrapper implements Serializable, IsSerializable {
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
+
+    public String getDepthStr() {
+        return depth + (depth > 3 ? " дней" : " дня");
+    }
+
+
 }

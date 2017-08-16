@@ -14,8 +14,8 @@ public class ClosedReportPeriodWrapper implements Serializable, IsSerializable {
     private String lastDateStr;
     private String cutDateStr;
 
-    private Date lastDate;
-    private Date cutDate;
+    private Date lastDate;      // используется только на сервере
+    private Date cutDate;       // используется только на сервере
 
     public String getDateFormat() {
         return dateFormat;
