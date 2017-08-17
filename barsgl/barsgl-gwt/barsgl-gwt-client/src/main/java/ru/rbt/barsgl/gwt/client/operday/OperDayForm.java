@@ -36,7 +36,7 @@ public class OperDayForm extends BaseForm {
 
     private Action refreshAction;
     private Action open_OD;
-    private Action close_Balance_Previous_OD;
+//    private Action close_Balance_Previous_OD;
     private Action change_Phase_To_PRE_COB;
     private Action switchPdMode;
 
@@ -98,7 +98,7 @@ public class OperDayForm extends BaseForm {
         abw.addAction(export2ExcelActtion());
 
         abw.addSecureAction(createOpenODAction(), SecurityActionCode.TskOdOpenRun);
-        abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
+//        abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
@@ -183,7 +183,7 @@ public class OperDayForm extends BaseForm {
 
     private void setButtonsEnabled(OperDayButtons button){
         open_OD.setEnable(button == OperDayButtons.OPEN_OD);
-        close_Balance_Previous_OD.setEnable(button == OperDayButtons.CLOSE_BALANCE_PREVIOUS_OD);
+//        close_Balance_Previous_OD.setEnable(button == OperDayButtons.CLOSE_BALANCE_PREVIOUS_OD);
         change_Phase_To_PRE_COB.setEnable(button == OperDayButtons.CHANGE_PHASE_TO_PRE_COB);
         switchPdMode.setEnable(true);
     }
@@ -269,6 +269,7 @@ public class OperDayForm extends BaseForm {
         };
     }
 
+/*
     private Action createCloseBalancePreviousODAction(){
         return close_Balance_Previous_OD = new Action("Закрытие баланса предыдущего ОД", "", null, 5) {
             @Override
@@ -299,9 +300,10 @@ public class OperDayForm extends BaseForm {
             }
         };
     }
+*/
 
     private Action createChangePhaseToPRE_COBAction(){
-        return change_Phase_To_PRE_COB = new Action("Перевод фазы в PRE_COB", "", null, 5) {
+        return change_Phase_To_PRE_COB = new Action("Закрытие баланса предыдущего ОД и перевод фазы в PRE_COB", "", null, 5) {
             @Override
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());

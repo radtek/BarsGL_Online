@@ -157,6 +157,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return waitStopProcessing(operday, idCob, phase);
         }));
 
+        works.add(new CobRunningStepWork(CobStornoProc, (Long idCob, CobPhase phase) -> {
+            return reprocessStorno(operday, idCob, phase);
+        }));
+
         works.add(new CobRunningStepWork(CobCloseBalance, (Long idCob, CobPhase phase) -> {
             return closeBalance(operday, idCob, phase);
         }));
@@ -167,10 +171,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
         works.add(new CobRunningStepWork(CobManualProc, (Long idCob, CobPhase phase) -> {
             return processUnprocessedBatchPostings(operday, idCob, phase);
-        }));
-
-        works.add(new CobRunningStepWork(CobStornoProc, (Long idCob, CobPhase phase) -> {
-            return reprocessStorno(operday, idCob, phase);
         }));
 
         works.add(new CobRunningStepWork(CobFanProc, (Long idCob, CobPhase phase) -> {
