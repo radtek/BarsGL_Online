@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.repository.dict;
 
+import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
@@ -11,9 +12,10 @@ import java.util.Date;
  */
 @Stateless
 @LocalBean
-public class LwdBalanceCutRepository extends AbstractBaseEntityRepository {
+public class LwdBalanceCutRepository extends AbstractBaseEntityRepository<LwdBalanceCut, Date> {
 
     public void updateCloseTimestamp(Date runDate, Date closeTimestamp) {
         executeUpdate("update LwdBalanceCut b set b.closeDateTime = ?1 where b.runDate = ?2", closeTimestamp, runDate);
     }
+
 }

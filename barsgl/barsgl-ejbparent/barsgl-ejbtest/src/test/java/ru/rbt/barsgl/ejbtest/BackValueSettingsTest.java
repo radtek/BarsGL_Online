@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -7,17 +8,23 @@ import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.dict.BVSourceDeal;
 import ru.rbt.barsgl.ejb.entity.dict.BVSourceDealId;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
+import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
+import ru.rbt.barsgl.ejb.integr.dict.LwdBalanceCutController;
 import ru.rbt.barsgl.ejb.integr.dict.ManualDictionaryService;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.BVSourceDealWrapper;
 import ru.rbt.barsgl.shared.dict.ClosedReportPeriodWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.DealSource;
+import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+import static ru.rbt.ejbcore.util.DateUtils.addSeconds;
+import static ru.rbt.ejbcore.util.DateUtils.onlyDate;
 
 /**
  * Created by er18837 on 15.08.2017.
@@ -37,8 +44,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         wrapper.setCutDateStr(dateFormat.format(cutDate));
 
         RpcRes_Base<ClosedReportPeriodWrapper> res = remoteAccess.invoke(ManualDictionaryService.class, "saveClosedReportPeriod", wrapper, FormAction.CREATE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
 
         ClosedReportPeriod period = (ClosedReportPeriod) baseEntityRepository.findById(ClosedReportPeriod.class, lastDate);
@@ -50,8 +56,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         wrapper.setCutDateStr(dateFormat.format(nextDate));
 
         res = remoteAccess.invoke(ManualDictionaryService.class, "saveClosedReportPeriod", wrapper, FormAction.UPDATE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
 
         period = (ClosedReportPeriod) baseEntityRepository.findById(ClosedReportPeriod.class, lastDate);
@@ -60,8 +65,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         Assert.assertNotNull(period.getCreateTimestamp());
 
         res = remoteAccess.invoke(ManualDictionaryService.class, "saveClosedReportPeriod", wrapper, FormAction.DELETE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
 
         period = (ClosedReportPeriod) baseEntityRepository.findById(ClosedReportPeriod.class, lastDate);
@@ -85,8 +89,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         wrapper.setDepth(3);
         wrapper.setStartDateStr(dateFormat.format(start1));
         RpcRes_Base<ClosedReportPeriodWrapper> res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.CREATE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
         BVSourceDeal sourceDeal1 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id1);
         Assert.assertNotNull(sourceDeal1);
@@ -98,8 +101,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         wrapper.setDepth(4);
         wrapper.setStartDateStr(dateFormat.format(start2));
         res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.CREATE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
         BVSourceDeal sourceDeal2 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id2);
         Assert.assertNotNull(sourceDeal2);
@@ -112,8 +114,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         // изменить период 2
         wrapper.setDepth(5);
         res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.UPDATE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
         sourceDeal2 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id2);
         Assert.assertNotNull(sourceDeal2);
@@ -121,12 +122,55 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
 
         // удалить период 2
         res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.DELETE);
-        if (!isEmpty(res.getMessage()))
-            System.out.println(res.getMessage());
+        System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
         sourceDeal2 = (BVSourceDeal) baseEntityRepository.findById(BVSourceDeal.class, id2);
         Assert.assertNull(sourceDeal2);
-
     }
 
+    @Test
+    public void testLwdBalanceCut() {
+        baseEntityRepository.executeUpdate("delete from LwdBalanceCut b");
+
+        Date cutDateTime  = getSystemDateTime();
+
+        LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
+        for (int i = 0; i < 2; i++) {
+            cutDateTime = addSeconds(cutDateTime, 300);
+            wrapper.setRunDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(cutDateTime));
+            wrapper.setCutTimeStr(new SimpleDateFormat(wrapper.getTimeFormat()).format(cutDateTime));
+
+            RpcRes_Base<LwdBalanceCutWrapper> res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+            System.out.println(res.getMessage());
+            Assert.assertFalse(res.isError());
+            LwdBalanceCut record = (LwdBalanceCut) baseEntityRepository.selectFirst(LwdBalanceCut.class, "from LwdBalanceCut b");
+            Assert.assertNotNull(record);
+            Assert.assertEquals(onlyDate(cutDateTime), record.getRunDate());
+            Assert.assertEquals(wrapper.getCutTimeStr(), record.getCutTime());
+            Assert.assertNotNull(record.getCreateDateTime());
+            Assert.assertNull(record.getCloseDateTime());
+        }
+
+        wrapper.setCutTimeStr("1:6");
+        RpcRes_Base<LwdBalanceCutWrapper> res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res.getMessage());
+        Assert.assertFalse(res.isError());
+
+        wrapper.setCutTimeStr("1256");
+        res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res.getMessage());
+        Assert.assertTrue(res.isError());
+
+        wrapper.setCutTimeStr("125:56");
+        res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res.getMessage());
+        Assert.assertTrue(res.isError());
+
+        wrapper.setCutTimeStr("1:76");
+        res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res.getMessage());
+        Assert.assertTrue(res.isError());
+
+        baseEntityRepository.executeUpdate("delete from LwdBalanceCut b");
+    }
 }

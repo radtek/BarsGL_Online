@@ -23,13 +23,23 @@ public class LwdBalanceCut extends BaseEntity<Date> {
     @Column(name = "USER")
     private String userName;
 
-    @Column(name = "OTS")
+    @Column(name = "OTS", insertable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createDateTime;
 
     @Column(name = "OTS_CLOSE")
     @Temporal(TemporalType.TIMESTAMP)
     private Date closeDateTime;
+
+
+    public LwdBalanceCut() {
+    }
+
+    public LwdBalanceCut(Date runDate, String cutTime, String userName) {
+        this.runDate = runDate;
+        this.cutTime = cutTime;
+        this.userName = userName;
+    }
 
     @Override
     public Date getId() {

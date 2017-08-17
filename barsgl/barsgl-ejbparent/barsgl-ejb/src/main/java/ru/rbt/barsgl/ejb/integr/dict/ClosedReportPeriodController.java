@@ -4,12 +4,14 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.dict.BVSourceDeal;
 import ru.rbt.barsgl.ejb.entity.dict.BVSourceDealId;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
+import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedReportPeriodRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.ClosedReportPeriodWrapper;
 import ru.rbt.ejbcore.util.StringUtils;
 
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,6 +38,9 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
     @Inject
     ru.rbt.ejbcore.util.DateUtils dateUtils;
 
+    @EJB
+    private ClosedPeriodCashedRepository closedPeriodRepository;
+
     @Override
     public RpcRes_Base<ClosedReportPeriodWrapper> create(ClosedReportPeriodWrapper wrapper) {
         String errorMessage = validate(wrapper);
@@ -51,6 +56,11 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
                         , wrapper.getCutDate()
                         , userContext.getUserName()
                         , operdayController.getSystemDateTime()));
+    }
+
+    @Override
+    public void afterCreate(ClosedReportPeriod entity) {
+        closedPeriodRepository.init();
     }
 
     @Override
@@ -72,6 +82,11 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
     }
 
     @Override
+    public void afterUpdate(ClosedReportPeriod entity) {
+        closedPeriodRepository.init();
+    }
+
+    @Override
     public RpcRes_Base<ClosedReportPeriodWrapper> delete(ClosedReportPeriodWrapper wrapper) {
         String parseError = parseDates(wrapper);
         if (!isEmpty(parseError))
@@ -84,6 +99,11 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
                 format("Отчетный период с датой завершения '%s' не найден", wrapper.getLastDateStr()),
                 format("Удален отчетный период с датой завершения '%s' и датой закрытия '%s'", wrapper.getLastDateStr(), wrapper.getCutDateStr()),
                 format("Ошибка при удалении отчетного периода с датой завершения '%s'", wrapper.getLastDateStr()));
+    }
+
+    @Override
+    public void afterDelete() {
+        closedPeriodRepository.init();
     }
 
     private String parseDates(ClosedReportPeriodWrapper wrapper) {
@@ -126,5 +146,6 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
         } catch (Exception e) {
             errorList.add(e.getMessage());
         }
-        return StringUtils.listToString(errorList, "\n");    }
+        return StringUtils.listToString(errorList, "\n");
+    }
 }

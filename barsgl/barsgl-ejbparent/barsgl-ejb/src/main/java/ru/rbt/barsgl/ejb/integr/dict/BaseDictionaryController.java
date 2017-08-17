@@ -5,12 +5,18 @@
 package ru.rbt.barsgl.ejb.integr.dict;
 
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.ExceptionUtils;
 
 import javax.ejb.EJB;
+import javax.persistence.PersistenceException;
 import java.io.Serializable;
+import java.sql.DataTruncation;
+import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -86,6 +92,7 @@ public abstract class BaseDictionaryController<T extends Serializable, K extends
     try {
       beforeDelete(entity);
       repository.remove(entity);
+      afterDelete();
 
       return auditInfo(wrapper, infoMessage);
     } catch (Exception ex) {
@@ -100,7 +107,13 @@ public abstract class BaseDictionaryController<T extends Serializable, K extends
 
   protected RpcRes_Base<T> auditError(T wrapper, String auditErrorMessage, Exception ex) {
     auditController.error(User, auditErrorMessage, null, ex);
-    return new RpcRes_Base<>(wrapper, true, getErrorMessage(ex));
+    return new RpcRes_Base<>(wrapper, true, auditErrorMessage + ":\n" + getErrorMessage(ex));
+  }
+
+  private String getErrorMessage(Throwable throwable) {
+    return ExceptionUtils.getErrorMessage(throwable,
+            ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
+            IllegalArgumentException.class, PersistenceException.class, DefaultApplicationException.class);
   }
 
   public void beforeCreate(E entity){}
@@ -110,5 +123,6 @@ public abstract class BaseDictionaryController<T extends Serializable, K extends
   public void afterUpdate(E entity){}
 
   public void beforeDelete(E entity){}
+  public void afterDelete(){}
 
 }

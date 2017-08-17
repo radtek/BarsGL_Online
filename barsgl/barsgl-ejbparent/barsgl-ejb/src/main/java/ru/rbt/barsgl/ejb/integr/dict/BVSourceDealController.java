@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.integr.dict;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.dict.*;
+import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSourceDealRepository;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
@@ -31,10 +32,13 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
     private BVSourceDealRepository repository;
 
     @Inject
-    OperdayController operdayController;
+    private OperdayController operdayController;
 
     @EJB
     private SourcesDealsRepository sourcesDealsRepository;
+
+    @EJB
+    private BVSouceCachedRepository bvSourceRepository;
 
     @Inject
     private UserContext userContext;
@@ -71,6 +75,11 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
     }
 
     @Override
+    public void afterCreate(BVSourceDeal entity) {
+        bvSourceRepository.init();
+    }
+
+    @Override
     public RpcRes_Base<BVSourceDealWrapper> update(BVSourceDealWrapper wrapper) {
         String errorMessage = validate(wrapper);
         if(!isEmpty(errorMessage)){
@@ -83,7 +92,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                 format("Ошибка при изменении настройки глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 (param) -> {
                     // глубину можно менять только у будущих настроек
-                    if (wrapper.getStartDate().after(operdayController.getOperday().getCurrentDate()))
+                    if (!wrapper.getStartDate().before(operdayController.getOperday().getCurrentDate()))
                         param.setShift(wrapper.getDepth());
                     else if (!wrapper.getDepth().equals(param.getShift()))
                         // TODO возможно, здесь нужна особая обработка
@@ -92,6 +101,11 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                     param.setUser(userContext.getUserName());
                     param.setCreateTimestamp(operdayController.getSystemDateTime());
                 });
+    }
+
+    @Override
+    public void afterUpdate(BVSourceDeal entity) {
+        bvSourceRepository.init();
     }
 
     @Override
@@ -108,6 +122,11 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                 format("Удалена настройка глубины BackValue для источника '%s': %s (c даты '%s')", wrapper.getSourceDeal(), wrapper.getDepthStr(), wrapper.getStartDateStr()),
                 format("Ошибка при удалении настройки глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr())
                 );
+    }
+
+    @Override
+    public void afterDelete() {
+        bvSourceRepository.init();
     }
 
     private String parseDates(BVSourceDealWrapper wrapper) {

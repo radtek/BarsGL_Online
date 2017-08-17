@@ -7,6 +7,7 @@ import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
+import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 /**
@@ -16,6 +17,8 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 public interface OperDayService extends RemoteService {
 
 //        RpcRes_Base<OperDayWrapper> getOperDay() throws Exception;
+
+        RpcRes_Base<LwdBalanceCutWrapper> setLwdBalanceCut(LwdBalanceCutWrapper wrapper) throws Exception;
 
         RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception;
 

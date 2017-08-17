@@ -7,6 +7,8 @@ import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+import ru.rbt.barsgl.ejb.integr.dict.LwdBalanceCutController;
+import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -47,7 +49,17 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
 //        }
         wrapper.setIsCOBRunning(isAlreadyRunning);
     }
-      
+
+    @Override
+    public RpcRes_Base<LwdBalanceCutWrapper> setLwdBalanceCut(LwdBalanceCutWrapper wrapper) throws Exception {
+        return new RpcResProcessor<LwdBalanceCutWrapper>() {
+            @Override
+            public RpcRes_Base<LwdBalanceCutWrapper> buildResponse() throws Throwable {
+                return localInvoker.invoke(LwdBalanceCutController.class, "create", wrapper);
+            }
+        }.process();
+    }
+
     @Override
     public RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception {
         return new RpcResProcessor<COB_OKWrapper>() {
