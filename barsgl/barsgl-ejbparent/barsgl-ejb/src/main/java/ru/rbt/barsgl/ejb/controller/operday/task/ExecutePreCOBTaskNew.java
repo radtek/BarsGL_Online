@@ -157,6 +157,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return waitStopProcessing(operday, idCob, phase);
         }));
 
+        works.add(new CobRunningStepWork(CobCloseBalance, (Long idCob, CobPhase phase) -> {
+            return closeBalance(operday, idCob, phase);
+        }));
+
         works.add(new CobRunningStepWork(CobResetBuffer, (Long idCob, CobPhase phase) -> {
             return synchronizePostings(idCob, phase);
         }));
@@ -167,10 +171,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
         works.add(new CobRunningStepWork(CobStornoProc, (Long idCob, CobPhase phase) -> {
             return reprocessStorno(operday, idCob, phase);
-        }));
-
-        works.add(new CobRunningStepWork(CobCloseBalance, (Long idCob, CobPhase phase) -> {
-            return closeBalance(operday, idCob, phase);
         }));
 
         works.add(new CobRunningStepWork(CobFanProc, (Long idCob, CobPhase phase) -> {
@@ -306,7 +306,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                     , dateUtils.onlyDateString(operday.getCurrentDate())));
             try {
                 beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                    closeLastWorkdayBalanceTask.closeBalance(false, false);
+                    closeLastWorkdayBalanceTask.closeBalance(false);
                     return null;
                 }, 60 * 60);
             } catch (Exception e) {

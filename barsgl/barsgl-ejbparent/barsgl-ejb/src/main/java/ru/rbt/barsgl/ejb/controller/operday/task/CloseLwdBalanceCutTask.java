@@ -77,7 +77,7 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
         if (OPEN == operday.getLastWorkdayStatus()) {
             try {
                 lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
-                    if (closeBalance(true, true).getResult()) {
+                    if (closeBalance(true).getResult()) {
                         lwdBalanceCutRepository.updateCloseTimestamp(currentDate, currentDateTime);
                         lwdCutCachedRepository.flushCache();
                         return true;
@@ -156,31 +156,27 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
 
     @Lock(LockType.WRITE)
     // измененный вариант CloseLastWorkdayBalanceTask.executeWork
-    public RpcRes_Base<Boolean> closeBalance(boolean withStorno, boolean stopProcessing) {
+    public RpcRes_Base<Boolean> closeBalance(boolean fromOnline) {
         final Operday operday = operdayController.getOperday();
         String curDateStr = dateUtils.onlyDateString(operday.getLastWorkingDay());
         String prevDateStr = dateUtils.onlyDateString(operday.getCurrentDate());
         try {
-            // проверим, что не запущены конкурирующие задачи
-            RpcRes_Base<Boolean> res = checkNotRunOther(operday.getCurrentDate());
-            if (!res.getResult())
-                return res;
-
             auditController.info(AuditRecord.LogCode.Operday, format("Закрытие БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'.", prevDateStr, curDateStr));
 
+            checkOperdayStatus(operdayController.getOperday());
+
             boolean isWasProcessingAllowed = false;
-            if (stopProcessing) {
+            if (fromOnline) {
+                // проверим, что не запущены конкурирующие задачи
+                RpcRes_Base<Boolean> res = checkNotRunOther(operday.getCurrentDate());
+                if (!res.getResult())
+                    return res;
                 isWasProcessingAllowed = operdayController.isProcessingAllowed();
                 if (!synchronizationController.waitStopProcessing()) {
                     String msg = format("Не удалось остановить обработку проводок. Закрытие БАЛАНСА предыдущего ОД '%s' прервано. Текущий ОД '%s'", prevDateStr, curDateStr);
                     auditController.error(Operday, msg, null, "");
                     return new RpcRes_Base<>(false, true, msg);
                 }
-            }
-
-            checkOperdayStatus(operdayController.getOperday());
-
-            if (withStorno) {
                 etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
             }
 

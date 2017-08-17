@@ -1,14 +1,19 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLwdBalanceCutTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskFake;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
+import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
+import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobStepItem;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
@@ -20,8 +25,13 @@ import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
+import static ru.rbt.barsgl.ejbtest.OperdayTest.startupEtlStructureMonitor;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
+import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
 /**
  * Created by ER18837 on 13.03.17.
@@ -135,22 +145,14 @@ public class CobStatTest extends AbstractTimerJobTest  {
     }
 
     @Test
-    public void testCobTaskNew() throws InterruptedException {
-/*
-        String monitorName = EtlStructureMonitorTask.class.getSimpleName();
-        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", monitorName);
-        if (job == null) {
-            throw new RuntimeException(Utils.Fmt("Не найдено задание '{0}'.", monitorName));
-        }
-        if (job.getState() != TimerJob.JobState.STARTED) {
-            remoteAccess.invoke(BackgroundJobsController.class, "startupJob", job);
-        }
-*/
+    public void testCobTaskNew() throws Exception {
+        updateOperday(ONLINE, OPEN);
+        updateOperdayMode(Operday.PdMode.BUFFER, ProcessingStatus.STARTED);
+        startupEtlStructureMonitor();
 
-        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
-
-        boolean ex = remoteAccess.invoke(ExecutePreCOBTaskNew.class, "execWork", null, null);
-        Assert.assertTrue(ex);
+        SingleActionJob job = createPreCobTaskJob();
+        baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
+        jobService.executeJob(job);
 
         Long idCob = null;
         RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);
@@ -168,6 +170,19 @@ public class CobStatTest extends AbstractTimerJobTest  {
         CobStepItem totalItem = wrapper1.getTotal();
         printStepInfo(totalItem);
         checkStepState(totalItem, Success);
+    }
+
+    private SingleActionJob createPreCobTaskJob() {
+        SingleActionJob SingleActionJob = new SingleActionJob();
+        SingleActionJob.setDelay(0L);
+        SingleActionJob.setDescription("test preCobTask job");
+        SingleActionJob.setRunnableClass(ExecutePreCOBTaskNew.class.getName());
+        SingleActionJob.setStartupType(MANUAL);
+        SingleActionJob.setState(STOPPED);
+        SingleActionJob.setName(ExecutePreCOBTaskNew.class.getSimpleName());
+
+        registerJob(SingleActionJob);
+        return SingleActionJob;
     }
 
     private CobWrapper checkGetInfo(CobWrapper wr0, CobPhase phase, CobStepStatus stepStatus, CobStepStatus totalStatus) {
