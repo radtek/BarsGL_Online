@@ -9,7 +9,6 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
@@ -28,16 +27,12 @@ import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.*;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -61,10 +56,6 @@ import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
-import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
-import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.shared.enums.SecurityActionCode;
 
 /**
  * Created by ER18837 on 13.08.15.
