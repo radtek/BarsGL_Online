@@ -20,6 +20,8 @@ public interface OperDayService extends RemoteService {
 
         RpcRes_Base<LwdBalanceCutWrapper> setLwdBalanceCut(LwdBalanceCutWrapper wrapper) throws Exception;
 
+        RpcRes_Base<LwdBalanceCutWrapper> getLwdBalanceCut() throws Exception;
+
         RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception;
 
         RpcRes_Base<Boolean> runCloseLastWorkdayBalanceTask() throws Exception;

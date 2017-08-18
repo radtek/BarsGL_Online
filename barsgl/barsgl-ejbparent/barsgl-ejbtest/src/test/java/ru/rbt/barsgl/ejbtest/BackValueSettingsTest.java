@@ -135,14 +135,15 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         Date cutDateTime  = getSystemDateTime();
 
         LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
+        RpcRes_Base<LwdBalanceCutWrapper> res1 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
         for (int i = 0; i < 2; i++) {
             cutDateTime = addSeconds(cutDateTime, 300);
             wrapper.setRunDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(cutDateTime));
             wrapper.setCutTimeStr(new SimpleDateFormat(wrapper.getTimeFormat()).format(cutDateTime));
 
-            RpcRes_Base<LwdBalanceCutWrapper> res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
-            System.out.println(res.getMessage());
-            Assert.assertFalse(res.isError());
+            res1 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+            System.out.println(res1.getMessage());
+            Assert.assertFalse(res1.isError());
             LwdBalanceCut record = (LwdBalanceCut) baseEntityRepository.selectFirst(LwdBalanceCut.class, "from LwdBalanceCut b");
             Assert.assertNotNull(record);
             Assert.assertEquals(onlyDate(cutDateTime), record.getRunDate());
@@ -150,27 +151,38 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
             Assert.assertNotNull(record.getCreateDateTime());
             Assert.assertNull(record.getCloseDateTime());
         }
+        RpcRes_Base<LwdBalanceCutWrapper> res2 = remoteAccess.invoke(LwdBalanceCutController.class, "get");
+        System.out.println(res2.getMessage());
+        Assert.assertFalse(res2.isError());
+        LwdBalanceCutWrapper wrapper2 = res2.getResult();
+        Assert.assertEquals(wrapper.getRunDateStr(), wrapper2.getRunDateStr());
+        Assert.assertEquals(wrapper.getCutTimeStr(), wrapper2.getCutTimeStr());
 
-        wrapper.setCutTimeStr("1:6");
-        RpcRes_Base<LwdBalanceCutWrapper> res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
-        System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
+        wrapper.setCutTimeStr("1:0");
+        res2 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res2.getMessage());
+        Assert.assertFalse(res2.isError());
 
         wrapper.setCutTimeStr("1256");
-        res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
-        System.out.println(res.getMessage());
-        Assert.assertTrue(res.isError());
+        res2 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res2.getMessage());
+        Assert.assertTrue(res2.isError());
 
         wrapper.setCutTimeStr("125:56");
-        res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
-        System.out.println(res.getMessage());
-        Assert.assertTrue(res.isError());
+        res2 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res2.getMessage());
+        Assert.assertTrue(res2.isError());
 
         wrapper.setCutTimeStr("1:76");
-        res = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
-        System.out.println(res.getMessage());
-        Assert.assertTrue(res.isError());
+        res2 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res2.getMessage());
+        Assert.assertTrue(res2.isError());
 
-        baseEntityRepository.executeUpdate("delete from LwdBalanceCut b");
+        wrapper.setCutTimeStr("-2:6");
+        res2 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        System.out.println(res2.getMessage());
+        Assert.assertTrue(res2.isError());
+
+//        baseEntityRepository.executeUpdate("delete from LwdBalanceCut b");
     }
 }

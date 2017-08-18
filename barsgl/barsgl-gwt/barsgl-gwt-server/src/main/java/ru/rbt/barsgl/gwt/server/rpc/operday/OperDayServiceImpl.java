@@ -61,6 +61,16 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
     }
 
     @Override
+    public RpcRes_Base<LwdBalanceCutWrapper> getLwdBalanceCut() throws Exception {
+        return new RpcResProcessor<LwdBalanceCutWrapper>() {
+            @Override
+            public RpcRes_Base<LwdBalanceCutWrapper> buildResponse() throws Throwable {
+                return localInvoker.invoke(LwdBalanceCutController.class, "get");
+            }
+        }.process();
+    }
+
+    @Override
     public RpcRes_Base<COB_OKWrapper> getCOB_OK() throws Exception {
         return new RpcResProcessor<COB_OKWrapper>() {
             @Override
