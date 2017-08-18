@@ -22,7 +22,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -260,6 +262,12 @@ public class TechAccountTest extends AbstractRemoteTest {
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
     }
 
+    @Test
+    public void testLoadEtlPstFromFile() throws ParseException, InvalidFormatException, IOException {
+
+        LoadEtlFromFile();
+    }
+
 
     private void closeAllTHAccount()
     {
@@ -444,7 +452,7 @@ public class TechAccountTest extends AbstractRemoteTest {
 
     public void LoadEtlFromFile() throws IOException, InvalidFormatException, ParseException {
 
-        File f = new File("c:\\Projects\\GL_ETLPST_20170320_01.xlsx");
+        File f = new File("c:\\Projects\\ETLPST_storno2.xlsx");
         Assert.assertTrue("Файл с даными для загрузки не существует", f.exists());
 
         if (f.exists()) {
@@ -456,14 +464,14 @@ public class TechAccountTest extends AbstractRemoteTest {
             Assert.assertTrue("Нет строк для загрузки",parser.hasNext());
 
             long stamp = System.currentTimeMillis();
-            EtlPackage pkg = newPackage(stamp, "TECHACC_1");
+            EtlPackage pkg = newPackage(stamp, "TECHACC_storno");
             Assert.assertTrue(pkg.getId() > 0);
 
             //Сохраняем дату опердня и меняем на свою
-            Operday oldOperday = getOperday();
+            /*Operday oldOperday = getOperday();
             Date curDate = DateUtils.parseDate("2017-03-13","yyy-MM-dd");
             setOperday(curDate,curDate, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
-            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);*/
 
             List<Object> header = it.next();
 
@@ -473,14 +481,16 @@ public class TechAccountTest extends AbstractRemoteTest {
                 EtlPosting pst = newPosting(stamp, pkg);
                 pst = this.fillEtlPst(pst,row);
                 pst = (EtlPosting) baseEntityRepository.save(pst);
-                GLOperation operation = (GLOperation) postingController.processMessage(pst);
-                Assert.assertNotNull("Ошибка создания операции.",operation);
-                operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-                Assert.assertEquals("Ошибка при обработке операции: "+operation.getId(),OperState.POST, operation.getState());
+
+                EtlPosting pst2 = (EtlPosting) baseEntityRepository.findById(EtlPosting.class,pst.getId());
+                //GLOperation operation = (GLOperation) postingController.processMessage(pst);
+                //Assert.assertNotNull("Ошибка создания операции.",operation);
+                //operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+                //Assert.assertEquals("Ошибка при обработке операции: "+operation.getId(),OperState.POST, operation.getState());
             }
 
-            setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
-            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+            /*setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
+            updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);*/
         }
     }
 
@@ -550,17 +560,20 @@ public class TechAccountTest extends AbstractRemoteTest {
         pst.setDealId(row.get(5).toString());
         pst.setDeptId(row.get(8).toString());
         pst.setValueDate(DateUtils.parseDate(row.get(9).toString(),"yyyy-MM-dd"));
-        pst.setOperationTimestamp(DateUtils.parseDate(row.get(10).toString().trim(),"yyyy-MM-dd HH:mm:ss.SSS"));
+        //pst.setOperationTimestamp(DateUtils.parseDate(row.get(10).toString().trim(),"yyyy-MM-dd HH:mm:ss.SSS"));
+        pst.setOperationTimestamp(Timestamp.from(Instant.now()));
         //pst.setOperationTimestamp(DateUtils.parseDate("2016-07-21 15:37:57.930000","yyyy-MM-dd HH:mm:ss.SSS"));
         pst.setNarrative(row.get(11).toString());
         pst.setRusNarrativeLong(row.get(12).toString());
         pst.setRusNarrativeShort(row.get(13).toString());
         pst.setStorno(YesNo.valueOf(row.get(14).toString()));
+        pst.setStornoReference(row.get(15)!=null?row.get(15).toString():null);
         pst.setCurrencyDebit(row.get(17).toString().equals("RUR")?BankCurrency.RUB:BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal(row.get(18).toString()));
         pst.setCurrencyCredit(row.get(21).toString().equals("RUR")?BankCurrency.RUB:BankCurrency.USD);
         pst.setAmountCredit(new BigDecimal(row.get(22).toString()));
         pst.setFan(YesNo.valueOf(row.get(24).toString()));
+        pst.setPaymentRefernce(null);
 
         pst.setAccountKeyDebit(row.get(28).toString());
         pst.setAccountKeyCredit(row.get(29).toString());
