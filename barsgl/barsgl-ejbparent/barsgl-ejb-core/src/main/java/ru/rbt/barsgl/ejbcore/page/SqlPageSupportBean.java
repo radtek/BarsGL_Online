@@ -134,7 +134,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
     private static SQL prepareCommonSql2(final String nativeSql, Criterion criterion, OrderByColumn orderBy) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
 
-        String upperSql = nativeSql.trim().toUpperCase();
+        String upperSql = nativeSql.trim();
         final boolean isWherePresents = isWherePresents(upperSql);
 
         SQL whereClause = null;
