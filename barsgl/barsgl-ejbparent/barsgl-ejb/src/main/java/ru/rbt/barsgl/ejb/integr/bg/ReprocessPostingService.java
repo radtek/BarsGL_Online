@@ -64,7 +64,7 @@ public class ReprocessPostingService {
             }
             List<String> states = errorRepository.getOperStateList(idList);
             if (states.size() != 1) {
-                errorList.addErrorDescription("В списке разные статусы операций: " + StringUtils.listToString(states, ", ", "'"));
+                errorList.addErrorDescription("В списке разные операции с разными статусами: " + StringUtils.listToString(states, ", ", "'"));
             }
             String state = states.get(0);
             List<String> opers = errorRepository.getIdPstList(idList, OperState.WTAC);

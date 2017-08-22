@@ -15,6 +15,14 @@ public class LwdBalanceCutWrapper implements Serializable {
 
     Date runDate;               // используется на сервере
 
+    public LwdBalanceCutWrapper() {
+    }
+
+    public LwdBalanceCutWrapper(String runDateStr, String cutTimeStr) {
+        this.runDateStr = runDateStr;
+        this.cutTimeStr = cutTimeStr;
+    }
+
     public String getRunDateStr() {
         return runDateStr;
     }

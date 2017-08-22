@@ -135,7 +135,13 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
         Date cutDateTime  = getSystemDateTime();
 
         LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
-        RpcRes_Base<LwdBalanceCutWrapper> res1 = remoteAccess.invoke(LwdBalanceCutController.class, "create", wrapper);
+        RpcRes_Base<LwdBalanceCutWrapper> res = remoteAccess.invoke(LwdBalanceCutController.class, "get");
+        System.out.println(res.getMessage());
+        Assert.assertFalse(res.isError());
+        Assert.assertNull(res.getResult().getRunDateStr());
+        Assert.assertNull(res.getResult().getCutTimeStr());
+
+        RpcRes_Base<LwdBalanceCutWrapper> res1;
         for (int i = 0; i < 2; i++) {
             cutDateTime = addSeconds(cutDateTime, 300);
             wrapper.setRunDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(cutDateTime));

@@ -59,10 +59,12 @@ public class LwdBalanceCutController extends BaseDictionaryController<LwdBalance
     ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     public RpcRes_Base<LwdBalanceCutWrapper> get() {
-        LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
         LwdBalanceCutView record = cachedRepository.getRecord();
-        wrapper.setRunDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(record.getRunDate()));
-        wrapper.setCutTimeStr(record.getCutTime());
+        LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
+        if (null != record) {
+            wrapper.setRunDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(record.getRunDate()));
+            wrapper.setCutTimeStr(record.getCutTime());
+        }
         return new RpcRes_Base<>(wrapper, false,
                 String.format("Время отсечения предыдущего рабочего дня: дата опердня '%s', время '%s'"
                 , wrapper.getRunDateStr(), wrapper.getCutTimeStr()));
