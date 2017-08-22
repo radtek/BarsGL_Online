@@ -3,6 +3,9 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
+import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
+import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
@@ -39,6 +42,7 @@ public class OperDayForm extends BaseForm {
 //    private Action close_Balance_Previous_OD;
     private Action change_Phase_To_PRE_COB;
     private Action switchPdMode;
+    private Action autoCloseAction;
 
     private Label currentOD;
     private Label phaseCurrentOD;
@@ -51,6 +55,9 @@ public class OperDayForm extends BaseForm {
     private Label vip;
     private Label not_vip;
 
+    private Label dateOD;
+    private Label timeClose;
+    private LwdBalanceCutWrapper lwdBalanceCutWrapper;
 
     public OperDayForm(){
         super();
@@ -102,7 +109,7 @@ public class OperDayForm extends BaseForm {
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
-
+        abw.addSecureAction(autoCloseAction = createAutoCloseODAction(), SecurityActionCode.TskOdBalCloseRun);
 
         refreshAction.execute();
 
@@ -114,8 +121,42 @@ public class OperDayForm extends BaseForm {
         vp.add(grid);
         vp.add(createCOB_OKInfo());
         vp.add(vip_errors = createVipErrorInfo());
+        vp.add(createAutoClosePreviousODInfo());
         panel.add(vp);
+
+
+
         return panel;
+    }
+
+    private Widget createAutoClosePreviousODInfo(){
+        VerticalPanel vp = new VerticalPanel();
+        vp.getElement().getStyle().setMarginLeft(5, Style.Unit.PX);
+        vp.getElement().getStyle().setMarginTop(50, Style.Unit.PX);
+
+        HTMLPanel html = new HTMLPanel("<h4>Автоматическое закрыти баланса предыдущего дня</h4>");
+        html.getElement().getStyle().setBackgroundColor("#FFFF00");
+        html.getElement().getStyle().setHeight(20, Style.Unit.PX);
+        html.getElement().getStyle().setTextAlign(Style.TextAlign.CENTER);
+
+        Label label;
+        Grid grid = new Grid(2, 2);
+
+
+        grid.setWidget(0, 0, label = new Label("Дата опердня"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.setWidget(0, 1, dateOD = new Label());
+
+        grid.setWidget(1, 0, label = new Label("Время закрытия"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.setWidget(1, 1, timeClose = new  Label());
+
+        grid.getCellFormatter().setWidth(0, 0, "285px");
+        grid.getColumnFormatter().getElement(0).getStyle().setFontWeight(Style.FontWeight.BOLD);
+
+        vp.add(html);
+        vp.add(grid);
+        return vp;
     }
 
     private Grid createVipErrorInfo(){
@@ -193,6 +234,7 @@ public class OperDayForm extends BaseForm {
             @Override
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                autoCloseAction.setEnable(false);
 //                WaitingManager.show("TEXT_CONSTANTS.waitMessage_Load()");
 
                 CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
@@ -233,8 +275,32 @@ public class OperDayForm extends BaseForm {
                     }
                 });
 
+                getAutoClosePreviousOD();
             }
         };
+    }
+
+    private void getAutoClosePreviousOD(){
+        BarsGLEntryPoint.operDayService.getLwdBalanceCut(new AuthCheckAsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>>() {
+
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                autoCloseAction.setEnable(true);
+                Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
+            }
+
+            @Override
+            public void onSuccess(RpcRes_Base<LwdBalanceCutWrapper> res) {
+                autoCloseAction.setEnable(true);
+                if (res.isError()) {
+                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                } else {
+                    lwdBalanceCutWrapper = res.getResult();
+                    dateOD.setText(lwdBalanceCutWrapper.getRunDateStr());
+                    timeClose.setText(lwdBalanceCutWrapper.getCutTimeStr());
+                }
+            }
+        });
     }
 
     private Action createOpenODAction(){
@@ -386,6 +452,42 @@ public class OperDayForm extends BaseForm {
            }
        };
    }
+
+    private Action createAutoCloseODAction(){
+        return new Action(null, "Настройка", new Image(ImageConstants.INSTANCE.back_value()), 5){
+            AutoCloseODDlg dlg = null;
+            @Override
+            public void execute() {
+                dlg =  new AutoCloseODDlg();
+                dlg.setCaption(this.getHint());
+                dlg.setDlgEvents(new IDlgEvents() {
+                    @Override
+                    public void onDlgOkClick(Object prms) throws Exception {
+                        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                        BarsGLEntryPoint.operDayService.setLwdBalanceCut((LwdBalanceCutWrapper)prms, new AuthCheckAsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>>() {
+
+                            @Override
+                            public void onFailureOthers(Throwable throwable) {
+                                Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
+                            }
+
+                            @Override
+                            public void onSuccess(RpcRes_Base<LwdBalanceCutWrapper> res) {
+                                if (res.isError()) {
+                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                                } else {
+                                    getAutoClosePreviousOD();
+                                }
+                            }
+                        });
+                    }
+                });
+
+                dlg.show(lwdBalanceCutWrapper);
+            }
+        };
+    }
+
 
    private Action export2ExcelActtion(){
        return new Action(null, "Ночной отчет об ошибках", new Image(ImageConstants.INSTANCE.report()), 5) {

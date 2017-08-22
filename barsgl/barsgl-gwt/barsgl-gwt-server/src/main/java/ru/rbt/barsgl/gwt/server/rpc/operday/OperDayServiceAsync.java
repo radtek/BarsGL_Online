@@ -13,8 +13,8 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
  * Created by akichigi on 23.03.15.
  */
 public interface OperDayServiceAsync {
-     void setLwdBalanceCut(LwdBalanceCutWrapper wrapper, AsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>> callback) throws Exception;
-     void getLwdBalanceCut(AsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>> callback) throws Exception;
+     void setLwdBalanceCut(LwdBalanceCutWrapper wrapper, AsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>> callback);
+     void getLwdBalanceCut(AsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>> callback);
 
      void getCOB_OK(AsyncCallback<RpcRes_Base<COB_OKWrapper>> callback);
      void runCloseLastWorkdayBalanceTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
