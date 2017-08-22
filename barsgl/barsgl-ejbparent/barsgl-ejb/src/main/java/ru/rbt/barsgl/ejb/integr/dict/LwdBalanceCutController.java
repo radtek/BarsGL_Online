@@ -40,7 +40,7 @@ public class LwdBalanceCutController extends BaseDictionaryController<LwdBalance
     public static final String timePatternMask = "([0-1]?\\d|2[0-3]):([0-5]?\\d)";
     private static final Pattern timePattern = Pattern.compile(timePatternMask);
 
-    @Inject
+    @EJB
     LwdBalanceCutRepository repository;
 
     @EJB
@@ -128,12 +128,10 @@ public class LwdBalanceCutController extends BaseDictionaryController<LwdBalance
                 errorList.add(format("Дата отсечения '%s' < текущего опердня '%s'"
                         , wrapper.getRunDateStr(), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
 
-            // runDate существует
+            // runDate существует и рабочий день
             if (calendarDayRepository.getCalendarDays(runDate, runDate).isEmpty())
                 errorList.add(format("Дата отсечения '%s' отсутствует в календаре банка", wrapper.getRunDateStr()));
-
-            // runDate рабочий день
-            if (!calendarDayRepository.isWorkday(runDate))
+            else if (!calendarDayRepository.isWorkday(runDate))
                 errorList.add(format("Дата отсечения '%s' - выходной день", wrapper.getRunDateStr()));
 
         } catch (Exception e) {
