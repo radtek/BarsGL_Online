@@ -88,7 +88,7 @@ public enum SecurityActionCode {
     , TechOperHistoryUser("История создания операций по техсчетам для user")
     , TechOperPstChngDate("Изменение даты проводки по техсчетам без анализа прав доступа в архив")
     , Replication("Ручная репликация")
-
+    , ReferAcc2Deals("Настройка списка счетов для контроля сделки")
     ;
 
     private final String desc;

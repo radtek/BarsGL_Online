@@ -23,6 +23,7 @@ public interface ManualDictionaryServiceAsync {
     void saveTypesOfTerms(CodeNameWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<CodeNameWrapper>> callback) throws Exception;
     void savePropertyType(PropertyTypeWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<PropertyTypeWrapper>> asyncCallbackImpl) throws Exception;
     void saveStamtUnloadParam(StamtUnloadParamWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<StamtUnloadParamWrapper>> asyncCallbackImpl) throws Exception;
+    void saveAccDeals(AccDealsWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<AccDealsWrapper>> asyncCallbackImpl) throws Exception;
     void saveOperationTemplate(ManualOperationWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback) throws Exception;
     void saveProfitCenter(ProfitCenterWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<ProfitCenterWrapper>> callback) throws Exception;
     void saveAccTypeSection(AccTypeSectionWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<AccTypeSectionWrapper>> callback) throws Exception;

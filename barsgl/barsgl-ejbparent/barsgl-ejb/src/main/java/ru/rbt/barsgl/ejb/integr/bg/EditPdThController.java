@@ -160,7 +160,7 @@ public class EditPdThController {
                 if (editDay.after(newDate))
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
-                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.OperPstChngDate) ) {
+                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.TechOperPstChngDate) ) {
                     Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
                     Date minDate = newDate.before(oldDate) ? newDate : oldDate;
                     accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
@@ -180,9 +180,7 @@ public class EditPdThController {
             auditController.info(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
         } catch (Exception e) {
-            String errMessage = operationWrapper.getErrorMessage() + "\n" + e.getMessage();
-            if (e.getCause() != null ) errMessage += "\n" + e.getCause().getMessage();
-            auditController.error(ManualOperation, errMessage, "GL_PDTH", operationWrapper.getId().toString(), e);
+            String errMessage = operationWrapper.getErrorMessage();
             return new RpcRes_Base<>(operationWrapper, true, errMessage);
         }
     }

@@ -1,15 +1,16 @@
 package ru.rbt.barsgl.ejb.controller.cob;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.shared.enums.CobPhase;
+import ru.rbt.barsgl.shared.enums.CobStepStatus;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.barsgl.shared.enums.CobPhase;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -50,27 +51,28 @@ public class CobStatRecalculator {
     }
 
     @Lock(LockType.WRITE)
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Long calculateCob(boolean withRun) {
         try {
-            Operday operday = operdayController.getOperday();
-            Date curdate = operday.getCurrentDate();
-            // TODO проверка, что COB в этот опердень не запущен!!
+            return statRepository.executeInNewTransaction(persistence -> {
+                Operday operday = operdayController.getOperday();
+                Date curdate = operday.getCurrentDate();
+                // TODO проверка, что COB в этот опердень не запущен!!
 
-            if (statRepository.getRunCobStatus(curdate) == CobStepStatus.Running) {
-                throw new ValidationError(ErrorCode.COB_IS_RUNNING, dateUtils.onlyDateString(curdate));
-            }
+                if (statRepository.getRunCobStatus(curdate) == CobStepStatus.Running) {
+                    throw new ValidationError(ErrorCode.COB_IS_RUNNING, dateUtils.onlyDateString(curdate));
+                }
 
-            auditController.info(PreCob, "Расчет длительности COB");
-            Long idCob = statRepository.createCobStepGroup(curdate);
-            for (CobPhase phase : CobPhase.values()) {
-                Long parameter = statRepository.getStepParameter(phase, curdate, operday.getLastWorkingDay());
-                statRepository.setStepEstimate(idCob, phase.getPhaseNo(), parameter);
-            }
-            return idCob;
+                auditController.info(PreCob, "Расчет длительности COB");
+                Long idCob = statRepository.createCobStepGroup(curdate);
+                for (CobPhase phase : CobPhase.values()) {
+                    Long parameter = statRepository.getStepParameter(phase, curdate, operday.getLastWorkingDay());
+                    statRepository.setStepEstimate(idCob, phase.getPhaseNo(), parameter);
+                }
+                return idCob;
+            });
         } catch (Throwable t) {
             auditController.error(PreCob, "Ошибка при расчете длительности COB", null, t);
-            return null;
+            throw new DefaultApplicationException(t.getMessage(), t);
         }
     }
 

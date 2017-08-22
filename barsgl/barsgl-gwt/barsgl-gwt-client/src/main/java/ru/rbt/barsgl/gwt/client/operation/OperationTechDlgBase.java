@@ -4,22 +4,17 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import com.google.gwt.user.datepicker.client.DateBox;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccTechFormDlg;
-import ru.rbt.barsgl.gwt.client.dictionary.AccountTypeTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
-import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
-import ru.rbt.barsgl.gwt.core.ui.IBoxValue;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -110,9 +105,9 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         grid.setWidget(3, 0, createAlignWidget(mButton = createAccTypedButton("AccType", BUTTON_WIDTH, isDebit), LABELS_WIDTH));
 
         if (side.equals(Side.DEBIT))
-            grid.setWidget(3, 1, createAlignWidget(mAccType = createTxtBox(20, SUM_WIDTH), FIELDS_WIDTH));
+            grid.setWidget(3, 1, createAlignWidget(mAccType = createTxtBox(10, SUM_WIDTH), FIELDS_WIDTH));
         else
-            grid.setWidget(3, 1, mAccType = createTxtBox(20, SUM_WIDTH));
+            grid.setWidget(3, 1, mAccType = createTxtBox(10, SUM_WIDTH));
 
         grid.setWidget(4, 0, createLabel("Счет"));
 
@@ -244,6 +239,9 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             if (null != mAccType) {
                 accWrapper.setAccountType(mAccType.getValue() != null ? Long.parseLong(mAccType.getValue()) : null);
             }
+            else{
+                return;
+            }
             accWrapper.setCurrency(ccy);
             accWrapper.setFilial(cbccn);
 
@@ -251,6 +249,11 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
                 @Override
                 public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
                     if (!wrapper.isError()) {
+                        if (wrapper.getResult().getDateCloseStr()!=null)
+                        {
+                            DialogUtils.showInfo("Запрещены операции с закрытым счётом!");
+                            return;
+                        }
                         mAccount.setValue(wrapper.getResult().getBsaAcid());
                     } else {
                         mAccount.clear();

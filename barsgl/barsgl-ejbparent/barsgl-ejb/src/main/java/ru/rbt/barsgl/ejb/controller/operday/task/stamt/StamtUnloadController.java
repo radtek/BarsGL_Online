@@ -3,8 +3,8 @@ package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
@@ -131,7 +131,7 @@ public class StamtUnloadController {
      * Проверяем закончена ли обработка данных по выгрузкам проводок в TDS
      * @throws Exception
      */
-    public void checkConsumed() throws Exception {
+    public boolean checkConsumed() throws Exception {
         List<DataRecord> unloads = repository.select(
                         "select *\n" +
                         "  from V_GL_STM_AWAIT s\n" +
@@ -141,6 +141,7 @@ public class StamtUnloadController {
                 .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
                         + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
                 .collect(Collectors.joining(" ")))));
+        return true;
     }
 
 

@@ -8,7 +8,7 @@ public enum UserMenuCode {
     , Backvalue, Audit, PLAccount, CBAccount, Operation, Posting, OperSemiposting
     , ErrorOper, UnloadAccountBalance, AEIncomeMsg, FileIncomeMsg, PostingSource
     , TermCode, AccountingType, PlanAccountingType, PlanAccountOfr, PropertyType, Branch
-    , UnloadStamtConfig, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
+    , UnloadStamtConfig, Acc2Deals, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
     , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
     , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
     , TechOperInpConfirm, ErrorView, ErrorHandling, TechOperInpHistory, OperBackValue, OperNotAuthBV, OperAuthBV

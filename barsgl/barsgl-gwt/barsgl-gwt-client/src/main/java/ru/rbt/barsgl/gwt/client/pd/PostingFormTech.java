@@ -32,7 +32,6 @@ import java.util.HashMap;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterParams.DateFilterField.CREATE_DATE;
-import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.addDays;
@@ -118,7 +117,7 @@ public class PostingFormTech extends GridForm {
         podIndex = result.addColumn(colPostDate = new Column("POD", DATE, "Дата проводки", 80));
         colPostDate.setFormat("dd.MM.yyyy");
 
-        result.addColumn(new Column("ACCTYPE_DR", DECIMAL, "AccType ДБ", 80, false, false, Column.Sort.ASC, "000000000"));
+        result.addColumn(new Column("ACCTYPE_DR", STRING, "AccType ДБ", 80, true, false));
         result.addColumn(new Column("BSAACID_DR", STRING, "Счет ДБ", 160));
         result.addColumn(new Column("CBCC_DR", STRING, "Филиал ДБ (счет)", 60, false, false));
         result.addColumn(new Column("FILIAL_DR", STRING, "Филиал ДБ (опер)", 60, false, false));
@@ -126,7 +125,7 @@ public class PostingFormTech extends GridForm {
         result.addColumn(new Column("AMNT_DR", DECIMAL, "Сумма ДБ", 100));
         result.addColumn(new Column("AMNTBC_DR", DECIMAL, "Сумма в руб. ДБ", 100));
 
-        result.addColumn(new Column("ACCTYPE_CR", DECIMAL, "AccType КР", 80,false, false, Column.Sort.ASC, "000000000"));
+        result.addColumn(new Column("ACCTYPE_CR", STRING, "AccType КР", 80,true, false));
         result.addColumn(new Column("BSAACID_CR", STRING, "Счет КР", 160));
         result.addColumn(new Column("CBCC_CR", STRING, "Филиал КР (счет)", 60, false, false));
         result.addColumn(new Column("FILIAL_CR", STRING, "Филиал КР (опер)", 60, false, false));

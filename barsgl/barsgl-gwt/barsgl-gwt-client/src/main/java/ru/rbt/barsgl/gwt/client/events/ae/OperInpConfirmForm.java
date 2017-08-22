@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import com.google.gwt.logging.client.ConsoleLogHandler;
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
-import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.operation.NewOperationAction;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
@@ -13,6 +13,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
+import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
@@ -23,12 +24,16 @@ import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
+import static ru.rbt.barsgl.gwt.client.BarsGLEntryPoint.operationService;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
 
@@ -45,6 +50,7 @@ public class OperInpConfirmForm extends OperBase {
     private GridAction _backward;
     private GridAction _sign;
     private GridAction _confirmDate;
+    Logger log = Logger.getLogger("OperInpConfirmForm");
 
     public OperInpConfirmForm() {
         super(FORM_NAME);
@@ -53,7 +59,6 @@ public class OperInpConfirmForm extends OperBase {
     @Override
     protected void reconfigure() {
         super.reconfigure();
-
         abw.addAction(_modify = createModify());
         abw.addAction(_create = createNewOperation());
         abw.addAction(_createFromTemplate = createTemplateOperation());
@@ -221,36 +226,157 @@ public class OperInpConfirmForm extends OperBase {
 
             @Override
             public void onDlgOkClick(Object prms){
+                log.info("onDlgOkClick");
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                ManualOperationWrapper wrapper = (ManualOperationWrapper) prms;
+                ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
 
                 BatchPostStatus status = BatchPostStatus.valueOf((String) getValue("STATE"));
-                wrapper.setStatus(status);
-                wrapper.setAction(calcAction(dlg.getOperationAction()));
+                operationWrapper.setStatus(status);
+                operationWrapper.setAction(calcAction(dlg.getOperationAction()));
+                operationWrapper.setNoCheckAccDeals(false);
+                operationWrapper.setNoCheckBalance(false);
+                OperationRq(operationWrapper);
 
-                //TODO  for debug
-                /*if (1==1){
-                    System.out.println("Action => " + wrapper.getAction().name());
-                    System.out.println("Prms => " + (wrapper.getReasonOfDeny()));
-                    dlg.hide();
-                    WaitingManager.hide();
-                    return;
-                }*/
-
-                BarsGLEntryPoint.operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+//                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//                ManualOperationWrapper operationWrapper = (ManualOperationWrapper) prms;
+//
+//                operationWrapper.setStatus(BatchPostStatus.NONE);
+//                operationWrapper.setAction( dlg.getOperationAction() == OperationHandsDlg.ButtonOperAction.OK ?
+//                        BatchPostAction.SAVE : BatchPostAction.SAVE_CONTROL);
+//                operationWrapper.setNoCheckAccDeals(false);
+//                operationWrapper.setNoCheckBalance(false);
+//                OperationRq(operationWrapper);
+            }
+            private void OperationRq(final ManualOperationWrapper operationWrapper) {
+                operationService.processOperationRq(operationWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
                     @Override
-                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
-                        if (wrapper.isError()) {
-                            showInfo("Ошибка", wrapper.getMessage());
+                    public void onFailureOthers(Throwable throwable) {
+                        WaitingManager.hide();
+
+                        showInfo("Системная ошибка", "Возможено, операция не сохранена\nПроверьте наличие проводок по операции в нижней части окна" + throwable.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> operationWrappers) {
+                        final ManualOperationWrapper w1 = operationWrappers.getResult();
+                        //final StringBuffer isAccDealOk = new StringBuffer();
+                        log.info("edit operationWrappers.isError()= "+ operationWrappers.isError());
+                        if (operationWrappers.isError()) {
+                            log.info("w1.getErrorList().getErrorListLen() = "+ w1.getErrorList().getErrorListLen());
+                            log.info("w1.getErrorList().getErrorCode()= "+ w1.getErrorList().getErrorCode());
+                            if (w1.getErrorList().getErrorCode().equals("FIELDS_DEAL_SUBDEAL")){
+                                showConfirm("Несоответствие параметров сделки !!!", w1.getErrorList().getErrorMessage(0),
+                                        new IDlgEvents() {
+                                            @Override
+                                            public void onDlgOkClick(Object p) throws Exception {
+                                                w1.setNoCheckAccDeals(true);
+                                                w1.getErrorList().clear();
+                                                //isAccDealOk.append("Y");
+                                                //log.info("onDlgOkClick = " + w1.isNoCheckAccDeals() + " " + isAccDealOk);
+                                                OperationRq(w1);
+                                            }
+                                        }
+                                        , new IAfterCancelEvent() {
+                                            @Override
+                                            public void afterCancel() {
+                                                dlg.getmDealId().setFocus(true);
+                                            }
+                                        } , null);
+//                        log.info("after onDlgOkClick = "+isAccDealOk);
+                            }
+                            else if (operationWrappers.getResult().isBalanceError()) {
+                                showConfirm("Красное сальдо !!!!", operationWrappers.getMessage(), new IDlgEvents() {
+                                            @Override
+                                            public void onDlgOkClick(Object p) throws Exception {
+                                                w1.setNoCheckBalance(true);
+                                                w1.setBalanceError(false);
+                                                w1.getErrorList().clear();
+                                                OperationRq(w1);
+//                                        operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+//                                        {
+//                                            @Override
+//                                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+//                                                if (w2.isError())
+//                                                {
+//                                                    showInfo("Ошибка", w2.getMessage());
+//                                                }
+//                                                else {
+//                                                    dlg.hide();
+//                                                    showInfo("Информация", w2.getMessage());
+//                                                    grid.refresh();
+//                                                }
+//                                            }
+//                                        });
+                                            }
+                                        }
+                                        , null);
+                            }
+                            else {
+                                showInfo("Ошибка", operationWrappers.getMessage());
+                            }
                         } else {
+                            showInfo("Информация", operationWrappers.getMessage());
                             dlg.hide();
-                            showInfo("Информация", wrapper.getMessage());
-                            grid.refresh();
+                            grid.refresh(); // TODO refreshAction.execute();
                         }
                         WaitingManager.hide();
                     }
                 });
+
             }
+
+//            @Override
+//            public void onDlgOkClick(Object prms){
+//                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+//                ManualOperationWrapper wrapper = (ManualOperationWrapper) prms;
+//
+//                BatchPostStatus status = BatchPostStatus.valueOf((String) getValue("STATE"));
+//                wrapper.setStatus(status);
+//                wrapper.setAction(calcAction(dlg.getOperationAction()));
+//
+//                operationService.processOperationRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+//                    @Override
+//                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
+//                        if (wrapper.isError()) {
+//                            if (wrapper.getResult().isBalanceError()) {
+//                                final ManualOperationWrapper w1 = wrapper.getResult();
+//                                showConfirm("Красное сальдо !!!!", wrapper.getMessage(), new IDlgEvents() {
+//                                            @Override
+//                                            public void onDlgOkClick(Object p) throws Exception {
+//                                                w1.setNoCheckBalance(true);
+//                                                w1.setBalanceError(false);
+//                                                w1.getErrorList().clear();
+//                                                operationService.processOperationRq(w1, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>()
+//                                                {
+//                                                    @Override
+//                                                    public void onSuccess(RpcRes_Base<ManualOperationWrapper> w2) {
+//                                                        if (w2.isError())
+//                                                        {
+//                                                            showInfo("Ошибка", w2.getMessage());
+//                                                        }
+//                                                        else {
+//                                                            dlg.hide();
+//                                                            showInfo("Информация", w2.getMessage());
+//                                                            grid.refresh();
+//                                                        }
+//                                                    }
+//                                                });
+//                                            }
+//                                        }
+//                                        , null);
+//                            }
+//                            else {
+//                                showInfo("Ошибка", wrapper.getMessage());
+//                            }
+//                        } else {
+//                            dlg.hide();
+//                            showInfo("Информация", wrapper.getMessage());
+//                            grid.refresh();
+//                        }
+//                        WaitingManager.hide();
+//                    }
+//                });
+//            }
         };
     }
 
