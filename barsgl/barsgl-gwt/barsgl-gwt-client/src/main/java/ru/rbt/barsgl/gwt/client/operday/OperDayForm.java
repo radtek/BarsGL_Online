@@ -466,10 +466,10 @@ public class OperDayForm extends BaseForm {
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
                         BarsGLEntryPoint.operDayService.setLwdBalanceCut((LwdBalanceCutWrapper)prms, new AuthCheckAsyncCallback<RpcRes_Base<LwdBalanceCutWrapper>>() {
 
-                            @Override
+                          /*  @Override
                             public void onFailureOthers(Throwable throwable) {
                                 Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
-                            }
+                            }*/
 
                             @Override
                             public void onSuccess(RpcRes_Base<LwdBalanceCutWrapper> res) {
@@ -478,6 +478,7 @@ public class OperDayForm extends BaseForm {
                                 } else {
                                     getAutoClosePreviousOD();
                                 }
+                                WaitingManager.hide();
                             }
                         });
                     }
