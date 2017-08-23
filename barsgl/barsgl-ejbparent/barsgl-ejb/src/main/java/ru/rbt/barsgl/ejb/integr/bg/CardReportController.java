@@ -123,7 +123,7 @@ public class CardReportController {
                 "from BALTUR b" +
                 "left join GL_ACC a on b.bsaacid = a.bsaacid" +
                 "left join GL_BALTUR c on c.bsaacid = b.bsaacid and c.dat <= '%s'" +
-                "    where b.bsaacid in (select t.bsaacid from gl_acc t	where t.cbccn = '%s' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2'))" +
+                "    where b.bsaacid in (select t.bsaacid from gl_acc t	where t.cbcc = '%s' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2'))" +
                 "	    and b.dat <= '%s' and b.datto >= '%s'" +
                 "group by a.ccy, a.branch, a.subdealid" +
                 "order by a.subdealid, a.branch, a.ccy", dateStr, filial, dateStr, dateStr);
@@ -137,7 +137,7 @@ public class CardReportController {
                 "     , sum(value(a.obac,0) + value(a.dtct,0)) as sum" +
                 "     , a.ccy, a.subdealid" +
                 "from GL_ACCCARD a" +
-                "    where a.cbccn = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
+                "    where a.cbcc = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
                 "group by a.ccy, a.branch, a.subdealid" +
                 "order by a.subdealid, a.branch, a.ccy", filial, dateStr, dateStr);
 
