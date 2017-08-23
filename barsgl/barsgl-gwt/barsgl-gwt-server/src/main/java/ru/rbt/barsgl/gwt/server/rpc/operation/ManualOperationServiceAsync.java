@@ -15,7 +15,7 @@ import java.util.List;
  * Created by ER18837 on 19.08.15.
  */
 public interface ManualOperationServiceAsync {
-    void getCardReport(CardReportWrapper wrapper, AsyncCallback<RpcRes_Base<CardReportWrapper>> callback ) throws Exception;
+    void getCardReport(CardReportWrapper wrapper, AsyncCallback<RpcRes_Base<CardReportWrapper>> callback );
 
     void processOperationRq(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
     void processPackageRq(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
