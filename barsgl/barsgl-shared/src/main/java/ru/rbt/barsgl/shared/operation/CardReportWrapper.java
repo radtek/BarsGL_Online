@@ -12,6 +12,8 @@ public class CardReportWrapper implements Serializable, IsSerializable {
 
     private String filial;
     private String postDateStr;
+    private String reportSql;
+    private String comment;
 
     public String getDateFormat() {
         return dateFormat;
@@ -31,5 +33,21 @@ public class CardReportWrapper implements Serializable, IsSerializable {
 
     public void setPostDateStr(String postDateStr) {
         this.postDateStr = postDateStr;
+    }
+
+    public String getReportSql() {
+        return reportSql;
+    }
+
+    public void setReportSql(String reportSql) {
+        this.reportSql = reportSql;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

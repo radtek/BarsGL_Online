@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.commons.lang3.time.DateUtils;
+import ru.rb.cfg.SystemConfiguration;
 import ru.rbt.barsgl.ejb.entity.acc.AccCardId;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccCard;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -34,7 +35,22 @@ public class CardReportController {
     GLAccountRepository accountRepository;
 
     // TODO заглушка
-    public RpcRes_Base<CardReportWrapper> getCardReport(CardReportWrapper wrapper) throws Exception {
+    public RpcRes_Base<CardReportWrapper> getCardReport(CardReportWrapper wrapper) {
+        Date dat;
+        try {
+            dat = new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr());
+        } catch (ParseException e) {
+            return new RpcRes_Base<>(wrapper, true, "Неверный формат даты, требуется " + wrapper.getDateFormat());
+        }
+        Date datStart = accountRepository.getDateStartCardPH();
+        if (null == datStart || dat.before(datStart)) {
+            wrapper.setReportSql(getReportSqlOld(dat, wrapper.getFilial()));
+            wrapper.setComment("Рассчет по остаткам");
+        } else {
+            createCardReport(dat, wrapper.getFilial());
+            wrapper.setReportSql(getReportSqlNew(dat, wrapper.getFilial()));
+            wrapper.setComment("Рассчет по оборотам");
+        }
         return new RpcRes_Base<>(wrapper, false, "");
     }
 
@@ -98,6 +114,32 @@ public class CardReportController {
         }
     }
 
+    public String getReportSqlOld(Date dat, String filial) {
+        String dateStr = databaseDate.format(dat);
+        return String.format(
+                "select a.branch" +
+                "     , sum((value(b.obac,0) + value(b.dtac,0) + value(b.ctac,0) + value(c.dtac, 0) + value(c.ctac,0)) * 0.01) as sum" +
+                "     , a.ccy, a.subdealid" +
+                "from BALTUR b" +
+                "left join GL_ACC a on b.bsaacid = a.bsaacid" +
+                "left join GL_BALTUR c on c.bsaacid = b.bsaacid and c.dat <= '%s'" +
+                "    where b.bsaacid in (select t.bsaacid from gl_acc t	where t.cbccn = '%s' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2'))" +
+                "	    and b.dat <= '%s' and b.datto >= '%s'" +
+                "group by a.ccy, a.branch, a.subdealid" +
+                "order by a.subdealid, a.branch, a.ccy", dateStr, filial, dateStr, dateStr);
 
+    }
 
+    public String getReportSqlNew(Date dat, String filial) {
+        String dateStr = databaseDate.format(dat);
+        return String.format(
+                "select a.branch" +
+                "     , sum(value(a.obac,0) + value(a.dtct,0)) as sum" +
+                "     , a.ccy, a.subdealid" +
+                "from GL_ACCCARD a" +
+                "    where a.cbccn = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
+                "group by a.ccy, a.branch, a.subdealid" +
+                "order by a.subdealid, a.branch, a.ccy", filial, dateStr, dateStr);
+
+    }
 }

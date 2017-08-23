@@ -58,6 +58,6 @@ public class AccCardRepository extends AbstractBaseEntityRepository<GLAccCard, A
                         "where PROCDATE = ? and FILIAL = ?" +
                         "group by BSAACID, POD" +
                         "order by BSAACID, POD", procdate, filial);
-
     }
+
 }
