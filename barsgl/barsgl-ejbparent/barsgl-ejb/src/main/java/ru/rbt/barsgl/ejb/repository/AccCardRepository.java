@@ -11,16 +11,19 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+
 /**
  * Created by er18837 on 21.08.2017.
  */
 public class AccCardRepository extends AbstractBaseEntityRepository<GLAccCard, AccCardId> {
     public GLAccCard createAccCardRecord(String bsaAcid, Date startDate, BigDecimal turnover, GLAccount glAcc) {
         GLAccCard accCard = new GLAccCard(bsaAcid, startDate);
-        accCard.setAcid(glAcc.getAcid());
+        String acid = glAcc.getAcid();
+        accCard.setAcid(acid);
         accCard.setFilial(glAcc.getFilial());
         accCard.setCompanyCode(glAcc.getCompanyCode());
-        accCard.setBranch(glAcc.getBranch()); // TODO Substr(gl_acc.acid.18,3)
+        accCard.setBranch(substr(acid, 17, 20));        // последние 3 символа
         accCard.setCcy(glAcc.getCurrency().getCurrencyCode());
         accCard.setCard(glAcc.getSubDealId());
         accCard.setStartBalance(BigDecimal.ZERO);
@@ -52,12 +55,22 @@ public class AccCardRepository extends AbstractBaseEntityRepository<GLAccCard, A
         return null != res ? res.getDate(0) : null;
     }
 
-    public List<DataRecord> getAccTurnovers(Date procdate, String filial) throws SQLException {
-        return select(
-                "select POD, BSAACID, sum(AMNT * 0.01) DtCt from V_GL_CARDPD" +
-                        "where PROCDATE = ? and FILIAL = ?" +
-                        "group by BSAACID, POD" +
-                        "order by BSAACID, POD", procdate, filial);
+    public List<DataRecord> getFilalTurnoversOnDate(String filial, Date procdate) throws SQLException {
+        return select(  "select BSAACID, POD, sum(AMNT * 0.01) DtCt from V_GL_CARDPD" +
+                        " where FILIAL = ? and PROCDATE = ? " +
+                        " group by BSAACID, POD" +
+                        " order by BSAACID, POD", filial, procdate);
     }
 
+    public List<DataRecord> getAccTurnoversAfterDate(String bsaacid, Date procdate) throws SQLException {
+        return select(  "select BSAACID, POD, sum(AMNT * 0.01) DtCt from V_GL_CARDPD" +
+                        " where (AC_DR = ? or AC_CR = ?) and BSAACID = ? and PROCDATE > ? " +
+                        " group by BSAACID, POD" +
+                        " order by BSAACID, POD", bsaacid, bsaacid, bsaacid, procdate);
+    }
+
+    public int deleteAccBalanceAfterDate(String bsaacid, Date afterdate) throws SQLException {
+        return executeNativeUpdate(
+                "delete from GL_ACCCARD where BSAACID = ? and PROCDATE > ? ", bsaacid, afterdate);
+    }
 }

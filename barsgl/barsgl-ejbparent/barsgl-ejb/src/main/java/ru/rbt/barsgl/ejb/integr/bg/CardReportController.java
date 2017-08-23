@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.commons.lang3.time.DateUtils;
-import ru.rb.cfg.SystemConfiguration;
 import ru.rbt.barsgl.ejb.entity.acc.AccCardId;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccCard;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -40,7 +39,8 @@ public class CardReportController {
         try {
             dat = new SimpleDateFormat(wrapper.getDateFormat()).parse(wrapper.getPostDateStr());
         } catch (ParseException e) {
-            return new RpcRes_Base<>(wrapper, true, "Неверный формат даты, требуется " + wrapper.getDateFormat());
+            return new RpcRes_Base<>(wrapper, true, String.format("Неверный формат даты '%s', требуется '%s'"
+                    , wrapper.getPostDateStr(), wrapper.getDateFormat()));
         }
         Date datStart = accountRepository.getDateStartCardPH();
         if (null == datStart || dat.before(datStart)) {
@@ -59,21 +59,29 @@ public class CardReportController {
             Date finalDate = databaseDate.parse(finalDateStr);
 
             // TODO транзакции !!
-            List<DataRecord> accList = cardRepository.getAccTurnovers(procdate, filial);
-
+            List<DataRecord> accList = cardRepository.getFilalTurnoversOnDate(filial, procdate);
+            String bsaAcidPrev = "";
+            Date datToPrev = finalDate;
             for(DataRecord res: accList) {
-                Date pod = res.getDate(0);
-                String bsaAcid = res.getString(1);
+                String bsaAcid = res.getString(0);
+                if (bsaAcid.equals(bsaAcidPrev) && datToPrev.before(finalDate))
+                    continue;           // повторно счет не обрабатываем, если в пред случае была не последняя запись по счету
+                bsaAcidPrev = bsaAcid;
+
+                Date pod = res.getDate(1);
                 BigDecimal turnover = res.getBigDecimal(2);
                 GLAccCard accCardWas = cardRepository.findById(GLAccCard.class, new AccCardId(bsaAcid, pod));
                 if (null != accCardWas) {
                     // запись с такой датой есть
+                    datToPrev = accCardWas.getEndDate();
                     accCardWas.setTurnovers(turnover);
-                    if (pod.before(finalDate)) {
-                        // это не последняя запись по счету
+                    if (!accCardWas.getEndDate().before(finalDate)) {
+                        // последняя запись по счету
+                        cardRepository.update(accCardWas);
+                    } else {
+                        // не последняя запись по счету
                         // TODO 3.3
                     }
-                    cardRepository.update(accCardWas);
                 } else {
                     // найти запись с максимальной датой < POD
                     Date maxBefore = cardRepository.getMaxDateBefore(bsaAcid, pod);
@@ -120,13 +128,13 @@ public class CardReportController {
                 "select a.branch" +
                 "     , sum((value(b.obac,0) + value(b.dtac,0) + value(b.ctac,0) + value(c.dtac, 0) + value(c.ctac,0)) * 0.01) as sum" +
                 "     , a.ccy, a.subdealid" +
-                "from BALTUR b" +
-                "left join GL_ACC a on b.bsaacid = a.bsaacid" +
-                "left join GL_BALTUR c on c.bsaacid = b.bsaacid and c.dat <= '%s'" +
+                " from BALTUR b" +
+                " left join GL_ACC a on b.bsaacid = a.bsaacid" +
+                " left join GL_BALTUR c on c.bsaacid = b.bsaacid and c.dat <= '%s'" +
                 "    where b.bsaacid in (select t.bsaacid from gl_acc t	where t.cbcc = '%s' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2'))" +
                 "	    and b.dat <= '%s' and b.datto >= '%s'" +
-                "group by a.ccy, a.branch, a.subdealid" +
-                "order by a.subdealid, a.branch, a.ccy", dateStr, filial, dateStr, dateStr);
+                " group by a.ccy, a.branch, a.subdealid" +
+                " order by a.subdealid, a.branch, a.ccy", dateStr, filial, dateStr, dateStr);
 
     }
 
@@ -136,10 +144,10 @@ public class CardReportController {
                 "select a.branch" +
                 "     , sum(value(a.obac,0) + value(a.dtct,0)) as sum" +
                 "     , a.ccy, a.subdealid" +
-                "from GL_ACCCARD a" +
+                " from GL_ACCCARD a" +
                 "    where a.cbcc = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
-                "group by a.ccy, a.branch, a.subdealid" +
-                "order by a.subdealid, a.branch, a.ccy", filial, dateStr, dateStr);
+                " group by a.ccy, a.branch, a.subdealid" +
+                " order by a.subdealid, a.branch, a.ccy", filial, dateStr, dateStr);
 
     }
 }

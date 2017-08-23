@@ -818,11 +818,16 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     public Date getDateStartCardPH() {
         try {
             return executeInNonTransaction(connection -> {
+                SystemConfiguration cfg;
                 try {
-                    SystemConfiguration cfg = getCfg(CFG_NAME_CARD, connection);     // проверяем, что конфиг уже есть
-                    return cfg.getDate(PROP_NAME_CARD);
+                    cfg = getCfg(CFG_NAME_CARD, connection);     // проверяем, что конфиг уже есть
                 } catch (Exception e) {
                     throw new DefaultApplicationException(e.getMessage(), e);
+                }
+                try {
+                    return cfg.getDate(PROP_NAME_CARD);
+                } catch (Exception e) {
+                    return null;
                 }
             });
         } catch (Exception e) {
