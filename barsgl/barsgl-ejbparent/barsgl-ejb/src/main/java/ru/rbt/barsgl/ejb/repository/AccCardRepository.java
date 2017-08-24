@@ -17,8 +17,9 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
  * Created by er18837 on 21.08.2017.
  */
 public class AccCardRepository extends AbstractBaseEntityRepository<GLAccCard, AccCardId> {
-    public GLAccCard createAccCardRecord(String bsaAcid, Date startDate, BigDecimal turnover, GLAccount glAcc) {
-        GLAccCard accCard = new GLAccCard(bsaAcid, startDate);
+    public GLAccCard createAccCardRecord(GLAccount glAcc, Date startDate, Date endDate, BigDecimal turnover) {
+        GLAccCard accCard = new GLAccCard(glAcc.getBsaAcid(), startDate);
+        accCard.setEndDate(endDate);
         String acid = glAcc.getAcid();
         accCard.setAcid(acid);
         accCard.setFilial(glAcc.getFilial());
@@ -31,8 +32,8 @@ public class AccCardRepository extends AbstractBaseEntityRepository<GLAccCard, A
         return accCard;
     };
 
-    public GLAccCard createAccCardRecord(String bsaAcid, Date startDate, Date endDate,  BigDecimal turnover, GLAccCard cardPrev) {
-        GLAccCard accCard = new GLAccCard(bsaAcid, startDate);
+    public GLAccCard createAccCardRecord(GLAccCard cardPrev, Date startDate, Date endDate, BigDecimal turnover) {
+        GLAccCard accCard = new GLAccCard(cardPrev.getId().getBsaAcid(), startDate);
         accCard.setEndDate(endDate);
         accCard.setAcid(cardPrev.getAcid());
         accCard.setFilial(cardPrev.getFilial());
