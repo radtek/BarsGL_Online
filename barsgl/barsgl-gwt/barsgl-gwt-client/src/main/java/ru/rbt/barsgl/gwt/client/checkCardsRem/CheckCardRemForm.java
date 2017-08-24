@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.checkCardsRem;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
@@ -14,11 +13,9 @@ import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
-import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
-import java.util.ArrayList;
+
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;

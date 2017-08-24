@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.checkCardsRem;
 
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Widget;
