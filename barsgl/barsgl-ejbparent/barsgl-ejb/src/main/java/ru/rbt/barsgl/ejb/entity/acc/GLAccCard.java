@@ -16,7 +16,7 @@ public class GLAccCard extends BaseEntity<AccCardId> {
     @EmbeddedId
     AccCardId id;
 
-    @Column(name = "Datto", insertable = false)
+    @Column(name = "Datto")
     @Temporal(TemporalType.DATE)
     private Date endDate;
 

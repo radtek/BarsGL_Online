@@ -72,6 +72,6 @@ public class AccCardRepository extends AbstractBaseEntityRepository<GLAccCard, A
 
     public int deleteAccBalanceAfterDate(String bsaacid, Date afterdate) throws SQLException {
         return executeNativeUpdate(
-                "delete from GL_ACCCARD where BSAACID = ? and PROCDATE > ? ", bsaacid, afterdate);
+                "delete from GL_ACCCARD where BSAACID = ? and DAT > ? ", bsaacid, afterdate);
     }
 }

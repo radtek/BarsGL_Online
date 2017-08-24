@@ -12,11 +12,14 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import javax.persistence.PersistenceException;
 import java.math.BigDecimal;
+import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,7 +67,7 @@ public class CardReportController {
         } catch (Throwable t) {
             auditController.error(AuditRecord.LogCode.CardReport, String.format("Ошибка при создании отчета по картотеке для филиала '%s' на дату '%s'"
                     , wrapper.getFilial(), wrapper.getPostDateStr()), null, t);
-            return new RpcRes_Base<>(wrapper, true, ExceptionUtils.getErrorMessage(t));
+            return new RpcRes_Base<>(wrapper, true, getErrorMessage(t));
         }
     }
 
@@ -161,8 +164,8 @@ public class CardReportController {
                 " left join GL_BALTUR c on c.bsaacid = b.bsaacid and c.dat <= '%s'" +
                 "    where b.bsaacid in (select t.bsaacid from gl_acc t	where t.cbcc = '%s' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2'))" +
                 "	    and b.dat <= '%s' and b.datto >= '%s'" +
-                " group by a.ccy, a.branch, a.subdealid" +
-                " order by a.subdealid, a.branch, a.ccy", dateStr, filial, dateStr, dateStr);
+                " group by a.ccy, a.branch, a.subdealid" // + " order by a.subdealid, a.branch, a.ccy"
+                , dateStr, filial, dateStr, dateStr);
 
     }
 
@@ -174,8 +177,8 @@ public class CardReportController {
                 "     , a.ccy, a.card subdealid" +
                 " from GL_ACCCARD a" +
                 "    where a.cbcc = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
-                " group by a.ccy, a.branch, a.card" +
-                " order by a.card, a.branch, a.ccy", filial, dateStr, dateStr);
+                " group by a.ccy, a.branch, a.card" // + " order by a.card, a.branch, a.ccy"
+                , filial, dateStr, dateStr);
     }
 
     private Date getFinalDate() {
@@ -184,5 +187,11 @@ public class CardReportController {
         } catch (ParseException e) {
             return null;
         }
+    }
+
+    public String getErrorMessage(Throwable throwable) {
+        return ExceptionUtils.getErrorMessage(throwable,
+                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
+                IllegalArgumentException.class, PersistenceException.class, DefaultApplicationException.class);
     }
 }

@@ -6,6 +6,7 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
@@ -16,6 +17,7 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
@@ -99,6 +101,15 @@ public class CheckCardRemForm extends GridForm {
     protected String prepareSql() {
         return null;
     }
+
+    @Override
+    public ArrayList<SortItem> getInitialSortCriteria() {
+        ArrayList<SortItem> list = new ArrayList<SortItem>();
+        list.add(new SortItem("subdealid", Column.Sort.ASC));
+        return list;
+    }
+
+
 
     public void setSql(String text){
         sql_select = text;
