@@ -171,11 +171,11 @@ public class CardReportController {
         return String.format(
                 "select a.branch" +
                 "     , sum(value(a.obac,0) + value(a.dtct,0)) as sum" +
-                "     , a.ccy, a.subdealid" +
+                "     , a.ccy, a.card subdealid" +
                 " from GL_ACCCARD a" +
                 "    where a.cbcc = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
-                " group by a.ccy, a.branch, a.subdealid" +
-                " order by a.subdealid, a.branch, a.ccy", filial, dateStr, dateStr);
+                " group by a.ccy, a.branch, a.card" +
+                " order by a.card, a.branch, a.ccy", filial, dateStr, dateStr);
     }
 
     private Date getFinalDate() {

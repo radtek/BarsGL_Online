@@ -2,10 +2,7 @@ package ru.rbt.barsgl.ejb.entity.acc;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -20,6 +17,7 @@ public class GLAccCard extends BaseEntity<AccCardId> {
     AccCardId id;
 
     @Column(name = "Datto", insertable = false)
+    @Temporal(TemporalType.DATE)
     private Date endDate;
 
     @Column(name = "ACID")
