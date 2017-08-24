@@ -119,7 +119,7 @@ public class BVDepthDlg extends DlgFrame {
 
     private void setContent(){
         if (action == FormAction.CREATE){
-            depth.setValue(1);
+//            depth.setValue(1);
             beginDate.setValue(CommonEntryPoint.CURRENT_OPER_DAY);
             return;
         }
