@@ -1,16 +1,18 @@
 package ru.rbt.barsgl.ejbcore.page;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.util.Sql2Xls;
-import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.shared.Assert;
 import ru.rbt.shared.enums.Repository;
 
 import javax.ejb.EJB;
@@ -20,7 +22,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +39,10 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @EJB
     private CoreRepository repository;
+
+    @EJB
+    protected AuditController auditController;
+
 
     @Override
     public List<DataRecord> select(final String nativeSql, Criterion<?> criterion, int pageSize, int pageNumber, OrderByColumn orderBy) {
@@ -184,12 +189,14 @@ public class SqlPageSupportBean implements SqlPageSupport {
                     outStream.flush();
                     return f.getAbsolutePath();    // TODO
                 } catch (Exception e) {
+                    auditController.info(AuditRecord.LogCode.User,e.getMessage());
                     throw new DefaultApplicationException(e.getMessage(), e);
                 } finally {
                     outStream.close();
                 }
             });
         } catch (Exception e) {
+            auditController.info(AuditRecord.LogCode.User,e.getMessage());
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }

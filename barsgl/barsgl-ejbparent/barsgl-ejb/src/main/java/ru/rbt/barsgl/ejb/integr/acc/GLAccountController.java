@@ -1,8 +1,9 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import org.apache.log4j.Logger;
-import org.apache.poi.util.StringUtil;
 import ru.rb.ucb.util.AccountUtil;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
@@ -11,21 +12,19 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 
 import javax.ejb.*;
 import javax.inject.Inject;
@@ -43,11 +42,11 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.E;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FIVE;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -262,7 +261,9 @@ public class GLAccountController {
 
 
         if (null != glAccount) {
-            return glAccount;
+
+
+            return glAccountRepository.reopenAccountTH(glAccount);
         }
 
         /*
@@ -394,7 +395,7 @@ public class GLAccountController {
     }
 
     @Lock(LockType.WRITE)
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public GLAccount updateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
 
@@ -1142,7 +1143,16 @@ public class GLAccountController {
 
     @Lock(LockType.READ)
     public GLAccount findTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
-        return glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+        GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+
+        return account;
+    }
+
+    @Lock(LockType.READ)
+    public GLAccount findOrReopenTechnicalAccountTH(AccountingType accountingType, String glccy, String cbccn) {
+        GLAccount account = glAccountRepository.findTechnicalAccountTH(accountingType, glccy, cbccn,operdayController.getOperday().getCurrentDate());
+
+        return glAccountRepository.reopenAccountTH(account);
     }
 
     /**

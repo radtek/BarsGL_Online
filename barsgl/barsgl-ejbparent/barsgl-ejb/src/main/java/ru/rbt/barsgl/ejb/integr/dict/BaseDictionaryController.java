@@ -101,7 +101,7 @@ public abstract class BaseDictionaryController<T extends Serializable, K extends
   }
 
   protected RpcRes_Base<T> auditInfo(T wrapper, String infoMessage) {
-    auditController.info(User, infoMessage);
+    if (infoMessage != null && infoMessage.length() > 0) auditController.info(User, infoMessage);
     return new RpcRes_Base<>(wrapper, false, infoMessage);
   }
 

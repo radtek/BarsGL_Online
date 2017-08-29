@@ -174,6 +174,12 @@ public class GlPdThRepository extends AbstractBaseEntityRepository<GlPdTh, Long>
         return res;
     }
 
+    public List<GlPdTh> getPostings(GLOperation operation)
+    {
+        List<GlPdTh> res = select(GlPdTh.class, "from GlPdTh p where p.glOperationId = "+operation.getId());
+        return res;
+    }
+
     public List<GlPdTh> getOperationPdThListByPcId(Long pcid) {
         List<GlPdTh> res = select(GlPdTh.class, "from GlPdTh p where p.pcId ="+pcid.toString());
         return res;

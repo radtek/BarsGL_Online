@@ -53,7 +53,7 @@ public abstract class AccountTechQuickFilterParams implements IQuickFilterParams
             boolean isPattern = acctype.contains("%") || acctype.contains("_");
             if ((acctype.length() < 9) || isPattern) {
                 FilterCriteria accCriteria = (isPattern) ? FilterCriteria.LIKE : FilterCriteria.START_WITH;
-                list.add(new FilterItem(colAccType, accCriteria, Integer.valueOf(acctype).toString()));
+                list.add(new FilterItem(colAccType, accCriteria, acctype));
             }
             else {
                 FilterCriteria accCriteria = FilterCriteria.EQ;

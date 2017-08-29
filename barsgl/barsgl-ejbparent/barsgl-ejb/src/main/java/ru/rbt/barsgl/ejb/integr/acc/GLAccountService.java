@@ -161,7 +161,7 @@ public class GLAccountService {
             keys.setCurrencyDigital(currency.getDigitalCode());
             String sAccType = keys.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class,sAccType);
-            return Optional.ofNullable(glAccountController.findTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
+            return Optional.ofNullable(glAccountController.findOrReopenTechnicalAccountTH(accType,keys.getCurrency(),keys.getCompanyCode())).orElseGet(() -> {
                 try {
                     checkNotStorno(operation, operSide);
                     return glAccountController.findOrCreateGLAccountTH(operation, accType,operSide, dateOpen, keys);
@@ -538,8 +538,6 @@ public class GLAccountService {
             Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
             String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт" : "Изменен";
 
-
-
             DataRecord data = glAccountRepository.getAccountParams(Utils.fillUp(Long.toString(accountWrapper.getAccountType()), 9),
                     "00", "00", dateOpen);
             if (null == data) {
@@ -562,8 +560,13 @@ public class GLAccountService {
             msg = null != dateClose
                     ? "Уже существует счет с такой датой закрытия. Установите другую дату закрытия"
                     : "Уже существует открытый счет с таким номером.";
-            if (glAccountRepository.checkTechAccountExists(account.getBsaAcid() ,dateClose)){
+                      if (glAccountRepository.checkTechAccountExists(account.getId(), account.getBsaAcid() ,dateClose)){
                 throw new Exception(msg);
+            }
+
+            if (glAccountRepository.checkTechAccountExistsInterval(account.getId(),account.getBsaAcid(), dateOpen,dateClose))
+            {
+                throw  new Exception(String.format("Найдены действующие счета в период с %s по %s",dateOpenStr, dateCloseStr == null ? "01.01.2029" : dateCloseStr));
             }
 
             GLAccount glAccount = glAccountController.updateGLAccountMnlTech(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
@@ -614,7 +617,7 @@ public class GLAccountService {
                     msg = "Уже существует открытый счет с таким номером.";
                 }
 
-                if (glAccountRepository.checkTechAccountExists(accountWrapper.getBsaAcid() ,dateClose)){
+                if (glAccountRepository.checkTechAccountExists(accountWrapper.getId(), accountWrapper.getBsaAcid() ,dateClose)){
                     throw new Exception(msg);
                 }
                 GLAccount glAccount = glAccountController.closeGLAccountMnlTech(account, dateClose, accountWrapper.getErrorList());

@@ -14,4 +14,6 @@ public interface MonitorServiceAsync {
     void getBuff(AsyncCallback<RpcRes_Base<HashMap>> callback) throws Exception;
     void getOper(AsyncCallback<RpcRes_Base<ArrayList>> callback) throws Exception;
     void getRepl(AsyncCallback<RpcRes_Base<HashMap>> callback) throws Exception;
+
+    void getAcc2ForDeals(AsyncCallback<RpcRes_Base<ArrayList>> callback) throws Exception;
 }

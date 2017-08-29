@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -18,6 +17,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -47,6 +47,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     private Column colCurrency;
     private Column colCustomer;
     private Column colAccType;
+    private Column colDTC;
 
     AccountTechQuickFilterParams quickFilterParams;
     GridAction quickFilterAction;
@@ -70,7 +71,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
 
     @Override
     protected String prepareSql() {
-        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, SUBSTR(char(1000000000+ACCTYPE),2,9) as ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
+        return "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
                 "ACC2, PLCODE, ACOD, SQ, ACID, PSAV, DEALSRS, DEALID, SUBDEALID, DESCRIPTION, " +
                 "DTO, DTC, DTR, DTM, OPENTYPE, GLOID, GLO_DC, BALANCE " +
                 "from V_GL_ACC_TH"
@@ -106,7 +107,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(colCustomer = new Column("CUSTNO", STRING, "Номер клиента", 70));
         colCustomer.setVisible(false);
         result.addColumn(new Column("DTO", DATE, "Дата открытия", 80));
-        result.addColumn(new Column("DTC", DATE, "Дата закрытия", 80));
+        result.addColumn(colDTC = new Column("DTC", DATE, "Дата закрытия", 80));
         Column colID;
         result.addColumn(colID = new Column("ID", LONG, "ID счета", 60, true, true, Column.Sort.NONE, ""));
         colID.setVisible(false);
@@ -150,7 +151,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
                 BarsGLEntryPoint.operationService.saveTechAccount(cnw, asyncCallbackImpl);
                 break;
             case UPDATE:
-                BarsGLEntryPoint.operationService.updateTechAccount (cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.operationService.updateTechAccount(cnw, asyncCallbackImpl);
                 break;
             case OTHER:
                 BarsGLEntryPoint.operationService.closeTechAccount(cnw, asyncCallbackImpl);
@@ -177,6 +178,7 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     }
 
     private GridAction createNewOperation() {
+
         sidePanel = new PopupPanel(true, true);
         VerticalPanel vp = new VerticalPanel();
         vp.add(new HTML("<b>Ввести операцию</b>"));
@@ -205,6 +207,17 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
         return new GridAction(grid, null, "Ввести операцию", new Image(ImageConstants.INSTANCE.oper_go()), 10) {
             @Override
             public void execute() {
+
+                Row row = grid.getCurrentRow();
+                if (row!=null)
+                {
+                    if (!isEmpty(grid.getFieldText(colDTC.getName())))
+                    {
+                        DialogUtils.showInfo("Нельзя создать операцию по закрытому счёту!");
+                        return;
+                    }
+                }
+
                 final PushButton button = abw.getButton(this);
                 sidePanel.setPopupPositionAndShow(new PopupPanel.PositionCallback() {
 

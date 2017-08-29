@@ -718,13 +718,21 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
                             ? valueDate
                             : calendarRepository.getWorkDateAfter(valueDate, withTech);
-        ClosedReportPeriodView period = closedPeriodRepository.getPeriod();
 
-        String reason = vdateCut.before(depthCutDate)
-                            ? OverDepth.getValue()
-                            : !valueDate.after(period.getLastDate())
-                                ? ClosedPeriod.getValue()
-                                : null;
+        String reason = null;
+        Date closedCutDate = null;
+        Date closedLastDate = null;
+        if (vdateCut.before(depthCutDate)) {
+            reason = OverDepth.getValue();
+        } else {
+            ClosedReportPeriodView closedPeriod = closedPeriodRepository.getPeriod();
+            if (null != closedPeriod) {
+                closedCutDate = closedPeriod.getCutDate();
+                closedLastDate = closedPeriod.getLastDate();
+                if (!valueDate.after(closedLastDate))
+                    reason = ClosedPeriod.getValue();
+            }
+        }
 
         GLOperation.OperClass operClass = null != reason ? BV_MANUAL : AUTOMATIC;
 
@@ -733,8 +741,8 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             BackValueParameters bvParameters = new BackValueParameters();
             bvParameters.setReason(reason);
             bvParameters.setDepthCutDate(depthCutDate);
-            bvParameters.setCloseCutDate(period.getCutDate());
-            bvParameters.setCloseLastDate(period.getLastDate());
+            bvParameters.setCloseCutDate(closedCutDate);
+            bvParameters.setCloseLastDate(closedLastDate);
             posting.setBackValue(true);
             posting.setBackValueParameters(bvParameters);
         }
@@ -762,6 +770,10 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         if (!calendarRepository.isWorkday(valueDate, withTechWorkDay(operation.getSourcePosting()))) {
             // выходной день
             return processHoliday(operation);
+        } else
+        if (operation.isManual()) {
+            // ручная операция
+            return operation.getPostDate();                                                     // дата проводки не меняется
         } else
         if (operation.isNonStandard()) {
             // нестандартная операция

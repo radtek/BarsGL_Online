@@ -54,6 +54,8 @@ public enum ErrorCode {
     , ACCOUNT_TH_ACCTYPE_NOT_VALID(44,"Поле AccType по %s содержит неверный код типа счёта '%s'")
     , ACCOUNT_TECH_NOT_CORRECT(45, "Некорректный счет %s: '%s'.")
     , ANY_CURRNCY_IS_RUR(46,"Одна из валют должна быть RUR")
+    , ACCOUNT_TH_IS_CLOSED(47, "Счет %s закрыт: '%s' (дата закрытия: '%s')")
+    , ACCOUNT_BALANCE_ERROR(48,"Ошибка при проверке балланса...\n  %s")
  
     /**
      * Ошибки при создании проводки (runtime)
@@ -77,6 +79,7 @@ public enum ErrorCode {
     , STORNO_POST_NOT_FOUND_BUFFER(1017, "%s")
     , BALANSE_SECOND_NOT_EXISTS(1018, "Балансовый счет 2-го порядка для счета %s: '%s' не существует")
     , FAN_INVALID_STATE(1019, "Для референса '%s' найдены частичные веерные операции не в статусе '%s': '%s'")
+    , FIELDS_DEAL_SUBDEAL(1020, "Не соответствие DealId/SudDealId данным в таблице gl_acc")
 
     /**
      * Ошибки при валидации и создании счета
@@ -96,7 +99,7 @@ public enum ErrorCode {
     , ACCOUNT_TYPE_IS_NOT_NUMBER(2012, "Ключи счета %s: Неверный формат типа счета (не число): '%s' (поле '%s')")
     , ACCOUNT_TYPE_INVALID(2013, "Ключи счета %s: Тип счета не задан в системе: '%s' (поле '%s')")
     , ACCOUNTGL_ALREADY_EXISTS(2014, "Счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre><pre>Счет Midas:   %s</pre>")
-    , ACCOUNTGLTH_ALREADY_EXISTS(2060, "Технический счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre>")
+    , ACCOUNTGLTH_ALREADY_EXISTS(2060, "Технический счет BarsGL с таким набором ключей уже существует\n<pre>Счет ЦБ:      %s</pre>")
     , CLOSEDATE_NOT_VALID(2015, "Дата закрытия счета '%s' < даты открытия '%s'")
     , ACCOUNT_RLN_INVALID(2016, "Не найдена запись в таблице ACCRLN для BSAACID = '%s', ACID = '%s'")
     , ACCOUNT_BSA_INVALID(2017, "Не найдена запись в таблице BSAACC для ID (BSAACID) = '%s'")

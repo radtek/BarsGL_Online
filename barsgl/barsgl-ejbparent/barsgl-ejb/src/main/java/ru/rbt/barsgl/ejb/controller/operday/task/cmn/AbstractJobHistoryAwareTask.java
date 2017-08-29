@@ -1,15 +1,15 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.cmn;
 
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -18,12 +18,10 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.ERROR;
-import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.SKIPPED;
-import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.SUCCEDED;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.*;
 import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY;
 import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
 
@@ -129,15 +127,23 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
      */
     protected boolean checkJobStatus(String jobName, Properties properties) {
         try {
-            Assert.isTrue(!jobHistoryRepository.isTaskOK(jobName, getOperday(properties))
-                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, jobName, dateUtils.onlyDateString(getOperday(properties))));
-            Assert.isTrue(!jobHistoryRepository.isAlreadyRunning(jobName, getOperday(properties))
-                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_RUN, jobName, dateUtils.onlyDateString(getOperday(properties))));
-            return true;
+            return checkOk(jobName, properties) && checkAlreadyRunning(jobName, properties);
         } catch (ValidationError e) {
             auditController.warning(Task, format("Задача %s не выполнена", jobName), null, e);
             return false;
         }
+    }
+
+    protected boolean checkOk(String jobName, Properties properties) {
+        Assert.isTrue(!jobHistoryRepository.isTaskOK(jobName, getOperday(properties))
+                , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, jobName, dateUtils.onlyDateString(getOperday(properties))));
+        return true;
+    }
+
+    protected boolean checkAlreadyRunning(String jobName, Properties properties) {
+        Assert.isTrue(!jobHistoryRepository.isAlreadyRunning(jobName, getOperday(properties))
+                , () -> new ValidationError(OPERDAY_TASK_ALREADY_RUN, jobName, dateUtils.onlyDateString(getOperday(properties))));
+        return true;
     }
 
     /**

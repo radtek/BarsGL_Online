@@ -101,7 +101,7 @@ public class TechAccPostingProcessor extends IncomingPostingProcessor  {
         // Код департамента, создавшего проводку
         context.addValidator(() -> {
             String fieldName = target.getColumnName("deptId");
-            String fieldValue = target.getDeptId();
+            String fieldValue = target.getDeptId().trim();
             int maxLen = 4;
             if (null != fieldValue &&  maxLen < fieldValue.length()) {
                 throw new ValidationError(STRING_FIELD_IS_TOO_LONG, fieldValue, fieldName, Integer.toString(maxLen));

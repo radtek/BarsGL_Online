@@ -1,19 +1,16 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
-import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
@@ -82,7 +79,7 @@ public class AccountTechQuickFilterDlg extends DlgFrame {
         int row = 0;
 
         grid.setWidget(row, 0, createLabel("Accounting Type", LABEL_WIDTH));
-        grid.setWidget(row++, 1, mAccType = createTxtBox(20, FIELD_WIDTH));
+        grid.setWidget(row++, 1, mAccType = createTxtBox(10, FIELD_WIDTH));
 
         grid.setWidget(row, 0, createLabel("Филиал"));
         grid.setWidget(row++, 1, mFilial = createFilialAuthListBox("", FIELD_WIDTH, false, true));

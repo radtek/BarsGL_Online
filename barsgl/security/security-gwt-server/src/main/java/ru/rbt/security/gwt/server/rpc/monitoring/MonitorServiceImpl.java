@@ -15,6 +15,19 @@ import java.util.List;
  * Created by akichigi on 06.12.16.
  */
 public class MonitorServiceImpl extends AbstractGwtService implements MonitorService {
+
+    @Override
+    public RpcRes_Base<ArrayList> getAcc2ForDeals() throws Exception {
+        return new RpcResProcessor<ArrayList>() {
+            @Override
+            protected RpcRes_Base<ArrayList> buildResponse() throws Throwable {
+                RpcRes_Base<ArrayList> res = localInvoker.invoke(MonitoringController.class, "getAcc2ForDeals");
+                if (res == null) throw new Throwable("Не удалось загрузить acc2 для deals!");
+                return res;
+            }
+        }.process();
+    }
+
 //    @Override
 //    public RpcRes_Base<MonitoringWrapper> getInfo() throws Exception {
 //        return new RpcResProcessor<MonitoringWrapper>() {
