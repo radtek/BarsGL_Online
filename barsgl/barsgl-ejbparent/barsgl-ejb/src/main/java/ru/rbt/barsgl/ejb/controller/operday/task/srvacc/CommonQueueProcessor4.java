@@ -228,18 +228,21 @@ public class CommonQueueProcessor4 implements MessageListener {
         List<JpaAccessCallback<Void>> callbacks = new ArrayList<>();
 
         for (int i = 0; i < batchSize; i++) {
+            long createReceiveTime = System.currentTimeMillis();
+
             String[] incMessage = readFromJMS(consumer);
             if (incMessage == null || incMessage[0] == null) {
                 break;
             }
-
+            long receiveTime = System.currentTimeMillis() - createReceiveTime;
+            
             String textMessage = incMessage[0].trim();
             Long jId = 0L;
             try {
                 jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
                     return journalRepository.createJournalEntry(params[0], textMessage);
                 });
-                callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2]));
+                callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], receiveTime));
             } catch (JMSException e) {
                 reConnect();
                 auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
@@ -268,7 +271,7 @@ public class CommonQueueProcessor4 implements MessageListener {
           return journalRepository.createJournalEntry(params[0], textMessage);
         });
 
-        asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2]),
+        asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], -1L),
                 propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue());
         
       } catch (JMSException e) {
@@ -286,13 +289,15 @@ public class CommonQueueProcessor4 implements MessageListener {
         String[] incMessage;
         String queue;
         String queueType;
+        long receiveTime;
 
-        CommonRqCallback(String queueType, String textMessage, Long jId, String[] incMessage, String queue) {
+        CommonRqCallback(String queueType, String textMessage, Long jId, String[] incMessage, String queue, long receiveTime) {
             this.textMessage = textMessage;
             this.jId = jId;
             this.incMessage = incMessage;
             this.queue = queue;
             this.queueType = queueType;
+            this.receiveTime = receiveTime;
         }
 
         @Override
@@ -330,6 +335,8 @@ public class CommonQueueProcessor4 implements MessageListener {
                     //journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" + (createAnswerTime - startProcessing) + "/" + (sendingAnswerTime - createAnswerTime));                    
                     journalRepository.invokeAsynchronous(em -> {
                       return journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" 
+                              + receiveTime
+                              + "/" 
                               + (createAnswerTime - startProcessing) 
                               + "/" 
                               + (sendingAnswerTime - createAnswerTime) 

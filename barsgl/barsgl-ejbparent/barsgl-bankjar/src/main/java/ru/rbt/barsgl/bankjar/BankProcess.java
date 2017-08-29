@@ -60,13 +60,15 @@ public class BankProcess extends AbstractBankjarBean {
     public boolean existBsaAccount(String bsaAccount)
             throws SQLException {
         String sql = "select id from bsaacc where id=? ";
-        PreparedStatement statement = connection().prepareStatement(sql);
-        statement.setString(1, bsaAccount);
-        ResultSet result = statement.executeQuery();
-        boolean exist = false;
-        if (result.next())
-            exist = true;
-        result.close();
+        boolean exist;
+        try (PreparedStatement statement = connection().prepareStatement(sql)) {
+            statement.setString(1, bsaAccount);
+            try (ResultSet result = statement.executeQuery()) {
+                exist = false;
+                if (result.next())
+                    exist = true;
+            }
+        }
         return exist;
     }
 
