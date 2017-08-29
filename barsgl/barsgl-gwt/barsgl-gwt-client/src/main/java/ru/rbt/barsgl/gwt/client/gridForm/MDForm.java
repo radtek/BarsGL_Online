@@ -232,7 +232,7 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
                 changeRefreshSetting(this, isManualRefresh);
                 mdWidget.setLazyRefresh(isManualRefresh);
                 mdWidget.setUseCurtain(isManualRefresh);
-                if (!isManualRefresh) detailRefreshAction.execute();
+                if (!isManualRefresh && masterGrid.getRowCount() != 0) detailRefreshAction.execute();
             }
         };
     }
