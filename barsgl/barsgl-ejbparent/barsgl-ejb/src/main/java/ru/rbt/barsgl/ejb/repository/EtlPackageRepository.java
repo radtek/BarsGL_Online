@@ -26,9 +26,9 @@ public class EtlPackageRepository extends AbstractBaseEntityRepository<EtlPackag
      */
     public List<DataRecord> getPackagesForProcessing(int packageCount, Date from, Date to, Date curdate) {
         try {
-            return selectMaxRows("SELECT * FROM GL_ETLPKG WHERE STATE = ? AND DT_LOAD >= ? AND DT_LOAD < ? " +
-                    "and ID_PKG not in (select ID_PKG from GL_ETLPST where VDATE > ?) " +
-                    "ORDER BY ID_PKG"
+            return selectMaxRows("SELECT p.* FROM GL_ETLPKG p WHERE STATE = ? AND DT_LOAD >= ? AND DT_LOAD < ? " +
+                    "and not exists (select ID_PKG from GL_ETLPST e where e.id_pkg=p.id_pkg and VDATE > ?) " +
+                    "ORDER BY p.ID_PKG"
                     , packageCount, new Object[]{EtlPackage.PackageState.LOADED.name(), from, to, curdate});
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
