@@ -483,7 +483,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     public DataRecord getAcidByAccRln(String bsaAcid, Date valDate) {
         String rln = bsaAcid.substring(0, 1).equals("7") ? "'2', '5'" : "'0', '4', '1'";   // RLNTYPE
         String sql = "select NVL(ACID, ' ') ACID, PLCODE, CTYPE from ACCRLN " +
-                         "where ? = BSAACID and ? between DRLNO and DRLNC " +
+                         "where BSAACID = ? and ? between DRLNO and DRLNC " +
                          "and RLNTYPE in (" + rln + ") order by RLNTYPE";
         try {
             DataRecord res = selectFirst(sql, bsaAcid, valDate);

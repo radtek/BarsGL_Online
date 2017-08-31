@@ -114,7 +114,7 @@ public class MemorderController {
 
     private boolean isMaskExists(String accountDebit, String accountCredit, Date pod) throws SQLException {
         List<DataRecord> filtered = memorderRepository.select(
-                "select * from F067_MASK m where dt_mask like ? and ct_mask like ? and ? between dat and datto"
+                "select * from F067_MASK where dt_mask like ? and ct_mask like ? and ? between dat and datto"
                 , accountDebit.substring(0, 3) + "%", accountCredit.substring(0, 3) + "%", pod);
         DataRecord record = filtered.stream().filter(dataRecord ->
                 accountDebit.matches(dataRecord.getString("dt_mask").trim().replace("_", ".").replace("%", ".*"))
