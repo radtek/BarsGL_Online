@@ -9,6 +9,7 @@ import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCommunicator;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
+import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.ManualOperationRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
@@ -19,6 +20,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -45,10 +47,8 @@ import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
-import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
@@ -820,10 +820,11 @@ public class ManualPostingController {
                     return;
                 } else {        // получен ответ после таймаута или ошибки
                     createPostingHistory(wrapper.getId());
-                    auditController.error(ManualOperation,
-                            "Ошибка при получении ответа от сервиса движений по запросу ID = " + wrapper.getId(), postingName, getWrapperId(wrapper),
-                            String.format("Получен положительный ответ от сервиса движений по запросу в статусе %s (%s)", oldStatus.name(), oldStatus.getLabel()));
-                    setOperationRqStatusReceive(wrapper, movementId, ERROPERSRV, 0, null);        // одобрен
+                    String errorMsg = String.format("Получен положительный ответ от сервиса движений по запросу в статусе %s (%s)"
+                            , oldStatus.name(), oldStatus.getLabel());
+                    auditController.error(ManualOperation, "Ошибка при получении ответа от сервиса движений по запросу ID = " + wrapper.getId()
+                            , postingName, getWrapperId(wrapper), errorMsg);
+                    setOperationRqStatusReceive(wrapper, movementId, ERROPERSRV, 0, errorMsg);              // ошибка
                 }
             } else {
                 // TODO надо вынести запись статуса ошибки наружу? Падает при обработке пакетных операций
@@ -838,7 +839,7 @@ public class ManualPostingController {
                 if (WAITSRV != oldStatus) {   // получен ответ после таймаута или ошибки
                     createPostingHistory(wrapper.getId());
                 }
-                setOperationRqStatusReceive(wrapper, movementId, errStatus, error.getCode(), errorMsg);        // одобрен
+                setOperationRqStatusReceive(wrapper, movementId, errStatus, error.getCode(), errorMsg);        // ошибка
             }
         }
         catch (Exception e) {
