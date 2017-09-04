@@ -186,6 +186,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
 
         // удалить все счета
         deleteAccountCB2(operation.getAccountCredit(), false);
+        deleteAccountCB2(operation.getAccountDebit(), false);
 
     }
 
