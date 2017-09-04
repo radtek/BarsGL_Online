@@ -38,7 +38,6 @@ public class SqlPageSupportBean implements SqlPageSupport {
     public static final String COUNT_ALIAS = "v2";
     public static final int MAX_PAGE_SIZE = 100000;
     public static final int MAX_ROW_COUNT = 5000;
-    private static int fetchedRowCount = -1;
 
     @EJB
     private CoreRepository repository;
@@ -61,35 +60,22 @@ public class SqlPageSupportBean implements SqlPageSupport {
     @Override
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
         String resultSql = null;
-        try{
+        try {
+            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, orderBy);
             final List<Object> params = new ArrayList<>();
-            log.debug("Count[fetchedRowCount] => " + fetchedRowCount);
-
-            if (fetchedRowCount == 0){
-                //if count equals zero return fake query
-                resultSql = getFakeZeroQuery(nativeSql);
-                fetchedRowCount = -1;
-            } else{
-                SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, orderBy);
-                if (null != sql.getParams()) {
-                    params.addAll(Arrays.asList(sql.getParams()));
-                }
-                resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith);
-                log.info("Parameters list: " + params.stream().map(p -> "param = " + p).collect(Collectors.joining(":")));
+            if (null != sql.getParams()) {
+                params.addAll(Arrays.asList(sql.getParams()));
             }
+
+            resultSql = preparePaging(sql.getQuery(), params, pageSize, startWith);
+
             log.info("SQL[selectRows] => " + resultSql);
+            log.info("Parameters list: " + params.stream().map(p -> "param = " + p).collect(Collectors.joining(":")));
             DataSource dataSource = repository.getDataSource(rep);
             return repository.selectMaxRows(dataSource, resultSql, MAX_ROW_COUNT, params.toArray());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new DefaultApplicationException(e.getMessage() + (resultSql != null ? (" sql: " + resultSql) : ""), e);
         }
-    }
-
-    private String getFakeZeroQuery(String query){
-        String tmp = query;
-        int idx = tmp.toLowerCase().indexOf("where");
-        String _where = " 1=2 ";
-        return (idx == -1 ? query + " where" : query.substring(0, idx + 5)) + _where;
     }
 
     @Override
@@ -111,7 +97,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
             int cnt = calculateCount(rep, resultSql, sql.getParams());
             if (MAX_ROW_COUNT + 1 == cnt)
                 cnt = -MAX_ROW_COUNT;       // свыше MAX_ROW_COUNT
-            return fetchedRowCount = cnt;
+            return cnt;
         } catch (Exception e) {
             throw new DefaultApplicationException(e.getMessage() + (resultSql != null ? (" sql: " + resultSql) : ""), e);
         }
