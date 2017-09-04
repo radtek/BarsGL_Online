@@ -150,7 +150,7 @@ public class ManualAccountOfrIT extends AbstractRemoteIT {
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals("GLOID = " + operation.getId(), OperState.POST, operation.getState());
 
         // проверка счетов
         String acidDr = "", acidCr = "";
