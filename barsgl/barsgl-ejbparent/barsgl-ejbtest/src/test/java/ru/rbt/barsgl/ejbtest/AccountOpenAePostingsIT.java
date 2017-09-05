@@ -334,14 +334,14 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         if (isEmpty(pst.getAccountCredit()))
             acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
 
-        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2";
+        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2 and a.dateOpen = ?3";
         GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
-                operation, D);
+                operation, D, operation.getCurrentDate());
         Assert.assertNotNull(accountDt);
         Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
 
         GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
-                operation, C);
+                operation, C, operation.getCurrentDate());
         Assert.assertNotNull(accountCt);
         Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
 
@@ -388,12 +388,12 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         if (isEmpty(pst.getAccountCredit()))
             checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
 
-        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2";
-        GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, D);
+        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2 and a.dateOpen = ?3";
+        GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, D, operation.getCurrentDate());
         Assert.assertNotNull(accountDt);
         Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
 
-        GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, C);
+        GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, C, operation.getCurrentDate());
         Assert.assertNotNull(accountCt);
         Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
 
@@ -533,7 +533,8 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertEquals(ZERO.getValue()
                 , baseEntityRepository.selectOne(accrlnSql, bsaacidDebit).getString("rlntype"));
 
-        List<GLAccount> accountsCreated = baseEntityRepository.select(GLAccount.class, "from GLAccount a where a.operation = ?1", operation);
+        List<GLAccount> accountsCreated = baseEntityRepository.select(GLAccount.class, "from GLAccount a where a.operation = ?1 and a.dateOpen = ?2"
+                , operation, operation.getCurrentDate());
         Assert.assertTrue(accountsCreated.stream()
                 .map(acc -> acc.getId() + ":" + acc.getRelationType()).collect(Collectors.joining(";"))
                 ,accountsCreated.stream().allMatch(acc -> acc.getRelationTypeEnum() == ZERO));
@@ -548,7 +549,8 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
 
-        accountsCreated = baseEntityRepository.select(GLAccount.class, "from GLAccount a where a.operation = ?1", operation);
+        accountsCreated = baseEntityRepository.select(GLAccount.class, "from GLAccount a where a.operation = ?1 and a.dateOpen = ?2"
+                , operation, operation.getCurrentDate());
         Assert.assertTrue(accountsCreated.stream().allMatch(acc -> acc.getRelationTypeEnum() == ZERO));
 
     }

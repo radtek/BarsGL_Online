@@ -327,7 +327,7 @@ public class ValidationIT extends AbstractTimerJobIT {
      * Проверка ошибки в дате валютирования проводки  - больше текущего опердня (ошибка проводки из АЕ)
      * @fsd 7.3
      */
-    @Test public void testValueDateError() throws ParseException, SQLException {
+    @Test public void testValueDateError() throws ParseException, SQLException, InterruptedException {
 
         long stamp = System.currentTimeMillis();
 
@@ -351,6 +351,7 @@ public class ValidationIT extends AbstractTimerJobIT {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Thread.sleep(500L);
         checkOperErrorRecord(operation, "1001", OperState.ERCHK);
 /*
         EtlPosting pstS = newStornoPosting(System.currentTimeMillis(), pkg, pst);
