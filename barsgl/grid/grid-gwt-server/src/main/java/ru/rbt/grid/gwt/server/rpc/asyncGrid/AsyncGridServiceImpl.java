@@ -1,6 +1,8 @@
 package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
+import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -14,9 +16,13 @@ import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
 import ru.rbt.barsgl.shared.criteria.*;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.shared.enums.Repository;
 
+import java.io.NotActiveException;
 import java.io.Serializable;
+import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,7 +116,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Exception {
-        return localInvoker.invoke(SqlPageSupport.class, "count", sql, filterCriteriaAdapter(filterCriteria));
+        try {
+            return localInvoker.invoke(SqlPageSupport.class, "count", sql, filterCriteriaAdapter(filterCriteria));
+        } catch (Exception t) {
+            return (Integer) processException(t);
+        }
     }
 
     @Override
@@ -232,4 +242,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         System.out.println(msg);
     }
 
+    public Object processException(Exception t) throws Exception {
+        Exception sqlEx = ExceptionUtils.findException(t, SQLException.class);
+        if (null != sqlEx && null != sqlEx.getMessage() && sqlEx.getMessage().toUpperCase().contains("SQL0666"))
+            throw new SqlQueryTimeoutException(); // TODO
+        else
+            throw t;
+    }
 }

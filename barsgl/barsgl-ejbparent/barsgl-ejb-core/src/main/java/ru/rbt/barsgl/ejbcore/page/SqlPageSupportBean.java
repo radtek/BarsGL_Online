@@ -6,6 +6,7 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.util.Sql2Xls;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
+import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
@@ -13,6 +14,7 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.shared.enums.Repository;
 
 import javax.ejb.EJB;
@@ -22,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,7 +78,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
             DataSource dataSource = repository.getDataSource(rep);
             return repository.selectMaxRows(dataSource, resultSql, MAX_ROW_COUNT, params.toArray());
         } catch (Exception e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
+                throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 
