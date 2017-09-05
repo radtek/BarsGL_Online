@@ -61,7 +61,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
     public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
         String resultSql = null;
         try {
-            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, orderBy);
+            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, orderBy, startWith, pageSize);
             final List<Object> params = new ArrayList<>();
             if (null != sql.getParams()) {
                 params.addAll(Arrays.asList(sql.getParams()));
@@ -87,7 +87,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
     public int count(String nativeSql, Repository rep, Criterion<?> criterion) {
         String resultSql = null;
         try {
-            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
+            SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null, 1, MAX_ROW_COUNT);
 
             if (isWherePresents(sql.getQuery())) {
                 resultSql = "select 1 from (" + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
@@ -131,7 +131,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
         return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
     }*/
 
-    private static SQL prepareCommonSql2(final String nativeSql, Criterion criterion, OrderByColumn orderBy) {
+    private static SQL prepareCommonSql2(final String nativeSql, Criterion criterion, OrderByColumn orderBy, int startWith, int pageSize) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
 
         String upperSql = nativeSql.trim();
@@ -147,9 +147,9 @@ public class SqlPageSupportBean implements SqlPageSupport {
         resultSql = "select " + WHERE_ALIAS + ".*, rownum rn from (" + resultSql + ") " + WHERE_ALIAS + " ";
 
         // применяем where
-        resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
+        resultSql += (null != whereClause ? " where " + whereClause.getQuery() + " and rownum <= ? " : " where rownum <= ? ");
 
-        return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
+        return new SQL(resultSql, null != whereClause ? addItem(whereClause.getParams(), pageSize + startWith - 1) : new Object[]{pageSize + startWith - 1});
     }
 
     private String preparePaging(String query, List<Object> params, int pageSize, int startWith) {
@@ -188,7 +188,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
         String pagingString = buildRowNnumberMarker2(orderBy, pgSize);
         try {
-               SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null);
+               SQL sql = prepareCommonSql2(defineSql(nativeSql), criterion, null, startWith, pageSize);
                final ArrayList<Object> params = new ArrayList<>();
                if (null != sql.getParams()) {
                    params.addAll(Arrays.asList(sql.getParams()));
@@ -265,5 +265,12 @@ public class SqlPageSupportBean implements SqlPageSupport {
             }
             return cnt;
         });
+    }
+
+    private static Object[] addItem(Object[] array, Object object) {
+        Object[] params = new Object[array.length + 1];
+        System.arraycopy(array, 0, params, 0, array.length);
+        params[array.length] = object;
+        return params;
     }
 }
