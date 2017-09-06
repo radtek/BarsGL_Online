@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -27,15 +29,13 @@ import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import java.text.ParseException;
-import org.apache.commons.lang3.time.DateUtils;
-import org.junit.BeforeClass;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
@@ -43,7 +43,6 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
-import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.setOperday;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -248,6 +247,10 @@ public class BufferModeIT extends AbstractRemoteIT {
         Operday operday = getOperday();
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
                 , ONLINE, OPEN, BUFFER);
+
+        operday = getOperday();
+        log.info("updated = " + baseEntityRepository.executeNativeUpdate("update gl_oper o set procdate = ? where o.procdate = ? and o.postdate < o.procdate"
+                , DateUtils.addDays(operday.getCurrentDate(), -5), operday.getCurrentDate()));
 
         long stamp = System.currentTimeMillis();
 
