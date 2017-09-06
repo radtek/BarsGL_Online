@@ -6,6 +6,7 @@ import com.google.gwt.view.client.AbstractDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.shared.Assert;
@@ -108,7 +109,7 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
         @Override
         public void onfailure(Throwable t) throws Throwable {
             if (isSqlQueryTimeoutException(t)) {
-                Window.alert("Время выполнения запроса превышает " + ((SqlQueryTimeoutException)t).getLimit() + " сек\nПопробуйте выполнить другой запрос");
+                DialogManager.error("Ошибка", ((SqlQueryTimeoutException)t).getUserMessage());
                 if (WaitingManager.isWaiting()) {
                     WaitingManager.hide();
                 }

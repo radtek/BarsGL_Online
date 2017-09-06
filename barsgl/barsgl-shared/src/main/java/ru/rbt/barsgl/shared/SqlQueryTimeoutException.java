@@ -11,13 +11,22 @@ import java.sql.SQLException;
 public class SqlQueryTimeoutException extends Exception {
 
     public static final String SQL_TIMEOUT_MESSAGE = "Sql query timeout";
+    private int limit = 10;
+
+    public SqlQueryTimeoutException() {
+    }
+
+    public SqlQueryTimeoutException(Throwable cause) {
+        super(cause);
+    }
 
     @Override
     public String getMessage() {
         return SQL_TIMEOUT_MESSAGE;
     }
 
-    public int getLimit() {
-        return 10;
-    };
+    public String getUserMessage() {
+        return "Время выполнения запроса превышает лимит\nПопробуйте выполнить другой запрос";
+    }
+
 }

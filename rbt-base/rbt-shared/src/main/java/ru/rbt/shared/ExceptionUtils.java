@@ -2,6 +2,7 @@ package ru.rbt.shared;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.sql.SQLException;
 
 /**
  * Created by Ivan Sevastyanov
@@ -47,4 +48,11 @@ public class ExceptionUtils {
         }
     }
 
+    public static SQLException getSqlTimeoutException(Throwable t) {
+        SQLException sqlEx = ExceptionUtils.findException(t, SQLException.class);
+        if (null != sqlEx && null != sqlEx.getMessage() && sqlEx.getMessage().toUpperCase().contains("SQL0666"))
+            return sqlEx;
+        else
+            return null;
+    }
 }
