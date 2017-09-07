@@ -6,6 +6,7 @@ import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -14,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -27,6 +29,8 @@ import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
 
 /**
  * Created by ER18837 on 30.03.15.
@@ -222,6 +226,38 @@ public class ValidationTest extends AbstractTimerJobTest {
     }
 
     /**
+     * Проверка неверного кода валюты, отсутствия ИД проводки - ИД платежа или ИД сделки (ошибка проводки из АЕ)
+     * @fsd 7.4.1
+     */
+    @Test public void testDealIdKplus() {
+
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "SimpleValidation");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg, KondorPlus.getLabel());
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountDebit("40817036250010000018");
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(BankCurrency.AUD);
+        pst.setPaymentRefernce(null);
+        pst.setDealId("0");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+        Assert.assertNotNull(pst);
+        pst = (EtlPosting) baseEntityRepository.findById(pst.getClass(), pst.getId());
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, operation.getId());
+        checkOperErrorRecord(operation, "5", ERCHK);
+    }
+
+    /**
      * Проверка обработки операции при отсутствии счета (операция в статусе WTAC)
      * @fsd 7.5.1
      */
@@ -349,7 +385,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        checkOperErrorRecord(operation, "1001", OperState.ERCHK);
+        checkOperErrorRecord(operation, "1001", ERCHK);
 /*
         EtlPosting pstS = newStornoPosting(System.currentTimeMillis(), pkg, pst);
         pstS.setValueDate(DateUtils.addDays(operDate, -62));  // неверная дата (< опердень на 2 м-ца)
@@ -461,7 +497,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        checkOperErrorRecord(operation, "1005", OperState.ERCHK);
+        checkOperErrorRecord(operation, "1005", ERCHK);
     }
 
     /**
@@ -546,7 +582,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        checkOperErrorRecord(operation, "1003", OperState.ERCHK);
+        checkOperErrorRecord(operation, "1003", ERCHK);
     }
 
     /**
@@ -590,7 +626,7 @@ public class ValidationTest extends AbstractTimerJobTest {
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
         Assert.assertNull(operationS.getStornoOperation());        // ссылка на сторно операцию
-        checkOperErrorRecord(operationS, "1007", OperState.ERCHK);
+        checkOperErrorRecord(operationS, "1007", ERCHK);
 
     }
 
@@ -622,7 +658,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         Assert.assertTrue(0 < operation.getId());       // операция создана
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
-        baseEntityRepository.executeNativeUpdate("update GL_OPER set STATE = ? where GLOID = ?", OperState.ERCHK.name(), operation.getId());
+        baseEntityRepository.executeNativeUpdate("update GL_OPER set STATE = ? where GLOID = ?", ERCHK.name(), operation.getId());
 
         // Сторно операция
         stamp = System.currentTimeMillis();
@@ -637,7 +673,7 @@ public class ValidationTest extends AbstractTimerJobTest {
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
         Assert.assertNull(operationS.getStornoOperation());        // ссылка на сторно операцию
-        checkOperErrorRecord(operationS, "1007", OperState.ERCHK);
+        checkOperErrorRecord(operationS, "1007", ERCHK);
 
     }
 
@@ -922,7 +958,7 @@ public class ValidationTest extends AbstractTimerJobTest {
 
         operation = (GLOperation) postingController.processMessage(pst2);
         Assert.assertNotNull(operation);                                               // операция должна быть создана
-        checkOperErrorRecord(operation, "27", OperState.ERCHK);
+        checkOperErrorRecord(operation, "27", ERCHK);
 
     }
 
@@ -1053,7 +1089,7 @@ public class ValidationTest extends AbstractTimerJobTest {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        checkOperErrorRecord(operation, "2008", OperState.ERCHK);
+        checkOperErrorRecord(operation, "2008", ERCHK);
 
     }
 

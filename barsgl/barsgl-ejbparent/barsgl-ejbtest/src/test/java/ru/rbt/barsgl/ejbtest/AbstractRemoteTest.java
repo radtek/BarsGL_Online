@@ -34,6 +34,7 @@ import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -54,6 +55,7 @@ import java.util.*;
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
@@ -348,7 +350,7 @@ public abstract class AbstractRemoteTest  {
      * @return
      */
     public static EtlPosting newPosting(long stamp, EtlPackage pkg) {
-        return newPosting(stamp, pkg, "PH");
+        return newPosting(stamp, pkg, PaymentHub.getLabel());
     }
 
     public static EtlPosting newPosting(long stamp, EtlPackage pkg, String src) {
