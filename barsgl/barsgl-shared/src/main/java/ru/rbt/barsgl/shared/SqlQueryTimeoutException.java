@@ -11,7 +11,6 @@ import java.sql.SQLException;
 public class SqlQueryTimeoutException extends Exception {
 
     public static final String SQL_TIMEOUT_MESSAGE = "Sql query timeout";
-    private int limit = 10;
 
     public SqlQueryTimeoutException() {
     }
@@ -26,7 +25,7 @@ public class SqlQueryTimeoutException extends Exception {
     }
 
     public String getUserMessage() {
-        return "Время выполнения запроса превышает лимит\nПопробуйте выполнить другой запрос";
+        return "Время выполнения запроса превышает лимит. Добавьте дополнительные условия или уменьшите временные рамки поиска";
     }
 
 }
