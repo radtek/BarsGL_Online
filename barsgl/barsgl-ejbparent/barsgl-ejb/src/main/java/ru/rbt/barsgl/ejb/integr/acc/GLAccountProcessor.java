@@ -497,7 +497,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         glAccount.setDealSource(keys.getDealSource());
         glAccount.setDealId(keys.getDealId());
         glAccount.setSubdealId(keys.getSubDealId());
-        glAccount.setAcid("");
+        glAccount.setAcid(" ");
 
 
         String customerName = glAccountRepository.getCustomerName(keys.getCustomerNumber());
