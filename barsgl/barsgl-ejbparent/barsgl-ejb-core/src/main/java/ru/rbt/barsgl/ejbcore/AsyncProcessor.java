@@ -117,7 +117,7 @@ public class AsyncProcessor {
             ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
                   maxConcurrency,
                   maxPoolSize,
-                  OFFER_DEFAULT_TIMEOUT_MS, 
+                  0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS, 
                   MILLISECONDS,
                   new ArrayBlockingQueue<>(callbacks.size()), 
                   managedThreadFactory);
