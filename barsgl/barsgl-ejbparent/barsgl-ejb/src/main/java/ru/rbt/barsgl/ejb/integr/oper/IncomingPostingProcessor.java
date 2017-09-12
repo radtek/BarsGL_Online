@@ -32,6 +32,9 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.ejbcore.util.DateUtils;
+
+import static ru.rbt.barsgl.shared.enums.DealSource.AOS;
+import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -647,9 +650,11 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Operday operday = operdayController.getOperday();
 
         // Для ARMPRO разрешен технический опердень, но не ранее 14 лней назад
-        if (DealSource.ARMPRO.name().equals(operation.getSourcePosting()) && T.name().equals(dayType)
+        if (ARMPRO.getLabel().equals(operation.getSourcePosting()) && T.name().equals(dayType)
                 && operation.getValueDate().after(DateUtils.addDay(operday.getCurrentDate(), -14))) { // технический опердень
             return operation.getValueDate();
+        } else if (AOS.getLabel().equals(operation.getSourcePosting())) {
+            return operday.getCurrentDate();
         }
         // после предыд ОД
         Calendar vdatecal = Calendar.getInstance();
