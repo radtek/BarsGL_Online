@@ -33,6 +33,8 @@ public class AsyncProcessor {
     private static long OFFER_DEFAULT_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(15);
     private static long INIT_DEFAULT_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(15);
 
+    private static int DEFAULT_MAX_POOL_SIZE = 5000;
+    
     @EJB
     private CoreRepository repository;
 
@@ -60,7 +62,21 @@ public class AsyncProcessor {
      * @throws Exception
      */
     public <T> void asyncProcessPooled(List<JpaAccessCallback<T>> callbacks, int maxConcurrency
-            , long timeout, TimeUnit unit) throws Exception {      
+            , long timeout, TimeUnit unit) throws Exception {
+        asyncProcessPooledByExecutor(callbacks, maxConcurrency, timeout, unit);
+   }
+
+    /**
+     * Обрабатываем асинхронно с таймаутом на обработку всех заданий
+     * @param callbacks задания
+     * @param maxConcurrency одновременно
+     * @param timeout таймаут
+     * @param unit единицы измерения
+     * @param <T> параметр
+     * @throws Exception
+     */
+    public <T> void asyncProcessPooledOld(List<JpaAccessCallback<T>> callbacks, int maxConcurrency
+            , long timeout, TimeUnit unit) throws Exception {
         logger.info(format("Starting async processing callbacks: '%s'", callbacks.size()));
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
         BlockingQueue<InternalAsyncTask> pool = new ArrayBlockingQueue<>(maxConcurrency);
@@ -80,7 +96,7 @@ public class AsyncProcessor {
         }
         awaitCompletion(pool, tillTo);
    }
-
+    
     /**
      * Обрабатываем асинхронно с таймаутом на обработку всех заданий
      * Increase performance up to 20%
@@ -93,34 +109,36 @@ public class AsyncProcessor {
      */
     public <T> void asyncProcessPooledByExecutor(List<JpaAccessCallback<T>> callbacks, int maxConcurrency
             , long timeout, TimeUnit unit) throws Exception {      
-        logger.info(format("Starting async processing callbacks: '%s'", callbacks.size()));
-        int maxPoolSize = callbacks.size() < maxConcurrency ? maxConcurrency + 1 : callbacks.size() + 1;// + 1 -- for managed
-        final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
-        
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-              maxConcurrency,
-              maxPoolSize,
-              OFFER_DEFAULT_TIMEOUT_MS, 
-              MILLISECONDS,
-              new ArrayBlockingQueue<>(callbacks.size()), 
-              managedThreadFactory);
-        try {
-            for (JpaAccessCallback<T> callback : callbacks) {              
-              try {
-                threadPoolExecutor.submit(() -> {
-                  return repository.invoke((persistence) -> {
-                    return callback.call(persistence);
-                  }).get();
-                });
-              } catch (RejectedExecutionException ree) {
-                throw new RuntimeException(format("Timeout is exceeded in waiting pool free space, size: %s", maxConcurrency), ree);
-              }
+        if(!callbacks.isEmpty()){
+            logger.info(format("Starting async processing callbacks: '%s'", callbacks.size()));
+            int maxPoolSize = callbacks.size() < maxConcurrency ? maxConcurrency + 1 : callbacks.size() + 1;// + 1 -- for managed
+            final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
+
+            ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
+                  maxConcurrency,
+                  maxPoolSize,
+                  OFFER_DEFAULT_TIMEOUT_MS, 
+                  MILLISECONDS,
+                  new ArrayBlockingQueue<>(callbacks.size()), 
+                  managedThreadFactory);
+            try {
+                for (JpaAccessCallback<T> callback : callbacks) {              
+                  try {
+                    threadPoolExecutor.submit(() -> {
+                      return repository.invoke((persistence) -> {
+                        return callback.call(persistence);
+                      }).get();
+                    });
+                  } catch (RejectedExecutionException ree) {
+                    throw new RuntimeException(format("Timeout is exceeded in waiting pool free space, size: %s", maxConcurrency), ree);
+                  }
+                }
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "error on offering task", e);
             }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "error on offering task", e);
+
+            awaitTermination(threadPoolExecutor, timeout, unit, tillTo);
         }
-        
-        awaitTermination(threadPoolExecutor, timeout, unit, tillTo);
     }
     
     public void awaitTermination(ThreadPoolExecutor threadPoolExecutor, long timeout, TimeUnit unit, long tillTo) throws Exception {
@@ -148,7 +166,7 @@ public class AsyncProcessor {
       if(defaultThreadPoolExecutor == null){
         defaultThreadPoolExecutor = new ThreadPoolExecutor(
               corePoolSize,
-              5000,
+              DEFAULT_MAX_POOL_SIZE,
               OFFER_DEFAULT_TIMEOUT_MS, 
               MILLISECONDS,
               new LinkedBlockingQueue<>(), 
