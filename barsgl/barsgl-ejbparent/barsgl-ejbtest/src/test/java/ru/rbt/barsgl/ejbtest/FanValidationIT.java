@@ -251,6 +251,9 @@ public class FanValidationIT extends AbstractTimerJobIT {
     }
 
     public static void checkErrorRecord(GLOperation operation, String errorCode) {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {}
         Assert.assertNotNull(operation);
         Long pstRef = operation.getEtlPostingRef();
         Long gloRef = operation.getId();
@@ -260,6 +263,7 @@ public class FanValidationIT extends AbstractTimerJobIT {
         Assert.assertTrue(errorMessage.contains(errorCode));
 
         GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        Assert.assertNotNull("Error record has not found by ref=" + pstRef, errorRecord);
         Assert.assertEquals(gloRef, errorRecord.getGlOperRef());
         Assert.assertEquals(errorCode, errorRecord.getErrorCode());
     }
