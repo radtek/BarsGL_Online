@@ -106,7 +106,7 @@ public class TimerJobIT extends AbstractTimerJobIT {
 
         Thread.sleep(4000L);
 
-        Assert.assertEquals(1, jobRegistrator.getRunCount(calendarJob.getName()));
+        Assert.assertTrue(1 == jobRegistrator.getRunCount(calendarJob.getName()) || 2 == jobRegistrator.getRunCount(calendarJob.getName()));
         calendarJob = (CalendarJob) baseEntityRepository.findById(CalendarJob.class, calendarJob.getId());
         Assert.assertNotNull(calendarJob);
         Assert.assertEquals(STARTED, calendarJob.getState());
