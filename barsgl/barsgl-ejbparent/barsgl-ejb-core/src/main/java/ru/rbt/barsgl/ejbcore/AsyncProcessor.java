@@ -110,70 +110,69 @@ public class AsyncProcessor {
     public <T> void asyncProcessPooledByExecutor(List<JpaAccessCallback<T>> callbacks, int maxConcurrency
             , long timeout, TimeUnit unit) throws Exception {      
         if(!callbacks.isEmpty()){
-            logger.info(format("Starting async processing callbacks: '%s'", callbacks.size()));
-            int maxPoolSize = callbacks.size() < maxConcurrency ? maxConcurrency + 1 : callbacks.size() + 1;// + 1 -- for managed
+            logger.info(format("Starting async processing(ManagedThreadFactory) callbacks: '%s'", callbacks.size()));
+            //int maxPoolSize = callbacks.size() < maxConcurrency ? maxConcurrency + 1 : callbacks.size() + 1;// + 1 -- for managed
             final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
 
+            //create with fixed thread pool size
             ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
                   maxConcurrency,
-                  maxPoolSize,
+                  maxConcurrency,
                   0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS, 
                   MILLISECONDS,
                   new ArrayBlockingQueue<>(callbacks.size()), 
                   managedThreadFactory);
-            try {
-                for (JpaAccessCallback<T> callback : callbacks) {              
-                  try {
-                    threadPoolExecutor.submit(() -> {
-                      return repository.invoke((persistence) -> {
-                        return callback.call(persistence);
-                      }).get();
-                    });
-                  } catch (RejectedExecutionException ree) {
-                    throw new RuntimeException(format("Timeout is exceeded in waiting pool free space, size: %s", maxConcurrency), ree);
-                  }
-                }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "error on offering task", e);
-            }
+            
+            callbacks.stream().forEach(callback -> {
+                threadPoolExecutor.submit(() -> {
+                  return repository.invoke((persistence) -> {
+                    return callback.call(persistence);
+                  }).get();
+                });
+            });
 
             awaitTermination(threadPoolExecutor, timeout, unit, tillTo);
         }
     }
     
     public void awaitTermination(ThreadPoolExecutor threadPoolExecutor, long timeout, TimeUnit unit, long tillTo) throws Exception {
-        try{
-          threadPoolExecutor.shutdown();
-          threadPoolExecutor.awaitTermination(timeout, unit);
-          logger.log(Level.INFO, "All threads are terminated");
-        }catch(InterruptedException ex){
-          throw new TimeoutException(format("Async operation is timed out. Current time '%s' greater than '%s'"
-                  , dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));          
+        try {
+            threadPoolExecutor.shutdown();
+            if (threadPoolExecutor.awaitTermination(timeout, unit)) {
+                logger.log(Level.INFO, "All threads are terminated");
+            } else {
+                throw new TimeoutException(format("Async operation is timed out. Current time '%s' greater than '%s'",
+                         dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));
+            }
+        } catch (InterruptedException ex) {
+            throw new Exception("Execution tasks is interrupted", ex);
         }
     }
     
-    public <T> void submitToDefaultExecutor(JpaAccessCallback<T> callback, int maxConcurrency){
-      ExecutorService executorService = getDefaultThreadPoolExecutor(maxConcurrency);
-     
-      executorService.submit(() -> {
-                  return repository.invoke((persistence) -> {
-                    return callback.call(persistence);
-                  }).get();
-                });
+    public <T> void submitToDefaultExecutor(JpaAccessCallback<T> callback, int maxConcurrency) {
+        ExecutorService executorService = getDefaultThreadPoolExecutor(maxConcurrency);
+
+        executorService.submit(() -> {
+            return repository.invoke((persistence) -> {
+                return callback.call(persistence);
+            }).get();
+        });
     }
     
     public ExecutorService getDefaultThreadPoolExecutor(int corePoolSize){
+      //create with fixed thread pool size
       if(defaultThreadPoolExecutor == null){
         defaultThreadPoolExecutor = new ThreadPoolExecutor(
               corePoolSize,
-              DEFAULT_MAX_POOL_SIZE,
-              OFFER_DEFAULT_TIMEOUT_MS, 
+              corePoolSize,
+              0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS, 
               MILLISECONDS,
               new LinkedBlockingQueue<>(), 
               managedThreadFactory);
         
       }
       defaultThreadPoolExecutor.setCorePoolSize(corePoolSize);
+      defaultThreadPoolExecutor.setMaximumPoolSize(corePoolSize);
       return defaultThreadPoolExecutor;
     }
     
