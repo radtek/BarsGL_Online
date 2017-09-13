@@ -75,7 +75,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
             DataSource dataSource = repository.getDataSource(rep);
             return repository.selectMaxRows(dataSource, resultSql, MAX_ROW_COUNT, params.toArray());
         } catch (Exception e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
+                throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 

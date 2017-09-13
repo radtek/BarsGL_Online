@@ -7,6 +7,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.operation.BackValueWrapper;
+import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
@@ -18,6 +19,8 @@ import java.util.List;
  */
 @RemoteServiceRelativePath("service/ManualOperationService")
 public interface ManualOperationService  extends RemoteService {
+    RpcRes_Base<CardReportWrapper> getCardReport(CardReportWrapper wrapper) throws Exception;
+
     RpcRes_Base<Integer> processOperationBv(BackValueWrapper wrapper) throws Exception;
 
     RpcRes_Base<ManualOperationWrapper> processOperationRq(ManualOperationWrapper wrapper) throws Exception;

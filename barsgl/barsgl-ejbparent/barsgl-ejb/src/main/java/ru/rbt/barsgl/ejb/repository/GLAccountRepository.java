@@ -39,6 +39,8 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
 @LocalBean
 public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount, Long> {
 
+    private static final String CFG_NAME_CARD = "CARD";
+    private static final String PROP_NAME_CARD = "START_PH_CARD_DATE";
     private static final String CFG_NAME_446P = "446P";
     private static final String PROP_NAME_446P = "START_446P_DATE";
     private static final String CFG_NAME_SPOD = "SPOD";
@@ -811,6 +813,26 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             cfg.add(DbConfiguration.createDbConfiguration(cfgName, connection));
         }
         return cfg;
+    }
+
+    public Date getDateStartCardPH() {
+        try {
+            return executeInNonTransaction(connection -> {
+                SystemConfiguration cfg;
+                try {
+                    cfg = getCfg(CFG_NAME_CARD, connection);     // проверяем, что конфиг уже есть
+                } catch (Exception e) {
+                    throw new DefaultApplicationException(e.getMessage(), e);
+                }
+                try {
+                    return cfg.getDate(PROP_NAME_CARD);
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 
     public Date getDateStart446p() {

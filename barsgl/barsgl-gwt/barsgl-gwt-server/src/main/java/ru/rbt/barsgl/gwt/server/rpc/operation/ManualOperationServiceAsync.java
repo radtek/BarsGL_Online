@@ -5,6 +5,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.barsgl.shared.operation.BackValueWrapper;
+import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
@@ -16,6 +17,8 @@ import java.util.List;
  */
 public interface ManualOperationServiceAsync {
     void processOperationBv(BackValueWrapper wrapper, AsyncCallback<RpcRes_Base<Integer>> callback);
+
+    void getCardReport(CardReportWrapper wrapper, AsyncCallback<RpcRes_Base<CardReportWrapper>> callback );
 
     void processOperationRq(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
     void processPackageRq(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);

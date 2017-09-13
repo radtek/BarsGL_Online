@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.checkCardsRem;
 
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Widget;
@@ -58,7 +57,7 @@ public class CheckCardRemFilterDlg extends DlgFrame {
         Grid grid = new Grid(2, 2);
 
         grid.setText(0, 0, "Филиал");
-        grid.setWidget(0, 1, filial = createFilialAuthListBox("", "110", true, true));
+        grid.setWidget(0, 1, filial = createFilialAuthListBox("", "110", false, true));
 
         grid.setText(1, 0, "Дата проводок");
         grid.setWidget(1, 1, date = new DatePickerBox(null));
@@ -78,8 +77,7 @@ public class CheckCardRemFilterDlg extends DlgFrame {
             return false;
         }
 
-        params = new String[]{DateTimeFormat.getFormat("yyyy-MM-dd").format(date.getValue()),
-                             (String)filial.getValue()};
+        params = new Object[]{date.getValue(), filial.getValue()};
         return true;
     }
 

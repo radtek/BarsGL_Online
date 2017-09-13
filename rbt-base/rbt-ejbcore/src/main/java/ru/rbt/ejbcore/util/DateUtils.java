@@ -15,6 +15,7 @@ public class DateUtils {
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
     private final SimpleDateFormat fullDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss SSS z Z");
     private final static SimpleDateFormat timeDate = new SimpleDateFormat("dd.MM.yy HH:mm:ss.SSS");
+
     static public Date addDay(Date d, int days){
         return new Date(d.getTime() + (1000 * 60 * 60 * 24 * days));
     }
@@ -72,7 +73,7 @@ public class DateUtils {
 
     public static Date addSeconds(Date date, int seconds) {
         return org.apache.commons.lang3.time.DateUtils.addSeconds(date, seconds);
-}
+    }
 
     public static String formatElapsedTimeOver24h(long milliseconds) {
 

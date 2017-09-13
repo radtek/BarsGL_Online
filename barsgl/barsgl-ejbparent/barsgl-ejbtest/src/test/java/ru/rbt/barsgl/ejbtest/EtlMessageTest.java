@@ -38,8 +38,7 @@ import static java.util.Calendar.MONTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
-import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
-import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
+import static ru.rbt.barsgl.shared.enums.DealSource.*;
 import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
 
 /**
@@ -628,6 +627,123 @@ public class EtlMessageTest extends AbstractTimerJobTest {
                 , pdCr.getAmount().longValue());  // сумма в валюте
         Assert.assertEquals(operation.getAmountDebit().longValue()
                 , -pdDr.getAmount().longValue());  // сумма в валюте
+
+    }
+
+    /**
+     * в случае даты валютирования меньше текущей и больше предыдущей
+     * дата проводки в текущем дне если текущий день не в следующем месяце относительно предыдущего рабочего дня
+     */
+    @Test public void testPostingHolidays() throws Exception {
+
+        long stamp = System.currentTimeMillis();
+
+        final Date longPrev = DateUtils.parseDate("18.01.2015", "dd.MM.yyyy");
+        Assert.assertFalse(remoteAccess.invoke(BankCalendarDayRepository.class, "isWorkday", longPrev));
+        Date prev = DateUtils.parseDate("23.01.2015", "dd.MM.yyyy");
+        Date hold = DateUtils.parseDate("25.01.2015", "dd.MM.yyyy");
+        Date curr = DateUtils.parseDate("26.01.2015", "dd.MM.yyyy");
+        List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and thol <> 'X'"
+                , prev, curr);
+        Assert.assertEquals(2, days.size());
+        final Date finalCurr = curr;
+        final Date finalPrev = prev;
+        Assert.assertEquals(2, days.stream().filter(rec
+                -> rec.getDate("dat").equals(finalPrev) || rec.getDate("dat").equals(finalCurr)).collect(Collectors.toList()).size());
+
+        setOperday(curr, prev, ONLINE,OPEN);
+
+        EtlPackage pkg = newPackage(stamp, "HILPST");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(hold);
+
+        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountDebit("40817036250010000018");
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setDealId("123");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+        Assert.assertEquals(operation.getPostDate()+"",curr, operation.getPostDate());
+
+        // далеко назад выходной
+        pst.setValueDate(longPrev);
+        operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+        Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
+
+        // переход через месяц
+        curr = DateUtils.parseDate("16.02.2015", "dd.MM.yyyy");
+        setOperday(curr, prev, ONLINE,OPEN);
+
+        pst.setValueDate(prev);
+        operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+        Assert.assertEquals(operation.getPostDate()+"", prev, operation.getPostDate());
+
+        // переход через месяц - технический опердень
+        curr = DateUtils.parseDate("10.02.2015", "dd.MM.yyyy");
+        prev = DateUtils.parseDate("09.02.2015", "dd.MM.yyyy");
+        setOperday(curr, prev, ONLINE,OPEN);
+
+        // ARMPRO
+        hold = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
+        pst.setValueDate(hold);
+        pst.setSourcePosting(ARMPRO.getLabel());
+        operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+        Assert.assertEquals(operation.getPostDate()+"", hold, operation.getPostDate());
+
+        // AOS
+        pst.setSourcePosting(AOS.getLabel());
+        operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+        Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
+
+        // дата в будущем !!
+        setOperday(curr, prev, ONLINE,OPEN);
+
+        pst.setValueDate(DateUtils.addDays(curr, 1));
+        operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.ERCHK, operation.getState());
+        Assert.assertNotNull(operation.getProcDate());
+        Assert.assertEquals(curr, operation.getProcDate());
 
     }
 
