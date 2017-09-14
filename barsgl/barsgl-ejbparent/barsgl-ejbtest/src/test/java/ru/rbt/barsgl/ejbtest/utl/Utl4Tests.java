@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest.utl;
 
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
+import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -16,8 +17,10 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -160,10 +163,26 @@ public class Utl4Tests {
     }
 
     public static String findBsaacid(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
+        return findBsaacidRln(baseEntityRepository, operday, like).getBsaAcid();
+    }
+
+    public static AccRlnId findBsaacidRln(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
-                "select id from BSAACC B " +
-                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?)", like, operday.getCurrentDate()))
-                .orElseThrow(() -> new RuntimeException("not found by " + like)).getString(0);
+                "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
+                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID", like, operday.getCurrentDate()))
+                .map(r -> new AccRlnId(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
+    }
+
+    public static List<AccRlnId> findBsaacidRlns(BaseEntityRepository baseEntityRepository, Operday operday, final String like, int count) throws SQLException {
+        return (List<AccRlnId>) baseEntityRepository.select(
+                "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
+                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID fetch first "+ count +" rows only", like, operday.getCurrentDate())
+                .stream().map(new Function<DataRecord, AccRlnId>() {
+                    @Override
+                    public AccRlnId apply(DataRecord r) {
+                        return new AccRlnId(r.getString("acid"), r.getString("bsaacid"));
+                    }
+                }).collect(Collectors.toList());
     }
 
     public static void cleanHeader(BaseEntityRepository baseEntityRepository, String pardesc) {

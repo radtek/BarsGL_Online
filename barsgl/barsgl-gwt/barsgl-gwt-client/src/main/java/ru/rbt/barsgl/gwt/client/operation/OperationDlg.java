@@ -17,6 +17,7 @@ import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -32,9 +33,15 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.security.gwt.client.operday.IDataConsumer;
+import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
@@ -42,7 +49,6 @@ import ru.rbt.barsgl.gwt.core.comp.Components;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
 /**
  * Created by akichigi on 19.03.15.
@@ -50,6 +56,11 @@ import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 public class OperationDlg extends OperationDlgBase {
 
     protected DataListBox mDealSource;
+
+    public TxtBox getmDealId() {
+        return mDealId;
+    }
+
     protected TxtBox mDealId;
     protected TxtBox mSubDealId;
 
@@ -111,7 +122,9 @@ public class OperationDlg extends OperationDlgBase {
         HorizontalPanel hp3 = new HorizontalPanel();
         hp3.setSpacing(0);
         hp3.add(createOneSide("Дебет", OperationDlgBase.Side.DEBIT, true));
+        mAccount.addChangeHandler(create_mAccount_ChangeHandler());
         hp3.add(createOneSide("Кредит", OperationDlgBase.Side.CREDIT, true));
+        mAccount.addChangeHandler(create_mAccount_ChangeHandler());
         mainVP.add(hp3);
 
         mainVP.add(createSumRu());
@@ -126,6 +139,48 @@ public class OperationDlg extends OperationDlgBase {
 
         return mainVP;
     }
+
+//    List glAccDeals = Arrays.asList(new String[]{"45201"});
+//45204810620150000063
+    protected ChangeHandler create_mAccount_ChangeHandler() {
+        return new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                setDeals(((TextBox) changeEvent.getSource()).getValue());
+            }
+        };
+    }
+
+    @Override
+    public void setDeals(final String account){
+        String smDealId = mDealId.getValue();
+        String smSubDealId = mSubDealId.getValue();
+        if (!(smDealId == null || smDealId.isEmpty()) || !(smSubDealId == null || smSubDealId.isEmpty()))
+            return;
+//                log.info("mAccount");
+//                log.info("mAccount = "+mAccount.getValue());
+
+        if (null == account || account.length() < 20 || ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(account.substring(0,5)) < 1) return;
+        GridEntryPoint.asyncGridService.selectFirst("select DEALID, SUBDEALID from gl_acc where bsaacid=?",new Serializable[]{account}, new AuthCheckAsyncCallback<Row>() {
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                WaitingManager.hide();
+                Window.alert("Операция не удалась. select DEALID, SUBDEALID from gl_acc where bsaacid="+account+"\n Ошибка: " + throwable.getLocalizedMessage());
+                WaitingManager.hide();
+            }
+            @Override
+            public void onSuccess(Row row) {
+                if (row.getFieldsCount() != 0) {
+                    mDealId.setValue(row.getField(0).getValue() == null? "":row.getField(0).getValue().toString());
+                    mSubDealId.setValue(row.getField(1).getValue() == null? "":row.getField(1).getValue().toString());
+                }
+                WaitingManager.hide();
+            }
+        });
+
+    };
+
+
 
     protected void setControlsEnabled(){
     }

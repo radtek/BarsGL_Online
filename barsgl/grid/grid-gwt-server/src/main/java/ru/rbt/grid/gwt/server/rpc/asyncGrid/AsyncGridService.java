@@ -22,6 +22,7 @@ public interface AsyncGridService extends RemoteService {
     List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria,
                            List<SortItem> sortCriteria) throws Exception;
     Row selectOne(String sql, Serializable[] params) throws Exception;
+    Row selectFirst(String sql, Serializable[] params) throws Exception;
     void Debug(String msg) throws Exception;
     String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria,
                         List<SortItem> sortCriteria, ExcelExportHead head) throws Exception;

@@ -5,10 +5,16 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
+import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.MovementCommunicator;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
+import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
+import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.integr.struct.PaymentDetails;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.ManualOperationRepository;
@@ -19,16 +25,24 @@ import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.barsgl.shared.enums.BatchPostStatus;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.shared.Assert;
+import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.shared.enums.SecurityActionCode;
 
@@ -38,12 +52,15 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
@@ -53,6 +70,10 @@ import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
+import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.shared.enums.SecurityActionCode;
 
 /**
  * Created by ER18837 on 13.08.15.
@@ -82,6 +103,9 @@ public class ManualPostingController {
     @Inject
     private OperdayController operdayController;
 
+    @Inject
+    private GLAccountRepository glAccountRepository;
+
     @EJB
     private PdRepository pdRepository;
 
@@ -93,6 +117,13 @@ public class ManualPostingController {
 
     @Inject
     private DateUtils dateUtils;
+
+    @Inject
+    private AccRlnRepository accRlnRepository;
+
+    @Inject
+    private BankCurrencyRepository bankCurrencyRepository;
+
 
     /**
      * Обработка запроса от интерфейса на обработку запроса на операцию
@@ -167,6 +198,106 @@ public class ManualPostingController {
     }
 
     /**
+     * Проверка баланса счёта на Красное сальдо
+     * @param wrapper
+     * @throws ParseException
+     */
+    private void checkAccountsBalance(ManualOperationWrapper wrapper) throws ParseException, SQLException {
+        if (wrapper.isNoCheckBalance()) {
+            wrapper.setBalanceError(false);
+            return;
+        }
+        GlAccRln accountDr = accRlnRepository.checkAccointIsPair(wrapper.getAccountDebit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountDebit());
+        GlAccRln accountCr = accRlnRepository.checkAccointIsPair(wrapper.getAccountCredit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountCredit());
+
+        Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
+
+        if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
+            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
+            BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
+            BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
+            DataRecord resDr = null;
+            if (tehoverAcc!=null) {
+                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)),tehoverAcc);
+            }
+            else {
+                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)));
+            }
+            if (resDr != null && (resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0)) {
+                wrapper.setBalanceError(true);
+                BigDecimal bac = convertFromScale(resDr.getBigDecimal(1),currencyDr.getScale().intValue());
+                BigDecimal outrest = convertFromScale(resDr.getBigDecimal(2),currencyDr.getScale().intValue());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(), resDr.getDate(0),  bac, outrest));
+            }
+        }
+
+        if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
+            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getId().getBsaAcid(),accountCr.getId().getAcid());
+            BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
+            BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
+            DataRecord resCr = null;
+            if (tehoverAcc!=null) {
+                resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr,tehoverAcc);
+            }
+            else {
+                resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr);
+            }
+            if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO) > 0) {
+                wrapper.setBalanceError(true);
+                BigDecimal bac = convertFromScale(resCr.getBigDecimal(1),currencyCr.getScale().intValue());
+                BigDecimal outrest = convertFromScale(resCr.getBigDecimal(2),currencyCr.getScale().intValue());
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountCr.getId().getBsaAcid(), resCr.getDate(0), bac, outrest));
+            }
+        }
+
+        if (wrapper.isBalanceError())
+            throw new ValidationError(ErrorCode.ACCOUNT_BALANCE_ERROR, wrapper.getErrorMessage());
+    }
+
+    private BigDecimal convertToScale(BigDecimal amount,int scale)
+    {
+        return amount.multiply(BigDecimal.TEN.pow(scale));
+    }
+
+    private BigDecimal convertFromScale(BigDecimal amount,int scale)
+    {
+        return amount.divide(BigDecimal.TEN.pow(scale));
+    }
+
+    /**
+     * Проверка полей Deal, SubDeal на соответствие с GL_ACC
+     * @param wrapper
+     * @throws ParseException
+     * @throws SQLException
+     */
+    private void checkAccDeals(ManualOperationWrapper wrapper) throws ParseException, SQLException {
+        if (wrapper.isNoCheckAccDeals()) {
+            return;
+        }
+        //если Дб удовлетворил, то Кт не проверять
+        if (isEqualAccDeal( wrapper, wrapper.getAccountDebit())) return;
+        isEqualAccDeal( wrapper, wrapper.getAccountCredit());
+    }
+
+    private boolean isEqualAccDeal(ManualOperationWrapper wrapper, String bsaacid){
+        GLAccount glAccount = glAccountRepository.getDealSubDealGlAcc(bsaacid);
+        if (glAccount != null){
+            if (!ifEmpty(glAccount.getDealId(), "").equals(ifEmpty(wrapper.getDealId(), "")) ||
+                !ifEmpty(glAccount.getSubDealId(), "").equals(ifEmpty(wrapper.getSubdealId(), "")) ){
+                wrapper.getErrorList().addErrorDescription(
+                        String.format("Операция по счету %s\nВ операции: № сделки / субсделки = %s / %s\nВ счете:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;№ сделки / субсделки = %s / %s",
+                                bsaacid, ifEmpty(wrapper.getDealId(), ""),
+                                ifEmpty(wrapper.getSubdealId(), ""),
+                                ifEmpty(glAccount.getDealId(), ""),
+                                ifEmpty(glAccount.getSubDealId(), "")),
+                                ErrorCode.FIELDS_DEAL_SUBDEAL.toString());
+                throw new ValidationError(ErrorCode.FIELDS_DEAL_SUBDEAL, wrapper.getErrorMessage());
+            }else return true;
+        }
+        return false;
+    }
+
+    /**
      * Интерфейс: Создает запрос на операцию с проверкой прав
      * @param wrapper
      * @return
@@ -175,6 +306,8 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> saveOperationRq(ManualOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
+            checkAccDeals(wrapper);
+
         } catch (ValidationError e) {
             String msg = "Ошибка при сохранении запроса на операцию";
             if (null != wrapper.getId())
@@ -211,6 +344,16 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> updateOperationRq(ManualOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
+            checkAccDeals(wrapper);
+            //Проверка на deal subdeal
+            if (newStatus.equals(BatchPostAction.UPDATE) || newStatus.equals(BatchPostAction.UPDATE_CONTROL)){
+                checkAccDeals(wrapper);
+            }
+
+            //Контроль остатков по счёту
+            if (newStatus==CONTROL) {
+                checkAccountsBalance(wrapper);
+            }
         } catch (ValidationError e) {
             String msg = "Ошибка при изменении запроса на операцию ID = " + wrapper.getId();
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -259,6 +402,8 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> forSignOperationRq(ManualOperationWrapper wrapper) throws Exception {
         try {
             checkUserPermission(wrapper);
+            checkAccDeals(wrapper);
+            checkAccountsBalance(wrapper);
         } catch (ValidationError e) {
             String msg = "Ошибка при передаче запроса на операцию ID = " + wrapper.getId() + " на подпись";
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -308,6 +453,7 @@ public class ManualPostingController {
             postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
             BatchPosting posting0 = getPostingWithCheck(wrapper, CONTROL);
             checkHand12Diff(posting0);
+            checkAccountsBalance(wrapper); //Проверяем баланс
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             // тестируем статус - что никто еще не менял
             updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);
@@ -340,6 +486,7 @@ public class ManualPostingController {
 //            }
             postingProcessor.checkFilialPermission(wrapper.getFilialDebit(), wrapper.getFilialCredit(), wrapper.getUserId());
             BatchPosting posting0 = getPostingWithCheck(wrapper, WAITDATE);
+            checkAccountsBalance(wrapper); //Проверяем баланс
             BatchPosting posting = createPostingHistory(posting0, wrapper.getStatus().getStep(), wrapper.getAction());
             BatchPostStatus newStatus = SIGNEDDATE;
             // тестируем статус - что никто еще не менял
@@ -556,6 +703,10 @@ public class ManualPostingController {
      */
     private BatchPosting createPosting(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
         validateOperationRq(wrapper);
+
+        if (status==CONTROL) {
+            checkAccountsBalance(wrapper);
+        }
 
         try {
             BatchPosting posting = postingProcessor.createPosting(wrapper);       // создать операцию

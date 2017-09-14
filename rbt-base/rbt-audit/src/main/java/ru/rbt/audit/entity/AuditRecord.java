@@ -81,6 +81,9 @@ public class AuditRecord extends BaseEntity<Long> {
         , CurrencyExchange
         , ReprocessAEOper
         , BulkOpeningAccountsTask
+        , Acc2ForDeals
+        , StamtPstDeleted
+        , CardReport
         , KillSession
     }
 

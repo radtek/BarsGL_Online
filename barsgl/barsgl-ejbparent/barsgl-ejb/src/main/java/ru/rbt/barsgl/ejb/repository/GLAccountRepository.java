@@ -7,10 +7,10 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
@@ -38,6 +39,8 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
 @LocalBean
 public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount, Long> {
 
+    private static final String CFG_NAME_CARD = "CARD";
+    private static final String PROP_NAME_CARD = "START_PH_CARD_DATE";
     private static final String CFG_NAME_446P = "446P";
     private static final String PROP_NAME_446P = "START_446P_DATE";
     private static final String CFG_NAME_SPOD = "SPOD";
@@ -119,6 +122,23 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+
+    public GLAccount getDealSubDealGlAcc(String bsaAcid){
+        try{
+            return selectFirst(GLAccount.class, "select a from GlAccDeals d, GLAccount a where a.bsaAcid=?1 and d.acc2=substring(a.bsaAcid,1, 5) and d.flag_off='N'", new Object[]{bsaAcid});
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+//    public DataRecord getDealSubDealGlAcc(String bsaAcid){
+//        try{
+//           return selectFirst("select dealid, subdealid from GL_ACCDEALS d, gl_acc a where a.bsaacid=? and d.acc2=substr(a.bsaacid,1, 5) and d.flag_off='N'", bsaAcid);
+//        } catch (SQLException e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
+
     public ResultCode checkBsaAccountGlAcc(String bsaAcid)
     {
         try {
@@ -151,6 +171,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+
+
 
     public boolean checkAccountRlnExists(String bsaAcid, String acid, String rlntype) {
         try {
@@ -679,7 +701,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     }
 
 
-
     public boolean isExistsGLAccountByOpenType(String bsaAcid) {
         try {
             DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and opentype is not null and opentype!='MIGR'", bsaAcid);
@@ -775,6 +796,26 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             cfg.add(DbConfiguration.createDbConfiguration(cfgName, connection));
         }
         return cfg;
+    }
+
+    public Date getDateStartCardPH() {
+        try {
+            return executeInNonTransaction(connection -> {
+                SystemConfiguration cfg;
+                try {
+                    cfg = getCfg(CFG_NAME_CARD, connection);     // проверяем, что конфиг уже есть
+                } catch (Exception e) {
+                    throw new DefaultApplicationException(e.getMessage(), e);
+                }
+                try {
+                    return cfg.getDate(PROP_NAME_CARD);
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 
     public Date getDateStart446p() {

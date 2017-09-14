@@ -29,10 +29,12 @@ public class PackageStatisticsAction extends GridAction {
     public void execute() {
         final Row row = grid.getCurrentRow();
         if (row == null) return;
-        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+
         Long idPkg = (Long)grid.getCurrentRow().getField(grid.getTable().getColumns().getColumnIndexByName("ID_PKG")).getValue();
         if (null == idPkg || 0 == idPkg)
             return;
+
+        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
         ManualOperationWrapper wrapper = new ManualOperationWrapper();
         wrapper.setPkgId(idPkg);
@@ -53,6 +55,5 @@ public class PackageStatisticsAction extends GridAction {
                 grid.refresh();
             }
         });
-
     }
 }

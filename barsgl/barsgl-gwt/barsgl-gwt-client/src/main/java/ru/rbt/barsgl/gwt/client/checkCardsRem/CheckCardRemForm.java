@@ -1,10 +1,26 @@
 package ru.rbt.barsgl.gwt.client.checkCardsRem;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.operation.CardReportWrapper;
+import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+
+
+import java.util.ArrayList;
+import java.util.Date;
+
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
@@ -52,12 +68,27 @@ public class CheckCardRemForm extends GridForm {
 
             public void onDlgOkClick(Object prms){
                 dlg.hide();
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
 
-                setSql(sql(((String[]) prms)[0], ((String[]) prms)[1]));
-                //System.out.println(sql(((String[]) prms)[0], ((String[]) prms)[1]));
+                CardReportWrapper wrapper = new CardReportWrapper();
+                wrapper.setPostDateStr(DateTimeFormat.getFormat(wrapper.getDateFormat()).format((Date)((Object[]) prms)[0]));
+                wrapper.setFilial((String)((Object[]) prms)[1]);
 
-                doActionEnable(true);
-                refreshAction.execute();
+                BarsGLEntryPoint.operationService.getCardReport(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<CardReportWrapper>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<CardReportWrapper> res) {
+                        if (res.isError()){
+                            DialogManager.error("Ошибка", res.getMessage());
+                        } else {
+                            CardReportWrapper _wrapper =  res.getResult() ;
+                            StatusBarManager.ChangeStatusBarText(_wrapper.getComment(), StatusBarManager.MessageReason.MSG);
+                            setSql(_wrapper.getReportSql());
+                            doActionEnable(true);
+                            refreshAction.execute();
+                        }
+                        WaitingManager.hide();
+                    }
+                });
             }
         };
     }
@@ -80,26 +111,22 @@ public class CheckCardRemForm extends GridForm {
         return  result;
     }
 
-   /* @Override
-    protected ArrayList<SortItem> getInitialSortCriteria() {
-        ArrayList<SortItem> list = new ArrayList<SortItem>();
-        list.add(new SortItem("subdealid", Column.Sort.ASC));
-        list.add(new SortItem("branch", Column.Sort.ASC));
-        list.add(new SortItem("ccy", Column.Sort.ASC));
-        return list;
-    }*/
-
     @Override
     protected String prepareSql() {
         return null;
     }
 
+    @Override
+    public ArrayList<SortItem> getInitialSortCriteria() {
+        ArrayList<SortItem> list = new ArrayList<SortItem>();
+        list.add(new SortItem("subdealid", Column.Sort.ASC));
+        return list;
+    }
+
+
+
     public void setSql(String text){
         sql_select = text;
         setExcelSql(sql_select);
-    }
-
-    private String sql(String date, String filial){
-        return Utils.Fmt(_sql, date, filial);
     }
 }

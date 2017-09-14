@@ -7,6 +7,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.*;
+import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -16,6 +17,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
+import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -24,6 +26,8 @@ import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -40,12 +44,10 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOS
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
-import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
-import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.FULL_POSTING;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.findGlAccount;
-import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.getPds;
+import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.*;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamType.B;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamTypeCheck.INCLUDE;
 
@@ -556,6 +558,175 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(header.getLong("id"), header2.getLong("id"));
     }
 
+    @Test public void testDeleted() throws Exception {
+        initCorrectOperday();
+        updateOperday(ONLINE, OPEN);
+        Date operday = getOperday().getCurrentDate();
+        Date lwday = getOperday().getLastWorkingDay();
+        log.info("operday = " + operday);
+        baseEntityRepository.executeNativeUpdate("delete from GL_STMDEL");
+
+        List<AccRlnId> rlnIds = findBsaacidRlns(baseEntityRepository, getOperday(), "40817%", 2);
+        AccRlnId rlnId1 = rlnIds.get(0);
+        AccRlnId rlnId2 = rlnIds.get(1);
+        log.info("bsaacid1: " + rlnId1.getBsaAcid());
+        log.info("bsaacid2: " + rlnId2.getBsaAcid());
+        Assert.assertEquals(2, rlnIds.size());
+
+        List<DataRecord> opers = baseEntityRepository.select("select gloid, p.pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref fetch first 2 rows only");
+        Assert.assertEquals(2, opers.size());
+
+        registerForStamtUnload(rlnId1.getBsaAcid());
+        registerForStamtUnload(rlnId2.getBsaAcid());
+
+        // ручное подавление - две и более записи по счету в gl_pdjchg
+        // первая проводка
+        long id1 = createPd(operday, rlnId1.getAcid(), rlnId1.getBsaAcid(), BankCurrency.EUR.getCurrencyCode()
+                , "@@GL" + ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis() + "", 3), -100, -200);
+        long id2 = createPd(operday, rlnId2.getAcid(), rlnId2.getBsaAcid(), BankCurrency.EUR.getCurrencyCode()
+                , "@@GL" + ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis() + "", 3), 100, 200);
+        long pcid1 = baseEntityRepository.nextId("PD_SEQ");
+        baseEntityRepository.executeNativeUpdate("update pd set pcid = ? where id in (?, ?)", pcid1, id1, id2);
+        baseEntityRepository.executeNativeUpdate("update gl_posting set pcid = ? where glo_ref = ?", pcid1, opers.get(0).getLong("gloid"));
+
+        // вторая проводка
+        long id1_1 = createPd(operday, rlnId1.getAcid(), rlnId1.getBsaAcid(), BankCurrency.EUR.getCurrencyCode()
+                , "@@GL" + ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis() + "", 3), -100, -200);
+        long id2_1 = createPd(operday, rlnId2.getAcid(), rlnId2.getBsaAcid(), BankCurrency.EUR.getCurrencyCode()
+                , "@@GL" + ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis() + "", 3), 100, 200);
+        long pcid1_1 = baseEntityRepository.nextId("PD_SEQ");
+        baseEntityRepository.executeNativeUpdate("update pd set pcid = ? where id in (?, ?)", pcid1_1, id1_1, id2_1);
+        baseEntityRepository.executeNativeUpdate("update gl_posting set pcid = ? where glo_ref = ?", pcid1_1, opers.get(1).getLong("gloid"));
+
+        log.info("count gl_pdjchg deleted " + baseEntityRepository.executeNativeUpdate("delete from gl_pdjchg"));
+
+        // проводки GL
+        // подавление/удаление в БД
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id1));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id2));
+        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("delete from pd where pcid = ?", pcid1_1));
+
+        List<DataRecord> glpds = baseEntityRepository.select("select * from GL_PDJCHG where id in (?, ?, ?, ?)", id1, id2, id1_1, id2_1);
+        Assert.assertEquals(4, glpds.size());
+        Assert.assertTrue(glpds.stream().allMatch(r -> r.getLong("id") == id1 || r.getLong("id") == id2 || r.getLong("id") == id1_1 || (r.getLong("id") == id2_1)));
+
+        // теховеры
+        long id3 = createPd(operday, rlnId1.getAcid(), rlnId1.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", -100, -200);
+        long id4 = createPd(operday, rlnId2.getAcid(), rlnId2.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", 100, 200);
+        long pcid2 = baseEntityRepository.nextId("PD_SEQ");
+        baseEntityRepository.executeNativeUpdate("update pd set pcid = ? where id in (?, ?)", pcid2, id3, id4);
+
+        // теховеры вторая проводка
+        long id1_2 = createPd(operday, rlnId1.getAcid(), rlnId1.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", -100, -200);
+        long id2_2 = createPd(operday, rlnId2.getAcid(), rlnId2.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", 100, 200);
+        long pcid2_1 = baseEntityRepository.nextId("PD_SEQ");
+        baseEntityRepository.executeNativeUpdate("update pd set pcid = ? where id in (?, ?)", pcid2_1, id1_2, id2_2);
+
+        log.info("count gl_pdjover deleted " + baseEntityRepository.executeNativeUpdate("delete from gl_pdjover"));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id3));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id4));
+        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("delete from pd where pcid = ?", pcid2_1));
+
+        List<DataRecord> pdOver = baseEntityRepository.select("select * from gl_pdjover where idpd in (?, ?, ?, ?)", id3, id4, id1_2, id2_2);
+        Assert.assertEquals(4, pdOver.size());
+        Assert.assertTrue(pdOver.stream().allMatch(r -> r.getLong("idpd") == id3 || r.getLong("idpd") == id4 || r.getLong("idpd") == id1_2 || r.getLong("idpd") == id2_2));
+
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, OPEN);
+
+        // формирование выгрузки в STAMT
+        SingleActionJob job = SingleActionJobBuilder.create().withClass(StamtUnloadDeletedTask.class)
+                .withName("Deleted" + StringUtils.rsubstr(System.currentTimeMillis() + "", 3)).build();
+        jobService.executeJob(job);
+
+        // проверка заголовков
+        DataRecord header1 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertNotNull(header1);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header1.getString("parvalue"));
+
+        List<DataRecord> unloads = baseEntityRepository.select("select * from GL_STMDEL");
+        Assert.assertEquals(4, unloads.size());
+        List<DataRecord> allUnloads = unloads.stream().filter(r -> r.getLong("pcid") == pcid1 || r.getLong("pcid") == pcid1_1
+                || r.getLong("pcid") == pcid2 ||r.getLong("pcid") == pcid2_1).collect(Collectors.toList());
+        Assert.assertEquals(4, allUnloads.size());
+
+        // проверка - запуск один раз в день
+        jobService.executeJob(job);
+        DataRecord header2 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertEquals(header1.getLong("id"), header2.getLong("id"));
+
+        // проверка - запуск после ошибки
+        setHeaderStatus(header1.getLong("id"), DwhUnloadStatus.ERROR);
+        JobHistory history = getLastHistory(job.getName());
+        setHistoryStatus(history.getId(), DwhUnloadStatus.ERROR);
+        jobService.executeJob(job);
+        DataRecord header3 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header3.getString("parvalue"));
+        Assert.assertFalse(Objects.equals(header1.getLong("id"), header3.getLong("id")));
+
+        // инкрементальная последующая выгрузка
+        Long pcidNew = createPostingUpdate(operday, rlnId1, rlnId2);
+        jobService.executeJob(job);
+
+        // нет выгрузки потому что необработана предыдущая
+        DataRecord header4 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertTrue(Objects.equals(header3.getLong("id"), header4.getLong("id")));
+
+        setHeaderStatus(header4.getLong("id"), DwhUnloadStatus.CONSUMED);
+
+        jobService.executeJob(job);
+
+        header4 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertFalse(Objects.equals(header3.getLong("id"), header4.getLong("id")));
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header4.getString("parvalue"));
+
+        unloads = baseEntityRepository.select("select * from GL_STMDEL");
+        log.info("pcids: " + pcid1 + ":" + pcid1_1 + ":" + pcid2 + ":" + pcid2_1 + ":" + pcidNew);
+        log.info("unloaded: " + unloads.stream().map(r->r.getLong("pcid").toString()).collect(Collectors.joining(":")));
+        Assert.assertEquals(5, unloads.size());
+
+        allUnloads = unloads.stream().filter(r -> r.getLong("pcid") == pcid1 || r.getLong("pcid") == pcid1_1
+                || r.getLong("pcid") == pcid2 || r.getLong("pcid") == pcid2_1 || r.getLong("pcid") == pcidNew.longValue()).collect(Collectors.toList());
+        Assert.assertEquals(allUnloads.stream().map(r->r.getLong("pcid").toString()).collect(Collectors.joining(":")), 5, allUnloads.size());
+
+        // при выгрузке в следующем дне в первый раз проводки ранее выгруженные должны быть удалены
+        setOperday(DateUtils.addDays(getOperday().getCurrentDate(), 1), DateUtils.addDays(getOperday().getLastWorkingDay(), 1), ONLINE, OPEN);
+        setHeaderStatus(header4.getLong("id"), DwhUnloadStatus.CONSUMED);
+        // должна быть первая выгрузка в текущем ОД
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
+        jobService.executeJob(job);
+
+        DataRecord header5 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertFalse(Objects.equals(header4.getLong("id"), header5.getLong("id")));
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header5.getString("parvalue"));
+
+        unloads = baseEntityRepository.select("select * from GL_STMDEL");
+        // осталась одна в прошлой дате
+        Assert.assertEquals(1, unloads.size());
+    }
+
+    @Test
+    public void testRegisterChanged() throws SQLException {
+
+        baseEntityRepository.executeNativeUpdate("delete from GL_PDJCHG");
+
+        Date operday = getOperday().getCurrentDate();
+        List<AccRlnId> rlnIds = findBsaacidRlns(baseEntityRepository, getOperday(), "40817%", 2);
+        AccRlnId rlnId1 = rlnIds.get(0);
+        AccRlnId rlnId2 = rlnIds.get(1);
+        Long pcid = createPostingUpdate(operday, rlnId1, rlnId2);
+
+        List<Pd> pds = (List<Pd>) baseEntityRepository.findNative(Pd.class, "select * from Pd d where d.pcId = ?", 2, pcid);
+        Assert.assertEquals(2, pds.size());
+
+        for (Pd pd : pds) {
+            remoteAccess.invoke(BackvalueJournalRepository.class, "registerChanged", pd);
+        }
+        List<DataRecord> glpds = baseEntityRepository.select("select * from GL_PDJCHG where pcid = ?", pcid);
+
+        Assert.assertEquals(2, glpds.size());
+
+    }
+
     private void registerForStamtUnload(String bsaacid) {
         try {
             baseEntityRepository.executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype,INCLUDEBLN) values (?, '1', 'B','1')"
@@ -593,6 +764,22 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
     private void checkAllBalanceSucceded() throws SQLException {
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), getLastUnloadHeader(UnloadStamtParams.BALANCE_FULL).getString("parvalue"));
+    }
+
+    private DataRecord getLastUnloadHeader(UnloadStamtParams params) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository
+                .selectFirst("select * from gl_etlstms where parname = ? and pardesc = ? order by id desc"
+                        , params.getParamName(), params.getParamDesc())).orElse(null);
+    }
+
+    private static void setHeaderStatus(long headerId, DwhUnloadStatus status) throws SQLException {
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = ? where id = ? "
+                        , status.getFlag(), headerId));
+    }
+
+    private static void setHistoryStatus(long headerId, DwhUnloadStatus status) {
+        baseEntityRepository.executeNativeUpdate("update gl_sched_h set SCHRSLT = ? where id_hist = ?"
+            , status.getFlag(), headerId);
     }
 
     /**
@@ -799,6 +986,30 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
     private String getCurrencyCodeByDigital(String cbccy) throws SQLException {
         return baseEntityRepository.selectOne("select glccy from currency where cbccy = ?", cbccy).getString("glccy");
+    }
+
+    private static long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr, long amnt, long amntbc) throws SQLException {
+        long id = createPd(pod, acid, bsaacid, glccy, pbr);
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set amnt = ?, amntbc = ? where id = ?", amnt, amntbc, id));
+        return id;
+    }
+
+    private static JobHistory getLastHistory(String jobName) throws SQLException {
+        DataRecord record = Optional.ofNullable(baseEntityRepository.selectFirst("select * from gl_sched_h where SCHED_NAME = ? order by 1 desc"
+            , jobName)).orElseThrow(() -> new RuntimeException("No executed jobs with name: " + jobName));
+        return (JobHistory) baseEntityRepository.findById(JobHistory.class, record.getLong("id_hist"));
+    }
+
+    private static Long createPostingUpdate(Date operday, AccRlnId rlnId1, AccRlnId rlnId2) throws SQLException {
+        long id1 = createPd(operday, rlnId1.getAcid(), rlnId1.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", -100, -200);
+        long id2 = createPd(operday, rlnId2.getAcid(), rlnId2.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", 100, 200);
+        Long pcid = baseEntityRepository.nextId("PD_SEQ");
+        baseEntityRepository.executeNativeUpdate("update pd set pcid = ? where id in (?, ?)", pcid, id1, id2);
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_pdjover where pcid = 0");
+
+        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where pcid = ?", pcid));
+        return pcid;
     }
 
 }

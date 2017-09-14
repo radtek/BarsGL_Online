@@ -49,9 +49,9 @@ public interface IBaseEntityMultiRepository<T extends BaseEntity, K extends Seri
 
     <E> E selectOne(EntityManager persistence, Class<E> clazz, String jpaQuery, Object... params);
 
-    <E> List<E> select(EntityManager persistence, Class<E> clazz, String jpaQuery, Object... params);
+    <E> List<E> select(EntityManager persistence, Class<E> clazz, String jpaQuery, int max, Object... params);
 
-    <E> List<E> selectHinted(EntityManager persistence, Class<E> clazz, String jpaQuery
+    <E> List<E> selectHinted(EntityManager persistence, Class<E> clazz, String jpaQuery, int max
             , Object[] params, Map<String, String> hints);
 
     T save(EntityManager persistence, T entity);

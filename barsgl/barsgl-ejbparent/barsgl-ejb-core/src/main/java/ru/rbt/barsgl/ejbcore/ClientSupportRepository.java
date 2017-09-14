@@ -23,4 +23,13 @@ public class ClientSupportRepository extends AbstractBaseEntityRepository {
             throw new RuntimeException("Ошибка", ex);
         }
     }
+    public Object selectFirst(Repository repository, Class clazz, String jpaQuery, Object... params) {
+        try {
+            EntityManager persistence = getPersistence(repository);
+            return super.selectFirst(persistence, clazz, jpaQuery, params);
+        } catch (Exception ex) {
+            //TODO надо сделать нормальную обработку
+            throw new RuntimeException("Ошибка", ex);
+        }
+    }
 }

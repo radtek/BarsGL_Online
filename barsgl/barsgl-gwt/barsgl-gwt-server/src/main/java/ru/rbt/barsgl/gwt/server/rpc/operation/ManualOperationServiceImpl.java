@@ -14,6 +14,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
+import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
@@ -24,6 +25,18 @@ import java.util.List;
  * Created by ER18837 on 19.08.15.
  */
 public class ManualOperationServiceImpl extends AbstractGwtService implements ManualOperationService {
+
+    @Override
+    public RpcRes_Base<CardReportWrapper> getCardReport(CardReportWrapper wrapper) throws Exception {
+        return new RpcResProcessor<CardReportWrapper>() {
+            @Override
+            public RpcRes_Base<CardReportWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<CardReportWrapper> res = localInvoker.invoke(CardReportController.class, "getCardReport", wrapper);
+                if (res == null) throw new Throwable("Не удалось создать отчет по картотеке");
+                return res;
+            }
+        }.process();
+    }
 
     @Override
     public RpcRes_Base<ManualOperationWrapper> processOperationRq(final ManualOperationWrapper wrapper) throws Exception {

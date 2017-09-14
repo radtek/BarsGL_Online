@@ -5,6 +5,8 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
  */
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
@@ -14,6 +16,7 @@ import ru.rbt.barsgl.ejb.controller.cob.CobRunningStepWork;
 import ru.rbt.barsgl.ejb.controller.cob.CobRunningTaskController;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
+import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
@@ -34,6 +37,8 @@ import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
@@ -121,6 +126,9 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
     @EJB
     private CobStatRecalculator statRecalculator;
+
+    @EJB
+    private DatLCorrector balturCorrector;
 
     /**
      * проверка нужно ли запускать задачу взависимости от того запускалась ли она в ОД  AbstractJobHistoryAwareTask#getOperday(java.util.Properties)
@@ -369,6 +377,13 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
                 int cnt2 = suppressDuplication.suppress();
                 statInfo(idCob, phase, format("Подавлено дублирующихся проводок по сделкам TBO: %s", cnt2));
+
+                try {
+                    long cnt3 = (long) repository.executeInNewTransaction(persistence1 -> balturCorrector.correctDatL());
+                    statInfo(idCob, phase, format("Скорректировано BALTUR.DATL (дата последней операции): %s", cnt3));
+                } catch (Throwable e) {
+                    auditController.error(PreCob, "Ошибка при корректировке дат последней операции в балансе", null, e);
+                }
                 return null;
             });
         } catch (Exception e) {

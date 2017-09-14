@@ -12,10 +12,14 @@ import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStep;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
+import java.util.logging.Logger;
+
 /**
  * Created by akichigi on 10.06.16.
  */
 public class OperationHandsDlg extends OperationDlg {
+    static Logger log = Logger.getLogger("OperationHandsDlg");
+
     public enum ButtonOperAction {NONE, OK, OTHER}
     private ButtonOperAction operationAction;
 
@@ -51,6 +55,7 @@ public class OperationHandsDlg extends OperationDlg {
         button.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
+                log.info("createSignButton");
                 operationAction = ButtonOperAction.OTHER;
                 try {
                     if (OperationHandsDlg.super.onClickOK()){
@@ -86,6 +91,7 @@ public class OperationHandsDlg extends OperationDlg {
     private Boolean _exitFlag = false;
     @Override
     protected Boolean beforeReturn(final Object prm){
+        log.info("beforeReturn");
         ManualOperationWrapper wrapper = (ManualOperationWrapper) prm;
         wrapper.setReasonOfDeny(_reasonOfDeny);
 

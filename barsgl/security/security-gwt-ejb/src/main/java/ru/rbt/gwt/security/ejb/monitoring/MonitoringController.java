@@ -7,6 +7,11 @@ import ru.rbt.barsgl.shared.monitoring.OperTableItem;
 import ru.rbt.barsgl.shared.monitoring.ReplTableItem2;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.monitoring.*;
+
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Acc2ForDeals;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Monitoring;
 
 import javax.ejb.EJB;
 import java.util.ArrayList;
@@ -54,6 +59,21 @@ public class MonitoringController {
             "select state, fan, cnt " +
             "from V_GL_MON_OPER " +
             "order by fan, state";
+
+    public RpcRes_Base<ArrayList> getAcc2ForDeals(){
+        ArrayList<String> ret = new ArrayList<String>();
+        try {
+            List<DataRecord> records = repository.select("select ACC2 from GL_ACCDEALS where FLAG_OFF='N'");
+            if (records != null) {
+                records.stream().forEach(r -> ret.add(r.getString("ACC2")));
+            }
+            return new RpcRes_Base<>(ret, false, "");
+        }catch (Exception e){
+            String errMessage = getErrorMessage(e);
+            auditController.error(Acc2ForDeals, "Не удалось загрузить acc2 для deals!", null, e);
+            return new RpcRes_Base<>(null, true, errMessage);
+        }
+    }
 
     public RpcRes_Base<HashMap> getBuff(Date oldDate, Integer oldPdMoved, Integer oldBltMoved){
        HashMap ret = new HashMap();

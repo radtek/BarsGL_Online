@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GlPdTh;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
@@ -9,6 +10,7 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 
@@ -56,5 +58,28 @@ public class GLTechOperationRepository extends AbstractBaseEntityRepository<GLOp
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Подавляет проводки в Pd
+     *
+     * @param invisible true - подавить
+     * @param postings  список проводок, которые надо подавить
+     */
+    public int updatePdInvisible(boolean invisible, List<GlPdTh> postings) {
+
+        if (postings.isEmpty()) {
+            return 0;
+        }
+
+        String strInvisible = invisible ? "1" : "0";
+        StringBuilder pcidIn = new StringBuilder();
+        pcidIn.append("update GL_PDTH set invisible = ? where ID in (");
+        for (GlPdTh posting : postings) {
+            pcidIn.append(posting.getId()).append(",");
+        }
+        pcidIn.setCharAt(pcidIn.length() - 1, ')');
+        String sql = pcidIn.toString();
+        return executeNativeUpdate(sql, strInvisible);
     }
 }

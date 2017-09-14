@@ -1,10 +1,7 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
-import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournalId;
-import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
@@ -53,6 +50,19 @@ public class BackvalueJournalRepository extends AbstractBaseEntityRepository<Bac
         } catch (Throwable e) {
             insertJournalRecordNewTransaction(journalId);
         }
+    }
+
+    /**
+     * на тот случай если триггера отключены
+     * @param pd
+     */
+    public void registerChanged(AbstractPd pd) throws Exception {
+        coreRepository.executeInNewTransaction(persistence1 -> {
+            return executeNativeUpdate("insert into gl_pdjchg (id, pcid, chfl, pod, vald, acid, bsaacid, amnt, amntbc, pbr, invisible, operday, unf) " +
+                            "values (?, ?, 'U', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'N')"
+                    , pd.getId(), pd.getPcId(), pd.getPod(), pd.getVald(), pd.getAcid(), pd.getBsaAcid(), pd.getAmount()
+                    , pd.getAmountBC(), pd.getPbr(), pd.getInvisible(), operdayController.getOperday().getCurrentDate());
+        });
     }
 
     private BackvalueJournal insertJournalRecordNewTransaction(BackvalueJournalId recordId) throws Exception {

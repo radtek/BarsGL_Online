@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
@@ -17,18 +16,14 @@ import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
-import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.shared.ExceptionUtils;
 
 import javax.ejb.EJB;
@@ -44,12 +39,9 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 import static org.apache.commons.lang3.time.DateUtils.truncate;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
 

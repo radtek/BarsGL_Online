@@ -6,6 +6,8 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
+import ru.rbt.barsgl.ejb.props.PropertyName;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
@@ -759,10 +761,12 @@ public class OperdaySynchronizationController {
             if (ProcessingStatus.STARTED == operdayController.getProcessingStatus()) {
                 pdRepository.executeInNewTransaction(p ->  {operdayController.setProcessingStatus(ProcessingStatus.REQUIRED); return null; });
             }
+            int timeout = (int)(long)propertiesRepository.getNumberDef(PropertyName.STOP_PROC_TIMEOUT.getName(), 3L) * 6;   // интервалов по 10 секунд
             int tryCount = 0;
-            while (tryCount < 3) {
+            while (tryCount < timeout) {
                 tryCount++;
-                TimeUnit.MINUTES.sleep(1);
+//                TimeUnit.MINUTES.sleep(1);
+                TimeUnit.SECONDS.sleep(10);
                 if (ProcessingStatus.STOPPED == operdayController.getProcessingStatus()) {
                     return true;
                 }

@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
+import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlAccount;
@@ -36,6 +37,7 @@ import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -57,6 +59,9 @@ import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
 import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov
@@ -345,7 +350,7 @@ public abstract class AbstractRemoteIT  {
      * @return
      */
     public static EtlPosting newPosting(long stamp, EtlPackage pkg) {
-        return newPosting(stamp, pkg, "PH");
+        return newPosting(stamp, pkg, PaymentHub.getLabel());
     }
 
     public static EtlPosting newPosting(long stamp, EtlPackage pkg, String src) {
@@ -746,6 +751,19 @@ public abstract class AbstractRemoteIT  {
 
     public static String findBsaAccount(String bsaacidLike) throws SQLException {
         return findBsaAccount(bsaacidLike, new Date());
+    }
+
+    public static AccRlnId findAccRln(String bsaacidLike) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository.selectFirst("select acid, bsaacid from accrln r, BSAACC a where r.bsaacid like ? and r.bsaacid = a.id and a.BSAACC > ?"
+                , bsaacidLike, new Date()))
+                .map(r -> new AccRlnId(r.getString(0), r.getString(1))).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike));
+    }
+
+    public static long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
+        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
+        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234");
+        return id;
     }
 
     public static String findBsaAccount(String bsaacidLike, Date dateClose) throws SQLException {

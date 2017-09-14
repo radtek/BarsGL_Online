@@ -40,7 +40,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     private Instance<PersistenceProvider<? extends Enum>> instancePersistenceProvider;
 
     private PersistenceProvider persistenceProvider;
-    
+
 //    @PersistenceContext(unitName="GLOracleDataSource")
 //    protected EntityManager persistence;
 //
@@ -133,15 +133,19 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return this.selectOne(getPersistence(), clazz, jpaQuery, params);
     }
 
+    public <E> List<E> selectMaxRows(Class<E> clazz, String jpaQuery, int max, Object ... params) {
+        return this.select(persistence, clazz, jpaQuery, max, params);
+    }
+
     @Override
     public <E> List<E> select(Class<E> clazz, String jpaQuery, Object ... params) {
-        return this.select(getPersistence(), clazz, jpaQuery, params);
+        return this.select(getPersistence(), clazz, jpaQuery, 0, params);
     }
 
     @Override
     public <E> List<E> selectHinted(Class<E> clazz, String jpaQuery
             , Object[] params, Map<String,String> hints) {
-        return this.selectHinted(getPersistence(), clazz, jpaQuery, params, hints);
+        return this.selectHinted(getPersistence(), clazz, jpaQuery, 0, params, hints);
     }
 
     @Override
@@ -287,24 +291,24 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     @Override
     public <E> E selectFirst(EntityManager persistence, Class<E> clazz, String jpaQuery, Object... params) {
-        List<E> list = select(persistence, clazz, jpaQuery, params);
+        List<E> list = select(persistence, clazz, jpaQuery, 1, params);
         return list.isEmpty() ? null : (E) list.get(0);
     }
 
     @Override
     public <E> E selectOne(EntityManager persistence, Class<E> clazz, String jpaQuery, Object... params) {
-        List<E> list = select(persistence, clazz, jpaQuery, params);
+        List<E> list = select(persistence, clazz, jpaQuery, 1, params);
         checkSingleQueryResult(list);
         return list.get(0);
     }
 
     @Override
-    public <E> List<E> select(EntityManager persistence, Class<E> clazz, String jpaQuery, Object... params) {
-        return selectHinted(persistence, clazz, jpaQuery, params, null);
+    public <E> List<E> select(EntityManager persistence, Class<E> clazz, String jpaQuery, int max, Object... params) {
+        return selectHinted(persistence, clazz, jpaQuery, max, params, null);
     }
 
     @Override
-    public <E> List<E> selectHinted(EntityManager persistence, Class<E> clazz, String jpaQuery
+    public <E> List<E> selectHinted(EntityManager persistence, Class<E> clazz, String jpaQuery, int max
             , Object[] params, Map<String, String> hints) {
         TypedQuery<E> query = persistence.createQuery(jpaQuery, clazz);
         // TODO https://bugs.eclipse.org/bugs/show_bug.cgi?id=372689 query.setMaxResults(MAX_ROWS);
@@ -317,6 +321,9 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
             for (int i = 1; i <= params.length; i++) {
                 query.setParameter(i, params[i-1]);
             }
+        }
+        if (max > 0) {
+            query.setMaxResults(max);
         }
         return query.getResultList();
     }
@@ -478,7 +485,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void flush(EntityManager persistence) {
         persistence.flush();
@@ -521,7 +528,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     protected EntityManager getPersistence(){
         return persistenceProvider.getDefaultPersistence();
     }
-    
+
     public <T extends Enum> EntityManager getPersistence(T repository) throws Exception{
         return persistenceProvider.getPersistence(repository);
 //        if(null == repository) {
@@ -540,7 +547,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     protected DataSource getDataSource() {
         return persistenceProvider.getDefaultDataSource();
 }
-    
+
     public <T extends Enum> DataSource getDataSource(T repository) throws Exception {
         return persistenceProvider.getDataSource(repository);
 

@@ -3,6 +3,9 @@ package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
+import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
@@ -16,9 +19,14 @@ import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
 import ru.rbt.barsgl.shared.criteria.*;
+import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.shared.enums.Repository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
+import java.io.NotActiveException;
 import java.io.Serializable;
+import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +44,12 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             e.printStackTrace();
             localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе кол-ва записей для списка: " + sql, null, e);
             throw e;
+        }
+        try {
+            return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
+        } catch (Exception t) {
+            processException(t);
+            return null;
         }
     }
 
@@ -57,6 +71,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
                         row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
                     }
                 }
+            for (DataRecord r : data) {
+                Row row = new Row();
+                for (int i = 0; i < columns.getColumnCount(); i++) {
+                    row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                }
 
                 result.add(row);
             }
@@ -66,6 +85,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             e.printStackTrace();
             localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе записей для списка: " + sql, null, e);
             throw e;
+        }
+            return result;
+        } catch (Exception t) {
+            processException(t);
+            return null;
         }
     }
 
@@ -90,6 +114,9 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             ex.printStackTrace();
             localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки: " + sql, null, ex);
             throw new RuntimeException(ex);
+        } catch (Exception t) {
+            processException(t);
+            return null;
         }
     }
 
@@ -100,6 +127,13 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             for (int i = 0; i < columns.getColumnCount(); i++) {
                 Column column = columns.getColumnByIndex(i);
                 if (column.isVisible())
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+            }
+        try {
+            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
+            for (int i = 0; i < columns.getColumnCount(); i++) {
+                Column column = columns.getColumnByIndex(i);
+                if (column.isVisible() && column.getWidth() > 0)
                     xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
             }
 
@@ -113,15 +147,69 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             throw e;
         }
     }
+            return fileName;
+        } catch (Exception t) {
+            processException(t);
+            return null;
+        }
+}
 
     @Override
     public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Exception {
         return getAsyncCount(Repository.BARSGL, sql, filterCriteria);
+        try {
+            return localInvoker.invoke(SqlPageSupport.class, "count", sql, filterCriteriaAdapter(filterCriteria));
+        } catch (Exception t) {
+            processException(t);
+            return null;
+        }
     }
 
     @Override
     public List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
         return getAsyncRows(Repository.BARSGL, sql, columns, start, pageSize, filterCriteria, sortCriteria);
+        try {
+            List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, filterCriteriaAdapter(filterCriteria), pageSize,
+                                                        start + 1, sortCriteriaAdapter(sortCriteria));
+            List<Row> result = new ArrayList<Row>();
+
+            for(DataRecord r: data) {
+                Row row = new Row();
+                for( int i = 0; i < columns.getColumnCount(); i++){
+                    row.addField(new Field((Serializable) r.getObject(columns.getColumnByIndex(i).getName())));
+                }
+
+                result.add(row);
+            }
+
+            return result;
+        } catch (Exception t) {
+            processException(t);
+            return null;
+        }
+    }
+
+    @Override
+    public Row selectFirst(String sql, Serializable[] params) throws Exception {
+        try{
+            Object [] array = new Object[(params == null) ? 1 : params.length + 1];
+            array[0] = sql;
+            if(params != null && params.length  > 0)
+                System.arraycopy(params, 0, array, 1, params.length);
+            DataRecord record = localInvoker.invoke(ClientSupportRepository.class, "selectFirst", array);
+            Row row = new Row();
+            if (record != null) {
+                for (int i = 0; i < record.getColumnCount(); i++) {
+                    row.addField(new Field((Serializable) record.getObject(i)));
+                }
+            }
+            return row;
+
+        } catch (Exception t) {
+            processException(t);
+            return null;
+        }
+
     }
 
     @Override
@@ -141,6 +229,29 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         }catch (Exception ex){
             localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки: " + sql, null, ex);
             throw new RuntimeException(ex);
+        } catch (Exception t) {
+            processException(t);
+            return null;
+        }
+    }
+
+    @Override
+    public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
+        try {
+            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
+            for (int i = 0; i < columns.getColumnCount(); i++) {
+                Column column = columns.getColumnByIndex(i);
+                if (column.isVisible() && column.getWidth() > 0)
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+            }
+
+            String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, xlsColumns,
+                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
+
+            return fileName;
+        } catch (Exception t) {
+            processException(t);
+            return null;
         }
     }
 
@@ -214,6 +325,14 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     public void Debug(String msg) {
         System.out.println(msg);
+    }
+
+    public void processException(Exception t) throws Exception {
+        SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
+        if( null != ex )
+            throw new SqlQueryTimeoutException(ex);
+        else
+            throw new RuntimeException();
     }
 
 }

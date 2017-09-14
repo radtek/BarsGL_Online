@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
 import ru.rbt.shared.enums.SecurityActionCode;
+import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateIntervalQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;
@@ -8,10 +9,12 @@ import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
+import ru.rbt.barsgl.gwt.core.widgets.IGridRowChanged;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.enums.*;
 
@@ -38,10 +41,13 @@ public class OperEventHistoryForm  extends OperSuperBase {
     private String _where_ownMessages = "";
     private String _where_message_type = "";
 
+    private GridAction statistics;
+
     public OperEventHistoryForm(){
         super(FORM_NAME, true);
         _select = getSelectClause();
         reconfigure();
+        setRowChangeEventHandler();
     }
 
     private void reconfigure() {
@@ -49,7 +55,7 @@ public class OperEventHistoryForm  extends OperSuperBase {
         abw.addAction(quickFilterAction = new DateHistoryQuickFilterAction(grid, colProcDate, colInvisible));;
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addAction(createPreview());
-        abw.addAction(new PackageStatisticsAction(grid));
+        abw.addAction(statistics = new PackageStatisticsAction(grid));
         quickFilterAction.execute();
     }
 
@@ -224,4 +230,20 @@ public class OperEventHistoryForm  extends OperSuperBase {
         }
     }
 
+    private void setRowChangeEventHandler() {
+        grid.setRowChangedEvent(new IGridRowChanged() {
+            @Override
+            public void onRowChanged(Row row) {
+                if (grid.getCurrentRow() == null) return;
+                boolean flag;
+                if (grid.getRowCount() == 0){
+                    flag = false;
+                }else{
+                    Long idPkg = (Long)grid.getCurrentRow().getField(grid.getTable().getColumns().getColumnIndexByName("ID_PKG")).getValue();
+                    flag = (null != idPkg && 0 != idPkg);
+                }
+                statistics.setEnable(flag);
+            }
+        });
+    }
 }

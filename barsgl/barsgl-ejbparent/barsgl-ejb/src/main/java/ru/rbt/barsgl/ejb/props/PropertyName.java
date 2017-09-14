@@ -13,7 +13,8 @@ public enum PropertyName {
     , BATPKG_MAXROWS("batpkg.max.count")
     , MC_QUEUES_PARAM("mc.queues.param")
     , MC_TIMEOUT("mc.timeout.sec")
-    , COB_STAT_INC("cob.stat.increase");
+    , COB_STAT_INC("cob.stat.increase")
+    , STOP_PROC_TIMEOUT("process.stop.timeout.minute");
 
     private String name;
 

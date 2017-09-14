@@ -19,6 +19,10 @@ import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.BatchPackageState;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -113,6 +117,9 @@ public class ManualOperationController {
 
     @EJB
     private PropertiesRepository propertiesRepository;
+
+    @Inject
+    private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     // ====================================================
     // Обработка сообщений
@@ -440,6 +447,5 @@ public class ManualOperationController {
                     "\nЗаписи не прошедшие пересчет/локализацию в таблице GL_BVJRNL.STATE = 'ERROR'", null, e);
         }
     }
-
 
 }

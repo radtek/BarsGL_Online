@@ -128,15 +128,23 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
      */
     protected boolean checkJobStatus(String jobName, Properties properties) {
         try {
-            Assert.isTrue(!jobHistoryRepository.isTaskOK(jobName, getOperday(properties))
-                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, jobName, dateUtils.onlyDateString(getOperday(properties))));
-            Assert.isTrue(!jobHistoryRepository.isAlreadyRunning(jobName, getOperday(properties))
-                    , () -> new ValidationError(OPERDAY_TASK_ALREADY_RUN, jobName, dateUtils.onlyDateString(getOperday(properties))));
-            return true;
+            return checkOk(jobName, properties) && checkAlreadyRunning(jobName, properties);
         } catch (ValidationError e) {
             auditController.warning(Task, format("Задача %s не выполнена", jobName), null, e);
             return false;
         }
+    }
+
+    protected boolean checkOk(String jobName, Properties properties) {
+        Assert.isTrue(!jobHistoryRepository.isTaskOK(jobName, getOperday(properties))
+                , () -> new ValidationError(OPERDAY_TASK_ALREADY_EXC, jobName, dateUtils.onlyDateString(getOperday(properties))));
+        return true;
+    }
+
+    protected boolean checkAlreadyRunning(String jobName, Properties properties) {
+        Assert.isTrue(!jobHistoryRepository.isAlreadyRunning(jobName, getOperday(properties))
+                , () -> new ValidationError(OPERDAY_TASK_ALREADY_RUN, jobName, dateUtils.onlyDateString(getOperday(properties))));
+        return true;
     }
 
     /**

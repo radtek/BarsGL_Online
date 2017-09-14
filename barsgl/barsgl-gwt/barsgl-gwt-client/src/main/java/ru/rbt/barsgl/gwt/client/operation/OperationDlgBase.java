@@ -23,6 +23,7 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.comp.Components.*;
@@ -34,6 +35,8 @@ import static ru.rbt.barsgl.shared.dict.FormAction.UPDATE;
  * Created by ER18837 on 16.03.16.
  */
 public abstract class OperationDlgBase extends EditableDialog<ManualOperationWrapper> {
+    static Logger log = Logger.getLogger("OperationDlgBase");
+
     public enum Side {DEBIT, CREDIT};
 
     protected final String LABEL_WIDTH = "130px";
@@ -92,11 +95,10 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         return new ManualOperationWrapper();
     }
 
+    protected TxtBox mAccount;
     protected Grid createOneSide(String label, final Side side, boolean withSum) {
         DataListBoxEx mCurrency;
         DataListBoxEx mFilial;
-        TxtBox mAccount;
-        //TxtBox mSum = null;
         BtnTxtBox mSum = null;
         Button mButton;
 
@@ -168,6 +170,7 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
         return new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
+                log.info("onChange");
                 TextBox mAccount = ((TextBox)changeEvent.getSource());
                 String account = mAccount.getValue();
                 if (null == account || account.length() < 20)
@@ -242,14 +245,17 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
 
                     final String bsaAcid = mAccount.getValue();
                     FormAction action = OperationDlgBase.this.action;
-                    boolean editAccount = (CREATE == action || UPDATE == action);
+                    boolean editAccount = (CREATE == action || UPDATE == action) && mAccount.isEnabled();
+
                     GridFormDlgBase dlg = new AccCustomerFormDlg(!editAccount) {
                         @Override
                         protected boolean setResultList(HashMap<String, Object> result) {
                             if (null != result) {
                                 mFilial.setParam("CBCCN", (String) result.get("CBCCN"));
                                 mCurrency.setParam("CCYN", (String) result.get("CCYN"));
+                                mAccount.clear();
                                 mAccount.setValue((String) result.get("BSAACID"));
+                                setDeals(result.get("BSAACID").toString());
                             }
                             return true;
                         }
@@ -271,4 +277,6 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     }
 
     abstract protected Date getAccountDate();
+    protected void setDeals(String account){};
+
 }

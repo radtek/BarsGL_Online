@@ -170,6 +170,13 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
                         operation.getAccountCredit(), operation.getColumnName("accountCredit"));
             }
         });
+        // ИД сделки
+        context.addValidator(() -> {
+            if ( null == pdRepository.getPref(operation)) {
+                throw new ValidationError(DEALID_PYMANTREF_IS_EMPTY,
+                        operation.getColumnName("dealId"), operation.getColumnName("paymentRefernce"));
+            }
+        });
 
         context.addValidator(() -> {
             ValidationError error = glAccountRepository.checkAccount9999(operation.getAccountDebit(), operation.getAccountCredit(), GLOperation.OperSide.D);

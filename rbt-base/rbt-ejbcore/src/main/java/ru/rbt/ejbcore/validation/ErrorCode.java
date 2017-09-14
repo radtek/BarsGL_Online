@@ -55,6 +55,7 @@ public enum ErrorCode {
     , ACCOUNT_TECH_NOT_CORRECT(45, "Некорректный счет %s: '%s'.")
     , ANY_CURRNCY_IS_RUR(46,"Одна из валют должна быть RUR")
     , ACCOUNT_TH_IS_CLOSED(47, "Счет %s закрыт: '%s' (дата закрытия: '%s')")
+    , ACCOUNT_BALANCE_ERROR(48,"Ошибка при проверке балланса...\n  %s")
  
     /**
      * Ошибки при создании проводки (runtime)
@@ -78,6 +79,7 @@ public enum ErrorCode {
     , STORNO_POST_NOT_FOUND_BUFFER(1017, "%s")
     , BALANSE_SECOND_NOT_EXISTS(1018, "Балансовый счет 2-го порядка для счета %s: '%s' не существует")
     , FAN_INVALID_STATE(1019, "Для референса '%s' найдены частичные веерные операции не в статусе '%s': '%s'")
+    , FIELDS_DEAL_SUBDEAL(1020, "Не соответствие DealId/SudDealId данным в таблице gl_acc")
 
     /**
      * Ошибки при валидации и создании счета

@@ -529,6 +529,8 @@ public class EtlPostingController implements EtlMessageController<EtlPosting, GL
                 TechOperationProcessor techOperationProcessor = (TechOperationProcessor) operationProcessor;
                 List<GlPdTh> pdthList = techOperationProcessor.createPdTh(operation);
                 glPdThRepository.processGlPdTh(operation,pdthList,OperState.POST);
+
+
             }
             else {
                 List<GLPosting> pstList = operationProcessor.createPosting(operation);      // обработать операцию

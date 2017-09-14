@@ -131,7 +131,7 @@ public class StamtUnloadController {
      * Проверяем закончена ли обработка данных по выгрузкам проводок в TDS
      * @throws Exception
      */
-    public void checkConsumed() throws Exception {
+    public boolean checkConsumed() throws Exception {
         List<DataRecord> unloads = repository.select(
                         "select *\n" +
                         "  from V_GL_STM_AWAIT s\n" +
@@ -141,6 +141,7 @@ public class StamtUnloadController {
                 .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
                         + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
                 .collect(Collectors.joining(" ")))));
+        return true;
     }
 
 

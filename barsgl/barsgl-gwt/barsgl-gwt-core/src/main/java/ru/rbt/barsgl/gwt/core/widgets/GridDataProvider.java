@@ -1,14 +1,19 @@
 package ru.rbt.barsgl.gwt.core.widgets;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.view.client.AbstractDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.shared.Assert;
 
 import java.util.List;
+
+import static ru.rbt.barsgl.shared.SqlQueryTimeoutException.SQL_TIMEOUT_MESSAGE;
 
 /**
  * Created by akichigi on 02.04.15.
@@ -102,8 +107,22 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
 
     private class DefaultOnfailureCallback implements OnfailureCallback {
         @Override
-        public void onfailure(Throwable throwable) throws Throwable {
-            throw throwable;
+        public void onfailure(Throwable t) throws Throwable {
+            if (isSqlQueryTimeoutException(t)) {
+                DialogManager.error("Ошибка", ((SqlQueryTimeoutException)t).getUserMessage());
+                if (WaitingManager.isWaiting()) {
+                    WaitingManager.hide();
+                }
+            }
+            else
+                throw t;
         }
     }
+
+    public static boolean isSqlQueryTimeoutException(Throwable throwable) {
+        return (null != throwable && throwable.getLocalizedMessage().contains(SQL_TIMEOUT_MESSAGE));
+//                || throwable instanceof SqlQueryTimeoutException;
+    }
+
 }
+
