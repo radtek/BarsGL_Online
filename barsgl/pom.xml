@@ -15,7 +15,7 @@
     </modules>
 
     <properties>
-      <version.org.hibernate>5.2.10.Final</version.org.hibernate>
+      <version.org.hibernate>5.2.11.Final</version.org.hibernate>
     </properties>
 
     <!-- TODO слить что ли профили ???-->
