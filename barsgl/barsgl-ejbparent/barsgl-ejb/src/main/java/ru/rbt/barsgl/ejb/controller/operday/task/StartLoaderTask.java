@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rb.cfg.CryptoUtil;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
 import ru.rbt.barsgl.ejb.etc.SshProcedureRunner;
@@ -35,6 +36,12 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
     public enum StartLoaderProp {
         Operday
     }
+
+    public enum StartLoaderType {
+        ssh,
+        as400;
+    }
+
     @Override
     protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
         try {
@@ -45,12 +52,12 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
             auditController.info(StartLoaderTask, "В BarsRep установлен workday " + dateUtils.dbDateString(d));
 
             String barsGlLoaderType = propertiesRepository.getString(PropertyName.BARSGL_LOADER_TYPE.getName());
-            if("ssh".equals(barsGlLoaderType)){
+            if(StartLoaderType.ssh.name().equals(barsGlLoaderType)){
                 String host = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_HOST.getName());
                 Long portObj = propertiesRepository.getNumber(PropertyName.BARSGL_LOADER_SSH_PORT.getName());
                 int port = (portObj == null) ? 22 : portObj.intValue();
                 String user = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_USER.getName());
-                String pswd = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_PSWD.getName());
+                String pswd = CryptoUtil.decrypt(propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_PSWD.getName()));
                 String cmd = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_RUN_CMD.getName());
                 sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, null);
             } else {
@@ -58,12 +65,12 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
             }
 
             String barsRepLoaderType = propertiesRepository.getString(PropertyName.BARSREP_LOADER_TYPE.getName());
-            if("ssh".equals(barsRepLoaderType)){
+            if(StartLoaderType.ssh.name().equals(barsRepLoaderType)){
                 String host = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_HOST.getName());
                 Long portObj = propertiesRepository.getNumber(PropertyName.BARSREP_LOADER_SSH_PORT.getName());
                 int port = (portObj == null) ? 22 : portObj.intValue();
                 String user = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_USER.getName());
-                String pswd = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_PSWD.getName());
+                String pswd = CryptoUtil.decrypt(propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_PSWD.getName()));
                 String cmd = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_RUN_CMD.getName());
                 sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, null);
             } else {
@@ -72,7 +79,7 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
             return true;
         } catch (Throwable e) {
             auditController.error(StartLoaderTask
-                    , format("Ошибка при установке workday за '%s'", dateUtils.onlyDateString((Date)properties.get(StartLoaderProp.Operday))), null, e);
+                    , format("Ошибка при запуске загрузчика за '%s'", dateUtils.onlyDateString((Date)properties.get(StartLoaderProp.Operday))), null, e);
             return false;
         }
     }

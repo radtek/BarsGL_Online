@@ -28,7 +28,14 @@ public enum PropertyName {
     , BARSREP_LOADER_SSH_PORT("barsrep.loader.ssh.port")
     , BARSREP_LOADER_SSH_USER("barsrep.loader.ssh.user")
     , BARSREP_LOADER_SSH_PSWD("barsrep.loader.ssh.pswd")
-    , BARSREP_LOADER_SSH_RUN_CMD("barsrep.loader.ssh.run.cmd");
+    , BARSREP_LOADER_SSH_RUN_CMD("barsrep.loader.ssh.run.cmd")
+
+    , BARSREP_REPL_TYPE("barsrep.repl.type")
+    , BARSREP_REPL_SSH_HOST("barsrep.repl.ssh.host")
+    , BARSREP_REPL_SSH_PORT("barsrep.repl.ssh.port")
+    , BARSREP_REPL_SSH_USER("barsrep.repl.ssh.user")
+    , BARSREP_REPL_SSH_PSWD("barsrep.repl.ssh.pswd")
+    , BARSREP_REPL_SSH_RUN_CMD("barsrep.repl.ssh.run.cmd");
 
     private String name;
 

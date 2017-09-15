@@ -22,7 +22,9 @@ import java.util.Properties;
 
 /**
  * Created by SotnikovAV on 03.11.2016.
+ * @deprecated Управление загрузкой перенесенов в другое приложение
  */
+@Deprecated
 public class LoaderManagementTask implements ParamsAwareRunnable {
 
     private static final Logger log = Logger.getLogger(LoaderManagementTask.class);
