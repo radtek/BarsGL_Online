@@ -70,6 +70,11 @@
             <artifactId>rbt-audit</artifactId>
             <type>ejb</type>
         </dependency>
+
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
