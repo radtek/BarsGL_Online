@@ -29,6 +29,7 @@ public class QueueProperties {
     public String mqPassword;
     public String unspents;
     public String writeOut;
+    public String writeSleepThreadTime;
 
     @Override
     public String toString() {
@@ -42,6 +43,7 @@ public class QueueProperties {
                    ", mqTopics='" + mqTopics + '\'' +
                    ", unspents='" + unspents + '\'' +
                    ", writeOut='" + writeOut + '\'' +
+                   ", writeSleepThreadTime='" + writeSleepThreadTime + '\'' +
                    '}';
     }
 
@@ -57,6 +59,7 @@ public class QueueProperties {
         this.mqTopics = Optional.ofNullable(properties.getProperty("mq.topics")).orElse("###");
         this.unspents = Optional.ofNullable(properties.getProperty("unspents")).orElse("hide");
         this.writeOut = Optional.ofNullable(properties.getProperty("writeOut")).orElse("false");        
+        this.writeSleepThreadTime = Optional.ofNullable(properties.getProperty("writeSleepThreadTime")).orElse("false");
         this.mqUser = Optional.ofNullable(properties.getProperty("mq.user")).orElse("###");
         this.mqPassword = Optional.ofNullable(properties.getProperty("mq.password")).orElse("###");
         if ((this.toString()).contains("###")) {
