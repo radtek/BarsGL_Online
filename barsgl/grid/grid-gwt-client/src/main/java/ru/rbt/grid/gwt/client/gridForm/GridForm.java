@@ -66,7 +66,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 		panel.addNorth(abw, 10);
 
 		panel.add(grid = createGrid(getInitialFilterParams(), delayLoad));
-
+        grid.setSortStrategy(null); //отключена сортировка
 		abw.addAction(refreshAction = createRefreshAction());
 		grid.setSortEvents(refreshAction);
 
