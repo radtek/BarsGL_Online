@@ -14,7 +14,7 @@ public class TextResourceController {
      * @throws IOException
      */
     public String getContent(String resourceName) throws IOException {
-        try (InputStream is = TextResourceController.class.getClassLoader().getResourceAsStream(resourceName)
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName)
              ; InputStreamReader reader = new InputStreamReader(is)
              ; BufferedReader br = new BufferedReader(reader)
              ; StringWriter sw = new StringWriter()
