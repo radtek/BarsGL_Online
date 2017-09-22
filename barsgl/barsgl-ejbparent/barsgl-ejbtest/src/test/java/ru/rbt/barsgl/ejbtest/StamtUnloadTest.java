@@ -660,6 +660,10 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
 
         setHeaderStatus(header4.getLong("id"), DwhUnloadStatus.CONSUMED);
 
+        cleanHeader();
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
+
+        // предыдущая выгрузка обработана, след должна пройти
         jobService.executeJob(job);
 
         header4 = getLastUnloadHeader(POSTING_DELETE);

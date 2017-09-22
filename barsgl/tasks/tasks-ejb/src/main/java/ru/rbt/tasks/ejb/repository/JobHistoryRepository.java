@@ -2,8 +2,8 @@ package ru.rbt.tasks.ejb.repository;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -25,8 +25,8 @@ public class JobHistoryRepository extends AbstractBaseEntityRepository<JobHistor
 
     public boolean isTaskOK (String taskName, Date operday) {
         return null != selectFirst(JobHistory.class
-                , "from JobHistory h where h.jobName = ?1 and h.operday = ?2 and h.result = ?3"
-                , taskName, operday, DwhUnloadStatus.SUCCEDED);
+                , "from JobHistory h where h.jobName = ?1 and h.operday = ?2 and h.result in (?3, ?4, ?5)"
+                , taskName, operday, DwhUnloadStatus.SUCCEDED, DwhUnloadStatus.CONSUMED, DwhUnloadStatus.PROCESSING);
     }
 
     public boolean isAlreadyRunning(String taskName, Date operday) {

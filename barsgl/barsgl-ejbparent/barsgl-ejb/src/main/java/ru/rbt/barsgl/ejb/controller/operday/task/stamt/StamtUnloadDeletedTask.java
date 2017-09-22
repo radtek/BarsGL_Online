@@ -72,12 +72,12 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
 
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
-        return unloadController.checkConsumed();
+        return true;
     }
 
     @Override
     protected boolean checkJobStatus(String jobName, Properties properties) {
-        return TaskUtils.getCheckRun(properties, true) ? checkAlreadyRunning(jobName, properties) : true;
+        return TaskUtils.getCheckRun(properties, true) ? (checkAlreadyRunning(jobName, properties) && checkOk(jobName, properties)) : true;
     }
 
     @Override
