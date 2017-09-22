@@ -1,5 +1,5 @@
 declare global temporary table TMP_PCID_DEL as (
-select t.pcid, t.pod postingdate, t.vald valuedate, t.id pid, t.bsaacid, o.src_pst hostsystem
+select distinct t.pcid, t.pod postingdate, t.vald valuedate, t.id pid, t.bsaacid, o.src_pst hostsystem
        , cast(case when o.src_pst = 'PH' then o.chnl_name else o.deal_id end as varchar(128)) dealid
        , value(o.pmt_ref, o.evt_id) psid
        , decimal(t.amnt)/integer(power(10, c.nbdp)) amount
@@ -13,7 +13,7 @@ select t.pcid, t.pod postingdate, t.vald valuedate, t.id pid, t.bsaacid, o.src_p
    and (r.invisible ='1' or r.invisible is null)
    and GL_STMFILTER(t.bsaacid) = '1'
 union all
-select t.pcid, t.pod postingdate, t.vdate valuedate, t.idpd pid, t.bsaacid, 'BSG_IB' hostsystem
+select distinct t.pcid, t.pod postingdate, t.vdate valuedate, t.idpd pid, t.bsaacid, 'BSG_IB' hostsystem
        , cast(null as varchar(20)) dealid, cast(t.pcid as varchar(40)) psid
        , decimal(t.amnt)/integer(power(10, c.nbdp)) amount
        , c.glccy ccy
