@@ -512,7 +512,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     public boolean checkPackagesToloadExists() throws Exception {
         TimerJob job = jobRepository.selectOne(TimerJob.class, "from TimerJob j where j.name = ?1", this.getClass().getSimpleName());
         Properties properties = new Properties();
-        properties.load(new StringReader(job.getProperties()));
+        if (null != job.getProperties())
+            properties.load(new StringReader(job.getProperties()));
         return checkPackagesToloadExists(properties, null);
     }
 
