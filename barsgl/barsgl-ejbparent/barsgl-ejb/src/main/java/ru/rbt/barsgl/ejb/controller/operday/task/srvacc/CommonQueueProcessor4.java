@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -173,7 +174,7 @@ public class CommonQueueProcessor4 implements MessageListener {
             bytesMessage.readBytes(incomingBytes);
 
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
-            try (Reader r = new InputStreamReader(byteArrayInputStream, "UTF-8")) {
+            try (Reader r = new InputStreamReader(byteArrayInputStream, StandardCharsets.UTF_8)) {
                 StringBuilder sb = new StringBuilder();
                 char cb[] = new char[1024];
                 int s = r.read(cb);
@@ -240,7 +241,7 @@ public class CommonQueueProcessor4 implements MessageListener {
                 String textMessage = incMessage[0].trim();
                 Long jId = 0L;
                 try {
-                    jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
+                    jId = journalRepository.executeInNewTransaction(persistence -> {
                         return journalRepository.createJournalEntry(params[0], textMessage);
                     });
                     callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], receiveTime));
@@ -267,8 +268,8 @@ public class CommonQueueProcessor4 implements MessageListener {
         String[] incMessage = readJMS(message);
         String textMessage = incMessage[0].trim();
 
-        jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
-          return journalRepository.createJournalEntry(params[0], textMessage);
+        jId = journalRepository.executeInNewTransaction(persistence -> {
+            return journalRepository.createJournalEntry(params[0], textMessage);
         });
 
         asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], -1L),
@@ -284,6 +285,7 @@ public class CommonQueueProcessor4 implements MessageListener {
     
     private void processMessage(Message receivedMessage, String queueType, String fromQueue, String queue, long receiveTime, long startThreadTime){
         long waitingTime = System.currentTimeMillis() - startThreadTime;
+        Long jId = null;
         try {            
             String[] incMessage = readJMS(receivedMessage);
             
@@ -293,17 +295,20 @@ public class CommonQueueProcessor4 implements MessageListener {
             
             String textMessage = incMessage[0].trim();
             
-            Long jId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+            jId = journalRepository.executeInNewTransaction((persistence) -> {
                 return journalRepository.createJournalEntry(queueType, textMessage);
             });
             
             processing(queueType, textMessage, jId, incMessage, queue, receiveTime, waitingTime);            
             
-        } catch (JMSException ex) {
+        } catch (JMSException e) {
             reConnect();
-            auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + fromQueue, null, ex);
+            auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + fromQueue + " / Таблица GL_ACLIRQ / id="+jId, null, e);
         } catch (Exception e) {
             log.error("Ошибка при обработке сообщения из " + fromQueue, e);
+            auditController.warning(AccountQuery, "Ошибка при обработке сообщения / Таблица GL_ACLIRQ / id=" + jId, null, e);
+            if(jId != null)
+                journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка при обработке сообщения. " + e.getMessage());
             context.setRollbackOnly();
             throw new DefaultApplicationException(e.getMessage(), e);
         }
