@@ -34,9 +34,7 @@ import ru.rbt.shared.enums.SecurityActionCode;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.DATE;
-import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.INTEGER;
-import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.STRING;
+import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
@@ -50,7 +48,7 @@ public class BVDepthForm extends GridForm{
     private GridAction _deleteAction;
     private BVDepthDlg dlg;
 
-    private String _sql = "select ID_SRC, BV_SHIFT, DTB, DTE from GL_BVPARM ";
+    private String _sql = "select ID_SRC, BV_SHIFT, DTB, DTE, \"USER\" as AUTHOR, OTS from GL_BVPARM ";
     private String _where = "where DTB<='{0}' and (DTE is null or DTE >='{0}')";
     private boolean isCurrent;
 
@@ -224,6 +222,11 @@ public class BVDepthForm extends GridForm{
         col.setFormat("dd.MM.yyyy");
         table.addColumn(col = new Column("DTE", DATE, "Дата окончания", 80));
         col.setFormat("dd.MM.yyyy");
+        table.addColumn( new Column("AUTHOR", STRING, "Пользователь", 100, false, false));
+
+        table.addColumn(col = new Column("OTS", DATETIME, "Дата создания", 80, false, false));
+        col.setFormat("dd.MM.yyyy hh:mm:ss");
+        col.setFilterable(false);
 
         return table;
     }
