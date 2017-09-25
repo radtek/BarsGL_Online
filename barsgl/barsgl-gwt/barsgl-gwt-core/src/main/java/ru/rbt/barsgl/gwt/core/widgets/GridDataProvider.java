@@ -14,7 +14,6 @@ import java.util.List;
  * Created by akichigi on 02.04.15.
  */
 
-
 public abstract class GridDataProvider extends AbstractDataProvider<Row> {
 
     private Range range;
@@ -23,6 +22,7 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
     private boolean delayLoad;
     private OnfailureCallback onfailureCountCallback = new DefaultOnfailureCallback();
     private OnfailureCallback onfailureRowsCallback = new DefaultOnfailureCallback();
+    private int rowCount;
 
     protected GridDataProvider() {
         this(false);
@@ -38,7 +38,6 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
         super(null);
         this.delayLoad = delayLoad;
     }
-
 
     public void activate() {
         delayLoad = false;
@@ -59,6 +58,7 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
         return new AsyncCallback<Integer>() {
             @Override
             public void onSuccess(Integer result) {
+                GridDataProvider.this.rowCount = result;
                 updateRowCount(Math.abs(result), result >= 0);
                 getServerData(range.getStart(), range.getLength(), callbackRows());
             }
@@ -98,6 +98,10 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
 
     public void setEvents(IProviderEvents events){
         this.events = events;
+    }
+
+    public int getRowCount() {
+        return rowCount;
     }
 
     private class DefaultOnfailureCallback implements OnfailureCallback {

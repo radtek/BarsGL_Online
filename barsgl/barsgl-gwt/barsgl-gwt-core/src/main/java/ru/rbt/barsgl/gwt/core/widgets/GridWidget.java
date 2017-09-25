@@ -319,6 +319,11 @@ public class GridWidget extends Composite implements IProviderEvents{
 		}
 	}
 
+	public void clear(){
+		grid.setRowCount(0);
+		LocalEventBus.fireEvent(new GridEvents(id, GridEvents.EventType.LOAD_DATA, grid.getRowCount()));
+	}
+
 	public ISortStrategy getSortStrategy(){
 		return sortStrategy;
 	}
