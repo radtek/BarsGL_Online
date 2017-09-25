@@ -15,6 +15,7 @@ import ru.rbt.ejbcore.util.StringUtils;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,13 +57,26 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
             return new RpcRes_Base<>(wrapper, true, format("Дата начала действия настройки '%s' < даты текущего опердня '%s'"
                     , wrapper.getStartDateStr(), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
 
+        Date endDate = wrapper.getEndDate();
+        if (null == endDate) {
+            try {
+                Date nextStart = repository.getNextStartDate(wrapper);
+                if (null != nextStart)
+                    endDate = DateUtils.addDays(nextStart, -1);
+
+            } catch (SQLException e) {
+                return new RpcRes_Base<>(wrapper, true, e.getMessage());
+            }
+        }
+
         BVSourceDealId id = new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate());
+        Date finalEndDate = endDate;
         return create(wrapper, repository, BVSourceDeal.class, id,
                 format("Настройка глубины BackValue для источника '%s' c даты '%s' уже существует", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 format("Создана настройка глубины BackValue для источника '%s': %s (c даты '%s')", wrapper.getSourceDeal(), wrapper.getDepthStr(), wrapper.getStartDateStr()),
                 format("Ошибка при создании настройки глубины BackValue для источника '%s' c даты '%s'", wrapper.getSourceDeal(), wrapper.getStartDateStr()),
                 () -> new BVSourceDeal(id
-                        , wrapper.getEndDate()
+                        , finalEndDate
                         , wrapper.getDepth()
                         , userContext.getUserName()
                         , operdayController.getSystemDateTime()));
@@ -159,7 +173,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
             if (wrapper.getDepth() <= 1)
                 errorList.add("Глубина BackValue должна быть > 1");
 
-            if (null != wrapper.getEndDate() && wrapper.getStartDate().before(wrapper.getEndDate()))
+            if (null != wrapper.getEndDate() && wrapper.getStartDate().after(wrapper.getEndDate()))
                 errorList.add(format("Дата окончания действия настройки '%s' < даты начала '%s'", wrapper.getEndDateStr(), wrapper.getStartDateStr()));
 
             // проверка непересечения периодов
