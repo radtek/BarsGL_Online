@@ -283,7 +283,7 @@ public class OperAuthBVForm extends MDForm {
         vDate.setFormat("dd.MM.yyyy");
         result.addColumn(col = new Column("POSTDATE", DATE, "Дата проводки", 80));
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Первичная дата проводки", 80));  //ext
+        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Плановая дата проводки", 80));  //ext
         col.setFormat("dd.MM.yyyy");
         result.addColumn(new Column("PDATE_CHNG", STRING, "Дата проводки изменена", 100, false, false)); //ext
 
@@ -345,6 +345,7 @@ public class OperAuthBVForm extends MDForm {
         col.setFilterable(false);
         result.addColumn(new Column("USER_AU3", STRING, "Логин исполнителя", 180, false, false));  //ext
         result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Время руч. обработки", 130, false, false));  //ext
+        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1000));
 
         return result;
     }

@@ -135,7 +135,7 @@ public class OperDayForm extends BaseForm {
         vp.getElement().getStyle().setMarginLeft(5, Style.Unit.PX);
         vp.getElement().getStyle().setMarginTop(50, Style.Unit.PX);
 
-        HTMLPanel html = new HTMLPanel("<h4>Автоматическое закрыти баланса предыдущего дня</h4>");
+        HTMLPanel html = new HTMLPanel("<h4>Автоматическое закрытие баланса предыдущего дня</h4>");
         html.getElement().getStyle().setBackgroundColor("#FFFF00");
         html.getElement().getStyle().setHeight(20, Style.Unit.PX);
         html.getElement().getStyle().setTextAlign(Style.TextAlign.CENTER);
