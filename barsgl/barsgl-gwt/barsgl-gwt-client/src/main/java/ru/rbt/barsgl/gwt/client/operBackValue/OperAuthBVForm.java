@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.operBackValue;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -315,7 +314,6 @@ public class OperAuthBVForm extends MDForm {
         result.addColumn(col = new Column("STRN", STRING, "Сторно", 50));
         col.setList(yesNoList);
         result.addColumn(new Column("STRN_GLO", LONG, "Сторно операция", 70, false, false));
-        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1200));
         result.addColumn(new Column("CUSTNO_DR", STRING, "Клиент ДБ", 400));
         result.addColumn(new Column("CUSTNO_CR", STRING, "Клиент КР", 400));
 
@@ -345,7 +343,7 @@ public class OperAuthBVForm extends MDForm {
         col.setFilterable(false);
         result.addColumn(new Column("USER_AU3", STRING, "Логин исполнителя", 180, false, false));  //ext
         result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Время руч. обработки", 130, false, false));  //ext
-        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1000));
+        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1000, false, false));
 
         return result;
     }
