@@ -58,6 +58,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                     , wrapper.getStartDateStr(), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
 
         Date endDate = wrapper.getEndDate();
+/*
         if (null == endDate) {
             try {
                 Date nextStart = repository.getNextStartDate(wrapper);
@@ -68,6 +69,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                 return new RpcRes_Base<>(wrapper, true, e.getMessage());
             }
         }
+*/
 
         BVSourceDealId id = new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate());
         Date finalEndDate = endDate;

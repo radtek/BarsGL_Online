@@ -26,15 +26,36 @@ public class BVSourceDealRepository extends AbstractBaseEntityRepository<BVSourc
     }
 
     public BVSourceDeal findIntersectedRecord(BVSourceDealWrapper wrapper) {
-        String sql = "from BVSourceDeal s where s.id.sourceDeal = ?1 " +
-                " and (s.id.startDate = ?2 or not s.endDate is null and s.endDate >= ?2 and (s.id.startDate <= ?2";
+        BVSourceDealId id = new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate());
+        String sql = "from BVSourceDeal s where s.id <> ?1 and s.id.sourceDeal = ?2 ";
         if (null == wrapper.getEndDate()) {
-            return selectFirst(BVSourceDeal.class, sql + "))"
-                    , wrapper.getSourceDeal(), wrapper.getStartDate());
+            sql += " and (s.id.startDate >= ?3)";
+            return selectFirst(BVSourceDeal.class, sql
+                    , id, wrapper.getSourceDeal(), wrapper.getStartDate());
 
         } else {
-            return selectFirst(BVSourceDeal.class, sql + " or s.id.startDate <= ?3))"
-                    , wrapper.getSourceDeal(), wrapper.getStartDate(), wrapper.getEndDate());
+            sql += " and ((s.endDate is null and s.id.startDate between ?3 and ?4)" +
+                    " or (?3 between s.id.startDate and s.endDate)" +
+                    " or (?4 between s.id.startDate and s.endDate))";
+            return selectFirst(BVSourceDeal.class, sql
+                    , id, wrapper.getSourceDeal(), wrapper.getStartDate(), wrapper.getEndDate());
         }
     }
+
+/*
+    public BVSourceDeal findIntersectedRecord(BVSourceDealWrapper wrapper) {
+        BVSourceDealId id = new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate());
+        String sql = "from BVSourceDeal s where s.id <> ?1" +
+                " and s.id.sourceDeal = ?2 " +
+                " and (s.id.startDate = ?3 or not s.endDate is null and s.endDate >= ?3 and (s.id.startDate <= ?3";
+        if (null == wrapper.getEndDate()) {
+            return selectFirst(BVSourceDeal.class, sql + "))"
+                    , id, wrapper.getSourceDeal(), wrapper.getStartDate());
+
+        } else {
+            return selectFirst(BVSourceDeal.class, sql + " or s.id.startDate <= ?4))"
+                    , id, wrapper.getSourceDeal(), wrapper.getStartDate(), wrapper.getEndDate());
+        }
+    }
+*/
 }
