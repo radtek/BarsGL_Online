@@ -129,8 +129,8 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
         String parseError = parseDates(wrapper);
         if (!isEmpty(parseError))
             return new RpcRes_Base<>(wrapper, true, parseError);
-        if (!wrapper.getStartDate().after(operdayController.getOperday().getCurrentDate()))
-            return new RpcRes_Base<>(wrapper, true, format("Нельзя удалить настройку глубины BackValue с датой начала <= текущего опердня '%s'"
+        if (wrapper.getStartDate().before(operdayController.getOperday().getCurrentDate()))
+            return new RpcRes_Base<>(wrapper, true, format("Нельзя удалить настройку глубины BackValue с датой начала < текущего опердня '%s'"
                 , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
 
         return delete(wrapper, repository, BVSourceDeal.class, new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate()),
