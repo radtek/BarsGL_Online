@@ -441,7 +441,7 @@ public class OperNotAuthBVForm extends GridForm {
 
                 postDateAuthListDlg = new BVPostDateAuthListDlg();
                 postDateAuthListDlg.setDlgEvents(this);
-                postDateAuthListDlg.show((Date)grid.getFieldValue("VDATE"));
+                postDateAuthListDlg.show((Date)grid.getFieldValue("POSTDATE"));
             }
 
             @Override
@@ -530,7 +530,7 @@ public class OperNotAuthBVForm extends GridForm {
         vDate.setFormat("dd.MM.yyyy");
         result.addColumn(col = new Column("POSTDATE", DATE, "Дата проводки", 80));
         col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Первичная дата проводки", 80, false, false));
+        result.addColumn(col = new Column("POSTDATE_PLAN", DATE, "Плановая дата проводки", 80, false, false));
         col.setFormat("dd.MM.yyyy");
 
         result.addColumn(new Column("AC_DR", STRING, "Счет ДБ", 160));
@@ -561,7 +561,6 @@ public class OperNotAuthBVForm extends GridForm {
         result.addColumn(col = new Column("STRN", STRING, "Сторно", 50));
         col.setList(yesNoList);
         result.addColumn(new Column("STRN_GLO", LONG, "Сторно операция", 70, false, false));
-        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1200));
         result.addColumn(new Column("CUSTNO_DR", STRING, "Клиент ДБ", 400));
         result.addColumn(new Column("CUSTNO_CR", STRING, "Клиент КР", 400));
 
@@ -591,6 +590,7 @@ public class OperNotAuthBVForm extends GridForm {
         col.setFilterable(false);
         result.addColumn(new Column("USER_AU3", STRING, "Логин исполнителя", 180, false, false));
         result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Время руч. обработки", 130, false, false));
+        result.addColumn(new Column("EMSG", STRING, "Сообщение об ошибке", 1000));
 
         return result;
     }

@@ -74,7 +74,7 @@ public class OperAuthBVForm extends MDForm {
 
     private BVOperChoiceDlg.ModeType _mode = BVOperChoiceDlg.ModeType.STANDARD;
     private BVOperChoiceDlg.SpecType _spec = BVOperChoiceDlg.SpecType.MANUAL;
-    private boolean _owner = true;
+    private boolean _owner = false;
 
     private boolean _detailFanMode = true;
     private AuthBVSqlBuilder _builder;
