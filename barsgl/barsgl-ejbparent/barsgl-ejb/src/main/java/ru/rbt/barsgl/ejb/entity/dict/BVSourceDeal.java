@@ -21,7 +21,7 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
     @Column(name = "BV_SHIFT")
     Integer shift;
 
-    @Column(name = "USER")
+    @Column(name = "USER_NAME")
     String user;
 
     @Column(name = "OTS")

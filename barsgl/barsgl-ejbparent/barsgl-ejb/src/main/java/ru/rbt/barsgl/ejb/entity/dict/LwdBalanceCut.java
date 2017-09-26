@@ -20,7 +20,7 @@ public class LwdBalanceCut extends BaseEntity<Date> {
     @Column(name = "CUTOFFTIME")
     private String cutTime;
 
-    @Column(name = "USER")
+    @Column(name = "USER_NAME")
     private String userName;
 
     @Column(name = "OTS", insertable = false, updatable = false)

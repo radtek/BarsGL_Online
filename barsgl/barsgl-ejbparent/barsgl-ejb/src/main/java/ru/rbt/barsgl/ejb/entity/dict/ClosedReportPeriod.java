@@ -21,7 +21,7 @@ public class ClosedReportPeriod extends BaseEntity<Date> {
     @Temporal(TemporalType.DATE)
     private Date cutDate;
 
-    @Column(name = "USER")
+    @Column(name = "USER_NAME")
     String user;
 
     @Column(name = "OTS")
