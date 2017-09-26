@@ -301,7 +301,7 @@ public class OperDayForm extends BaseForm {
                     DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                 } else {
                     lwdBalanceCutWrapper = res.getResult();
-                    dateCB.setText("1234545");
+                    dateCB.setText(lwdBalanceCutWrapper.getCloseDateStr());
                     dateOD.setText(lwdBalanceCutWrapper.getRunDateStr());
                     timeClose.setText(lwdBalanceCutWrapper.getCutTimeStr());
                 }
