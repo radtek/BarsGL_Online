@@ -722,16 +722,15 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         String reason = null;
         Date closedCutDate = null;
         Date closedLastDate = null;
+        ClosedReportPeriodView closedPeriod = closedPeriodRepository.getPeriod();
+        if (null != closedPeriod) {
+            closedCutDate = closedPeriod.getCutDate();
+            closedLastDate = closedPeriod.getLastDate();
+        }
         if (vdateCut.before(depthCutDate)) {
             reason = OverDepth.getValue();
-        } else {
-            ClosedReportPeriodView closedPeriod = closedPeriodRepository.getPeriod();
-            if (null != closedPeriod) {
-                closedCutDate = closedPeriod.getCutDate();
-                closedLastDate = closedPeriod.getLastDate();
-                if (!valueDate.after(closedLastDate))
-                    reason = ClosedPeriod.getValue();
-            }
+        } else if (null != closedPeriod && !valueDate.after(closedLastDate)) {
+            reason = ClosedPeriod.getValue();
         }
 
         GLOperation.OperClass operClass = null != reason ? BV_MANUAL : AUTOMATIC;

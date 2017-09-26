@@ -110,7 +110,7 @@ public class ReprocessWtacOparationsTask implements ParamsAwareRunnable {
             }
 
             auditController.info(RecalcWTAC
-                    , format("Повторная обработка BackValue операций со статусом '%s' за день '%s'", OperState.WTAC, dateStr));
+                    , format("Повторная обработка BackValue операций со статусом '%s' за день '%s'", OperState.BWTAC, dateStr));
             int errorCountBv = backValueOperationController.reprocessWtacBackValue(dateWtacPrev);
             if (errorCountBv > 0){
                 auditController.warning(RecalcWTAC, format("Обработано с ошибкой %d BackValue операций", errorCountBv), null, "");

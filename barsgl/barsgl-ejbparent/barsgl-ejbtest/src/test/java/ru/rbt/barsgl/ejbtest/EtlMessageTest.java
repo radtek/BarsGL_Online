@@ -20,6 +20,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -665,7 +666,7 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(DealSource.KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);

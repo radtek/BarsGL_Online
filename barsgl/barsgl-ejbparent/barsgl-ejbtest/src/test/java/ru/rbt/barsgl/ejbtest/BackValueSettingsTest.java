@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
 import ru.rbt.barsgl.ejb.integr.dict.LwdBalanceCutController;
 import ru.rbt.barsgl.ejb.integr.dict.ManualDictionaryService;
+import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.BVSourceDealWrapper;
 import ru.rbt.barsgl.shared.dict.ClosedReportPeriodWrapper;
@@ -131,6 +132,7 @@ public class BackValueSettingsTest extends AbstractTimerJobTest {
     @Test
     public void testLwdBalanceCut() {
         baseEntityRepository.executeUpdate("delete from LwdBalanceCut b");
+        remoteAccess.invoke(LwdCutCachedRepository.class, "init");
 
         Date cutDateTime  = getSystemDateTime();
 

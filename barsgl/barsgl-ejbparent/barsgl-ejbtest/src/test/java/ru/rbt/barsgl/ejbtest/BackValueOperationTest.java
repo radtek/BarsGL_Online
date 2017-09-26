@@ -607,7 +607,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         testCreateBackWtacOperation();
 
         List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class,
-                "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.procDate <= ?3 ",
+                "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.currentDate = ?3 ",
                 OperState.BWTAC, CONTROL, od.getLastWorkingDay());
         Assert.assertTrue(gloids.size() >= 2);
 
