@@ -55,6 +55,7 @@ public class OperDayForm extends BaseForm {
     private Label vip;
     private Label not_vip;
 
+    private Label dateCB;
     private Label dateOD;
     private Label timeClose;
     private LwdBalanceCutWrapper lwdBalanceCutWrapper;
@@ -140,16 +141,20 @@ public class OperDayForm extends BaseForm {
         html.getElement().getStyle().setTextAlign(Style.TextAlign.CENTER);
 
         Label label;
-        Grid grid = new Grid(2, 2);
+        Grid grid = new Grid(3, 2);
 
 
-        grid.setWidget(0, 0, label = new Label("Дата опердня"));
+        grid.setWidget(0, 0, label = new Label("Закрывается баланс за дату"));
         label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
-        grid.setWidget(0, 1, dateOD = new Label());
+        grid.setWidget(0, 1, dateCB = new Label());
 
-        grid.setWidget(1, 0, label = new Label("Время закрытия"));
+        grid.setWidget(1, 0, label = new Label("Дата закрытия"));
         label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
-        grid.setWidget(1, 1, timeClose = new  Label());
+        grid.setWidget(1, 1, dateOD = new Label());
+
+        grid.setWidget(2, 0, label = new Label("Время закрытия"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.setWidget(2, 1, timeClose = new  Label());
 
         grid.getCellFormatter().setWidth(0, 0, "285px");
         grid.getColumnFormatter().getElement(0).getStyle().setFontWeight(Style.FontWeight.BOLD);
@@ -296,6 +301,7 @@ public class OperDayForm extends BaseForm {
                     DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
                 } else {
                     lwdBalanceCutWrapper = res.getResult();
+                    dateCB.setText("1234545");
                     dateOD.setText(lwdBalanceCutWrapper.getRunDateStr());
                     timeClose.setText(lwdBalanceCutWrapper.getCutTimeStr());
                 }
@@ -454,12 +460,12 @@ public class OperDayForm extends BaseForm {
    }
 
     private Action createAutoCloseODAction(){
-        return new Action(null, "Настройка", new Image(ImageConstants.INSTANCE.back_value()), 5){
+        return new Action(null, "Закрытие баланса предыдущего дня", new Image(ImageConstants.INSTANCE.back_value()), 5){
             AutoCloseODDlg dlg = null;
             @Override
             public void execute() {
                 dlg =  new AutoCloseODDlg();
-                dlg.setCaption(this.getHint());
+                dlg.setCaption("Настройка закрытия баланса предыдущего дня");
                 dlg.setDlgEvents(new IDlgEvents() {
                     @Override
                     public void onDlgOkClick(Object prms) throws Exception {

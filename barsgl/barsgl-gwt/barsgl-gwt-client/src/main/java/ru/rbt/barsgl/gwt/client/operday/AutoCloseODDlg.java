@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
@@ -24,7 +23,7 @@ public class AutoCloseODDlg extends DlgFrame {
     public Widget createContent(){
         Grid grid = new Grid(2, 2);
 
-        grid.setText(0, 0, "Дата опердня");
+        grid.setText(0, 0, "Дата закрытия баланса предыдущего дня");
         grid.setWidget(0, 1, date = new DatePickerBox());
         date.setWidth("100px");
 
@@ -51,7 +50,7 @@ public class AutoCloseODDlg extends DlgFrame {
     }
 
     private void checkUp() throws Exception{
-        if (!date.hasValue()) throw new Exception("Не заполено поле 'Дата опердня'");
+        if (!date.hasValue()) throw new Exception("Не заполено поле 'Дата закрытия баланса предыдущего дня'");
     }
 
     @Override
