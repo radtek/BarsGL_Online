@@ -18,6 +18,7 @@ import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.*;
 import javax.inject.Inject;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -62,7 +63,15 @@ public class LwdBalanceCutController extends BaseDictionaryController<LwdBalance
         LwdBalanceCutView record = cachedRepository.getRecord();
         LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
         if (null != record) {
+            Date runDate = record.getRunDate();
+            Date closeDate;
+            try {
+                closeDate = calendarDayRepository.getWorkDateBefore(runDate, false);
+            } catch (SQLException e) {
+                return new RpcRes_Base<>(wrapper, true, e.getMessage());
+            }
             wrapper.setRunDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(record.getRunDate()));
+            wrapper.setCloseDateStr(new SimpleDateFormat(wrapper.getDateFormat()).format(closeDate));
             wrapper.setCutTimeStr(record.getCutTime());
         }
         return new RpcRes_Base<>(wrapper, false,

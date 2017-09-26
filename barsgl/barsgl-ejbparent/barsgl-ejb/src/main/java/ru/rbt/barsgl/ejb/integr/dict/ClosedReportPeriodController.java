@@ -91,8 +91,8 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
         String parseError = parseDates(wrapper);
         if (!isEmpty(parseError))
             return new RpcRes_Base<>(wrapper, true, parseError);
-        if (!wrapper.getCutDate().after(operdayController.getOperday().getCurrentDate()))
-            return new RpcRes_Base<>(wrapper, true, format("Нельзя удалить отчетный период с датой закрытия '%s' <= текущего опердня '%s'"
+        if (wrapper.getCutDate().before(operdayController.getOperday().getCurrentDate()))
+            return new RpcRes_Base<>(wrapper, true, format("Нельзя удалить отчетный период с датой закрытия '%s' < текущего опердня '%s'"
                 , wrapper.getCutDateStr(), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));;
 
         return delete(wrapper, repository, ClosedReportPeriod.class, wrapper.getLastDate(),

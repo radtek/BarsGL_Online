@@ -11,6 +11,7 @@ public class LwdBalanceCutWrapper implements Serializable {
     public final String timeFormat = "HH:mm";
 
     String runDateStr;
+    String closeDateStr;
     String cutTimeStr;
 
     Date runDate;               // используется на сервере
@@ -18,8 +19,9 @@ public class LwdBalanceCutWrapper implements Serializable {
     public LwdBalanceCutWrapper() {
     }
 
-    public LwdBalanceCutWrapper(String runDateStr, String cutTimeStr) {
+    public LwdBalanceCutWrapper(String runDateStr, String closeDateStr, String cutTimeStr) {
         this.runDateStr = runDateStr;
+        this.closeDateStr = closeDateStr;
         this.cutTimeStr = cutTimeStr;
     }
 
@@ -29,6 +31,14 @@ public class LwdBalanceCutWrapper implements Serializable {
 
     public void setRunDateStr(String runDateStr) {
         this.runDateStr = runDateStr;
+    }
+
+    public String getCloseDateStr() {
+        return closeDateStr;
+    }
+
+    public void setCloseDateStr(String closeDateStr) {
+        this.closeDateStr = closeDateStr;
     }
 
     public String getCutTimeStr() {

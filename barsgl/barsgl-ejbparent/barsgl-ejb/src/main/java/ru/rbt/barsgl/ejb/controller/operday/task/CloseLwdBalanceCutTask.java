@@ -158,8 +158,8 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
     // измененный вариант CloseLastWorkdayBalanceTask.executeWork
     public RpcRes_Base<Boolean> closeBalance(boolean fromOnline) {
         final Operday operday = operdayController.getOperday();
-        String curDateStr = dateUtils.onlyDateString(operday.getLastWorkingDay());
-        String prevDateStr = dateUtils.onlyDateString(operday.getCurrentDate());
+        String curDateStr = dateUtils.onlyDateString(operday.getCurrentDate());
+        String prevDateStr = dateUtils.onlyDateString(operday.getLastWorkingDay());
         try {
             auditController.info(AuditRecord.LogCode.Operday, format("Закрытие БАЛАНСА предыдущего ОД '%s'. Текущий ОД '%s'.", prevDateStr, curDateStr));
 
