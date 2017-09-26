@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.DATE;
+import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.DATETIME;
+import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.STRING;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
@@ -159,13 +161,17 @@ public class BVPeriodClosingForm extends GridForm {
         col.setFormat("dd.MM.yyyy");
         table.addColumn(col = new Column("PRD_CUTDATE", DATE, "Дата закрытия отчетного периода", 80));
         col.setFormat("dd.MM.yyyy");
+        table.addColumn( new Column("AUTHOR", STRING, "Пользователь", 100, false, false));
+        table.addColumn(col = new Column("OTS", DATETIME, "Дата создания", 80, false, false));
+        col.setFormat("dd.MM.yyyy hh:mm:ss");
+        col.setFilterable(false);
 
         return table;
     }
 
     @Override
     protected String prepareSql() {
-        return "select PRD_LDATE, PRD_CUTDATE from GL_CRPRD";
+        return "select * from (select PRD_LDATE, PRD_CUTDATE, \"USER\" as AUTHOR, OTS from GL_CRPRD) t ";
     }
 
     @Override

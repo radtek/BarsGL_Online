@@ -47,8 +47,7 @@ public class BVDepthForm extends GridForm{
     private final String allTitle = "Все записи";
     private GridAction _deleteAction;
     private BVDepthDlg dlg;
-
-    private String _sql = "select ID_SRC, BV_SHIFT, DTB, DTE, \"USER\" as AUTHOR, OTS from GL_BVPARM ";
+    private String _sql = "select * from (select ID_SRC, BV_SHIFT, DTB, DTE, \"USER\" as AUTHOR, OTS from GL_BVPARM) t ";
     private String _where = "where DTB<='{0}' and (DTE is null or DTE >='{0}')";
     private boolean isCurrent;
 
@@ -258,7 +257,7 @@ public class BVDepthForm extends GridForm{
                 if (grid.getRowCount() == 0){
                     flag = true;
                 }else{
-                    flag = ((Date)getFieldByName("DTB").getValue()).compareTo(CommonEntryPoint.CURRENT_OPER_DAY) != 1;
+                    flag = ((Date)getFieldByName("DTB").getValue()).compareTo(CommonEntryPoint.CURRENT_OPER_DAY) == -1;
                 }
 
                 _deleteAction.setEnable(!flag);
