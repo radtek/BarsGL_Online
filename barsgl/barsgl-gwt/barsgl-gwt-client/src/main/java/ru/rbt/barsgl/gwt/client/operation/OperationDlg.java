@@ -326,7 +326,7 @@ public class OperationDlg extends OperationDlgBase {
             mCrAccount.setValue(operation.getAccountCredit());
             mCrSum.setValue(getSumma(operation.getAmountCredit()));
 
-            BigDecimal amountRu = operation.getAmountRu();
+            BigDecimal amountRu = getAmountRu(operation.getAmountRu(), operation.getAmountRuCredit(), operation.getCurrencyDebit(), operation.getCurrencyCredit());
             boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
                     && (null != amountRu);
             mCheckSumRu.setValue(withoutDiff);
@@ -345,6 +345,15 @@ public class OperationDlg extends OperationDlgBase {
         getOperDay();
 
         setControlsEnabled();
+    }
+
+    protected BigDecimal getAmountRu(BigDecimal amtruDr, BigDecimal amtruCr, String ccyDr, String ccyCr) {
+        if (null != amtruDr && (amtruDr.equals(amtruCr) || !"RUR".equals(ccyDr)))
+            return amtruDr;
+        else if (null != amtruCr && !"RUR".equals(ccyCr))
+            return amtruCr;
+        else
+            return null;
     }
 
 

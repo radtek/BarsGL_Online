@@ -57,6 +57,7 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
     protected String filialCredit;        // 3    //    @Column(name = "CBCC_CR")
 
     protected BigDecimal amountCredit;    //    @Column(name = "AMT_CR")
+    protected BigDecimal amountRuCredit;     //    @Column(name = "AMTRU_CR")
 
     // Возвращаются на форму ==============================
     protected Long id;                            //    @Column(name = "GLOID")
@@ -438,4 +439,11 @@ public class ManualOperationWrapper implements Serializable, IsSerializable {
         this.noCheckAccDeals = noCheckAccDeals;
     }
 
+    public BigDecimal getAmountRuCredit() {
+        return amountRuCredit;
+    }
+
+    public void setAmountRuCredit(BigDecimal amountRuCredit) {
+        this.amountRuCredit = amountRuCredit;
+    }
 }

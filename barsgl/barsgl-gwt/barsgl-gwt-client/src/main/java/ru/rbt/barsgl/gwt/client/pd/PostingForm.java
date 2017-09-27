@@ -65,6 +65,7 @@ public class PostingForm extends MDForm {
 
     public PostingForm(){
         super(FORM_NAME, null, "Все проводки по операции", true);
+        setLazyDetailRefresh(true);
         reconfigure();
     }
 
