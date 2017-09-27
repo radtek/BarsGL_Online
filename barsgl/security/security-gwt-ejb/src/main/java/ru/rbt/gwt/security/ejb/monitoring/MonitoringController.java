@@ -7,8 +7,6 @@ import ru.rbt.barsgl.shared.monitoring.OperTableItem;
 import ru.rbt.barsgl.shared.monitoring.ReplTableItem2;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.monitoring.*;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Acc2ForDeals;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Monitoring;
@@ -19,7 +17,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Monitoring;
 import static ru.rbt.ejbcore.util.DateUtils.dateTimeString;
 import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 

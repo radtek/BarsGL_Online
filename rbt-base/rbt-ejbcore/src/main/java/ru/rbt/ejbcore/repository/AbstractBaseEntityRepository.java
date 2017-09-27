@@ -134,7 +134,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     }
 
     public <E> List<E> selectMaxRows(Class<E> clazz, String jpaQuery, int max, Object ... params) {
-        return this.select(persistence, clazz, jpaQuery, max, params);
+        return this.select(getPersistence(), clazz, jpaQuery, max, params);
     }
 
     @Override

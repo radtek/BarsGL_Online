@@ -194,9 +194,9 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
         try{
             String where = "П".equalsIgnoreCase(account.getPassiveActive())?"outrest<0":"outrest>0";
             DataRecord res = selectFirst(String.format("with ACC_TOVER as (" +
-                        "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
+                        "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
                         "UNION ALL " +
-                        "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1 " +
+                        "select CAST(? AS DATE) as dat, NVL(GET_BALANCE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual " +
                         ") " +
                         "select * " +
                         "FROM " +
@@ -218,17 +218,17 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
             String sql = String.format("with ACC_TOVER as (" +
                     "SELECT DAT,SUM(BAC) as bac " +
                     "FROM(" +
-                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ?" +
+                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ?" +
                     " UNION ALL " +
-                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from DWH.V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ?" +
+                    "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ?" +
                     ") T1 " +
                     " GROUP BY DAT " +
                     " UNION ALL " +
                     "SELECT dat,sum(bac) as bac " +
                     "FROM(" +
-                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1" +
+                    "select CAST(? AS DATE) as dat, NVL(GET_BALANCE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual" +
                     " UNION ALL " +
-                    "select CAST(? AS DATE) as dat, VALUE(DWH.GET_BALANCE(CAST(? AS VARCHAR(20)),CAST(? AS VARCHAR(20)),CAST(? AS DATE)),0) as bac from sysibm.sysdummy1" +
+                    "select CAST(? AS DATE) as dat, NVL(GET_BALANCE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual" +
                     ") t2" +
                     " group by dat) " +
                     "select * FROM (" +

@@ -1,6 +1,5 @@
 package ru.rbt.security.gwt.client.formmanager;
 
-import com.google.gwt.logging.client.ConsoleLogHandler;
 import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
@@ -15,16 +14,11 @@ import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
-import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
-import ru.rbt.barsgl.gwt.core.events.StatusBarEvent;
-import ru.rbt.barsgl.gwt.core.events.StatusBarEventHandler;
 import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-import ru.rbt.security.gwt.client.CommonEntryPoint;
-import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.shared.access.UserMenuWrapper;
 
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;

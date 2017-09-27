@@ -26,10 +26,7 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.shared.enums.PrmValueEnum;
 import ru.rbt.shared.enums.SecurityActionCode;
@@ -47,8 +44,6 @@ import java.util.List;
 import static java.lang.String.format;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
-import ru.rbt.shared.enums.PrmValueEnum;
-import ru.rbt.shared.enums.SecurityActionCode;
 
 /**
  * Created by ER18837 on 13.08.15.

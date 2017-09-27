@@ -10,9 +10,6 @@ public enum UserMenuCode {
     , TermCode, AccountingType, PlanAccountingType, PlanAccountOfr, PropertyType, Branch
     , UnloadStamtConfig, Acc2Deals, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
     , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype, PLAccountMidas
-    , TermCode, AccountingType, PlanAccountingType, PropertyType, Branch
-    , UnloadStamtConfig, TemplateOper, OperInpConfirm, OperInpHistory, ProfitCentr
-    , DomesticPlan, AccTypeParts, LoaderControl, BufferSync, AcodMidas, PLAccountAcctype
     , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
     , TechOperInpConfirm, ErrorView, ErrorHandling, TechOperInpHistory
 

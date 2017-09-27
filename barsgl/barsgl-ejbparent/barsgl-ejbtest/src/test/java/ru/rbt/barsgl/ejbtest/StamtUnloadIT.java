@@ -26,7 +26,6 @@ import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.io.IOException;
@@ -766,7 +765,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), getLastUnloadHeader(UnloadStamtParams.BALANCE_FULL).getString("parvalue"));
     }
 
-    private DataRecord getLastUnloadHeader(UnloadStamtParams params) throws SQLException {
+    protected static DataRecord getLastUnloadHeader(UnloadStamtParams params) throws SQLException {
         return Optional.ofNullable(baseEntityRepository
                 .selectFirst("select * from gl_etlstms where parname = ? and pardesc = ? order by id desc"
                         , params.getParamName(), params.getParamDesc())).orElse(null);

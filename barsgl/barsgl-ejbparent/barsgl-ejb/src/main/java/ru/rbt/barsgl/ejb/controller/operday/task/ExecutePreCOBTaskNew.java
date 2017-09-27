@@ -5,8 +5,6 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
  */
 
 import org.apache.log4j.Logger;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
@@ -37,8 +35,6 @@ import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;

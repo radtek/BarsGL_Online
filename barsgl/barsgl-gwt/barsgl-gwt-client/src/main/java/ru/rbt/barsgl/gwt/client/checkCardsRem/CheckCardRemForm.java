@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
-import ru.rbt.barsgl.shared.Utils;
-import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 /**
  * Created by akichigi on 15.12.16.
@@ -32,17 +30,6 @@ public class CheckCardRemForm extends GridForm {
 
     private CheckCardRemFilterDlg dlg = null;
     private GridAction preFilterAction;
-    private final String _sql =
-            "select a.branch, sum((nvl(b.obac,0) + nvl(b.dtac,0) + nvl(b.ctac,0) + nvl(c.dtac, 0) + nvl(c.ctac,0)) * 0.01) as sum, a.ccy, a.subdealid " +
-            "from baltur b " +
-            "left join gl_acc a on b.bsaacid = a.bsaacid " +
-            "left join gl_baltur c on c.bsaacid = b.bsaacid and c.dat <= '{0}' " +
-            "where b.bsaacid in ( select t.bsaacid from  gl_acc t " +
-            "where t.cbccn ='{1}' and t.acc2 in ('90901','90902') and t.subdealid  in ('1.2','2')) " +
-                   // "where t.cbccn ='{1}' ) " +
-            "and b.dat <= '{0}' and b.datto >= '{0}' " +
-            "group by a.ccy, a.branch, a.subdealid " +
-            "order by a.subdealid, a.branch, a.ccy";
 
     public CheckCardRemForm() {
         super(FORM_NAME, true);
@@ -122,8 +109,6 @@ public class CheckCardRemForm extends GridForm {
         list.add(new SortItem("subdealid", Column.Sort.ASC));
         return list;
     }
-
-
 
     public void setSql(String text){
         sql_select = text;

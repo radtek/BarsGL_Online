@@ -37,7 +37,6 @@ import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
-import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;

@@ -44,6 +44,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 
 
 /**
