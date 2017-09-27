@@ -14,7 +14,7 @@ import java.util.Date;
 /**
  * Created by er23851 on 24.07.2017.
  */
-public class AccountBalanceTest extends AbstractRemoteTest {
+public class AccountBalanceIT extends AbstractRemoteTest {
 
 
     @Test

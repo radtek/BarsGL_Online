@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Created by er18837 on 23.08.2017.
  */
-public class CardReportTest extends AbstractRemoteTest{
+public class CardReportIT extends AbstractRemoteTest{
 
     @Test
     public void testReportSqlOld() throws SQLException {
