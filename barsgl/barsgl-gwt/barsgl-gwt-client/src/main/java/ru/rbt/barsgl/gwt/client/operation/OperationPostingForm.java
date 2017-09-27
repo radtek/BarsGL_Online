@@ -64,7 +64,7 @@ public class OperationPostingForm extends MDForm {
 
     @Override
     protected String prepareMasterSql() {
-        return "select /*+ first_rows(30) */ a1.*, a1.AC_DR || ' ' || a1.AC_CR as dr_cr from V_GL_OPERCUST a1 "
+        return "select /*+ first_rows(30) */ a1.* from V_GL_OPERCUST a1 "
                 + getSourceAndFilialPart("where", "SRC_PST", "CBCC_CR", "CBCC_DR");
     }
 
