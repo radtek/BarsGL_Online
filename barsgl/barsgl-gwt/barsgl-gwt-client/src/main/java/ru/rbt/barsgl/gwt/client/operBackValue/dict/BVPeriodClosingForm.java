@@ -161,7 +161,7 @@ public class BVPeriodClosingForm extends GridForm {
         col.setFormat("dd.MM.yyyy");
         table.addColumn(col = new Column("PRD_CUTDATE", DATE, "Дата закрытия отчетного периода", 80));
         col.setFormat("dd.MM.yyyy");
-        table.addColumn( new Column("AUTHOR", STRING, "Пользователь", 100, false, false));
+        table.addColumn( new Column("USER_NAME", STRING, "Пользователь", 100, false, false));
         table.addColumn(col = new Column("OTS", DATETIME, "Дата создания", 80, false, false));
         col.setFormat("dd.MM.yyyy hh:mm:ss");
         col.setFilterable(false);
@@ -171,7 +171,7 @@ public class BVPeriodClosingForm extends GridForm {
 
     @Override
     protected String prepareSql() {
-        return "select * from (select PRD_LDATE, PRD_CUTDATE, \"USER\" as AUTHOR, OTS from GL_CRPRD) t ";
+        return "select * from GL_CRPRD ";
     }
 
     @Override

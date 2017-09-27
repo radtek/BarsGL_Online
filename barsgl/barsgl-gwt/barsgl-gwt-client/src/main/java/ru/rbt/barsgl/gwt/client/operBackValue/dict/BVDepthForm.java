@@ -47,7 +47,7 @@ public class BVDepthForm extends GridForm{
     private final String allTitle = "Все записи";
     private GridAction _deleteAction;
     private BVDepthDlg dlg;
-    private String _sql = "select * from (select ID_SRC, BV_SHIFT, DTB, DTE, \"USER\" as AUTHOR, OTS from GL_BVPARM) t ";
+    private String _sql = "select * from GL_BVPARM ";
     private String _where = "where DTB<='{0}' and (DTE is null or DTE >='{0}')";
     private boolean isCurrent;
 
@@ -221,7 +221,7 @@ public class BVDepthForm extends GridForm{
         col.setFormat("dd.MM.yyyy");
         table.addColumn(col = new Column("DTE", DATE, "Дата окончания", 80));
         col.setFormat("dd.MM.yyyy");
-        table.addColumn( new Column("AUTHOR", STRING, "Пользователь", 100, false, false));
+        table.addColumn( new Column("USER_NAME", STRING, "Пользователь", 100, false, false));
 
         table.addColumn(col = new Column("OTS", DATETIME, "Дата создания", 80, false, false));
         col.setFormat("dd.MM.yyyy hh:mm:ss");
