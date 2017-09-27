@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -260,17 +261,20 @@ public class OperationPostingForm extends MDForm {
         wrapper.setDealId((String) getValue("DEAL_ID"));
         wrapper.setSubdealId((String) getValue("SUBDEALID"));
 
-        wrapper.setCurrencyDebit((String) getValue("CCY_DR"));
+        String ccyDr = (String) getValue("CCY_DR");
+        wrapper.setCurrencyDebit(ccyDr);
         wrapper.setFilialDebit((String) getValue("CBCC_DR"));
         wrapper.setAccountDebit((String) getValue("AC_DR"));
         wrapper.setAmountDebit((BigDecimal) getValue("AMT_DR"));
 
-        wrapper.setCurrencyCredit((String) getValue("CCY_CR"));
+        String ccyCr = (String) getValue("CCY_CR");
+        wrapper.setCurrencyCredit(ccyCr);
         wrapper.setFilialCredit((String) getValue("CBCC_CR"));
         wrapper.setAccountCredit((String) getValue("AC_CR"));
         wrapper.setAmountCredit((BigDecimal) getValue("AMT_CR"));
 
-        wrapper.setAmountRu((BigDecimal) getValue("AMTRU_DR"));
+        wrapper.setAmountRu(getAmountRu((BigDecimal) getValue("AMTRU_DR"), (BigDecimal) getValue("AMTRU_CR"), ccyDr, ccyCr));
+
         wrapper.setCorrection("Y".equals(((String) getValue("FCHNG")))); //TODO некошерно
 
         wrapper.setNarrative((String) getValue("NRT"));
@@ -285,7 +289,11 @@ public class OperationPostingForm extends MDForm {
 
         return wrapper;
     }
-    
+
+    protected BigDecimal getAmountRu(BigDecimal amtruDr, BigDecimal amtruCr, String ccyDr, String ccyCr) {
+        return (null != amtruDr && (amtruDr.equals(amtruCr) || !"RUR".equals(ccyDr))) ? amtruDr : amtruCr;
+    }
+
     private GridAction createReprocessOperation() {
         return new NewOperationAction(masterGrid, ImageConstants.INSTANCE.oper_go()) {
             @Override
