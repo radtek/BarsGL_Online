@@ -188,7 +188,7 @@ public class ManualPostingController {
      * @param wrapper
      * @throws ParseException
      */
-    private void checkAccountsBalance(ManualOperationWrapper wrapper) throws ParseException, SQLException {
+    public void checkAccountsBalance(ManualOperationWrapper wrapper) throws ParseException, SQLException {
         if (wrapper.isNoCheckBalance()) {
             wrapper.setBalanceError(false);
             return;

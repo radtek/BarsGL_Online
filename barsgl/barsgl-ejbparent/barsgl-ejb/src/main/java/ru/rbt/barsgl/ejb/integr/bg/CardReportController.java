@@ -157,7 +157,7 @@ public class CardReportController {
         String dateStr = databaseDate.format(dat);
         return String.format(
                 "select a.branch" +
-                "     , sum((value(b.obac,0) + value(b.dtac,0) + value(b.ctac,0) + value(c.dtac, 0) + value(c.ctac,0)) * 0.01) as sum" +
+                "     , sum((coalesce(b.obac,0) + coalesce(b.dtac,0) + coalesce(b.ctac,0) + coalesce(c.dtac, 0) + coalesce(c.ctac,0)) * 0.01) as sum" +
                 "     , a.ccy, a.subdealid" +
                 " from BALTUR b" +
                 " left join GL_ACC a on b.bsaacid = a.bsaacid" +
@@ -173,7 +173,7 @@ public class CardReportController {
         String dateStr = databaseDate.format(dat);
         return String.format(
                 "select a.branch" +
-                "     , sum(value(a.obac,0) + value(a.dtct,0)) as sum" +
+                "     , sum(coalesce(a.obac,0) + coalesce(a.dtct,0)) as sum" +
                 "     , a.ccy, a.card subdealid" +
                 " from GL_ACCCARD a" +
                 "    where a.cbcc = '%s' and a.dat <= '%s' and a.datto >= '%s'" +

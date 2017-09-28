@@ -46,11 +46,11 @@ public class ManualEditPostingDirectIT extends AbstractTimerJobIT {
     @Test
     public void testEditManualOperationDirect() throws SQLException {
         // создаем ручную операцию
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817840_0040%");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0040%");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0016%");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
-                "EKB", bsaDt, "USD", new BigDecimal("1000"),
-                "CHL", bsaCt, "RUR", new BigDecimal("65000.25")
+                "EKB", bsaDt, "RUR", new BigDecimal("650.25"),
+                "CHL", bsaCt, "RUR", new BigDecimal("650.25")
         );
 
         final String src = "FC12_CL";
