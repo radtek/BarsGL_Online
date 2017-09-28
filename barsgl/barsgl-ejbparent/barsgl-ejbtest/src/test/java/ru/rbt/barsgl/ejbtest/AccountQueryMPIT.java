@@ -195,7 +195,8 @@ mq.password=UsATi8hU
     @Test
     @Ignore
     public void testLocalStress() throws Exception {
-
+        //System.setProperty("com.ibm.msg.client.commonservices.trace.status", "ON");
+        
         MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
 
         // Config
@@ -211,7 +212,7 @@ mq.password=UsATi8hU
         sendToQueue(cf, 
 //                "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
 //                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
-//                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
+//                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","","");
                 
 //                "UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST",
 //                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),

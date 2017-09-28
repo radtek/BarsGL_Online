@@ -93,7 +93,7 @@ public class CommonQueueProcessor4 implements MessageListener {
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
             cf.setQueueManager(queueProperties.mqQueueManager);
             cf.setChannel(queueProperties.mqChannel);
-            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword));
+            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword, JMSContext.CLIENT_ACKNOWLEDGE));
             jmsContext.setExceptionListener((JMSException e) -> {
                 log.info("\n\nonException calling");
                 reConnect();
@@ -163,6 +163,8 @@ public class CommonQueueProcessor4 implements MessageListener {
     }
     
     private String[] readJMS(Message receivedMessage) throws JMSException {
+        if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
+            receivedMessage.acknowledge();
         String textMessage = null;
         if (receivedMessage instanceof TextMessage) {
             textMessage = ((TextMessage) receivedMessage).getText();
