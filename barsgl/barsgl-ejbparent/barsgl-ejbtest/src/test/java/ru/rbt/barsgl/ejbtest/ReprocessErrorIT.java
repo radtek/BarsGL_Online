@@ -53,7 +53,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     @Test
     public void testCloseOne() throws SQLException {
         EtlPackage pkgOk = newPackage(System.currentTimeMillis(), "WithoutError");
-        EtlPosting pstOk = createPosting(pkgOk, "SECMOD", "40817036%1", "40817036%2", BankCurrency.AUD, new BigDecimal("315.45"));
+        EtlPosting pstOk = createPosting(pkgOk, "SECMOD", "40817810%1", "40817810%2", BankCurrency.RUB, new BigDecimal("315.45"));
         Assert.assertTrue(pstOk.getId() > 0);
 
         EtlPackage pkgErr = newPackage(System.currentTimeMillis(), "WithError");
@@ -254,7 +254,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     @Test
     public void testReprocessStorno() throws SQLException {
         EtlPackage pkgParent = newPackage(System.currentTimeMillis(), "Parent");
-        EtlPosting pstParent = createPosting(pkgParent, "SECMOD", "40817036%1", "40817036%2", BankCurrency.AUD, new BigDecimal("315.45") );
+        EtlPosting pstParent = createPosting(pkgParent, "SECMOD", "40817810%1", "40817810%2", BankCurrency.RUB, new BigDecimal("315.45") );
         Assert.assertTrue(pstParent.getId() > 0);
 
         EtlPackage pkgStorno = newPackage(System.currentTimeMillis(), "Storno");
