@@ -42,11 +42,12 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     @Test
     public void testSaveOperationRq() throws SQLException, ParseException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%3");
+        BigDecimal sum = new BigDecimal("99.056");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%1");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%3");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
-                "MOS", bsaDt, "AUD", new BigDecimal("102.056"),
-                "MOS", bsaCt, "AUD", new BigDecimal("102.056")
+                "MOS", bsaDt, "RUR", sum,
+                "MOS", bsaCt, "RUR", sum
         );
 
         wrapper.setAction(BatchPostAction.SAVE);
@@ -78,7 +79,6 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     @Test
     public void testSaveForSignOperationRq() throws SQLException, ParseException {
         BigDecimal sum = new BigDecimal("102.056");
-
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%1");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%3");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
@@ -193,11 +193,12 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     @Test
     public void testDeleteOperationRq() throws SQLException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%3");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%5");
+        BigDecimal sum = new BigDecimal("149.056");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%4");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%6");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
-                "MOS", bsaDt, "AUD", new BigDecimal("142.056"),
-                "MOS", bsaCt, "AUD", new BigDecimal("142.056")
+                "MOS", bsaDt, "RUR", sum,
+                "MOS", bsaCt, "RUR", sum
         );
 
         wrapper.setAction(BatchPostAction.SAVE);
