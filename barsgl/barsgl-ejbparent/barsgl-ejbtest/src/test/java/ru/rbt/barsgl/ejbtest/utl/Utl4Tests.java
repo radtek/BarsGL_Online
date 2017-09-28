@@ -13,6 +13,7 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -166,10 +167,15 @@ public class Utl4Tests {
         return findBsaacidRln(baseEntityRepository, operday, like).getBsaAcid();
     }
 
+    public static String findBsaacidBal(BaseEntityRepository baseEntityRepository, Operday operday, final String like, BigDecimal sum) throws SQLException {
+        return findBsaacidBalance(baseEntityRepository, operday, like, sum).getBsaAcid();
+    }
+
     public static AccRlnId findBsaacidRln(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
                 "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
-                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID", like, operday.getCurrentDate()))
+                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?)" +
+                        " and R.BSAACID = B.ID", like, operday.getCurrentDate()))
                 .map(r -> new AccRlnId(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
@@ -183,6 +189,15 @@ public class Utl4Tests {
                         return new AccRlnId(r.getString("acid"), r.getString("bsaacid"));
                     }
                 }).collect(Collectors.toList());
+    }
+
+    public static AccRlnId findBsaacidBalance(BaseEntityRepository baseEntityRepository, Operday operday, final String like, final BigDecimal sum) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository.selectFirst(
+                "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r, BALTUR t " +
+                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID" +
+                        "  and t.BSAACID = r.BSAACID and t.ACID = r.ACID and t.DATTO = '2029-01-01' and OBAC + DTAC + CTAC >= ?"
+                , like, operday.getCurrentDate(), sum))
+                .map(r -> new AccRlnId(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
     public static void cleanHeader(BaseEntityRepository baseEntityRepository, String pardesc) {

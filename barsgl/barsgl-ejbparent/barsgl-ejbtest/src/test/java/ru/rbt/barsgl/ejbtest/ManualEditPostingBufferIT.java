@@ -45,11 +45,12 @@ public class ManualEditPostingBufferIT  extends AbstractTimerJobIT {
     @Test
     public void testEditManualOperationBuffer() throws SQLException {
         // создаем ручную операцию
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817978_0040%");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0016%");
+        BigDecimal sum = new BigDecimal("50.25");
+        String bsaDt = Utl4Tests.findBsaacidBal(baseEntityRepository, getOperday(), "20202810_0001%", sum);
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
-                "EKB", bsaDt, "EUR", new BigDecimal("1000"),
-                "CHL", bsaCt, "RUR", new BigDecimal("75000.25")
+                "MOS", bsaDt, "RUR", sum,
+                "MOS", bsaCt, "RUR", sum
         );
 
         final String src = "FC12_CL";
