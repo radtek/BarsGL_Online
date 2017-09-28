@@ -705,6 +705,12 @@ public class StamtUnloadTest extends AbstractTimerJobTest {
         Assert.assertTrue(2 <= unloads.size());
         Assert.assertTrue(rlnId1.getBsaAcid(), unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(rlnId1.getBsaAcid())
                 || r.getString("CBACCOUNT").equals(rlnId2.getBsaAcid()))));
+
+        // повторную выгрузку не производим, если нет невыгруженных удаленных проводок
+        setHeaderStatus(header5.getLong("id"), DwhUnloadStatus.CONSUMED);
+        jobService.executeJob(job);
+        DataRecord header6 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertTrue(Objects.equals(header5.getLong("id"), header6.getLong("id")));
     }
 
     @Test
