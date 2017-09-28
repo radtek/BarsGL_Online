@@ -29,7 +29,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.loadPackage;
+import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
 
 /**
  * Created by ER18837 on 04.07.16.
@@ -46,12 +48,14 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
     @Test
     public void testProcessPostings() throws SQLException {
 
+        shutdownJob(ETL_MONITOR_TASK);
+
         // 1.CONTROL
-        String bsaDt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%1");
-        String bsaCt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%3");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%1");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%2");
         ManualOperationWrapper wrapper1 = newOperationWrapper("А",
-                "MOS", bsaDt1, "AUD", new BigDecimal("161.057"),
-                "MOS", bsaCt1, "AUD", new BigDecimal("161.057")
+                "MOS", bsaDt, "RUR", new BigDecimal("12.056"),
+                "MOS", bsaCt, "RUR", new BigDecimal("12.056")
         );
 
         BatchPosting posting = ManualOperationIT.createAuthorizedPosting(wrapper1, USER_ID, BatchPostStatus.CONTROL);
@@ -60,11 +64,11 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         wrapper1.setStatus(posting.getStatus());
 
         // 2.CONTROL -> WORKING
-        String bsaDt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%2");
-        String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
+        String bsaDt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%3");
+        String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%4");
         ManualOperationWrapper wrapper2 = newOperationWrapper("А",
-                "MOS", bsaDt2, "AUD", new BigDecimal("162.057"),
-                "MOS", bsaCt2, "AUD", new BigDecimal("162.057")
+                "MOS", bsaDt, "RUR", new BigDecimal("13.056"),
+                "MOS", bsaCt, "RUR", new BigDecimal("13.056")
         );
         posting = ManualOperationIT.createAuthorizedPosting(wrapper2, USER_ID, BatchPostStatus.WORKING);
         Assert.assertNotNull(posting);
@@ -72,11 +76,11 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         wrapper2.setStatus(posting.getStatus());
 
         // 3.SIGNEDDATE
-        String bsaDt3 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%3");
-        String bsaCt3 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%5");
+        String bsaDt3 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%5");
+        String bsaCt3 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%6");
         ManualOperationWrapper wrapper3 = newOperationWrapper("А",
-                "MOS", bsaDt3, "AUD", new BigDecimal("163.057"),
-                "MOS", bsaCt3, "AUD", new BigDecimal("163.057")
+                "MOS", bsaDt, "RUR", new BigDecimal("14.056"),
+                "MOS", bsaCt, "RUR", new BigDecimal("14.056")
         );
         wrapper3.setPostDateStr(new SimpleDateFormat(wrapper3.dateFormat).format(getOperday().getLastWorkingDay()));
         wrapper3.setValueDateStr(wrapper3.getPostDateStr());
@@ -87,11 +91,11 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         wrapper3.setStatus(posting.getStatus());
 
         // 4.COMPLETED -> WORKING
-        String bsaDt4 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
-        String bsaCt4 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%6");
+        String bsaDt4 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%7");
+        String bsaCt4 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%8");
         ManualOperationWrapper wrapper4 = newOperationWrapper("А",
-                "MOS", bsaDt4, "AUD", new BigDecimal("164.057"),
-                "MOS", bsaCt4, "AUD", new BigDecimal("164.057")
+                "MOS", bsaDt, "RUR", new BigDecimal("15.056"),
+                "MOS", bsaCt, "RUR", new BigDecimal("15.056")
         );
 
         posting = ManualOperationIT.createAuthorizedPosting(wrapper4, USER_ID, BatchPostStatus.SIGNED);
@@ -103,11 +107,11 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ? where ID = ?", BatchPostStatus.WORKING.name(), wrapper4.getId());
 
         // 5.WAITDATE - ручной
-        String bsaDt5 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%5");
-        String bsaCt5 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%7");
+        String bsaDt5 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%9");
+        String bsaCt5 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%0");
         ManualOperationWrapper wrapper5 = newOperationWrapper("А",
-                "MOS", bsaDt5, "AUD", new BigDecimal("165.057"),
-                "MOS", bsaCt5, "AUD", new BigDecimal("165.057")
+                "MOS", bsaDt, "RUR", new BigDecimal("16.056"),
+                "MOS", bsaCt, "RUR", new BigDecimal("16.056")
         );
         wrapper5.setPostDateStr(new SimpleDateFormat(wrapper5.dateFormat).format(getOperday().getLastWorkingDay()));
         wrapper5.setValueDateStr(wrapper5.getPostDateStr());
@@ -118,11 +122,11 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         wrapper5.setStatus(posting.getStatus());
 
         // 6.CONTROL -> WAITSRV
-        String bsaDt6 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%2");
-        String bsaCt6 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
+        String bsaDt6 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%3");
+        String bsaCt6 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%5");
         ManualOperationWrapper wrapper6 = newOperationWrapper("А",
-                "MOS", bsaDt6, "AUD", new BigDecimal("162.057"),
-                "MOS", bsaCt6, "AUD", new BigDecimal("162.057")
+                "MOS", bsaDt, "RUR", new BigDecimal("17.056"),
+                "MOS", bsaCt, "RUR", new BigDecimal("17.056")
         );
         posting = ManualOperationIT.createAuthorizedPosting(wrapper2, USER_ID, BatchPostStatus.WAITSRV);
         Assert.assertNotNull(posting);
@@ -244,7 +248,7 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
     public void testBalturRecalcFull() throws SQLException, ParseException {
 
         String[] dateStr = {"2015-02-02", "2015-02-04", "2015-02-10", "2015-02-12"};
-        String[] acc2s = {"20208", "30126"};
+        String[] acc2s = {"20208", "20202"};
         Date[] dates = new Date[dateStr.length];
         String[] acids = new String[2];
         String[] bsaAcids = new String[2];

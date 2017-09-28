@@ -31,6 +31,7 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -557,6 +558,12 @@ public class OperdayIT extends AbstractTimerJobIT {
             jobService.startupJob(etlMonitor);
             registerJob(etlMonitor);
         }
+    }
+
+    public static void shutdownJob(String jobName) {
+        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", jobName);
+        if (null != job)
+            remoteAccess.invoke(BackgroundJobsController.class, "shutdownJob", job);
     }
 
     private Operday.PdMode calculatePdMode(Properties properties) {
