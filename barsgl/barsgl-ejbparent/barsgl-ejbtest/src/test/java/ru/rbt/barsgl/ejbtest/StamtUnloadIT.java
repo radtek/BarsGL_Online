@@ -572,7 +572,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         log.info("bsaacid2: " + rlnId2.getBsaAcid());
         Assert.assertEquals(2, rlnIds.size());
 
-        List<DataRecord> opers = baseEntityRepository.select("select gloid, p.pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref fetch first 2 rows only");
+        List<DataRecord> opers = baseEntityRepository.select("select gloid, p.pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and rownum <= 2");
         Assert.assertEquals(2, opers.size());
 
         registerForStamtUnload(rlnId1.getBsaAcid());
@@ -714,7 +714,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         AccRlnId rlnId2 = rlnIds.get(1);
         Long pcid = createPostingUpdate(operday, rlnId1, rlnId2);
 
-        List<Pd> pds = (List<Pd>) baseEntityRepository.findNative(Pd.class, "select * from Pd d where d.pcId = ?", 2, pcid);
+        List<Pd> pds = (List<Pd>) baseEntityRepository.select(Pd.class, "from Pd d where d.pcId = ?1", pcid);
+
+//        List<Pd> pds = (List<Pd>) baseEntityRepository.findNative(Pd.class, "select * from Pd d where d.pcId = ?1", 2, pcid);
         Assert.assertEquals(2, pds.size());
 
         for (Pd pd : pds) {

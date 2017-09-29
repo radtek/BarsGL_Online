@@ -759,9 +759,9 @@ public abstract class AbstractRemoteIT  {
     }
 
     public static long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
-        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
-        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234");
+        long id = baseEntityRepository.selectFirst("select PD_SEQ.nextval id_seq from dual").getLong(0);
+        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar,invisible) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234", "0");
         return id;
     }
 
