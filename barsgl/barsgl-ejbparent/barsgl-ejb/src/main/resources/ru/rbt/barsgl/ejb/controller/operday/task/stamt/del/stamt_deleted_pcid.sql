@@ -11,7 +11,7 @@ select distinct t.pcid, t.pod postingdate, t.vald valuedate, t.id pid, t.bsaacid
   left join pd r on r.id = t.id
  where t.operday in  (?1, ?2)
    and (r.invisible ='1' or r.invisible is null)
-   and GL_STMFILTER(t.bsaacid) = '1'
+   --and GL_STMFILTER(t.bsaacid) = '1'
 union all
 select distinct t.pcid, t.pod postingdate, t.vdate valuedate, t.idpd pid, t.bsaacid, 'BSG_IB' hostsystem
        , cast(null as varchar(20)) dealid, cast(t.pcid as varchar(40)) psid
@@ -22,5 +22,5 @@ select distinct t.pcid, t.pod postingdate, t.vdate valuedate, t.idpd pid, t.bsaa
       left join pd r on r.id = t.id
      where t.operday in  (?1, ?2)
        and (r.invisible ='1' or r.invisible is null)
-       and GL_STMFILTER(t.bsaacid) = '1'
+       --and GL_STMFILTER(t.bsaacid) = '1'
 ) with data with replace
