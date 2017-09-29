@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejb.repository;
 
+import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.BsaAcc;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.validation.ValidationError;
 
@@ -37,6 +39,8 @@ public class BsaAccRepository extends AbstractBaseEntityRepository<BsaAcc, Strin
 
         Date dateTax = glAccount.getDateOpen();
         for (int i = 0; i<3; i++) {                 // open + 3 work day
+            BankCalendarDay day = calendarDayRepository.getWorkdayAfter(dateTax);
+            if (day == null) throw new DefaultApplicationException("Невозможно открыть счет. Ошибка в данных календаря.");
             dateTax = calendarDayRepository.getWorkdayAfter(dateTax).getId().getCalendarDate();
         }
         bsaAcc.setDateTax(dateTax);
