@@ -47,20 +47,24 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
 
     @Override
     protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
-        final long[] headerId = {-1};
+        final long[] headerPstId = {-1};
+        final long[] headerBalId = {-1};
         Date operday = (Date) properties.get(UnloadDeletedPostingsContext.OPERDAY);
         try {
-            headerId[0] = unloadController.createHeader(operday, UnloadStamtParams.POSTING_DELETE);
+            headerPstId[0] = unloadController.createHeader(operday, UnloadStamtParams.POSTING_DELETE);
 
             auditController.info(StamtPstDeleted, format("Выгружено в STAMT удаленных проводок: %s, ОД: %s"
                     , fillDeltaPostings(properties), dateUtils.onlyDateString(operday)));
+            unloadController.setHeaderStatus(headerPstId[0], DwhUnloadStatus.SUCCEDED);
 
+            headerBalId[0] = unloadController.createHeader(operday, UnloadStamtParams.BALANCE_DELTA);
             auditController.info(StamtPstDeleted, format("Выгружено в STAMT остатков по удаленным проводкам: %s, ОД: %s"
                     , fillDeletedBalance(properties), dateUtils.onlyDateString(operday)));
+            unloadController.setHeaderStatus(headerBalId[0], DwhUnloadStatus.SUCCEDED);
 
-            unloadController.setHeaderStatus(headerId[0], DwhUnloadStatus.SUCCEDED);
         } catch (Throwable e) {
-            unloadController.setHeaderStatus(headerId[0], DwhUnloadStatus.ERROR);
+            unloadController.setHeaderStatus(headerPstId[0], DwhUnloadStatus.ERROR);
+            unloadController.setHeaderStatus(headerBalId[0], DwhUnloadStatus.ERROR);
             auditController.error(StamtPstDeleted, format("Ошибка при выполнении выгрузки проводк/остатков по удаленным проводкам: %s, ОД: %s"
                     , fillDeletedBalance(properties), dateUtils.onlyDateString(operday)), null, e);
             return false;
@@ -121,7 +125,7 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
                     .replaceAll("\\?1", "'" + DateUtils.dbDateString(lwDate) + "'")
                     .replaceAll("\\?2", "'" + DateUtils.dbDateString(operday) + "'")).getLong("cnt");
             Assert.isTrue(cnt > 0, () -> new ValidationError(STAMT_UNLOAD_DELETED, format("Нет удаленных проводок для выгрузки в STAMT. ОД %s", dateUtils.onlyDateString(operday))));
-            auditController.info(StamtPstDeleted, format("Найдены потенциально новые удаленные проводки. ОД: %s", dateUtils.onlyDateString(operday)));
+            auditController.info(StamtPstDeleted, format("Найдены потенциально новые удаленные проводки. ОД: %s, кол-во: %s", dateUtils.onlyDateString(operday), cnt));
             return true;
         } catch (Throwable e) {
             auditController.error(StamtPstDeleted, "Не прошла проверка возможности выполнения задачи выгрузки удаленных остатков", null, e);
