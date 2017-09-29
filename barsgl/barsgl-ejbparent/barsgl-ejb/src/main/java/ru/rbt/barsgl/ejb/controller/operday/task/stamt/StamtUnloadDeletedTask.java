@@ -121,6 +121,7 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
                     .replaceAll("\\?1", "'" + DateUtils.dbDateString(lwDate) + "'")
                     .replaceAll("\\?2", "'" + DateUtils.dbDateString(operday) + "'")).getLong("cnt");
             Assert.isTrue(cnt > 0, () -> new ValidationError(STAMT_UNLOAD_DELETED, format("Нет удаленных проводок для выгрузки в STAMT. ОД %s", dateUtils.onlyDateString(operday))));
+            auditController.info(StamtPstDeleted, format("Найдены потенциально новые удаленные проводки. ОД: %s", dateUtils.onlyDateString(operday)));
             return true;
         } catch (Throwable e) {
             auditController.error(StamtPstDeleted, "Не прошла проверка возможности выполнения задачи выгрузки удаленных остатков", null, e);
