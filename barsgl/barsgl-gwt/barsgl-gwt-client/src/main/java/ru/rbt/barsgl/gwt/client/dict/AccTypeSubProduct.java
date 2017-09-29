@@ -10,7 +10,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -88,7 +88,7 @@ public class AccTypeSubProduct extends EditableDictionary<AccTypeSubProductWrapp
         return new GridAction(grid, "Модификатор", "Управление модификаторами", null, 10, true) {
             @Override
             public void execute() {
-                Field fieldSubProduct = getFieldByName(AccTypeSubProduct.FIELD_SUBPRODUCT);
+                Field fieldSubProduct = getFieldByCaption(AccTypeSubProduct.FIELD_SUBPRODUCT);
                 if (fieldSubProduct == null) return;
                 FormManagerUI.show(new AccTypeModifier(initSection, initProduct, (String)fieldSubProduct.getValue()));
             }

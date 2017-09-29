@@ -9,5 +9,5 @@ import java.util.ArrayList;
  * Created by akichigi on 28.05.15.
  */
 public interface ILinkFilterCriteria {
-    public ArrayList<FilterItem> createLinkFilterCriteria(Row row);
+    ArrayList<FilterItem> createLinkFilterCriteria(Row row);
 }

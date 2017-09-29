@@ -122,7 +122,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.SOCANC);
+        Assert.assertEquals(OperState.SOCANC, operationS.getState());
         Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.ST);
         Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.C);
         Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
@@ -130,7 +130,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertTrue(postList.isEmpty());                    // нет своих проводки
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.CANC);
+        Assert.assertEquals(OperState.CANC, operation.getState());
         postList = getPostings(operation);
 
         Assert.assertNotNull(postList);

@@ -158,6 +158,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 
     public void setFilials(GLOperation operation) throws SQLException {
         if (isEmpty(operation.getFilialDebit())) {
+            // TODO зачем это здесь ?? логично перенести в заполнение счетов
             if (operation.getAccountKeyDebit()!=null) {
                 operation.createAccountParamDebit();
             }
@@ -339,6 +340,11 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         executeUpdate("update GLOperation o set o.state = ?1, o.errorMessage = ?2 where o.parentReference = ?3 and o.storno = ?4 and o.errorMessage is null",
             state, message, parentRef, storno);
     }
+
+    public void updateOperationParentPostDate(Long operationId, Date postDate) {
+        executeUpdate("update GLOperation o set o.postDate = ?1 where o.id = ?2 or o.parentOperation.id = ?2", postDate, operationId);
+    }
+
 
     public List<GLPosting> getPostings(GLOperation operation) {
         return select(GLPosting.class, "from GLPosting p where p.operation = ?1 order by p.id",

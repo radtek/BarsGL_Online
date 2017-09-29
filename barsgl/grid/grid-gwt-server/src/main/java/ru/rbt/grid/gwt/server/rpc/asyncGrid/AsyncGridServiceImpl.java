@@ -25,6 +25,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.filterCriteriaAdapter;
+
 /**
  * Created by akichigi on 02.04.15.
  */
@@ -32,7 +34,6 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Exception {
-//    	return 1000;
         try {
             return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
         } catch (Throwable t) {
@@ -170,7 +171,8 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         }
     }
 
-    private Criterion filterCriteriaAdapter(List<FilterItem> filterCriteria){
+/*
+    public static Criterion filterCriteriaAdapter(List<FilterItem> filterCriteria){
         if (filterCriteria == null || filterCriteria.isEmpty()) return null;
 
         List<Criterion> list = new ArrayList<Criterion>();
@@ -226,6 +228,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         }
         return new Criteria(CriteriaLogic.AND, list);
     }
+*/
 
     private OrderByColumn sortCriteriaAdapter(List<SortItem> sortCriteria){
         if (sortCriteria == null || sortCriteria.isEmpty()) return null;
@@ -243,6 +246,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     public void processException(Throwable t) throws Exception {
+        if (t instanceof NotAuthorizedUserException) throw t;
         SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
         if( null != ex )
             throw new SqlQueryTimeoutException(ex);

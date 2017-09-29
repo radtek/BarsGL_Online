@@ -3,6 +3,8 @@ package ru.rbt.barsgl.ejb.integr.oper;
 import ru.rbt.barsgl.ejb.bt.BalturRecalculator;
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPd;
+import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
@@ -25,8 +27,12 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.Iterables.find;
+import static java.util.stream.Collectors.toList;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -61,7 +67,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
 
     public abstract List<Long> getOperationPdIdList(long parentId);
     public abstract List<? extends AbstractPd> getOperationPdList(List<Long> pdIdList);
-    public abstract void updateMemOrder(Date pod, boolean isCorrection, AbstractPd debit, AbstractPd credit);
+    public abstract void updateMemOrder(AbstractPd debit, String memorderNumber, Memorder.DocType docType);
     public abstract void updatePd(List<? extends AbstractPd> pdList);
 
     @Override
@@ -170,7 +176,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
                 pd.setSubdealId(wrapper.getSubdealId());
                 pd.setPaymentRef(wrapper.getDealId());
                 pd.setPref(pdRepository.getPrefManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce(),
-                        GLOperation.srcPaymentHub.equals(wrapper.getDealSrc())));
+                        PaymentHub.getLabel().equals(wrapper.getDealSrc())));
                 pd.setPnar(pdRepository.getPnarManual(wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce()));
             }
             pd.setVald(valueDate);
@@ -183,14 +189,14 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
      * @param wrapper
      * @param pdList
      */
-    public void updateWithMemorder(ManualOperationWrapper wrapper, final List<? extends AbstractPd> pdList, boolean isBuffer) throws Exception {
+    public Date updateWithMemorder(ManualOperationWrapper wrapper, final List<? extends AbstractPd> pdList, boolean isBuffer) throws Exception {
         YesNo isCorrection = YesNo.getValue(wrapper.isCorrection());
         Date postDate = postingProcessor.checkDateFormat(wrapper.getPostDateStr(), "Дата проводки");
         Date pod = pdList.get(0).getPod();
         boolean changeDate = !pod.equals(postDate);
         boolean changeCorrection = (pdList.get(0).getIsCorrection() != isCorrection);
         if (!changeDate && !changeCorrection)      // дата и признак коррекции не изменились
-            return ;
+            return postDate;
 
         checkStornoDate(wrapper, postDate); // проверить дату со сторно
         if (changeDate) {
@@ -201,29 +207,30 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
         }
 
         Date dateMin = pod.before(postDate) ? pod : postDate;
-        List<AbstractPd> debitList = new ArrayList<>();
+        // обновить поля в полупроводках
         for (AbstractPd pd : pdList) {
-            // выбираем п/проводки по дебету
-            if (pd.getAmountBC() < 0) debitList.add(pd);
-            // обновить поля в полупроводках
             pd.setIsCorrection(isCorrection);
             pd.setPod(postDate);
             if (changeDate) {
-                // запись в журнал для пересчета баланса
-                balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), dateMin);
-                if (isBuffer) {
-                    // запись в журнал для пересчета и локазизации по счету
-                    backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), dateMin);
-                    backvalueRepository.registerChanged(pd);
-                }
+                registerJournals(pd, dateMin, isBuffer);
             }
         };
+
         // обновить мемордера
-        for (AbstractPd debit : pdList) {
-            AbstractPd credit = find(pdList, pair -> pair.getPcId().equals(debit.getPcId()) && pair.getAmountBC() > 0 , null);
-            Assert.isTrue(null != credit, "Не найдена полупроводка по кредиту для PCID " + debit.getPcId());
-            updateMemOrder(postDate, wrapper.isCorrection(), debit, credit);
-        };
+        List<AbstractPd> pdListDebit = pdList.stream().filter(p -> Objects.equals(p.getId(), p.getPcId())).collect(Collectors.toList());
+        for (AbstractPd pdDebit : pdListDebit) {
+            List<AbstractPd> debits = pdList.stream().filter(p -> p.getAmountBC() < 0
+                    && Objects.equals(p.getPcId(), pdDebit.getPcId())).collect(toList());
+            Assert.isTrue(debits.size() >= 1, "Не найдена проводка по дебету");
+            List<AbstractPd> credits = pdList.stream().filter(p -> p.getAmountBC() > 0
+                    && Objects.equals(p.getPcId(), pdDebit.getPcId())).collect(Collectors.toList());
+            Assert.isTrue(credits.size() >= 1, "Не найдена проводка по кредиту");
+
+            String memorderNumber = memorderController.nextMemorderNumber(pdDebit.getPod(), pdDebit.getBsaAcid(), wrapper.isCorrection());
+            Memorder.DocType docTyoe = memorderController.getDocType(wrapper.isCorrection(), debits, credits, pdDebit.getPod());
+            updateMemOrder(pdDebit, memorderNumber, docTyoe);
+        }
+        return postDate;
     }
 
     /**
@@ -253,13 +260,19 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
         String invisible = wrapper.isInvisible() ? "1" : "0";
         for (AbstractPd pd : pdList) {
             pd.setInvisible(invisible);
-            // запись в журнал для пересчета и локазизации по счету
-            balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), pd.getPod());
-            if (isBuffer) {
-                backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), pd.getPod());
-                backvalueRepository.registerChanged(pd);
-            }
+            registerJournals(pd, pd.getPod(), isBuffer);
         };
+    }
+
+    private void registerJournals(AbstractPd pd, Date dateMin, boolean isBufferMode) throws Exception {
+        // ВСЕГДА - запись в журнал для пересчета и локазизации по счету
+        backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), dateMin);
+        // только в режиме БУФЕР
+        if (isBufferMode) {
+            // запись в журнал для пересчета баланса
+            balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), dateMin);
+        }
+//        backvalueRepository.registerChanged(pd);      // решили вообще не делать - уже нет выгрузки в DWH
     }
 
     /**

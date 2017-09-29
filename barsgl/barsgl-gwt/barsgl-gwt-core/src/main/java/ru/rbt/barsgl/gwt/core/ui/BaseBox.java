@@ -1,9 +1,8 @@
 package ru.rbt.barsgl.gwt.core.ui;
 
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.dom.client.KeyDownHandler;
-import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.dom.client.*;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -108,16 +107,20 @@ public abstract class BaseBox<T extends Serializable> extends Composite implemen
         value = null;
     }
 
-    public void addKeyPressHandler(KeyPressHandler handler) {
-        textBox.addKeyPressHandler(handler);
+    public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
+       return textBox.addKeyPressHandler(handler);
     }
  
-    public void addKeyDownHandler(KeyDownHandler handler) {
-    	textBox.addKeyDownHandler(handler);
+    public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
+    	return textBox.addKeyDownHandler(handler);
     }
-    
-    public void addChangeHandler(final ChangeHandler handler) {
-        textBox.addChangeHandler(new ChangeHandler() {
+
+    public HandlerRegistration addValueChangeHandler(ValueChangeHandler<String> handler){return textBox.addValueChangeHandler(handler);}
+
+    public HandlerRegistration addKeyUpHandler(KeyUpHandler handler){return textBox.addKeyUpHandler(handler);}
+
+    public HandlerRegistration addChangeHandler(final ChangeHandler handler) {
+       return textBox.addChangeHandler(new ChangeHandler() {
 
             @Override
             public void onChange(ChangeEvent changeEvent) {
@@ -126,6 +129,13 @@ public abstract class BaseBox<T extends Serializable> extends Composite implemen
             }
         });
     }
+
+    public HandlerRegistration addBlurHandler(BlurHandler handler){
+        return textBox.addBlurHandler(handler);
+    }
+    public HandlerRegistration addFocusHandler(FocusHandler handler){
+        return textBox.addFocusHandler(handler);
+    };
 
     public void cancelKey() {
         textBox.cancelKey();
@@ -141,5 +151,13 @@ public abstract class BaseBox<T extends Serializable> extends Composite implemen
 
     public void setTabStopOff(){
         textBox.setTabIndex(-1);
+    }
+
+    public void setCursorPos(int pos){
+        textBox.setCursorPos(pos);
+    }
+
+    public void selectAll(){
+        textBox.selectAll();
     }
 }

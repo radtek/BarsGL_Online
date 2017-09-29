@@ -194,21 +194,33 @@ public class ValuesBox extends Composite implements IBoxValue<Serializable> {
 	public int getSelectedIndex(){
 		return list.getSelectedIndex();
 	}
-	public void removeItem(){		
-		int idx = list.getSelectedIndex();
-		if (idx == -1) return;
-		
+
+	private void removeItemByIndex(int idx){
 		Serializable key = getKeyByIndex(idx);
-		
+
 		map.remove(key);
 		mapIndex.remove(key);
 
 		list.setSelectedIndex(nextIndex(idx));
-	    list.removeItem(idx);
-	    
-	    reindex();
+		list.removeItem(idx);
+
+		reindex();
 	}
-	
+
+	public void removeItem(){		
+		int idx = list.getSelectedIndex();
+		if (idx == -1) return;
+
+		removeItemByIndex(idx);
+	}
+
+	public void removeItem(String text) {
+		int idx = getListIndex(text);
+		if(idx == -1) return;
+
+		removeItemByIndex(idx);
+	}
+
 	private void reindex(){
 		int idx = 0;
 		for (Entry<Serializable, Integer> entry : mapIndex.entrySet()) {			

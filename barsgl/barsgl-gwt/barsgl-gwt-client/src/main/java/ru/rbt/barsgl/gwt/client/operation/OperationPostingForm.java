@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -9,7 +10,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
@@ -49,6 +50,7 @@ public class OperationPostingForm extends MDForm {
 
     public OperationPostingForm(String formTitle, String masterTitle, String detailTitle, boolean delayLoad) {
         super(formTitle, masterTitle, detailTitle, delayLoad);
+        setLazyDetailRefresh(true);
         reconfigure();
     }
 
@@ -271,6 +273,7 @@ public class OperationPostingForm extends MDForm {
         wrapper.setAmountCredit((BigDecimal) getValue("AMT_CR"));
 
         wrapper.setAmountRu((BigDecimal) getValue("AMTRU_DR"));
+        wrapper.setAmountRuCredit((BigDecimal) getValue("AMTRU_CR"));
         wrapper.setCorrection("Y".equals(((String) getValue("FCHNG")))); //TODO некошерно
 
         wrapper.setNarrative((String) getValue("NRT"));
@@ -285,7 +288,7 @@ public class OperationPostingForm extends MDForm {
 
         return wrapper;
     }
-    
+
     private GridAction createReprocessOperation() {
         return new NewOperationAction(masterGrid, ImageConstants.INSTANCE.oper_go()) {
             @Override

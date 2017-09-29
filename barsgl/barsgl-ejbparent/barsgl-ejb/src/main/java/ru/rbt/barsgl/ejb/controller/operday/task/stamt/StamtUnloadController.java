@@ -1,11 +1,13 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
 import org.apache.commons.lang3.time.DateUtils;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
@@ -18,6 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.ejbcore.validation.ErrorCode.TASK_ERROR;
 
 /**
@@ -35,6 +38,9 @@ public class StamtUnloadController {
 
     @Inject
     private TextResourceController textResourceController;
+
+    @EJB
+    private AuditController auditController;
 
     public void setHeaderStatus(long headerId, DwhUnloadStatus status) throws Exception {
         repository.executeInNewTransaction(persistence ->
@@ -132,16 +138,29 @@ public class StamtUnloadController {
      * @throws Exception
      */
     public boolean checkConsumed() throws Exception {
-        List<DataRecord> unloads = repository.select(
-                        "select *\n" +
-                        "  from V_GL_STM_AWAIT s\n" +
-                        " where s.operday >= (select lwdate from gl_od)");
-        Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(TASK_ERROR
-                , format("Найдены необработанные выгрузки: %s", unloads.stream()
-                .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
-                        + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
-                .collect(Collectors.joining(" ")))));
-        return true;
+        return checkConsumed(TASK_ERROR);
+    }
+
+    /**
+     * Проверяем закончена ли обработка данных по выгрузкам проводок в TDS
+     * @throws Exception
+     */
+    public boolean checkConsumed(ErrorCode errorCode) throws Exception {
+        try {
+            List<DataRecord> unloads = repository.select(
+                            "select *\n" +
+                            "  from V_GL_STM_AWAIT s\n" +
+                            " where s.operday >= (select lwdate from gl_od)");
+            Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(errorCode
+                    , format("Найдены необработанные выгрузки: %s", unloads.stream()
+                    .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
+                            + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
+                    .collect(Collectors.joining(" ")))));
+            return true;
+        } catch (Throwable e) {
+            auditController.error(Task, "Найдены необработанные выгрузки", null, e);
+            return false;
+        }
     }
 
 

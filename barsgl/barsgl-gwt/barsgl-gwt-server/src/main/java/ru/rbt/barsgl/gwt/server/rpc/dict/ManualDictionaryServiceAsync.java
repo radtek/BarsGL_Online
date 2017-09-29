@@ -18,6 +18,8 @@ public interface ManualDictionaryServiceAsync {
     void saveDepartment(CodeNameWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<CodeNameWrapper>> callback) throws Exception;
     void saveAccountigType(CodeNameWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<CodeNameWrapper>> callback) throws Exception;
     void saveSourcesDeals(ExtCodeNameWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<ExtCodeNameWrapper>> callback) throws Exception;
+    void saveBVSourceDeal(BVSourceDealWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<BVSourceDealWrapper>> callback);
+    void saveClosedReportPeriod(ClosedReportPeriodWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<ClosedReportPeriodWrapper>> callback );
     void saveTypesOfTerms(CodeNameWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<CodeNameWrapper>> callback) throws Exception;
     void savePropertyType(PropertyTypeWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<PropertyTypeWrapper>> asyncCallbackImpl) throws Exception;
     void saveStamtUnloadParam(StamtUnloadParamWrapper wrapper, FormAction action, AsyncCallback<RpcRes_Base<StamtUnloadParamWrapper>> asyncCallbackImpl) throws Exception;

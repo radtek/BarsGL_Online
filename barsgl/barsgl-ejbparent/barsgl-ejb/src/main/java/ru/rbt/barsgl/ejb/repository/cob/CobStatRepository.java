@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
@@ -88,7 +90,7 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                                 "select count(1) cnt from GL_OPER o join GL_POSTING p on o.GLOID = p.GLO_REF " +
                                     "where o.PROCDATE = ? and o.SRC_PST = ? and o.STRN = 'Y' and o.STATE = 'POST' union all " +
                                 "select count(1) cnt from GL_BVJRNL where STATE = 'NEW') T1",
-                        curdate, SourcesDeals.SRCPST.KTP.getValue());
+                        curdate, KondorPlus.getLabel());
                 return res.getLong(0);
             default:
                 return null;

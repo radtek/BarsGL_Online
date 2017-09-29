@@ -27,10 +27,12 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.time.DateUtils.addDays;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
@@ -56,6 +58,9 @@ public class EditPostingController {
     private ManualPostingController manualPostingController;
 
     @Inject
+    private BackValuePostingController backValuePostingController;
+
+    @Inject
     private EditPostingPdProcessor editPdProcessor;
 
     @Inject
@@ -79,6 +84,12 @@ public class EditPostingController {
     @Inject
     private SecurityActionRepository actionRepository;
 
+    /**
+     * отработка действия на форме "Проводки"
+     * @param operationWrapper
+     * @param postingAction
+     * @return
+     */
     public List<? extends AbstractPd> processMessage(ManualOperationWrapper operationWrapper, PostingAction postingAction) {
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
@@ -115,6 +126,12 @@ public class EditPostingController {
         }
     }
 
+    /**
+     * редактирование проводок
+     * @param operationWrapper
+     * @return
+     * @throws Exception
+     */
     public List<? extends AbstractPd> updatePostings(ManualOperationWrapper operationWrapper) throws Exception {
         Operday.PdMode pdMode = Operday.PdMode.valueOf(operationWrapper.getPdMode());
         EditPostingProcessor editPostingProcessor =
@@ -151,7 +168,6 @@ public class EditPostingController {
                 operationRepository.update(operation);
             }
 
-
             return editPostingProcessor.getOperationPdList(pdIdList);
         } else {
             // TODO
@@ -159,12 +175,18 @@ public class EditPostingController {
         }
     }
 
+    /**
+     * подавление проводок
+     * @param operationWrapper
+     * @return
+     * @throws Exception
+     */
     public List<? extends AbstractPd> suppressPostings(ManualOperationWrapper operationWrapper) throws Exception {
         Operday.PdMode pdMode = Operday.PdMode.valueOf(operationWrapper.getPdMode());
         EditPostingProcessor editPostingProcessor =
                 (pdMode == Operday.PdMode.DIRECT) ? editPdProcessor : editGLPdProcessor;
 
-        List<Long> pdIdList = null;
+        List<Long> pdIdList;
         boolean toGetPd = (operationWrapper.getPostingChoice() == PST_ALL);
         if (toGetPd)
             pdIdList = editPostingProcessor.getOperationPdIdList(operationWrapper.getId());
@@ -196,17 +218,23 @@ public class EditPostingController {
         try {
             String msg = "Ошибка при редактировании проводки";
             try {
-                Date newDate = dateUtils.onlyDateParse(operationWrapper.getPostDateStr());
-                Date editDay = org.apache.commons.lang3.time.DateUtils.addDays(operdayController.getOperday().getCurrentDate(), -30); // TODO -30
-                // нельзя установить дату ранее 30 дней назад
-                if (editDay.after(newDate))
-                    throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
+                Date postDateOld = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
+                Date postDateNew = dateUtils.onlyDateParse(operationWrapper.getPostDateStr());
+                Date valueDateNew = dateUtils.onlyDateParse(operationWrapper.getValueDateStr());
+
+                // проверка даты проводки
+                backValuePostingController.checkPostDate(operationWrapper.getDealSrc(), postDateNew, valueDateNew);
+
+                // TODO нельзя установить дату ранее 30 дней назад - наверно уже лишнее
+                Date minEditDay = addDays(operdayController.getOperday().getCurrentDate(), -30);
+                if (minEditDay.after(postDateNew))
+                    throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(minEditDay));
+
+                // проверка закрытого отчетного периода
+                backValuePostingController.checkClosedPeriod(operationWrapper.getUserId(), postDateNew);
+
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
-                if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.OperPstChngDate) ) {
-                    Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
-                    Date minDate = newDate.before(oldDate) ? newDate : oldDate;
-                    accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
-                }
+                backValuePostingController.checkUserAccessToBackValue(operationWrapper.getUserId(), postDateNew, postDateOld);
 
             } catch (ValidationError e) {
                 String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());

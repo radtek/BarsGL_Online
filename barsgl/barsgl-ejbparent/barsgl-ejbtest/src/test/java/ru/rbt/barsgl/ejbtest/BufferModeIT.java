@@ -43,6 +43,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 
 /**
  * Created by Ivan Sevastyanov on 05.02.2016.
@@ -58,7 +59,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         setOperday(curDate, DateUtils.addDays(curDate, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         initCorrectOperday();
     }
-    
+
     @Before
     public void before() {
         baseEntityRepository.executeNativeUpdate("delete from gl_baltur");
@@ -89,7 +90,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -180,7 +181,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -267,7 +268,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -380,7 +381,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -434,7 +435,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);

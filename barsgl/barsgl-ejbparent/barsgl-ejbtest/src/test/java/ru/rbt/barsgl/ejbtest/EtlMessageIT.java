@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
@@ -25,6 +26,7 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -38,18 +40,20 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.util.Calendar.MONTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
-import static ru.rbt.barsgl.shared.enums.DealSource.AOS;
-import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
+import static ru.rbt.barsgl.shared.enums.DealSource.*;
 import static ru.rbt.ejbcore.util.StringUtils.rsubstr;
 
 /**
@@ -99,7 +103,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -151,7 +155,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcPaymentHub);
+        pst.setSourcePosting(PaymentHub.getLabel());
         pst.setDealId("123");
         pst.setPaymentRefernce(null);
 
@@ -206,7 +210,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.EUR);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
@@ -701,7 +705,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(DealSource.KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -811,7 +815,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -894,7 +898,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -955,7 +959,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setDealId("123");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);

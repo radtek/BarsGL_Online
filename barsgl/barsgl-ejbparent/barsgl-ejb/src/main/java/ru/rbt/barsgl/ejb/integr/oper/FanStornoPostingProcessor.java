@@ -8,8 +8,10 @@ import javax.inject.Inject;
  * Created by ER18837 on 05.03.15.
  * Обработчик сторно веерных проводок в режиме online
  */
-public class FanStornoPostingProcessor extends IncomingPostingProcessor {
+@Deprecated
+public class FanStornoPostingProcessor { // extends IncomingPostingProcessor {
 
+/*
     @Inject
     private FanPostingProcessor fanPostingProcessor;
 
@@ -18,6 +20,7 @@ public class FanStornoPostingProcessor extends IncomingPostingProcessor {
         return null != posting
                 && posting.isFan() && posting.isStorno() && !posting.isTech();
     }
+*/
 
     /*
     // TODO удалить потом - стандарнтое определение даты проводки

@@ -19,8 +19,9 @@ import javax.persistence.Table;
 @Table(name = "GL_SRCPST")
 public class SourcesDeals extends BaseEntity<String> {
 
+/*
     public enum SRCPST implements HasValue <String> {
-        PH("PH"), KTP("K+TP");
+        PH("PH"), KTP("K+TP"), ARMPRO("ARMPRO");
 
         private final String value;
 
@@ -36,6 +37,7 @@ public class SourcesDeals extends BaseEntity<String> {
         @Override
         public void setValue(String value) {}
     }
+*/
 
     @Id
     @Column(name = "ID_SRC", nullable = false, length = 64)

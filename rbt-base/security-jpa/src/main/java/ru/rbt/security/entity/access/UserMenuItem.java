@@ -37,6 +37,9 @@ public class UserMenuItem extends BaseEntity<Integer> {
     @Column(name = "MENU_CODE")
     private UserMenuCode menuCode;
 
+    @Column(name = "ORDER_NUM")
+    private Integer orderNum;
+
     @Override
     public Integer getId() {
         return id;
@@ -77,5 +80,13 @@ public class UserMenuItem extends BaseEntity<Integer> {
 
     public void setMenuCode(UserMenuCode menuCode) {
         this.menuCode = menuCode;
+    }
+
+    public Integer getOrderNum() {
+        return orderNum;
+    }
+
+    public void setOrderNum(Integer orderNum) {
+        this.orderNum = orderNum;
     }
 }

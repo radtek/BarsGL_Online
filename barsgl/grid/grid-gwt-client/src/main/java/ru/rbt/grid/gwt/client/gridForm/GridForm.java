@@ -197,7 +197,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 		return this.grid;
 	}
 
-	public Field getFieldByName(String name){
+	public Field getFieldByCaption(String name){
 		Row row = grid.getCurrentRow();
 		if (row == null) return null;
 
@@ -205,6 +205,19 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 		int ind = columns.getColumnIndexByCaption(name);
 		if (ind >= 0) {
 		 	return row.getField(ind);
+		}else{
+			return null;
+		}
+	}
+
+	public Field getFieldByName(String name){
+		Row row = grid.getCurrentRow();
+		if (row == null) return null;
+
+		Columns columns = table.getColumns();
+		int ind = columns.getColumnIndexByName(name);
+		if (ind >= 0) {
+			return row.getField(ind);
 		}else{
 			return null;
 		}

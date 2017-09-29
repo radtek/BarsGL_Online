@@ -149,4 +149,19 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"copy.png"})
     public abstract ImageResource copy();
 
+    @ClientBundle.Source({"authoriz.png"})
+    public abstract ImageResource authoriz();
+
+    @ClientBundle.Source({"locked.png"})
+    public abstract ImageResource locked();
+
+    @ClientBundle.Source({"nonauthoriz.png"})
+    public abstract ImageResource nonauthoriz();
+
+    @ClientBundle.Source({"link.png"})
+    public abstract ImageResource link();
+
+    @ClientBundle.Source({"link_break.png"})
+    public abstract ImageResource link_break();
+
 }

@@ -5,10 +5,10 @@ package ru.rbt.barsgl.shared.enums;
  */
 public enum CobPhase {
     CobStopEtlProc(1),  // "Остановка обработки проводок"
-    CobResetBuffer(2),  //"Автоматический сброс буфера"$
-    CobManualProc(3),   //"Обработка необработанных запросов на операцию"
-    CobStornoProc(4),   //"Обработка сторно текущего дня"
-    CobCloseBalance(5), //"Закрытие баланса предыдущего дня"
+    CobStornoProc(2),   //"Обработка сторно текущего дня"
+    CobCloseBalance(3), //"Закрытие баланса предыдущего дня"
+    CobResetBuffer(4),  //"Автоматический сброс буфера"$
+    CobManualProc(5),   //"Обработка необработанных запросов на операцию"
     CobFanProc(6),      //"Обработка вееров"
     CobRecalcBaltur(7)  // "Пересчет и локализация"
     ;

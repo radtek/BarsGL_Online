@@ -13,6 +13,9 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static java.math.BigDecimal.ZERO;
+import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
@@ -26,12 +29,12 @@ import static ru.rbt.ejbcore.mapping.YesNo.Y;
 @SequenceGenerator(name = "GLOperationIdSeq", sequenceName = "GL_OPER_SEQ", allocationSize = 1)
 public class GLOperation extends BaseEntity<Long> {
 
-    public static final String srcPaymentHub = "PH";
-    public static final String srcKondorPlus = "K+TP";
+//    public static final String srcPaymentHub = "PH";
+//    public static final String srcKondorPlus = "K+TP";
     public static final String flagTechOper = "T";
 
     public enum OperClass {
-        AUTOMATIC, MANUAL
+        AUTOMATIC, MANUAL, BV_MANUAL
     }
 
     public enum OperType {
@@ -326,6 +329,9 @@ public class GLOperation extends BaseEntity<Long> {
 
     @Transient
     private AccountKeys accountParamCredit;
+
+    @Transient
+    private BackValueParameters backValueParameters;
 
     // ====================================================
 
@@ -823,14 +829,6 @@ public class GLOperation extends BaseEntity<Long> {
         return (null != filialCredit) && !filialCredit.isEmpty() ;
     }
 
-    public boolean fromPaymentHub() {
-        return srcPaymentHub.equals(sourcePosting);
-    }
-
-    public boolean fromKondorPlus() {
-        return srcKondorPlus.equals(sourcePosting);
-    }
-
     public boolean hasParent() {
         return null != parentReference;
     }
@@ -966,6 +964,36 @@ public class GLOperation extends BaseEntity<Long> {
 
             return false;
         }
+    }
+
+    public boolean fromPaymentHub() {
+        return PaymentHub.getLabel().equals(sourcePosting);
+    }
+
+    public boolean fromKondorPlus() {
+        return KondorPlus.getLabel().equals(sourcePosting);
+    }
+
+    public boolean fromARMPRO() {
+        return ARMPRO.getLabel().equals(sourcePosting);
+    }
+
+    public boolean isNonStandard() {
+        return fromKondorPlus() || Y.equals(fan);
+    }
+
+    public boolean isAutomatic() {return true;}
+
+    public boolean isManual() {return false;}
+
+    public boolean isBackValue() {return false;}
+
+    public BackValueParameters getBackValueParameters() {
+        return backValueParameters;
+    }
+
+    public void setBackValueParameters(BackValueParameters backValueParameters) {
+        this.backValueParameters = backValueParameters;
     }
 }
 

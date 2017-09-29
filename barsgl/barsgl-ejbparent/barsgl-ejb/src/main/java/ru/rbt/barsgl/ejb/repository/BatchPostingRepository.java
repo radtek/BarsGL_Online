@@ -9,6 +9,8 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.barsgl.shared.enums.BatchPostStatus;
+import ru.rbt.barsgl.shared.enums.InvisibleType;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -157,7 +159,7 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
                 "INSERT INTO GL_BATPST (ID, INVISIBLE, ID_PAR, " + histfields + ")" +
                 " SELECT GL_BATPST_SEQ.NEXTVAL, 'H', ID, "  + histfields + " FROM GL_BATPST WHERE ID = ?",
                 postingId);
-        Long idHist = selectFirst("SELECT GL_BATPST_SEQ.CURRVAL id FROM DUAL").getLong("id");
+        Long idHist = selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
         executeNativeUpdate("UPDATE GL_BATPST SET OTS_CHNG = ?, USER_CHNG = ?, ID_PAR = ?, ID_PREV = ? WHERE ID = ?",
                 timestamp, userName, postingId, idHist, postingId);
         return findById(postingId);
@@ -187,9 +189,9 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
 
     public List<Long> getPostingsForProcessing (int postingCount, Date curdate) {
         try {
-            List<DataRecord> res = selectMaxRows("select * from GL_BATPST where ID_PKG is NULL and STATE in (?, ?) and PROCDATE = ? and INVISIBLE = ? " +
+            List<DataRecord> res = selectMaxRows("select ID from GL_BATPST where ID_PKG is NULL and STATE in (?, ?) and PROCDATE = ? and INVISIBLE = ? and TECH_ACT = ?" +
                             "ORDER BY ID"
-                    , postingCount, new Object[]{SIGNED.name(), SIGNEDDATE.name(), curdate, InvisibleType.N.name()});
+                    , postingCount, new Object[]{SIGNED.name(), SIGNEDDATE.name(), curdate, InvisibleType.N.name(),"N"});
             return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

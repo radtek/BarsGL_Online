@@ -2,6 +2,9 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.shared.operation.BackValueWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
@@ -18,8 +21,6 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.enums.BoolType;
-import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.shared.user.AppUserWrapper;
 

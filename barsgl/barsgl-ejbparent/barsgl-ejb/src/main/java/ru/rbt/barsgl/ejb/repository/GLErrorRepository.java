@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
@@ -93,8 +94,14 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
 
-    public List<String> getOperPostList(String idList, OperState state) throws SQLException {
-        List<DataRecord> res = select("select distinct e.ID_PST from GL_ERRORS e join GL_OPER o on e.ID_PST = o.ID_PST" +
+    public List<String> getOperStateList(String idList) throws SQLException {
+        List<DataRecord> res = select("select distinct o.STATE from GL_ERRORS e left join GL_OPER o on e.ID_PST = o.ID_PST" +
+                " where e.ID in (" + idList + ")") ;
+        return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+    }
+
+    public List<String> getIdPstList(String idList, OperState state) throws SQLException {
+        List<DataRecord> res = select("select distinct e.ID_PST from GL_ERRORS e left join GL_OPER o on e.ID_PST = o.ID_PST" +
                 " where e.ID in (" + idList + ") and o.STATE = ?", state.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     }
@@ -103,6 +110,11 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         List<DataRecord> res = select("select e.ID_PST from GL_ERRORS e " +
                 " where e.ID in (" + idList + ") and coalesce(e.CORRECT, 'N') = ?", isCorrect.name()) ;
         return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+    }
+
+    public List<Long> getOperationIdList(String idList) throws SQLException {
+        List<DataRecord> res = select("select e.GLO_REF from GL_ERRORS e where e.ID in (" + idList + ")") ;
+        return res.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
     }
 
     public List<GLOperation> getOperationCorrPost(String idPstNew, String srcPst) {
@@ -131,6 +143,11 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         executeNativeUpdate("update GL_ETLPKG p set p.STATE = ?, p.DT_LOAD = greatest(p.DT_LOAD, systimestamp - 5)" +
                 " where p.ID_PKG in (" + idPkgList + ")",
                 EtlPackage.PackageState.LOADED.name());
+    }
+
+    public void updateBvOperationsStateReprocess(String idOperList, OperState state) {
+        executeNativeUpdate("update GL_OPER o set o.STATE = ?, o.EMSG = ? where o.GLOID in (" + idOperList + ")",
+                state.name(), null);
     }
 
     public int updateErrorsCorrected(String idList, String comment, Date timestamt, String userName) {

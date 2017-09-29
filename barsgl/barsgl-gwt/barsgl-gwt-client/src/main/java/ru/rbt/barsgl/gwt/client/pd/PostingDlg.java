@@ -133,8 +133,8 @@ public class PostingDlg extends OperationDlg {
     	} 
     	else {
             if (SecurityChecker.checkActions(OperPstChngDate, OperPstChngDateArcRight)) {
-                mDateValue.setEnabled(allPd);
-                mDateOperation.setEnabled(allPd);
+                mDateValue.setEnabled(manualAll);
+                mDateOperation.setEnabled(manualAll);
             }
             if (SecurityChecker.checkAction(OperPstChng)) {
                 mDealId.setEnabled(manualAll);

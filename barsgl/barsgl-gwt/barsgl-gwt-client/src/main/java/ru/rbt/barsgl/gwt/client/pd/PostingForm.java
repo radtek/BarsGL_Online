@@ -3,6 +3,8 @@ package ru.rbt.barsgl.gwt.client.pd;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
@@ -64,6 +66,7 @@ public class PostingForm extends MDForm {
 
     public PostingForm(){
         super(FORM_NAME, null, "Все проводки по операции", true);
+        setLazyDetailRefresh(true);
         reconfigure();
     }
 
@@ -89,7 +92,7 @@ public class PostingForm extends MDForm {
 
     @Override
     protected String prepareMasterSql() {
-        return "select /*+ first_rows(30) */ a1.*, a1.BSAACID_DR || ' ' || a1.BSAACID_CR as DR_CR from V_GL_PDLINK  a1 "
+        return "select * from (select a.*, a.BSAACID_DR || ' ' || a.BSAACID_CR as DR_CR from V_GL_PDLINK as a) tl "
                 + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
     }
 

@@ -23,6 +23,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.EDIT;
+import static ru.rbt.barsgl.shared.enums.ErrorCorrectType.CorrectType.*;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 
 /**
  * Created by ER18837 on 01.03.17.
@@ -61,7 +63,12 @@ public class ReprocessPostingService {
             if (codes.size() != 1) {
                 errorList.addErrorDescription("В списке разные комбинации кодов ошибок");   // + StringUtils.listToString(codes, ", ", "'"));
             }
-            List<String> opers = errorRepository.getOperPostList(idList, OperState.WTAC);
+            List<String> states = errorRepository.getOperStateList(idList);
+            if (states.size() != 1) {
+                errorList.addErrorDescription("В списке разные операции с разными статусами: " + StringUtils.listToString(states, ", ", "'"));
+            }
+            String state = states.get(0);
+            List<String> opers = errorRepository.getIdPstList(idList, OperState.WTAC);
             if (opers.size() != 0) {
                 errorList.addErrorDescription("В списке есть операции со статусом 'WTAC', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
             }
@@ -76,7 +83,8 @@ public class ReprocessPostingService {
 
             auditController.info(AuditRecord.LogCode.ReprocessAEOper, String.format("Начало оброаботки '%s' ошибок ID : %s",
                     correctType.getTypeLabel(), idList));
-            int cnt = reprocessController.correctPostingErrors(errorIdList, comment, idPstCorr, correctType);
+            int cnt = reprocessController.correctPostingErrors(errorIdList, comment, idPstCorr, correctType
+                    , (null != state ? OperState.valueOf(state) : null));
             String msg = String.format("Сообщения АЕ (%d) %s\nДата опердня: '%s'\nИсточник сделки: '%s'", cnt,
                     correctType.getTypeMessage(), dates.get(0), sources.get(0));
             auditController.info(AuditRecord.LogCode.ReprocessAEOper, msg);
