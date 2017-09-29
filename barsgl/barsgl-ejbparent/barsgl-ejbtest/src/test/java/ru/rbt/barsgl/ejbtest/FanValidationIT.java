@@ -23,6 +23,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
+
 /**
  * Created by ER18837 on 14.02.17.
  */
@@ -42,8 +44,8 @@ public class FanValidationIT extends AbstractTimerJobIT {
      */
     @Test
     public void testFanOnlyOne() throws SQLException {
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40806810%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810%1");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40802810%");
 
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting validation");
@@ -196,7 +198,6 @@ public class FanValidationIT extends AbstractTimerJobIT {
      * TODO пока эта ошибка не пишется в GL_ERRORS. Если надо - добавить в PreCobStepController
      */
     @Test
-    @Ignore
     public void testFanNoRate() throws SQLException {
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40806810%5");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810%5");
@@ -242,7 +243,7 @@ public class FanValidationIT extends AbstractTimerJobIT {
         Assert.assertEquals(2, operList.size());
 
         checkErrorRecord(oper1, "1019");
-        checkErrorRecord(oper2, "1019");
+        checkErrorRecord(oper2, "1003", ERCHK);
 
         if (null != rate) {
             baseEntityRepository.executeNativeUpdate("insert into CURRATES (DAT, CCY, RATE, AMNT, RATE0) values (?, ?, ?, ?, ?)",
@@ -251,16 +252,32 @@ public class FanValidationIT extends AbstractTimerJobIT {
     }
 
     public static void checkErrorRecord(GLOperation operation, String errorCode) {
+        checkErrorRecord(operation, errorCode, OperState.ERPROC);
+    }
+
+    public static void checkErrorRecord(GLOperation operation, String errorCode, OperState state) {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {}
         Assert.assertNotNull(operation);
         Long pstRef = operation.getEtlPostingRef();
         Long gloRef = operation.getId();
         GLOperation oper = (GLOperation) baseEntityRepository.refresh(operation, true);
-        Assert.assertEquals(oper.getState(), OperState.ERPROC);
+        if (null != oper.getErrorMessage())
+            System.out.println(oper.getErrorMessage());
+        Assert.assertEquals(state, oper.getState());
         String errorMessage = oper.getErrorMessage();
         Assert.assertTrue(errorMessage.contains(errorCode));
 
-        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
-        Assert.assertEquals(gloRef, errorRecord.getGlOperRef());
-        Assert.assertEquals(errorCode, errorRecord.getErrorCode());
+//        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        List<GLErrorRecord> errorRecords = baseEntityRepository.select(GLErrorRecord.class, "from GLErrorRecord g where g.etlPostingRef = ?1 order by g.id desc", pstRef);
+        Assert.assertNotNull("Error record has not found by ref=" + pstRef, errorRecords);
+        Assert.assertNotEquals("Error record has not found by ref=" + pstRef, 0, errorRecords.size());
+        boolean isErrorRecord = false;
+        for (GLErrorRecord errorRecord : errorRecords) {
+            Assert.assertEquals(gloRef, errorRecord.getGlOperRef());
+            isErrorRecord |= (errorCode.equals(errorRecord.getErrorCode()));
+        }
+        Assert.assertTrue("Error record has not found by ref=" + + pstRef + " with errorCode=" + errorCode, isErrorRecord);
     }
 }

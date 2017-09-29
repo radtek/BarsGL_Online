@@ -174,15 +174,15 @@ public class Utl4Tests {
     public static AccRlnId findBsaacidRln(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
                 "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
-                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?)" +
-                        " and R.BSAACID = B.ID", like, operday.getCurrentDate()))
+                        "where B.ID like ? and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?)" +
+                        " and R.BSAACID = B.ID", like, operday.getCurrentDate(), operday.getCurrentDate()))
                 .map(r -> new AccRlnId(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
     public static List<AccRlnId> findBsaacidRlns(BaseEntityRepository baseEntityRepository, Operday operday, final String like, int count) throws SQLException {
         return (List<AccRlnId>) baseEntityRepository.select(
                 "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
-                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID fetch first "+ count +" rows only", like, operday.getCurrentDate())
+                        "where B.ID like ? and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID fetch first "+ count +" rows only", like, operday.getCurrentDate(), operday.getCurrentDate())
                 .stream().map(new Function<DataRecord, AccRlnId>() {
                     @Override
                     public AccRlnId apply(DataRecord r) {
