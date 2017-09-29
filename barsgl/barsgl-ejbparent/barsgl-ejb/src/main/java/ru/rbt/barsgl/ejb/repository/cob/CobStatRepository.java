@@ -2,7 +2,6 @@ package ru.rbt.barsgl.ejb.repository.cob;
 
 import ru.rbt.barsgl.ejb.entity.cob.CobStatId;
 import ru.rbt.barsgl.ejb.entity.cob.CobStepStatistics;
-import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
@@ -22,7 +21,7 @@ import java.util.List;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
+
 
 /**
  * Created by ER18837 on 10.03.17.

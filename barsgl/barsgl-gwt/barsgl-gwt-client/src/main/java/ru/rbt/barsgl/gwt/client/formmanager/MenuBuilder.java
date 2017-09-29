@@ -434,7 +434,6 @@ public class MenuBuilder implements IMenuBuilder {
                 }
             });
 
-            default: return getUnSupportedMenuItem();
             default: return getUnSupportedMenuItem(wrapper);
         }
     }

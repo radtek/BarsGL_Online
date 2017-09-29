@@ -28,7 +28,6 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;

@@ -1,7 +1,5 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.ibm.as400.access.AS400JDBCConnection;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -9,7 +7,6 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
@@ -48,8 +45,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.AUD;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
-import static ru.rbt.barsgl.ejbtest.BackValueOperationTest.*;
+import static ru.rbt.barsgl.ejbtest.BackValueOperationIT.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 import static ru.rbt.barsgl.shared.criteria.CriterionColumn.createCriterion;
 import static ru.rbt.barsgl.shared.enums.BackValueAction.*;
@@ -65,9 +61,9 @@ import static ru.rbt.barsgl.shared.enums.OperState.POST;
 /**
  * Created by er18837 on 20.07.2017.
  */
-public class BackValueAuthTest extends AbstractTimerJobTest {
+public class BackValueAuthIT extends AbstractTimerJobIT {
 
-    public static final Logger log = Logger.getLogger(BackValueAuthTest.class.getName());
+    public static final Logger log = Logger.getLogger(BackValueAuthIT.class.getName());
     private final Long USER_ID = 2L;
 
     @BeforeClass

@@ -380,12 +380,12 @@
             <dependency>
                 <groupId>ru.rb.cfg</groupId>
                 <artifactId>cfg-core</artifactId>
-                <version>1.0.8</version>
+                <version>1.0.19</version>
             </dependency>
             <dependency>
                 <groupId>ru.rb.cfg</groupId>
                 <artifactId>cfg-db</artifactId>
-                <version>1.0.8</version>
+                <version>1.0.19</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -419,6 +419,11 @@
                 <artifactId>security-ejb</artifactId>
                 <version>1.0.0.ora</version>
                 <type>ejb</type>
+            </dependency>
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>0.1.54</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

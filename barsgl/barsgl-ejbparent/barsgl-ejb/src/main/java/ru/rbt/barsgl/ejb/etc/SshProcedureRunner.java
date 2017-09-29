@@ -4,11 +4,9 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
-import org.apache.log4j.Logger;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejbcore.CoreRepository;
 
-import javax.ejb.EJB;
+import org.apache.log4j.Logger;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 

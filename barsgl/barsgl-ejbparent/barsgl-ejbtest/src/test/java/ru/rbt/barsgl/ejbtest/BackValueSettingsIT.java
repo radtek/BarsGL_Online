@@ -30,7 +30,8 @@ import static ru.rbt.ejbcore.util.DateUtils.onlyDate;
 /**
  * Created by er18837 on 15.08.2017.
  */
-public class BackValueSettingsTest extends AbstractTimerJobTest {
+public class BackValueSettingsIT extends AbstractTimerJobIT
+{
 
     @Test
     public void testClosedReportPeriod(){

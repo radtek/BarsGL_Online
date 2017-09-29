@@ -111,7 +111,8 @@ public class SqlPageSupportBean implements SqlPageSupport {
         return nativeSql.toLowerCase().contains("where");
     }
 
-    /*public static SQL prepareCommonSql(final String nativeSql, Criterion criterion) {
+    // TODO проверить
+    public static SQL prepareCommonSql(final String nativeSql, Criterion criterion) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
 
         SQL whereClause = null;
@@ -129,7 +130,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
         // применяем where
         resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
         return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
-    }*/
+    }
 
     private static SQL prepareCommonSql2(final String nativeSql, Criterion criterion, OrderByColumn orderBy, int startWith, int pageSize) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");

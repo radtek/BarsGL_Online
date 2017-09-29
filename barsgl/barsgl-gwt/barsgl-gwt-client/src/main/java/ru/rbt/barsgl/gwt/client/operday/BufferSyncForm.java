@@ -12,7 +12,6 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
 import ru.rbt.barsgl.gwt.client.comp.ListBoxSqlDataProvider;
 import ru.rbt.barsgl.gwt.client.comp.StringRowConverter;
-import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.actions.RefreshAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
@@ -24,7 +23,6 @@ import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;

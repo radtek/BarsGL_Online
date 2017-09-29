@@ -52,7 +52,7 @@ import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
-import static ru.rbt.barsgl.ejbtest.ValidationTest.checkOperErrorRecord;
+import static ru.rbt.barsgl.ejbtest.ValidationIT.checkOperErrorRecord;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.COMPLETED;
 import static ru.rbt.barsgl.shared.enums.BackValuePostStatus.CONTROL;
 import static ru.rbt.barsgl.shared.enums.DealSource.*;
@@ -61,9 +61,9 @@ import static ru.rbt.barsgl.shared.enums.OperState.*;
 /**
  * Created by er18837 on 26.06.2017.
  */
-public class BackValueOperationTest extends AbstractTimerJobTest {
+public class BackValueOperationIT extends AbstractTimerJobIT {
 
-    public static final Logger log = Logger.getLogger(BackValueOperationTest.class.getName());
+    public static final Logger log = Logger.getLogger(BackValueOperationIT.class.getName());
     private static final String daysCriteria = " CCY = 'RUR' and DAT between '2015-01-31' and '2015-02-28' ";
     private static final String holidays =
             "'2015-02-01', '2015-02-07', '2015-02-08', '2015-02-14', '2015-02-15', '2015-02-21', '2015-02-22', '2015-02-23', '2015-02-28'";
@@ -101,7 +101,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
     public static void restoreTable(String tblName) {
         String tmpName = tblName + "_tmp";
         baseEntityRepository.executeNativeUpdate("delete from " + tblName);
-        baseEntityRepository.executeNativeUpdate("insert into " + tblName + " select * from " + tmpName);
+        baseEntityRepository.executeNativeUpdate("insert into " + tblName + " (select * from " + tmpName + ")");
         baseEntityRepository.executeNativeUpdate("drop table " + tmpName);
     }
 

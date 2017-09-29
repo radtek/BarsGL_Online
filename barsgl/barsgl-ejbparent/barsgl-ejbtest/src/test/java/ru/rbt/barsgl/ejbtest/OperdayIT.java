@@ -13,11 +13,9 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.CloseLastWorkdayBalanceTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
-import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
@@ -35,12 +33,8 @@ import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 import java.io.IOException;
@@ -62,7 +56,6 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
-import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STARTED;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
@@ -270,16 +263,6 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
         stopProcessing();
-/*
-        if (EnumUtils.contains(new ProcessingStatus[]{ProcessingStatus.ALLOWED, ProcessingStatus.STARTED}
-                , previosOperday.getProcessingStatus())) {
-            try {
-                remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.REQUIRED);
-            } catch (Exception e) {
-                remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.STOPPED);
-            }
-        }
-*/
 
         // задача мониторинга ETL
         checkCreateEtlStructureMonitor();
@@ -309,7 +292,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
         calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
 
-        baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
+        //baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
 
         jobService.executeJob(calendarJob);
         remoteAccess.invoke(ExecutePreCOBTaskNew.class, "run", "ExecutePreCOBTaskNew", new Properties());
@@ -697,12 +680,6 @@ public class OperdayIT extends AbstractTimerJobIT {
         TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", jobName);
         if (null != job)
             remoteAccess.invoke(BackgroundJobsController.class, "startupJob", job);
-    }
-
-    public static void shutdownJob(String jobName) {
-        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", jobName);
-        if (null != job)
-            remoteAccess.invoke(BackgroundJobsController.class, "shutdownJob", job);
     }
 
     public static void shutdownJob(String jobName) {

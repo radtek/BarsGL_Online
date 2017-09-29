@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.gwt.client.operation;
 
 import com.google.gwt.user.client.ui.Image;
-import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;

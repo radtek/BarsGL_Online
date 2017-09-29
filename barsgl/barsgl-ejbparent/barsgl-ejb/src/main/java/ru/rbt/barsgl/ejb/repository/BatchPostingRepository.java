@@ -9,8 +9,6 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.shared.enums.BatchPostStatus;
-import ru.rbt.barsgl.shared.enums.InvisibleType;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;

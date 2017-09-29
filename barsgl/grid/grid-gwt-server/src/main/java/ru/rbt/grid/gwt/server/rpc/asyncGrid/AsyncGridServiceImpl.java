@@ -3,6 +3,7 @@ package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
@@ -33,18 +34,17 @@ import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.filterCriteriaAdap
 public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGridService {
 
     @Override
-    public Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Exception {
+    public Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Throwable {
         try {
             return localInvoker.invoke(SqlPageSupport.class, "count", sql, repository, filterCriteriaAdapter(filterCriteria));
         } catch (Throwable t) {
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе кол-ва записей для списка: " + sql, null, t);
-            processException(t);
+            processException(t, sql, "Ошибка при запросе кол-ва записей для списка");
             return null;
         }
     }
 
     @Override
-    public List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
+    public List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Throwable {
         try {
             List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, repository, filterCriteriaAdapter(filterCriteria), pageSize,
                     start + 1, sortCriteriaAdapter(sortCriteria));
@@ -67,15 +67,14 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
             return result;
         } catch (Throwable t) {
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе записей для списка: " + sql, null, t);
-            processException(t);
+            processException(t, sql, "Ошибка при запросе записей для списка");
             return null;
         }
     }
 
     // TODO это что за дублирование с selectOne !? слить этот г-код
     @Override
-    public Row selectOne(Repository repository, String sql, Serializable[] params) throws Exception {
+    public Row selectOne(Repository repository, String sql, Serializable[] params) throws Throwable {
         try{
             Object [] array = new Object[(params == null) ? 2 : params.length + 2];
             array[0] = sql;
@@ -91,14 +90,13 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return row;
 
         }catch (Throwable t){
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки: " + sql, null, t);
-            processException(t);
+            processException(t, sql, "Ошибка при запросе строки");
             return null;
         }
     }
 
     @Override
-    public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
+    public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable {
         try {
             List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
             for (int i = 0; i < columns.getColumnCount(); i++) {
@@ -112,24 +110,23 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
             return fileName;
         } catch (Throwable t) {
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при экспорте в Excel: " + sql, null, t);
-            processException(t);
+            processException(t, sql, "Ошибка при экспорте в Excel");
             return null;
         }
 }
 
     @Override
-    public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Exception {
+    public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Throwable {
         return getAsyncCount(Repository.BARSGL, sql, filterCriteria);
     }
 
     @Override
-    public List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Exception {
+    public List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Throwable {
         return getAsyncRows(Repository.BARSGL, sql, columns, start, pageSize, filterCriteria, sortCriteria);
     }
 
     @Override
-    public Row selectFirst(String sql, Serializable[] params) throws Exception {
+    public Row selectFirst(String sql, Serializable[] params) throws Throwable {
         try{
             Object [] array = new Object[(params == null) ? 1 : params.length + 1];
             array[0] = sql;
@@ -145,13 +142,13 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return row;
 
         } catch (Throwable t) {
-            processException(t);
+            processException(t, sql, "Ошибка при запросе строки");
             return null;
         }
     }
 
     @Override
-    public Row selectOne(String sql, Serializable[] params) throws Exception {
+    public Row selectOne(String sql, Serializable[] params) throws Throwable {
         try{
             Object [] array = new Object[(params == null) ? 1 : params.length + 1];
             array[0] = sql;
@@ -165,70 +162,10 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             return row;
 
         }catch (Throwable t){
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, "Ошибка при запросе строки: " + sql, null, t);
-            processException(t);
+            processException(t, sql, "Ошибка при запросе строки");
             return null;
         }
     }
-
-/*
-    public static Criterion filterCriteriaAdapter(List<FilterItem> filterCriteria){
-        if (filterCriteria == null || filterCriteria.isEmpty()) return null;
-
-        List<Criterion> list = new ArrayList<Criterion>();
-
-        for (FilterItem item: filterCriteria){
-           Operator operator;
-           Serializable value = item.getSqlValue();
-            switch (item.getCriteria()){
-                case GE:
-                    operator = Operator.GE;
-                    break;
-                case GT:
-                    operator = Operator.GT;
-                    break;
-                case LT:
-                    operator = Operator.LT;
-                    break;
-                case LE:
-                    operator = Operator.LE;
-                    break;
-                case NE:
-                    operator = Operator.NE;
-                    break;
-                case HAVE:
-                    operator = Operator.LIKE;
-                    value = "%" + value + "%";
-                    break;
-                case START_WITH:
-                    operator = Operator.LIKE;
-                    value = value + "%";
-                    break;
-                case LIKE:
-                    operator = Operator.LIKE;
-                    break;
-                case IS_NULL:
-                    operator = Operator.IS_NULL;
-                    break;
-                case NOT_NULL:
-                    operator = Operator.NOT_NULL;
-                    break;
-                case IS_EMPTY:
-                    operator = Operator.EQ;
-                    value = "";
-                    break;
-                case NOT_EMPTY:
-                    operator = Operator.NE;
-                    value = "";
-                    break;
-                default:
-                    operator = Operator.EQ;
-            }
-            list.add(CriterionColumn.createCriterion(item.getSqlName(), operator, value));
-        }
-        return new Criteria(CriteriaLogic.AND, list);
-    }
-*/
 
     private OrderByColumn sortCriteriaAdapter(List<SortItem> sortCriteria){
         if (sortCriteria == null || sortCriteria.isEmpty()) return null;
@@ -237,7 +174,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     @Override
-    public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Exception {
+    public String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable {
         return export2Excel(Repository.BARSGL, sql, columns, filterCriteria, sortCriteria, head);
     }
 
@@ -245,7 +182,8 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         System.out.println(msg);
     }
 
-    public void processException(Throwable t) throws Exception {
+    public void processException(Throwable t, String sql, String message) throws Throwable {
+        localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, message + ": " + sql, null, t);
         if (t instanceof NotAuthorizedUserException) throw t;
         SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
         if( null != ex )

@@ -7,17 +7,14 @@ package ru.rbt.barsgl.ejb.integr.dict;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 
 import javax.annotation.PostConstruct;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.ejb.EJB;
 import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.sql.DataTruncation;
@@ -26,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.User;
-import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
 
 /**
  *

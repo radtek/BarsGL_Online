@@ -43,14 +43,13 @@ public class BsaAccRepository extends AbstractBaseEntityRepository<BsaAcc, Strin
         for (int i = 0; i<3; i++) {                 // open + 3 work day
             BankCalendarDay day = calendarDayRepository.getWorkdayAfter(dateTax);
             if (day == null) throw new DefaultApplicationException("Невозможно открыть счет. Ошибка в данных календаря.");
-/*        for (int i = 0; i<3; i++) {                 // open + 3 work day
-            dateTax = calendarDayRepository.getWorkdayAfter(dateTax).getId().getCalendarDate();
         }
-*/
+
         try {
             dateTax = calendarDayRepository.getWorkDateAfter(glAccount.getDateOpen(), 3, false);
+            if (dateTax == null) throw new DefaultApplicationException("Невозможно открыть счет. Ошибка в данных календаря.");
         } catch (SQLException e) {
-            e.printStackTrace();    // TODO !!!
+            throw new DefaultApplicationException(e.getMessage());
         }
         bsaAcc.setDateTax(dateTax);
 

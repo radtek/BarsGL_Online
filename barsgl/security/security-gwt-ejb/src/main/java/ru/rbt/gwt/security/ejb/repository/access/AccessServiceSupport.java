@@ -10,20 +10,12 @@ import ru.rbt.security.ejb.repository.AppUserRepository;
 import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.PrmValueWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.security.ejb.repository.AppUserRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
-import ru.rbt.security.entity.AppUser;
-import ru.rbt.security.entity.access.PrmValue;
-import ru.rbt.security.entity.access.PrmValueHistory;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.enums.PrmValueEnum;
 import ru.rbt.shared.security.RequestContext;
@@ -223,12 +215,6 @@ public class AccessServiceSupport {
                 " where ccy='RUR' and thol not in ('X', 'T') and dat < (select curdate from gl_od)\n" +
                 " and rownum <= %s" +
                 " order by 1 desc) d", prm.getPrmValue()));
-        Date bvDate = rec.getDate("dat");
-                "\tselect dat \n" +
-                "\tfrom dwh.cal\n" +
-                "\twhere ccy='RUR' and thol not in ('X', 'T') and dat< (select curdate from dwh.gl_od)\n" +
-                "\torder by 1 desc\n" +
-                "\tfetch first %s rows only) d", prm.getPrmValue()));
 */
         Date bvDate = calendarRepository.getWorkDateBefore(operDay, Integer.parseInt(prm.getPrmValue()), false);
 
