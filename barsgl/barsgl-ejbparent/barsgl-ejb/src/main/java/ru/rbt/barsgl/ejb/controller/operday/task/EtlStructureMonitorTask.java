@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import java.util.concurrent.ExecutorService;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 import static org.apache.commons.lang3.time.DateUtils.truncate;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -203,7 +204,37 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
         }
     }
 
-    private void asyncProcessPostings (List<EtlPosting> postings) throws Exception {
+    private void asyncProcessPostings(List<EtlPosting> postings) throws Exception {
+        if(!postings.isEmpty()){
+            long timeout = 1L;
+            TimeUnit unit = TimeUnit.HOURS;
+            final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
+
+            int maxConcurency = propertiesRepository
+                    .getNumber(PD_CONCURENCY.getName()).intValue();
+            
+            ExecutorService executorService = asyncProcessor.getBlockingQueueThreadPoolExecutor(maxConcurency, maxConcurency, postings.size());
+
+            postings.stream().forEach(posting -> {
+                executorService.submit(() -> beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
+                    try {
+                        return etlPostingController.processMessage(posting);
+                    } catch (Throwable e) {
+                        logger.log(Level.SEVERE, format("Error on async processing of posting '%s'", posting.getId()), e);
+                        etlPostingRepository.executeInNewTransaction(persistence0 -> {
+                            etlPostingRepository.updatePostingStateError(posting, getErrorMessage(e));
+                            return null;
+                        });
+                        return null;
+                    }
+                }));
+            });
+
+            asyncProcessor.awaitTermination(executorService, timeout, unit, tillTo);
+        }
+    }
+    
+    private void asyncProcessPostingsOld (List<EtlPosting> postings) throws Exception {
         List<JpaAccessCallback<GLOperation>> callbacks = postings.stream().map(
                 posting -> (JpaAccessCallback<GLOperation>) persistence ->
                         beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence1, connection) -> {

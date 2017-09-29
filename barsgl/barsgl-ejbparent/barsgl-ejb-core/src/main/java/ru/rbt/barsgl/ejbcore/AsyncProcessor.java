@@ -114,31 +114,24 @@ public class AsyncProcessor {
             //int maxPoolSize = callbacks.size() < maxConcurrency ? maxConcurrency + 1 : callbacks.size() + 1;// + 1 -- for managed
             final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
 
-            //create with fixed thread pool size
-            ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-                  maxConcurrency,
-                  maxConcurrency,
-                  0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS, 
-                  MILLISECONDS,
-                  new ArrayBlockingQueue<>(callbacks.size()), 
-                  managedThreadFactory);
+            ExecutorService executorService = getBlockingQueueThreadPoolExecutor(maxConcurrency, maxConcurrency, callbacks.size());
             
             callbacks.stream().forEach(callback -> {
-                threadPoolExecutor.submit(() -> {
+                executorService.submit(() -> {
                   return repository.invoke((persistence) -> {
                     return callback.call(persistence);
                   }).get();
                 });
             });
 
-            awaitTermination(threadPoolExecutor, timeout, unit, tillTo);
+            awaitTermination(executorService, timeout, unit, tillTo);
         }
     }
     
-    public void awaitTermination(ThreadPoolExecutor threadPoolExecutor, long timeout, TimeUnit unit, long tillTo) throws Exception {
+    public void awaitTermination(ExecutorService executorService, long timeout, TimeUnit unit, long tillTo) throws Exception {
         try {
-            threadPoolExecutor.shutdown();
-            if (threadPoolExecutor.awaitTermination(timeout, unit)) {
+            executorService.shutdown();
+            if (executorService.awaitTermination(timeout, unit)) {
                 logger.log(Level.INFO, "All threads are terminated");
             } else {
                 throw new TimeoutException(format("Async operation is timed out. Current time '%s' greater than '%s'",
@@ -174,6 +167,18 @@ public class AsyncProcessor {
       defaultThreadPoolExecutor.setCorePoolSize(corePoolSize);
       defaultThreadPoolExecutor.setMaximumPoolSize(corePoolSize);
       return defaultThreadPoolExecutor;
+    }
+    
+    public ExecutorService getBlockingQueueThreadPoolExecutor(int corePoolSize, int maximumPoolSize, int queueSize) {
+        //create with fixed thread pool size
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
+                corePoolSize,
+                maximumPoolSize,
+                0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
+                MILLISECONDS,
+                new ArrayBlockingQueue<>(queueSize),
+                managedThreadFactory);
+        return threadPoolExecutor;
     }
     
     /**

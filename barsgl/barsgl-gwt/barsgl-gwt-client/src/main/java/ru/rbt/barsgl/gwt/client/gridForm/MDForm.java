@@ -76,10 +76,10 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         detailSql = prepareDetailSql();
 
         masterGrid = createMasterGrid(delayLoad);
-
+        masterGrid.setSortStrategy(null); //отключена сортировка
         masterGrid.setSortEvents(masterRefreshAction = createMasterRefreshAction());
         detailGrid = createDetailGrid();
-
+        detailGrid.setSortStrategy(null); //отключена сортировка
 
         detailGrid.setSortEvents(detailRefreshAction = createDetailRefreshAction());
 

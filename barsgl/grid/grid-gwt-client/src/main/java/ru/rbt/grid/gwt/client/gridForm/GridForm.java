@@ -1,6 +1,7 @@
 package ru.rbt.grid.gwt.client.gridForm;
 
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -13,6 +14,9 @@ import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.events.GridEvents;
+import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
@@ -66,7 +70,7 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 		panel.addNorth(abw, 10);
 
 		panel.add(grid = createGrid(getInitialFilterParams(), delayLoad));
-
+        grid.setSortStrategy(null); //отключена сортировка
 		abw.addAction(refreshAction = createRefreshAction());
 		grid.setSortEvents(refreshAction);
 
@@ -89,6 +93,11 @@ public abstract class GridForm extends BaseForm implements IDisposable {
 
 			@Override
 			protected void getServerData(int start, int pageSize, AsyncCallback<List<Row>> callback) {
+				if (getRowCount() == 0) {
+					grid.clear();
+					WaitingManager.hide();
+					return;
+				}
 				List<SortItem> sortItems = getSortCriteria();
 				List<FilterItem> filterItems = getFilterCriteria(initialFilterParams);
 				refreshGridParams(filterItems, sortItems);

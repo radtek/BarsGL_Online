@@ -25,11 +25,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Resource;
+import javax.ejb.EJBContext;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -40,7 +45,10 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 @LocalBean
 public class CommonQueueProcessor4 implements MessageListener {
     private static final Logger log = Logger.getLogger(CommonQueueProcessor4.class);
-    private static final String SCHEDULED_TASK_NAME = "AccountQuery";
+    //private static final String SCHEDULED_TASK_NAME = "AccountQuery";
+
+    @Resource
+    private EJBContext context;
 
     @EJB
     private AsyncProcessor asyncProcessor;
@@ -69,17 +77,13 @@ public class CommonQueueProcessor4 implements MessageListener {
     @EJB
     private PropertiesRepository propertiesRepository;
 
-    private static final Map<String, String> currencyMap = new HashMap<>();
-    private static final Map<String, Integer> currencyNBDPMap = new HashMap<>();
+    private static final Map<String, String> CURRENCY_MAP = new HashMap<>();
+    private static final Map<String, Integer> CURRENCY_NBDP_MAP = new HashMap<>();
 
     private QueueProperties queueProperties;
 
-//    QueueConnection connection = null;
-//    QueueSession session = null;
-
     private JMSContext jmsContext = null;
-    private int defaultBatchSize = 50;
-    private int batchSize;
+    private final int defaultBatchSize = 50;
 
     public void startConnection() throws JMSException {
         if (jmsContext == null) {
@@ -89,10 +93,7 @@ public class CommonQueueProcessor4 implements MessageListener {
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
             cf.setQueueManager(queueProperties.mqQueueManager);
             cf.setChannel(queueProperties.mqChannel);
-//            connection = cf.createQueueConnection(queueProperties.mqUser, queueProperties.mqPassword);
-//            setSession(connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE));
-            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword));
-//            connection.setExceptionListener(new ExceptionListener() {
+            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword, JMSContext.CLIENT_ACKNOWLEDGE));
             jmsContext.setExceptionListener((JMSException e) -> {
                 log.info("\n\nonException calling");
                 reConnect();
@@ -103,52 +104,37 @@ public class CommonQueueProcessor4 implements MessageListener {
     private void reConnect() {
         log.info("\n\nreConnect calling");
         closeConnection();
-//        connection = null;
-//        session = null;
-        jmsContext = null;
         // На следующем старте задачи сработает startConnection()
     }
 
     @PreDestroy
     public void closeConnection() {
         log.info("\n\ncloseConnection calling");
-//        try {
-//            if (session != null) {
-//                session.close();
-//            }
-//        } catch (JMSException e1) {
-//            auditController.warning(AccountQuery, "Ошибка при закрытии сессии", null, e1);
-//        }
-
         try {
-//            if (connection != null) {
-//                connection.close();
-//            }
-            if(jmsContext != null)
+            if (jmsContext != null) {
                 jmsContext.close();
-
-//        } catch (JMSException e1) {
-        } catch (Exception e1) {
-            auditController.warning(AccountQuery, "Ошибка при закрытии соединения", null, e1);
+            }
+        } catch (Exception e) {
+            auditController.warning(AccountQuery, "Ошибка при закрытии соединения", null, e);
+        }finally{
+            jmsContext = null;
         }
     }
 
     private void loadCurrency() throws Exception {
-        if (currencyMap == null || currencyNBDPMap == null || currencyMap.size() == 0 || currencyNBDPMap.size() == 0) {
-            queryRepository.loadCurrency(currencyMap, currencyNBDPMap);
+        if (CURRENCY_MAP.isEmpty() || CURRENCY_NBDP_MAP.isEmpty()) {
+            queryRepository.loadCurrency(CURRENCY_MAP, CURRENCY_NBDP_MAP);
         }
     }
 
     public void process(Properties properties) throws Exception {
         try {
             setQueueProperties(properties);
-            batchSize = queueProperties.mqBatchSize;
             try{
                 startConnection();
                 loadCurrency();
                 processSources();
-//                log.info("Сессия обработки одной очереди завершена");
-            }catch(JMSException ex){
+            }catch(JMSRuntimeException | JMSException ex){
                 // reset session
                 reConnect();
                 auditController.warning(AccountQuery, "Ошибка при обработке сообщений", null, ex);
@@ -164,12 +150,6 @@ public class CommonQueueProcessor4 implements MessageListener {
       this.queueProperties = new QueueProperties(properties);
     }
 
-//    @Deprecated
-//    public void setSession(QueueSession session) {
-//      //this.session = session;
-//      throw new UnsupportedOperationException("You must upgrade to JMS 2.0!");
-//    }
-    
     public void setJmsContext(JMSContext jmsContext) {
         this.jmsContext = jmsContext;
     }
@@ -183,8 +163,8 @@ public class CommonQueueProcessor4 implements MessageListener {
     }
     
     private String[] readJMS(Message receivedMessage) throws JMSException {
-//        log.info(receivedMessage.toString());
-
+        if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
+            receivedMessage.acknowledge();
         String textMessage = null;
         if (receivedMessage instanceof TextMessage) {
             textMessage = ((TextMessage) receivedMessage).getText();
@@ -196,7 +176,7 @@ public class CommonQueueProcessor4 implements MessageListener {
             bytesMessage.readBytes(incomingBytes);
 
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
-            try (Reader r = new InputStreamReader(byteArrayInputStream, "UTF-8")) {
+            try (Reader r = new InputStreamReader(byteArrayInputStream, StandardCharsets.UTF_8)) {
                 StringBuilder sb = new StringBuilder();
                 char cb[] = new char[1024];
                 int s = r.read(cb);
@@ -215,50 +195,73 @@ public class CommonQueueProcessor4 implements MessageListener {
         return new String[]{textMessage, receivedMessage.getJMSMessageID(),
             receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString()};
     }
-
+            
     private void processSources() throws Exception {
         String[] params = queueProperties.mqTopics.split(":");
-//        Queue queueIn = session.createQueue("queue:///" + params[1]);
-//        QueueReceiver receiver = session.createReceiver(queueIn);
-//
-//        connection.start();
+        try (JMSConsumer consumer = jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));) {
+            int cuncurencySize = propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue();
+            long timeout = 10L;
+            TimeUnit unit = TimeUnit.MINUTES;
+            ExecutorService executor = null;
+            try {
+                for (int i = 0; i < queueProperties.mqBatchSize; i++) {
+                    long startReceiveTime = System.currentTimeMillis();
+                    Message receivedMessage = consumer.receiveNoWait();
+                    long endReceiveTime = System.currentTimeMillis();
+                    if (receivedMessage != null) {
+                        if (executor == null) {
+                            executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(cuncurencySize, cuncurencySize, queueProperties.mqBatchSize);
+                        }
+                        
+                        executor.submit(() -> processMessage(receivedMessage, params[0], params[1], params[2], endReceiveTime - startReceiveTime, endReceiveTime));
+                    } else
+                        break;
+                }
+            } finally {
+                if(executor != null)
+                    awaitTermination(executor, timeout, unit);
+            }
+        }
+    }
+
+    private void processSourcesOld() throws Exception {
+        String[] params = queueProperties.mqTopics.split(":");
         
         try(JMSConsumer consumer =  jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));){
         
-        List<JpaAccessCallback<Void>> callbacks = new ArrayList<>();
+            List<JpaAccessCallback<Void>> callbacks = new ArrayList<>();
 
-        for (int i = 0; i < batchSize; i++) {
-            long createReceiveTime = System.currentTimeMillis();
+            for (int i = 0; i < queueProperties.mqBatchSize; i++) {
+                long createReceiveTime = System.currentTimeMillis();
 
-            String[] incMessage = readFromJMS(consumer);
-            if (incMessage == null || incMessage[0] == null) {
-                break;
+                String[] incMessage = readFromJMS(consumer);
+                if (incMessage == null || incMessage[0] == null) {
+                    break;
+                }
+                long receiveTime = System.currentTimeMillis() - createReceiveTime;
+
+                String textMessage = incMessage[0].trim();
+                Long jId = 0L;
+                try {
+                    jId = journalRepository.executeInNewTransaction(persistence -> {
+                        return journalRepository.createJournalEntry(params[0], textMessage);
+                    });
+                    callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], receiveTime));
+                } catch (JMSException e) {
+                    reConnect();
+                    auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
+                }
             }
-            long receiveTime = System.currentTimeMillis() - createReceiveTime;
-            
-            String textMessage = incMessage[0].trim();
-            Long jId = 0L;
-            try {
-                jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
-                    return journalRepository.createJournalEntry(params[0], textMessage);
-                });
-                callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], receiveTime));
-            } catch (JMSException e) {
-                reConnect();
-                auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
+
+            if (callbacks.size() > 0) {
+    //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов");
+                //asyncProcessor.asyncProcessPooled(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
+                asyncProcessor.asyncProcessPooledByExecutor(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
+    //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов. Обработка завершена");
             }
         }
-
-        if (callbacks.size() > 0) {
-//            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов");
-            //asyncProcessor.asyncProcessPooled(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
-            asyncProcessor.asyncProcessPooledByExecutor(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
-//            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов. Обработка завершена");
-        }
-        }
-        //receiver.close();
     }
-
+    
     @Override
     public void onMessage(Message message) {
       Long jId = 0L;
@@ -267,8 +270,8 @@ public class CommonQueueProcessor4 implements MessageListener {
         String[] incMessage = readJMS(message);
         String textMessage = incMessage[0].trim();
 
-        jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
-          return journalRepository.createJournalEntry(params[0], textMessage);
+        jId = journalRepository.executeInNewTransaction(persistence -> {
+            return journalRepository.createJournalEntry(params[0], textMessage);
         });
 
         asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], -1L),
@@ -281,9 +284,119 @@ public class CommonQueueProcessor4 implements MessageListener {
         log.error("Ошибка при обработке сообщения", ex);
       }
     }
+    
+    private void processMessage(Message receivedMessage, String queueType, String fromQueue, String queue, long receiveTime, long startThreadTime){
+        long waitingTime = System.currentTimeMillis() - startThreadTime;
+        Long jId = null;
+        try {            
+            String[] incMessage = readJMS(receivedMessage);
+            
+            if (incMessage == null || incMessage[0] == null) {
+                return;
+            }
+            
+            String textMessage = incMessage[0].trim();
+            
+            jId = journalRepository.executeInNewTransaction((persistence) -> {
+                return journalRepository.createJournalEntry(queueType, textMessage);
+            });
+            
+            processing(queueType, textMessage, jId, incMessage, queue, receiveTime, waitingTime);            
+            
+        } catch (JMSException e) {
+            reConnect();
+            auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + fromQueue + " / Таблица GL_ACLIRQ / id="+jId, null, e);
+        } catch (Exception e) {
+            log.error("Ошибка при обработке сообщения из " + fromQueue, e);
+            auditController.warning(AccountQuery, "Ошибка при обработке сообщения / Таблица GL_ACLIRQ / id=" + jId, null, e);
+            if(jId != null)
+                journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка при обработке сообщения. " + e.getMessage());
+            context.setRollbackOnly();
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+    
+    private void processing(String queueType, String textMessage, Long jId, String[] incMessage, String queue, long receiveTime, long waitingTime) throws Exception {
+        long startProcessing = System.currentTimeMillis();
+        String outMessage = (String) coreRepository.executeInNewTransaction(persistence1 -> {
+            try {
+                switch (queueType) {
+                    case "LIRQ":
+                        return queryProcessor.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId, "show".equals(queueProperties.unspents));
+                    case "BALIRQ":
+                        return queryProcessorBA.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
+                    case "MAPBRQ":
+                        return queryProcessorMAPB.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
+                }
+            } catch (Exception e) {
+                log.error("Ошибка при подготовке ответа. ", e);
+                auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица GL_ACLIRQ / id=" + jId, null, e);
+                return journalRepository.executeInNewTransaction(persistence2 -> {
+                    AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
+                    return getErrorMessage(aclirqJournal.getComment());
+                });
+            }
+            return "";
+        });
 
+        if (!isEmpty(outMessage)) {
+            try {
+                long createAnswerTime = System.currentTimeMillis();
+                sendToQueue(outMessage, queueProperties, incMessage, queue);
+                long sendingAnswerTime = System.currentTimeMillis();
+                journalRepository.invokeAsynchronous(em -> {
+                    return journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED,
+                            receiveTime
+                            + "/"
+                            + (createAnswerTime - startProcessing)
+                            + "/"
+                            + (sendingAnswerTime - createAnswerTime)
+                            + "/"
+                            + ("true".equals(queueProperties.writeSleepThreadTime) ? waitingTime : "")
+                            + "/",
+                             "true".equals(queueProperties.writeOut) ? outMessage : null);
+                });
+            } catch (JMSRuntimeException | JMSException e) {
+                auditController.error(AccountQuery, "Ошибка при отправке сообщения / Таблица GL_ACLIRQ / id=" + jId, null, e);
+                journalRepository.invokeAsynchronous(em -> {
+                    return journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
+                });
+            }
+        }
+    }
+    
+    public void sendToQueue(String outMessage, QueueProperties queueProperties, String[] incMessage, String queue) throws JMSException {
+        TextMessage message = jmsContext.createTextMessage(outMessage);
+        message.setJMSCorrelationID(incMessage[1]);
+        JMSProducer producer = jmsContext.createProducer();
+        producer.send(jmsContext.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue), message);
+    }
+
+    private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
+        final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
+        asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
+    }
+
+    public String getErrorMessage(String message) throws DatatypeConfigurationException {
+        String answerBody;
+        GregorianCalendar calendar = new GregorianCalendar();
+        calendar.setTime(new Date());
+        DatatypeFactory df = DatatypeFactory.newInstance();
+        XMLGregorianCalendar dateTime = df.newXMLGregorianCalendar(calendar);
+
+        answerBody =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
+                "\t\t\t<asbo:Code>0100</asbo:Code>\n" +
+                "\t\t\t<asbo:Description>" + message + "</asbo:Description>\n" +
+                "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
+                "\t\t\t<asbo:Kind>SYSERR</asbo:Kind>\n" +
+                "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" +
+                "\t\t</asbo:Error>\n";
+        return answerBody;
+    }
+    
     private class CommonRqCallback implements JpaAccessCallback<Void> {
-
         String textMessage;
         Long jId;
         String[] incMessage;
@@ -302,88 +415,8 @@ public class CommonQueueProcessor4 implements MessageListener {
 
         @Override
         public Void call(EntityManager persistence) throws Exception {
-            long startProcessing = System.currentTimeMillis();
-            String outMessage = (String) coreRepository.executeInNewTransaction(persistence1 -> {
-                try {
-                    switch (queueType) {
-                        case "LIRQ":
-                            return queryProcessor.process(textMessage, currencyMap, currencyNBDPMap, jId, "show".equals(queueProperties.unspents));
-                        case "BALIRQ":
-                            return queryProcessorBA.process(textMessage, currencyMap, currencyNBDPMap, jId);
-                        case "MAPBRQ":
-                            return queryProcessorMAPB.process(textMessage, currencyMap, currencyNBDPMap, jId);
-                    }
-                } catch (JMSException e) {
-                    reConnect();
-                    auditController.warning(AccountQuery, "Ошибка при отправке сообщения / Таблица GL_ACLIRQ / id=" + jId, null, e);
-                } catch (Exception e) {
-                    log.error("Ошибка при подготовке ответа. ", e);
-                    auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица GL_ACLIRQ / id=" + jId, null, e);
-                    return journalRepository.executeInNewTransaction(persistence2 -> {
-                        AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
-                        return getErrorMessage(aclirqJournal.getComment());
-                    });
-                }
-                return "";
-            });
-
-            long createAnswerTime = System.currentTimeMillis();
-            if (!isEmpty(outMessage)) {
-                try {
-                    sendToQueue(outMessage, queueProperties, incMessage, queue);
-                    long sendingAnswerTime = System.currentTimeMillis();
-                    //journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" + (createAnswerTime - startProcessing) + "/" + (sendingAnswerTime - createAnswerTime));                    
-                    journalRepository.invokeAsynchronous(em -> {
-                      return journalRepository.updateLogStatus(jId, AclirqJournal.Status.PROCESSED, "" 
-                              + receiveTime
-                              + "/" 
-                              + (createAnswerTime - startProcessing) 
-                              + "/" 
-                              + (sendingAnswerTime - createAnswerTime) 
-                              + "/",
-                              "true".equals(queueProperties.writeOut) ? outMessage : null);
-                    });                    
-                } catch (Throwable e) {
-                    auditController.error(AccountQuery, String.format("Ошибка отправки ответа: %s", e.getMessage()), null, e);
-                    journalRepository.invokeAsynchronous(em -> {
-                      return journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
-                    });
-                }
-            }
+            processing(queueType, textMessage, jId, incMessage, queue, receiveTime, -1L);
             return null;
-        }
-
-        public void sendToQueue(String outMessage, QueueProperties queueProperties, String[] incMessage, String queue) throws JMSException {
-            //TextMessage message = session.createTextMessage(outMessage);
-            TextMessage message = jmsContext.createTextMessage(outMessage);
-            message.setJMSCorrelationID(incMessage[1]);
-//            Queue queueOut = session.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue);
-//            QueueSender sender = session.createSender(queueOut);
-//            MessageProducer sender = session.createProducer(queueOut);
-            JMSProducer producer = jmsContext.createProducer();
-            //sender.send(message);
-            producer.send(jmsContext.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue), message);
-//            sender.close();
-//            log.info("Отправка сообщения завершена");
-        }
-
-        public String getErrorMessage(String message) throws DatatypeConfigurationException {
-            String answerBody;
-            GregorianCalendar calendar = new GregorianCalendar();
-            calendar.setTime(new Date());
-            DatatypeFactory df = DatatypeFactory.newInstance();
-            XMLGregorianCalendar dateTime = df.newXMLGregorianCalendar(calendar);
-
-            answerBody =
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                    "\t\t<asbo:Error xmlns:asbo=\"urn:asbo:barsgl\">\n" +
-                    "\t\t\t<asbo:Code>0100</asbo:Code>\n" +
-                    "\t\t\t<asbo:Description>" + message + "</asbo:Description>\n" +
-                    "\t\t\t<asbo:Source>BarsGL</asbo:Source>\n" +
-                    "\t\t\t<asbo:Kind>SYSERR</asbo:Kind>\n" +
-                    "\t\t\t<asbo:DateTime>" + dateTime.toString() + "</asbo:DateTime>\n" +
-                    "\t\t</asbo:Error>\n";
-            return answerBody;
         }
     }
 }
