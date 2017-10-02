@@ -89,7 +89,7 @@ public class PostingForm extends MDForm {
 
     @Override
     protected String prepareMasterSql() {
-        return "select /*+ first_rows(30) */ a1.*, a1.BSAACID_DR || ' ' || a1.BSAACID_CR as DR_CR from V_GL_PDLINK  a1 "
+        return "select /*+ first_rows(30) */ a1.* from V_GL_PDLINK  a1 "
                 + getSourceAndCodeFilialPart("where", "SRC_PST", "FILIAL_CR", "FILIAL_DR");
     }
 
