@@ -270,6 +270,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     public void processException(Exception t) throws Exception {
+        if (t instanceof NotAuthorizedUserException) throw t;
         SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
         if( null != ex )
             throw new SqlQueryTimeoutException(ex);
