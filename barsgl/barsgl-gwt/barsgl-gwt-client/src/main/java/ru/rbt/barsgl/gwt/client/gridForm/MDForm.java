@@ -3,8 +3,6 @@ package ru.rbt.barsgl.gwt.client.gridForm;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
-import ru.rbt.grid.gwt.client.GridEntryPoint;
-import ru.rbt.grid.gwt.client.export.Export2ExcelAction;
 import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.FilterAction;
 import ru.rbt.barsgl.gwt.core.actions.RefreshAction;
@@ -16,13 +14,15 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterUtils;
 import ru.rbt.barsgl.gwt.core.forms.BaseForm;
 import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 import ru.rbt.barsgl.gwt.core.widgets.*;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
+import ru.rbt.grid.gwt.client.export.Export2ExcelAction;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import ru.rbt.barsgl.gwt.core.statusbar.StatusBarManager;
 
 /**
  * Created by akichigi on 21.05.15.
@@ -76,10 +76,10 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         detailSql = prepareDetailSql();
 
         masterGrid = createMasterGrid(delayLoad);
-        masterGrid.setSortStrategy(null); //отключена сортировка
+//        masterGrid.setSortStrategy(null); //отключена сортировка
         masterGrid.setSortEvents(masterRefreshAction = createMasterRefreshAction());
         detailGrid = createDetailGrid();
-        detailGrid.setSortStrategy(null); //отключена сортировка
+//        detailGrid.setSortStrategy(null); //отключена сортировка
 
         detailGrid.setSortEvents(detailRefreshAction = createDetailRefreshAction());
 
