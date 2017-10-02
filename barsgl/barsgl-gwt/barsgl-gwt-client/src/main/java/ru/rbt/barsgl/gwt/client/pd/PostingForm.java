@@ -312,8 +312,7 @@ public class PostingForm extends MDForm {
             @Override
             public void execute() {
                 Row row = grid.getCurrentRow();
-                int rowCount = detailGrid.getRowCount();
-                if ((row == null) || (rowCount < 1)) {
+                if (row == null) {
                     return;
                 }
 
@@ -336,8 +335,7 @@ public class PostingForm extends MDForm {
         @Override
         public void execute() {
             Row row = grid.getCurrentRow();
-            int rowCount = detailGrid.getRowCount();
-            if ((row == null) || (rowCount < 1)) {
+            if (row == null) {
                 return;
             }
 
@@ -376,7 +374,7 @@ public class PostingForm extends MDForm {
         public void execute() {
             Row row = grid.getCurrentRow();
             int rowCount = detailGrid.getRowCount();
-            if ((row == null) || (rowCount < 1)) {
+            if (row == null) {
                 return;
             }
             if (!checkPostDate(row)) {
