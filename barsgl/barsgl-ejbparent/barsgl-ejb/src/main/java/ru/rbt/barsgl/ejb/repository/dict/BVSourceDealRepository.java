@@ -42,20 +42,4 @@ public class BVSourceDealRepository extends AbstractBaseEntityRepository<BVSourc
         }
     }
 
-/*
-    public BVSourceDeal findIntersectedRecord(BVSourceDealWrapper wrapper) {
-        BVSourceDealId id = new BVSourceDealId(wrapper.getSourceDeal(), wrapper.getStartDate());
-        String sql = "from BVSourceDeal s where s.id <> ?1" +
-                " and s.id.sourceDeal = ?2 " +
-                " and (s.id.startDate = ?3 or not s.endDate is null and s.endDate >= ?3 and (s.id.startDate <= ?3";
-        if (null == wrapper.getEndDate()) {
-            return selectFirst(BVSourceDeal.class, sql + "))"
-                    , id, wrapper.getSourceDeal(), wrapper.getStartDate());
-
-        } else {
-            return selectFirst(BVSourceDeal.class, sql + " or s.id.startDate <= ?4))"
-                    , id, wrapper.getSourceDeal(), wrapper.getStartDate(), wrapper.getEndDate());
-        }
-    }
-*/
 }

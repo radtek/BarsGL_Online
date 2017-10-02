@@ -1,8 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.dict;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.entity.dict.BVSourceDeal;
-import ru.rbt.barsgl.ejb.entity.dict.BVSourceDealId;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedReportPeriodRepository;
@@ -137,8 +135,14 @@ public class ClosedReportPeriodController extends BaseDictionaryController<Close
             if (!wrapper.getCutDate().after(wrapper.getLastDate()))
                 errorList.add(format("Дата закрытия отчетного периода '%s' <= даты завершения отчетного периода '%s'"
                         , wrapper.getCutDateStr(), wrapper.getLastDateStr()));
+            // проверка совпадания даты отсечения периодов
+            ClosedReportPeriod period = repository.findPeriodByCutDate(wrapper);
+            if (null != period)
+                errorList.add(format("Найден отчетный период с датой завершения '%s' и датой закрытия '%s', равной заданной"
+                        , dateUtils.onlyDateString(period.getLastDate())
+                        , dateUtils.onlyDateString(period.getCutDate())));
             // проверка непересечения периодов
-            ClosedReportPeriod intersected = repository.findIntersectedRecord(wrapper);
+            ClosedReportPeriod intersected = repository.findIntersectedPeriod(wrapper);
             if (null != intersected)
                 errorList.add(format("Найден отчетный период с датой завершения '%s' и датой закрытия '%s', перекрывающий заданный"
                         , dateUtils.onlyDateString(intersected.getLastDate())
