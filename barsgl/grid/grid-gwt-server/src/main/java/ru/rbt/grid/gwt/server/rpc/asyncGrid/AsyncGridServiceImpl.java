@@ -3,6 +3,7 @@ package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
@@ -24,6 +25,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by akichigi on 02.04.15.
@@ -243,6 +245,12 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     public void processException(Throwable t) throws Exception {
+        NotAuthorizedUserException naue = ExceptionUtils.findException(t, NotAuthorizedUserException.class);
+        if (naue != null) throw new NotAuthorizedUserException();
+
+        TimeoutException toe = ExceptionUtils.findException(t, TimeoutException.class);
+        if (toe != null) throw new SqlQueryTimeoutException(toe);
+
         SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
         if( null != ex )
             throw new SqlQueryTimeoutException(ex);
