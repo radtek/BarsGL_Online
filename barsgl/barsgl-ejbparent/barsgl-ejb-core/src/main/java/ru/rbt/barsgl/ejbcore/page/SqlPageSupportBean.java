@@ -133,7 +133,9 @@ public class SqlPageSupportBean implements SqlPageSupport {
                     }
                 })));
         try {
-            return resf.get(timeout, timeUnit);
+            List<DataRecord> result = new ArrayList<>();
+            result.addAll(resf.get(timeout, timeUnit));
+            return result;
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             throw e;
@@ -216,7 +218,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
         }
 
         // применяем where
-        resultSql = isWherePresents ? "select * from (" + resultSql + ") " : resultSql;
+        resultSql = isWherePresents ? "select * from (" + resultSql + ") " + WHERE_ALIAS : resultSql;
         resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
         resultSql += (null != orderBy ? (" order by " + orderBy.getColumn() + " " + orderBy.getOrder()) : "");
 
