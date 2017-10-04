@@ -159,7 +159,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
         String resultSql = null;
         try {
             sql = prepareCommonSql3(defineSql(nativeSql), criterion, null);
-            resultSql = "select count(1) cnt from ( " + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
+            resultSql = "select 1 cntr from ( " + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
 
             return calculateCount(rep, resultSql, sql.getParams());
 
@@ -305,8 +305,8 @@ public class SqlPageSupportBean implements SqlPageSupport {
     }
 
     private int calculateCount(Repository dbRepository, String sql, Object[] params) throws Exception {
-        List<DataRecord> result = getSqlResult(dbRepository, new SQL(sql, params), 1, 1, DEFAULT_SQL_TIMEOUT.getTimeUnit(), DEFAULT_SQL_TIMEOUT.getTimeout());
-        return MAX_ROW_COUNT + 1 == result.get(0).getInteger("cnt") ? -MAX_ROW_COUNT : result.get(0).getInteger("cnt");
+        List<DataRecord> result = getSqlResult(dbRepository, new SQL(sql, params), 1, MAX_ROW_COUNT + 1, DEFAULT_SQL_TIMEOUT.getTimeUnit(), DEFAULT_SQL_TIMEOUT.getTimeout());
+        return MAX_ROW_COUNT + 1 == result.size() ? -MAX_ROW_COUNT : result.size();
     }
 
     private static Object[] addItem(Object[] array, Object object) {
