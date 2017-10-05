@@ -93,7 +93,7 @@ public class ReprocessWtacOparationsTask implements ParamsAwareRunnable {
 
             auditController.info(RecalcWTAC
                     , format("Повторная обработка операций со статусом '%s' за день '%s'", OperState.WTAC, dateStr ));
-            int errorCount = etlPostingController.reprocessWtacOperations(dateWtacPrev, dateWtacPrev ).size();
+            int errorCount = etlPostingController.reprocessWtacOperations(dateWtacPrev).size();
             if (errorCount > 0){
                 auditController.warning(RecalcWTAC, format("Обработано с ошибкой %d операций", errorCount), null, "");
             } else {
@@ -115,7 +115,7 @@ public class ReprocessWtacOparationsTask implements ParamsAwareRunnable {
             if (errorCountBv > 0){
                 auditController.warning(RecalcWTAC, format("Обработано с ошибкой %d BackValue операций", errorCountBv), null, "");
             } else {
-                auditController.info(RecalcWTAC, format("Все BackValue операции со статусом %s повторно обработаны", OperState.WTAC));
+                auditController.info(RecalcWTAC, format("Все BackValue операции со статусом %s повторно обработаны", OperState.BWTAC));
             }
 
             auditController.info(RecalcWTAC

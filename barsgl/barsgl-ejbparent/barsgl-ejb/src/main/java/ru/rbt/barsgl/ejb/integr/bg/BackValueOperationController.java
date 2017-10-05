@@ -117,7 +117,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
             if (BWTAC.equals(operation.getState())) {
                 // изменяем статус, чтобы операция обработалась в общем потоке
                 operationRepository.updateOperationStatusSuccess(operation, BLOAD);
-                return false;
+                return true;
             }
             try {
                 finalOperation(operationProcessor, operation);

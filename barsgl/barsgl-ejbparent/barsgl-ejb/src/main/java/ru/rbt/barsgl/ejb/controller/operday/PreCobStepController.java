@@ -96,8 +96,8 @@ public class PreCobStepController {
 
     public CobStepResult processFan(Date operday) {
         try {
-            List<String> refs = operationRepository.getFanOperationLoad(operdayController.getOperday().getCurrentDate());
-            if (refs.size() > 0) {
+            Long cnt = operationRepository.getFanOperationLoad(operdayController.getOperday().getCurrentDate());
+            if (cnt > 0) {
                 return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
                     String msg = format(" обработки вееров актуальных на дату '%s'"
                             , dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate()));
@@ -114,8 +114,8 @@ public class PreCobStepController {
 
                     auditController.info(PreCob, "Успешное завершение " + msg);
 
-                    List<String> res = operationRepository.getFanOperationProcessed(operdayController.getOperday().getCurrentDate(), refs);
-                    return new CobStepResult(CobStepStatus.Success, format("Найдено вееров %d. Обработано вееров %d", refs.size(), res.size()));
+                    Long cntOk = operationRepository.getFanOperationProcessed(operdayController.getOperday().getCurrentDate());
+                    return new CobStepResult(CobStepStatus.Success, format("Найдено вееров %d. Обработано вееров %d", cnt, cntOk));
                 }, 60 * 60);
             } else {
                 return new CobStepResult(CobStepStatus.Skipped, format("Нет вееров для обработки"));

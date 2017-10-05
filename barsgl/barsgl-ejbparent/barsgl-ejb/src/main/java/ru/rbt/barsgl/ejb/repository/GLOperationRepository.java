@@ -394,11 +394,11 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
                 , parentReference, storno, YesNo.Y, getFanVdatefrom());
     }
 
-    public List<String> getFanOperationLoad(Date procdate) {
+    public Long getFanOperationLoad(Date procdate) {
         try {
-            List<DataRecord> res = select("select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE = ?",
+            DataRecord res = selectFirst("select count(DISTINCT PAR_RF) from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE = ?",
                     procdate, OperState.LOAD.name());
-            return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+            return res.getLong(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -410,6 +410,16 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
                     StringUtils.listToString(refs, ", ", "'") + ") ",
                     procdate, OperState.POST.name(), OperState.SOCANC.name());
             return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public Long getFanOperationProcessed(Date procdate) {
+        try {
+            DataRecord res = selectFirst("select count(DISTINCT PAR_RF) from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE in (?, ?) ",
+                    procdate, OperState.POST.name(), OperState.SOCANC.name());
+            return res.getLong(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

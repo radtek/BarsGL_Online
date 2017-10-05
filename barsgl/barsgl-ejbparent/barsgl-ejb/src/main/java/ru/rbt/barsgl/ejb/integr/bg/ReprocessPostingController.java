@@ -77,12 +77,9 @@ public class ReprocessPostingController {
         int cnt = errorRepository.setErrorsCorrected(idList, correctType.getTypeName(), comment, idPstNew, userContext.getTimestamp(), userContext.getUserName());
         checkUpdate(errorIdList.size(), cnt);
 
-        if (BERCHK == state) {
+        if (BERCHK == state || BERWTAC == state) {
             String gloidList = StringUtils.listToString(errorRepository.getOperationIdList(idList), ",");
             errorRepository.updateBvOperationsStateReprocess(gloidList, BLOAD);
-        } else if (BERWTAC == state) {
-            String gloidList = StringUtils.listToString(errorRepository.getOperationIdList(idList), ",");
-            errorRepository.updateBvOperationsStateReprocess(gloidList, BWTAC);
         } else {
             // получить список из GL_ETLPST: ID, PKG_ID
             List<DataRecord> postingList = errorRepository.getPostingIdList(idList);

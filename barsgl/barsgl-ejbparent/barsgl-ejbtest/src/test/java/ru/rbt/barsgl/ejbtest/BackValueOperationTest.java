@@ -291,6 +291,8 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
         operation = (GLBackValueOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(BV_MANUAL, operation.getOperClass());
         Assert.assertEquals(BWTAC, operation.getState());
+        Assert.assertNotNull(operation.getErrorMessage());
+        System.out.println(operation.getErrorMessage());
         Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
 
         Assert.assertNotNull(operation.getOperExt());
@@ -704,7 +706,7 @@ public class BackValueOperationTest extends AbstractTimerJobTest {
                 "from GLOperation o where o.etlPostingRef = ?1 ", pst.getId());
         Assert.assertEquals(POST, oper.getState());
 
-        remoteAccess.invoke(CloseLastWorkdayBalanceTask.class, "reprocessErckStorno", operday.getLastWorkingDay(), operday.getCurrentDate());
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "reprocessErckStorno", operday.getLastWorkingDay(), operday.getCurrentDate());
         operBvSt = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operBvSt.getId());
         Assert.assertEquals(POST, operBvSt.getState());
         Assert.assertNull(operBvSt.getOperExt());

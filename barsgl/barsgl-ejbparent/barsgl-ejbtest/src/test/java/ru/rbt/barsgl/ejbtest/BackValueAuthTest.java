@@ -314,9 +314,9 @@ public class BackValueAuthTest extends AbstractTimerJobTest {
          * авторизовать
          * запустить обработку
          */
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(),  "40702810%");
-        String bsaCt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "30111810%");
-        String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "70601810_990%");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(),  "40702810_0001%");
+        String bsaCt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%");
+        String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "70601810_9_01%");
         BigDecimal amt1 = new BigDecimal("897.65");
         BigDecimal amt2 = new BigDecimal("100.01");
         BankCurrency currency = RUB;

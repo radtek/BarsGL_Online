@@ -168,15 +168,15 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
 
     /**
      * Повторная обработка опреаций со статусом WTAC
-     * @param date1 первая дата валютирования
+     * @param prevdate первая дата валютирования
      * @param date2 вторая дата валютирования
      * @return операции обработанные с ошибками
      */
-    public List<GLOperation> reprocessWtacOperations(Date date1, Date date2) throws Exception {
+    public List<GLOperation> reprocessWtacOperations(Date prevdate) throws Exception {
         List<GLOperation> res = new ArrayList<GLOperation>();
         //TODO Golomin Предполагаемое количество операци - небольшое, если будет критическим, переписать на JDBC
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
-                "FROM GLOperation g WHERE g.state = ?1 AND g.valueDate IN (?2 , ?3) ORDER BY g.id", OperState.WTAC, date1, date2);
+                "FROM GLOperation g WHERE g.state = ?1 AND g.currentDate = ?2 ORDER BY g.id", OperState.WTAC, prevdate);
         if (operations.size() > 0) {
             auditController.info(Operation, format("Найдено %d отложенных операций", operations.size()));
             for (GLOperation operation : operations) {
