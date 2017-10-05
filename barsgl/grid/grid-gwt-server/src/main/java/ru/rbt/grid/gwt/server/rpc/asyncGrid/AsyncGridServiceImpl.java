@@ -23,6 +23,7 @@ import ru.rbt.shared.ExceptionUtils;
 
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -251,11 +252,14 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         TimeoutException toe = ExceptionUtils.findException(t, TimeoutException.class);
         if (toe != null) throw new SqlQueryTimeoutException(toe);
 
+        SQLSyntaxErrorException ssee = ExceptionUtils.findException(t, SQLSyntaxErrorException.class);
+        if (ssee != null) throw new Exception(ssee);
+
         SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
         if( null != ex )
             throw new SqlQueryTimeoutException(ex);
         else
-            throw new RuntimeException();
+            throw new RuntimeException(t);
     }
 
 }

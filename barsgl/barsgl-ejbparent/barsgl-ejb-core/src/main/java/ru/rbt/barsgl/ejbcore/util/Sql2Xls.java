@@ -4,13 +4,9 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.io.OutputStream;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,15 +22,12 @@ public class Sql2Xls {
 
     public static final Logger logger = Logger.getLogger(Sql2Xls.class.getName());
 
-    private final String query;
-    private final ArrayList<Object> params;
     private List<XlsColumn> columns = new ArrayList();
     private ExcelExportHead head = null;
-    private List<Row> headRows = new ArrayList();
+    private List<DataRecord> dataRecords;
 
-    public Sql2Xls(String query, ArrayList<Object> params) {
-        this.query = query;
-        this.params = params;
+    public Sql2Xls(List<DataRecord> dataRecords) {
+        this.dataRecords = dataRecords;
     }
 
     private void writeHead(Sheet sheet){
@@ -61,14 +54,12 @@ public class Sql2Xls {
         cell.setCellValue("Условия фильтра: " + head.getFilter());
     }
 
-    public void process(OutputStream out, Connection connection) throws Exception {
+    public void process(OutputStream out) throws Exception {
         if(this.columns.isEmpty()) {
             throw new Exception("Колонки не заданы");
         } else {
             SXSSFWorkbook wb;
             Sheet curSheet;
-            PreparedStatement statement = null;
-            ResultSet rs = null;
             Row row;
             int rowNumber = head == null ? 0 : 5;
             wb = new SXSSFWorkbook(100);
@@ -77,10 +68,6 @@ public class Sql2Xls {
 
             try {
                 curSheet = wb.createSheet();
-
-                statement = connection.prepareStatement(this.query);
-                bindParameters(statement, this.params);
-                rs = statement.executeQuery();
                 row = curSheet.createRow(rowNumber);
 
                 Cell cell;
@@ -97,30 +84,31 @@ public class Sql2Xls {
                 }
                 writeHead(curSheet);
 
-                while(rs.next()) {
+                for(DataRecord record: dataRecords){
                     ++rowNumber;
                     row = curSheet.createRow(rowNumber);
 
                     for(int e = 0; e < this.columns.size(); ++e) {
                         XlsColumn column = columns.get(e);
                         String columnName = column.getName();
-                        if(rs.getObject(columnName) != null) {
+
+                        if (record.getObject(columnName) != null) {
                             cell = row.createCell(e);
                             CellStyle cellStyle;
                             switch(column.getType()) {
                                 case STRING:
-                                    cell.setCellValue(rs.getString(columnName));
+                                    cell.setCellValue(record.getString(columnName));
                                     break;
                                 case BOOLEAN:
-                                    cell.setCellValue(rs.getBoolean(columnName));
+                                    cell.setCellValue(record.getBoolean(columnName));
                                     break;
                                 case INTEGER:
-                                    cell.setCellValue((double)rs.getInt(columnName));
+                                    cell.setCellValue((double)record.getInteger(columnName));
                                 case LONG:
-                                    cell.setCellValue((double)rs.getLong(columnName));
+                                    cell.setCellValue((double)record.getLong(columnName));
                                     break;
                                 case DECIMAL:
-                                    cell.setCellValue(rs.getBigDecimal(columnName).doubleValue());
+                                    cell.setCellValue(record.getBigDecimal(columnName).doubleValue());
                                     if(!cellStyles.containsKey(Integer.valueOf(e))) {
                                         cellStyle = wb.createCellStyle();
                                         cellStyle.setDataFormat(cHelper.createDataFormat().getFormat(column.getFormat()));
@@ -130,7 +118,7 @@ public class Sql2Xls {
                                     cell.setCellStyle((CellStyle)cellStyles.get(Integer.valueOf(e)));
                                     break;
                                 case DATE:
-                                    cell.setCellValue(rs.getDate(columnName));
+                                    cell.setCellValue(record.getDate(columnName));
                                     if(!cellStyles.containsKey(Integer.valueOf(e))) {
                                         cellStyle = wb.createCellStyle();
                                         cellStyle.setDataFormat(cHelper.createDataFormat().getFormat(((XlsColumn)this.columns.get(e)).getFormat()));
@@ -140,7 +128,7 @@ public class Sql2Xls {
                                     cell.setCellStyle((CellStyle)cellStyles.get(Integer.valueOf(e)));
                                     break;
                                 case DATETIME:
-                                    cell.setCellValue(rs.getTimestamp(columnName));
+                                    cell.setCellValue(record.getDate(columnName));
                                     if(!cellStyles.containsKey(Integer.valueOf(e))) {
                                         cellStyle = wb.createCellStyle();
                                         cellStyle.setDataFormat(cHelper.createDataFormat().getFormat(((XlsColumn)this.columns.get(e)).getFormat()));
@@ -153,7 +141,6 @@ public class Sql2Xls {
                         }
                     }
                 }
-
                 wb.write(out);
             } catch (Exception var24) {
                 var24.printStackTrace();
@@ -161,24 +148,6 @@ public class Sql2Xls {
             } catch (Throwable t) {
                 t.printStackTrace();
                 throw new Exception(t.getMessage(),t);
-            } finally {
-//                wb.dispose();
-                try {
-                    if(statement != null) {
-                        statement.close();
-                    }
-                } catch (SQLException var23) {
-                    ;
-                }
-
-                try {
-                    if(rs != null) {
-                        rs.close();
-                    }
-                } catch (SQLException var22) {
-                    ;
-                }
-
             }
         }
     }
@@ -189,29 +158,6 @@ public class Sql2Xls {
 
     public void setColumns(List<XlsColumn> columns) {
         this.columns = columns;
-    }
-
-    private static void bindParameters(PreparedStatement statement, ArrayList<Object> params) throws SQLException {
-        if(params != null) {
-            for(int i = 0; i < params.size(); ++i) {
-                Object param = params.get(i);
-                if(param == null) {
-                    statement.setObject(i + 1, (Object)null);
-                } else if(param instanceof String) {
-                    statement.setString(i + 1, (String)param);
-                } else if(param instanceof Date) {
-                    statement.setDate(i + 1, new java.sql.Date(((Date)param).getTime()));
-                } else if(param instanceof Long) {
-                    statement.setLong(i + 1, ((Long)param).longValue());
-                } else if(param instanceof BigDecimal) {
-                    statement.setBigDecimal(i + 1, (BigDecimal)param);
-                } else if(param instanceof Integer) {
-                    statement.setInt(i + 1, ((Integer)param).intValue());
-                } else {
-                    statement.setObject(i + 1, param);
-                }
-            }
-        }
     }
 
     public void setHead(ExcelExportHead head) {
