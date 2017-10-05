@@ -49,7 +49,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     public static final String WHERE_ALIAS = "v1";
     public static final int MAX_PAGE_SIZE = 100000;
-    public static final int MAX_ROW_COUNT = 5000;
+    public static final int MAX_ROW_COUNT = 1000;
 
     public enum TimeoutInternal {
         DEFAULT_SQL_TIMEOUT(3, TimeUnit.MINUTES);
