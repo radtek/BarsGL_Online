@@ -184,6 +184,26 @@ public class BackValueOperationController extends AbstractEtlPostingController{
     }
 
     /**
+     * Повторная обработка опреаций со статусом WTAC по списку
+     * @return количество операций обработанных с ошибками
+     */
+    public int reprocessWtacBackValue(List<Long> idList) throws Exception {
+        int res = 0;
+        if (idList.size() > 0) {
+            auditController.info(Operation, format("Переобработка %d отложенных BackValue операций", idList.size()));
+            for (Long id : idList) {
+                GLBackValueOperation operation = bvOperationRepository.findById(GLBackValueOperation.class, id);
+                if (!reprocessOperation(operation, "Переобработка ошибочных отложенных (BERWTAC) операций"))
+                    res++;
+            }
+            return res;
+        } else {
+            auditController.info(Operation, "Не найдено отложенных BackValue операций");
+        }
+        return res;
+    }
+
+    /**
      * Повторная обработка сторно, которые должны были выйти на ручную обработку
      * @param prevdate предыдущий ОД
      * @param curdate день создания операции (текущий ОД)
