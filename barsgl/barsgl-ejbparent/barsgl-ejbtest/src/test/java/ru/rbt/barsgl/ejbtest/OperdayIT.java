@@ -262,10 +262,9 @@ public class OperdayIT extends AbstractTimerJobIT {
         updateOperday(ONLINE, OPEN);
 
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
-        stopProcessing();
 
         // задача мониторинга ETL
-        checkCreateEtlStructureMonitor();
+        startupEtlStructureMonitor();
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -295,7 +294,6 @@ public class OperdayIT extends AbstractTimerJobIT {
         //baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
 
         jobService.executeJob(calendarJob);
-        remoteAccess.invoke(ExecutePreCOBTaskNew.class, "run", "ExecutePreCOBTaskNew", new Properties());
 
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);

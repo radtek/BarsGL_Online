@@ -328,7 +328,7 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
      */
     protected GLOperation setDateParameters(IncomingPostingProcessor etlPostingProcessor
             , GLOperation operation) throws Exception {
-        return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence,connection) -> {
+        return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
             etlPostingProcessor.setDateParameters(operation);                                  // обогащение операции
             return operationRepository.update(operation);
         });
@@ -496,6 +496,14 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
 
     private <T> T throwsSupplied(Supplier<? extends Exception> supplier) throws Exception {
         throw supplier.get();
+    }
+
+    protected GLOperation refreshOperationForcibly(GLOperation operation) {
+        try {
+            return operationRepository.executeInNewTransaction(persistence -> operationRepository.refresh(operation, true));
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 
     @PostConstruct

@@ -12,7 +12,7 @@ public class GLBackValueOperation extends GLOperation {
 
     // GL_OPEREXT - Параметры авторизации BackValue ======
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = false)    // fetch = FetchType.LAZY,
+    @OneToOne(cascade = CascadeType.ALL)    //, orphanRemoval = true, optional = false)    // fetch = FetchType.LAZY,
     @JoinColumn(name="GLOID", insertable = false, updatable = false)
     private GLOperationExt operExt;
 

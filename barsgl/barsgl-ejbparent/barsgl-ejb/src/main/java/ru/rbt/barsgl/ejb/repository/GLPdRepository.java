@@ -236,7 +236,7 @@ public class GLPdRepository extends AbstractBaseEntityRepository<GLPd, Long> {
     public List<Long> getOperationPdIdList(long parentId) {
         String sql = "select pd.ID from GL_OPER o" +
                     " join GL_PD pd on o.GLOID = pd.GLO_REF" +
-                    " where VALUE(o.PAR_GLO, o.GLOID) = ?";
+                    " where COALESCE(o.PAR_GLO, o.GLOID) = ?";
         try {
             List<DataRecord> res = select(sql, parentId);
             if (null == res)

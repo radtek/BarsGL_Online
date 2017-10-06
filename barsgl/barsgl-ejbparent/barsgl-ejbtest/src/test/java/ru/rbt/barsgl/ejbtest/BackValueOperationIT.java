@@ -16,6 +16,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.BackValueOperationController;
+import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
@@ -78,12 +79,13 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         }
         setCalendar2015_02();
 
-        saveTable("GL_BVPARM");
-        saveTable("GL_CRPRD");
+//        saveTable("GL_BVPARM");
+//        saveTable("GL_CRPRD");
 
         setBVparams();
     }
 
+/*
     @AfterClass
     public static  void  restoreTables() {
         restoreTable("GL_BVPARM");
@@ -104,6 +106,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("insert into " + tblName + " (select * from " + tmpName + ")");
         baseEntityRepository.executeNativeUpdate("drop table " + tmpName);
     }
+*/
 
     // заполнить корректно календарь
     public static void setCalendar2015_02() {
@@ -560,7 +563,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 
         remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
         operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals("GLOID = " + operation.getId(), POST, operation.getState());
+        Assert.assertEquals("GLOID = " + operation.getId(), COMPLETED, operation.getOperExt().getManualStatus());
 
     }
 
@@ -569,12 +573,13 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         testPostingBV();
         Date curdate = getOperday().getCurrentDate();
 
-        List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class, "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2",
+        List<GLBackValueOperation> gloids = baseEntityRepository.select(GLBackValueOperation.class, "from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2",
                 OperState.BLOAD, CONTROL);
         Assert.assertFalse(gloids.isEmpty());
-        String ops = gloids.stream().map(op -> " " + op).collect(Collectors.joining(","));
-        baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = ?2, o.equivalentCredit = ?3 where o.id in (" + ops + ")",
-                getOperday().getCurrentDate(), null, null);
+        String ops = gloids.stream().map(op -> " " + op.getId()).collect(Collectors.joining(","));
+        System.out.println(ops);
+        baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = null, o.equivalentCredit = null, o.bsChapter = null where o.id in (" + ops + ")", //
+                getOperday().getCurrentDate());
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + ops + ")", BackValuePostStatus.SIGNEDDATE);
 
         List<GLBackValueOperation> operations = remoteAccess.invoke(BackValueOperationRepository.class, "getOperationsForProcessing", 0, curdate);
@@ -586,8 +591,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 
         for (GLBackValueOperation operation : operations) {
             GLBackValueOperation oper = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
-            Assert.assertEquals(POST, oper.getState());
-            Assert.assertEquals(COMPLETED, oper.getOperExt().getManualStatus());
+            Assert.assertEquals("GLOID = " + oper.getId(), POST, oper.getState());
+            Assert.assertEquals("GLOID = " + oper.getId(), COMPLETED, oper.getOperExt().getManualStatus());
             List<GLPosting> postList = getPostings(operation);
             for (GLPosting post: postList) {                // в каждой проводке:
                 List<Pd> pdList = getPostingPd(post);
@@ -606,41 +611,41 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         testCreateBackWtacOperation();
         testCreateBackWtacOperation();
 
-        List<Long> gloids = baseEntityRepository.select(GLBackValueOperation.class,
-                "select o.id from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.currentDate = ?3 ",
+        List<GLBackValueOperation> gloids = baseEntityRepository.select(GLBackValueOperation.class,
+                "from GLBackValueOperation o where o.state = ?1 and o.operExt.manualStatus = ?2 and o.currentDate = ?3 ",
                 OperState.BWTAC, CONTROL, od.getLastWorkingDay());
         Assert.assertTrue(gloids.size() >= 2);
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%2");
-        String ops = gloids.stream().map(op -> " " + op).collect(Collectors.joining(","));
+        String ops = gloids.stream().map(op -> " " + op.getId()).collect(Collectors.joining(","));
         baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1 where o.id in (" + ops + ")", bsaDt);
-        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0) + ")", BackValuePostStatus.SIGNEDDATE);
+        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0).getId() + ")", BackValuePostStatus.SIGNEDDATE);
 
         // обработка WTAC
         setOperday(od.getCurrentDate(), od.getLastWorkingDay(), ONLINE, OPEN);
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
 
-        GLBackValueOperation oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(0));
+        GLBackValueOperation oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(0).getId());
         Assert.assertNotNull(oper1);
-        Assert.assertEquals(BLOAD, oper1.getState());
+        Assert.assertEquals("GLOID = " + oper1.getId(), BLOAD, oper1.getState());
 
-        GLBackValueOperation oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(1));
+        GLBackValueOperation oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(1).getId());
         Assert.assertNotNull(oper2);
-        Assert.assertEquals(BLOAD, oper2.getState());
+        Assert.assertEquals("GLOID = " + oper2.getId(), BLOAD, oper2.getState());
 
-        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(1) + ")", BackValuePostStatus.SIGNEDDATE);
+        baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(1).getId() + ")", BackValuePostStatus.SIGNEDDATE);
 
         // обработка BLOAD
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessBackValueOperationsTask.class).build());
         oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, oper1.getId());
         Assert.assertNotNull(oper1);
-        Assert.assertEquals(POST, oper1.getState());
-        Assert.assertEquals(COMPLETED, oper1.getOperExt().getManualStatus());
+        Assert.assertEquals("GLOID = " + oper1.getId(), POST, oper1.getState());
+        Assert.assertEquals("GLOID = " + oper1.getId(), COMPLETED, oper1.getOperExt().getManualStatus());
 
         oper2 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, oper2.getId());
         Assert.assertNotNull(oper2);
-        Assert.assertEquals(POST, oper2.getState());
-        Assert.assertEquals(COMPLETED, oper2.getOperExt().getManualStatus());
+        Assert.assertEquals("GLOID = " + oper2.getId(), POST, oper2.getState());
+        Assert.assertEquals("GLOID = " + oper2.getId(), COMPLETED, oper2.getOperExt().getManualStatus());
 
     }
 
@@ -675,19 +680,19 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 
         GLBackValueOperation operBv = (GLBackValueOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
                 "from GLBackValueOperation o where o.etlPostingRef = ?1 ", pstBv.getId());
-        Assert.assertEquals(BLOAD, operBv.getState());
-        Assert.assertEquals(CONTROL, operBv.getOperExt().getManualStatus());
+        Assert.assertEquals("GLOID = " + operBv.getId(), BLOAD, operBv.getState());
+        Assert.assertEquals("GLOID = " + operBv.getId(), CONTROL, operBv.getOperExt().getManualStatus());
         GLBackValueOperation operBvSt = (GLBackValueOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
                 "from GLBackValueOperation o where o.etlPostingRef = ?1 ", pstBvSt.getId());
-        Assert.assertEquals(ERCHK, operBvSt.getState());
-        Assert.assertNull(operBvSt.getOperExt());
+        Assert.assertEquals("GLOID = " + operBvSt.getId(), ERCHK, operBvSt.getState());
+        Assert.assertNull("GLOID = " + operBvSt.getId(), operBvSt.getOperExt());
 
-        GLOperation oper = (GLOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+        GLOperation oper = (GLOperation) baseEntityRepository.selectFirst(GLOperation.class,
                 "from GLOperation o where o.etlPostingRef = ?1 ", pst.getId());
         Assert.assertNull(oper);
-        GLOperation operSt = (GLOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+        GLOperation operSt = (GLOperation) baseEntityRepository.selectFirst(GLOperation.class,
                 "from GLOperation o where o.etlPostingRef = ?1 ", pstSt.getId());
-        Assert.assertEquals(ERCHK, operSt.getState());
+        Assert.assertEquals("GLOID = " + operSt.getId(), ERCHK, operSt.getState());
 
         // авторизуем operBv операцию
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + operBv.getId() + ")", BackValuePostStatus.SIGNEDDATE);
@@ -697,24 +702,24 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         jobService.executeJob(mon);
 
         operBv = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operBv.getId());
-        Assert.assertEquals(POST, operBv.getState());
-        Assert.assertEquals(COMPLETED, operBv.getOperExt().getManualStatus());
+        Assert.assertEquals("GLOID = " + operBv.getId(), POST, operBv.getState());
+        Assert.assertEquals("GLOID = " + operBv.getId(), COMPLETED, operBv.getOperExt().getManualStatus());
 
-        oper = (GLOperation) baseEntityRepository.selectFirst(GLBackValueOperation.class,
+        oper = (GLOperation) baseEntityRepository.selectFirst(GLOperation.class,
                 "from GLOperation o where o.etlPostingRef = ?1 ", pst.getId());
-        Assert.assertEquals(POST, oper.getState());
+        Assert.assertEquals("GLOID = " + oper.getId(), POST, oper.getState());
 
-        remoteAccess.invoke(CloseLastWorkdayBalanceTask.class, "reprocessErckStorno", operday.getLastWorkingDay(), operday.getCurrentDate());
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "reprocessErckStorno", operday.getLastWorkingDay(), operday.getCurrentDate());
         operBvSt = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operBvSt.getId());
-        Assert.assertEquals(POST, operBvSt.getState());
-        Assert.assertNull(operBvSt.getOperExt());
-        Assert.assertEquals(vdatePast, operBvSt.getValueDate());
-        Assert.assertEquals(operday.getCurrentDate(), operBvSt.getPostDate());
+        Assert.assertEquals("GLOID = " + operBvSt.getId(), POST, operBvSt.getState());
+        Assert.assertNull("GLOID = " + operBvSt.getId(), operBvSt.getOperExt());
+        Assert.assertEquals("GLOID = " + operBvSt.getId(), vdatePast, operBvSt.getValueDate());
+        Assert.assertEquals("GLOID = " + operBvSt.getId(), operday.getCurrentDate(), operBvSt.getPostDate());
 
         operSt = (GLOperation) baseEntityRepository.findById(GLOperation.class, operSt.getId());
-        Assert.assertEquals(POST, operSt.getState());
-        Assert.assertEquals(vdatePrev, operSt.getValueDate());
-        Assert.assertEquals(vdatePrev, operSt.getPostDate());
+        Assert.assertEquals("GLOID = " + operSt.getId(), POST, operSt.getState());
+        Assert.assertEquals("GLOID = " + operSt.getId(), vdatePrev, operSt.getValueDate());
+        Assert.assertEquals("GLOID = " + operSt.getId(), vdatePrev, operSt.getPostDate());
 
     }
 
@@ -738,8 +743,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         operation = (GLBackValueOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
-        Assert.assertEquals(BLOAD, operation.getState());
+        Assert.assertEquals("GLOID = " + operation.getId(), pst.getValueDate(), operation.getPostDate());
+        Assert.assertEquals("GLOID = " + operation.getId(), BLOAD, operation.getState());
 
         baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1, o.bsChapter = null where o.id = ?2", bsaCt9, operation.getId());
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id = ?2", BackValuePostStatus.SIGNEDDATE, operation.getId());
@@ -761,14 +766,14 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         Assert.assertFalse(res.isError());
         System.out.println(res.getMessage());
         operation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
-        Assert.assertEquals(BLOAD, operation.getState());
+        Assert.assertEquals("GLOID = " + operation.getId(), BLOAD, operation.getState());
 
         // обработка BLOAD
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessBackValueOperationsTask.class).build());
         GLBackValueOperation bvOperation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
         Assert.assertNotNull(bvOperation);
-        Assert.assertEquals(POST, bvOperation.getState());
-        Assert.assertEquals(COMPLETED, bvOperation.getOperExt().getManualStatus());
+        Assert.assertEquals("GLOID = " + bvOperation.getId(), POST, bvOperation.getState());
+        Assert.assertEquals("GLOID = " + bvOperation.getId(), COMPLETED, bvOperation.getOperExt().getManualStatus());
     }
 
 

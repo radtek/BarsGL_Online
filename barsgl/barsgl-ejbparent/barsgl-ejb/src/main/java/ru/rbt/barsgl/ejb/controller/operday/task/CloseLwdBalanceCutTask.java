@@ -57,9 +57,6 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
     @EJB
     private LwdBalanceCutRepository lwdBalanceCutRepository;
 
-    @EJB
-    private AuditController auditController;
-
     @Inject
     DateUtils dateUtils;
 

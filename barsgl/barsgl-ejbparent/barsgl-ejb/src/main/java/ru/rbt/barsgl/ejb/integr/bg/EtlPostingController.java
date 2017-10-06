@@ -216,12 +216,4 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
         }
     }
 
-    private GLOperation refreshOperationForcibly(GLOperation operation) {
-        try {
-            return operationRepository.executeInNewTransaction(persistence -> operationRepository.refresh(operation, true));
-        } catch (Exception e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
 }

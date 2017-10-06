@@ -42,11 +42,11 @@ public class BackValueOperationController extends AbstractEtlPostingController{
 
     /**
      * Обработка операции после авторизиции и подтверждения / изменения даты
-     * @param operation
      * @return
      * @throws Exception
      */
     public Boolean processBackValueOperation(GLBackValueOperation operation) throws Exception {
+        operation = refreshOperationForcibly(operation);
         String msgCommon = format(" BackValue операции: '%d', ID_PST: '%s'", operation.getId(), operation.getAePostingId());
         if (operation.getState() != POST ) {
             GLOperationExt operationExt = operation.getOperExt();
@@ -200,6 +200,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
             auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций BV_MANUAL", operations.size()));
             for (GLBackValueOperation operation: operations ) {
                 // дата проводки в прошлом дне - пересчитать параметры
+                operation = refreshOperationForcibly(operation);
                 operation.setPostDate(curdate);
                 setDateParameters(ordinaryPostingProcessor, operation);
                 if (reprocessOperation(operation, "Повторная обработка СТОРНО операций BV_MANUAL (ERCHK)")) {
@@ -243,7 +244,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
         }
     }
 
-    private GLBackValueOperation refreshOperationForcibly(GLBackValueOperation operation) {
+    public GLBackValueOperation refreshOperationForcibly(GLBackValueOperation operation) {
         try {
             return operationRepository.executeInNewTransaction(persistence -> bvOperationRepository.refresh(operation, true));
         } catch (Exception e) {
