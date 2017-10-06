@@ -157,7 +157,7 @@ public class BatchPostingRepository extends AbstractBaseEntityRepository<BatchPo
                 "INSERT INTO GL_BATPST (ID, INVISIBLE, ID_PAR, " + histfields + ")" +
                 " SELECT GL_BATPST_SEQ.NEXTVAL, 'H', ID, "  + histfields + " FROM GL_BATPST WHERE ID = ?",
                 postingId);
-        Long idHist = selectFirst("SELECT IDENTITY_VAL_LOCAL() id FROM SYSIBM.SYSDUMMY1").getLong("id");
+        Long idHist = selectFirst("SELECT GL_BATPST_SEQ.CURRVAL id FROM DUAL").getLong("id");
         executeNativeUpdate("UPDATE GL_BATPST SET OTS_CHNG = ?, USER_CHNG = ?, ID_PAR = ?, ID_PREV = ? WHERE ID = ?",
                 timestamp, userName, postingId, idHist, postingId);
         return findById(postingId);

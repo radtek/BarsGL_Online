@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.WorkmodRepository;
 import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;

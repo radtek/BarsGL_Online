@@ -548,7 +548,7 @@ public class OperdayIT extends AbstractTimerJobIT {
     @Test public void testCloseLwdBalanceCutJob() throws Exception {
 
         try {
-//            startupEtlStructureMonitor();                               // запустить обработку проводок
+            startupEtlStructureMonitor();                               // запустить обработку проводок
             shutdownJob(CloseLwdBalanceCutTask.class.getSimpleName());  // остановить задачу закрытия баланса
             setLwdCut();                                                // установить текущее время как время отсечки
 
