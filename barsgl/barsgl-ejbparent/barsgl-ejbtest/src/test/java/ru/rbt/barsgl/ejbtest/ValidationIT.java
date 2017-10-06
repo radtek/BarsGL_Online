@@ -341,7 +341,7 @@ public class ValidationIT extends AbstractTimerJobIT {
         baseEntityRepository.executeUpdate("update GLOperation G set G.accountDebit = ?1, G.accountCredit = ?2 WHERE G.id=?3", rightAcDr, rightAcCr, gloid);
         //JPA update accounts in selected WTAC operation
 
-        remoteAccess.invoke(EtlPostingController.class, "reprocessWtacOperations", getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
+        remoteAccess.invoke(EtlPostingController.class, "reprocessWtacOperations", getOperday().getCurrentDate());
         //launch new OperDay
 
         // LK бессмысленно, могут быть другие необработанные операции WTAC
