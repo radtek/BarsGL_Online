@@ -1,10 +1,9 @@
 package ru.rbt.barsgl.ejb.controller;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -21,8 +20,8 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -66,10 +65,12 @@ public class BackvalueJournalController {
     public int recalculateLocal() throws Exception {
         return processRecalcException(connection -> {
             final int[] count = {0};
-            List<BackvalueJournal> journal = journalRepository.select(BackvalueJournal.class,
-                    "  from BackvalueJournal j " +
-                            " where j.state = ?1 " +
-                            " order by j.id.postingDate desc, j.id.bsaAcid, j.id.acid", BackvalueJournalState.NEW);
+            List<DataRecord> journal = journalRepository
+                    .select("select min(pod) min_pod, bsaacid, acid \n" +
+                    " from gl_bvjrnl j \n" +
+                    "where state = ? \n" +
+                    "group by bsaacid, acid \n" +
+                    "order by 1,2,3", BackvalueJournalState.NEW.name());
             if (!journal.isEmpty()) {
                 auditController.info(Task, format("Начало пересчета/локализации. Записей в журнале BACKVALUE: '%s'", journal.size()));
             } else {
@@ -81,7 +82,7 @@ public class BackvalueJournalController {
                 logger.info(format("deleted from GL_LOCACC: %s", journalRepository.executeNativeUpdate("delete from GL_LOCACC")));
                 journal.stream().forEach(rec ->
                         journalRepository.executeNativeUpdate("insert into GL_LOCACC (bsaacid,acid,pod) values (?,?,?)"
-                            , rec.getId().getBsaAcid(), rec.getId().getAcid(), rec.getId().getPostingDate()));
+                            , rec.getString("bsaacid"), rec.getString("acid"), rec.getDate("min_pod")));
                 count[0]++;
                 return null;
             });

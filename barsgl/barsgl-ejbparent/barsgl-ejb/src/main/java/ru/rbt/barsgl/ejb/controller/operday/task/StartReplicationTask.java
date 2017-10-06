@@ -7,6 +7,7 @@ import ru.rbt.barsgl.ejb.etc.SshProcedureRunner;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.WorkmodRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.enums.Repository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
@@ -19,6 +20,7 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.StartLoaderTask;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.StartReplicationTask;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 
 /**
  * Created by ER19391 on 11.09.2017.
@@ -77,6 +79,16 @@ public class StartReplicationTask  extends AbstractJobHistoryAwareTask {
             return false;
         } else {
             return true;
+        }
+    }
+
+    @Override
+    protected boolean checkJobStatus(String jobName, Properties properties) {
+        try {
+            return checkAlreadyRunning(jobName, properties);
+        } catch (ValidationError e) {
+            auditController.warning(Task, format("Задача %s не выполнена", jobName), null, e);
+            return false;
         }
     }
 
