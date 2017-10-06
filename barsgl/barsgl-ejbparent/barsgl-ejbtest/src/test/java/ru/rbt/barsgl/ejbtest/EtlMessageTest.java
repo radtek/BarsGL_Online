@@ -689,7 +689,8 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertEquals(OperState.POST, operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
+        Date wday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", longPrev, false);
+        Assert.assertEquals(operation.getPostDate()+"", wday, operation.getPostDate());
 
         // переход через месяц
         curr = DateUtils.parseDate("16.02.2015", "dd.MM.yyyy");
@@ -718,18 +719,18 @@ public class EtlMessageTest extends AbstractTimerJobTest {
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
         Assert.assertEquals(operation.getPostDate()+"", hold, operation.getPostDate());
 
-        // AOS
+        // AOS  // TODO нужна доработка
         pst.setSourcePosting(AOS.getLabel());
         operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
         Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
