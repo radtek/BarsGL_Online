@@ -223,6 +223,7 @@ public class OperAuthBVForm extends MDForm {
                         } else {
                             if (dlg != null) dlg.hide();
                             showInfo(res.getMessage());
+                            masterRefreshAction.execute();
                         }
                         WaitingManager.hide();
                     }

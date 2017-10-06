@@ -13,7 +13,15 @@ import java.util.Date;
  */
 public class ClosedReportPeriodRepository extends AbstractBaseEntityRepository<ClosedReportPeriod, Date> {
 
-    public ClosedReportPeriod findIntersectedRecord(ClosedReportPeriodWrapper wrapper) {
+    public ClosedReportPeriod findPeriodByLastDate(ClosedReportPeriodWrapper wrapper) {
+        return selectFirst(ClosedReportPeriod.class, "from ClosedReportPeriod p where p.lastDate = ?1", wrapper.getLastDate());
+    }
+
+    public ClosedReportPeriod findPeriodByCutDate(ClosedReportPeriodWrapper wrapper) {
+        return selectFirst(ClosedReportPeriod.class, "from ClosedReportPeriod p where p.cutDate = ?1", wrapper.getCutDate());
+    }
+
+    public ClosedReportPeriod findIntersectedPeriod(ClosedReportPeriodWrapper wrapper) {
         return selectFirst(ClosedReportPeriod.class, "from ClosedReportPeriod p where" +
                 " (p.cutDate > ?1 and p.lastDate < ?2) or" +
                 " (p.cutDate < ?1 and p.lastDate > ?2)", wrapper.getCutDate(), wrapper.getLastDate());

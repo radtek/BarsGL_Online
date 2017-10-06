@@ -145,7 +145,8 @@ public class CobStatIT extends AbstractTimerJobIT  {
     public void testCobTaskNew() throws Exception {
         updateOperday(ONLINE, OPEN);
         updateOperdayMode(Operday.PdMode.BUFFER, ProcessingStatus.STARTED);
-        startupEtlStructureMonitor();
+//        startupEtlStructureMonitor();
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
         SingleActionJob job = createPreCobTaskJob();
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());

@@ -294,6 +294,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         operation = (GLBackValueOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(BV_MANUAL, operation.getOperClass());
         Assert.assertEquals(BWTAC, operation.getState());
+        Assert.assertNotNull(operation.getErrorMessage());
+        System.out.println(operation.getErrorMessage());
         Assert.assertEquals(pst.getValueDate(), operation.getPostDate());
 
         Assert.assertNotNull(operation.getOperExt());

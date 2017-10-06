@@ -117,7 +117,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
             if (BWTAC.equals(operation.getState())) {
                 // изменяем статус, чтобы операция обработалась в общем потоке
                 operationRepository.updateOperationStatusSuccess(operation, BLOAD);
-                return false;
+                return true;
             }
             try {
                 finalOperation(operationProcessor, operation);
@@ -174,6 +174,26 @@ public class BackValueOperationController extends AbstractEtlPostingController{
             auditController.info(Operation, format("Найдено %d отложенных BackValue операций", operations.size()));
             for (GLBackValueOperation operation : operations) {
                 if (!reprocessOperation(operation, "Обработка отложенных (BWTAC) операций"))
+                    res++;
+            }
+            return res;
+        } else {
+            auditController.info(Operation, "Не найдено отложенных BackValue операций");
+        }
+        return res;
+    }
+
+    /**
+     * Повторная обработка опреаций со статусом WTAC по списку
+     * @return количество операций обработанных с ошибками
+     */
+    public int reprocessWtacBackValue(List<Long> idList) throws Exception {
+        int res = 0;
+        if (idList.size() > 0) {
+            auditController.info(Operation, format("Переобработка %d отложенных BackValue операций", idList.size()));
+            for (Long id : idList) {
+                GLBackValueOperation operation = bvOperationRepository.findById(GLBackValueOperation.class, id);
+                if (!reprocessOperation(operation, "Переобработка ошибочных отложенных (BERWTAC) операций"))
                     res++;
             }
             return res;

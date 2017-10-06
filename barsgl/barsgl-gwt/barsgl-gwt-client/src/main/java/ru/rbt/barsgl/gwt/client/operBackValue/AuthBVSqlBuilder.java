@@ -27,7 +27,7 @@ public class AuthBVSqlBuilder {
                                   "'' as MNL_NRT, '' as MNL_STATUS, '' as USER_AU3, cast(null as TIMESTAMP) as OTS_AU3, " +
                                   "cast(null as TIMESTAMP) as OTS_AUTO, '' as AUTHOR " +
                                   "from V_GL_OPERCUST op ";
-    private String _BASE_WHERE = "where op.VDATE < op.PROCDATE and op.STATE ='POST' and op.OPER_CLASS <> 'BV_MANUAL' ";
+    private String _BASE_WHERE = "where op.VDATE < op.PROCDATE and op.STATE ='POST' and op.OPER_CLASS <> 'BV_MANUAL' and op.INP_METHOD = 'AE' ";
     private String _STANDARD_AUTO_WHERE = "and op.FAN <> 'Y' and op.SRC_PST <>'K+TP' ";
     private String _NONSTANDARD_KPlusTP_WHERE = "and op.FAN <> 'Y' and op.SRC_PST ='K+TP' ";
     private String _NONSTANDARD_FAN_WHERE =  "and op.FAN = 'Y' ";

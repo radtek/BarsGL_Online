@@ -31,15 +31,18 @@ public class ReprocessPostingController {
 
     private static final Logger log = Logger.getLogger(ReprocessPostingController.class);
 
-    @Inject
+    @EJB
     private GLErrorRepository errorRepository;
 
     @Inject
     private UserContext userContext;
 
+    @Inject
+    BackValueOperationController bvOperationController;
+
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public int correctPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType, OperState state) throws SQLException {
+    public int correctPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType, OperState state) throws Exception {
         switch (correctType.getCorrectType()) {
             case NEW:
                 return closePostingErrors(errorIdList, comment, idPstNew, correctType);
@@ -64,7 +67,7 @@ public class ReprocessPostingController {
         return cnt;
     }
 
-    public int reprocessPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType, OperState state) throws SQLException {
+    public int reprocessPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType, OperState state) throws Exception {
         String idList = StringUtils.listToString(errorIdList, ",");
         List<String> opers = errorRepository.getOperCorrList(idList, YesNo.Y);
         if (opers.size() != 0) {
@@ -78,17 +81,19 @@ public class ReprocessPostingController {
         checkUpdate(errorIdList.size(), cnt);
 
         if (BERCHK == state) {
-            String gloidList = StringUtils.listToString(errorRepository.getOperationIdList(idList), ",");
-            errorRepository.updateBvOperationsStateReprocess(gloidList, BLOAD);
+            String gloids = StringUtils.listToString(errorRepository.getOperationIdList(idList), ",");
+            errorRepository.updateBvOperationsStateReprocess(gloids, BLOAD);
         } else if (BERWTAC == state) {
-            String gloidList = StringUtils.listToString(errorRepository.getOperationIdList(idList), ",");
-            errorRepository.updateBvOperationsStateReprocess(gloidList, BWTAC);
+            List<Long> gloidList = errorRepository.getOperationIdList(idList);
+            String gloids = StringUtils.listToString(gloidList , ",");
+            errorRepository.executeInNewTransaction(persistence -> {errorRepository.updateBvOperationsStateReprocess(gloids, BWTAC); return null;});
+            bvOperationController.reprocessWtacBackValue(gloidList);
         } else {
             // получить список из GL_ETLPST: ID, PKG_ID
             List<DataRecord> postingList = errorRepository.getPostingIdList(idList);
-            String idPstList = StringUtils.listToString(postingList.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");
-            String idPkgList = StringUtils.listToString(postingList.stream().map(r -> r.getLong(1)).collect(Collectors.toList()), ",");
-            errorRepository.updatePostingsStateReprocess(idPstList, idPkgList);
+            String idPsts = StringUtils.listToString(postingList.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");
+            String idPkgs = StringUtils.listToString(postingList.stream().map(r -> r.getLong(1)).collect(Collectors.toList()), ",");
+            errorRepository.updatePostingsStateReprocess(idPsts, idPkgs);
         }
 
         return cnt;

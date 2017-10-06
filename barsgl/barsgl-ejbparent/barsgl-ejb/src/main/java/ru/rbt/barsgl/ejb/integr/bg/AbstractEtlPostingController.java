@@ -154,6 +154,8 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
                 if (operation.isBackValue()) {
                     // TODO: статус BWTAC
                     createOperationExt(operationProcessor, operation, BWTAC);
+                    String msg = "Отложена обработка BackValue" + msgCommon;
+                    operationErrorMessage(errors, msg, operation, BWTAC, false);
                 } else
                 if (operation.isStorno()                    // сторно в тот же день - продолжить
                         && operation.stornoOneday(operdayController.getOperday().getCurrentDate())) {
