@@ -681,7 +681,7 @@ public class OperdayIT extends AbstractTimerJobIT {
     }
 
     public static void shutdownJob(String jobName) {
-        TimerJob job = remoteAccess.invoke(BackgroundJobsController.class, "getJob", jobName);
+        TimerJob job = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class, "from TimerJob j where j.name = ?1", jobName);
         if (null != job)
             remoteAccess.invoke(BackgroundJobsController.class, "shutdownJob", job);
     }
