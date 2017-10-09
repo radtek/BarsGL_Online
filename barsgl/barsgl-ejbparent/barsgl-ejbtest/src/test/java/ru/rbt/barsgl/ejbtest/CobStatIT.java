@@ -150,8 +150,10 @@ public class CobStatIT extends AbstractTimerJobIT  {
 
         SingleActionJob job = createPreCobTaskJob();
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
+//        updateUnprocessedPackegaes();
         jobService.executeJob(job);
 
+        Thread.sleep(5000L);
         Long idCob = null;
         RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);
         CobWrapper wrapper1 = res.getResult();
@@ -238,5 +240,11 @@ public class CobStatIT extends AbstractTimerJobIT  {
                     item.getPhaseNo().toString(), item.getStatus().getLabel(),
                     item.getIntEstimation().toString(), item.getIntDuration().toString(), item.getIntPercent().toString(),
                     null != item.getMessage() ? ("message: " + item.getMessage()) : "");
+    }
+
+    private void updateUnprocessedPackegaes() {
+        baseEntityRepository.executeNativeUpdate("update GL_ETLPKG P set P.STATE = 'ERROR'" +
+                        " WHERE P.STATE IN ('WORKING', 'LOADED', 'INPROGRESS')" +
+                        "   AND P.DT_LOAD > (SELECT CAST(LWDATE - 10 AS TIMESTAMP) FROM GL_OD)");
     }
 }

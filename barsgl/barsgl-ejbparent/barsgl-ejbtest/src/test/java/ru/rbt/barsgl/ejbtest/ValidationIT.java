@@ -1101,6 +1101,14 @@ public class ValidationIT extends AbstractTimerJobIT {
             Assert.assertTrue(errorMessage.contains(errorCode));
 
         GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        if (null == errorRecord) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        }
         String errRecordCode = errorRecord.getErrorCode();
         for (String errorCode : errorCodes)
             Assert.assertTrue(errRecordCode.contains(errorCode));

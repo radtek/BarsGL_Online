@@ -318,7 +318,7 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
          * авторизовать
          * запустить обработку
          */
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(),  "40701810_0001%");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(),  "40902810_0001%");
         String bsaCt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%");
         String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "70601810_9_01%");
         BigDecimal amt1 = new BigDecimal("897.65");

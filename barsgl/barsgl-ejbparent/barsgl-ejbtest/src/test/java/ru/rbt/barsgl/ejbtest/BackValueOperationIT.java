@@ -627,6 +627,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         setOperday(od.getCurrentDate(), od.getLastWorkingDay(), ONLINE, OPEN);
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
 
+        Thread.sleep(1000L);
         GLBackValueOperation oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(0).getId());
         Assert.assertNotNull(oper1);
         Assert.assertEquals("GLOID = " + oper1.getId(), BLOAD, oper1.getState());
