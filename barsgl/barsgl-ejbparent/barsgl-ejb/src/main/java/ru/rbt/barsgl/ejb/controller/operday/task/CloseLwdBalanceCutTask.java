@@ -199,11 +199,13 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
     }
 
     public CobStepResult reprocessErckStorno(Date prevdate, Date curdate) throws Exception {
-        int cntBvMnl = bvPostingController.reprocessErckStornoBvMnl(prevdate, curdate);
-        int cntBvAuto = bvPostingController.reprocessErckStornoBvAuto(prevdate, curdate);
-        int cnt = etlPostingController.reprocessErckStornoToday(prevdate, curdate);
-        if (cnt > 0 || cntBvMnl > 0 || cntBvAuto > 0) {
-            return new CobStepResult(CobStepStatus.Success, format("Обработано СТОРНО операций BV_MANUAL: %d, AUTOMATIC: %d (bv), : %d (не bv)", cntBvMnl, cntBvAuto, cnt));
+        int[] cntBvMnl = bvPostingController.reprocessErckStornoBvMnl(prevdate, curdate);
+        int[] cntBvAuto = bvPostingController.reprocessErckStornoBvAuto(prevdate, curdate);
+        int[] cntToday = etlPostingController.reprocessErckStornoToday(prevdate, curdate);
+        int all = cntBvMnl[0] + cntBvAuto[0] + cntToday[0];
+        if (all > 0) {
+            return new CobStepResult(CobStepStatus.Success, format("Обработано СТОРНО операций BV_MANUAL: %d из %d, AUTOMATIC bv: %d из %d, AUTOMATIC не bv: %d из %d"
+                    , cntBvMnl[1], cntBvMnl[0] , cntBvAuto[1], cntBvAuto[0], cntToday[1], cntToday[0]));
         } else {
             return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");
         }
