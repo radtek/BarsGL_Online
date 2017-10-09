@@ -734,7 +734,7 @@ public class StornoBufferTest extends AbstractTimerJobTest {
         oper = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper.getId());
         Assert.assertEquals(POST, oper.getState());
 
-        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStorno"
+        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStornoToday"
                 , getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
 
         operStrn = (GLOperation) baseEntityRepository.findById(GLOperation.class, operStrn.getId());

@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatRecalculator;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
@@ -21,6 +22,8 @@ import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -154,6 +157,10 @@ public class CobStatTest extends AbstractTimerJobTest  {
         SingleActionJob job = createPreCobTaskJob();
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
         jobService.executeJob(job);
+
+        JobHistory hist = (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.jobName = ?1", job.getName());
+        Assert.assertNotNull("Не удалось запустить задачу " + job.getName(), hist);
+        Assert.assertEquals("Неверный статус выполнения задачи", DwhUnloadStatus.SUCCEDED, hist.getResult());
 
         Long idCob = null;
         RpcRes_Base<CobWrapper> res = remoteAccess.invoke(CobStatService.class, "getCobInfo", idCob);

@@ -191,7 +191,7 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
                 setPreCobState();
 
                 auditController.info(Operday, "Повторная обработка сторно");
-                beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
+                beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> closeLastWorkdayBalanceTask.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
 
                 auditController.info(Operday, "Обработка вееров");
                 beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> preCobStepController.processFan());

@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -174,7 +173,7 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
                     auditController.error(Operday, msg, null, "");
                     return new RpcRes_Base<>(false, true, msg);
                 }
-                etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
+                reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
             }
 
             operdayController.closeLastWorkdayBalance();
@@ -200,11 +199,11 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
     }
 
     public CobStepResult reprocessErckStorno(Date prevdate, Date curdate) throws Exception {
-        int cntBv = bvPostingController.reprocessErckStornoMnl(prevdate, curdate);
-        int cnt = bvPostingController.reprocessErckStornoAuto(prevdate, curdate);
-        cnt += etlPostingController.reprocessErckStorno(prevdate, curdate);
-        if (cnt > 0 || cntBv > 0) {
-            return new CobStepResult(CobStepStatus.Success, format("Обработано СТОРНО операций AUTOMATIC: %d, BV_MANUAL: %d, ", cnt, cntBv));
+        int cntBvMnl = bvPostingController.reprocessErckStornoBvMnl(prevdate, curdate);
+        int cntBvAuto = bvPostingController.reprocessErckStornoBvAuto(prevdate, curdate);
+        int cnt = etlPostingController.reprocessErckStornoToday(prevdate, curdate);
+        if (cnt > 0 || cntBvMnl > 0 || cntBvAuto > 0) {
+            return new CobStepResult(CobStepStatus.Success, format("Обработано СТОРНО операций BV_MANUAL: %d, AUTOMATIC: %d (bv), : %d (не bv)", cntBvMnl, cntBvAuto, cnt));
         } else {
             return new CobStepResult(CobStepStatus.Skipped, "Не найдено сторно операций для повторной обработки");
         }
