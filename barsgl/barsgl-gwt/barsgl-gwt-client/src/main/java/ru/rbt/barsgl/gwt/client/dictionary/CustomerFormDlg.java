@@ -44,24 +44,23 @@ public abstract class CustomerFormDlg extends GridFormDlgBase {
         @Override
         protected Table prepareTable() {
             Table result = new Table();
-            Column col;
-
-            result.addColumn(colCustNo = new Column("CUSTNO", Column.Type.STRING, "Номер клиента", 30));
+            result.addColumn(colCustNo = new Column("CUSTNO", Column.Type.STRING, "Номер клиента", 40));
             result.addColumn(new Column("CUSTNAME", Column.Type.STRING, "Имя клиента", 120));
             result.addColumn(new Column("NAME", Column.Type.STRING, "Имя клиента (на английском)", 80));
+            result.addColumn(new Column("BRANCH", Column.Type.STRING, "Отделение", 30, false, false));
             result.addColumn(new Column("FILIAL", Column.Type.STRING, "Филиал", 30));
             result.addColumn(new Column("CTYPE", Column.Type.STRING, "Тип собственности", 20, true, false));
             result.addColumn(new Column("CTYPENAME", Column.Type.STRING, "Имя собственности", 20, false, false));
             return result;
         }
 
-        @Override
+       /* @Override
         public ArrayList<SortItem> getInitialSortCriteria() {
             ArrayList<SortItem> list = new ArrayList<SortItem>();
             list.add(new SortItem("CUSTNO", Column.Sort.ASC));
             return list;
         }
-
+*/
         @Override
         public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
             custNo = (String)initialFilterParams[0];

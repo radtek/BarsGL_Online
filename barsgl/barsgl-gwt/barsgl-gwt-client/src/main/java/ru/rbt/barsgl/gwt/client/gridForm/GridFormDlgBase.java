@@ -45,7 +45,6 @@ public abstract class GridFormDlgBase extends DlgFrame implements IDlgEvents {
     public Widget createContent() {
         dataPanel = new DockLayoutPanel(Style.Unit.PCT);
         gridForm = getGridForm();
-//        gridForm.getGrid().refresh();
         dataPanel.add(gridForm);
         dataPanel.setWidth(getGridWidth());
         dataPanel.setHeight(getGridHeight());

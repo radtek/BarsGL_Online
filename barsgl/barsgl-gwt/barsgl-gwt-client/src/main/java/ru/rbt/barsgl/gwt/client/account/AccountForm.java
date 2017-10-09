@@ -97,8 +97,8 @@ public class AccountForm extends EditableDictionary<ManualAccountWrapper> {
         result.addColumn(new Column("PSAV", STRING, "А/ П", 25));
         result.addColumn(new Column("ACID", STRING, "Счет Midas", 160));
         result.addColumn(colDealSource = new Column("DEALSRS", STRING, "Источник сделки", 70));
-        result.addColumn(colDealId = new Column("DEALID", STRING, "ИД сделки", 120));
-        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 160));
+        result.addColumn(colDealId = new Column("DEALID", STRING, "ИД сделки", 150));
+        result.addColumn(new Column("SUBDEALID", STRING, "ИД субсделки", 150));
         result.addColumn(new Column("CBCCN", STRING, "Код филиала", 60, false, false));
         result.addColumn(colFilial = new Column("CBCC", STRING, "Филиал", 40));
         result.addColumn(new Column("BRANCH", STRING, "Отделение", 40));
