@@ -153,7 +153,7 @@ public class CobStatIT extends AbstractTimerJobIT  {
 
         SingleActionJob job = createPreCobTaskJob();
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
-//        updateUnprocessedPackegaes();
+        updateUnprocessedPackegaes();
         jobService.executeJob(job);
 
         JobHistory hist = (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.jobName = ?1", job.getName());
