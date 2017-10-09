@@ -56,7 +56,7 @@ public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
             checkOperdayStatus(operdayController.getOperday());
 
             if (withStorno) {
-                etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
+                reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate());
             }
 
             operdayController.closeLastWorkdayBalance();
@@ -76,9 +76,9 @@ public class CloseLastWorkdayBalanceTask implements ParamsAwareRunnable {
     }
 
     public CobStepResult reprocessErckStorno(Date prevdate, Date curdate) throws Exception {
-        int cntBv = bvPostingController.reprocessErckStornoMnl(prevdate, curdate);
-        int cnt = bvPostingController.reprocessErckStornoAuto(prevdate, curdate);
-        cnt += etlPostingController.reprocessErckStorno(prevdate, curdate);
+        int cntBv = bvPostingController.reprocessErckStornoBvMnl(prevdate, curdate);
+        int cnt = bvPostingController.reprocessErckStornoBvAuto(prevdate, curdate);
+        cnt += etlPostingController.reprocessErckStornoToday(prevdate, curdate);
         if (cnt > 0 || cntBv > 0) {
             return new CobStepResult(CobStepStatus.Success, format("Обработано СТОРНО операций AUTOMATIC: %d, BV_MANUAL: %d, ", cnt, cntBv));
         } else {

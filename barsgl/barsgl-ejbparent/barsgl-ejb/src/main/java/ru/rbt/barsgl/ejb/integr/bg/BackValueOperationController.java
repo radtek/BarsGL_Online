@@ -209,7 +209,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
      * @param curdate день создания операции (текущий ОД)
      * @return false в случае ошибок иначе true
      */
-    public int reprocessErckStornoMnl(Date prevdate, Date curdate) throws Exception {
+    public int reprocessErckStornoBvMnl(Date prevdate, Date curdate) throws Exception {
         int cnt = 0;
         // TODO убедиться, что в выборку попадают только BackBalue операции (OPER_CLASS = BV_MANUAL)
         // TODO среди них могут быть не дошедшие до авторизации и авторизованные - те, что упали после авторизации, пееробрабатывать не надо ???
@@ -234,26 +234,25 @@ public class BackValueOperationController extends AbstractEtlPostingController{
     }
 
     /**
-     * Повторная обработка сторно BackValue, которые должны были быть обработаны автоматически (кроме нестандартных - вееров и К+ТР)
+     * Повторная обработка сторно BackValue, которые должны были быть обработаны автоматически
      * @param prevdate предыдущий ОД
      * @param curdate день создания операции (текущий ОД)
      * @return false в случае ошибок иначе true
      */
-    public int reprocessErckStornoAuto(Date prevdate, Date curdate) throws Exception {
+    public int reprocessErckStornoBvAuto(Date prevdate, Date curdate) throws Exception {
         int cnt = 0;
-        // TODO убедиться, что в выборку попадают только BackBalue операции (OPER_CLASS = BV_MANUAL)
-        // TODO среди них могут быть не дошедшие до авторизации и авторизованные - те, что упали после авторизации, пееробрабатывать не надо
-        // TODO что с датой ??
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
                 "FROM GLOperation g WHERE g.state = ?1 AND g.storno = ?2 AND g.operClass = ?3 AND g.currentDate = ?4" +
-                        " AND g.valueDate < ?5 AND g.fan <> ?6 AND g.sourcePosting <> ?7 ORDER BY g.id"
-                , ERCHK, YesNo.Y, AUTOMATIC, curdate, prevdate, YesNo.Y, KondorPlus.getLabel());
+                        " AND g.valueDate < ?5 ORDER BY g.id"
+                , ERCHK, YesNo.Y, AUTOMATIC, curdate, prevdate);
         if (operations.size() > 0) {
             auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций BackValue AUTOMATIC", operations.size()));
             for (GLOperation operation: operations ) {
-                // дата проводки в прошлом дне - пересчитать параметры
-                operation.setPostDate(curdate);
-                setDateParameters(ordinaryPostingProcessor, operation);
+                // дата проводки в прошлом дне - пересчитать параметры (кроме нестандартных операций)
+                if (!operation.isNonStandard()) {
+                    operation.setPostDate(curdate);
+                    setDateParameters(ordinaryPostingProcessor, operation);
+                }
                 if (etlPostingController.reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }

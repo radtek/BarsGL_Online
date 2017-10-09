@@ -74,8 +74,8 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                         BatchPostStatus.WAITDATE.name(), BatchPostStatus.SIGNED.name(), BatchPostStatus.SIGNEDDATE.name(), BatchPostStatus.SIGNEDVIEW.name());
                 return res.getLong(0);
             case CobStornoProc:
-                res = selectOne("select count(1) from GL_OPER where STATE = ? and VDATE in (?, ?) and STRN = ?",
-                        OperState.ERCHK.name(), curdate, lwdate, YesNo.Y.name());
+                res = selectOne("select count(1) from GL_OPER where STATE = ? and STRN = ? and (CURDATE = ? or VDATE in (?, ?))",
+                        OperState.ERCHK.name(), YesNo.Y.name(), curdate, curdate, lwdate);
                 return res.getLong(0);
             case CobCloseBalance:
                 return 0L;
