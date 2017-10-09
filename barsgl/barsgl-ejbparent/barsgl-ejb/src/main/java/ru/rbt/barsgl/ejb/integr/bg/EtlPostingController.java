@@ -196,7 +196,7 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
      * @param date2 вторая дата валютирования
      * @return false в случае ошибок иначе true
      */
-    public int reprocessErckStornoToday(Date date1, Date date2) throws Exception {
+    public int[] reprocessErckStornoToday(Date date1, Date date2) throws Exception {
         int cnt = 0;
         // TODO убедиться, что в выборку попадают только автоматические операции (OPER_CLASS = AUTOMATIC)
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
@@ -209,10 +209,9 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
                     cnt++;
                 }
             }
-            return cnt;
+            return new int[]{operations.size(), cnt};
         } else {
-//            auditController.info(Operation, "Не найдено сторно операций для повторной обработки");
-            return 0;
+            return new int[]{0, 0};
         }
     }
 

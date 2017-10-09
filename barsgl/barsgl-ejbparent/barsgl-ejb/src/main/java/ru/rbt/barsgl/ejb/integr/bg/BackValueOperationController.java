@@ -209,7 +209,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
      * @param curdate день создания операции (текущий ОД)
      * @return false в случае ошибок иначе true
      */
-    public int reprocessErckStornoBvMnl(Date prevdate, Date curdate) throws Exception {
+    public int[] reprocessErckStornoBvMnl(Date prevdate, Date curdate) throws Exception {
         int cnt = 0;
         // TODO убедиться, что в выборку попадают только BackBalue операции (OPER_CLASS = BV_MANUAL)
         // TODO среди них могут быть не дошедшие до авторизации и авторизованные - те, что упали после авторизации, пееробрабатывать не надо ???
@@ -227,9 +227,9 @@ public class BackValueOperationController extends AbstractEtlPostingController{
                     cnt++;
                 }
             }
-            return cnt;
+            return new int[]{operations.size(), cnt};
         } else {
-            return 0;
+            return new int[]{0, 0};
         }
     }
 
@@ -239,7 +239,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
      * @param curdate день создания операции (текущий ОД)
      * @return false в случае ошибок иначе true
      */
-    public int reprocessErckStornoBvAuto(Date prevdate, Date curdate) throws Exception {
+    public int[] reprocessErckStornoBvAuto(Date prevdate, Date curdate) throws Exception {
         int cnt = 0;
         List<GLOperation> operations = operationRepository.select(GLOperation.class,
                 "FROM GLOperation g WHERE g.state = ?1 AND g.storno = ?2 AND g.operClass = ?3 AND g.currentDate = ?4" +
@@ -248,18 +248,20 @@ public class BackValueOperationController extends AbstractEtlPostingController{
         if (operations.size() > 0) {
             auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций BackValue AUTOMATIC", operations.size()));
             for (GLOperation operation: operations ) {
+/*
                 // дата проводки в прошлом дне - пересчитать параметры (кроме нестандартных операций)
                 if (!operation.isNonStandard()) {
                     operation.setPostDate(curdate);
                     setDateParameters(ordinaryPostingProcessor, operation);
                 }
+*/
                 if (etlPostingController.reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }
             }
-            return cnt;
+            return new int[]{operations.size(), cnt};
         } else {
-            return 0;
+            return new int[]{0, 0};
         }
     }
 
