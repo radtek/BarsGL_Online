@@ -126,10 +126,13 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
                      return false;
                  }
                  else {                             // больше сюда попадать не должны
+                     auditController.warning(Operation, "Повторная обработка BackValue операции как AUTOMATIC");
+/*
                      String msg = "Ошибка обработки операции BackValue";
                      operationErrorMessage(new DefaultApplicationException("Неверный процесс обработки: BackValue операции не должны здесь обрабатываться"),
                              msg + msgCommon, operation, ERPROC, initSource());
                      return false;
+*/
                  }
             }
             try {
@@ -169,7 +172,6 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
     /**
      * Повторная обработка опреаций со статусом WTAC
      * @param prevdate первая дата валютирования
-     * @param date2 вторая дата валютирования
      * @return операции обработанные с ошибками
      */
     public List<GLOperation> reprocessWtacOperations(Date prevdate) throws Exception {
