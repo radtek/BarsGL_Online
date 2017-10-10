@@ -622,12 +622,12 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         String ops = gloids.stream().map(op -> " " + op.getId()).collect(Collectors.joining(","));
         baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1 where o.id in (" + ops + ")", bsaDt);
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0).getId() + ")", BackValuePostStatus.SIGNEDDATE);
+        baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", ReprocessWtacOparationsTask.JOB_NAME);
 
         // обработка WTAC
         setOperday(od.getCurrentDate(), od.getLastWorkingDay(), ONLINE, OPEN);
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
 
-        Thread.sleep(1000L);
         GLBackValueOperation oper1 = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, gloids.get(0).getId());
         Assert.assertNotNull(oper1);
         Assert.assertEquals("GLOID = " + oper1.getId(), BLOAD, oper1.getState());
