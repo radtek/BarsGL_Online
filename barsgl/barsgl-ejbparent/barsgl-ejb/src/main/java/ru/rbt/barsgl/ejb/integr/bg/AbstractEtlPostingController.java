@@ -94,6 +94,9 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
     protected GLErrorController errorController;
 
     @EJB
+    protected ReprocessPostingController reprocessController;
+
+    @EJB
     protected BeanManagedProcessor beanManagedProcessor;
 
     protected List<IncomingPostingProcessor> cachedPostingProcessors;

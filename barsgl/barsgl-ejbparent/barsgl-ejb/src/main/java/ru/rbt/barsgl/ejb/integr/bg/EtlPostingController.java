@@ -152,6 +152,7 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
                 return false;
             }
             operation = refreshOperationForcibly(operation);
+            reprocessController.closeReprocessOperErrors(operation.getId(), reason);
             if (processOperation(operation, false)) {
                 auditController.info(Operation,
                         format("Успешное завершение повторной обработки операции '%s'. Причина '%s'.", operation.getId(), reason)
