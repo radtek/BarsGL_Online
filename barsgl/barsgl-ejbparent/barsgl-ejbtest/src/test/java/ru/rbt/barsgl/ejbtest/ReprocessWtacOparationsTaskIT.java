@@ -81,7 +81,6 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
     public void testAll() throws Exception {
         updateOperday(ONLINE,OPEN);
 
-        baseEntityRepository.executeNativeUpdate("delete from GL_SCHED_H");
         baseEntityRepository.executeNativeUpdate("update GL_ETLPKG set STATE = 'ERROR' where STATE = 'LOADED'");
 
         Long stamp = System.currentTimeMillis();
@@ -112,8 +111,10 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
 
         oper1.setAccountCredit("40817036200012959997");
         oper1.setValueDate(getOperday().getLastWorkingDay());
+        oper1.setCurrentDate(getOperday().getLastWorkingDay());
         baseEntityRepository.update(oper1);
 
+        baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", ReprocessWtacOparationsTask.JOB_NAME);
         // обработка WTAC
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
 
