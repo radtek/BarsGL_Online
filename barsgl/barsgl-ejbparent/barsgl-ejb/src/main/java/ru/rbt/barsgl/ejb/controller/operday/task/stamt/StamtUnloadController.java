@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.ejbcore.validation.ErrorCode.TASK_ERROR;
 
 /**
@@ -146,21 +145,16 @@ public class StamtUnloadController {
      * @throws Exception
      */
     public boolean checkConsumed(ErrorCode errorCode) throws Exception {
-        try {
-            List<DataRecord> unloads = repository.select(
-                            "select *\n" +
-                            "  from V_GL_STM_AWAIT s\n" +
-                            " where s.operday >= (select lwdate from gl_od)");
-            Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(errorCode
-                    , format("Найдены необработанные выгрузки: %s", unloads.stream()
-                    .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
-                            + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
-                    .collect(Collectors.joining(" ")))));
-            return true;
-        } catch (Throwable e) {
-            auditController.error(Task, "Найдены необработанные выгрузки", null, e);
-            return false;
-        }
+        List<DataRecord> unloads = repository.select(
+                "select *\n" +
+                        "  from V_GL_STM_AWAIT s\n" +
+                        " where s.operday >= (select lwdate from gl_od)");
+        Assert.isTrue(unloads.isEmpty(), () -> new ValidationError(errorCode
+                , format("Найдены необработанные выгрузки: %s", unloads.stream()
+                .map(rec -> rec.getString("ID") + ":" + rec.getString("PARNAME")
+                        + ":" + rec.getString("PARDESC") + ":" + rec.getString("PARVALUE"))
+                .collect(Collectors.joining(" ")))));
+        return true;
     }
 
 

@@ -74,7 +74,12 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
 
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
-        return unloadController.checkConsumed(STAMT_UNLOAD_DELETED) && checkNewDeleted(properties);
+        try {
+            return unloadController.checkConsumed(STAMT_UNLOAD_DELETED) && checkNewDeleted(properties);
+        } catch (Throwable e) {
+            auditController.error(StamtPstDeleted, "Не прошла проверка возможности выполнения выгрузки удаленных проводок в STAMT", null, e);
+            return false;
+        }
     }
 
     @Override
