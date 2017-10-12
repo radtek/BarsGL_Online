@@ -1,8 +1,8 @@
 package ru.rbt.barsgl.ejb.repository;
 
+import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.shared.enums.Repository;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
