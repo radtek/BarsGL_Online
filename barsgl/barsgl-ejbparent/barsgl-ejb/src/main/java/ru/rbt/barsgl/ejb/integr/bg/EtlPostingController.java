@@ -151,8 +151,8 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
             if (!refillAccounts(operation)) {
                 return false;
             }
-            operation = refreshOperationForcibly(operation);
             reprocessController.closeReprocessOperErrors(operation.getId(), reason);
+            operation = refreshOperationForcibly(operation);
             if (processOperation(operation, false)) {
                 auditController.info(Operation,
                         format("Успешное завершение повторной обработки операции '%s'. Причина '%s'.", operation.getId(), reason)

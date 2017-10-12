@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLwdBalanceCutTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -621,13 +622,14 @@ public class StornoIT extends AbstractTimerJobIT {
         logger.info("oper id=" + oper.getId());
 
         oper = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper.getId());
-        Assert.assertEquals(POST, oper.getState());
+        Assert.assertEquals("GLOID = " + oper.getId(), POST, oper.getState());
 
-        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStornoToday"
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "reprocessErckStorno"
+//        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStornoToday"
                 , getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
 
         operStrn = (GLOperation) baseEntityRepository.findById(GLOperation.class, operStrn.getId());
-        Assert.assertEquals(OperState.SOCANC, operStrn.getState());
+        Assert.assertEquals("GLOID = " + operStrn.getId(), OperState.SOCANC, operStrn.getState());
 
     }
 
