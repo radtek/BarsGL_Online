@@ -1100,15 +1100,7 @@ public class ValidationIT extends AbstractTimerJobIT {
         for (String errorCode : errorCodes)
             Assert.assertTrue(errorMessage.contains(errorCode));
 
-        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
-        if (null == errorRecord) {
-            try {
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
-        }
+        GLErrorRecord errorRecord = getErrorRecord(pstRef, null);
         String errRecordCode = errorRecord.getErrorCode();
         for (String errorCode : errorCodes)
             Assert.assertTrue(errRecordCode.contains(errorCode));
@@ -1123,8 +1115,21 @@ public class ValidationIT extends AbstractTimerJobIT {
         String errorMessage = oper.getErrorMessage();
         Assert.assertTrue(errorMessage.contains(errorCode));
 
-        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        GLErrorRecord errorRecord = getErrorRecord(pstRef, null);
         Assert.assertEquals(gloRef, errorRecord.getGlOperRef());
         Assert.assertTrue(errorRecord.getErrorCode().contains(errorCode));
+    }
+
+    private static GLErrorRecord getErrorRecord(Long pstRef, Long operRef) {
+        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        if (null == errorRecord) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        }
+        return errorRecord;
     }
 }
