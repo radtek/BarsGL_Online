@@ -623,7 +623,7 @@ public class OperNotAuthBVForm extends GridForm {
     }
 
     private String getModeWherePart(){
-        return _mode == BVModeChoiceDlg.ModeType.NONE ?  "" : "MNL_STATUS in ('CONTROL', 'HOLD')";
+        return _mode == BVModeChoiceDlg.ModeType.NONE ?  "" : "MNL_STATUS in ('CONTROL', 'HOLD') and STATE not in ('BWTAC', 'BERWTAC')";
     }
 
     private String getStateWherePart(){
@@ -637,13 +637,12 @@ public class OperNotAuthBVForm extends GridForm {
                 res = Utils.Fmt("MNL_STATUS='COMPLETED' and PROCDATE='{0}'", ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
                 break;
             case WORKING:
-                res = "MNL_STATUS='SIGNEDDATE' and STATE in ('BLOAD', 'BWTAC')";
+                res = "((MNL_STATUS='SIGNEDDATE' and STATE = 'BLOAD') or (STATE = 'BWTAC'))";
                 break;
             case NOTCOMPLETED:
-                res = "(MNL_STATUS in ('CONTROL', 'HOLD') or (MNL_STATUS='SIGNEDDATE' and STATE not in ('BLOAD', 'POST', 'BWTAC')))";
+                res = "((MNL_STATUS in ('CONTROL', 'HOLD') and STATE <> 'BWTAC') or (MNL_STATUS='SIGNEDDATE' and STATE <> 'BLOAD'))";
                 break;
         }
-
         return res;
     }
 
