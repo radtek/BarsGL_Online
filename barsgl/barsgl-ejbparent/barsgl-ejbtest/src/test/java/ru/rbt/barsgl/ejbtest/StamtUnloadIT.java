@@ -25,7 +25,6 @@ import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.io.IOException;
@@ -634,7 +633,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // формирование выгрузки в STAMT
         SingleActionJob job = SingleActionJobBuilder.create().withClass(StamtUnloadDeletedTask.class)
-                .withName("Deleted" + StringUtils.rsubstr(System.currentTimeMillis() + "", 3)).build();
+                .withName(StamtUnloadDeletedTask.class.getSimpleName()).build();
         jobService.executeJob(job);
 
         // проверка заголовков
@@ -657,10 +656,14 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         setHeaderStatus(header1.getLong("id"), DwhUnloadStatus.ERROR);
         JobHistory history = getLastHistory(job.getName());
         setHistoryStatus(history.getId(), DwhUnloadStatus.ERROR);
+
+        // удаляем одну выгруженную
+        Assert.assertTrue(1 == baseEntityRepository.executeNativeUpdate("delete from GL_STMDEL where pcid = ?", pcid1));
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
         jobService.executeJob(job);
         DataRecord header3 = getLastUnloadHeader(POSTING_DELETE);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header3.getString("parvalue"));
         Assert.assertFalse(Objects.equals(header1.getLong("id"), header3.getLong("id")));
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header3.getString("parvalue"));
 
         // инкрементальная последующая выгрузка
         Long pcidNew = createPostingUpdate(operday, rlnId1, rlnId2);
@@ -669,9 +672,12 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // нет выгрузки потому что необработана предыдущая
         DataRecord header4 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertTrue(Objects.equals(header3.getLong("id"), header4.getLong("id")));
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
 
-        setHeaderStatus(header4.getLong("id"), DwhUnloadStatus.CONSUMED);
+//        cleanHeader();
+//        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
 
+        // предыдущая выгрузка обработана, след должна пройти
         jobService.executeJob(job);
 
         header4 = getLastUnloadHeader(POSTING_DELETE);
@@ -689,9 +695,16 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // при выгрузке в следующем дне в первый раз проводки ранее выгруженные должны быть удалены
         setOperday(DateUtils.addDays(getOperday().getCurrentDate(), 1), DateUtils.addDays(getOperday().getLastWorkingDay(), 1), ONLINE, OPEN);
-        setHeaderStatus(header4.getLong("id"), DwhUnloadStatus.CONSUMED);
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
         // должна быть первая выгрузка в текущем ОД
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
+        // удаляем одну выгруженную
+        Assert.assertTrue(1 == baseEntityRepository.executeNativeUpdate("delete from GL_STMDEL where pcid = ?", pcidNew));
+
+        // учищаем остатки GL_BALSTMD
+        DataRecord balheader1 = getLastUnloadHeader(BALANCE_DELTA);
+        Assert.assertNotNull(balheader1);
+        baseEntityRepository.executeNativeUpdate("delete from GL_BALSTMD");
         jobService.executeJob(job);
 
         DataRecord header5 = getLastUnloadHeader(POSTING_DELETE);
@@ -701,6 +714,22 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         unloads = baseEntityRepository.select("select * from GL_STMDEL");
         // осталась одна в прошлой дате
         Assert.assertEquals(1, unloads.size());
+
+        unloads = baseEntityRepository.select("select * from GL_BALSTMD");
+        Assert.assertTrue(2 <= unloads.size());
+        Assert.assertTrue(rlnId1.getBsaAcid(), unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(rlnId1.getBsaAcid())
+                || r.getString("CBACCOUNT").equals(rlnId2.getBsaAcid()))));
+
+        // заголовок по остаткам
+        DataRecord balheader2 = getLastUnloadHeader(BALANCE_DELTA);
+        Assert.assertFalse(Objects.equals(balheader1.getLong("id"), balheader2.getLong("id")));
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), balheader2.getString("parvalue"));
+
+        // повторную выгрузку не производим, если нет невыгруженных удаленных проводок
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        jobService.executeJob(job);
+        DataRecord header6 = getLastUnloadHeader(POSTING_DELETE);
+        Assert.assertTrue(Objects.equals(header5.getLong("id"), header6.getLong("id")));
     }
 
     @Test
@@ -777,6 +806,11 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = ? where id = ? "
                         , status.getFlag(), headerId));
     }
+
+    private static void setHeadersStatus(DwhUnloadStatus status) throws SQLException {
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = ? ", status.getFlag());
+    }
+
 
     private static void setHistoryStatus(long headerId, DwhUnloadStatus status) {
         baseEntityRepository.executeNativeUpdate("update gl_sched_h set SCHRSLT = ? where id_hist = ?"

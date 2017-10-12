@@ -209,13 +209,7 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
             pd.setIsCorrection(isCorrection);
             pd.setPod(postDate);
             if (changeDate) {
-                // запись в журнал для пересчета баланса
-                balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), dateMin);
-                if (isBuffer) {
-                    // запись в журнал для пересчета и локазизации по счету
-                    backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), dateMin);
-                    backvalueRepository.registerChanged(pd);
-                }
+                registerJournals(pd, dateMin, isBuffer);
             }
         };
         // обновить мемордера
@@ -253,13 +247,19 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
         String invisible = wrapper.isInvisible() ? "1" : "0";
         for (AbstractPd pd : pdList) {
             pd.setInvisible(invisible);
-            // запись в журнал для пересчета и локазизации по счету
-            balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), pd.getPod());
-            if (isBuffer) {
-                backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), pd.getPod());
-                backvalueRepository.registerChanged(pd);
-            }
+            registerJournals(pd, pd.getPod(), isBuffer);
         };
+    }
+
+    private void registerJournals(AbstractPd pd, Date dateMin, boolean isBufferMode) throws Exception {
+        // ВСЕГДА - запись в журнал для пересчета и локазизации по счету
+        backvalueRepository.registerBackvalueJournalAcc(pd.getBsaAcid(), pd.getAcid(), dateMin);
+        // только в режиме БУФЕР
+        if (isBufferMode) {
+            // запись в журнал для пересчета баланса
+            balturRecalculator.registerChangeMarker(pd.getBsaAcid(), pd.getAcid(), dateMin);
+        }
+//        backvalueRepository.registerChanged(pd);      // решили вообще не делать - уже нет выгрузки в DWH
     }
 
     /**

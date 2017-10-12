@@ -1,0 +1,3 @@
+set JAVA_HOME="C:\JDK\jdk1.8.0_131"
+
+mvn clean install -DskipTests -e -P ear-prod

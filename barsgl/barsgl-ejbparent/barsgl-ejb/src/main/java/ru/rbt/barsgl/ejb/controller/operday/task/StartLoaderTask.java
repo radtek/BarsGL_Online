@@ -1,13 +1,18 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rb.cfg.CryptoUtil;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.etc.AS400ProcedureRunner;
+import ru.rbt.barsgl.ejb.etc.SshProcedureRunner;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.Properties;
@@ -23,10 +28,20 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
     private WorkdayRepository workdayRepository;
     @Inject
     private AS400ProcedureRunner as400ProcedureRunner;
+    @Inject
+    private SshProcedureRunner sshProcedureRunner;
+    @EJB
+    private PropertiesRepository propertiesRepository;
 
     public enum StartLoaderProp {
         Operday
     }
+
+    public enum StartLoaderType {
+        ssh,
+        as400;
+    }
+
     @Override
     protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
         try {
@@ -35,12 +50,36 @@ public class StartLoaderTask extends AbstractJobHistoryAwareTask {
             auditController.info(StartLoaderTask, "В BarsGl установлен workday " + dateUtils.dbDateString(d));
             workdayRepository.setRepWorkday(d);
             auditController.info(StartLoaderTask, "В BarsRep установлен workday " + dateUtils.dbDateString(d));
-            as400ProcedureRunner.callAsyncGl("/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", new Object[]{});
-            as400ProcedureRunner.callAsyncRep("/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", new Object[]{});
+
+            String barsGlLoaderType = propertiesRepository.getString(PropertyName.BARSGL_LOADER_TYPE.getName());
+            if(StartLoaderType.ssh.name().equals(barsGlLoaderType)){
+                String host = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_HOST.getName());
+                Long portObj = propertiesRepository.getNumber(PropertyName.BARSGL_LOADER_SSH_PORT.getName());
+                int port = (portObj == null) ? 22 : portObj.intValue();
+                String user = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_USER.getName());
+                String pswd = CryptoUtil.decrypt(propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_PSWD.getName()));
+                String cmd = propertiesRepository.getString(PropertyName.BARSGL_LOADER_SSH_RUN_CMD.getName());
+                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, null);
+            } else {
+                as400ProcedureRunner.callAsyncGl("/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", new Object[]{});
+            }
+
+            String barsRepLoaderType = propertiesRepository.getString(PropertyName.BARSREP_LOADER_TYPE.getName());
+            if(StartLoaderType.ssh.name().equals(barsRepLoaderType)){
+                String host = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_HOST.getName());
+                Long portObj = propertiesRepository.getNumber(PropertyName.BARSREP_LOADER_SSH_PORT.getName());
+                int port = (portObj == null) ? 22 : portObj.intValue();
+                String user = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_USER.getName());
+                String pswd = CryptoUtil.decrypt(propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_PSWD.getName()));
+                String cmd = propertiesRepository.getString(PropertyName.BARSREP_LOADER_SSH_RUN_CMD.getName());
+                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, null);
+            } else {
+                as400ProcedureRunner.callAsyncRep("/GCP/bank.jar", "lv.gcpartners.bank.util.LoadProcessNew", new Object[]{});
+            }
             return true;
         } catch (Throwable e) {
             auditController.error(StartLoaderTask
-                    , format("Ошибка при установке workday за '%s'", dateUtils.onlyDateString((Date)properties.get(StartLoaderProp.Operday))), null, e);
+                    , format("Ошибка при запуске загрузчика за '%s'", dateUtils.onlyDateString((Date)properties.get(StartLoaderProp.Operday))), null, e);
             return false;
         }
     }
