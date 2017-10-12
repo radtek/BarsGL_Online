@@ -125,6 +125,10 @@
             <systemPath>${project.basedir}/../barsgl-ejbtest/lib/jmslib/com.ibm.mqjms.jar</systemPath>
             <scope>system</scope>
         </dependency>
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+        </dependency>
     </dependencies>
 
 <!--  <profiles>
