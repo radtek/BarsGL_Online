@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.gwt.core.dialogs;
+package ru.rbt.barsgl.shared.filter;
 
 import java.io.Serializable;
 

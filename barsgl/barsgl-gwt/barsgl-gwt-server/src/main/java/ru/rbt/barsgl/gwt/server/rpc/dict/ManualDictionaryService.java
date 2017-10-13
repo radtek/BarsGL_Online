@@ -21,6 +21,8 @@ public interface ManualDictionaryService extends RemoteService {
     RpcRes_Base<CodeNameWrapper> saveDepartment(CodeNameWrapper wrapper, FormAction action) throws Exception;
     RpcRes_Base<CodeNameWrapper> saveAccountigType(CodeNameWrapper wrapper, FormAction action) throws Exception;
     RpcRes_Base<ExtCodeNameWrapper> saveSourcesDeals(ExtCodeNameWrapper wrapper, FormAction action) throws Exception;
+    RpcRes_Base<BVSourceDealWrapper> saveBVSourceDeal(BVSourceDealWrapper wrapper, FormAction action) throws Exception;
+    RpcRes_Base<ClosedReportPeriodWrapper> saveClosedReportPeriod(ClosedReportPeriodWrapper wrapper, FormAction action) throws Exception;
     RpcRes_Base<CodeNameWrapper> saveTypesOfTerms(CodeNameWrapper wrapper, FormAction action) throws Exception;
     RpcRes_Base<PropertyTypeWrapper> savePropertyType(PropertyTypeWrapper cnw, FormAction action) throws Exception;
     RpcRes_Base<StamtUnloadParamWrapper> saveStamtUnloadParam(StamtUnloadParamWrapper wrapper, FormAction action) throws Exception;

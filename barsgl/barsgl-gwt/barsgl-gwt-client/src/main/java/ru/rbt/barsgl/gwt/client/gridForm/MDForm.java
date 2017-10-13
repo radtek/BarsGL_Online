@@ -30,12 +30,12 @@ import java.util.List;
 public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilterCriteria {
     protected GridWidget masterGrid;
     protected Table masterTable;
-    private String masterSql;
-    private FilterAction  masterFilterAction;
+    protected String masterSql;
+    protected FilterAction  masterFilterAction;
     protected ActionBarWidget masterActionBar;
     protected RefreshAction masterRefreshAction;
-    private Export2ExcelAction masterExport2Excel;
-    private Export2ExcelAction detailExport2Excel;
+    protected Export2ExcelAction masterExport2Excel;
+    protected Export2ExcelAction detailExport2Excel;
 
 
     protected GridWidget detailGrid;
@@ -44,6 +44,8 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
     private FilterAction  detailFilterAction;
     protected ActionBarWidget detailActionBar;
     protected RefreshAction detailRefreshAction;
+    protected Action refreshSettingAction;
+    private boolean isManualRefresh = false;
 
     private List<FilterItem> detailLinkFilterCriteria = null;
 
@@ -71,7 +73,6 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         masterTable = prepareMasterTable();
         masterSql = prepareMasterSql();
 
-        //System.out.println(masterSql);
         detailTable = prepareDetailTable();
         detailSql = prepareDetailSql();
 
@@ -90,6 +91,8 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         masterActionBar.addAction(masterFilterAction = createMasterFilterAction());
         masterActionBar.addSecureAction(masterExport2Excel = new Export2ExcelAction(masterGrid, masterSql), SecurityActionCode.OperToExcel);
         masterExport2Excel.setFormTitle(title.getText());
+        masterActionBar.addAction(refreshSettingAction = createRefreshSettingAction());
+        refreshSettingAction.setVisible(false);
 
         detailActionBar.addAction(detailRefreshAction);
         detailActionBar.addAction(detailFilterAction = createDetailFilterAction());
@@ -220,6 +223,24 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
         return new FilterAction(detailGrid);
     }
 
+    private Action createRefreshSettingAction(){
+        return new Action(null, "Режим: Ручное обновление", new Image(ImageConstants.INSTANCE.link_break()),10) {
+            @Override
+            public void execute() {
+                isManualRefresh = !isManualRefresh;
+                changeRefreshSetting(this, isManualRefresh);
+                mdWidget.setLazyRefresh(isManualRefresh);
+                mdWidget.setUseCurtain(isManualRefresh);
+                if (!isManualRefresh && masterGrid.getRowCount() != 0) detailRefreshAction.execute();
+            }
+        };
+    }
+
+    private void changeRefreshSetting(Action action, boolean manual){
+        action.setImage(manual ? new Image(ImageConstants.INSTANCE.link_break()) : new Image(ImageConstants.INSTANCE.link()));
+        action.setHint(manual ? "Режим: Ручное обновление деталей" : "Режим: Автоматическое обновление деталей");
+    }
+
 	public Serializable getValue(String colName){
 		Columns columns = masterGrid.getTable().getColumns();
 		return masterGrid.getCurrentRow().getField(columns.getColumnIndexByName(colName)).getValue();
@@ -239,7 +260,10 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
     }
 
     public void setLazyDetailRefresh(boolean lazy){
+        refreshSettingAction.setVisible(lazy);
         mdWidget.setLazyRefresh(lazy);
+        isManualRefresh = lazy;
+        mdWidget.setUseCurtain(isManualRefresh);
     }
 
     public GridWidget getMasterGrid() {
@@ -248,5 +272,13 @@ public abstract class MDForm extends BaseForm implements IDisposable, ILinkFilte
 
     public GridWidget getDetailGrid() {
         return detailGrid;
+    }
+
+    public void setMasterExcelSql(String sql) {
+        masterExport2Excel.setSql(sql);
+    }
+
+    public void setDetailExcelSql(String sql) {
+        detailExport2Excel.setSql(sql);
     }
 }

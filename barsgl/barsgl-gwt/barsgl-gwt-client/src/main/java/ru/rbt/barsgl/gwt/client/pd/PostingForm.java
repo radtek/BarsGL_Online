@@ -3,6 +3,8 @@ package ru.rbt.barsgl.gwt.client.pd;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
@@ -26,7 +28,6 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
@@ -64,6 +65,7 @@ public class PostingForm extends MDForm {
 
     public PostingForm(){
         super(FORM_NAME, null, "Все проводки по операции", true);
+        setLazyDetailRefresh(true);
         reconfigure();
     }
 
@@ -310,8 +312,7 @@ public class PostingForm extends MDForm {
             @Override
             public void execute() {
                 Row row = grid.getCurrentRow();
-                int rowCount = detailGrid.getRowCount();
-                if ((row == null) || (rowCount < 1)) {
+                if (row == null) {
                     return;
                 }
 
@@ -334,8 +335,7 @@ public class PostingForm extends MDForm {
         @Override
         public void execute() {
             Row row = grid.getCurrentRow();
-            int rowCount = detailGrid.getRowCount();
-            if ((row == null) || (rowCount < 1)) {
+            if (row == null) {
                 return;
             }
 
@@ -374,7 +374,7 @@ public class PostingForm extends MDForm {
         public void execute() {
             Row row = grid.getCurrentRow();
             int rowCount = detailGrid.getRowCount();
-            if ((row == null) || (rowCount < 1)) {
+            if (row == null) {
                 return;
             }
             if (!checkPostDate(row)) {

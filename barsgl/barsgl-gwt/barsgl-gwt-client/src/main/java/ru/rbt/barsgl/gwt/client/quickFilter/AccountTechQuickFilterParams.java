@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
 import ru.rbt.barsgl.gwt.core.datafields.Column;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public abstract class AccountTechQuickFilterParams implements IQuickFilterParams
 
     @Override
     public ArrayList<FilterItem> getFilter() {
-        ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+        ArrayList<FilterItem> list = new ArrayList<>();
         if (!isEmpty(filial))
             list.add(new FilterItem(colFilial, FilterCriteria.EQ, filial));
         if (!isEmpty(currency))

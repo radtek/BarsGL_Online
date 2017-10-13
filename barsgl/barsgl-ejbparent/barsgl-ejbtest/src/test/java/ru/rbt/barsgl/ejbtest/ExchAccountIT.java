@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -8,6 +9,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.shared.enums.DealSource;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -15,6 +17,7 @@ import java.sql.SQLException;
 /**
  * Created by ER22317 on 04.12.2015.
  */
+@Ignore // TODO to delete ?
 public class ExchAccountIT extends AbstractRemoteIT {
 
     @Test
@@ -35,7 +38,7 @@ public class ExchAccountIT extends AbstractRemoteIT {
         pst.setAmountDebit(new BigDecimal("2454900000.000"));
         pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(GLOperation.srcKondorPlus);
+        pst.setSourcePosting(DealSource.KondorPlus.getLabel());
         pst.setDealId("981495");
         pst.setErrorCode(null);
         pst.setErrorMessage(null);

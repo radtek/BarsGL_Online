@@ -18,18 +18,18 @@ import java.util.List;
 
 @RemoteServiceRelativePath("service/AsyncGridService")
 public interface AsyncGridService extends RemoteService {
-    Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Exception ;
+    Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Throwable;
     List<Row> getAsyncRows(String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria,
-                           List<SortItem> sortCriteria) throws Exception;
-    Row selectOne(String sql, Serializable[] params) throws Exception;
-    Row selectFirst(String sql, Serializable[] params) throws Exception;
+                           List<SortItem> sortCriteria) throws Throwable;
+    Row selectOne(String sql, Serializable[] params) throws Throwable;
+    Row selectFirst(String sql, Serializable[] params) throws Throwable;
     void Debug(String msg) throws Exception;
     String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria,
-                        List<SortItem> sortCriteria, ExcelExportHead head) throws Exception;
-    Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Exception ;
+                        List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable;
+    Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Throwable;
     List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria,
-                           List<SortItem> sortCriteria) throws Exception;
-    Row selectOne(Repository repository, String sql, Serializable[] params) throws Exception;
+                           List<SortItem> sortCriteria) throws Throwable;
+    Row selectOne(Repository repository, String sql, Serializable[] params) throws Throwable;
     String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
-                        List<SortItem> sortCriteria, ExcelExportHead head) throws Exception;
+                        List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable;
 }

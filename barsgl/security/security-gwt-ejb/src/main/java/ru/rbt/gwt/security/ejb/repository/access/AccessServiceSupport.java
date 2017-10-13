@@ -1,21 +1,21 @@
 package ru.rbt.gwt.security.ejb.repository.access;
 
 import org.apache.log4j.Logger;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.access.PrmValueWrapper;
-import ru.rbt.barsgl.shared.dict.FormAction;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.security.ejb.repository.AppUserRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.security.entity.AppUser;
 import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.security.entity.access.PrmValueHistory;
+import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueHistoryRepository;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.access.PrmValueWrapper;
+import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.enums.PrmValueEnum;
 import ru.rbt.shared.security.RequestContext;
@@ -45,6 +45,9 @@ public class AccessServiceSupport {
 
     @Inject
     private PrmValueRepository prmValueRepository;
+
+    @Inject
+    private BankCalendarDayRepository calendarRepository;
 
     @Inject
     private OperdayController operdayController;
@@ -205,15 +208,17 @@ public class AccessServiceSupport {
                     new SimpleDateFormat("dd.MM.yyyy").format(prm.getDateBegin()),
                     prm.getDateEnd() == null ? "" : "по " + new SimpleDateFormat("dd.MM.yyyy").format(prm.getDateEnd()));
 
+/*
         DataRecord rec = prmValueRepository.selectFirst(format("select min(d.dat) as dat\n" +
                 "from (\n" +
                 " select dat from cal\n" +
                 " where ccy='RUR' and thol not in ('X', 'T') and dat < (select curdate from gl_od)\n" +
                 " and rownum <= %s" +
                 " order by 1 desc) d", prm.getPrmValue()));
-        Date bvDate = rec.getDate("dat");
+*/
+        Date bvDate = calendarRepository.getWorkDateBefore(operDay, Integer.parseInt(prm.getPrmValue()), false);
 
-        if (rec == null || bvDate.compareTo(date) == 1)
+        if (bvDate == null || bvDate.compareTo(date) == 1)
             throw new ValidationError(ErrorCode.POSTING_BACK_NOT_IN_DAYS, new SimpleDateFormat("dd.MM.yyyy").format(bvDate));
     }
 

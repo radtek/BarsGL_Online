@@ -1,5 +1,12 @@
 package ru.rbt.barsgl.shared;
 
+import ru.rbt.barsgl.shared.criteria.*;
+import ru.rbt.barsgl.shared.filter.IFilterItem;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by akichigi on 17.03.15.
  */

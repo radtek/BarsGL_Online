@@ -5,10 +5,14 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
+import ru.rbt.barsgl.ejb.entity.gl.BackValueParameters;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.*;
+import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
+import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
@@ -31,14 +35,18 @@ import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay.HolidayFlag.T;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-import ru.rbt.barsgl.shared.enums.DealSource;
+
 import ru.rbt.ejbcore.util.DateUtils;
 
-import static ru.rbt.barsgl.shared.enums.DealSource.AOS;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.*;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
+import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -74,7 +82,13 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
     private ru.rbt.ejbcore.util.DateUtils dateUtils;
 
     @Inject
-    private BankCalendarDayRepository calendarDayRepository;
+    private BankCalendarDayRepository calendarRepository;
+
+    @EJB
+    private BVSouceCachedRepository sourceRepository;
+
+    @EJB
+    private ClosedPeriodCashedRepository closedPeriodRepository;
 
     public abstract boolean isSupported(EtlPosting posting);
 
@@ -403,13 +417,23 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
 */
 
     /**
+     * создает новую пустую операцию
+     * @param posting
+     * @return
+     */
+
+    public GLOperation newOperation(EtlPosting posting) {
+        return new GLOperation();
+    }
+
+    /**
      * Создает GL операцию, заполняет параметры, пришедшие из ETL
      * @param posting   - ETL posting
      * @return          - GL operation
      * @throws SQLException
      */
     public final GLOperation createOperation(EtlPosting posting) throws SQLException {
-        GLOperation operation = new GLOperation();
+        GLOperation operation = newOperation(posting);
 
         // Основные параметры
         operation.setEtlPostingRef(posting.getId());
@@ -477,29 +501,13 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Date postDate = calculatePostingDate(operation);
         operation.setPostDate(postDate);
 
-        // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
-        BankCurrency ccyDebit = bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit());
-        operation.setCurrencyDebit(ccyDebit);
-        BigDecimal rateDebit = rateRepository.getRate(ccyDebit.getCurrencyCode(), postDate);
-        BigDecimal eqvDebit = rateRepository.getEquivalent(ccyDebit, rateDebit, operation.getAmountDebit());
-
-        operation.setRateDebit(rateDebit);
-        operation.setEquivalentDebit(eqvDebit);
-
-        // параметры КРЕДИТА: курс валюты, рублевый эквивалент
-        BankCurrency ccyCredit = bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit());
-        operation.setCurrencyCredit(ccyCredit);
-        BigDecimal rateCredit = rateRepository.getRate(ccyCredit.getCurrencyCode(), postDate);
-        BigDecimal eqvCredit = rateRepository.getEquivalent(ccyCredit, rateCredit, operation.getAmountCredit());
-
-        operation.setRateCredit(rateCredit);
-        operation.setEquivalentCredit(eqvCredit);
-
         // параметры счетов - они нужны для определения филиала и главы баланса в случае отсутствифя счетов
-        if (isEmpty(operation.getAccountDebit()))
+        if (operation.getAccountKeyDebit() != null) {
             operation.createAccountParamDebit();
-        if (isEmpty(operation.getAccountCredit()))
+        }
+        if (operation.getAccountKeyCredit() != null) {
             operation.createAccountParamCredit();
+        }
 
         // филиалы по дебету и кредиту
         glOperationRepository.setFilials(operation);
@@ -507,6 +515,32 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         // глава балансового счета
         // Добавили определение также в processOperation, тк счет может быть не задан
         glOperationRepository.setBsChapter(operation);            // Глава баланса
+
+        setDateParameters(operation);
+
+    }
+
+    /**
+     * Заполняет параметры, зависящие от даты проводки
+     * @param operation
+     * @throws SQLException
+     */
+    public final void setDateParameters(GLOperation operation) {
+        // валюты
+        operation.setCurrencyDebit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit()));
+        operation.setCurrencyCredit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit()));
+
+        // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
+        BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
+        BigDecimal eqvDebit = rateRepository.getEquivalent(operation.getCurrencyDebit(), rateDebit, operation.getAmountDebit());
+        operation.setRateDebit(rateDebit);
+        operation.setEquivalentDebit(eqvDebit);
+
+        // параметры КРЕДИТА: курс валюты, рублевый эквивалент
+        BigDecimal rateCredit = rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
+        BigDecimal eqvCredit = rateRepository.getEquivalent(operation.getCurrencyCredit(), rateCredit, operation.getAmountCredit());
+        operation.setRateCredit(rateCredit);
+        operation.setEquivalentCredit(eqvCredit);
 
         // параметры обмена валюты
         setExchengeParameters(operation);
@@ -589,14 +623,14 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
      * @param operation операция
      * @return дата проводки
      */
-    public final Date calculatePostingDate(GLOperation operation) {
+    public final Date calculatePostingDateOld(GLOperation operation) {
         try {
             Operday operday = operdayController.getOperday();
             String dayType = "";
             if ((InputMethod.AE == operation.getInputMethod())
-                    && !isEmpty(dayType = calendarDayRepository.getDayType(operation.getValueDate()))) {
+                    && !isEmpty(dayType = calendarRepository.getDayType(operation.getValueDate()))) {
                 // попали в выходной день
-                return processHoliday(operation, dayType);
+                return processHolidayOld(operation, dayType);
             } else {
                 final DataRecord record = glOperationRepository.selectOne("select * from V_GL_OPER_POD where GLOID = ?", operation.getId());
                 final PostingDateType podType = PostingDateType.valueOf(record.getString("POD_TYPE"));
@@ -650,15 +684,13 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
      * Если дата валютирования попала на выходной
      * @return дата postdate
      */
-    private Date processHoliday(GLOperation operation, String dayType) {
+    private Date processHolidayOld(GLOperation operation, String dayType) {
         Operday operday = operdayController.getOperday();
 
         // Для ARMPRO разрешен технический опердень, но не ранее 14 лней назад
-        if (ARMPRO.getLabel().equals(operation.getSourcePosting()) && T.name().equals(dayType)
+        if (ARMPRO.name().equals(operation.getSourcePosting()) && T.name().equals(dayType)
                 && operation.getValueDate().after(DateUtils.addDay(operday.getCurrentDate(), -14))) { // технический опердень
             return operation.getValueDate();
-        } else if (AOS.getLabel().equals(operation.getSourcePosting())) {
-            return operday.getCurrentDate();
         }
         // после предыд ОД
         Calendar vdatecal = Calendar.getInstance();
@@ -672,6 +704,109 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             return operday.getLastWorkingDay();
         } else {
             return operday.getCurrentDate();
+        }
+    }
+
+    public final GLOperation.OperClass calculateOperationClass(EtlPosting posting) throws SQLException {
+        Date valueDate = posting.getValueDate();
+        Operday operday = operdayController.getOperday();
+        if (operday.getCurrentDate().equals(valueDate) || posting.isNonStandard()) {
+            posting.setBackValue(false);
+            return AUTOMATIC;
+        }
+
+        Integer depth = sourceRepository.getDepth(posting.getSourcePosting());
+        Date depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
+
+        boolean withTech = withTechWorkDay(posting.getSourcePosting());
+        Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
+                            ? valueDate
+                            : calendarRepository.getWorkDateAfter(valueDate, withTech);
+
+        String reason = null;
+        Date closedCutDate = null;
+        Date closedLastDate = null;
+        ClosedReportPeriodView closedPeriod = closedPeriodRepository.getPeriod();
+        if (null != closedPeriod) {
+            closedCutDate = closedPeriod.getCutDate();
+            closedLastDate = closedPeriod.getLastDate();
+        }
+        if (vdateCut.before(depthCutDate)) {
+            reason = OverDepth.getValue();
+        } else if (null != closedPeriod && !valueDate.after(closedLastDate)) {
+            reason = ClosedPeriod.getValue();
+        }
+
+        GLOperation.OperClass operClass = null != reason ? BV_MANUAL : AUTOMATIC;
+
+        // TODO хорошо бы сохранить вычисленные значения reason, depthCutDate, prdLastDate, prdCutDate в EtlPosting
+        if (null != reason) {
+            BackValueParameters bvParameters = new BackValueParameters();
+            bvParameters.setReason(reason);
+            bvParameters.setDepthCutDate(depthCutDate);
+            bvParameters.setCloseCutDate(closedCutDate);
+            bvParameters.setCloseLastDate(closedLastDate);
+            posting.setBackValue(true);
+            posting.setBackValueParameters(bvParameters);
+        }
+
+        return operClass;
+    }
+
+    public Date calculatePostingDate(GLOperation operation) throws SQLException {
+        Operday operday = operdayController.getOperday();
+        Date curDate = operday.getCurrentDate();
+        Date lastWorkDate = operday.getLastWorkingDay();
+        Date valueDate = operation.getValueDate();
+        // TODO надо анализировать фазу опердня?
+        if (operday.getCurrentDate().before(valueDate)) {
+            // valueDate > СЕГОДНЯ
+            throw new ValidationError(DATE_NOT_VALID, "валютирования",
+                    dateUtils.onlyDateString(valueDate),
+                    dateUtils.onlyDateString(curDate), operday.getPhase().name(),
+                    dateUtils.onlyDateString(lastWorkDate), operday.getLastWorkdayStatus().name());
+        } else
+        if (curDate.equals(valueDate)) {
+            // текущий опердень
+            return valueDate;
+        } else
+        if (!calendarRepository.isWorkday(valueDate, withTechWorkDay(operation.getSourcePosting()))) {
+            // выходной день
+            return processHoliday(operation);
+        } else
+        if (operation.isManual()) {
+            // ручная операция
+            return operation.getPostDate();                                                     // дата проводки не меняется
+        } else
+        if (operation.isNonStandard()) {
+            // нестандартная операция
+            return lastWorkDate.equals(valueDate) && OPEN == operday.getLastWorkdayStatus()     // если пред раб день и баланс открыт
+                        ? valueDate                                                             //  тогда VDATE
+                        : curDate;                                                              //  иначе CURDATE
+        } else {
+            // стандартные операции
+            return lastWorkDate.equals(valueDate) && CLOSED == operday.getLastWorkdayStatus()   // есди пред раб день, баланс закрыт
+                    && operation.isAutomatic()                                                  // и автоматическая
+                    && null == sourceRepository.getDepth(operation.getSourcePosting())          // и непараметризованная
+                        ? curDate                                                               //  тогда CURDATE
+                        : valueDate;                                                            //  иначе VDATE
+        }
+    }
+
+    public Date processHoliday(GLOperation operation) throws SQLException {
+        Calendar vdatecal = Calendar.getInstance();
+        vdatecal.setTime(operation.getValueDate());
+
+        Date nextWork = calendarRepository.getWorkDateAfter(operation.getValueDate(), withTechWorkDay(operation.getSourcePosting()));
+        Calendar vnextcal = Calendar.getInstance();
+        vnextcal.setTime(nextWork);
+
+        if (vdatecal.get(Calendar.MONTH) == vnextcal.get(Calendar.MONTH)) {
+            // ОД находится в том же месяце
+            return nextWork;
+        } else {
+            // ОД находится в след месяце
+            return calendarRepository.getWorkDateBefore(operation.getValueDate(), withTechWorkDay(operation.getSourcePosting()));
         }
     }
 

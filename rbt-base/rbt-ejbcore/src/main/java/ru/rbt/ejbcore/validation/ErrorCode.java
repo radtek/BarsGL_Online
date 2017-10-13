@@ -195,6 +195,7 @@ public enum ErrorCode {
     , POSTING_STATUS_WRONG(4023, "Статус запроса на операцию не соответствует ожидаемому: '%s' (%s)")
     , PACKAGE_STATUS_WRONG(4024, "Статус пакета не соответствует ожидаемому: '%s' (%s)")
     , REPROCESS_ERROR(4025, "%s")
+    , BV_MANUAL_ERROR(4026, "%s")
 
 //    , VALIDATION_ERROR(10000, "%s %s %s")
     ;

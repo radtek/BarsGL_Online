@@ -34,7 +34,7 @@ public class UserMenuRepository extends AbstractBaseEntityRepository<UserMenuIte
                 return UserMenuWrapper.emptyWrapper();
             }
             // получить все узлы
-            List<DataRecord> allNodes = select("SELECT * FROM GL_AU_MENU ORDER BY ID_MENU, PARENT_ID");
+            List<DataRecord> allNodes = select("SELECT * FROM GL_AU_MENU ORDER BY PARENT_ID, ORDER_NUM, ID_MENU");
             UserMenuWrapper menu = new UserMenuWrapper(allNodes.stream()
                     .filter(rec -> null == rec.getInteger("PARENT_ID"))
                     .map(rec -> new UserMenuItemWrapper(rec.getInteger("ID_MENU"), rec.getString("MENU_NAME")

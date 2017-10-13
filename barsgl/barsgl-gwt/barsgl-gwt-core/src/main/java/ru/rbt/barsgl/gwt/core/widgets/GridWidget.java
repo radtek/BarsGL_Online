@@ -8,6 +8,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.cellview.client.*;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.Handler;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -17,13 +18,12 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
-import ru.rbt.barsgl.gwt.core.datafields.Columns;
-import ru.rbt.barsgl.gwt.core.datafields.Row;
-import ru.rbt.barsgl.gwt.core.datafields.Table;
+import ru.rbt.barsgl.gwt.core.datafields.*;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.events.GridEvents;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
+import ru.rbt.barsgl.shared.filter.IFilterItem;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -41,6 +41,7 @@ public class GridWidget extends Composite implements IProviderEvents{
     private ISortStrategy sortStrategy;
 	private ISortEvents sortEvents;
 	private IGridRowChanged rowChangedEvent;
+	private IRefreshEvent refreshEvent;
     private String id;
 
     private List<SortItem> sortCriteria = null;
@@ -70,6 +71,10 @@ public class GridWidget extends Composite implements IProviderEvents{
     }
 
     private ICellValueEvent cellValueEventHandler;
+
+	public void setRefreshEvent(IRefreshEvent refreshEvent) {
+		this.refreshEvent = refreshEvent;
+	}
 
 	public interface TableResources extends DataGrid2.Resources {
 		interface TableStyle extends DataGrid2.Style {}
@@ -374,6 +379,7 @@ public class GridWidget extends Composite implements IProviderEvents{
 			grid.setKeyboardSelectedRow(0);
 		}
 		LocalEventBus.fireEvent(new GridEvents(id, GridEvents.EventType.LOAD_DATA, grid.getRowCount()));
+		if (refreshEvent != null) refreshEvent.refresh();
 	}
 
 	public List<FilterItem> getFilterCriteria() {
@@ -453,31 +459,59 @@ public class GridWidget extends Composite implements IProviderEvents{
 		prepareColumns();
 	}
 
-	public void hideColumns(String... columnNames){
+	private void hideColumn(String columnName){
+        ru.rbt.barsgl.gwt.core.datafields.Column col = table.getColumn(columnName);
+        col.setVisible(false);
+        col.setFilterable(false);
+        col.setEditable(false);
+    }
+
+    private void showColumn(String columnName){
+        ru.rbt.barsgl.gwt.core.datafields.Column col = table.getColumn(columnName);
+        col.setVisible(true);
+        col.setFilterable(true);
+        col.setEditable(true);
+    }
+
+    public void hideColumns(String... columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(0);
+            hideColumn(columnName);
 		}
 		rebuildGrid();
 	}
 
 	public void hideColumns(List<String> columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(0);
+            hideColumn(columnName);
 		}
 		rebuildGrid();
 	}
 
 	public void showColumns(String... columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(table.getColumn(columnName).getOrigin_width());
+            showColumn(columnName);
 		}
 		rebuildGrid();
 	}
 
 	public void showColumns(List<String> columnNames){
 		for (String columnName: columnNames){
-			table.getColumn(columnName).setWidth(table.getColumn(columnName).getOrigin_width());
+            showColumn(columnName);
 		}
 		rebuildGrid();
 	}
+
+    private void showColumn(String columnName, boolean gridVisible, boolean filterVisible, boolean propVisible){
+        ru.rbt.barsgl.gwt.core.datafields.Column col = table.getColumn(columnName);
+        col.setVisible(gridVisible);
+        col.setFilterable(filterVisible);
+        col.setEditable(propVisible);
+    }
+
+    public void showColumns(boolean gridVisible, boolean filterVisible, boolean propVisible, String... columnNames){
+        for (String columnName: columnNames){
+            showColumn(columnName, gridVisible, filterVisible, propVisible);
+        }
+        rebuildGrid();
+    }
 }

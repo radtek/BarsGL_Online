@@ -2,12 +2,14 @@ package ru.rbt.barsgl.gwt.core.dialogs;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.ui.*;
 import ru.rbt.barsgl.gwt.core.ui.LongBox;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -80,7 +82,8 @@ public class FilterFrame  extends Composite {
 
         if (null != filterConditions) {
             for(FilterItem filterItem: filterConditions) {
-                addCondition(filterItem.getName(), filterItem.getCriteria(), filterItem.getValue(), filterItem.isPined(), filterItem.isReadOnly());
+                addCondition(filterItem.getName(), filterItem.getCriteria(), filterItem.getValue(), filterItem.isPined(),
+                             filterItem.isReadOnly(), filterItem.isValueEnabled());
                 if (filterItem.isReadOnly()) frozenColumns.add(filterItem.getName());
             }
         }
@@ -88,7 +91,7 @@ public class FilterFrame  extends Composite {
         fillColumnsList(columns);
     };
 
-    private void addCondition(String fieldName, FilterCriteria criteria, Serializable value, boolean pined, boolean isReadOnly) {
+    private void addCondition(String fieldName, FilterCriteria criteria, Serializable value, boolean pined, boolean isReadOnly, boolean isValueEnabled) {
         Column column = columns.getColumnByName(fieldName);
         rows++;
 
@@ -97,7 +100,7 @@ public class FilterFrame  extends Composite {
         grid.setWidget(rows - 1, 1, new Label(column.getCaption()));
         grid.getCellFormatter().setWidth(rows - 1, 1, "230px");
         grid.setWidget(rows - 1, 2, createOperList(column.getType(), criteria, isReadOnly));
-        grid.setWidget(rows - 1, 3, createValue(column, value, isReadOnly));
+        grid.setWidget(rows - 1, 3, createValue(column, value, isReadOnly && !isValueEnabled));
     }
 
     private PushButton createPlusButton() {
@@ -113,7 +116,7 @@ public class FilterFrame  extends Composite {
             public void onClick(ClickEvent event) {
                 if (columnsList.getItemCount() == 0) return;
 
-                FilterFrame.this.addCondition((String) columnsList.getValue(), null, null, false, false);
+                FilterFrame.this.addCondition((String) columnsList.getValue(), null, null, false, false, true);
             }
         });
 
@@ -188,7 +191,6 @@ public class FilterFrame  extends Composite {
         }
 
         Column.Type type = column.getType();
-
         switch(type){
             case DATE:
             case DATETIME:
@@ -209,7 +211,9 @@ public class FilterFrame  extends Composite {
             default:
                 box = new TxtBox((String)value);
         }
+
         box.setWidth("150px");
+
         if (null != value) ((IBoxValue)box).setValue(value);
         ((IBoxValue)box).setEnabled(!isReadOnly);
         return box;
@@ -242,11 +246,13 @@ public class FilterFrame  extends Composite {
         rows = 0;
     }
 
-    public void clearAllFilterCriteria(){
+    public void clearAllFilterCriteria(boolean force){
         int i = 0;
         while ( i < grid.getRowCount() ) {
-            if (!isConditionPined(i))
+            if (!isConditionPined(i) || force){
                 grid.removeRow(i);
+            }
+
             else
                 i++;
         }
@@ -256,18 +262,19 @@ public class FilterFrame  extends Composite {
     public ArrayList<FilterItem> getFilterConditions(){
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
 
-        for (int i=0 ; i < grid.getRowCount(); i++){
+        for (int i = 0 ; i < grid.getRowCount(); i++){
             String text = ((Label)grid.getWidget(i, 1)).getText();
             Column col = columns.getColumnByCaption(text);
 
             FilterCriteria criteria = (FilterCriteria) ((IBoxValue<?>)grid.getWidget(i, 2)).getValue();
-
-            Serializable value = (Serializable)((IBoxValue<?>)grid.getWidget(i, 3)).getValue();
+            IBoxValue box = (IBoxValue<?>)grid.getWidget(i, 3);
+            Serializable value = (Serializable) box.getValue();
 
             FilterItem item = new FilterItem(col, criteria, value, isConditionPined(i));
             item.setCaption(col.getCaption());
-            item.setStrValue(((IBoxValue<?>)grid.getWidget(i, 3)).getText());
+            item.setStrValue(box.getText());
             item.setReadOnly(isConditionReadOnly(i));
+            item.setValueEnabled(box.isEnabled());
             list.add(item);
         }
         return list.isEmpty() ? null : list;

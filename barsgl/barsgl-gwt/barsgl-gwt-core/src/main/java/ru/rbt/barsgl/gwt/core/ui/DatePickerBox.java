@@ -198,16 +198,6 @@ public class DatePickerBox extends BaseBox<Date> implements HasAllFocusHandlers,
 	}
 
 	@Override
-	public HandlerRegistration addFocusHandler(FocusHandler handler){
-		return textBox.addFocusHandler(handler);
-	};
-
-	@Override
-	public HandlerRegistration addBlurHandler(BlurHandler handler){
-		return textBox.addBlurHandler(handler);
-	}
-	
-	@Override
 	public void setEnabled(boolean enabled) {		
 		super.setEnabled(enabled);
 		

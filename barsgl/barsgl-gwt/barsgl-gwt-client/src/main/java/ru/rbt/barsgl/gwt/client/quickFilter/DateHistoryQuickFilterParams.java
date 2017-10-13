@@ -2,7 +2,7 @@ package ru.rbt.barsgl.gwt.client.quickFilter;
 
 import ru.rbt.barsgl.gwt.client.events.ae.StepChoiceDlg;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class DateHistoryQuickFilterParams extends DateIntervalQuickFilterParams 
 
     @Override
     public ArrayList<FilterItem> getFilter() {
-        ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+        ArrayList<FilterItem> list = new ArrayList<>();
         list.add(new FilterItem(dateColumn, FilterCriteria.GE, dateBegin));
         list.add(new FilterItem(dateColumn, FilterCriteria.LE, dateEnd));
         if (null != histColumn) {

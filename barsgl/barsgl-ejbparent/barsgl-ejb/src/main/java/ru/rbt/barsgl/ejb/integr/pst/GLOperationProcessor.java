@@ -4,19 +4,18 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.gl.BalanceChapter;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.BackValuePostStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -324,5 +323,25 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
                 operation.setAccountCredit(accCredit);
             }
         }
+    }
+
+    public final GLOperation createOperationExt(GLBackValueOperation operation) {
+
+        Assert.isTrue(null == operation.getOperExt(), String.format("По операции ID = '%d' уже есть запись в GL_OPEREXT", operation.getId()));
+        GLOperationExt operExt = new GLOperationExt(operation.getId(), operation.getPostDate());
+        operExt.setCreateTimestamp(operdayController.getSystemDateTime());
+        operExt.setManualStatus(BackValuePostStatus.CONTROL);
+
+        // TODO где хранить эти даты и причину... в GLOperation ?
+        BackValueParameters parameters = operation.getBackValueParameters();
+        if (null != parameters) {
+            operExt.setManualReason(parameters.getReason());
+            operExt.setDepthCutDate(parameters.getDepthCutDate());
+            operExt.setCloseCutDate(parameters.getCloseCutDate());
+            operExt.setCloseLastDate(parameters.getCloseLastDate());
+        }
+
+        operation.setOperExt(operExt);
+        return operation;
     }
 }

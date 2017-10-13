@@ -13,8 +13,8 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.entity.dict.SourcesDeals.SRCPST.KTP;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.PreCob;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.ejbcore.mapping.YesNo.N;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
@@ -76,7 +76,7 @@ public class SuppressStornoTboController {
 
     private void bindParams1(PreparedStatement queryStatement) throws SQLException {
         queryStatement.setDate(1, operdayController.getOperday().getCurrentSqlDate());
-        queryStatement.setString(2, KTP.getValue());
+        queryStatement.setString(2, KondorPlus.getLabel());
         queryStatement.setString(3, Y.name());
         queryStatement.setString(4, POST.name());
     }

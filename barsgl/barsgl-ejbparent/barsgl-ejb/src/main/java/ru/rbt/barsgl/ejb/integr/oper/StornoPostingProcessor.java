@@ -9,8 +9,10 @@ import javax.ejb.EJB;
  * Created by Ivan Sevastyanov
  * Обработчик сторно двойных проводок в режиме online
  */
-public class StornoPostingProcessor extends IncomingPostingProcessor {
+@Deprecated
+public class StornoPostingProcessor { //extends IncomingPostingProcessor {
 
+/*
     @EJB
     private GLOperationRepository glOperationRepository;
 
@@ -19,5 +21,6 @@ public class StornoPostingProcessor extends IncomingPostingProcessor {
         return null != posting
                 && !posting.isFan() && posting.isStorno() && !posting.isTech();
     }
+*/
 
 }

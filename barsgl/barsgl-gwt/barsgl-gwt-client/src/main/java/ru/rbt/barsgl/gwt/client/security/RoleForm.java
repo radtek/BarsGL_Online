@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.security;
 
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;

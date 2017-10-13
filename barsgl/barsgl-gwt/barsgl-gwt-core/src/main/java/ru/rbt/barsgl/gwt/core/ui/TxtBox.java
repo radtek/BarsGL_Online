@@ -39,7 +39,6 @@ public class TxtBox extends BaseBox<String>{
 		textBox.setValidRegMask(mask);
 	}
 
-
 	@Override
 	protected String makeVisibleString() {		
 		return value == null ? "" : value;

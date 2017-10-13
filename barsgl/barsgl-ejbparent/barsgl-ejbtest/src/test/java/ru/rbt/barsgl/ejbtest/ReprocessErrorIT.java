@@ -283,7 +283,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         operParent = (GLOperation) baseEntityRepository.refresh(operParent, true);
         Assert.assertEquals(OperState.POST, operParent.getState());
 
-        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStorno"
+        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStornoToday"
                 , getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
 
         operStorno = (GLOperation) baseEntityRepository.refresh(operStorno, true);
@@ -336,6 +336,14 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         Assert.assertNotEquals(errorMessage, "SUCCESS");
 
         GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        if( null == errorRecord) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
+        }
         Assert.assertNotNull(errorRecord);
         return errorRecord;
     }
