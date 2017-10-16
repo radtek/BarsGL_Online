@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -14,7 +13,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;   // ru.rbt.barsgl.shared.filter
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;

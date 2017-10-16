@@ -35,7 +35,7 @@ public class FilterDlg extends DlgFrame {
         cancel.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent clickEvent) {
-                filterFrame.clearAllFilterCriteria();
+                filterFrame.clearAllFilterCriteria(false);
             }
         });
 
@@ -72,5 +72,9 @@ public class FilterDlg extends DlgFrame {
 
     public void setAllowNullValue(boolean allow){
         allowNullValue = allow;
+    }
+
+    public void clearAllFilterCriteria(boolean force){
+        filterFrame.clearAllFilterCriteria(force);
     }
 }

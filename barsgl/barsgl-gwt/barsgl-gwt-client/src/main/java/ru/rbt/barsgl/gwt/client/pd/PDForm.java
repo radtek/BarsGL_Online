@@ -4,7 +4,7 @@ import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 

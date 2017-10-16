@@ -1,10 +1,13 @@
 package ru.rbt.barsgl.gwt.core.widgets;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.FontWeight;
 import com.google.gwt.dom.client.Style.TextAlign;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Style.VerticalAlign;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
@@ -26,6 +29,7 @@ public class MDWidget extends Composite{
     private boolean lazyRefresh;
 
     private ILinkFilterCriteria linkFilterCriteria;
+    private boolean useCurtain;
 
     public MDWidget(GridWidget masterGrid, ActionBarWidget masterActionBar,
                     GridWidget detailGrid, ActionBarWidget detailActionBar){
@@ -41,6 +45,12 @@ public class MDWidget extends Composite{
         this.detailGrid = detailGrid;
         this.detailActionBar = detailActionBar;
         this.detailCaption = detailCaption == null ? "" : detailCaption;
+        this.detailGrid.setRefreshEvent(new IRefreshEvent() {
+            @Override
+            public void refresh() {
+                if (useCurtain) showCurtain(false);
+            }
+        });
 
         createRowChangedEvent(masterGrid);
 
@@ -107,6 +117,7 @@ public class MDWidget extends Composite{
                  LocalEventBus.fireEvent(new GridEvents(detailGrid.getId(),
                                          lazyRefresh ? GridEvents.EventType.LAZY_MASTER_ROW_CHANGED :
                                          GridEvents.EventType.MASTER_ROW_CHANGED, filterItems));
+                 if (useCurtain)showCurtain(true);
              }
          });
     }
@@ -115,4 +126,45 @@ public class MDWidget extends Composite{
         this.linkFilterCriteria = linkFilterCriteria;
     }
 
+    public void setUseCurtain(boolean useCurtain) {
+        this.useCurtain = useCurtain;
+        if (!useCurtain) {
+            detailGrid.clear();
+            showCurtain(false);
+        }
+    }
+
+    public boolean isUseCurtain() {
+        return useCurtain;
+    }
+
+    Node curtain;
+    boolean _isCurtainOn;
+
+    private void showCurtain(boolean on){
+        if (_isCurtainOn == on) return;
+        Element parent = detailGrid.getElement().getParentElement();
+
+        if (on){
+            curtain = parent.appendChild(createGlass());
+            detailGrid.clear();
+        } else{
+            parent.removeChild(curtain);
+        }
+        _isCurtainOn = on;
+    }
+
+    private Element createGlass(){
+        SimplePanel panel = new SimplePanel();
+        Element div  = panel.getElement();
+        div.setId("_curtain_");
+        div.getStyle().setBackgroundColor("grey");
+        div.getStyle().setOpacity(0.3);
+        div.getStyle().setWidth(100, Unit.PCT);
+        div.getStyle().setHeight(100, Unit.PCT);
+        div.getStyle().setLeft(0, Unit.PX);
+        div.getStyle().setTop(0, Unit.PX);
+        div.getStyle().setPosition(Style.Position.ABSOLUTE);
+        return div;
+    }
 }

@@ -10,5 +10,10 @@ import javax.persistence.Entity;
 @Entity
 @DiscriminatorValue("MANUAL")
 public class GLManualOperation extends GLOperation{
+    public boolean isAutomatic() {return false;}
+
+    public boolean isManual() {return true;}
+
+    public boolean isBackValue() {return false;}
 
 }

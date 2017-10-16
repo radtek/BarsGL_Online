@@ -5,6 +5,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.EditableDictionary;

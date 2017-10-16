@@ -423,6 +423,7 @@ public abstract class AbstractRemoteIT  {
     public static EtlPosting newStornoPosting(long stamp, EtlPackage pkg, EtlPosting pst) {
         EtlPosting pstS = newPosting(stamp, pkg);
         // идентификаторы
+        pstS.setSourcePosting(pst.getSourcePosting());
         pstS.setStornoReference(pst.getEventId());
         pstS.setDealId(pst.getDealId());
         pstS.setPaymentRefernce(pst.getPaymentRefernce());

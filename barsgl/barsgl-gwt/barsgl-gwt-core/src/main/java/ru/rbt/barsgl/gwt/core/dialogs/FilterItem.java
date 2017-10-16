@@ -7,11 +7,13 @@ package ru.rbt.barsgl.gwt.core.dialogs;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.IFilterItem;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class FilterItem implements Serializable, IsSerializable {
+public class FilterItem implements IFilterItem, Serializable, IsSerializable {
 	private static final long serialVersionUID = -3960734068373764479L;
 
 //	public static final String DATE_FORMAT = "dd.MM.yyyy";
@@ -24,6 +26,7 @@ public class FilterItem implements Serializable, IsSerializable {
     private FilterCriteria criteria;
     private boolean pined;
     private boolean isReadOnly = false;
+    private boolean isValueEnabled = false;
     private String caption;
     private String strValue;
 
@@ -36,6 +39,11 @@ public class FilterItem implements Serializable, IsSerializable {
     public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined, boolean readOnly) {
         this(column.getName(), column.getType(), column.getCaption(), criteria, value, pined);
         this.setReadOnly(readOnly);
+    }
+
+    public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined, boolean readOnly, boolean isValueEnabled) {
+        this(column, criteria, value, pined, readOnly);
+        this.setValueEnabled(isValueEnabled);
     }
 
     public FilterItem(Column column, FilterCriteria criteria, Serializable value, boolean pined) {
@@ -117,5 +125,13 @@ public class FilterItem implements Serializable, IsSerializable {
 
     public void setStrValue(String strValue) {
         this.strValue = strValue;
+    }
+
+    public boolean isValueEnabled() {
+        return isValueEnabled;
+    }
+
+    public void setValueEnabled(boolean valueEnabled) {
+        isValueEnabled = valueEnabled;
     }
 }

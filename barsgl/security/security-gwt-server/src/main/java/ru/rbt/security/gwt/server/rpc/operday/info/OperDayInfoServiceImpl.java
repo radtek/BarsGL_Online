@@ -41,6 +41,12 @@ public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDa
 
                 OperDayButtons buttonStatus = OperDayButtons.NONE;
 
+
+                if (phase == Operday.OperdayPhase.ONLINE)
+                    buttonStatus = OperDayButtons.CHANGE_PHASE_TO_PRE_COB;
+                else
+                    buttonStatus = OperDayButtons.OPEN_OD;
+/*
                 switch (status){
                     case OPEN:
                         if (phase == Operday.OperdayPhase.ONLINE)  buttonStatus = OperDayButtons.CLOSE_BALANCE_PREVIOUS_OD;
@@ -56,6 +62,7 @@ public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDa
                             default: buttonStatus = OperDayButtons.NONE;
                         }
                 }
+*/
                 wrapper.setEnabledButton(buttonStatus);
 
                 additionalAction(wrapper);

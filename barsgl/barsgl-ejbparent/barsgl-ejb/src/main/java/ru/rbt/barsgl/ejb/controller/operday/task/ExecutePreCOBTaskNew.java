@@ -84,17 +84,17 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     @EJB
     private PreCobStepController preCobStepController;
 
-    @EJB
-    private EtlPostingController etlPostingController;
+//    @EJB
+//    private EtlPostingController etlPostingController;
 
     @EJB
-    BalturRecalculator balturRecalculator;
+    private BalturRecalculator balturRecalculator;
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
 
     @Inject
-    private CloseLastWorkdayBalanceTask closeLastWorkdayBalanceTask;
+    private CloseLwdBalanceCutTask closeLastWorkdayBalanceTask;
 
     @Inject
     private EtlStructureMonitorTask monitorTask;
@@ -154,20 +154,20 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return waitStopProcessing(operday, idCob, phase);
         }));
 
-        works.add(new CobRunningStepWork(CobResetBuffer, (Long idCob, CobPhase phase) -> {
-            return synchronizePostings(idCob, phase);
-        }));
-
-        works.add(new CobRunningStepWork(CobManualProc, (Long idCob, CobPhase phase) -> {
-            return processUnprocessedBatchPostings(operday, idCob, phase);
-        }));
-
         works.add(new CobRunningStepWork(CobStornoProc, (Long idCob, CobPhase phase) -> {
             return reprocessStorno(operday, idCob, phase);
         }));
 
         works.add(new CobRunningStepWork(CobCloseBalance, (Long idCob, CobPhase phase) -> {
             return closeBalance(operday, idCob, phase);
+        }));
+
+        works.add(new CobRunningStepWork(CobResetBuffer, (Long idCob, CobPhase phase) -> {
+            return synchronizePostings(idCob, phase);
+        }));
+
+        works.add(new CobRunningStepWork(CobManualProc, (Long idCob, CobPhase phase) -> {
+            return processUnprocessedBatchPostings(operday, idCob, phase);
         }));
 
         works.add(new CobRunningStepWork(CobFanProc, (Long idCob, CobPhase phase) -> {
@@ -284,9 +284,8 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     public CobStepResult reprocessStorno(Operday operday, Long idCob, CobPhase phase) {
         try {
             return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
-//                auditController.info(AuditRecord.LogCode.Operday, "Повторная обработка сторно");
                 return beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) ->
-                        etlPostingController.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
+                        closeLastWorkdayBalanceTask.reprocessErckStorno(operday.getLastWorkingDay(), operday.getCurrentDate()));
             });
         } catch (Exception e) {
             return stepErrorResult(Error, "Ошибка при повторной обработке сторно", e);
@@ -304,7 +303,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                     , dateUtils.onlyDateString(operday.getCurrentDate())));
             try {
                 beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                    closeLastWorkdayBalanceTask.executeWork(false);
+                    closeLastWorkdayBalanceTask.closeBalance(false);
                     return null;
                 }, 60 * 60);
             } catch (Exception e) {
@@ -469,9 +468,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     }
 
     protected boolean checkRun(String jobName, Properties properties, List<String> errList) throws Exception {
-        return !(!checkChronology(operdayController.getOperday().getCurrentDate()
-                , operdayController.getSystemDateTime(), properties, errList)
-                || !checkPackagesToloadExists(properties, errList));
+        Date curdate = operdayController.getOperday().getCurrentDate();
+        return !(!checkChronology(curdate, operdayController.getSystemDateTime(), properties, errList)
+                || !checkPackagesToloadExists(properties, errList)
+                || !closeLastWorkdayBalanceTask.checkNotRunOther(curdate, this.getClass(), PdSyncTask.class, CloseLwdBalanceCutTask.class).getResult());
 
     }
 

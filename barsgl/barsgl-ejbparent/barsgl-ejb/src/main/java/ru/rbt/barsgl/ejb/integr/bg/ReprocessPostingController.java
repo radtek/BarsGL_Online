@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by ER18837 on 27.02.17.
@@ -30,20 +31,23 @@ public class ReprocessPostingController {
 
     private static final Logger log = Logger.getLogger(ReprocessPostingController.class);
 
-    @Inject
+    @EJB
     private GLErrorRepository errorRepository;
 
     @Inject
     private UserContext userContext;
 
+    @Inject
+    BackValueOperationController bvOperationController;
+
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public int correctPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType) throws SQLException {
+    public int correctPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType, OperState state) throws Exception {
         switch (correctType.getCorrectType()) {
             case NEW:
                 return closePostingErrors(errorIdList, comment, idPstNew, correctType);
             case REPROC:
-                return reprocessPostingErrors(errorIdList, comment, idPstNew, correctType);
+                return reprocessPostingErrors(errorIdList, comment, idPstNew, correctType, state);
             case EDIT:
                 return editPostingErrors(errorIdList, comment, idPstNew, correctType);
             default:
@@ -63,25 +67,34 @@ public class ReprocessPostingController {
         return cnt;
     }
 
-    public int reprocessPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType) throws SQLException {
+    public int reprocessPostingErrors(List<Long> errorIdList, String comment, String idPstNew, ErrorCorrectType correctType, OperState state) throws Exception {
         String idList = StringUtils.listToString(errorIdList, ",");
         List<String> opers = errorRepository.getOperCorrList(idList, YesNo.Y);
         if (opers.size() != 0) {
             throw new ValidationError(ErrorCode.REPROCESS_ERROR, "В списке есть переобработанные (закрытые) операции, ИД АЕ: " + StringUtils.listToString(opers, ", ", "'"));
         }
-        opers = errorRepository.getOperPostList(idList, OperState.POST);
+        opers = errorRepository.getIdPstList(idList, OperState.POST);
         if (opers.size() != 0) {
             throw new ValidationError(ErrorCode.REPROCESS_ERROR, "В списке есть успешно обработанные операции со статусом 'POST', ID_PST: " + StringUtils.listToString(opers, ", ", "'"));
         }
         int cnt = errorRepository.setErrorsCorrected(idList, correctType.getTypeName(), comment, idPstNew, userContext.getTimestamp(), userContext.getUserName());
         checkUpdate(errorIdList.size(), cnt);
 
-        // получить список из GL_ETLPST: ID, PKG_ID
-        List<DataRecord> postingList  = errorRepository.getPostingIdList(idList);
-        String idPstList = StringUtils.listToString(postingList.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");
-        String idPkgList = StringUtils.listToString(postingList.stream().map(r -> r.getLong(1)).collect(Collectors.toList()), ",");
-
-        errorRepository.updatePostingsStateReprocess(idPstList, idPkgList);
+        if (BERCHK == state) {
+            String gloids = StringUtils.listToString(errorRepository.getOperationIdList(idList), ",");
+            errorRepository.updateBvOperationsStateReprocess(gloids, BLOAD);
+        } else if (BERWTAC == state) {
+            List<Long> gloidList = errorRepository.getOperationIdList(idList);
+            String gloids = StringUtils.listToString(gloidList , ",");
+            errorRepository.executeInNewTransaction(persistence -> {errorRepository.updateBvOperationsStateReprocess(gloids, BWTAC); return null;});
+            bvOperationController.reprocessWtacBackValue(gloidList);
+        } else {
+            // получить список из GL_ETLPST: ID, PKG_ID
+            List<DataRecord> postingList = errorRepository.getPostingIdList(idList);
+            String idPsts = StringUtils.listToString(postingList.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");
+            String idPkgs = StringUtils.listToString(postingList.stream().map(r -> r.getLong(1)).collect(Collectors.toList()), ",");
+            errorRepository.updatePostingsStateReprocess(idPsts, idPkgs);
+        }
 
         return cnt;
     }

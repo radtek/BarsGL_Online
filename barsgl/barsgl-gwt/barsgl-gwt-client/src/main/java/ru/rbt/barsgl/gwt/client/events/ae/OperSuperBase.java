@@ -61,6 +61,7 @@ abstract public class OperSuperBase extends GridForm {
         wrapper.setAmountCredit((BigDecimal) getValue("AMT_CR"));
 
         wrapper.setAmountRu((BigDecimal) getValue("AMTRU"));
+        wrapper.setAmountRuCredit((BigDecimal) getValue("AMTRU"));
         wrapper.setCorrection("Y".equals(((String) getValue("FCHNG")))); //TODO некошерно
 
         wrapper.setNarrative((String) getValue("NRT"));

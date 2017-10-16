@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.quickFilter;
 
 import ru.rbt.barsgl.gwt.core.datafields.Column;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class ErrorQFilterParams implements IQuickFilterParams {
 
     @Override
     public ArrayList<FilterItem> getFilter() {
-        ArrayList<FilterItem> list = new ArrayList<FilterItem>();
+        ArrayList<FilterItem> list = new ArrayList<>();
 
         if (!isEmpty(dealSource))
             list.add(new FilterItem(colDealSource, FilterCriteria.EQ, dealSource));

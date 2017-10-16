@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.entity.etl;
 
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.gl.BackValueParameters;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -10,6 +11,9 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
@@ -123,6 +127,12 @@ public class EtlPosting extends BaseEntity <Long> {
 
     @Column(name = "EMSG")
     private String errorMessage;
+
+    @Transient
+    private boolean isBackValue;
+
+    @Transient
+    private BackValueParameters backValueParameters;    // параметры отсечения BACK VALUE
 
     @Override
     public Long getId() {
@@ -424,4 +434,35 @@ public class EtlPosting extends BaseEntity <Long> {
         }
     }
 
+    public boolean fromPaymentHub() {
+        return PaymentHub.getLabel().equals(sourcePosting);
+    }
+
+    public boolean fromKondorPlus() {
+        return KondorPlus.getLabel().equals(sourcePosting);
+    }
+
+    public boolean fromARMPRO() {
+        return ARMPRO.getLabel().equals(sourcePosting);
+    }
+
+    public boolean isNonStandard() {
+        return fromKondorPlus() || Y.equals(fan);
+    }
+
+    public BackValueParameters getBackValueParameters() {
+        return backValueParameters;
+    }
+
+    public void setBackValueParameters(BackValueParameters backValueParameters) {
+        this.backValueParameters = backValueParameters;
+    }
+
+    public boolean isBackValue() {
+        return isBackValue;
+    }
+
+    public void setBackValue(boolean backValue) {
+        isBackValue = backValue;
+    }
 }

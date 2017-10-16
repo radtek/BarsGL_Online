@@ -7,7 +7,7 @@ import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.events.GridEvents;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
@@ -77,7 +77,8 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
             quickFilterAction.execute();
         } else {
             ArrayList<FilterItem> filterCriteria = filterParams.getFilter();
-            if ("810".equals(ccyN) && (bsaAcid.equals("99999") || bsaAcid.equals("99998")) ) {
+            if ("810".equals(ccyN) && (bsaAcid.equals("99999") || bsaAcid.equals("99998")
+                                    || bsaAcid.equals("99997") || bsaAcid.equals("99996")) ) {
             	filterCriteria.add(new FilterItem(colRlnType, FilterCriteria.EQ, "T"));
             }
             LocalEventBus.fireEvent(new GridEvents(gridForm.getGrid().getId(), GridEvents.EventType.FILTER, filterCriteria));

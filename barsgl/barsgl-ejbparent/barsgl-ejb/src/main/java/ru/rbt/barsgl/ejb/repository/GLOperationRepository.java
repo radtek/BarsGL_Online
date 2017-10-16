@@ -158,6 +158,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 
     public void setFilials(GLOperation operation) throws SQLException {
         if (isEmpty(operation.getFilialDebit())) {
+            // TODO зачем это здесь ?? логично перенести в заполнение счетов
             if (operation.getAccountKeyDebit()!=null) {
                 operation.createAccountParamDebit();
             }
@@ -340,6 +341,11 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
             state, message, parentRef, storno);
     }
 
+    public void updateOperationParentPostDate(Long operationId, Date postDate) {
+        executeUpdate("update GLOperation o set o.postDate = ?1 where o.id = ?2 or o.parentOperation.id = ?2", postDate, operationId);
+    }
+
+
     public List<GLPosting> getPostings(GLOperation operation) {
         return select(GLPosting.class, "from GLPosting p where p.operation = ?1 order by p.id",
             new Object[]{operation});
@@ -390,11 +396,11 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
                 , parentReference, storno, YesNo.Y, getFanVdatefrom());
     }
 
-    public List<String> getFanOperationLoad(Date procdate) {
+    public Long getFanOperationLoad(Date procdate) {
         try {
-            List<DataRecord> res = select("select DISTINCT PAR_RF from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE = ?",
+            DataRecord res = selectFirst("select count(DISTINCT PAR_RF) from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE = ?",
                     procdate, OperState.LOAD.name());
-            return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+            return res.getLong(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -406,6 +412,16 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
                     StringUtils.listToString(refs, ", ", "'") + ") ",
                     procdate, OperState.POST.name(), OperState.SOCANC.name());
             return res.stream().map(r -> r.getString(0)).collect(Collectors.toList());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public Long getFanOperationProcessed(Date procdate) {
+        try {
+            DataRecord res = selectFirst("select count(DISTINCT PAR_RF) from GL_OPER where FAN = 'Y' and PROCDATE = ? and STATE in (?, ?) ",
+                    procdate, OperState.POST.name(), OperState.SOCANC.name());
+            return res.getLong(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

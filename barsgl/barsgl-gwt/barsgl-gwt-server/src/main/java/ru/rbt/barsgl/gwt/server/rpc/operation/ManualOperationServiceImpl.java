@@ -14,12 +14,16 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
+import ru.rbt.barsgl.shared.operation.BackValueWrapper;
 import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.barsgl.shared.operation.CurExchangeWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.ManualTechOperationWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.filterCriteriaAdapter;
 
 /**
  * Created by ER18837 on 19.08.15.
@@ -33,6 +37,19 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
             public RpcRes_Base<CardReportWrapper> buildResponse() throws Throwable {
                 RpcRes_Base<CardReportWrapper> res = localInvoker.invoke(CardReportController.class, "getCardReport", wrapper);
                 if (res == null) throw new Throwable("Не удалось создать отчет по картотеке");
+                return res;
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Integer> processOperationBv(final BackValueWrapper wrapper) throws Exception {
+        return new RpcResProcessor<Integer>() {
+            @Override
+            public RpcRes_Base<Integer> buildResponse() throws Throwable {
+                RpcRes_Base<Integer> res = localInvoker.invoke(BackValuePostingController.class, "processOperationBv", wrapper,
+                        filterCriteriaAdapter(wrapper.getFilters()));
+                if (res == null) throw new Throwable("Не удалось обработать запрос на операцию");
                 return res;
             }
         }.process();

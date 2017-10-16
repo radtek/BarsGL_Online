@@ -18,21 +18,23 @@ public class EditPostingPdProcessor extends EditPostingProcessor {
     @EJB
     private MemorderRepository memorderRepository;
 
+    @Override
     public List<Long> getOperationPdIdList(long parentId) {
         return pdRepository.getOperationPdIdList(parentId);
     }
 
+    @Override
     public List<? extends AbstractPd> getOperationPdList(List<Long> pdIdList) {
         return pdRepository.getOperationPdList(pdIdList);
     }
 
     @Override
-    public void updateMemOrder(Date pod, boolean isCorrection, AbstractPd debit, AbstractPd credit) {
+    public void updateMemOrder(AbstractPd debit, String memorderNumber, Memorder.DocType docType) {
         Memorder mo = memorderRepository.findById(Memorder.class, debit.getPcId());
         Assert.isTrue(null != mo, "Не найден мемордер для PCID = " + debit.getPcId());
-        mo.setPostDate(pod);
-        mo.setNumber(memorderController.nextMemorderNumber(pod, debit.getBsaAcid(), isCorrection));
-        mo.setDocType(memorderController.getDocTypeNotFan(isCorrection, debit.getBsaAcid(), credit.getBsaAcid(), pod));
+        mo.setPostDate(debit.getPod());
+        mo.setNumber(memorderNumber);
+        mo.setDocType(docType);
         memorderRepository.update(mo);
     }
 

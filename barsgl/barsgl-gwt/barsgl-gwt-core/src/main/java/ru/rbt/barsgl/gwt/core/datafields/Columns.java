@@ -1,5 +1,7 @@
 package ru.rbt.barsgl.gwt.core.datafields;
 
+import com.google.gwt.user.client.Window;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 

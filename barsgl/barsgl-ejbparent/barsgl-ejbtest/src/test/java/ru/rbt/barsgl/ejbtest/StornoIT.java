@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLwdBalanceCutTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -122,7 +123,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(operationS.getState(), OperState.SOCANC);
+        Assert.assertEquals(OperState.SOCANC, operationS.getState());
         Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.ST);
         Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.C);
         Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
@@ -130,7 +131,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertTrue(postList.isEmpty());                    // нет своих проводки
 
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.CANC);
+        Assert.assertEquals(OperState.CANC, operation.getState());
         postList = getPostings(operation);
 
         Assert.assertNotNull(postList);
@@ -621,13 +622,14 @@ public class StornoIT extends AbstractTimerJobIT {
         logger.info("oper id=" + oper.getId());
 
         oper = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper.getId());
-        Assert.assertEquals(POST, oper.getState());
+        Assert.assertEquals("GLOID = " + oper.getId(), POST, oper.getState());
 
-        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStorno"
+        remoteAccess.invoke(CloseLwdBalanceCutTask.class, "reprocessErckStorno"
+//        remoteAccess.invoke(EtlPostingController.class, "reprocessErckStornoToday"
                 , getOperday().getLastWorkingDay(), getOperday().getCurrentDate());
 
         operStrn = (GLOperation) baseEntityRepository.findById(GLOperation.class, operStrn.getId());
-        Assert.assertEquals(OperState.SOCANC, operStrn.getState());
+        Assert.assertEquals("GLOID = " + operStrn.getId(), OperState.SOCANC, operStrn.getState());
 
     }
 

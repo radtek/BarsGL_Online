@@ -7,13 +7,17 @@ import ru.rbt.barsgl.gwt.core.ui.AreaBox;
  * Created by akichigi on 16.06.16.
  */
 public class ReasonDlg extends DlgFrame implements IAfterShowEvent {
-    private AreaBox box;
+    protected AreaBox box;
 
     @Override
     public Widget createContent() {
         box = new AreaBox();
         setAfterShowEvent(this);
         return box;
+    }
+
+    protected boolean check(){
+        return (box.getValue() != null && !box.getValue().trim().isEmpty());
     }
 
     @Override
@@ -24,7 +28,7 @@ public class ReasonDlg extends DlgFrame implements IAfterShowEvent {
     @Override
     protected boolean onClickOK() throws Exception {
         params = box.getValue();
-        return ( box.getValue() != null && !box.getValue().trim().isEmpty());
+        return check();
     }
 
     @Override

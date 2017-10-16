@@ -4,6 +4,7 @@
  */
 package ru.rbt.barsgl.gwt.server.rpc.dict;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.barsgl.ejb.integr.dict.AccType.*;
 import ru.rbt.barsgl.ejb.integr.dict.AcodController;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
@@ -65,6 +66,16 @@ public class ManualDictionaryServiceImpl extends AbstractGwtService implements M
   public RpcRes_Base<ExtCodeNameWrapper> saveSourcesDeals(ExtCodeNameWrapper wrapper, FormAction action) throws Exception {
     return save("saveSourcesDeals", wrapper, action);
   }
+
+  @Override
+  public RpcRes_Base<BVSourceDealWrapper> saveBVSourceDeal(BVSourceDealWrapper wrapper, FormAction action) throws Exception{
+      return save("saveBVSourceDeal", wrapper, action);
+  };
+
+  @Override
+  public RpcRes_Base<ClosedReportPeriodWrapper> saveClosedReportPeriod(ClosedReportPeriodWrapper wrapper, FormAction action) throws Exception{
+      return save("saveClosedReportPeriod", wrapper, action);
+  };
 
   @Override
   public RpcRes_Base<CodeNameWrapper> saveTypesOfTerms(CodeNameWrapper wrapper, FormAction action) throws Exception {

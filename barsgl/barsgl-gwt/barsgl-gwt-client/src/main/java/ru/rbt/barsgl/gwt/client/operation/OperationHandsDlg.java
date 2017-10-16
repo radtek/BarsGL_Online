@@ -81,11 +81,7 @@ public class OperationHandsDlg extends OperationDlg {
 
     @Override
     protected void setControlsEnabled(){
-        if ( action == FormAction.DELETE || action == FormAction.SEND || action == FormAction.SIGN ||
-             action == FormAction.RETURN || action == FormAction.CONFIRM || action == FormAction.PREVIEW){
-            //TODO блокировка полей на UPDATE (HAND2)
-            setControlsDisabled();
-        }
+       super.setControlsEnabled();
     }
 
     private Boolean _exitFlag = false;

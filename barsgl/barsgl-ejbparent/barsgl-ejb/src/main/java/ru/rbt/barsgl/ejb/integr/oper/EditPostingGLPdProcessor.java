@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.integr.oper;
 
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPd;
+import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.repository.GLPdRepository;
 
 import javax.inject.Inject;
@@ -16,20 +17,21 @@ public class EditPostingGLPdProcessor extends EditPostingProcessor {
     @Inject
     private GLPdRepository glPdRepository;
 
+    @Override
     public List<Long> getOperationPdIdList(long parentId) {
         return glPdRepository.getOperationPdIdList(parentId);
     }
 
+    @Override
     public List<? extends AbstractPd> getOperationPdList(List<Long> pdIdList) {
         return glPdRepository.getOperationPdList(pdIdList);
     }
 
     @Override
-    public void updateMemOrder(Date pod, boolean isCorrection, AbstractPd debit, AbstractPd credit) {
-        ((GLPd)debit).setMemorderNumber(memorderController.nextMemorderNumber(pod, debit.getBsaAcid(), isCorrection));
-        ((GLPd)debit).setDocType(memorderController.getDocTypeNotFan(isCorrection, debit.getBsaAcid(), credit.getBsaAcid(), pod));
+    public void updateMemOrder(AbstractPd debit, String memorderNumber, Memorder.DocType docType) {
+        ((GLPd)debit).setMemorderNumber(memorderNumber);
+        ((GLPd)debit).setDocType(docType);
     }
-
 
     @Override
     public void updatePd(List<? extends AbstractPd> pdList) {
