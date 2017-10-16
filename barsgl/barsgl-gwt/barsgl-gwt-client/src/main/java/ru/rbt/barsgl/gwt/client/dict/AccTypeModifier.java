@@ -89,6 +89,7 @@ public class AccTypeModifier extends EditableDictionary<AccTypeModifierWrapper> 
         return new GridAction(grid, "Подпродукты", "Управление подпродуктами", null, 10) {
             @Override
             public void execute() {
+                AccTypeSubProduct.PARAMS = new Object[]{initSection, initProduct};
                 FormManagerUI.show(new AccTypeSubProduct(initSection, initProduct));
             }
         };
@@ -100,6 +101,7 @@ public class AccTypeModifier extends EditableDictionary<AccTypeModifierWrapper> 
             public void execute() {
                 Field fieldModifier = getFieldByName(AccTypeModifier.FIELD_MODIFIER);
                 if (fieldModifier == null) return;
+                AccType.PARAMS = new Object[] {initSection, initProduct, initSubProduct, fieldModifier.getValue()};
                 FormManagerUI.show(new AccType(initSection, initProduct, initSubProduct, (String)fieldModifier.getValue()));
             }
         };
@@ -132,15 +134,15 @@ public class AccTypeModifier extends EditableDictionary<AccTypeModifierWrapper> 
     protected ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
 
-        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, initSection, true);
+        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, (String)PARAMS[0]/*initSection*/, true);
         item.setReadOnly(true);
         list.add(item);
 
-        item = new FilterItem(productColumn, FilterCriteria.EQ, initProduct, true);
+        item = new FilterItem(productColumn, FilterCriteria.EQ, (String)PARAMS[1]/*initProduct*/, true);
         item.setReadOnly(true);
         list.add(item);
 
-        item = new FilterItem(subProductColumn, FilterCriteria.EQ, initSubProduct, true);
+        item = new FilterItem(subProductColumn, FilterCriteria.EQ, (String)PARAMS[2]/*initSubProduct*/, true);
         item.setReadOnly(true);
         list.add(item);
 

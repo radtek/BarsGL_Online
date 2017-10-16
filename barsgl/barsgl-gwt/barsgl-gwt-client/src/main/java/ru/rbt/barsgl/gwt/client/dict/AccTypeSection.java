@@ -1,19 +1,19 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.dlg.AccTypeSectionDlg;
-import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
-import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
-import ru.rbt.barsgl.gwt.core.datafields.*;
+import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Field;
+import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.AccTypeSectionWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public class AccTypeSection  extends EditableDictionary<AccTypeSectionWrapper> {
             public void execute() {
                 Field field = getFieldByName(AccTypeSection.FIELD_SECTION);
                 if (field == null) return;
-
+                AccTypeProduct.PARAMS = new Object[] {field.getValue()};
                 FormManagerUI.show(new AccTypeProduct((String) field.getValue()));
             }
         };

@@ -111,6 +111,7 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
         return new GridAction(grid, "Модификатор", "Управление модификаторами", null, 10) {
             @Override
             public void execute() {
+                AccTypeModifier.PARAMS = new Object[]{initSection, initProduct, initSubProduct};
                 FormManagerUI.show(new AccTypeModifier(initSection, initProduct, initSubProduct));
             }
         };
@@ -131,7 +132,7 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
             public void execute() {
                 Row row = grid.getCurrentRow();
                 String tech_flag = row != null ? (String)row.getField(8).getValue(): null;
-
+                ActParm.PARAMS = new Object[] {initSection, initProduct, initSubProduct, initModifier, tech_flag};
                 FormManagerUI.show(new ActParm(initSection, initProduct, initSubProduct, initModifier, tech_flag));
             }
         };
@@ -174,19 +175,19 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
     protected ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
 
-        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, initSection, true);
+        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, (String)PARAMS[0]/*initSection*/, true);
         item.setReadOnly(true);
         list.add(item);
 
-        item = new FilterItem(productColumn, FilterCriteria.EQ, initProduct, true);
+        item = new FilterItem(productColumn, FilterCriteria.EQ, (String)PARAMS[1]/*initProduct*/, true);
         item.setReadOnly(true);
         list.add(item);
 
-        item = new FilterItem(subProductColumn, FilterCriteria.EQ, initSubProduct, true);
+        item = new FilterItem(subProductColumn, FilterCriteria.EQ, (String)PARAMS[2]/*initSubProduct*/, true);
         item.setReadOnly(true);
         list.add(item);
 
-        item = new FilterItem(modifierColumn, FilterCriteria.EQ, initModifier, true);
+        item = new FilterItem(modifierColumn, FilterCriteria.EQ, (String)PARAMS[3]/*initModifier*/, true);
         item.setReadOnly(true);
         list.add(item);
 
@@ -199,5 +200,4 @@ public class AccType extends EditableDictionary<AccTypeWrapper>  implements IAft
             actionCreate.setEnable(rowCount == 0);
         }
     }
-
 }

@@ -1,27 +1,22 @@
 package ru.rbt.barsgl.gwt.client.dict;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dict.dlg.AccTypeProductDlg;
-import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
-import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
-import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Field;
-import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterCriteria;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.AccTypeProductWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.security.gwt.client.formmanager.FormManagerUI;
 import ru.rbt.shared.enums.SecurityActionCode;
 
 import java.util.ArrayList;
@@ -91,7 +86,7 @@ public class AccTypeProduct extends EditableDictionary<AccTypeProductWrapper> {
             public void execute() {
                 Field fieldProduct = getFieldByName(AccTypeProduct.FIELD_PRODUCT);
                 if (fieldProduct == null) return;
-
+                AccTypeSubProduct.PARAMS = new Object[] {initSection, fieldProduct.getValue()};
                 FormManagerUI.show(new AccTypeSubProduct(initSection, (String)fieldProduct.getValue()));
             }
         };
@@ -129,7 +124,7 @@ public class AccTypeProduct extends EditableDictionary<AccTypeProductWrapper> {
    @Override
     protected ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, initSection, true);
+        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, (String) PARAMS[0] /*initSection*/, true);
         item.setReadOnly(true);
         list.add(item);
         return list;

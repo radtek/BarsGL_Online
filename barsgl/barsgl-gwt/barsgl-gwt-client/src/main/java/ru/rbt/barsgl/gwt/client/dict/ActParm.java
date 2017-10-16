@@ -188,6 +188,7 @@ public class ActParm extends GridForm {
         return new GridAction(grid, "AccType", "Управление AccType", null, 10) {
             @Override
             public void execute() {
+                AccType.PARAMS = new Object[] {initSection, initProduct, initSubProduct, initModifier};
                 FormManagerUI.show(new AccType(initSection, initProduct, initSubProduct, initModifier));
             }
         };
@@ -243,7 +244,8 @@ public class ActParm extends GridForm {
     @Override
     protected ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-        FilterItem item = new FilterItem(accTypeColumn, FilterCriteria.EQ, initAccType, true);
+        String _initAccTYpe = (String)PARAMS[0] + PARAMS[1] + PARAMS[2] + PARAMS[3];
+        FilterItem item = new FilterItem(accTypeColumn, FilterCriteria.EQ, _initAccTYpe/*initAccType*/, true);
         item.setReadOnly(true);
         list.add(item);
         return list;

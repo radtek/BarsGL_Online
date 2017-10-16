@@ -79,6 +79,7 @@ public class AccTypeSubProduct extends EditableDictionary<AccTypeSubProductWrapp
         return new GridAction(grid, "Продукты", "Управление продуктами", null, 10) {
             @Override
             public void execute() {
+                AccTypeProduct.PARAMS = new Object[]{initSection};
                 FormManagerUI.show(new AccTypeProduct(initSection));
             }
         };
@@ -90,6 +91,7 @@ public class AccTypeSubProduct extends EditableDictionary<AccTypeSubProductWrapp
             public void execute() {
                 Field fieldSubProduct = getFieldByName(AccTypeSubProduct.FIELD_SUBPRODUCT);
                 if (fieldSubProduct == null) return;
+                AccTypeModifier.PARAMS = new Object[] {initSection, initProduct, fieldSubProduct.getValue()};
                 FormManagerUI.show(new AccTypeModifier(initSection, initProduct, (String)fieldSubProduct.getValue()));
             }
         };
@@ -130,11 +132,11 @@ public class AccTypeSubProduct extends EditableDictionary<AccTypeSubProductWrapp
     protected ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
         ArrayList<FilterItem> list = new ArrayList<FilterItem>();
 
-        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, initSection, true);
+        FilterItem item = new FilterItem(sectionColumn, FilterCriteria.EQ, (String)PARAMS[0]/*initSection*/, true);
         item.setReadOnly(true);
         list.add(item);
 
-        item = new FilterItem(productColumn, FilterCriteria.EQ, initProduct, true);
+        item = new FilterItem(productColumn, FilterCriteria.EQ, (String)PARAMS[1] /*initProduct*/, true);
         item.setReadOnly(true);
         list.add(item);
 

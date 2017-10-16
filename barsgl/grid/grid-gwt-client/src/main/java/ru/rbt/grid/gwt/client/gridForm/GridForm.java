@@ -33,6 +33,7 @@ import java.util.List;
  * Created by akichigi on 27.04.15.
  */
 public abstract class GridForm extends BaseForm implements IDisposable {
+	public static Object[] PARAMS;
 	protected GridWidget grid;
 	protected Table table;
 	protected String sql_select;
