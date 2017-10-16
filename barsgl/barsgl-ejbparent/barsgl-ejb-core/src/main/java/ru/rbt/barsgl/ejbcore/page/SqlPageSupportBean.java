@@ -176,7 +176,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
         return nativeSql.toLowerCase().contains("where");
     }
 
-    private static SQL prepareCommonSql(final String nativeSql, Criterion criterion, OrderByColumn orderBy) {
+    public static SQL prepareCommonSql(final String nativeSql, Criterion criterion, OrderByColumn orderBy) {
         Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
 
         final String HINT = "first_rows";

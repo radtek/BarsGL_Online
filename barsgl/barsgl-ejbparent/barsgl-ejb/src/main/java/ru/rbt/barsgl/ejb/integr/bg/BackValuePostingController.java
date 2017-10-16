@@ -328,7 +328,7 @@ public class BackValuePostingController {
         OperationParameters parameters = new OperationParameters();
         if (ALL == wrapper.getMode()) {
             // сформировать запрос по фильтру
-            SQL formSql = prepareCommonSql(wrapper.getSql(), criteria);
+            SQL formSql = prepareCommonSql(wrapper.getSql(), criteria, null);
             parameters.setGloidIn("select t.GLOID from (" + formSql.getQuery() + ") t ");
             parameters.setSqlParams(formSql.getParams());
         } else {
