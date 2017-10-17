@@ -60,9 +60,9 @@ public class OperNotAuthBVForm extends GridForm {
     private String _select = "select * from (" +
                              "select op.*, ex.POSTDATE_PLAN, ex.MNL_RSNCODE, ex.BV_CUTDATE, ex.PRD_LDATE, ex.PRD_CUTDATE, ex.MNL_NRT, " +
                              "ex.MNL_STATUS, ex.USER_AU3, ex.OTS_AU3, ex.OTS_AUTO, " +
-                             "u.SURNAME || ' ' ||  LEFT(u.FIRSTNAME, 1) || '.' || LEFT(COALESCE(u.PATRONYMIC, ''), 1) || " +
+                             "u.SURNAME || ' ' ||  SUBSTR(u.FIRSTNAME, 1, 1) || '.' || SUBSTR(COALESCE(u.PATRONYMIC, ''), 1, 1) || " +
                              "case when COALESCE(u.PATRONYMIC, '') = '' then '' else '.' end as AUTHOR " +
-                             "from V_GL_OPERCUST as op " +
+                             "from V_GL_OPERCUST op " +
                              "join GL_OPEREXT ex on op.GLOID = ex.GLOID " +
                              "left join GL_USER u on ex.USER_AU3 = u.USER_NAME) v ";
 
