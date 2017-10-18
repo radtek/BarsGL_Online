@@ -731,10 +731,10 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             closedCutDate = closedPeriod.getCutDate();
             closedLastDate = closedPeriod.getLastDate();
         }
-        if (vdateCut.before(depthCutDate)) {
-            reason = OverDepth.getValue();
-        } else if (null != closedPeriod && !valueDate.after(closedLastDate)) {
+        if (null != closedPeriod && !valueDate.after(closedLastDate)) {
             reason = ClosedPeriod.getValue();
+        } else if (vdateCut.before(depthCutDate)) {
+            reason = OverDepth.getValue();
         }
 
         GLOperation.OperClass operClass = null != reason ? BV_MANUAL : AUTOMATIC;
