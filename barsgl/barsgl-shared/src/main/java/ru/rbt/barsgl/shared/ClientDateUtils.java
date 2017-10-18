@@ -21,4 +21,12 @@ public class ClientDateUtils {
     public static Date String2Date(String dateStr) throws IllegalArgumentException{
         return null == dateStr ? null : DateTimeFormat.getFormat(onlyDate).parse(dateStr);
     }
+
+    public static String Date2String(Date date, String format) {
+        return  date == null ? null : DateTimeFormat.getFormat(format).format(date);
+    }
+
+    public static Date String2Date(String dateStr, String format) throws IllegalArgumentException{
+        return null == dateStr ? null : DateTimeFormat.getFormat(format).parse(dateStr);
+    }
 }

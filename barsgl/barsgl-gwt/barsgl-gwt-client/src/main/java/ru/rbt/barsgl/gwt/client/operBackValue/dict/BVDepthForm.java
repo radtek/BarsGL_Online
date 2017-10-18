@@ -48,9 +48,8 @@ public class BVDepthForm extends GridForm{
     private GridAction _deleteAction;
     private BVDepthDlg dlg;
     private String _sql = "select * from GL_BVPARM ";
-    private String _where = "where DTB<='{0}' and (DTE is null or DTE >='{0}')";
+    private String _where = "where DTB<= to_date('{0}', 'yyyy-mm-dd') and (DTE is null or DTE >=to_date('{0}', 'yyyy-mm-dd'))";
     private boolean isCurrent;
-
     public BVDepthForm(){
         super(FORM_NAME);
         reconfigure();
@@ -232,11 +231,11 @@ public class BVDepthForm extends GridForm{
 
     @Override
     protected String prepareSql() {
-        return _sql +  Utils.Fmt(_where, ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
+        return _sql +  Utils.Fmt(_where, ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY, "yyyy-MM-dd"));
     }
 
     private void changeQuery(){
-        String sql = _sql + (isCurrent ? Utils.Fmt(_where, ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY)) : "");
+        String sql = _sql + (isCurrent ? Utils.Fmt(_where, ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY, "yyyy-MM-dd")) : "");
         setSql(sql);
         setExcelSql(sql);
     }
