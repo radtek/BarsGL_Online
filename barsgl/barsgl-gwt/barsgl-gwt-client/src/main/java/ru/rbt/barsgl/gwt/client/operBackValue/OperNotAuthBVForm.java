@@ -630,17 +630,17 @@ public class OperNotAuthBVForm extends GridForm {
         String res = "";
         switch (_state) {
             case ALL:
-                res =  Utils.Fmt("(MNL_STATUS in ('HOLD', 'SIGNEDDATE', 'CONTROL') or (MNL_STATUS='COMPLETED' and PROCDATE='{0}'))",
-                       ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
+                res =  Utils.Fmt("(MNL_STATUS in ('HOLD', 'SIGNEDDATE', 'CONTROL') or (MNL_STATUS='COMPLETED' and PROCDATE=to_date('{0}', 'yyyy-mm-dd')))",
+                       ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY, "yyyy-MM-dd"));
                 break;
             case COMPLETED:
-                res = Utils.Fmt("MNL_STATUS='COMPLETED' and PROCDATE='{0}'", ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY));
+                res = Utils.Fmt("MNL_STATUS='COMPLETED' and PROCDATE=to_date('{0}', 'yyyy-mm-dd')", ClientDateUtils.Date2String(CommonEntryPoint.CURRENT_OPER_DAY, "yyyy-MM-dd"));
                 break;
             case WORKING:
-                res = "((MNL_STATUS='SIGNEDDATE' and STATE = 'BLOAD') or (STATE = 'BWTAC'))";
+                res = "((MNL_STATUS='SIGNEDDATE' and STATE='BLOAD') or (STATE='BWTAC'))";
                 break;
             case NOTCOMPLETED:
-                res = "((MNL_STATUS in ('CONTROL', 'HOLD') and STATE <> 'BWTAC') or (MNL_STATUS='SIGNEDDATE' and STATE <> 'BLOAD'))";
+                res = "((MNL_STATUS in ('CONTROL', 'HOLD') and STATE<>'BWTAC') or (MNL_STATUS='SIGNEDDATE' and STATE<>'BLOAD'))";
                 break;
         }
         return res;
