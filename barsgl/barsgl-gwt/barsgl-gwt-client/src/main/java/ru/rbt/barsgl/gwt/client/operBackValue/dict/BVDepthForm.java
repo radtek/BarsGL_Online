@@ -93,7 +93,7 @@ public class BVDepthForm extends GridForm{
         builder.addItem(currentItem);
         builder.addSeparator();
         builder.addItem(allItem);
-        return  builder.toAction(grid);
+        return  builder.toAction(grid, false);
     }
 
     private void changeCurrentMode(){

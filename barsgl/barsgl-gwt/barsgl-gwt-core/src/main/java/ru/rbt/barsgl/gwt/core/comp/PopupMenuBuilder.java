@@ -39,7 +39,11 @@ public class PopupMenuBuilder {
    }
 
    public GridAction toAction(GridWidget grid){
-       return new GridAction(grid,null, title, image,10,true) {
+       return toAction(grid, true);
+   }
+
+   public GridAction toAction(GridWidget grid, boolean disableOnZeroRows){
+       return new GridAction(grid,null, title, image,10,disableOnZeroRows) {
            @Override
            public void execute() {
                final PushButton button = actionBar.getButton(this);
