@@ -21,7 +21,7 @@ declare global temporary table TMP_PCID_DEL as (
            , c.glccy ccy
       from gl_pdjover t
            join currency c on c.cbccy = substr(t.bsaacid, 6,3)
-          left join pd r on r.id = t.id
+          left join pd r on r.id = t.idpd
          where t.operday in  (?1, ?2)
            and (r.invisible ='1' or r.invisible is null)
 ) with data with replace
