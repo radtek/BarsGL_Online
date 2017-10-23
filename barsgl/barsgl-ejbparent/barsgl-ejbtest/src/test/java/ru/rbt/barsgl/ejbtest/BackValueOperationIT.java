@@ -201,11 +201,13 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         Date vdateSEC = period.getLastDate();
         Assert.assertTrue(cutDate.before(vdateSEC));
 
+        Operday od = getOperday();
         setOperday(operday, lwdate, ONLINE, Operday.LastWorkdayStatus.OPEN);
         pst = createEtlPosting(vdateSEC, SECMOD.getLabel(), bsaDt, RUB, amt, bsaCt, RUB, amt);
         operClass = remoteAccess.invoke(IncomingPostingProcessor.class, "calculateOperationClass", pst);
         Assert.assertEquals(BV_MANUAL, operClass);
 
+        setOperday(od.getCurrentDate(), od.getLastWorkingDay(), ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
 
     @Test
@@ -237,7 +239,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         Assert.assertNotNull(operExt);
         Assert.assertEquals(operation.getPostDate(), operExt.getPostDatePlan());
 
-        Assert.assertEquals(OverDepth.getValue(), operExt.getManualReason());
+        Assert.assertEquals("GLOID = " + operation.getId(),OverDepth.getValue(), operExt.getManualReason());
         Assert.assertEquals(operday.getLastWorkingDay(), operExt.getDepthCutDate());
         Assert.assertEquals(period.getCutDate(), operExt.getCloseCutDate());
         Assert.assertEquals(period.getLastDate(), operExt.getCloseLastDate());

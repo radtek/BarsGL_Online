@@ -66,6 +66,7 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
 
     public static final Logger log = Logger.getLogger(BackValueAuthIT.class.getName());
     private final static Long USER_ID = 2L;
+    private final static Long ROLE_H3 = 10L;
 
     @BeforeClass
     public static void beforeAll() throws SQLException {
@@ -81,7 +82,7 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
 //        saveTable("GL_CRPRD");
 
         setBVparams();
-        addUserRole(USER_ID, 1L);
+        addUserRole(USER_ID, ROLE_H3);
     }
 
     public static void addUserRole(Long id_user, Long id_role) throws SQLException {
