@@ -469,7 +469,9 @@ public class OperdayIT extends AbstractTimerJobIT {
                 , rlnId.getBsaAcid(), rlnId.getAcid());
         Assert.assertEquals(1, pdjrns.size());
 
-        Assert.assertEquals(new Long(1), remoteAccess.invoke(DatLCorrector.class, "correctDatL"));
+        checkCorrectCount(rlnId, 0);
+        Assert.assertTrue((Long)remoteAccess.invoke(DatLCorrector.class, "correctDatL") >= 1L);
+        checkCorrectCount(rlnId, 1);
 
         balturs = getBalturList(rlnId);
         Assert.assertEquals(day1, balturs.get(0).getDate("DATL"));
@@ -478,7 +480,8 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         // давим первую проводку
         baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id1);
-        Assert.assertEquals(new Long(2), remoteAccess.invoke(DatLCorrector.class, "correctDatL"));
+        Assert.assertTrue((Long)remoteAccess.invoke(DatLCorrector.class, "correctDatL") >= 2L);
+        checkCorrectCount(rlnId, 2);
 
         balturs = getBalturList(rlnId);
         Assert.assertNull(balturs.get(0).getDate("DATL"));
@@ -504,6 +507,15 @@ public class OperdayIT extends AbstractTimerJobIT {
         Assert.assertNull(balturs.get(0).getDate("DATL"));
         Assert.assertNull(balturs.get(1).getDate("DATL"));
         Assert.assertNull(balturs.get(2).getDate("DATL"));
+
+    }
+
+    private void checkCorrectCount(AccRlnId rlnId, int corr) throws SQLException {
+        List<DataRecord> balt2 = baseEntityRepository.select("select DAT, DATL from BALTUR where bsaacid = ? and acid = ? "
+                , rlnId.getBsaAcid(), rlnId.getAcid());
+        final int[] cntDiff = {0};
+        balt2.forEach((DataRecord rec) -> {if (!rec.getDate(0).equals(rec.getDate(1)))  cntDiff[0]++;});
+        Assert.assertEquals(corr, cntDiff[0]);
 
     }
 
