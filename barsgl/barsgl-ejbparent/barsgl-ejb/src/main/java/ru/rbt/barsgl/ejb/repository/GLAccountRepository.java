@@ -790,10 +790,15 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     private SystemConfiguration getCfg(String cfgName, Connection connection) throws ConfigurationException {
         SystemConfiguration cfg = SystemConfiguration.getInstance();
-        try {
+
+        if (cfg.containsConfig(cfgName)) {
             cfg.get(cfgName);     // проверяем, что конфиг уже есть
-        } catch (ConfigurationException e) {
-            cfg.add(DbConfiguration.createDbConfiguration(cfgName, connection));
+        } else {
+            synchronized (cfg) {
+                if (!cfg.containsConfig(cfgName)) {
+                    cfg.add(DbConfiguration.create(cfgName, connection));
+                }
+            }
         }
         return cfg;
     }
