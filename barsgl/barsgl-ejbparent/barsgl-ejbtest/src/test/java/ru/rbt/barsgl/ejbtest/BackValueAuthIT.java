@@ -82,6 +82,7 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
 //        saveTable("GL_CRPRD");
 
         setBVparams();
+        subUserRole(USER_ID, 1L);
         addUserRole(USER_ID, ROLE_H3);
     }
 

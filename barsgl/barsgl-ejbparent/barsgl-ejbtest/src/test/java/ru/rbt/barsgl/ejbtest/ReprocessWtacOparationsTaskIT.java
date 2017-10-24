@@ -120,6 +120,7 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         Thread.sleep(2000L);
 
         oper1 = getOperation(pst1.getId());
+        oper1 = (GLOperation) baseEntityRepository.refresh(oper1, true);
         Assert.assertNotNull(oper1);
         Assert.assertEquals("GLOID = " + oper1.getId(), OperState.POST, oper1.getState());
         Assert.assertEquals(GLOperation.OperType.S, oper1.getPstScheme());
