@@ -91,6 +91,12 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
             baseEntityRepository.executeNativeUpdate("insert into GL_AU_USRRL (ID_USER, ID_ROLE, USR_AUT) values (?, ?, ?)", id_user, id_role, "sys");
     }
 
+    public static void subUserRole(Long id_user, Long id_role) throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select * from GL_AU_USRRL where ID_USER = ? and ID_ROLE = ?", id_user, id_role);
+        if (null != res)
+            baseEntityRepository.executeNativeUpdate("delete from GL_AU_USRRL where ID_USER = ? and ID_ROLE = ?", id_user, id_role);
+    }
+
     /**
      * Задержать одну операцию
      * @throws SQLException
@@ -275,7 +281,7 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testEditOperationKP() throws SQLException {
+    public void testEditOperationKP() throws SQLException, InterruptedException {
 
         /**
          * создать операцию BV в статусе CONTROL
@@ -304,6 +310,7 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
         Assert.assertFalse(res.isError());
         Assert.assertEquals(1, res.getResult().intValue());
 
+        Thread.sleep(1000L);
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(vdate, operation.getPostDate());
 

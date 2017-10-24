@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.barsgl.ejbtest.ReprocessErrorIT.getErrorRecord;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
@@ -1120,16 +1121,4 @@ public class ValidationIT extends AbstractTimerJobIT {
         Assert.assertTrue(errorRecord.getErrorCode().contains(errorCode));
     }
 
-    private static GLErrorRecord getErrorRecord(Long pstRef, Long operRef) {
-        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
-        if (null == errorRecord) {
-            try {
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
-        }
-        return errorRecord;
-    }
 }

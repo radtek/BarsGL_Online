@@ -338,7 +338,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, null);
         if( null == errorRecord) {
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(2000L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -352,12 +352,31 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     public static GLErrorRecord getOperationErrorRecord(GLOperation operation) {
         Assert.assertNotNull(operation);
         Long gloRef = operation.getId();
-        GLOperation oper = (GLOperation) baseEntityRepository.refresh(operation, true);
 
         GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", null, gloRef);
+        if( null == errorRecord) {
+            try {
+                Thread.sleep(2000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", null, gloRef);
+        }
         Assert.assertNotNull(errorRecord);
         return errorRecord;
     }
 
+    public static GLErrorRecord getErrorRecord(Long pstRef, Long operRef) {
+        GLErrorRecord errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, operRef);
+        if (null == errorRecord) {
+            try {
+                Thread.sleep(2000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            errorRecord = remoteAccess.invoke(GLErrorRepository.class, "getRecordByRef", pstRef, operRef);
+        }
+        return errorRecord;
+    }
 
 }

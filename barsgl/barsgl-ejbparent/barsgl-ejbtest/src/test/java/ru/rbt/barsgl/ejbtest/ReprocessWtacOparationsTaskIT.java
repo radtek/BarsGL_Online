@@ -117,10 +117,11 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", ReprocessWtacOparationsTask.JOB_NAME);
         // обработка WTAC
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
+        Thread.sleep(2000L);
 
         oper1 = getOperation(pst1.getId());
         Assert.assertNotNull(oper1);
-        Assert.assertEquals(OperState.POST, oper1.getState());
+        Assert.assertEquals("GLOID = " + oper1.getId(), OperState.POST, oper1.getState());
         Assert.assertEquals(GLOperation.OperType.S, oper1.getPstScheme());
 
         err = (GLErrorRecord) baseEntityRepository.refresh(err, true);
