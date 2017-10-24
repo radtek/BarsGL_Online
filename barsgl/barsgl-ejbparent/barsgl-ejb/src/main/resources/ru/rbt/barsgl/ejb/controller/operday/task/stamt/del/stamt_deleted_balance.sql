@@ -1,14 +1,14 @@
-declare global temporary table GL_TMP_STMTBAL as (
+insert into GL_TMP_STMTBAL (
 select statdate
        , stattype
        , hostsystem
        , fcccustnum
-       , cast(ac.dealid as varchar(35)) fccaccount
+       , cast(ac.dealid as varchar2(35)) fccaccount
        , fccbranch
        , ext_custid
        , accbrn
        , cbaccount
-       , cast(ac.acctype as varchar(35)) acctype
+       , cast(ac.acctype as varchar2(35)) acctype
        , currcode
        , sqnumber
        , createdate
@@ -55,8 +55,8 @@ select statdate
            , 'BARS' hostsystem
            , rln.cnum fcccustnum
            , get_fcc_br(acmx.bsaacid) fccbranch
-           , right(rln.cnum,6) ext_custid
-           , right(acmx.acid,3) accbrn
+           , substr(rln.cnum,-6) ext_custid
+           , substr(acmx.acid,-3) accbrn
            , acmx.bsaacid cbaccount
            , cc.glccy currcode
            , cast(null as integer) sqnumber
@@ -64,21 +64,21 @@ select statdate
            , current_timestamp timecreate
            , case
                 when b.dat = c.dat then
-                  cast(decimal(b.obac) / integer(power(10,cc.nbdp)) as decimal(22,2))
+                  cast((b.obac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
                 else
-                  cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22,2))
+                  cast((b.obac + b.dtac + b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
            end openblnca
-           , cast(decimal(b.obac + b.dtac + b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2)) closeblnca
+           , cast((b.obac + b.dtac + b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2)) closeblnca
            , GL_GETOPERCNT(acmx.bsaacid, c.dat, '1') dbdocnt
            , case
                 when b.dat = c.dat then
-                  abs(cast(decimal(b.dtac) / integer(power(10,cc.nbdp)) as decimal(22, 2)))
+                  abs(cast((b.dtac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2)))
                 else 0
            end dbturnovra
            , GL_GETOPERCNT(acmx.bsaacid, c.dat, '0') crdocnt
            , case
                 when b.dat = c.dat then
-                    cast(decimal(b.ctac) / integer(power(10,cc.nbdp)) as decimal(22, 2))
+                    cast((b.ctac) / cast(power(10,cc.nbdp) as number(4)) as decimal(22,2))
                 else 0
            end crturnovra
            , case
@@ -117,7 +117,7 @@ select statdate
            , cast(null as varchar(12)) bcustswift
            , cast(null as varchar(14)) bcustinn
            , c.dat ed
-           , right(rln.ccode,3) branch_id
+           , substr(rln.ccode,-3) branch_id
            , b.acid alt_ac_no
            , s.bbcrnm accname
            , cast('' as varchar(255)) acodname
@@ -148,9 +148,9 @@ select statdate
        and cc.glccy = substr(acmx.acid,9,3)
        and cc.glccy = r.ccy and r.dat = c.dat
        and s.bbcust = rln.cnum
-       and i.ccbbr = rln.ccode and rp.a8brcd = right(acmx.acid,3)
+       and i.ccbbr = rln.ccode and rp.a8brcd = substr(acmx.acid,-3)
        and c.dat <= (case when o.phase = 'COB' then o.curdate else o.lwdate end) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
        and not exists (select 1 from gl_balstmd d where d.cbaccount = b.bsaacid and c.dat = d.statdate)
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount
-) with data with replace
+)

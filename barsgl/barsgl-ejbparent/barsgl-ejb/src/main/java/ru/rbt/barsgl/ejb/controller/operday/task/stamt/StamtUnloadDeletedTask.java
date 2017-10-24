@@ -167,9 +167,7 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
                         .replaceAll("\\?1", "'" + DateUtils.dbDateString(lwDate) + "'")
                         .replaceAll("\\?2", "'" + DateUtils.dbDateString(operday) + "'")
                 );
-                auditController.info(StamtPstDeleted, format("Сессионная таблица с проводками создана. Записей '%s'", repository.selectFirst("select count(1) cnt from session.TMP_PCID_DEL").getLong("cnt")));
-                repository.executeNativeUpdate("create index QTEMP.UN_TMP_IDX1 on SESSION.TMP_PCID_DEL (PCID)");
-                repository.executeNativeUpdate("create unique index QTEMP.UN_TMP_IDX2 on SESSION.TMP_PCID_DEL (PID)");
+                auditController.info(StamtPstDeleted, format("Сессионная таблица с проводками создана. Записей '%s'", repository.selectFirst("select count(1) cnt from TMP_PCID_DEL").getLong("cnt")));
                 return repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/del/stamt_deleted_result.sql"));
             });
         } catch (Throwable e) {

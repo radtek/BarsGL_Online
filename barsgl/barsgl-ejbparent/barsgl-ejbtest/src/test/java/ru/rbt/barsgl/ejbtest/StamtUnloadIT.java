@@ -572,7 +572,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         log.info("bsaacid2: " + rlnId2.getBsaAcid());
         Assert.assertEquals(2, rlnIds.size());
 
-        List<DataRecord> opers = baseEntityRepository.select("select gloid, p.pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and rownum <= 2");
+        List<DataRecord> opers = baseEntityRepository.select("select gloid, p.pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and o.PST_SCHEME = 'S' and rownum <= 2");
         Assert.assertEquals(2, opers.size());
 
         registerForStamtUnload(rlnId1.getBsaAcid());
@@ -631,6 +631,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertTrue(pdOver.stream().allMatch(r -> r.getLong("idpd") == id3 || r.getLong("idpd") == id4 || r.getLong("idpd") == id1_2 || r.getLong("idpd") == id2_2));
 
         setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, OPEN);
+
+        cleanHeader();
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
 
         // формирование выгрузки в STAMT
         SingleActionJob job = SingleActionJobBuilder.create().withClass(StamtUnloadDeletedTask.class)
