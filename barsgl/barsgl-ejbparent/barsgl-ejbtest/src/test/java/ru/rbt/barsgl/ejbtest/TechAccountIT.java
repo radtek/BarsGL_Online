@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -267,6 +268,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
     }
 
+    @Ignore
     @Test
     public void testLoadEtlPstFromFile() throws ParseException, InvalidFormatException, IOException {
 
@@ -390,7 +392,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting("TBO");
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setEventId("3370547");
         pst.setDeptId("TBM");
         pst.setDealId("1287387");
@@ -424,7 +426,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting("TBO");
+        pst.setSourcePosting(KondorPlus.getLabel());
         pst.setEventId("3370547");
         pst.setStornoReference("3370547");
         pst.setDeptId("TBM");

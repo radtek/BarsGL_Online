@@ -582,7 +582,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         Assert.assertFalse(gloids.isEmpty());
         String ops = gloids.stream().map(op -> " " + op.getId()).collect(Collectors.joining(","));
         System.out.println(ops);
-        baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = null, o.equivalentCredit = null, o.bsChapter = null where o.id in (" + ops + ")", //
+        baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = null, o.equivalentCredit = null where o.id in (" + ops + ")", //
                 getOperday().getCurrentDate());
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + ops + ")", BackValuePostStatus.SIGNEDDATE);
 
