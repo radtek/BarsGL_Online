@@ -503,7 +503,7 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
         throw supplier.get();
     }
 
-    protected GLOperation refreshOperationForcibly(GLOperation operation) {
+    public GLOperation refreshOperationForcibly(GLOperation operation) {
         try {
             return operationRepository.executeInNewTransaction(persistence -> operationRepository.refresh(operation, true));
         } catch (Exception e) {

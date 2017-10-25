@@ -632,8 +632,8 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, OPEN);
 
-        cleanHeader();
-        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
+//        cleanHeader();
+//        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
 
         // формирование выгрузки в STAMT
         SingleActionJob job = SingleActionJobBuilder.create().withClass(StamtUnloadDeletedTask.class)

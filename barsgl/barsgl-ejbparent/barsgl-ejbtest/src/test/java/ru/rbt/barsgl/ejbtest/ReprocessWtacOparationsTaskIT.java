@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
+import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
@@ -120,7 +121,7 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         Thread.sleep(2000L);
 
         oper1 = getOperation(pst1.getId());
-        oper1 = (GLOperation) baseEntityRepository.refresh(oper1, true);
+        oper1 = remoteAccess.invoke(EtlPostingController.class, "refreshOperationForcibly", oper1);
         Assert.assertNotNull(oper1);
         Assert.assertEquals("GLOID = " + oper1.getId(), OperState.POST, oper1.getState());
         Assert.assertEquals(GLOperation.OperType.S, oper1.getPstScheme());
