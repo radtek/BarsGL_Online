@@ -193,7 +193,7 @@ public class PreCobStepController {
         List<JpaAccessCallback<Boolean>> callbacks = refs.stream()
                 .map(s -> (JpaAccessCallback<Boolean>) persistence
                         -> processFanOperation(s, fanForwardOperationController, isWtacPreStage)).collect(Collectors.toList());
-        asyncProcessor.asyncProcessPooled(callbacks, fanConcurrency, 5L, TimeUnit.MINUTES);
+        asyncProcessor.asyncProcessPooled(callbacks, fanConcurrency, 60L, TimeUnit.MINUTES);
     }
 
     /**
