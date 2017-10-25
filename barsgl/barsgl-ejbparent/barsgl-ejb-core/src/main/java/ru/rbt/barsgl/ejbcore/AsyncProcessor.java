@@ -1,10 +1,13 @@
 package ru.rbt.barsgl.ejbcore;
 
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.*;
+import javax.enterprise.concurrent.ManagedThreadFactory;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.util.Date;
@@ -16,9 +19,6 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import javax.annotation.Resource;
-import javax.enterprise.concurrent.ManagedThreadFactory;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 /**
  * Created by Ivan Sevastyanov
@@ -63,7 +63,8 @@ public class AsyncProcessor {
      */
     public <T> void asyncProcessPooled(List<JpaAccessCallback<T>> callbacks, int maxConcurrency
             , long timeout, TimeUnit unit) throws Exception {
-        asyncProcessPooledByExecutor(callbacks, maxConcurrency, timeout, unit);
+        //  TODO return control to current thread before all task compleated and "shutdown" calling before all tasks compleated !!!      asyncProcessPooledByExecutor(callbacks, maxConcurrency, timeout, unit);
+        asyncProcessPooledOld(callbacks, maxConcurrency, timeout, unit);
    }
 
     /**
