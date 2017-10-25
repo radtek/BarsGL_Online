@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
 import ru.rbt.barsgl.ejb.integr.dict.LwdBalanceCutController;
 import ru.rbt.barsgl.ejb.integr.dict.ManualDictionaryService;
+import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.BVSourceDealWrapper;
@@ -18,11 +19,14 @@ import ru.rbt.barsgl.shared.dict.ClosedReportPeriodWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 import static ru.rbt.ejbcore.util.DateUtils.addSeconds;
 import static ru.rbt.ejbcore.util.DateUtils.onlyDate;
@@ -131,11 +135,12 @@ public class BackValueSettingsIT extends AbstractTimerJobIT
     }
 
     @Test
-    public void testLwdBalanceCut() {
+    public void testLwdBalanceCut() throws SQLException {
         baseEntityRepository.executeUpdate("delete from LwdBalanceCut b");
         remoteAccess.invoke(LwdCutCachedRepository.class, "init");
 
-        Date cutDateTime  = getSystemDateTime();
+        Date cutDateTime = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter",  getSystemDateTime(), false);
+        cutDateTime =  org.apache.commons.lang3.time.DateUtils.addHours(cutDateTime, 12);
 
         LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();
         RpcRes_Base<LwdBalanceCutWrapper> res = remoteAccess.invoke(LwdBalanceCutController.class, "get");

@@ -208,6 +208,7 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
         if (operations.size() > 0) {
             auditController.info(Operation, format("Найдено %d отложенных СТОРНО операций", operations.size()));
             for (GLOperation operation : operations) {
+                operation = refreshOperationForcibly(operation);
                 if (reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }

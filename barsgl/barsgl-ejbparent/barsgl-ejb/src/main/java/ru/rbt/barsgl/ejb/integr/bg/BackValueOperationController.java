@@ -256,6 +256,7 @@ public class BackValueOperationController extends AbstractEtlPostingController{
                     setDateParameters(ordinaryPostingProcessor, operation);
                 }
 */
+                operation = refreshOperationForcibly(operation);
                 if (etlPostingController.reprocessOperation(operation, "Повторная обработка СТОРНО операций (ERCHK)")) {
                     cnt++;
                 }
