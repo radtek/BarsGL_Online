@@ -18,7 +18,6 @@ import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
@@ -348,10 +347,9 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             statError(idCob, phase, format("Ошибка установки операционного дня в статус %s", PRE_COB), e);
         }
         try {
-            return beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
-
+            return (CobStepResult) repository.executeInNewTransaction((persistence) -> {
                 statInfo(idCob, phase, "Обработка вееров");
-                return beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection1, persistence1) -> preCobStepController.processFan());
+                return preCobStepController.processFan();
             });
         } catch (Exception e) {
             return stepErrorResult(Error, "Ошибка при обработке вееров", e);
