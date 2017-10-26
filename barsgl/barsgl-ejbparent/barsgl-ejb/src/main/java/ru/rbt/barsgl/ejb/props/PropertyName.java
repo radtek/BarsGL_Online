@@ -16,12 +16,19 @@ public enum PropertyName {
     , COB_STAT_INC("cob.stat.increase")
     , STOP_PROC_TIMEOUT("process.stop.timeout.minute")
     , BARSGL_LOADER_TYPE("barsgl.loader.type")
+    , BARSGL_LOCALIZATION_TYPE("barsgl.localization.type")
 
     , BARSGL_LOADER_SSH_HOST("barsgl.loader.ssh.host")
     , BARSGL_LOADER_SSH_PORT("barsgl.loader.ssh.port")
     , BARSGL_LOADER_SSH_USER("barsgl.loader.ssh.user")
     , BARSGL_LOADER_SSH_PSWD("barsgl.loader.ssh.pswd")
     , BARSGL_LOADER_SSH_RUN_CMD("barsgl.loader.ssh.run.cmd")
+
+    , BARSGL_LOCALIZATION_SSH_HOST("barsgl.localization.ssh.host")
+    , BARSGL_LOCALIZATION_SSH_PORT("barsgl.localization.ssh.port")
+    , BARSGL_LOCALIZATION_SSH_USER("barsgl.localization.ssh.user")
+    , BARSGL_LOCALIZATION_SSH_PSWD("barsgl.localization.ssh.pswd")
+    , BARSGL_LOCALIZATION_SSH_RUN_CMD("barsgl.localization.ssh.run.cmd")
 
     , BARSREP_LOADER_TYPE("barsrep.loader.type")
     , BARSREP_LOADER_SSH_HOST("barsrep.loader.ssh.host")

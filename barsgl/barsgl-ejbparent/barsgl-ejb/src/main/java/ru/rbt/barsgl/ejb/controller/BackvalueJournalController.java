@@ -1,10 +1,14 @@
 package ru.rbt.barsgl.ejb.controller;
 
+import ru.rb.cfg.CryptoUtil;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState;
+import ru.rbt.barsgl.ejb.etc.SshProcedureRunner;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -21,6 +25,7 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
+import static ru.rbt.barsgl.ejb.controller.operday.task.StartLoaderTask.StartLoaderType.ssh;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.*;
 
 /**
@@ -47,6 +52,12 @@ public class BackvalueJournalController {
 
     @EJB
     private OperdayController operdayController;
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
+
+    @Inject
+    private SshProcedureRunner sshProcedureRunner;
 
     /**
      * полный пересчет/локализация и пересчет остатков по БС2
@@ -86,11 +97,9 @@ public class BackvalueJournalController {
                 count[0]++;
                 return null;
             });
-            try {
-                journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
-            } catch (Exception e) {
-                throw new DefaultApplicationException("Ошибка при пересчете/локализации", e);
-            }
+            // пересчет - локализация
+            callGlCorrLocal();
+
             setBackvalueJournalState(LOCAL, NEW);
             auditController.info(Task, "Окончание пересчета/локализации");
             return count[0];
@@ -116,17 +125,36 @@ public class BackvalueJournalController {
             });
         });
         auditController.info(Task, format("Записей для локализации backvalue %s", accs));
-        try {
-            journalRepository.executeInNewTransaction(pers -> {
-                journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
-                return null;
-            });
-        } catch (Exception e) {
-            auditController.error(Task, "Ошибка при пересчете/локализации", null, e);
-        }
+        // пересчет - локализация
+        callGlCorrLocal();
+
         return accs;
     }
 
+    public void callGlCorrLocal() {
+        try {
+            String barsGlLoaderType = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_TYPE.getName());
+            if(ssh.name().equals(barsGlLoaderType)){
+                String host = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_HOST.getName());
+                Long portObj = propertiesRepository.getNumber(PropertyName.BARSGL_LOCALIZATION_SSH_PORT.getName());
+                int port = (portObj == null) ? 22 : portObj.intValue();
+                String user = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_USER.getName());
+                String ecryptedPswd = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_PSWD.getName());
+                String pswd = CryptoUtil.decrypt(ecryptedPswd);
+                String cmd = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_RUN_CMD.getName());
+                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, null);
+            } else {
+                journalRepository.executeInNewTransaction(pers -> {
+                    journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
+                    return null;
+                });
+            }
+        } catch (Throwable e) {
+            auditController.error(Task, "Ошибка при пересчете/локализации", null, e);
+        }
+        
+    }
+    
     /**
      * пересчет остатков по БС2
      * @return кол-во пересчитаных счетов

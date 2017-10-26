@@ -100,7 +100,7 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
      * @return                  true, если опеарция обработана, false - WTAC или ERCHK
      */
     private boolean processOperation(GLOperation operation, boolean isWtacPreStage) throws Exception {
-        String msgCommon = format(" операции: '%s' ID_PST: '%s'", operation.getId(), operation.getAePostingId());
+        String msgCommon = format(" GLOID: '%s' ID_PST: '%s'", operation.getId(), operation.getAePostingId());
         boolean toContinue;
         GLOperationProcessor operationProcessor;
         try {
@@ -108,7 +108,7 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
             operationProcessor = findOperationProcessor(operation);
             toContinue = validateOperation(operationProcessor, operation, isWtacPreStage);
         } catch ( Throwable e ) {
-            String msg = "Ошибка валидации данных";
+            String msg = "Ошибка валидации данных операции";
             operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
             return false;
         }
@@ -116,17 +116,18 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
             try {
                 updateOperation(operationProcessor, operation);
             } catch ( Throwable e ) {
-                String msg = "Ошибка заполнения данных";
+                String msg = "Ошибка заполнения данных операции";
                 operationErrorMessage(e, msg + msgCommon, operation, ERCHK, initSource());
                 return false;
             }
             if (operation.isBackValue()) {          // OPER_CALSS == BV_MANUAL
                  if( isWtacPreStage ) {             // первый раз создаем расширенную операцию и выходим на ручную обработку
+                     auditController.info(Operation, "Обработана и передана на ручную авторизацию операция" + msgCommon, operation);
                      createOperationExt(operationProcessor, operation, BLOAD);
                      return false;
                  }
                  else {                             // больше сюда попадать не должны
-                     auditController.warning(Operation, "Повторная обработка BackValue операции как AUTOMATIC");
+                     auditController.warning(Operation, "Повторная обработка операции BackValue как AUTOMATIC" + msgCommon);
 /*
                      String msg = "Ошибка обработки операции BackValue";
                      operationErrorMessage(new DefaultApplicationException("Неверный процесс обработки: BackValue операции не должны здесь обрабатываться"),
@@ -139,7 +140,7 @@ public class EtlPostingController extends AbstractEtlPostingController { //} imp
                 finalOperation(operationProcessor, operation);
                 return true;
             } catch ( Throwable e ) {
-                String msg = "Ошибка обработки";
+                String msg = "Ошибка обработки операции";
                 operationErrorMessage(e, msg + msgCommon, operation, ERPOST, initSource());
             }
         }
