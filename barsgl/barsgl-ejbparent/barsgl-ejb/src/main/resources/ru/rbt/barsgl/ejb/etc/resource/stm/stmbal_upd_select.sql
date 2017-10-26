@@ -151,13 +151,7 @@ select statdate
             pdj.OPERDAY = (select CURDATE from GL_OD)
             and pdj.POD < (select CURDATE from GL_OD)
             and UNF = 'N'
-            and (
-                    exists (select 1 from GL_STMPARM pr where pr.account = substr(pdj.bsaacid,1,5) and pr.acctype = 'B' and pr.includebln = '1')         
-                    or        
-                    exists (select 1 from GL_STMPARM pr where pr.account = pdj.bsaacid and pr.acctype = 'A' and pr.includebln = '1')       
-                )
-            and 
-                not exists (select 1 from GL_STMPARM pr where pr.account = pdj.bsaacid and pr.acctype = 'A' and pr.includebln = '0')
+            and GL_STMFILTER_BAL(pdj.bsaacid)
             group by pdj.pod, pdj.bsaacid 
         ) p on ac.BSAACID = p.bsaacid
 --    join (select curdate pdt from GL_OD) p on ac.dto <= p.pdt and value(ac.dtc, p.pdt) >= p.pdt

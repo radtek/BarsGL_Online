@@ -150,4 +150,4 @@ select *
    join imbcbbrp rp on rp.a8brcd = ac.branch
   where ac.rlntype <> '1'
   ) ac0
- where GL_STMFILTER(ac0.cbaccount) = '1'
+ where GL_STMFILTER_BAL(ac0.cbaccount) = '1'
