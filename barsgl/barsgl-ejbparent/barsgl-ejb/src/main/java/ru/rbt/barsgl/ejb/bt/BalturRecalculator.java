@@ -102,7 +102,7 @@ public class BalturRecalculator {
 
     public void registerChangeMarker(String bsaacid, String acid, Date dat) {
         try {
-            pdRepository.executeInNewTransaction(p -> registerChangeMarkerInternal(bsaacid, acid, dat));
+            pdRepository.executeInNewTransaction(p -> registerChangeMarkerInternal(bsaacid, StringUtils.ifEmpty(acid, " "), dat));
         } catch (Exception e) {
             registerChangeMarkerInternal(bsaacid, acid, dat);
         }

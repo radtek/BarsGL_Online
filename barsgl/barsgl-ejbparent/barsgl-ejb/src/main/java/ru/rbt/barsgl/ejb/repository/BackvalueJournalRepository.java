@@ -4,6 +4,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -44,7 +45,7 @@ public class BackvalueJournalRepository extends AbstractBaseEntityRepository<Bac
     }
 
     public void registerBackvalueJournalAcc(String bsaAcid, String acid, Date pod) throws Exception {
-        final BackvalueJournalId journalId = new BackvalueJournalId(acid, bsaAcid, pod);
+        final BackvalueJournalId journalId = new BackvalueJournalId(StringUtils.ifEmpty(acid, " "), bsaAcid, pod);
         try {
             insertJournalRecordNewTransaction(journalId);
         } catch (Throwable e) {

@@ -342,7 +342,8 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
     }
 
     public void updateOperationParentPostDate(Long operationId, Date postDate) {
-        executeUpdate("update GLOperation o set o.postDate = ?1 where o.id = ?2 or o.parentOperation.id = ?2", postDate, operationId);
+        executeNativeUpdate("update GL_OPER o set o.POSTDATE = ? where NVL(PAR_GLO, GLOID) = ?", postDate, operationId);
+//        executeUpdate("update GLOperation o set o.postDate = ?1 where o.id = ?2 or o.parentOperation.id = ?2", postDate, operationId);
     }
 
 

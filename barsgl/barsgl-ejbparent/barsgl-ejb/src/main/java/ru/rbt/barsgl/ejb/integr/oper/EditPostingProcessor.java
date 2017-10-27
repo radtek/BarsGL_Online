@@ -209,6 +209,8 @@ public abstract class EditPostingProcessor extends ValidationAwareHandler<Manual
         Date dateMin = pod.before(postDate) ? pod : postDate;
         // обновить поля в полупроводках
         for (AbstractPd pd : pdList) {
+            if (null == pd.getAcid())
+                pd.setAcid(" ");
             pd.setIsCorrection(isCorrection);
             pd.setPod(postDate);
             if (changeDate) {

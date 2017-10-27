@@ -47,6 +47,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackValueOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejbcore.page.SqlPageSupportBean.prepareCommonSql;
 import static ru.rbt.barsgl.shared.enums.BackValueAction.SIGN;
@@ -59,6 +60,7 @@ import static ru.rbt.barsgl.shared.enums.DealSource.withTechWorkDay;
 import static ru.rbt.barsgl.shared.enums.OperState.BLOAD;
 import static ru.rbt.barsgl.shared.enums.OperState.BWTAC;
 import static ru.rbt.barsgl.shared.enums.OperState.POST;
+import static ru.rbt.ejbcore.util.StringUtils.listToString;
 import static ru.rbt.ejbcore.validation.ErrorCode.BV_MANUAL_ERROR;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
@@ -256,6 +258,8 @@ public class BackValuePostingController {
                     getResultMessage(wrapper, 1),
                     StringUtils.listToString(pdList, ", "),
                     dateUtils.onlyDateString(parameters.getPostDate()), wrapper.getPostDateStr());
+            auditController.info(BackValueOperation, message, "GL_OPER", parameters.getParentId().toString());
+
             return new RpcRes_Base<>(1, false, message);
         } catch (ValidationError e) {
             String msg = "Ошибка при изменении даты: " + getResultMessage(wrapper, 0);
