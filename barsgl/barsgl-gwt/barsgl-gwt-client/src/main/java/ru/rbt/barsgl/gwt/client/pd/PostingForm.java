@@ -197,19 +197,23 @@ public class PostingForm extends MDForm {
         return result;
     }
 
+/*
     @Override
     public ArrayList<SortItem> getInitialMasterSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("PAR_GLO", Column.Sort.DESC));
         return list;
     }
+*/
 
+/*
     @Override
     public ArrayList<SortItem> getInitialDetailSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("POST_TYPE", Column.Sort.ASC));
         return list;
     }
+*/
 
     private ArrayList<Long> getPdIdList() {
         ArrayList<Long> pdList = new ArrayList<Long>();

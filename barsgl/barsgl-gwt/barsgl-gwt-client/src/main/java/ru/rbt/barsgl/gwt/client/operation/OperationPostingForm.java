@@ -68,12 +68,14 @@ public class OperationPostingForm extends MDForm {
         return "select * from V_GL_OPERCUST " + getSourceAndFilialPart("where", "SRC_PST", "CBCC_CR", "CBCC_DR");
     }
 
+/*
     @Override
     protected ArrayList<SortItem> getInitialMasterSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("GLOID", Column.Sort.DESC));
         return list;
     }
+*/
 
     @Override
     protected Table prepareMasterTable() {
@@ -151,12 +153,14 @@ public class OperationPostingForm extends MDForm {
         return "select * from V_GL_PDLINK ";
     }
 
+/*
     @Override
     protected ArrayList<SortItem> getInitialDetailSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("POST_TYPE", Column.Sort.ASC));
         return list;
     }
+*/
 
     @Override
     protected Table prepareDetailTable() {

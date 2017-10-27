@@ -437,19 +437,23 @@ public class OperAuthBVForm extends MDForm {
         return list;
     }
 
+/*
     @Override
     protected ArrayList<SortItem> getInitialMasterSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("GLOID", Column.Sort.DESC));
         return list;
     }
+*/
 
+/*
     @Override
     protected ArrayList<SortItem> getInitialDetailSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("POST_TYPE", Column.Sort.ASC));
         return list;
     }
+*/
 
     private ManualOperationWrapper masterRowToWrapper(){
         ManualOperationWrapper wrapper = new ManualOperationWrapper();

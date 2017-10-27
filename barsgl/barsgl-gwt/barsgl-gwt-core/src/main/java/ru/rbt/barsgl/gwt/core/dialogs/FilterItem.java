@@ -71,7 +71,8 @@ public class FilterItem implements IFilterItem, Serializable, IsSerializable {
             case DATE:
                 this.sqlName = name;
                 this.strValue = DateTimeFormat.getFormat(DATE_FORMAT).format((Date)value);
-                this.sqlValue = this.strValue;
+//                this.sqlValue = this.strValue;
+                this.sqlValue = value;
                 break;
             }
         }
