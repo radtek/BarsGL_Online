@@ -115,8 +115,8 @@ public class OperTechEventHistoryForm extends OperTechSuperBase {
         result.addColumn(new Column("HEADBRANCH", Column.Type.STRING, "Филиал 1 руки", 100, false, false));
         result.addColumn(new Column("USER_AU2", Column.Type.STRING, "Логин 2 руки", 100));
         result.addColumn(new Column("OTS_AU2", Column.Type.DATETIME, "Дата подписи", 130));
-        result.addColumn(new Column("USER_AU3", Column.Type.STRING, "Логин 3 руки", 100));
-        result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130));
+       // result.addColumn(new Column("USER_AU3", Column.Type.STRING, "Логин 3 руки", 100));
+       // result.addColumn(new Column("OTS_AU3", Column.Type.DATETIME, "Дата подтверж.", 130));
         result.addColumn(new Column("USER_CHNG", Column.Type.STRING, "Логин изменения", 100));
         result.addColumn(new Column("OTS_CHNG", Column.Type.DATETIME, "Дата изменения", 130));
         result.addColumn(new Column("SRV_REF", Column.Type.STRING, "ID запроса в АБС", 150));
@@ -129,8 +129,8 @@ public class OperTechEventHistoryForm extends OperTechSuperBase {
 
     private HashMap getInvisibleList() {
         HashMap invisibleMap = getEnumLabelsList(InvisibleType.values());
-        String visName = (String) invisibleMap.remove(InvisibleType.N.name());
-        invisibleMap.put("", visName);
+      //  String visName = (String) invisibleMap.remove(InvisibleType.N.name());
+      //  invisibleMap.put(" ", visName);
         return invisibleMap;
     }
 
@@ -147,7 +147,8 @@ public class OperTechEventHistoryForm extends OperTechSuperBase {
 
 
         String query = "select PST.ID, PST.GLOID_REF, PST.STATE, PST.ECODE, PST.ID_PKG, PST.NROW, " +
-                "case when PST.INVISIBLE = '" + InvisibleType.N.name() + "' then '' else PST.INVISIBLE end as INVISIBLE, " +
+                "PST.INVISIBLE, " +
+                //"case when PST.INVISIBLE = '" + InvisibleType.N.name() + "' then ' ' else PST.INVISIBLE end as INVISIBLE, " +
                 "PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.SEND_SRV, PST.OTS_SRV, PST.SRC_PST, " +
                 "PST.DEAL_ID, PST.SUBDEALID, PST.PMT_REF, PST.PROCDATE, PST.VDATE, PST.POSTDATE, PST.ACCTYPE_DR, " +
                 "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.ACCTYPE_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +

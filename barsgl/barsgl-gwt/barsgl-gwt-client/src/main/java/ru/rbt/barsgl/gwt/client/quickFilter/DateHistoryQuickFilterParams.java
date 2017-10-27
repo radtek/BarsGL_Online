@@ -29,7 +29,7 @@ public class DateHistoryQuickFilterParams extends DateIntervalQuickFilterParams 
         list.add(new FilterItem(dateColumn, FilterCriteria.GE, dateBegin));
         list.add(new FilterItem(dateColumn, FilterCriteria.LE, dateEnd));
         if (null != histColumn) {
-            list.add(new FilterItem(histColumn, FilterCriteria.EQ, ""));
+            list.add(new FilterItem(histColumn, FilterCriteria.EQ, "N"));
         }
         return list;
     }
