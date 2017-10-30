@@ -58,7 +58,7 @@ public class ValuesBox extends Composite implements IBoxValue<Serializable> {
 	@Override
 
 	public void setValue(Serializable value) {			
-		if (value instanceof String)
+		if (value instanceof String && !" ".equals(value))
 			value = ((String) value).trim(); 
 		if (!validate() || !mapIndex.containsKey(value)) return;
 

@@ -931,6 +931,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             List<String> errorList=null;
             try {
                 BatchPosting posting = postingRepository.findById(wrapper.getId());
+                posting = refreshPostingForcibly(posting);
                 errorList = manualOperationProcessed(posting);
                 Date timestamp = userContext.getTimestamp();
                 cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, COMPLETED, SIGNEDVIEW);
@@ -1205,5 +1206,12 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return manualOperationProcessor.createOperation(posting);
     }
 
+    public BatchPosting refreshPostingForcibly(BatchPosting posting) {
+        try {
+            return postingRepository.executeInNewTransaction(persistence -> postingRepository.refresh(posting, true));
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 
 }

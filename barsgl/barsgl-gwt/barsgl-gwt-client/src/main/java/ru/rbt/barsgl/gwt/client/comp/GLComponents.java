@@ -390,7 +390,14 @@ public class GLComponents {
     }
 
     public static HashMap<Serializable, String> getYesNoList() {
-        return getArrayValuesList(new String[]{"", "N", "Y"});
+        return getArrayValuesList(new String[]{" ", "N", "Y"});
+    }
+
+    public static HashMap<Serializable, String> getYesNoNoList() {
+        HashMap<Serializable, String> list = new HashMap<Serializable, String>();
+        list.put(" ", "N");
+        list.put("Y", "Y");
+        return list;
     }
 
     private static DataListBox getCachedListBox(String name, String selectedValue){

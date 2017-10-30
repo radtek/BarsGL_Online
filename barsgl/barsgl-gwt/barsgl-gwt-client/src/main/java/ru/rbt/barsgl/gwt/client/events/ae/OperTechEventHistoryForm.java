@@ -129,8 +129,8 @@ public class OperTechEventHistoryForm extends OperTechSuperBase {
 
     private HashMap getInvisibleList() {
         HashMap invisibleMap = getEnumLabelsList(InvisibleType.values());
-      //  String visName = (String) invisibleMap.remove(InvisibleType.N.name());
-      //  invisibleMap.put(" ", visName);
+        String visName = (String) invisibleMap.remove(InvisibleType.N.name());
+        invisibleMap.put(" ", visName);
         return invisibleMap;
     }
 
@@ -147,8 +147,8 @@ public class OperTechEventHistoryForm extends OperTechSuperBase {
 
 
         String query = "select PST.ID, PST.GLOID_REF, PST.STATE, PST.ECODE, PST.ID_PKG, PST.NROW, " +
-                "PST.INVISIBLE, " +
-                //"case when PST.INVISIBLE = '" + InvisibleType.N.name() + "' then ' ' else PST.INVISIBLE end as INVISIBLE, " +
+//                "PST.INVISIBLE, " +
+                "case when PST.INVISIBLE = '" + InvisibleType.N.name() + "' then ' ' else PST.INVISIBLE end as INVISIBLE, " +
                 "PST.INP_METHOD, PST.ID_PAR, PST.ID_PREV, PST.SRV_REF, PST.SEND_SRV, PST.OTS_SRV, PST.SRC_PST, " +
                 "PST.DEAL_ID, PST.SUBDEALID, PST.PMT_REF, PST.PROCDATE, PST.VDATE, PST.POSTDATE, PST.ACCTYPE_DR, " +
                 "PST.AC_DR, PST.CCY_DR, PST.AMT_DR, PST.CBCC_DR, PST.AC_CR, PST.ACCTYPE_CR, PST.CCY_CR, PST.AMT_CR, PST.CBCC_CR, " +
