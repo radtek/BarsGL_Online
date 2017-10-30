@@ -393,13 +393,6 @@ public class GLComponents {
         return getArrayValuesList(new String[]{" ", "N", "Y"});
     }
 
-    public static HashMap<Serializable, String> getYesNoNoList() {
-        HashMap<Serializable, String> list = new HashMap<Serializable, String>();
-        list.put(" ", "N");
-        list.put("Y", "Y");
-        return list;
-    }
-
     private static DataListBox getCachedListBox(String name, String selectedValue){
         DataListBox cachedBox = (DataListBox) LocalDataStorage.getParam(Utils.Fmt(ListBoxCachedSqlDataProvider.CACHED_LIST_PREFIX, name));
         if (cachedBox != null){

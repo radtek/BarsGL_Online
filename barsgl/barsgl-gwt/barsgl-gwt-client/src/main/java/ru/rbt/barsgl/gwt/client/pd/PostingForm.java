@@ -65,7 +65,7 @@ public class PostingForm extends MDForm {
 
     public PostingForm(){
         super(FORM_NAME, null, "Все проводки по операции", true);
-        setLazyDetailRefresh(true);
+//        setLazyDetailRefresh(true);
         reconfigure();
     }
 
@@ -123,7 +123,7 @@ public class PostingForm extends MDForm {
         Table result = new Table();
         Column col;
 
-        HashMap<Serializable, String> yesNoList = getYesNoNoList();
+        HashMap<Serializable, String> yesNoList = getYesNoList();
         result.addColumn(new Column("GLOID", LONG, "ID операции", 70));
         result.addColumn(colGloid = new Column("PAR_GLO", LONG, "ID осн. операции", 70, false, false));
         result.addColumn(col = new Column("INP_METHOD", STRING, "Способ ввода", 50));
