@@ -170,6 +170,7 @@ public class EditDlg extends DlgFrame{
 				    }
 				    else {
 						switch (col.getType()) {
+							case CHAR:
 							case STRING:
 							case DATETIME:	// строка
 								if (col.getFormat() != null && !col.getFormat().isEmpty()){

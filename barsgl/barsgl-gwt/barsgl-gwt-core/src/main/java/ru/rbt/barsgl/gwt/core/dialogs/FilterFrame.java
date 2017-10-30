@@ -160,6 +160,7 @@ public class FilterFrame  extends Composite {
         map.put(FilterCriteria.NOT_NULL, FilterCriteria.NOT_NULL.getValue());
 
         switch(type){
+            case CHAR:
             case STRING:
                 map.put(FilterCriteria.HAVE, FilterCriteria.HAVE.getValue());
                 map.put(FilterCriteria.START_WITH, FilterCriteria.START_WITH.getValue());

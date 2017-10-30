@@ -62,7 +62,8 @@ public abstract class AccountTypeTechFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select ACCTYPE, CUSTYPE, TERM, ACC2, ACOD, SQ, DTB, DTE, ACCNAME from V_GL_ACCUST_TH";
+            return "select * from  " +
+                    "(select ACCTYPE, trim(CUSTYPE) CUSTYPE, TERM, ACC2, ACOD, SQ, DTB, DTE, ACCNAME from V_GL_ACCUST_TH) v";
         }
 
         @Override

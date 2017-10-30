@@ -637,6 +637,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         GridFormDlgBase dlg = new GridFormDlgBase("Справочник продуктов AccountingType") {
             @Override
             protected GridForm getGridForm() {
+                AccTypeProduct.PARAMS = new Object[] {section.getValue()};
                 return new AccTypeProduct(section.getValue()){
                     @Override
                     protected void reconfigure() {
@@ -688,6 +689,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         GridFormDlgBase dlg = new GridFormDlgBase("Справочник подпродуктов AccountingType") {
             @Override
             protected GridForm getGridForm() {
+                AccTypeSubProduct.PARAMS = new Object[] {section.getValue(), product.getValue()};
                 return new AccTypeSubProduct(section.getValue(), product.getValue()){
                     @Override
                     protected void reconfigure() {
@@ -741,6 +743,7 @@ public class AccountingTypeCreateDlg extends DlgFrame implements IAfterShowEvent
         GridFormDlgBase dlg = new GridFormDlgBase("Справочник модификаторов AccountingType") {
             @Override
             protected GridForm getGridForm() {
+                AccTypeModifier.PARAMS = new Object[] {section.getValue(), product.getValue(), subproduct.getValue()};
                 return new AccTypeModifier(section.getValue(), product.getValue(), subproduct.getValue()){
                     @Override
                     protected void reconfigure() {

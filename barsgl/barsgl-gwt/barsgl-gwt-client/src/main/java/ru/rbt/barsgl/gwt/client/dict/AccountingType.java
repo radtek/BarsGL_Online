@@ -455,7 +455,7 @@ public class AccountingType extends MDForm implements IAfterRefreshEvent {
 
     @Override
     protected String prepareDetailSql() {
-        return "select PARM.ACCTYPE, PARM.CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, case when NM.TECH_ACT='Y' then 'Y' else 'N' end as TECH_ACT "
+        return "select PARM.ACCTYPE, TRIM(PARM.CUSTYPE) CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, case when NM.TECH_ACT='Y' then 'Y' else 'N' end as TECH_ACT "
                 + "from GL_ACTPARM PARM, GL_ACTNAME NM "
                 + "where NM.ACCTYPE = PARM.ACCTYPE";
     }

@@ -144,6 +144,7 @@ public class AccountingTypeDlg extends DlgFrame implements IAfterShowEvent {
             name.setReadOnly(true);
             pl_act.setEnabled(false);
             fl_ctrl.setEnabled(false);
+            tech_act.setEnabled(false);
         }
     }
 
