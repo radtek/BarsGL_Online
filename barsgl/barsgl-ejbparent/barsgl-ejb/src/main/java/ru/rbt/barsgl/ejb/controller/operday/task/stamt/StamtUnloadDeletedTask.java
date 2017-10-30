@@ -65,8 +65,8 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
         } catch (Throwable e) {
             unloadController.setHeaderStatus(headerPstId[0], DwhUnloadStatus.ERROR);
             unloadController.setHeaderStatus(headerBalId[0], DwhUnloadStatus.ERROR);
-            auditController.error(StamtPstDeleted, format("Ошибка при выполнении выгрузки проводк/остатков по удаленным проводкам: %s, ОД: %s"
-                    , fillDeletedBalance(properties), dateUtils.onlyDateString(operday)), null, e);
+            auditController.error(StamtPstDeleted, format("Ошибка при выполнении выгрузки проводк/остатков по удаленным проводкам: ОД: %s"
+                    , dateUtils.onlyDateString(operday)), null, e);
             return false;
         }
         return true;
