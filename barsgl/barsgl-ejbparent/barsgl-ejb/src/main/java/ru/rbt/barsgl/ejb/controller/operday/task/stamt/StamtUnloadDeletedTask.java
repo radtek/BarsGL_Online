@@ -57,7 +57,7 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
                     , fillDeltaPostings(properties), dateUtils.onlyDateString(operday)));
             unloadController.setHeaderStatus(headerPstId[0], DwhUnloadStatus.SUCCEDED);
 
-            headerBalId[0] = unloadController.createHeader(operday, UnloadStamtParams.BALANCE_DELTA);
+            headerBalId[0] = unloadController.createHeader(operday, UnloadStamtParams.BALANCE_DELTA2);
             auditController.info(StamtPstDeleted, format("Выгружено в STAMT остатков по удаленным проводкам: %s, ОД: %s"
                     , fillDeletedBalance(properties), dateUtils.onlyDateString(operday)));
             unloadController.setHeaderStatus(headerBalId[0], DwhUnloadStatus.SUCCEDED);
