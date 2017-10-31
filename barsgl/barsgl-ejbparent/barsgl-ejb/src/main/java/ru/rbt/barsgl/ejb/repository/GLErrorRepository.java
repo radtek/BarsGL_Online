@@ -7,6 +7,7 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -33,11 +34,11 @@ public class GLErrorRepository  extends AbstractBaseEntityRepository<GLErrorReco
         GLErrorRecord errorRecord = new GLErrorRecord();
         errorRecord.setEtlPostingRef(etlPostingRef);
         errorRecord.setGlOperRef(glOperRef);
-        errorRecord.setAePostingId(substr(aePostingId, 128));
-        errorRecord.setSourcePosting(substr(sourcePosting, 128));
-        errorRecord.setErrorType(substr(errorType, 512));
-        errorRecord.setErrorCode(substr(errorCode, 64));
-        errorRecord.setErrorMessage(substr(errorMessage, 4000));
+        errorRecord.setAePostingId(StringUtils.ifEmpty(substr(aePostingId, 128), " "));
+        errorRecord.setSourcePosting(StringUtils.ifEmpty(substr(sourcePosting, 128), " "));
+        errorRecord.setErrorType(StringUtils.ifEmpty(substr(errorType, 512), " "));
+        errorRecord.setErrorCode(StringUtils.ifEmpty(substr(errorCode, 64), " "));
+        errorRecord.setErrorMessage(StringUtils.ifEmpty(substr(errorMessage, 4000), " "));
         errorRecord.setProcDate(procDate);
         errorRecord.setCorrect(YesNo.N);
         return errorRecord;

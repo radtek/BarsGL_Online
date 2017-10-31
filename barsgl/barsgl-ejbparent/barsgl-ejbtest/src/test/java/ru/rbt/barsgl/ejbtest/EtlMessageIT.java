@@ -22,6 +22,7 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import static ru.rbt.barsgl.shared.enums.DealSource.*;
 
@@ -123,6 +125,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      */
     @Test public void testPH() throws ParseException {
 
+//        updateOperdayMode(BUFFER, ProcessingStatus.STARTED);
         long stamp = System.currentTimeMillis();
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");

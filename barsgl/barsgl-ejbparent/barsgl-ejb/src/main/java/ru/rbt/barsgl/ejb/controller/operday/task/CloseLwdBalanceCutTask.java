@@ -72,7 +72,7 @@ public class CloseLwdBalanceCutTask extends AbstractJobHistoryAwareTask {
         final String prevDateStr = dateUtils.onlyDateString(operday.getLastWorkingDay());
         if (OPEN == operday.getLastWorkdayStatus()) {
             try {
-                lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
+                return lwdBalanceCutRepository.executeInNewTransaction(persistence -> {
                     if (closeBalance(true).getResult()) {
                         lwdBalanceCutRepository.updateCloseTimestamp(currentDate, currentDateTime);
                         lwdCutCachedRepository.flushCache();
