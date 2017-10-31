@@ -101,7 +101,7 @@ public class AuditRecord extends BaseEntity<Long> {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "AuditRecordIdSeq")
     private Long id;
 
-    @Column(name = "SYS_TIME")
+    @Column(name = "SYS_TIME", insertable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date logTime;
 

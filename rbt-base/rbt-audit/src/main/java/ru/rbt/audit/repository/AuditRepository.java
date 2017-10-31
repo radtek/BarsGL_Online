@@ -23,7 +23,7 @@ public class AuditRepository extends AbstractBaseEntityRepository<AuditRecord, L
             String entity, String entity_id,
             String stackTrace, String transactionId,
             String attachment, int duration,
-            String userName, String userHost, Date sysTime) {
+            String userName, String userHost) {
         AuditRecord auditRecord = new AuditRecord();
 
         auditRecord.setUserName(substr(userName, 64));
@@ -40,7 +40,6 @@ public class AuditRepository extends AbstractBaseEntityRepository<AuditRecord, L
         auditRecord.setErrorSource(substr(errorSource, 4000));
         auditRecord.setAttachment(attachment);
         auditRecord.setProcessDuration(duration);
-        auditRecord.setLogTime(sysTime);
 
         return auditRecord;
     }
@@ -48,6 +47,6 @@ public class AuditRepository extends AbstractBaseEntityRepository<AuditRecord, L
     public AuditRecord createAuditRecord(
             AuditRecord.LogLevel logLevel, AuditRecord.LogCode logCode, String message) {
         return createAuditRecord(logLevel, logCode, message
-                , null, null, null, null, null, null, null, null, 0, "", "", null);
+                , null, null, null, null, null, null, null, null, 0, "", "");
     }
 }

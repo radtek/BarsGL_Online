@@ -204,7 +204,6 @@ public class AuditControllerEJBImpl implements AuditController {
                                       String userName, String userHost) {
         try {
 
-            Date operTime = new Date(System.currentTimeMillis());
             auditRepository.invokeAsynchronous(persistence -> {
 //            auditRepository.executeInNewTransaction(persistence -> {
                 AuditRecord auditRecord = auditRepository.createAuditRecord(
@@ -214,7 +213,7 @@ public class AuditControllerEJBImpl implements AuditController {
                     entity, entity_id,
                     stackTrace, transactionId,
                     attachment, duration,
-                    userName, userHost, operTime);
+                    userName, userHost);
                 return auditRepository.save(auditRecord);
             });
         } catch (Throwable e) {

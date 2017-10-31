@@ -36,11 +36,13 @@ public class AuditRecordIT extends AbstractRemoteIT {
         rec.setStackTrace("Stack Trace");
         rec.setTransactionId("Transaction Id");
         rec.setAttachment(org.apache.commons.lang3.StringUtils.rightPad("", 40000, "Attachment"));
-        rec.setLogTime(new Date());
+//        rec.setLogTime(new Date());
 
         rec = (AuditRecord) baseEntityRepository.save(rec);
 
         Assert.assertNotNull(rec.getId());
+        rec = (AuditRecord) baseEntityRepository.refresh(rec, true);
+        Assert.assertNotNull(rec.getLogTime());
     }
 
     /**
