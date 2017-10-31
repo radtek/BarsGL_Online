@@ -927,23 +927,27 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
 
         if (newStatus==SIGNEDVIEW) {
-            int cnt = 0;
-            List<String> errorList=null;
-            try {
-                BatchPosting posting = postingRepository.findById(wrapper.getId());
-                posting = refreshPostingForcibly(posting);
-                errorList = manualOperationProcessed(posting);
-                Date timestamp = userContext.getTimestamp();
-                cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, COMPLETED, SIGNEDVIEW);
-                result.setStatus(COMPLETED);
-                wrapper.setStatus(COMPLETED);
-            } catch (EJBException ex) {
-                auditController.info(ManualOperation, "Ошибка при обработке ручной операции\n"+errorList!=null ? String.join("\n",errorList) : "", postingName, getWrapperId(wrapper));
-                Date timestamp = userContext.getTimestamp();
-                cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, REFUSESRV, newStatus);
-                wrapper.setStatus(REFUSESRV);
-                result.setStatus(REFUSESRV);
-            }
+            glOperationRepository.executeInNewTransaction(persistence1 -> {
+                int cnt = 0;
+                List<String> errorList = null;
+                try {
+                    BatchPosting posting = postingRepository.findById(wrapper.getId());
+//                    posting = refreshPostingForcibly(posting);
+                    errorList = manualOperationProcessed(posting);
+                    Date timestamp = userContext.getTimestamp();
+                    cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, COMPLETED, SIGNEDVIEW);
+                    result.setStatus(COMPLETED);
+                    wrapper.setStatus(COMPLETED);
+                    return null;
+                } catch (EJBException ex) {
+                    auditController.info(ManualOperation, "Ошибка при обработке ручной операции\n" + errorList != null ? String.join("\n", errorList) : "", postingName, getWrapperId(wrapper));
+                    Date timestamp = userContext.getTimestamp();
+                    cnt = postingRepository.signedConfirmPostingStatus(wrapper.getId(), timestamp, userName, REFUSESRV, newStatus);
+                    wrapper.setStatus(REFUSESRV);
+                    result.setStatus(REFUSESRV);
+                    return null;
+                }
+            });
         }
 
         String msg = result.getPostSignedMessage();
