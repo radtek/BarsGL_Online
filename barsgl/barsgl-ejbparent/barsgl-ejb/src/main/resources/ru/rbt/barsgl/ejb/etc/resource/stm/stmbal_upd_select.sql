@@ -151,7 +151,7 @@ select statdate
             pdj.OPERDAY = (select CURDATE from GL_OD)
             and pdj.POD < (select CURDATE from GL_OD)
             and UNF = 'N'
-            and GL_STMFILTER_BAL(pdj.bsaacid)
+            and GL_STMFILTER_BAL(pdj.bsaacid) = '1'
             group by pdj.pod, pdj.bsaacid 
         ) p on ac.BSAACID = p.bsaacid
 --    join (select curdate pdt from GL_OD) p on ac.dto <= p.pdt and value(ac.dtc, p.pdt) >= p.pdt
