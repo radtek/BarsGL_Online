@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import static ru.rbt.barsgl.shared.enums.DealSource.*;
 
@@ -48,12 +50,14 @@ import static ru.rbt.barsgl.shared.enums.DealSource.*;
 public class EtlMessageIT extends AbstractTimerJobIT {
 
     public static final Logger log = Logger.getLogger(EtlMessageIT.class.getName());
+    private static final Operday.PdMode pdMode = DIRECT;
+//    private static final Operday.PdMode pdMode = BUFFER;
 
     @BeforeClass
     public static void beforeClass() throws ParseException {
 //        Date operday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
         Date operday = DateUtils.parseDate("2016-03-23", "yyyy-MM-dd");
-        setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN);
+        setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN, pdMode);
 
         baseEntityRepository.executeNativeUpdate("update bsaacc set bsaaco = ? where id like '93307392%'", DateUtils.parseDate("2015-01-01", "yyyy-MM-dd"));
 
@@ -374,7 +378,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         Date operday = DateUtils.parseDate("2014-12-29", "yyyy-MM-dd");
         Date lastday = DateUtils.parseDate("2014-12-26", "yyyy-MM-dd");
-        setOperday(operday, lastday, ONLINE, OPEN);
+        setOperday(operday, lastday, ONLINE, OPEN, pdMode);
         pst.setValueDate(getOperday().getCurrentDate());
         pst.setDealId(null);
         pst.setPaymentRefernce("00001");
@@ -590,7 +594,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
     @Test public void testJPY() throws ParseException, SQLException {
 
         setOperday(DateUtils.parseDate("2015-02-28", "yyyy-MM-dd")
-                , DateUtils.parseDate("2015-02-27", "yyyy-MM-dd"), ONLINE, OPEN);
+                , DateUtils.parseDate("2015-02-27", "yyyy-MM-dd"), ONLINE, OPEN, pdMode);
 
         long stamp = System.currentTimeMillis();
         final BankCurrency JPY = new BankCurrency("JPY");
@@ -676,7 +680,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertEquals(2, days.stream().filter(rec
                 -> rec.getDate("dat").equals(finalPrev) || rec.getDate("dat").equals(finalCurr)).collect(Collectors.toList()).size());
 
-        setOperday(curr, prev, ONLINE,OPEN);
+        setOperday(curr, prev, ONLINE,OPEN, pdMode);
 
         EtlPackage pkg = newPackage(stamp, "HILPST");
         Assert.assertTrue(pkg.getId() > 0);
@@ -718,7 +722,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
 
         // переход через месяц
         curr = DateUtils.parseDate("16.02.2015", "dd.MM.yyyy");
-        setOperday(curr, prev, ONLINE,OPEN);
+        setOperday(curr, prev, ONLINE,OPEN, pdMode);
 
         pst.setValueDate(prev);
         operation = (GLOperation) postingController.processMessage(pst);
@@ -733,7 +737,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         // переход через месяц - технический опердень
         curr = DateUtils.parseDate("10.02.2015", "dd.MM.yyyy");
         prev = DateUtils.parseDate("09.02.2015", "dd.MM.yyyy");
-        setOperday(curr, prev, ONLINE,OPEN);
+        setOperday(curr, prev, ONLINE, OPEN, pdMode);
 
         // ARMPRO
         hold = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
@@ -760,7 +764,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
 
         // дата в будущем !!
-        setOperday(curr, prev, ONLINE,OPEN);
+        setOperday(curr, prev, ONLINE, OPEN, pdMode);
 
         pst.setValueDate(DateUtils.addDays(curr, 1));
         operation = (GLOperation) postingController.processMessage(pst);

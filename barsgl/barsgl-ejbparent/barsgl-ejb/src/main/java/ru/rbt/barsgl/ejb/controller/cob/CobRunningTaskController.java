@@ -66,7 +66,7 @@ public class CobRunningTaskController {
                     auditController.error(PreCob, result.getMessage(), step, "Invalid COB result status: " + result.getStepStatus().name());
                     break;
             }
-            return statRepository.refresh(step, true);
+            return refreshStepForcibly(step);
         } catch (Throwable t) {
             log.log(Level.SEVERE, "Error on long running cob step: ", t);
             String msg = String.format("Шаг COB %d завершен с ошибкой", phase.getPhaseNo());
@@ -105,6 +105,14 @@ public class CobRunningTaskController {
                 }
             }
             return true;
+    }
+
+    public CobStepStatistics refreshStepForcibly(CobStepStatistics step) {
+        try {
+            return statRepository.executeInNewTransaction(persistence -> statRepository.refresh(step, true));
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
     }
 
 }

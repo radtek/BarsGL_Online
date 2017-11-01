@@ -49,7 +49,7 @@ public class OperationPostingForm extends MDForm {
 
     public OperationPostingForm(String formTitle, String masterTitle, String detailTitle, boolean delayLoad) {
         super(formTitle, masterTitle, detailTitle, delayLoad);
-        setLazyDetailRefresh(true);
+//        setLazyDetailRefresh(true);
         reconfigure();
     }
 
