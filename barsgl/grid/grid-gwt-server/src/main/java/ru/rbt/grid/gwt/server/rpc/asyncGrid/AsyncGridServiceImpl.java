@@ -3,22 +3,23 @@ package ru.rbt.grid.gwt.server.rpc.asyncGrid;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
-import ru.rbt.barsgl.shared.NotAuthorizedUserException;
-import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
+import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
-import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
-import ru.rbt.barsgl.shared.criteria.*;
+import ru.rbt.barsgl.shared.criteria.OrderByColumn;
+import ru.rbt.barsgl.shared.criteria.OrderByType;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.shared.ExceptionUtils;
 
 import java.io.Serializable;
@@ -99,6 +100,11 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
 
     @Override
     public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable {
+        return export2Excel(repository, sql, columns, filterCriteria, sortCriteria, head, false);
+    }
+
+    @Override
+    public String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable {
         try {
             List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
             for (int i = 0; i < columns.getColumnCount(); i++) {
@@ -106,16 +112,15 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
                 if (column.isVisible() && column.getWidth() > 0)
                     xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
             }
-
             String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, repository, xlsColumns,
-                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head);
+                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head, allrows);
 
             return fileName;
         } catch (Throwable t) {
             processException(t, sql, "Ошибка при экспорте в Excel");
             return null;
         }
-}
+    }
 
     @Override
     public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Throwable {

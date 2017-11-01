@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.core.widgets;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.view.client.AbstractDataProvider;
 import com.google.gwt.view.client.HasData;
@@ -117,9 +116,9 @@ public abstract class GridDataProvider extends AbstractDataProvider<Row> {
                 if (WaitingManager.isWaiting()) {
                     WaitingManager.hide();
                 }
-            }
-            else
+            } else {
                 throw t;
+            }
         }
     }
 

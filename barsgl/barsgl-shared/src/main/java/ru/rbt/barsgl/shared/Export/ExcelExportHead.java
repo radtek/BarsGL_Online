@@ -31,4 +31,8 @@ public class ExcelExportHead implements Serializable, IsSerializable {
     public String getFilter() {
         return filter;
     }
+
+    public void setFormTitle(String formTitle) {
+        this.formTitle = formTitle;
+    }
 }

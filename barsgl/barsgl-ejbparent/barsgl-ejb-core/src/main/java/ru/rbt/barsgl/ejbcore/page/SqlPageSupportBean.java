@@ -17,7 +17,6 @@ import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
-import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -36,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static ru.rbt.barsgl.ejbcore.page.SqlPageSupportBean.TimeoutInternal.DEFAULT_SQL_TIMEOUT;
 
 /**
@@ -49,6 +49,7 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     public static final String WHERE_ALIAS = "v1";
     public static final int MAX_ROW_COUNT = 5000;
+    public static final int MAX_ROW_COUNT_LIMIT = 100000;
 
     public enum TimeoutInternal {
         DEFAULT_SQL_TIMEOUT(3, TimeUnit.MINUTES);
@@ -217,12 +218,12 @@ public class SqlPageSupportBean implements SqlPageSupport {
     }
 
     @Override
-    public String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) {
+    public String export2Excel(String nativeSql, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) throws Exception {
         return export2Excel(nativeSql, Repository.BARSGL, xlsColumns, criterion, pageSize, startWith, orderBy, head);
     }
 
     @Override
-    public String export2Excel(String nativeSql, Repository rep, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head)  {
+    public String export2Excel(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head, boolean allrows) throws Exception {
         String resultSql = null;
         final ArrayList<Object> params = new ArrayList<>();
         try {
@@ -231,10 +232,13 @@ public class SqlPageSupportBean implements SqlPageSupport {
                 params.addAll(Arrays.asList(sql.getParams()));
             }
 
-            resultSql =  "select * from ( " + sql.getQuery() + " ) where rownum <= " + (MAX_ROW_COUNT + 1);
+            resultSql =  "select * from ( " + sql.getQuery() + " ) where rownum <= " + ((allrows ? MAX_ROW_COUNT_LIMIT : MAX_ROW_COUNT)  + 1);
 
-            List<DataRecord> dataRecords = getRows4Excel(rep, resultSql, sql.getParams());
+            List<DataRecord> dataRecords = getRows4Excel(repository, resultSql, sql.getParams());
             Sql2Xls getXls = new Sql2Xls(dataRecords);
+            if (dataRecords.size() == MAX_ROW_COUNT_LIMIT) {
+                head.setFormTitle(head.getFormTitle() + format(" \n\n !!! ВНИМАНИЕ! Выборка неполная. Достигнут максимальный размер выгрузки данных: %s строк!", MAX_ROW_COUNT_LIMIT));
+            }
             getXls.setHead(head);
             getXls.setColumns(xlsColumns);
 
@@ -257,9 +261,13 @@ public class SqlPageSupportBean implements SqlPageSupport {
         }
     }
 
+    @Override
+    public String export2Excel(String nativeSql, Repository rep, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head) throws Exception {
+        return export2Excel(nativeSql, rep, xlsColumns, criterion, pageSize, startWith, orderBy, head, false);
+    }
 
     private List<DataRecord> getRows4Excel(Repository dbRepository, String sql, Object[] params) throws Exception {
-        return getSqlResult(dbRepository, new SQL(sql, params), 1, MAX_ROW_COUNT,  DEFAULT_SQL_TIMEOUT.getTimeUnit(), DEFAULT_SQL_TIMEOUT.getTimeout());
+        return getSqlResult(dbRepository, new SQL(sql, params), 1, MAX_ROW_COUNT_LIMIT,  DEFAULT_SQL_TIMEOUT.getTimeUnit(), DEFAULT_SQL_TIMEOUT.getTimeout());
     }
 
     private int calculateCount(Repository dbRepository, String sql, Object[] params) throws Exception {

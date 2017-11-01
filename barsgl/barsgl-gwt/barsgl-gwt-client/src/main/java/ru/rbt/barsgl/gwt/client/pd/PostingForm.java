@@ -3,8 +3,6 @@ package ru.rbt.barsgl.gwt.client.pd;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.shared.filter.FilterCriteria;
-import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateQuickFilterAction;
@@ -14,20 +12,24 @@ import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.*;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
+import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
+import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
-import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
@@ -485,7 +487,7 @@ public class PostingForm extends MDForm {
 
                             Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(date, limit), head,
                                     new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
-                            e2e.export();
+                            e2e.export(true);
                         }
                     }
                 });

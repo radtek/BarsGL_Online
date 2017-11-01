@@ -26,6 +26,8 @@ public interface AsyncGridService extends RemoteService {
     void Debug(String msg) throws Exception;
     String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria,
                         List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable;
+    String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
+                        List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable;
     Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Throwable;
     List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria,
                            List<SortItem> sortCriteria) throws Throwable;

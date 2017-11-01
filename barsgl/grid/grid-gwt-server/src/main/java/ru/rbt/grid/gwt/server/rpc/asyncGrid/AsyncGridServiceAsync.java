@@ -30,4 +30,6 @@ public interface AsyncGridServiceAsync {
     void selectOne(Repository repository, String sql, Serializable[] params, AsyncCallback<Row> callback);
     void export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
                       List<SortItem> sortCriteria, ExcelExportHead head, AsyncCallback<String> callback);
+    void export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
+                      List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows, AsyncCallback<String> callback);
 }

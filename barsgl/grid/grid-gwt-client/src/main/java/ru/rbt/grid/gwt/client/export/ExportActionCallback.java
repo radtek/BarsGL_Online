@@ -3,7 +3,11 @@ package ru.rbt.grid.gwt.client.export;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.core.actions.Action;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
+import ru.rbt.barsgl.gwt.core.widgets.GridDataProvider;
+import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 
 /**
@@ -21,7 +25,14 @@ public class ExportActionCallback extends AuthCheckAsyncCallback<String> {
 
     @Override
     public void onFailureOthers(Throwable throwable) {
-        DialogUtils.showInfo("Ошибка", throwable.getMessage());
+        if (GridDataProvider.isSqlQueryTimeoutException(throwable)) {
+            DialogManager.error("Ошибка", ((SqlQueryTimeoutException)throwable).getUserMessage());
+            if (WaitingManager.isWaiting()) {
+                WaitingManager.hide();
+            }
+        } else {
+            DialogUtils.showInfo("Ошибка", throwable.getMessage());
+        }
         rootAction.setEnable(true);
     }
 
