@@ -21,6 +21,7 @@ import ru.rbt.barsgl.gwt.client.compLookup.LookupBoxBase;
 import ru.rbt.barsgl.gwt.client.dict.dlg.EditableDialog;
 import ru.rbt.barsgl.gwt.client.dictionary.AccountTypePlFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
+import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
@@ -242,7 +243,6 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
 
             mAcc2.setValue(getFieldText("ACC2"));
             mPlcode.setValue(getFieldText("PLCODE"));
-
             acod = getFieldText("ACOD");
             sq = getFieldText("SQ");
 
@@ -357,7 +357,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
                             String acc2 = (String)result.get("ACC2");
                             trueAcc2 = fl707 ? replaceAcc2(acc2, "7") : acc2;  
                             mAcc2.setValue(trueAcc2);
-                            mPlcode.setValue((String)result.get("PLCODE"));
+                            mPlcode.setValue(Utils.toStr((String)result.get("PLCODE")).trim());
                             acod = (String)result.get("ACOD");
                             sq = (String)result.get("SQ");
 

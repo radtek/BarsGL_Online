@@ -900,12 +900,19 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     */
     public DataRecord getAccountForPl(String acid, Short ctype, String plcode, String acc2, Date dateOpen) {
         try {
-            DataRecord res = selectFirst("select a.BSAACID, a.ACID, a.CTYPE, a.PLCODE, a.ACC2" +
+            DataRecord res = selectFirst("select a.BSAACID, a.ACID, a.CTYPE, a.PLCODE, a.ACC2 " +
+                            "from ACCRLN a where not exists (select 1 from GL_ACC g " +
+                            "where g.ACID = a.ACID and g.CBCUSTTYPE = a.CTYPE and g.PLCODE = a.PLCODE and g.ACC2 = a.ACC2) and " +
+                            "a.ACID = ? and a.CTYPE = ? and a.PLCODE = ? and a.ACC2 = ? and a.RLNTYPE = '2' " +
+                            "and a.DRLNO >= ? and a.DRLNC > ?",    // датой открытия >= datestart446P "И" с датой закрытия > даты открытия нового счета
+                    acid, ctype, plcode, acc2, getDateStart446p(), dateOpen);
+
+           /* DataRecord res = selectFirst("select a.BSAACID, a.ACID, a.CTYPE, a.PLCODE, a.ACC2" +
                     " from ACCRLN a exception join GL_ACC g" +
                     " on g.ACID = a.ACID and g.CBCUSTTYPE = a.CTYPE and g.PLCODE = a.PLCODE and g.ACC2 = a.ACC2" +
                     " where a.ACID = ? and a.CTYPE = ? and a.PLCODE = ? and a.ACC2 = ? and a.RLNTYPE = ?" +
                     " and DRLNO >= ? and DRLNC > ?",    // датой открытия >= datestart446P "И" с датой закрытия > даты открытия нового счета
-                    acid, ctype, plcode, acc2, '2', getDateStart446p(), dateOpen);
+                    acid, ctype, plcode, acc2, '2', getDateStart446p(), dateOpen);*/
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

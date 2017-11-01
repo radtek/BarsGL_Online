@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.dictionary;
 
+import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
@@ -64,8 +65,10 @@ public abstract class AccountTypePlFormDlg extends GridFormDlgBase {
 
         @Override
         protected String prepareSql() {
-            return "select ACCTYPE, CUSTYPE, TERM, ACC2, PLCODE, ACOD, SQ, DTB, DTE, ACCNAME, TERMNAME, CTYPENAME, FL_CTRL" +
-                    " from V_GL_ACTPL where nvl(PLCODE, '-') <> '-' and ACOD not in ('7920','7919','7903','7904','7907','7908')";
+            return  "select * from ( " +
+                    "select ACCTYPE, TRIM(CUSTYPE) CUSTYPE, TERM, ACC2, trim(PLCODE) PLCODE, ACOD, SQ, DTB, DTE, ACCNAME, TERMNAME, CTYPENAME, FL_CTRL " +
+                    "from V_GL_ACTPL where trim(PLCODE) is not null and ACOD not in ('7920','7919','7903','7904','7907','7908')) v";
+
         }
 
         @Override
@@ -111,7 +114,6 @@ public abstract class AccountTypePlFormDlg extends GridFormDlgBase {
             list.add(new FilterItem(colDateBegin, FilterCriteria.LE, currentDate, true));
             list.add(new FilterItem(colDateEnd, FilterCriteria.IS_NULL, null, true));
             list.add(new FilterItem(colCtrl, FilterCriteria.NE, "Y", true));
-
             if (!isEmpty(ctype)) list.add(new FilterItem(colCtype, FilterCriteria.EQ, ctype, true));
             if (!isEmpty(term)) list.add(new FilterItem(colTerm, FilterCriteria.EQ, term, true));
             if (!isEmpty(accType)) list.add(new FilterItem(colAccType, FilterCriteria.START_WITH, accType, true));

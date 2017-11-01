@@ -70,6 +70,7 @@ public class ManualPostingController {
     private static final Logger log = Logger.getLogger(EtlPostingController.class);
     private static final String postingName = "GL_BATPST";
     public static final SimpleDateFormat timeFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    public static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
 
     @EJB
     private AuditController auditController;
@@ -213,7 +214,8 @@ public class ManualPostingController {
                 wrapper.setBalanceError(true);
                 BigDecimal bac = convertFromScale(resDr.getBigDecimal(1),currencyDr.getScale().intValue());
                 BigDecimal outrest = convertFromScale(resDr.getBigDecimal(2),currencyDr.getScale().intValue());
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(), resDr.getDate(0),  bac, outrest));
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(),
+                        dateFormat.format(resDr.getDate(0)),  bac, outrest));
             }
         }
 
@@ -232,7 +234,8 @@ public class ManualPostingController {
                 wrapper.setBalanceError(true);
                 BigDecimal bac = convertFromScale(resCr.getBigDecimal(1),currencyCr.getScale().intValue());
                 BigDecimal outrest = convertFromScale(resCr.getBigDecimal(2),currencyCr.getScale().intValue());
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountCr.getId().getBsaAcid(), resCr.getDate(0), bac, outrest));
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)",  accountCr.getId().getBsaAcid(),
+                        dateFormat.format(resCr.getDate(0)), bac, outrest));
             }
         }
 

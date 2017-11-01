@@ -115,15 +115,16 @@ public abstract class AccCustomerFormDlg extends GridFormDlgBase {
             result.addColumn(colDealSrc = new Column("DEALSRS", Column.Type.STRING, "Источник сделки", 40, false, false));
             result.addColumn(colDealId = new Column("DEALID", Column.Type.STRING, "Номер сделки", 60));
             result.addColumn(colRlnType = new Column("RLNTYPE", Column.Type.STRING, "Тип счета", 30, false, false));
+            result.addColumn(new Column("PSAV", Column.Type.STRING, "А/П", 30, false, false));
             return result;
         }
 
-        @Override
+      /*  @Override
         public ArrayList<SortItem> getInitialSortCriteria() {
             ArrayList<SortItem> list = new ArrayList<SortItem>();
             list.add(new SortItem("BSAACID", Column.Sort.ASC));
             return list;
-        }
+        }*/
 
         @Override
         public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {

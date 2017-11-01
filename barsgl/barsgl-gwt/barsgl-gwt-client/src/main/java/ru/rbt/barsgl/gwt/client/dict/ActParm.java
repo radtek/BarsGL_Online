@@ -220,7 +220,7 @@ public class ActParm extends GridForm {
     @Override
     protected String prepareSql() {
         return "select * from ("+
-                        "select PARM.ACCTYPE, trim(PARM.CUSTYPE) CUSTYPE, PARM.TERM, PARM.ACC2, PARM.PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, " +
+                        "select PARM.ACCTYPE, trim(PARM.CUSTYPE) CUSTYPE, PARM.TERM, PARM.ACC2, trim(PARM.PLCODE) PLCODE, PARM.ACOD, PARM.AC_SQ, PARM.DTB, PARM.DTE, NM.ACCNAME, " +
                         "case when NM.FL_CTRL = 'N' then trim('" + No.getLabel() + "') " +
                         "else trim('" + Yes.getLabel() + "') " +
                         "end FL_CTRL, " +
