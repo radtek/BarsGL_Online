@@ -15,11 +15,12 @@ public class PostingBackValueRep {
     @EJB
     private CoreRepository repository;
 
-    private final String sql = "select procdate from gl_oper where procdate = to_date('%s', 'YYYY-MM-DD') and rownum = 1";
+    private final String sql = "select /*+ first_rows(30) */  procdate from gl_oper where procdate between to_date('%s', 'YYYY-MM-DD') and " +
+            " to_date('%s', 'YYYY-MM-DD') + %s and rownum = 1";
 
-    public RpcRes_Base<Boolean> operExists(String date){
+    public RpcRes_Base<Boolean> operExists(String date, String limit){
         try{
-            String query = String.format(sql, date);
+            String query = String.format(sql, date, date, limit);
             List<DataRecord> records =  repository.select(query);
             if (records == null || records.size() == 0) {
                 return new RpcRes_Base<>(false, true, "Нет данных для отчета");

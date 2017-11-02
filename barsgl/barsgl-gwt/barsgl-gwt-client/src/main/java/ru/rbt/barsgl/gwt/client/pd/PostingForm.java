@@ -464,7 +464,7 @@ public class PostingForm extends MDForm {
                 final String limit = (String)((Object[]) prms)[1];
                 WaitingManager.show("Проверка наличия данных...");
 
-                BarsGLEntryPoint.operationService.operExists(date, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
 
                     @Override
                     public void onSuccess(RpcRes_Base<Boolean> res) {

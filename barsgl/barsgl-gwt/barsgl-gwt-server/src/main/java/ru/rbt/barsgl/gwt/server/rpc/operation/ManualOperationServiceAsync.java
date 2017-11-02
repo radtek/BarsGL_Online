@@ -46,5 +46,5 @@ public interface ManualOperationServiceAsync {
 
     void correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type, AsyncCallback<RpcRes_Base<Integer>> callback);
 
-    void operExists(String date, AsyncCallback<RpcRes_Base<Boolean>> callback);
+    void operExists(String date, String limit, AsyncCallback<RpcRes_Base<Boolean>> callback);
 }

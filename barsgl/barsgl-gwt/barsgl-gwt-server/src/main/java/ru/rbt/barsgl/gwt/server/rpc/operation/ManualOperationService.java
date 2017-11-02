@@ -51,5 +51,5 @@ public interface ManualOperationService  extends RemoteService {
 
     RpcRes_Base<Integer> correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type) throws Exception;
 
-    RpcRes_Base<Boolean>  operExists(String date) throws Exception;
+    RpcRes_Base<Boolean>  operExists(String date, String limit) throws Exception;
 }

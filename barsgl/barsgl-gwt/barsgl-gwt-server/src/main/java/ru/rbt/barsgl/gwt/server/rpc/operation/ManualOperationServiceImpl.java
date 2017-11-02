@@ -281,12 +281,12 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
     }
 
     @Override
-    public RpcRes_Base<Boolean> operExists(String date) throws Exception {
+    public RpcRes_Base<Boolean> operExists(String date, String limit) throws Exception {
         return new RpcResProcessor<Boolean>(){
 
             @Override
             protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
-                RpcRes_Base<Boolean> res = localInvoker.invoke(PostingBackValueRep.class, "operExists", date);
+                RpcRes_Base<Boolean> res = localInvoker.invoke(PostingBackValueRep.class, "operExists", date, limit);
                 if (res == null) throw new Throwable("Не удалось проверить наличие данных для отчета");
                 return res;
             }
