@@ -50,7 +50,8 @@ public class BackgroundJobServiceBean implements BackgroundJobService {
     public List<TimerJob> getTimerJobs(boolean exclusive) {
         try {
             if (exclusive) {
-                int cntJobs = timerJobRepository.select("select COUNT(1) CNT from GL_SCHED").get(0).getInteger("CNT");
+//                int cntJobs = timerJobRepository.select("select COUNT(1) CNT from GL_SCHED").get(0).getInteger("CNT");
+                long cntJobs = (long) timerJobRepository.selectJpa("select count(*) from TimerJob j").get(0);
                 int cntLocked = timerJobRepository.executeUpdate("update TimerJob j set j.name = j.name");
                 if (0 != cntJobs && 0 == cntLocked) {
                     throw new DefaultApplicationException("Не удалось создать эксклюзивную блокировку при получении списка фоновых задач");

@@ -462,6 +462,21 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return list.isEmpty() ? null : list.get(0);
     }
 
+
+    //    @Override
+    public <E> List<E> selectJpa(String jpaQuery, Object... params) {
+        return this.selectJpa(getPersistence(), jpaQuery, params);
+    }
+
+    //    @Override
+    public <E> List<E> selectJpa(EntityManager persistence, String jpaQuery, Object... params) {
+        Assert.isTrue(!isEmpty(jpaQuery), "Query string cannot be null");
+
+        Query query = persistence.createQuery(jpaQuery);
+        bindParams(query, params);
+        return query.getResultList();
+    }
+
     @Override
     @Asynchronous
     public <V> Future<V> invokeAsynchronous(EntityManager persistence, JpaAccessCallback<V> callback) throws Exception {
