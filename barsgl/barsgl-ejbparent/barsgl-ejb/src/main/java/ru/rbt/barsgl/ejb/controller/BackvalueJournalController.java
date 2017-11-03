@@ -18,6 +18,7 @@ import javax.ejb.AccessTimeout;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
+import java.io.ByteArrayOutputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
@@ -144,8 +145,9 @@ public class BackvalueJournalController {
                 String pswd = CryptoUtil.decrypt(ecryptedPswd);
                 String cmd = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_RUN_CMD.getName());
                 auditController.info(AuditRecord.LogCode.Localization, String.format("Вызов пересчета/локализации чере SSH <%s:%s>: команда  %s", host, port, cmd));
-                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, System.out);
-                auditController.info(AuditRecord.LogCode.Localization, String.format("Пересчет/локализации по SSH прошел успешно", cmd));
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, os);
+                auditController.stat(AuditRecord.LogCode.Localization, "Пересчет/локализации по SSH прошел успешно", new String(os.toByteArray(), "cp1251"));
             } else {
                 journalRepository.executeInNewTransaction(pers -> {
                     journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
