@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.controller;
 
 import ru.rb.cfg.CryptoUtil;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState;
 import ru.rbt.barsgl.ejb.etc.SshProcedureRunner;
@@ -142,7 +143,9 @@ public class BackvalueJournalController {
                 String ecryptedPswd = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_PSWD.getName());
                 String pswd = CryptoUtil.decrypt(ecryptedPswd);
                 String cmd = propertiesRepository.getString(PropertyName.BARSGL_LOCALIZATION_SSH_RUN_CMD.getName());
-                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, null);
+                auditController.info(AuditRecord.LogCode.Localization, String.format("Вызов пересчета/локализации чере SSH <%s:%s>: команда  %s", host, port, cmd));
+                sshProcedureRunner.executeSshCommand(host, user, pswd, port, cmd, System.out);
+                auditController.info(AuditRecord.LogCode.Localization, String.format("Пересчет/локализации по SSH прошел успешно", cmd));
             } else {
                 journalRepository.executeInNewTransaction(pers -> {
                     journalRepository.executeNativeUpdate("{call GL_CORRLOCAL}");
