@@ -619,24 +619,14 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
                                       String accountType, String cbCustType, String term, String plcode, String cbccn,
                                       Date dateCurrent) {
         try {
-            String custTypeField = "CBCUSTTYPE";
-            String termField = "TERM";
-            if (isEmpty(cbCustType)) {
-                cbCustType = "-1";
-                custTypeField = "coalesce(CBCUSTTYPE, -1)";
-            }
-            if (isEmpty(term)) {
-                term = "-1";
-                termField = "coalesce(TERM, -1)";
-            }
             return Optional.ofNullable(selectFirst(
                             "select ID " +
                             "  from GL_ACC " +
                             " where CCY = ? and CUSTNO = ? and ACCTYPE = ? and PLCODE = ? and CBCCN = ?" +
-                            "   and DTO <= ? and (DTC is null or DTC > ?) and RLNTYPE = ? AND "
-                    + custTypeField + " = ? and " + termField + " = ? "
+                            "   and DTO <= ? and (DTC is null or DTC > ?) and RLNTYPE = ?" +
+                            "   and coalesce(CBCUSTTYPE, 0) = ? and coalesce(TERM, 0) = ? "
                     , currency, customerNumber, accountType, plcode, cbccn, dateCurrent, dateCurrent
-                    , GLAccount.RelationType.FIVE.getValue(), cbCustType, term))
+                    , GLAccount.RelationType.FIVE.getValue(), ifEmpty(cbCustType, "0"), ifEmpty(term, "0")))
                     .map((record) -> findById(GLAccount.class, record.getLong("ID"))).orElse(null);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -662,9 +652,9 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
                     "select ID from GL_ACC " +
                             " where CCY = ? and CUSTNO = ? and ACCTYPE = ? and PLCODE = ? and CBCCN = ?" +
                             " and (DTC is null or DTC > ?)" +   //and DTO <= ?   убрали тк может быть сразу 2 открытых счета
-                            " and ACC2 = ? and CBCUSTTYPE = ? and TERM = ? "
+                            " and ACC2 = ? and coalesce(CBCUSTTYPE, 0) = ? and coalesce(TERM, 0) = ? "
                     , currency, customerNumber, accountType, plcode, cbccn, dateCurrent
-                    , acc2, cbCustType, term))
+                    , acc2, ifEmpty(cbCustType, "0"), ifEmpty(term, "0")))
                     .map((record) -> findById(GLAccount.class, record.getLong("ID"))).orElse(null);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
