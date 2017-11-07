@@ -41,6 +41,8 @@ public class EditPostingPdProcessor extends EditPostingProcessor {
     @Override
     public void updatePd(List<? extends AbstractPd> pdList) {
         pdList.forEach(pd -> {
+            if (null == pd.getAcid())
+                pd.setAcid(" ");
             pdRepository.update((Pd)pd);
         });
     }

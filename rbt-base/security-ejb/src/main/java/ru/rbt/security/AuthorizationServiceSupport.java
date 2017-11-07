@@ -55,7 +55,7 @@ public class AuthorizationServiceSupport {
             return policy.login(username, password);
         } else {
             auditController.warning(Authorization, format("LOGIN FAILED. Пользователь '%s'", username), null,
-                    format("Пользователь '%s' должен быть зарегистрирован локально", username));
+                    format("Неверный логин пользователя '%s'", username));
             return buildInvalidUsernameLoginResult(username);
         }
     }
