@@ -1,14 +1,11 @@
 package ru.rbt.barsgl.gwt.client.dict.dlg;
 
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import ru.rbt.barsgl.gwt.client.comp.enm.EnumListBox;
 import ru.rbt.barsgl.gwt.client.compLookup.LookUpAcc2;
 import ru.rbt.barsgl.gwt.client.compLookup.LookupBoxBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
-import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
 import ru.rbt.barsgl.gwt.core.utils.AppPredicate;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.AccDealsWrapper;
@@ -31,7 +28,6 @@ public class AccDealsDlg extends EditableDialog<AccDealsWrapper>{
 
     private LookupBoxBase acc2;
     private CheckBox isOff;
-    private AccDealsWrapper wrapper;
 
     public AccDealsDlg(String caption, Columns columns, FormAction action) {
         super(columns, action);
@@ -46,9 +42,6 @@ public class AccDealsDlg extends EditableDialog<AccDealsWrapper>{
     @Override
     protected void setFields(AccDealsWrapper cnw) {
         cnw.setAcc2(checkLength(checkRequeredString(acc2.getValue(), FIELD_ACC2), 5, FIELD_ACC2));
-//        if (action == FormAction.CREATE){
-//            cnw.setAcc2(acc2.getValue());
-//        }
         cnw.setFlagOff(!isOff.getValue());
     }
 
@@ -70,7 +63,7 @@ public class AccDealsDlg extends EditableDialog<AccDealsWrapper>{
         if (action == FormAction.UPDATE || action == FormAction.DELETE) {
             acc2.setValue(Utils.value((String) row.getField(0).getValue()));
             acc2.setReadOnly(action == FormAction.UPDATE || action == FormAction.DELETE);
-            isOff.setValue(row.getField(2).getValue().equals(BoolType.Y.toString()));
+            isOff.setValue(row.getField(2).getValue() == null ?  false : row.getField(2).getValue().equals(BoolType.Y.toString()));
             isOff.setEnabled(action != FormAction.DELETE);
         }
     }
@@ -103,5 +96,4 @@ public class AccDealsDlg extends EditableDialog<AccDealsWrapper>{
 
         return value;
     }
-
 }
