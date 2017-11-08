@@ -16,17 +16,15 @@ import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-import java.math.BigDecimal;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Properties;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.time.DateUtils.parseDate;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnload;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.StamtUnloadBalFull;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.ejbcore.validation.ErrorCode.ALREADY_UNLOADED;
@@ -119,72 +117,16 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
      */
     public int fillDataDelta(Date executeDate,  BalanceDeltaMode deltaMode) throws Exception {
         return (int) repository.executeInNewTransaction(persistence -> {
-
-
-            repository.executeTransactionally(connection -> {
-                String fillTemp = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_select.sql");
-                try (PreparedStatement fillTempSt = connection.prepareCall(fillTemp)) {
-                    fillTempSt.setDate(1, new java.sql.Date(executeDate.getTime()));
-                    fillTempSt.setDate(2, new java.sql.Date(operdayController.getOperday().getCurrentDate().getTime()));
-                    fillTempSt.executeUpdate();
+            return repository.executeTransactionally((conn)-> {
+                try (CallableStatement statement = conn.prepareCall("{ CALL GL_STMBALANCE_BAK(?, ?) }")){
+                    statement.setDate(1, new java.sql.Date(executeDate.getTime()));
+                    statement.registerOutParameter(2, java.sql.Types.INTEGER);
+                    statement.execute();
+                    return statement.getInt(2);
                 }
-                return null;
             });
-            auditController.info(StamtUnloadBalDelta, format("Таблица с остатками создана. Кол-во счетов: %s"
-                    , repository.selectFirst("select count(1) from TMP_GL_BALSTMD").getLong(0)));
-            
-            String updStmntBal = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_upd_select.sql");
-            repository.executeNativeUpdate(updStmntBal);
-            auditController.info(StamtUnloadBalDelta, format("Таблица с остатками обновлена. Кол-во счетов: %s"
-                    , repository.selectFirst("select count(1) from TMP_GL_BALSTMD").getLong(0)));
-
-            String chngStatus = textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_chng_status.sql");
-            repository.executeNativeUpdate(chngStatus);
-            
-            repository.executeTransactionally(connection -> {
-                String cbacc, precbacc = "";
-                java.sql.Date bdat, statdate, prebdat = new java.sql.Date(parseDate("01.01.2030", "dd.MM.yyyy").getTime());
-                BigDecimal closeblnca = new BigDecimal("0");
-                BigDecimal closeblncn = new BigDecimal("0");
-                try (PreparedStatement st = connection.prepareStatement("SELECT * FROM TMP_GL_BALSTMD ORDER BY cbaccount, statdate")
-                     ; ResultSet rs = st.executeQuery()) {
-                    while (rs.next()){
-                        cbacc = rs.getString("cbaccount");
-                        bdat = rs.getDate("bdat");
-                        statdate = rs.getDate("statdate");
-                        if (cbacc.equals(precbacc) && bdat.equals(prebdat)) {
-                            try (PreparedStatement upd = connection.prepareStatement(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_upd.sql"))) {
-                                upd.setBigDecimal(1, closeblnca);
-                                upd.setBigDecimal(2, closeblncn);
-                                upd.setBigDecimal(3, closeblnca);
-                                upd.setBigDecimal(4, closeblncn);
-                                upd.setBigDecimal(5, new BigDecimal("0.0"));
-                                upd.setBigDecimal(6, new BigDecimal("0.0"));
-                                upd.setBigDecimal(7, new BigDecimal("0.0"));
-                                upd.setBigDecimal(8, new BigDecimal("0.0"));
-                                upd.setString(9, cbacc);
-                                upd.setDate(10, statdate);
-                                upd.executeUpdate();
-                            }
-                        } else {
-                            closeblnca = rs.getBigDecimal("closeblnca");
-                            closeblncn = rs.getBigDecimal("closeblncn");
-                        }
-                        prebdat = bdat;
-                        precbacc = cbacc;
-                    }
-                }
-                return null;
-            });
-            if (deltaMode == BalanceDeltaMode.InsertUpdate) {
-                auditController.info(StamtUnloadBalDelta, format("Удалено счетов из GL_BALSTMD записей для обновления '%s'"
-                        , repository.executeNativeUpdate(textResourceController
-                                .getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/stamt_delete_exists.sql"))));
-            } else if (deltaMode == BalanceDeltaMode.Replace) {
-                auditController.info(StamtUnloadBalDelta, format("Удалено старых записей (BACKDATE) '%s'", cleanOldDelta()));
-            }
-            return repository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ins_res.sql"));
         });
+
     }
 
     public boolean checkRun(Date executeDate, UnloadStamtParams params) throws SQLException {
