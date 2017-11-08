@@ -47,6 +47,12 @@ public class BackValueOperationRepository extends AbstractBaseEntityRepository<G
                 count, OperState.BLOAD, BackValuePostStatus.SIGNEDDATE);
     }
 
+    public Long getCountOperationsForProcessing (Date curdate) throws SQLException {
+        DataRecord data = selectFirst("select count(1) from GL_OPER o join GL_OPEREXT e on o.GLOID = e.GLOID where o.OPER_CLASS = ? and o.STATE = ? and e.MNL_STATUS = ? ",
+                GLOperation.OperClass.BV_MANUAL.name(), OperState.BLOAD.name(), BackValuePostStatus.SIGNEDDATE.name());
+        return data.getLong(0);
+    }
+
     /**
      * изменяет дату проводки, для подстраховки очищает курсы и рублевые эквиваленты
      * @param postDateNew

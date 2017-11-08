@@ -112,12 +112,12 @@ public class ProcessBackValueOperationsTask implements ParamsAwareRunnable {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             // T0: читаем операции в SIGNEDDATE с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
             Date curdate = operdayController.getOperday().getCurrentDate();
-            List<GLBackValueOperation> operations = operationRepository.getOperationsForProcessing(operCount, curdate);
-            int cnt = operations.size();
+            long cnt = operationRepository.getCountOperationsForProcessing(curdate);
             String msg = format("Кол-во авторизованных операций BackValue для обработки '%s' в режиме 'UR' за дату '%s'"
-                    , operations.size(), dateUtils.onlyDateString(curdate));
+                    , cnt, dateUtils.onlyDateString(curdate));
             log.info(msg);
             if (cnt > 0) {
+                List<GLBackValueOperation> operations = operationRepository.getOperationsForProcessing(operCount, curdate);
                 auditController.info(BackValueOperation, msg);
                 int cntError = 0;
                 try {
