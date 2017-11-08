@@ -4,6 +4,7 @@ import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.MemorderRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
@@ -43,8 +44,9 @@ public class EditPostingPdProcessor extends EditPostingProcessor {
         pdList.forEach(pd -> {
             if (null == pd.getAcid())
                 pd.setAcid(" ");
-            pdRepository.update((Pd)pd);
+            pdRepository.update((Pd)pd, false);
         });
+        pdRepository.flush();
     }
 
 }

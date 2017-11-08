@@ -3,7 +3,9 @@ package ru.rbt.barsgl.ejb.integr.oper;
 import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.Memorder;
+import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.GLPdRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 
 import javax.inject.Inject;
 import java.util.Date;
@@ -35,6 +37,8 @@ public class EditPostingGLPdProcessor extends EditPostingProcessor {
 
     @Override
     public void updatePd(List<? extends AbstractPd> pdList) {
-        pdList.forEach(pd -> glPdRepository.update((GLPd)pd));
+        pdList.forEach(pd -> glPdRepository.update((GLPd)pd, false));
+        pdRepository.flush();
     }
+
 }
