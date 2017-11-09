@@ -190,22 +190,26 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     public void processException(Throwable t, String sql, String message) throws Throwable {
-        localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, message + ": " + sql, null, t);
-
-        NotAuthorizedUserException naue = ExceptionUtils.findException(t, NotAuthorizedUserException.class);
-        if (naue != null) throw new NotAuthorizedUserException();
-
         TimeoutException toe = ExceptionUtils.findException(t, TimeoutException.class);
-        if (toe != null) throw new SqlQueryTimeoutException(toe);
+        if (toe != null) {
+            localInvoker.invoke(AuditController.class, "warning", AuditRecord.LogCode.User, message + ": " + sql, null, t);
+            throw new SqlQueryTimeoutException(toe);
+        } else {
+            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, message + ": " + sql, null, t);
 
-        SQLSyntaxErrorException ssee = ExceptionUtils.findException(t, SQLSyntaxErrorException.class);
-        if (ssee != null) throw new Exception(ssee);
+            NotAuthorizedUserException naue = ExceptionUtils.findException(t, NotAuthorizedUserException.class);
+            if (naue != null) throw new NotAuthorizedUserException();
 
-        SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
-        if( null != ex )
-            throw new SqlQueryTimeoutException(ex);
-        else
-            throw new RuntimeException(t);
+
+            SQLSyntaxErrorException ssee = ExceptionUtils.findException(t, SQLSyntaxErrorException.class);
+            if (ssee != null) throw new Exception(ssee);
+
+            SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
+            if( null != ex )
+                throw new SqlQueryTimeoutException(ex);
+            else
+                throw new RuntimeException(t);
+        }
     }
 
 }
