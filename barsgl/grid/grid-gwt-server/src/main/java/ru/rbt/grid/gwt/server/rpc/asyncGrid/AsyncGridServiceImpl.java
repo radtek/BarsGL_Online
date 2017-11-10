@@ -190,25 +190,29 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     }
 
     public void processException(Throwable t, String sql, String message) throws Throwable {
-        TimeoutException toe = ExceptionUtils.findException(t, TimeoutException.class);
-        if (toe != null) {
-            localInvoker.invoke(AuditController.class, "warning", AuditRecord.LogCode.User, message + ": " + sql, null, t);
-            throw new SqlQueryTimeoutException(toe);
-        } else {
-            localInvoker.invoke(AuditController.class, "error", AuditRecord.LogCode.User, message + ": " + sql, null, t);
+        String methodName = "error";
+        try {
+            TimeoutException toe = ExceptionUtils.findException(t, TimeoutException.class);
+            if (toe != null) {
+                methodName = "warning";
+                throw new SqlQueryTimeoutException(toe);
+            } else {
+                NotAuthorizedUserException naue = ExceptionUtils.findException(t, NotAuthorizedUserException.class);
+                if (naue != null) throw new NotAuthorizedUserException();
 
-            NotAuthorizedUserException naue = ExceptionUtils.findException(t, NotAuthorizedUserException.class);
-            if (naue != null) throw new NotAuthorizedUserException();
+                SQLSyntaxErrorException ssee = ExceptionUtils.findException(t, SQLSyntaxErrorException.class);
+                if (ssee != null) throw new Exception(ssee);
 
-
-            SQLSyntaxErrorException ssee = ExceptionUtils.findException(t, SQLSyntaxErrorException.class);
-            if (ssee != null) throw new Exception(ssee);
-
-            SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
-            if( null != ex )
-                throw new SqlQueryTimeoutException(ex);
-            else
-                throw new RuntimeException(t);
+                SQLException ex = ExceptionUtils.getSqlTimeoutException(t);
+                if( null != ex ) {
+                    throw new SqlQueryTimeoutException(ex);
+                } else {
+                    throw new RuntimeException(t);
+                }
+            }
+        } catch (Throwable target) {
+            localInvoker.invoke(AuditController.class, methodName, AuditRecord.LogCode.User, message + ": " + sql, null, t);
+            throw target;
         }
     }
 
