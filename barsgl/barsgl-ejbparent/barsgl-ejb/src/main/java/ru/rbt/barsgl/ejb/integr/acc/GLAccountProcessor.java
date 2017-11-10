@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
-import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.*;
@@ -9,13 +9,13 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
+import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.ErrorList;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -471,7 +471,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         String customerName = glAccountRepository.getCustomerName(keys.getCustomerNumber());
         if (isEmpty(customerName)) {
             throw new ValidationError(CUSTOMER_NUMBER_NOT_FOUND,
-                    keys.getCustomerNumber(), Long.toString(AccountKeys.getiCustomerNumber()));
+                    keys.getCustomerNumber(), Long.toString(AccountKeys.getiCustomerNumber()), "номер клиента");
         }
         String accountName = keys.getDescription();
         if (isEmpty(accountName))

@@ -889,14 +889,14 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         String dealId = "FL_" + System.currentTimeMillis();
         pst.setAccountCredit("");
         // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
-        final String keyStringCredit = "001;RUR;00208934;161020100;18;06;0000001645;0001;45205;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
+        final String keyStringCredit = "001;RUR;00000018;161020100;18;06;0000001645;0001;45205;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
         deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         deleteSQvalue(new AccountKeys(keyStringCredit));
         pst.setAccountKeyCredit(keyStringCredit);
 
         pst.setAccountDebit("");
         // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
-        final String keyStringDebit = "001;RUR;00208934;161020200;18;10;0000001898;0001;45812;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
+        final String keyStringDebit = "001;RUR;00000018;161020200;18;10;0000001898;0001;45812;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
         deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
         deleteSQvalue(new AccountKeys(keyStringDebit));
         pst.setAccountKeyDebit(keyStringDebit);
@@ -1021,7 +1021,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
     @Test public void testPLAccountOpenByAccountTypeError() throws SQLException {
 
         GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
-                , baseEntityRepository.selectFirst("select gloid from gl_oper order by 1 desc").getLong("gloid"));
+                , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
 
         AccountingType accountingType = Optional
                 .ofNullable((AccountingType) baseEntityRepository.findById(AccountingType.class, "643010101"))
@@ -1066,7 +1066,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
     @Test public void testPLAccountOpenByAccountTypeOwnGLAccount() throws SQLException {
 
         GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
-                , baseEntityRepository.selectFirst("select gloid from gl_oper order by 1 desc").getLong("gloid"));
+                , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
 
         final String acctype= "643010101";
         DataRecord record = Optional.ofNullable(baseEntityRepository

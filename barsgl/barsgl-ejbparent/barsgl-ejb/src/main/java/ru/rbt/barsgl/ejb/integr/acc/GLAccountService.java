@@ -265,10 +265,22 @@ public class GLAccountService {
                 return Optional.ofNullable(glAccountRepository
                         .findGLPLAccount(keys.getCurrency(), keys.getCustomerNumber(), keys.getAccountType()
                             , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
-                        .map(GLAccount::getBsaAcid).orElseGet(() -> glAccountController.createGLPLAccount(keys, operation, operSide));
+                        .map(GLAccount::getBsaAcid).orElseGet(() -> {
+                            try {
+                                return glAccountController.createGLPLAccount(keys, operation, operSide);
+                            } catch (Exception e) {
+                                throw new DefaultApplicationException(e.getMessage(), e);
+                            }
+                        });
             } else {
                 return Optional.ofNullable(glAccountController.findForPlcodeNo7903(keys, dateOpen, dateStart446P))
-                        .orElseGet(() -> glAccountController.processNotOwnPLAccount(operation, operSide, keys,dateOpen, dateStart446P));
+                        .orElseGet(() -> {
+                            try {
+                                return glAccountController.processNotOwnPLAccount(operation, operSide, keys, dateOpen, dateStart446P);
+                            } catch (Exception e) {
+                                throw new DefaultApplicationException(e.getMessage(), e);
+                            }
+                        });
             }
         }
     }
