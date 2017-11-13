@@ -156,7 +156,7 @@ public class ManualPostingController {
             if (null != wrapper.getId())
                 msg += " ID = " + wrapper.getId();
             if (!isEmpty(errorMsg)) {
-                auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), errorMsg);
+                auditController.warning(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
                 addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -458,7 +458,7 @@ public class ManualPostingController {
         } catch (ValidationError e) {
                 String msg = "Ошибка при авторизации запроса на операцию ID = " + wrapper.getId();
                 String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-                auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
+                auditController.warning(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
                 return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
@@ -494,7 +494,7 @@ public class ManualPostingController {
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты запроса на операцию ID = " + wrapper.getId();
             String errMessage = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
+            auditController.warning(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
