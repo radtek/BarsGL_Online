@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -74,6 +75,7 @@ public class TechOperationProcessor extends GLOperationProcessor
         List<GlPdTh> pdthList = new ArrayList<GlPdTh>();
         pdthList.add(this.getPdTh(operation, GLOperation.OperSide.D));
         pdthList.add(this.getPdTh(operation, GLOperation.OperSide.C));
+        Collections.sort(pdthList);
 
         return pdthList;
     }

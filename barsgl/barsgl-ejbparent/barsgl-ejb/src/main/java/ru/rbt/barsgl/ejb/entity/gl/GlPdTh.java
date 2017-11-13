@@ -14,7 +14,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_PDTH")
-public class GlPdTh extends BaseEntity<Long> {
+public class GlPdTh extends BaseEntity<Long> implements Comparable<GlPdTh> {
 
     /**
      * Posting ID
@@ -392,4 +392,8 @@ public class GlPdTh extends BaseEntity<Long> {
     }
 
 
+    @Override
+    public int compareTo(GlPdTh pd) {
+        return this.bsaAcid.compareTo(pd.getBsaAcid());
+    }
 }
