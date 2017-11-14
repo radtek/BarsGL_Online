@@ -187,7 +187,7 @@ public class AppUserForm extends EditableDictionary<AppUserWrapper> {
         return "ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport@getUserSql";
     }
      
-    @Override
+   @Override
     public ArrayList<SortItem> getInitialSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("ID_USER", Column.Sort.ASC));
