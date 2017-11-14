@@ -238,6 +238,19 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
                 IllegalArgumentException.class, PersistenceException.class, DefaultApplicationException.class);
     }
 
+    @Override
+    public RpcRes_Base<Boolean> switchAccessMode(OperDayWrapper wrapper) throws Exception {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                localInvoker.invoke(OperdayController.class, "refresh");
+                boolean res = localInvoker.invoke(OperdayController.class, "swithAccessMode", wrapper.getAccessMode());
+                if (!res) throw new Throwable("Ошибка изменения доступа");
+                return new RpcRes_Base<>(res, false, "");
+            }
+        }.process();
+    }
 
 
 }

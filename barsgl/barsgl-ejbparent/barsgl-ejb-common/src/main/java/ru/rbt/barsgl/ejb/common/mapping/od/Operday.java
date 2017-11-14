@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.common.mapping.od;
 
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
@@ -81,32 +82,7 @@ public class Operday extends BaseEntity<Date> {
         }
     }
 
-    /**
-     * режим доступа
-     */
-    public enum AccessMode implements HasLabel {
-        FULL("Полный")
-        /**
-         * прямая запись в PD c формированием PCID_MO, GL_POSTING
-         * недопустима совместная работа с загрузчиком Майдас
-         */
-        , LIMIT("Ограниченный");
 
-        private final String name;
-
-        AccessMode(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String getLabel() {
-            return name;
-        }
-
-        public static AccessMode switchMode(AccessMode from) {
-            return from == FULL ? LIMIT : FULL;
-        }
-    }
 
     /**
      * текущий операционный день

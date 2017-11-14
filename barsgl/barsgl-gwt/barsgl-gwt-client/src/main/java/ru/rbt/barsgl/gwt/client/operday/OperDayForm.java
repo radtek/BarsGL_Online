@@ -1,10 +1,13 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -48,7 +51,7 @@ public class OperDayForm extends BaseForm {
     private Label previousOD;
     private Label previousODBalanceStatus;
     private Label pdMode;
-    private Label accessMode;
+    private Label acm;
 
     private Label reason;
     private Grid vip_errors;
@@ -59,6 +62,7 @@ public class OperDayForm extends BaseForm {
     private Label dateOD;
     private Label timeClose;
     private LwdBalanceCutWrapper lwdBalanceCutWrapper;
+    private AccessMode accessMode;
 
     public OperDayForm(){
         super();
@@ -101,7 +105,7 @@ public class OperDayForm extends BaseForm {
         grid.setWidget(2, 1, previousOD = new Label(""));
         grid.setWidget(3, 1, previousODBalanceStatus = new Label(""));
         grid.setWidget(4, 1, pdMode = new Label(""));
-        grid.setWidget(5, 1, accessMode = new Label(""));
+        grid.setWidget(5, 1, acm = new Label(""));
 
         grid.getCellFormatter().setWidth(0, 0, "285px");
 
@@ -221,6 +225,10 @@ public class OperDayForm extends BaseForm {
         previousOD.setText(operDayWrapper.getPreviousOD());
         previousODBalanceStatus.setText(operDayWrapper.getPreviousODBalanceStatus());
         pdMode.setText(operDayWrapper.getPdMode());
+        accessMode = operDayWrapper.getAccessMode();
+        acm.getElement().getStyle().setColor(accessMode == AccessMode.FULL ? "#000000" : "#FF0000");
+        acm.getElement().getStyle().setFontWeight(accessMode == AccessMode.FULL ? Style.FontWeight.NORMAL :  Style.FontWeight.BOLD);
+        acm.setText(accessMode.getLabel());
 
         setButtonsEnabled(operDayWrapper.getEnabledButton());
     }
@@ -356,8 +364,6 @@ public class OperDayForm extends BaseForm {
                         } else {
                             refreshAction.execute();
                             change_Phase_To_PRE_COB.setEnable(false);
-//                            DialogManager.message("Инфо", "Задание 'Перевод фазы в PRE_COB' выполнено.\n" +
-//                                    "Для обновления информации нажмите 'Обновить'.");
                             DialogManager.message("Инфо", res.getMessage());
                         }
                     }
@@ -476,7 +482,6 @@ public class OperDayForm extends BaseForm {
                         if (result.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                         } else {
-                            //Window.alert(result.getResult().toString());
                             Window.alert(result.getMessage());
                         }
                         WaitingManager.hide();
@@ -490,25 +495,36 @@ public class OperDayForm extends BaseForm {
         return switchPdMode = new Action("Переключение режима доступа", "", null, 5) {
             @Override
             public void execute() {
-               /* WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                BarsGLEntryPoint.operDayService.swithPdMode(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
-
+                DialogManager.confirm("Переключение режима доступа", Utils.Fmt("Подтверждаете установку режим {0} доступа?",
+                        accessMode == AccessMode.FULL ? "ограниченного" : "полного"), "Да", "Нет", new ClickHandler() {
                     @Override
-                    public void onSuccess(RpcRes_Base<OperDayWrapper> res) {
-                        WaitingManager.hide();
+                    public void onClick(ClickEvent clickEvent) {
+                        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                        OperDayWrapper wrapper = new OperDayWrapper();
+                        wrapper.setAccessMode(accessMode);
+                        BarsGLEntryPoint.operDayService.switchAccessMode(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
 
-                        if (res.isError()) {
-                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
-                        } else {
-                            refreshAction.execute();
-                            pdMode.setText(res.getResult().getPdMode());
-                            DialogManager.message("Инфо", "Режим обработки проводок изменен.\n" +
-                                    "Для обновления информации нажмите 'Обновить'.");
-                        }
+                            @Override
+                            public void onSuccess(RpcRes_Base<Boolean> res) {
+                                WaitingManager.hide();
+
+                                if (res.isError()) {
+                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                                } else {
+                                    refreshAction.execute();
+                                    if (res.getResult() == false) {
+                                        DialogManager.error("Ошибка", "Операция изменения режима доступа не удалась");
+                                    } else {
+                                        DialogManager.message("Инфо", Utils.Fmt("Режим доступа изменен на {0}",
+                                                accessMode == AccessMode.FULL ? "ограниченный" : "полный"));
+                                    }
+                                }
+                            }
+                        });
                     }
-                });*/
-                accessMode.setText("Full");
-               Window.alert("QuQu");
+                }, null);
+
+
             }
         };
     }

@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.ejbcore.util.DateUtils;
@@ -174,10 +175,20 @@ public class OperdayController {
         operday.setPhase(orig.getPhase());
         operday.setPdMode(orig.getPdMode());
         operday.setProcessingStatus(orig.getProcessingStatus());
+        operday.setAccessMode(orig.getAccessMode());
     }
 
     private void initTimeService() {
         timeService = findAssignable(DataBaseTimeService.class, timeServices);
     }
 
+    @Lock(WRITE)
+    public Boolean swithAccessMode(AccessMode accessMode) throws Exception {
+
+        int cnt = repository.executeUpdate("update Operday o set o.accessMode = ?1",
+                accessMode == AccessMode.FULL ? AccessMode.LIMIT : AccessMode.FULL);
+        Assert.isTrue(1 == cnt);
+        init();
+        return (1 == cnt);
+    }
 }

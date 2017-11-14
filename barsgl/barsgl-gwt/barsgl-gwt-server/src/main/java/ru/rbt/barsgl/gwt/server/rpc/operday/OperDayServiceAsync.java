@@ -26,4 +26,5 @@ public interface OperDayServiceAsync {
      void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback);
      void runExecuteFakeCOBTask(AsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>> callback);
      void runExecutePreCOBTask(AsyncCallback<RpcRes_Base<TimerJobHistoryWrapper>> callback);
+     void switchAccessMode(OperDayWrapper wrapper, AsyncCallback<RpcRes_Base<Boolean>> callback);
 }
