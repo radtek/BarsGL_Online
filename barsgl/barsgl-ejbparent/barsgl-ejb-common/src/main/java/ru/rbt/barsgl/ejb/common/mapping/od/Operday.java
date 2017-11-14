@@ -82,6 +82,33 @@ public class Operday extends BaseEntity<Date> {
     }
 
     /**
+     * режим доступа
+     */
+    public enum AccessMode implements HasLabel {
+        FULL("Полный")
+        /**
+         * прямая запись в PD c формированием PCID_MO, GL_POSTING
+         * недопустима совместная работа с загрузчиком Майдас
+         */
+        , LIMIT("Ограниченный");
+
+        private final String name;
+
+        AccessMode(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getLabel() {
+            return name;
+        }
+
+        public static AccessMode switchMode(AccessMode from) {
+            return from == FULL ? LIMIT : FULL;
+        }
+    }
+
+    /**
      * текущий операционный день
      */
     @Id
@@ -114,6 +141,10 @@ public class Operday extends BaseEntity<Date> {
     @Enumerated(EnumType.STRING)
     @Column(name = "PRC")
     private ProcessingStatus processingStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ACSMODE")
+    private AccessMode accessMode;
 
     @Override
     public Date getId() {
@@ -174,5 +205,13 @@ public class Operday extends BaseEntity<Date> {
 
     public void setProcessingStatus(ProcessingStatus processingStatus) {
         this.processingStatus = processingStatus;
+    }
+
+    public AccessMode getAccessMode() {
+        return accessMode;
+    }
+
+    public void setAccessMode(AccessMode accessMode) {
+        this.accessMode = accessMode;
     }
 }
