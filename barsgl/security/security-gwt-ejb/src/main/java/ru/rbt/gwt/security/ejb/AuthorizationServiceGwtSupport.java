@@ -32,7 +32,7 @@ public class AuthorizationServiceGwtSupport {
     private AuthorizationServiceSupport authorizationSupport;
     
     public String getUserSql(){
-        return  "select * from ( " +
+        return  "select /*+ first_rows(30) */ * from ( " +
                 "select ID_USER, USER_NAME, SURNAME, FIRSTNAME, PATRONYMIC, FILIAL, DEPID, CREATE_DT, END_DT, " +
                 "case when LOCKED = '0' then trim('" + No.getLabel() + "') " +
                 "else trim('" + Yes.getLabel() + "') " +
