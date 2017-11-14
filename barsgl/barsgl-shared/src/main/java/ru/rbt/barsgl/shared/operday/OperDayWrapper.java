@@ -17,6 +17,7 @@ public class OperDayWrapper implements Serializable {
     private String processingStatus;
     private Date currentODDate;
     private Date previosODDate;
+    private String accessMode;
 
     private OperDayButtons enabledButton;
 //    private COB_OKWrapper cobOkWrapper;
@@ -108,5 +109,13 @@ public class OperDayWrapper implements Serializable {
 
     public void setIsCOBRunning(Boolean isCOBRunning) {
         this.isCOBRunning = isCOBRunning;
+    }
+
+    public String getAccessMode() {
+        return accessMode;
+    }
+
+    public void setAccessMode(String accessMode) {
+        this.accessMode = accessMode;
     }
 }
