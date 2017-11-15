@@ -495,7 +495,7 @@ public class OperDayForm extends BaseForm {
         return switchPdMode = new Action("Переключение режима доступа", "", null, 5) {
             @Override
             public void execute() {
-                DialogManager.confirm("Переключение режима доступа", Utils.Fmt("Подтверждаете установку режим {0} доступа?",
+                DialogManager.confirm("Переключение режима доступа", Utils.Fmt("Подтверждаете установку режима {0} доступа?",
                         accessMode == AccessMode.FULL ? "ограниченного" : "полного"), "Да", "Нет", new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent clickEvent) {
