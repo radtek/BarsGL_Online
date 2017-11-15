@@ -114,6 +114,8 @@
         
         <class>ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord</class>
 
+        <class>ru.rbt.barsgl.ejb.entity.monitor.AppHttpSession</class>
+
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 
         <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
