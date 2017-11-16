@@ -300,9 +300,9 @@ public class CommonQueueProcessor4 implements MessageListener {
             jId = journalRepository.executeInNewTransaction((persistence) -> {
                 return journalRepository.createJournalEntry(queueType, textMessage);
             });
-            
-            processing(queueType, textMessage, jId, incMessage, queue, receiveTime, waitingTime);            
-            
+
+            processing(queueType, textMessage, jId, incMessage, queue, receiveTime, waitingTime);
+
         } catch (JMSException e) {
             reConnect();
             auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + fromQueue + " / Таблица GL_ACLIRQ / id="+jId, null, e);

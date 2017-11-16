@@ -21,7 +21,7 @@ public class AclirqJournalRepository extends AbstractBaseEntityRepository<Aclirq
     public Long createJournalEntry(String param, String request) {
         // param добавить в таблицу
         AclirqJournal journal = new AclirqJournal();
-        journal.setRequestId("");
+        journal.setRequestId(param);
         journal.setRequest(request);
         journal.setStatusDate(new Timestamp(new Date().getTime()));
         journal.setStatus(AclirqJournal.Status.RAW);

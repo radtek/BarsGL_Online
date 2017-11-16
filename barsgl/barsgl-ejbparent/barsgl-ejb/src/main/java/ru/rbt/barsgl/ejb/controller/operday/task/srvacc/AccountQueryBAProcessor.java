@@ -36,6 +36,7 @@ import static ru.rbt.ejbcore.util.StringUtils.*;
 /**
  * Created by ER22228 on 29.03.2016.
  */
+@Deprecated
 @SuppressWarnings("ALL")
 @Stateless
 @LocalBean
