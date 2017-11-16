@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.monitor;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -30,6 +31,10 @@ public class AppHttpSession extends BaseEntity<Long> {
 
     @Column(name = "LASTACS_DT")
     private Date lastAccessTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "INVALIDATED")
+    private YesNo invalidated;
 
     @Override
     public void setId(Long id) {
@@ -73,4 +78,11 @@ public class AppHttpSession extends BaseEntity<Long> {
         this.lastAccessTime = lastAccessTime;
     }
 
+    public YesNo getInvalidated() {
+        return invalidated;
+    }
+
+    public void setInvalidated(YesNo invalidated) {
+        this.invalidated = invalidated;
+    }
 }

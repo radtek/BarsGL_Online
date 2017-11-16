@@ -43,4 +43,8 @@ public class LoginParams implements Serializable{
     public void setHostName(String hostName) {
         this.hostName = hostName;
     }
+
+    public static LoginParams createNotAuthorizedLoginParams() {
+        return new LoginParams("Not authorized user", "no type", "no host");
+    }
 }

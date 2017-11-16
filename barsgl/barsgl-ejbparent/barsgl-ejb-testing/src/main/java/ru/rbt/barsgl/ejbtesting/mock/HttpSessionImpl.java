@@ -15,6 +15,11 @@ public class HttpSessionImpl implements HttpSession, Serializable {
 
     private Map<Object,Object> attribMap = new HashMap<>();
     private long lastAccessedTime;
+    private final String sessionId;
+
+    public HttpSessionImpl() {
+        sessionId = System.currentTimeMillis() + "";
+    }
 
     @Override
     public long getCreationTime() {
@@ -23,7 +28,7 @@ public class HttpSessionImpl implements HttpSession, Serializable {
 
     @Override
     public String getId() {
-        return System.currentTimeMillis() + "";
+        return sessionId;
     }
 
     @Override
