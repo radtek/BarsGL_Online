@@ -69,7 +69,7 @@ public class FormManagerUI extends Composite {
 
         LocalEventBus.addHandler(StatusBarEvent.TYPE, createStatusBarEventHandler());
         LocalEventBus.addHandler(FormEvent.TYPE, createFormHandler());
-        //menuBuilder = new MenuBuilder(menuWrapper, dataPanel).build(menuBar);
+
         if(menuBuilder != null){
             this.menuBuilder = menuBuilder;
 
@@ -78,8 +78,6 @@ public class FormManagerUI extends Composite {
         }
 
         createOperdayPanel();
-
-//        showMonitoring();
     }
 
     private FormEventHandler createFormHandler() {
@@ -195,9 +193,4 @@ public class FormManagerUI extends Composite {
         }
     }
 
-//    private void showMonitoring(){
-//        if (SecurityChecker.checkAction(SecurityActionCode.TaskMonitor)){
-//            show(new Monitor());
-//        }
-//    }
 }

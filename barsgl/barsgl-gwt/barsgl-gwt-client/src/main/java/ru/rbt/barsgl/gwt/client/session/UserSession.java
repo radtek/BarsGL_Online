@@ -8,6 +8,7 @@ import ru.rbt.barsgl.gwt.core.actions.Action;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
@@ -38,7 +39,12 @@ public class UserSession extends GridForm {
 
             @Override
             public void execute() {
-                DialogManager.confirm("Закрытие сессий текущего пользователя", Utils.Fmt("Подтверждаете закрытие сессий текущего пользователя {0}?", "Person"), "Да", "Нет", new ClickHandler() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+                String login = (String) row.getField(1).getValue();
+                String user = (String) row.getField(4).getValue();
+                DialogManager.confirm("Закрытие сессий текущего пользователя",
+                        Utils.Fmt("Подтверждаете закрытие сессий текущего пользователя {0}?", login  + " (" + user+ ")"), "Да", "Нет", new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent clickEvent) {
                         Window.alert("Killed");
@@ -53,7 +59,11 @@ public class UserSession extends GridForm {
 
             @Override
             public void execute() {
-                DialogManager.confirm("Закрытие текущей сессии", Utils.Fmt("Подтверждаете закрытие текущей сессии ID = {0}?", "122345678"), "Да", "Нет", new ClickHandler() {
+                final Row row = grid.getCurrentRow();
+                if (row == null) return;
+                String id = (String) row.getField(0).getValue();
+
+                DialogManager.confirm("Закрытие текущей сессии", Utils.Fmt("Подтверждаете закрытие текущей сессии ID = {0}?", id), "Да", "Нет", new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent clickEvent) {
                         Window.alert("Killed");
@@ -83,36 +93,24 @@ public class UserSession extends GridForm {
         Table result = new Table();
 
         Column col;
-        result.addColumn(col = new Column("ID_PRM", Column.Type.LONG, "ID_PRM", 80, false, false));
-        col.setEditable(false);
-        col.setFilterable(false);
-
-        result.addColumn(new Column("ID_USER", Column.Type.INTEGER, "ID", 70, true, false));
+        result.addColumn(new Column("SESSION_ID", Column.Type.STRING, "ID сессии", 200));
         result.addColumn(new Column("USER_NAME", Column.Type.STRING, "Логин", 170));
+        result.addColumn(col = new Column("CREATED_DT", Column.Type.DATETIME, "Создание сессии", 105));
+        col.setFormat("dd.MM.yyyy hh:mm:ss");
+        result.addColumn(col = new Column("LASTACS_DT", Column.Type.DATETIME, "Окончание активности", 105));
+        col.setFormat("dd.MM.yyyy hh:mm:ss");
         result.addColumn(new Column("SURNAME", Column.Type.STRING, "Фамилия", 200));
-        result.addColumn(new Column("FIRSTNAME", Column.Type.STRING, "Имя", 160));
-        result.addColumn(new Column("PATRONYMIC", Column.Type.STRING, "Отчество", 180));
-
-        result.addColumn(col = new Column("PRM_CODE", Column.Type.STRING, "Параметр", 90, false, false));
-        col.setEditable(false);
-        col.setFilterable(false);
-        result.addColumn(new Column("PRMVAL", Column.Type.STRING, "Кол-во дней назад", 105));
-
-        result.addColumn(col = new Column("DT_BEGIN", Column.Type.DATE, "Дата начала действия", 105));
-        col.setFormat("dd.MM.yyyy");
-        result.addColumn(col = new Column("DT_END", Column.Type.DATE, "Дата окончания действия", 95));
-        col.setFormat("dd.MM.yyyy");
-
+        result.addColumn(new Column("FIRSTNAME", Column.Type.STRING, "Имя", 140));
+        result.addColumn(new Column("PATRONYMIC", Column.Type.STRING, "Отчество", 190));
         result.addColumn(new Column("FILIAL", Column.Type.STRING, "Филиал", 70));
-        result.addColumn(new Column("DEPID", Column.Type.STRING, "Подразделение", 115));
 
         return result;
     }
 
     @Override
     protected String prepareSql() {
-        return "select id_prm, id_user, user_name, surname, firstname, patronymic, prm_code, " +
-                "prmval, dt_begin, dt_end, filial, depid from V_GL_BACKVALUE " +
-                "where end_dt is null and locked='0'";
+        return "select h.*, u.SURNAME, u.FIRSTNAME, u.PATRONYMIC, u.FILIAL " +
+               "from GL_HTTPSESS h " +
+               "join GL_USER u on h.USER_NAME = u.USER_NAME";
     }
 }
