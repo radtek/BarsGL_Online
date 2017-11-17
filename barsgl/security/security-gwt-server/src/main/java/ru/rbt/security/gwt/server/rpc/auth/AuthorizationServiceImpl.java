@@ -29,14 +29,17 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
     @Override
     public LoginResult login(String user, String password) throws Exception {
         HttpServletRequest request = getThreadLocalRequest();
-        GwtServerUtils.setUserRequest(new UserRequestHolder(user, null != request ? request.getRemoteAddr() : ""));
+        UserRequestHolder requestHolder = new UserRequestHolder(user, null != request ? request.getRemoteAddr() : "");
+        GwtServerUtils.setUserRequest(requestHolder);
         try {
             LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "login", user, password);
             if (null != request){
                 HttpSession httpSession = request.getSession(true);
-                LoginParams params = new LoginParams(result.getUserName(), result.getUserType(), request.getRemoteAddr());
+                LoginParams params = new LoginParams(result.getUserName(), result.getUserType(), request.getRemoteAddr(), httpSession.getId());
                 httpSession.setAttribute(USER_NAME.getPath(), params);  // user
                 httpSession.setAttribute(USER_LOGIN_RESULT.getPath(), result);  // login result
+
+                requestHolder.setDynamicValue(USER_LOGIN_RESULT.getPath(), params);
 
                 localInvoker.invoke("ru.rbt.barsgl.ejb.monitoring.SessionSupportBean", "registerHttpSession", httpSession);
 
