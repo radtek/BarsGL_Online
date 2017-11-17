@@ -2,10 +2,6 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.*;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
@@ -13,9 +9,6 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
-import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
@@ -26,8 +19,6 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
@@ -35,6 +26,8 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 import java.io.IOException;
@@ -54,6 +47,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.SystemAccessMode.FULL;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.SystemAccessMode.LIMIT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
@@ -601,6 +596,24 @@ public class OperdayIT extends AbstractTimerJobIT {
             updateOperday(ONLINE, OPEN);
             updateOperdayMode(BUFFER, ProcessingStatus.STARTED);
         }
+    }
+
+    @Test public void testAccessMode() {
+        Operday operday = getOperday();
+        Operday.SystemAccessMode before = (FULL == operday.getAccessMode()) ? LIMIT : FULL;
+        Operday.SystemAccessMode mode = operday.getAccessMode();
+        Assert.assertNotNull(mode);
+
+        remoteAccess.invoke(OperdayController.class, "setAccessMode", before);
+        operday = getOperday();
+        Assert.assertEquals(before, operday.getAccessMode());
+        boolean isexc = false;
+        try {
+            remoteAccess.invoke(OperdayController.class, "setAccessMode", before);
+        } catch (Exception e) {
+            isexc = true;
+        }
+        Assert.assertTrue(isexc);
     }
 
     private void setLwdCut() {

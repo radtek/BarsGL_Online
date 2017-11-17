@@ -7,11 +7,8 @@ import ru.rbt.shared.user.AppUserWrapper;
 import java.io.Serializable;
 import java.util.List;
 
-import static ru.rbt.shared.ContextData.AVAILABLE_ACTIONS_PATH;
-import static ru.rbt.shared.ContextData.MESSAGE_PATH;
-import static ru.rbt.shared.ContextData.USER_MENU_PATH;
-import static ru.rbt.shared.LoginResult.LoginResultStatus.FAILED;
-import static ru.rbt.shared.LoginResult.LoginResultStatus.SUCCEEDED;
+import static ru.rbt.shared.ContextData.*;
+import static ru.rbt.shared.LoginResult.LoginResultStatus.*;
 
 /**
  * Created by Ivan Sevastyanov
@@ -19,7 +16,7 @@ import static ru.rbt.shared.LoginResult.LoginResultStatus.SUCCEEDED;
 public class LoginResult implements Serializable {
 
     public enum LoginResultStatus {
-        SUCCEEDED, FAILED
+        SUCCEEDED, FAILED, LIMIT
     }
     private LoginResultStatus loginResultStatus = FAILED;
 
@@ -81,7 +78,7 @@ public class LoginResult implements Serializable {
     }
 
     public boolean isSucceeded() {
-        return loginResultStatus == SUCCEEDED;
+        return loginResultStatus == SUCCEEDED || loginResultStatus == LIMIT;
     }
 
     public void setFailed(String message) {

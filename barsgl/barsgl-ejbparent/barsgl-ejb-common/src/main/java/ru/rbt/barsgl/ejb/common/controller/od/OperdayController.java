@@ -5,11 +5,11 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.AccessTimeout;
@@ -30,6 +30,8 @@ import static javax.ejb.LockType.WRITE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.SystemAccessMode.FULL;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.SystemAccessMode.LIMIT;
 import static ru.rbt.ejbcore.util.ServerUtils.findAssignable;
 
 /**
@@ -124,6 +126,14 @@ public class OperdayController {
         return Operday.PdMode.switchMode(operday.getPdMode());
     }
 
+    @Lock(WRITE)
+    public void setAccessMode(Operday.SystemAccessMode targetMode) {
+        Assert.isTrue(1 == repository.executeUpdate("update Operday o set o.accessMode = ?1 where o.accessMode = ?2", targetMode
+                , targetMode == FULL ? LIMIT : FULL),
+                () -> new DefaultApplicationException(format("Целеывой статус '%s' устарел", targetMode)));
+        init();
+    }
+
     @PostConstruct
     public void init() {
         initOperday();
@@ -174,6 +184,7 @@ public class OperdayController {
         operday.setPhase(orig.getPhase());
         operday.setPdMode(orig.getPdMode());
         operday.setProcessingStatus(orig.getProcessingStatus());
+        operday.setAccessMode(orig.getAccessMode());
     }
 
     private void initTimeService() {

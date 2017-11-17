@@ -6,6 +6,7 @@ import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.LoginParams;
 import ru.rbt.barsgl.shared.RpcRes_Base;
+import ru.rbt.barsgl.shared.access.HttpSessionWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
 import ru.rbt.shared.LoginResult;
@@ -16,6 +17,7 @@ import ru.rbt.shared.user.AppUserWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 
 import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_LOGIN_RESULT;
 import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_NAME;
@@ -41,7 +43,8 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
 
                 requestHolder.setDynamicValue(USER_LOGIN_RESULT.getPath(), params);
 
-                localInvoker.invoke("ru.rbt.barsgl.ejb.monitoring.SessionSupportBean", "registerHttpSession", httpSession);
+                localInvoker.invoke("ru.rbt.barsgl.ejb.monitoring.SessionSupportBean", "registerHttpSession",
+                        HttpSessionWrapper.createWrapper(httpSession.getId(), user, new Date(httpSession.getCreationTime()), new Date(httpSession.getCreationTime())));
 
                 return result;
             } else {

@@ -67,6 +67,15 @@ public class HttpSessionWrapper implements Serializable, IsSerializable {
         this.invalidated = invalidated;
     }
 
+    public static HttpSessionWrapper createWrapper(String sessionId, String userName, Date creationDate, Date lastAccessDate) {
+        HttpSessionWrapper httpSession = new HttpSessionWrapper();
+        httpSession.setSessionId(sessionId);
+        httpSession.setUserName(userName);
+        httpSession.setCreateDate(creationDate);
+        httpSession.setLastAccessDate(lastAccessDate);
+        return httpSession;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -1,26 +1,29 @@
 package ru.rbt.security.policy;
 
-import ru.rbt.security.entity.AppUser;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.security.ejb.repository.AppUserRepository;
+import ru.rbt.security.ejb.repository.access.PrmValueRepository;
 import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
 import ru.rbt.security.ejb.repository.access.UserMenuRepository;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.security.entity.AppUser;
+import ru.rbt.security.entity.access.PrmValue;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.LoginResult;
+import ru.rbt.shared.enums.PrmValueEnum;
+import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-
-import static java.lang.String.format;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Authorization;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
-import ru.rbt.security.ejb.repository.access.PrmValueRepository;
-import ru.rbt.security.entity.access.PrmValue;
-import ru.rbt.shared.enums.PrmValueEnum;
+import static ru.rbt.shared.enums.SecurityActionCode.UserRestrictedAccess;
 
 /**
  * Created by Ivan Sevastyanov on 13.05.2016.
@@ -47,7 +50,7 @@ public abstract class LoginPolicy {
 
     @EJB
     private PropertiesRepository propertiesRepository;
-    
+
     public final LoginResult login(String userName,String pasword) throws Exception {
         final AppUser user = userRepository.findUserByName(userName);
         if (null != user) {
@@ -55,9 +58,11 @@ public abstract class LoginPolicy {
             if (preliminaryResult.isSucceeded()) {
                 final LoginResult finalResult = buildLoginResult(userName, pasword);
                 if (preliminaryResult.isSucceeded()) {
-                    finalResult.setAvailableActions(actionRepository.getAvailableActions(user));
+                    List<SecurityActionCode> actions = actionRepository.getAvailableActions(user);
+                    finalResult.setAvailableActions(actions);
                     finalResult.setUserMenu(menuRepository.getUserMenu(user));
                     finalResult.setUser(getUserWrapper(user));
+                    finalResult.setLoginResultStatus(calcaulateTotalStatus(finalResult.getLoginResultStatus(), actions));
                 }
                 return finalResult;
             } else {
@@ -125,5 +130,13 @@ public abstract class LoginPolicy {
 
         return wrapper;
     }
-    
+
+    private boolean isLimitAccessMode() throws SQLException {
+        return "LIMIT".equals(actionRepository.selectFirst("select ACSMODE from GL_OD").getString(0));
+    }
+
+    private LoginResult.LoginResultStatus calcaulateTotalStatus(LoginResult.LoginResultStatus original, List<SecurityActionCode> actions) throws SQLException {
+        return isLimitAccessMode() && actions.stream().anyMatch(p -> p.equals(UserRestrictedAccess)) ? LoginResult.LoginResultStatus.LIMIT :
+                (isLimitAccessMode() ? LoginResult.LoginResultStatus.FAILED : original);
+    }
 }
