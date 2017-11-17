@@ -1,8 +1,9 @@
 package ru.rbt.barsgl.ejb.common.mapping.od;
 
+import ru.rbt.barsgl.shared.enums.AccessMode;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
-import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -81,9 +82,7 @@ public class Operday extends BaseEntity<Date> {
         }
     }
 
-    public enum SystemAccessMode {
-        FULL, LIMIT;
-    }
+
 
     /**
      * текущий операционный день
@@ -121,7 +120,7 @@ public class Operday extends BaseEntity<Date> {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ACSMODE")
-    private SystemAccessMode accessMode;
+    private AccessMode accessMode;
 
     @Override
     public Date getId() {
@@ -184,11 +183,11 @@ public class Operday extends BaseEntity<Date> {
         this.processingStatus = processingStatus;
     }
 
-    public SystemAccessMode getAccessMode() {
+    public AccessMode getAccessMode() {
         return accessMode;
     }
 
-    public void setAccessMode(SystemAccessMode accessMode) {
+    public void setAccessMode(AccessMode accessMode) {
         this.accessMode = accessMode;
     }
 }

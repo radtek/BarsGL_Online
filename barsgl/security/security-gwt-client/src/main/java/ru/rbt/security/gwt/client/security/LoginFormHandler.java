@@ -4,6 +4,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
+import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.shared.LoginResult;
 
 
@@ -34,10 +35,12 @@ public class LoginFormHandler {
                 if (LoginResult.LoginResultStatus.FAILED == result.getLoginResultStatus()) {
                     Window.alert(result.getMessage());
                     loginForm.enableFields();
+                   //
                 } else {
                     loginForm.hide();
                     LoginForm.setIsLoginFormInquired(false);
                     SecurityEntryPoint.prepare(result);
+                    DialogManager.error("Доступ", "ВНИМАНИЕ!!! Установлен режим ограниченного доступа");
                 }
                 if (loginForm.isSaveUser()) {
                     loginForm.saveCookies();
