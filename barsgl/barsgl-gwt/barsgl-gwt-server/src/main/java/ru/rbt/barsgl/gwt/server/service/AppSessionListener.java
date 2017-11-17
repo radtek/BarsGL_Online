@@ -4,6 +4,7 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.monitoring.SessionSupportBean;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
+import ru.rbt.barsgl.shared.access.HttpSessionWrapper;
 
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
@@ -34,7 +35,7 @@ public class AppSessionListener implements HttpSessionListener {
     public void sessionDestroyed(HttpSessionEvent httpSessionEvent) {
         try {
             if (null != httpSessionEvent.getSession().getAttribute(USER_NAME.getPath())) {
-                localInvoker.invoke(SessionSupportBean.class, "unregisterHttpSession", httpSessionEvent.getSession());
+                localInvoker.invoke(SessionSupportBean.class, "unregisterHttpSession", new HttpSessionWrapper(httpSessionEvent.getSession().getId()));
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Ошибка снятия с регистрации httpsession пользователя", e);

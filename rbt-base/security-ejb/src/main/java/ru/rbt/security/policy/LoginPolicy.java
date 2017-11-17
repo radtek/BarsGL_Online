@@ -23,6 +23,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Authorization;
+import static ru.rbt.shared.LoginResult.LoginResultStatus.LIMIT;
 import static ru.rbt.shared.enums.SecurityActionCode.UserRestrictedAccess;
 
 /**
@@ -62,7 +63,7 @@ public abstract class LoginPolicy {
                     finalResult.setAvailableActions(actions);
                     finalResult.setUserMenu(menuRepository.getUserMenu(user));
                     finalResult.setUser(getUserWrapper(user));
-                    finalResult.setLoginResultStatus(calcaulateTotalStatus(finalResult.getLoginResultStatus(), actions));
+                    calcaulateTotalResult(finalResult, actions);
                 }
                 return finalResult;
             } else {
@@ -135,8 +136,19 @@ public abstract class LoginPolicy {
         return "LIMIT".equals(actionRepository.selectFirst("select ACSMODE from GL_OD").getString(0));
     }
 
-    private LoginResult.LoginResultStatus calcaulateTotalStatus(LoginResult.LoginResultStatus original, List<SecurityActionCode> actions) throws SQLException {
-        return isLimitAccessMode() && actions.stream().anyMatch(p -> p.equals(UserRestrictedAccess)) ? LoginResult.LoginResultStatus.LIMIT :
-                (isLimitAccessMode() ? LoginResult.LoginResultStatus.FAILED : original);
+    /**
+     * для прошедших основную аутентификацию анализируем возможность работать в ограниченном доступе
+     * @param original - входящий результат
+     * @param actions
+     * @throws SQLException
+     */
+    private void calcaulateTotalResult(LoginResult original, List<SecurityActionCode> actions) throws SQLException {
+        if (original.isSucceeded()) {
+            if (isLimitAccessMode() && actions.stream().anyMatch(p -> p.equals(UserRestrictedAccess))) {
+                original.setLoginResultStatus(LIMIT);
+            } else if (isLimitAccessMode()) {
+                original.setFailed("В системе установлен режим ограниченного доступа. Доступ в систему запрещен.");
+            }
+        }
     }
 }
