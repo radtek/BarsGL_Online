@@ -23,6 +23,7 @@ import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
@@ -47,8 +48,6 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.SystemAccessMode.FULL;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.SystemAccessMode.LIMIT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
@@ -600,16 +599,16 @@ public class OperdayIT extends AbstractTimerJobIT {
 
     @Test public void testAccessMode() {
         Operday operday = getOperday();
-        Operday.SystemAccessMode before = (FULL == operday.getAccessMode()) ? LIMIT : FULL;
-        Operday.SystemAccessMode mode = operday.getAccessMode();
+        AccessMode before = AccessMode.switchMode(operday.getAccessMode());
+        AccessMode mode = operday.getAccessMode();
         Assert.assertNotNull(mode);
 
-        remoteAccess.invoke(OperdayController.class, "setAccessMode", before);
+        remoteAccess.invoke(OperdayController.class, "swithAccessMode", before);
         operday = getOperday();
         Assert.assertEquals(before, operday.getAccessMode());
         boolean isexc = false;
         try {
-            remoteAccess.invoke(OperdayController.class, "setAccessMode", before);
+            remoteAccess.invoke(OperdayController.class, "swithAccessMode", mode);
         } catch (Exception e) {
             isexc = true;
         }
