@@ -599,13 +599,13 @@ public class OperdayIT extends AbstractTimerJobIT {
 
     @Test public void testAccessMode() {
         Operday operday = getOperday();
-        AccessMode before = AccessMode.switchMode(operday.getAccessMode());
+        AccessMode before = operday.getAccessMode();
         AccessMode mode = operday.getAccessMode();
         Assert.assertNotNull(mode);
 
         remoteAccess.invoke(OperdayController.class, "swithAccessMode", before);
         operday = getOperday();
-        Assert.assertEquals(before, operday.getAccessMode());
+        Assert.assertEquals(AccessMode.switchMode(before), operday.getAccessMode());
         boolean isexc = false;
         try {
             remoteAccess.invoke(OperdayController.class, "swithAccessMode", mode);
