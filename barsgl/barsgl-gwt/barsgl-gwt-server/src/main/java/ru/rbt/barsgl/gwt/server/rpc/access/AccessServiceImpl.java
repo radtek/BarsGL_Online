@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.server.rpc.access;
 
+import ru.rbt.barsgl.ejb.monitoring.SessionSupportBean;
 import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.gwt.security.ejb.repository.access.RoleServiceSupport;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
@@ -111,6 +112,45 @@ public class AccessServiceImpl extends AbstractGwtService implements AccessServi
             protected RpcRes_Base<AccessRightsWrapper> buildResponse() throws Throwable {
                 RpcRes_Base<AccessRightsWrapper> res = localInvoker.invoke(RoleServiceSupport.class, "setAccessRights", wrapper);
                 return res;
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> killAllSession() throws Exception {
+       return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                localInvoker.invoke(SessionSupportBean.class, "invalidateAllSessions");
+
+                return new RpcRes_Base<>(true, false, "");
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> killSessionById(String id) throws Exception {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                localInvoker.invoke(SessionSupportBean.class, "invalidateSession", id);
+
+                return new RpcRes_Base<>(true, false, "");
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> killSessionByName(String name) throws Exception {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                localInvoker.invoke(SessionSupportBean.class, "invalidateUserSessions", name);
+
+                return new RpcRes_Base<>(true, false, "");
             }
         }.process();
     }

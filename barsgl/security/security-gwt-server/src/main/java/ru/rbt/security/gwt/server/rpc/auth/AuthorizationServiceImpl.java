@@ -43,9 +43,10 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
 
                 requestHolder.setDynamicValue(USER_LOGIN_RESULT.getPath(), params);
 
-                localInvoker.invoke("ru.rbt.barsgl.ejb.monitoring.SessionSupportBean", "registerHttpSession",
-                        HttpSessionWrapper.createWrapper(httpSession.getId(), user, new Date(httpSession.getCreationTime()), new Date(httpSession.getCreationTime())));
-
+                if (result.isSucceeded()) {
+                    localInvoker.invoke("ru.rbt.barsgl.ejb.monitoring.SessionSupportBean", "registerHttpSession",
+                            HttpSessionWrapper.createWrapper(httpSession.getId(), user, new Date(httpSession.getCreationTime()), new Date(httpSession.getCreationTime())));
+                }
                 return result;
             } else {
                 throw new RuntimeException("Request is not initialized");

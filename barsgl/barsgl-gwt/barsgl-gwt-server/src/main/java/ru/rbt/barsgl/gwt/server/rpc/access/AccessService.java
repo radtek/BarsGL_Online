@@ -4,6 +4,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.access.*;
+import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.shared.enums.PrmValueEnum;
 
 import java.util.ArrayList;
@@ -23,4 +24,7 @@ public interface AccessService extends RemoteService {
     RpcRes_Base<ArrayList<ActionWrapper>> getActionsByGroupId(int groupId) throws Exception;
     RpcRes_Base<AccessRightsWrapper> getAccessRights(int userId) throws Exception;
     RpcRes_Base<AccessRightsWrapper> setAccessRights(AccessRightsWrapper wrapper) throws Exception;
+    RpcRes_Base<Boolean> killAllSession() throws Exception;
+    RpcRes_Base<Boolean> killSessionById(String id) throws Exception;
+    RpcRes_Base<Boolean> killSessionByName(String name) throws Exception;
 }

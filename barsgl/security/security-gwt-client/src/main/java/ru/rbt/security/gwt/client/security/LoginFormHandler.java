@@ -33,14 +33,17 @@ public class LoginFormHandler {
             @Override
             public void onSuccess(LoginResult result) {
                 if (LoginResult.LoginResultStatus.FAILED == result.getLoginResultStatus()) {
-                    Window.alert(result.getMessage());
+                   // Window.alert(result.getMessage());
+                    DialogManager.error("Доступ", result.getMessage());
                     loginForm.enableFields();
-                   //
                 } else {
                     loginForm.hide();
                     LoginForm.setIsLoginFormInquired(false);
                     SecurityEntryPoint.prepare(result);
-                    DialogManager.error("Доступ", "ВНИМАНИЕ!!! Установлен режим ограниченного доступа");
+                    if (LoginResult.LoginResultStatus.LIMIT == result.getLoginResultStatus()){
+                        DialogManager.error("Доступ", "ВНИМАНИЕ!!! Установлен режим ограниченного доступа");
+                    }
+
                 }
                 if (loginForm.isSaveUser()) {
                     loginForm.saveCookies();
