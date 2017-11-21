@@ -7,11 +7,12 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.EJB;
@@ -37,7 +38,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountDetailsNotify;
+import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Sources.FC12;
+import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Sources.FCC;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.*;
+import static ru.rbt.ejbcore.util.DateUtils.getFinalDate;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
@@ -79,14 +84,22 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public void process(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
-        if (AcDNJournal.Sources.FCC_CLOSE.equals(source)) {
-            processClose(source, incomingEnvelope, jId);
-        } else {
-            processOpen(source, incomingEnvelope, jId);
+        switch(source) {
+            case FC12:
+                processFC12(source, incomingEnvelope, jId);
+                return;
+            case FCC:
+                processFCC(source, incomingEnvelope, jId);
+                return;
+            case MIDAS:
+                processFCC(source, incomingEnvelope, jId);
+                return;
+            default:
+                throw new DefaultApplicationException("Неверный источник: " + source.name());
         }
     }
 
-    public void processClose(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
+    public void processFC12(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
         Map<String, String> xmlData = readFromXML(incomingEnvelope, jId, paramNamesClose);
         if (xmlData == null) {
             // Запись в аудит, в таблицу аудита, в лог и возврат
@@ -94,70 +107,20 @@ public class AccountDetailsNotifyProcessor implements Serializable {
             return;
         }
 
-        String branch = xmlData.get("Branch");
+        String hostABS = xmlData.get("Positioning/HostABS");
         String bsaacid = xmlData.get("CBAccountNo");
         String status = xmlData.get("Status");
-        String hostABS = xmlData.get("Positioning/HostABS");
-        String closeDate = xmlData.get("CloseDate");
 
-        if(!isEmpty(status) && "C".equals(status)) {
-            if (!isEmpty(bsaacid) && !isEmpty(hostABS) && !isEmpty(closeDate) && "FC12".equals(hostABS)) {
-                DataRecord accRln = accRlnRepository.findByBsaacid(bsaacid);
-                if (accRln != null) {
-                    Date storingDate = sdf.parse(closeDate);
-                    if ((accRln.getDate("drlnc") == null ? "2029-01-01" : sdf.format(accRln.getDate("drlnc"))).equals("2029-01-01")) {
-                        coreRepository.executeNativeUpdate("UPDATE ACCRLN SET DRLNC=? WHERE BSAACID=?", storingDate, bsaacid);
-                        coreRepository.executeNativeUpdate("UPDATE GL_ACC SET DTC=? WHERE BSAACID=?", storingDate, bsaacid);
-                        coreRepository.executeNativeUpdate("UPDATE BSAACC SET BSAACC=? WHERE ID=?", storingDate, bsaacid);
-
-                        journalRepository.updateLogStatus(jId, PROCESSED, "Счет с bsaacid=" + bsaacid + " закрыт");
-                        auditController.info(AuditRecord.LogCode.AccountDetailsNotify, "Счет с bsaacid=" + bsaacid + " закрыт по нотификации от FC12");
-                    } else {
-                        journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " уже закрыт ранее");
-                        return;
-                    }
-                } else {
-                    journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " не существует ");
-                    return;
-                }
-            } else {
-                journalRepository.updateLogStatus(jId, ERROR, "Ошибка в данных bsaacid / hostABS / closeDate");
-                return;
-            }
-        } else if (!isEmpty(branch)){
-            DataRecord recMidas = coreRepository.selectFirst("SELECT midas_branch FROM DH_BR_MAP where fcc_branch=?", branch);
-            DataRecord recGlacc = coreRepository.selectFirst("SELECT branch from gl_acc where bsaacid=?", bsaacid);
-
-            if (recMidas == null){
-                journalRepository.updateLogStatus(jId, ERROR, "Не найден DH_BR_MAP.fcc_branch = " + branch);
-                log.warn("Не найден DH_BR_MAP.fcc_branch = " + branch);
-                return;
-            }else if (recGlacc == null){
-                journalRepository.updateLogStatus(jId, ERROR, "Не найден gl_acc.bsaacid = " + bsaacid);
-                log.warn("Не найден gl_acc.bsaacid = " + bsaacid);
-                return;
-            }
-            String midasBranch = recMidas.getString(0);
-            String glaccBranch = recGlacc.getString(0);
-            if (midasBranch.equals(glaccBranch)){
-                journalRepository.updateLogStatus(jId, ERROR, "Branch не менялся");
-                auditController.info(AuditRecord.LogCode.AccountDetailsNotify, "Branch не менялся");
-            }else{
-                coreRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", midasBranch, bsaacid);
-                String msg = "На счете " + bsaacid + " branch " + glaccBranch + " заменен на " + midasBranch + "(" + branch + ")";
-                journalRepository.updateLogStatus(jId, PROCESSED, msg);
-                auditController.info(AuditRecord.LogCode.AccountDetailsNotify, msg);
-            }
-            return;
-        } else{
-            journalRepository.updateLogStatus(jId, ERROR, "Запрос не про закрытие счёта");
-            return;
+        if("C".equals(status)) {
+            closeAccountAny(source, hostABS, bsaacid, xmlData, jId);
+        } else {
+            checkBranchFlex(source, hostABS, bsaacid, xmlData, jId);
         }
 
-        log.info("Обработка одного сообщения завершена. cbAccount:" + xmlData.get("CBAccountNo"));
+        log.info("Обработка одного сообщения от " + hostABS + " завершена. cbAccount:" + xmlData.get("CBAccountNo"));
     }
 
-    public void processOpen(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
+    public void processFCC(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
         // Преобразуем данные из сообщения
         Map<String, String> xmlData = readFromXML(incomingEnvelope, jId, paramNamesOpen);
         if (xmlData == null) {
@@ -166,40 +129,17 @@ public class AccountDetailsNotifyProcessor implements Serializable {
             return;
         }
 
+        String hostABS = xmlData.get("Positioning/HostABS");
         String bsaacid = xmlData.get("CBAccountNo");
-        if (!isEmpty(bsaacid)) {
-            if( bsaacid.startsWith("423") || bsaacid.startsWith("426") ){
-                journalRepository.updateLogStatus(jId, ERROR, "Депозитный счет " + bsaacid + " не открывается через сервис");
-                return;
-            }
+        String status = xmlData.get("Status");
 
-            DataRecord accRln = accRlnRepository.findByBsaacid(bsaacid);
-
-            if (accRln != null && (accRln.getDate("drlnc") == null || ifEmpty(xmlData.get("OpenDate"), "").compareTo(sdf.format(accRln.getDate("drlnc"))) <= 0)) {
-                journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " уже существует в ACCRLN");
-                return;
-            }
+        if("C".equals(status)) {
+            closeAccountAny(source, hostABS, bsaacid, xmlData, jId);
         } else {
-            journalRepository.updateLogStatus(jId, ERROR, "bsaacid не задан");
-            return;
+            processOpenFCC(source, hostABS, bsaacid, xmlData, jId);
         }
 
-
-        if (AcDNJournal.Sources.FCC.equals(source) && !"FCC".equals(xmlData.get("Positioning/HostABS"))) {
-            journalRepository.updateLogStatus(jId, ERROR,
-                    "Не обрабатываем сообщение из FCC c HostABS=" + xmlData.get("Positioning/HostABS"));
-            return;
-        }
-
-        // Если FCC, то обогащение. Придумываем счёт MIDAS
-        // Если ошибка в процессе обогащения - вернётся false
-
-        // validate после enrichment потому что для FCC-ветки нужен MIDAS_BRANCH
-        if (validateAll(source, jId, xmlData) && enrichmentData(source, xmlData, jId)) {
-            // Вставка в таблицы
-            openAccounts(jId, source, xmlData);
-        }
-        log.info("Обработка одного сообщения завершена. cbAccount:" + xmlData.get("CBAccountNo"));
+        log.info("Обработка одного сообщения от " + hostABS + " завершена. cbAccount:" + xmlData.get("CBAccountNo"));
     }
 
     private Map<String, String> readFromXML(String bodyXML, Long jId, String[] paramNames) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
@@ -254,6 +194,117 @@ public class AccountDetailsNotifyProcessor implements Serializable {
         return topic;
     }
 
+    private void closeAccountAny(AcDNJournal.Sources source, String hostABS, String bsaacid, Map<String, String> xmlData, Long jId) throws SQLException, ParseException {
+        String closeDateXml = xmlData.get("CloseDate");
+        if (!isEmpty(bsaacid) && !isEmpty(hostABS) && !isEmpty(closeDateXml) && source.name().equals(hostABS)) {
+            DataRecord accRln = accRlnRepository.findByBsaacid(bsaacid);
+            if (accRln != null) {
+                boolean withGL = FC12.equals(source);
+                Date closeDate = sdf.parse(closeDateXml);
+                Date closeDateWas = accRln.getDate("drlnc");
+//                    if ((accRln.getDate("drlnc") == null ? "2029-01-01" : sdf.format(accRln.getDate("drlnc"))).equals("2029-01-01")) {
+                if (closeDateWas == null || getFinalDate().equals(closeDateWas)) {  // счет открыт, закрываем
+                    updateDateClose(bsaacid, closeDate, withGL);
+
+                    journalRepository.updateLogStatus(jId, PROCESSED, "Счет с bsaacid=" + bsaacid + " закрыт");
+                    auditController.info(AccountDetailsNotify, String.format("Счет с bsaacid = '%s' закрыт по нотификации от %s", bsaacid, source.name()));
+                } else if (!closeDate.equals(closeDateWas)) {
+                    journalRepository.updateLogStatus(jId, ERROR, String.format("Счет с bsaacid = '%s' уже закрыт ранее с датой '%s'. Дата закрытия изменена",
+                            bsaacid, DateUtils.onlyDate(closeDateWas)));
+                    auditController.info(AccountDetailsNotify, String.format("Изменена дата закрытия счета с bsaacid = '%s' по нотификации от %s", bsaacid, source.name()));
+                    return;
+                } else {
+                    journalRepository.updateLogStatus(jId, ERROR, String.format("Счет с bsaacid = '%s' уже закрыт ранее", bsaacid));
+                    return;
+                }
+            } else {
+                journalRepository.updateLogStatus(jId, ERROR, String.format("Счет с bsaacid = '%s' не существует ", bsaacid));
+                return;
+            }
+        } else {
+            journalRepository.updateLogStatus(jId, ERROR, "Ошибка в данных bsaacid / hostABS / closeDate");
+            return;
+        }
+    }
+
+    private void checkBranchFlex(AcDNJournal.Sources source, String hostABS, String bsaacid, Map<String, String> xmlData, Long jId) throws SQLException {
+        String branch = xmlData.get("Branch");
+        if (isEmpty(branch)) {
+            journalRepository.updateLogStatus(jId, ERROR, "Branch не задан");
+            return;
+        }
+
+        DataRecord recMidas = coreRepository.selectFirst("SELECT midas_branch FROM DH_BR_MAP where fcc_branch=?", branch);
+        DataRecord recGlacc = coreRepository.selectFirst("SELECT branch from gl_acc where bsaacid=?", bsaacid);
+
+        if (recMidas == null){
+            journalRepository.updateLogStatus(jId, ERROR, "Не найден DH_BR_MAP.fcc_branch = " + branch);
+            log.warn("Не найден DH_BR_MAP.fcc_branch = " + branch);
+            return;
+        }else if (recGlacc == null){
+            journalRepository.updateLogStatus(jId, ERROR, "Не найден gl_acc.bsaacid = " + bsaacid);
+            log.warn("Не найден gl_acc.bsaacid = " + bsaacid);
+            return;
+        }
+        String midasBranch = recMidas.getString(0);
+        String glaccBranch = recGlacc.getString(0);
+        if (midasBranch.equals(glaccBranch)){
+            journalRepository.updateLogStatus(jId, ERROR, "Branch не менялся");
+            auditController.info(AccountDetailsNotify, "Branch не менялся");
+        }else{
+            coreRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", midasBranch, bsaacid);
+            String msg = "На счете " + bsaacid + " branch " + glaccBranch + " заменен на " + midasBranch + "(" + branch + ")";
+            journalRepository.updateLogStatus(jId, PROCESSED, msg);
+            auditController.info(AccountDetailsNotify, msg);
+        }
+    }
+
+    private void updateDateClose(String bsaacid, Date dateClose, boolean withGL) {
+        coreRepository.executeNativeUpdate("UPDATE ACCRLN SET DRLNC=? WHERE BSAACID=?", dateClose, bsaacid);
+        coreRepository.executeNativeUpdate("UPDATE BSAACC SET BSAACC=? WHERE ID=?", dateClose, bsaacid);
+        if (withGL) {
+            coreRepository.executeNativeUpdate("UPDATE GL_ACC SET DTC=? WHERE BSAACID=?", dateClose, bsaacid);
+        }
+    }
+
+    private void processOpenFCC(AcDNJournal.Sources source, String hostABS, String bsaacid, Map<String, String> xmlData, Long jId) throws Exception {
+        if (FCC.equals(source) && !FCC.name().equals(hostABS)) {
+            journalRepository.updateLogStatus(jId, ERROR,
+                    "Не обрабатываем сообщение из " + source.name() + " c HostABS=" + hostABS);
+            return;
+        }
+
+        if (isEmpty(bsaacid)) {
+            journalRepository.updateLogStatus(jId, ERROR, "bsaacid не задан");
+            return;
+        }
+
+        if( bsaacid.startsWith("423") || bsaacid.startsWith("426") ){
+            journalRepository.updateLogStatus(jId, ERROR, "Депозитный счет " + bsaacid + " не открывается через сервис");
+            return;
+        }
+
+        String openDateXml = xmlData.get("OpenDate");
+        DataRecord accRln = accRlnRepository.findByBsaacid(bsaacid);
+
+        if (accRln != null) {
+            Date closeDateWas = accRln.getDate("drlnc");
+            if ((closeDateWas == null || ifEmpty(openDateXml, "").compareTo(sdf.format(closeDateWas)) <= 0)) {
+                journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " уже существует в ACCRLN");
+                return;
+            }
+        }
+        // Если FCC, то обогащение. Придумываем счёт MIDAS
+        // Если ошибка в процессе обогащения - вернётся false
+
+        // validate после enrichment потому что для FCC-ветки нужен MIDAS_BRANCH
+        if (validateAll(source, jId, xmlData) && enrichmentData(source, xmlData, jId)) {
+            // Вставка в таблицы
+            openAccountFCC(source, xmlData, jId);
+        }
+
+    }
+
     private boolean validateAll(AcDNJournal.Sources source, Long jId, Map<String, String> xmlData) throws Exception {
 //        try {
 //            if (!journalDataRepository.validateClientNum(source, accountList)) {
@@ -281,7 +332,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     }
 
     private boolean enrichmentData(AcDNJournal.Sources source, Map<String, String> xmlData, Long jId) throws Exception {
-        if (source.equals(AcDNJournal.Sources.FCC)) {
+        if (source.equals(FCC)) {
             xmlData.put("Special", "0000"); // От FCC значение ACOD переопределяем
 //            try {
             String midasBranch = journalDataRepository.selectMidasBranchByBranch(xmlData.get("Branch"));
@@ -329,7 +380,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
         return true;
     }
 
-    private void openAccounts(Long jId, AcDNJournal.Sources source, Map<String, String> xmlData) throws Exception {
+    private void openAccountFCC(AcDNJournal.Sources source, Map<String, String> xmlData, Long jId) throws Exception {
         AcDNJournal journal = journalRepository.findById(AcDNJournal.class, jId);
         if (journal.getStatus().equals(AcDNJournal.Status.ERROR)) {
             // Возможно нужно логировать

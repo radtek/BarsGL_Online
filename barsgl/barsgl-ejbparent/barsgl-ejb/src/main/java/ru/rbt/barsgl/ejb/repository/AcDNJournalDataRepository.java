@@ -93,7 +93,7 @@ public class AcDNJournalDataRepository extends AbstractBaseEntityRepository<AcDN
 
     public boolean validateBranch(AcDNJournal.Sources source, String branch) throws SQLException {
         DataRecord dataRecord;
-        if (source.equals(AcDNJournal.Sources.MIDAS_OPEN)) {
+        if (source.equals(AcDNJournal.Sources.MIDAS)) {
             dataRecord = selectFirst("SELECT * FROM IMBCBBRP WHERE A8BRCD=?", branch);
         } else {
             dataRecord = selectFirst("SELECT * FROM IMBCBBRP WHERE A8BRCD = (SELECT MIDAS_BRANCH FROM DH_BR_MAP WHERE FCC_BRANCH=?)", branch);

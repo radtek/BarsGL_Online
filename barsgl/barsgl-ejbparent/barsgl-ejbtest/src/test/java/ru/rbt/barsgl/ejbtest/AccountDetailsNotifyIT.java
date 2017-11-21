@@ -61,7 +61,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
                                         "mq.queueManager = " + MBROKER + "\n" +
                                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                                         "mq.batchSize = 7\n" +
-                                        "mq.topics = FCC_CLOSE:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF;MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                                        "mq.topics = FC12:UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF\n" +
                                         "mq.user=" + USERNAME + "\n" +
                                         "mq.password=" + PASSWORD + ""
                         )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -135,13 +135,14 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     @Test
+    @Ignore
     public void testMidas() throws Exception {
 
         baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
         baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
         baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, AccountDetailsNotifyProcessor.messageMidas, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS, AccountDetailsNotifyProcessor.messageMidas, null);
 
         // С проверкой заполнения ключевых полей
         assertTrue(null != baseEntityRepository.selectFirst(
@@ -209,7 +210,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40802810500014908835'");
         baseEntityRepository.executeNativeUpdate("delete from acc where id='00800458RUR400902065'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, error1, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS, error1, null);
 
         assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40802810500014908835"));
         assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40802810500014908835"));
@@ -221,7 +222,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
         String oldBranch = rec.getString(0);
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, closeEqualBranch, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, closeEqualBranch, null);
 
         if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908' and branch=?", new Object[]{oldBranch}))
             assertTrue(true);
@@ -239,7 +240,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         String errBranch = "054";
         baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID='40802810900014820908'", new Object[]{errBranch});
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, closeEqualBranch, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, closeEqualBranch, null);
 
         if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908' and branch=?", new Object[]{oldBranch})) {
             assertTrue(true);
