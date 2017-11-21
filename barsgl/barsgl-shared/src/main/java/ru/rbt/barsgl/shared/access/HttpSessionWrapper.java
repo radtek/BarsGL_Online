@@ -23,7 +23,7 @@ public class HttpSessionWrapper implements Serializable, IsSerializable {
     }
 
     public HttpSessionWrapper(String sessionId) {
-        this.sessionId = sessionId;
+        setSessionId(sessionId);
     }
 
     public String getUserName() {

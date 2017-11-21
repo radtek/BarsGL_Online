@@ -15,13 +15,9 @@ import javax.ejb.AccessTimeout;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.naming.InitialContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
@@ -60,28 +56,29 @@ public class SessionSupportBean {
         return repository.save(dbSession);
     }
 
-    public void unregisterHttpSession(HttpSessionWrapper httpSession) {
+    public boolean unregisterHttpSession(HttpSessionWrapper httpSession) {
         if (null != httpSession && null != httpSession.getSessionId()) {
-            log.info(format("Удалена сессия из локального хранилища %s",store.remove(httpSession)));
+            boolean clearStore = store.remove(httpSession);
+            log.info(format("Удалена сессия из локального хранилища %s", clearStore));
             int cnt = repository.executeUpdate("delete from AppHttpSession s where s.sessionId = ?1", httpSession.getSessionId());
             log.info(format("Удалено строк из БД хранилища сессий %s по session_id %s", cnt, httpSession.getSessionId()));
+            return cnt > 0 && clearStore;
         }
+        return false;
+    }
+
+    public boolean checkSessionInStore(String sessionId) {
+        return store.contains(new HttpSessionWrapper(sessionId));
     }
 
     public boolean invalidateSession(String sessionId) throws Exception {
-        HttpSessionWrapper target = store.stream().filter(a -> a.getSessionId().split("!")[0].equals(sessionId.split("!")[0])).findFirst().orElse(null);
-        if (null != target) {
-            repository.invalidateSession(sessionId);
-            return invalidateMbeanSession(sessionId);
-        }
-        return false;
+        return unregisterHttpSession(new HttpSessionWrapper(sessionId));
     }
 
     public void invalidateUserSessions(String userName) throws Exception {
         List<AppHttpSession> sessions = repository.select(AppHttpSession.class, "from AppHttpSession s where s.userName = ?1", userName);
         for (AppHttpSession session : sessions) {
             unregisterHttpSession(new HttpSessionWrapper(session.getSessionId()));
-            invalidateMbeanSession(session.getSessionId());
         }
     }
 
@@ -90,39 +87,7 @@ public class SessionSupportBean {
         List<AppHttpSession> sessions = repository.select(AppHttpSession.class, "from AppHttpSession s where s.sessionId <> ?1", null != sessionId ? sessionId : "-1");
         for (AppHttpSession session : sessions) {
             unregisterHttpSession(new HttpSessionWrapper(session.getSessionId()));
-            invalidateMbeanSession(session.getSessionId());
         }
-    }
-
-    private boolean invalidateMbeanSession(String sessionId) throws Exception {
-        InitialContext ctx = new InitialContext();
-        MBeanServer server = (MBeanServer)ctx.lookup("java:comp/env/jmx/runtime");
-        ObjectName webAppComponentRuntime = findWebAppComponentRuntime(server);
-        Assert.notNull(webAppComponentRuntime, "MBean is not found");
-        try {
-            String monitoringSessionId = (String) server.invoke(webAppComponentRuntime, "getMonitoringId", new Object[]{sessionId}, new String[]{"java.lang.String"});
-            server.invoke(webAppComponentRuntime, "invalidateServletSession", new Object[]{monitoringSessionId}, new String[]{"java.lang.String"});
-            log.info(format("Session '%s' is invalidated successfully", sessionId));
-        } catch (Exception e) {
-            log.log(Level.WARNING, format("Error on invalidating sessionId '%s' ", sessionId), e);
-            return false;
-        }
-        return true;
-    }
-
-    private ObjectName findWebAppComponentRuntime(MBeanServer server) throws Exception {
-        ObjectName srv0 = (ObjectName)server.getAttribute(new ObjectName("com.bea:Name=RuntimeService,Type=weblogic.management.mbeanservers.runtime.RuntimeServiceMBean"), "ServerRuntime");
-        ObjectName[] serverRT = (ObjectName[]) server.getAttribute(srv0, "ApplicationRuntimes");
-        for (ObjectName objsrvrt : serverRT) {
-            ObjectName[] compRT = (ObjectName[]) server.getAttribute(objsrvrt, "ComponentRuntimes");
-            for (ObjectName objcmprt : compRT) {
-                if ("WebAppComponentRuntime".equals(server.getAttribute(objcmprt, "Type"))
-                        && server.getAttribute(objcmprt, "Name").toString().contains("barsgl")) {
-                    return objcmprt;
-                }
-            }
-        }
-        return null;
     }
 
     private String getCurrentSessionId() {
