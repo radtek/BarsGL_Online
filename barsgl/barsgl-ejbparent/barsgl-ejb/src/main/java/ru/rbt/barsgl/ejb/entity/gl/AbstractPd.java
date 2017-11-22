@@ -1,12 +1,15 @@
 package ru.rbt.barsgl.ejb.entity.gl;
 
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.persistence.*;
 import java.util.Date;
+
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.rightPad;
 
 /**
  * Created by Ivan Sevastyanov
@@ -221,7 +224,7 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     }
 
     public void setAcid(String acid) {
-        this.acid = StringUtils.ifEmpty(acid, " ");
+        this.acid = ifEmpty(acid, rightPad(" ", 20, " "));
     }
 
     public void setBsaAcid(String bsaAcid) {

@@ -127,7 +127,7 @@
             <property name="eclipselink.target-server" value="WebLogic"/>
             <property name="eclipselink.logging.logger" value="ServerLogger"/>
             <property name="eclipselink.logging.session" value="true"/>
-            <property name="eclipselink.logging.level" value="FINE"/>
+            <property name="eclipselink.logging.level" value="INFO"/>
       <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
 
       <property name="hibernate.id.new_generator_mappings" value="true"/>              
@@ -137,8 +137,8 @@
       <property name = "hibernate.integration.envers.enabled" value = "false"/>
       <property name = "hibernate.listeners.envers.autoRegister" value = "false"/>
       <!--from documentation: used during performance testing only <property name = "hibernate.enable_specj_proprietary_syntax" value = "true"/>-->
-      <property name = "hibernate.show_sql" value = "true"/>
-      <property name = "hibernate.format_sql" value = "true"/>
+      <property name = "hibernate.show_sql" value = "false"/>
+      <property name = "hibernate.format_sql" value = "false"/>
       <property name = "hibernate.max_fetch_depth" value = "1"/>
       <property name = "hibernate.default_batch_fetch_size" value = "8"/>
 
@@ -163,7 +163,7 @@
             <property name="eclipselink.target-server" value="WebLogic"/>
             <property name="eclipselink.logging.logger" value="ServerLogger"/>
             <property name="eclipselink.logging.session" value="true"/>
-            <property name="eclipselink.logging.level" value="FINE"/>
+            <property name="eclipselink.logging.level" value="INFO"/>
       <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
 
       <property name="hibernate.id.new_generator_mappings" value="true"/>              
