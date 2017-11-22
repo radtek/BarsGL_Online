@@ -76,10 +76,10 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     @EJB
     private CoreRepository coreRepository;
 
-    static String[] paramNamesOpen = {"AccountNo", "Branch", "CBAccountNo", "Ccy", "CcyDigital", "Description", "Status",
-            "CustomerNo", "Special", "OpenDate", "Positioning/HostABS"};
+    static String[] paramNamesFCC = {"AccountNo", "Branch", "CBAccountNo", "Ccy", "CcyDigital", "Description", "Status",
+            "CustomerNo", "Special", "OpenDate", "CloseDate", "Positioning/HostABS"};
 
-    static String[] paramNamesClose = {"Branch", "CBAccountNo", "Status", "CloseDate", "Positioning/HostABS"};
+    static String[] paramNamesFC12 = {"Branch", "CBAccountNo", "Status", "CloseDate", "Positioning/HostABS"};
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -100,7 +100,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     }
 
     public void processFC12(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
-        Map<String, String> xmlData = readFromXML(incomingEnvelope, jId, paramNamesClose);
+        Map<String, String> xmlData = readFromXML(incomingEnvelope, jId, paramNamesFC12);
         if (xmlData == null) {
             // Запись в аудит, в таблицу аудита, в лог и возврат
             journalRepository.updateLogStatus(jId, ERROR, "Ошибка во время распознования XML");
@@ -122,7 +122,7 @@ public class AccountDetailsNotifyProcessor implements Serializable {
 
     public void processFCC(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
         // Преобразуем данные из сообщения
-        Map<String, String> xmlData = readFromXML(incomingEnvelope, jId, paramNamesOpen);
+        Map<String, String> xmlData = readFromXML(incomingEnvelope, jId, paramNamesFCC);
         if (xmlData == null) {
             // Запись в аудит, в таблицу аудита, в лог и возврат
             journalRepository.updateLogStatus(jId, ERROR, "Ошибка во время распознования XML");
