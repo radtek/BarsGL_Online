@@ -147,7 +147,9 @@ public abstract class LoginPolicy {
             if (isLimitAccessMode() && actions.stream().anyMatch(p -> p.equals(UserRestrictedAccess))) {
                 original.setLoginResultStatus(LIMIT);
             } else if (isLimitAccessMode()) {
-                original.setFailed("В системе установлен режим ограниченного доступа. Доступ в систему запрещен.");
+                original.setFailed("Внимание !!!\n" +
+                        "Временно приостановлена работа в системе.\n" +
+                        "О доступности системы будет сообщено дополнительно.");
             }
         }
     }
