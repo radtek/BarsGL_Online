@@ -68,7 +68,11 @@ public class SessionSupportBean {
     }
 
     public boolean checkSessionInStore(String sessionId) {
-        return store.contains(new HttpSessionWrapper(sessionId));
+        if (store.contains(new HttpSessionWrapper(sessionId))) {
+            repository.pingSession(sessionId);
+            return true;
+        }
+        return false;
     }
 
     public boolean invalidateSession(String sessionId) throws Exception {
