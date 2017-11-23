@@ -5,11 +5,12 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
+import ru.rbt.barsgl.shared.enums.AccessMode;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.shared.Assert;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.AccessTimeout;
@@ -174,10 +175,20 @@ public class OperdayController {
         operday.setPhase(orig.getPhase());
         operday.setPdMode(orig.getPdMode());
         operday.setProcessingStatus(orig.getProcessingStatus());
+        operday.setAccessMode(orig.getAccessMode());
     }
 
     private void initTimeService() {
         timeService = findAssignable(DataBaseTimeService.class, timeServices);
     }
 
+    @Lock(WRITE)
+    public Boolean swithAccessMode(AccessMode accessMode) throws Exception {
+        Assert.isTrue(1 == repository.executeUpdate("update Operday o set o.accessMode = ?1 where o.accessMode = ?2",
+                AccessMode.switchMode(accessMode), accessMode),
+                () -> new DefaultApplicationException(format("Неактуальный исходный режим доступа: %s", accessMode))
+        );
+        init();
+        return true;
+    }
 }

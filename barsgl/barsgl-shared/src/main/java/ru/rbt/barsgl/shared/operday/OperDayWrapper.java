@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.shared.operday;
 
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
 
 import java.io.Serializable;
@@ -17,6 +18,7 @@ public class OperDayWrapper implements Serializable {
     private String processingStatus;
     private Date currentODDate;
     private Date previosODDate;
+    private AccessMode accessMode;
 
     private OperDayButtons enabledButton;
 //    private COB_OKWrapper cobOkWrapper;
@@ -108,5 +110,13 @@ public class OperDayWrapper implements Serializable {
 
     public void setIsCOBRunning(Boolean isCOBRunning) {
         this.isCOBRunning = isCOBRunning;
+    }
+
+    public AccessMode getAccessMode() {
+        return accessMode;
+    }
+
+    public void setAccessMode(AccessMode accessMode) {
+        this.accessMode = accessMode;
     }
 }

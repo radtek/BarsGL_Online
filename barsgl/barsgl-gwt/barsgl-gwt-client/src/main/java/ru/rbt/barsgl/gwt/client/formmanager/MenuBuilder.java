@@ -26,6 +26,7 @@ import ru.rbt.barsgl.gwt.client.operBackValue.OperAuthBVForm;
 import ru.rbt.barsgl.gwt.client.operBackValue.OperNotAuthBVForm;
 import ru.rbt.barsgl.gwt.client.operBackValue.dict.BVDepthForm;
 import ru.rbt.barsgl.gwt.client.operBackValue.dict.BVPeriodClosingForm;
+import ru.rbt.barsgl.gwt.client.session.UserSession;
 import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.barsgl.gwt.client.operation.OperationPostingForm;
 import ru.rbt.barsgl.gwt.client.operationTemplate.OperationTemplateForm;
@@ -116,7 +117,6 @@ public class MenuBuilder implements IMenuBuilder {
     }
 
     private MenuItem createItem(UserMenuItemWrapper wrapper){
-        MenuItem item;
         switch (wrapper.getMenuCode()) {
             case SystemExit: return new MenuItem("Выход", false, new Command() {
                 @Override
@@ -158,12 +158,12 @@ public class MenuBuilder implements IMenuBuilder {
                 }
             });
 
-            case LoaderControl: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+          /*  case LoaderControl: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
                     formLoad(new FullLoaderControlForm());
                 }
-            });
+            });*/
 
             case Operday: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
@@ -431,6 +431,13 @@ public class MenuBuilder implements IMenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new BVDepthForm());
+                }
+            });
+
+            case UserSessions: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new UserSession());
                 }
             });
 

@@ -1,10 +1,13 @@
 package ru.rbt.barsgl.gwt.client.operday;
 
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -39,7 +42,6 @@ public class OperDayForm extends BaseForm {
 
     private Action refreshAction;
     private Action open_OD;
-//    private Action close_Balance_Previous_OD;
     private Action change_Phase_To_PRE_COB;
     private Action switchPdMode;
     private Action autoCloseAction;
@@ -49,6 +51,7 @@ public class OperDayForm extends BaseForm {
     private Label previousOD;
     private Label previousODBalanceStatus;
     private Label pdMode;
+    private Label acm;
 
     private Label reason;
     private Grid vip_errors;
@@ -59,6 +62,7 @@ public class OperDayForm extends BaseForm {
     private Label dateOD;
     private Label timeClose;
     private LwdBalanceCutWrapper lwdBalanceCutWrapper;
+    private AccessMode accessMode;
 
     public OperDayForm(){
         super();
@@ -73,7 +77,7 @@ public class OperDayForm extends BaseForm {
 
     public Widget getContent(){
         Label label;
-        Grid grid = new Grid(5, 2);
+        Grid grid = new Grid(6, 2);
 
         grid.getElement().getStyle().setMarginLeft(5, Style.Unit.PX);
         grid.getElement().getStyle().setMarginTop(10, Style.Unit.PX);
@@ -93,11 +97,15 @@ public class OperDayForm extends BaseForm {
         grid.setWidget(4, 0, label = new Label("Режим обработки проводок:"));
         label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
 
+        grid.setWidget(5, 0, label = new Label("Режим доступа:"));
+        label.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+
         grid.setWidget(0, 1, currentOD = new Label(""));
         grid.setWidget(1, 1, phaseCurrentOD = new Label(""));
         grid.setWidget(2, 1, previousOD = new Label(""));
         grid.setWidget(3, 1, previousODBalanceStatus = new Label(""));
         grid.setWidget(4, 1, pdMode = new Label(""));
+        grid.setWidget(5, 1, acm = new Label(""));
 
         grid.getCellFormatter().setWidth(0, 0, "285px");
 
@@ -106,11 +114,11 @@ public class OperDayForm extends BaseForm {
         abw.addAction(export2ExcelActtion());
 
         abw.addSecureAction(createOpenODAction(), SecurityActionCode.TskOdOpenRun);
-//        abw.addSecureAction(createCloseBalancePreviousODAction(), SecurityActionCode.TskOdBalCloseRun);
         abw.addSecureAction(createChangePhaseToPRE_COBAction(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(createSwitchPdMode(), SecurityActionCode.TskOdSwitchModeRun);
         abw.addSecureAction(createMonitoring(), SecurityActionCode.TskOdPreCobRun);
         abw.addSecureAction(autoCloseAction = createAutoCloseODAction(), SecurityActionCode.TskOdBalCloseRun);
+        abw.addSecureAction(createSwitchAccessModeAction(), SecurityActionCode.TskOdAccessModeSwitch);
 
         refreshAction.execute();
 
@@ -124,8 +132,6 @@ public class OperDayForm extends BaseForm {
         vp.add(vip_errors = createVipErrorInfo());
         vp.add(createAutoClosePreviousODInfo());
         panel.add(vp);
-
-
 
         return panel;
     }
@@ -202,12 +208,9 @@ public class OperDayForm extends BaseForm {
         not_vip.setText("");
         vip_errors.setVisible(false);
 
-//        COB_OKWrapper wrapper = operDayWrapper.getCobOkWrapper();
         if (wrapper == null) return;
 
         reason.setText(wrapper.getReason() == null ? "" : wrapper.getReason().toString());
-//        vip.setText(wrapper.getVipCount() == null ? "" :
-//                (wrapper.getVipCount() == 0 ? "0 (OK)" : wrapper.getVipCount().toString()));
         vip.setText(wrapper.getVipCount() == null || wrapper.getVipCount() == 0 ? "0 (OK)" : wrapper.getVipCount().toString());
 
         not_vip.setText(wrapper.getNotVipCount() == null ? "0 (OK)" :
@@ -222,14 +225,16 @@ public class OperDayForm extends BaseForm {
         previousOD.setText(operDayWrapper.getPreviousOD());
         previousODBalanceStatus.setText(operDayWrapper.getPreviousODBalanceStatus());
         pdMode.setText(operDayWrapper.getPdMode());
+        accessMode = operDayWrapper.getAccessMode();
+        acm.getElement().getStyle().setColor(accessMode == AccessMode.FULL ? "#000000" : "#FF0000");
+        acm.getElement().getStyle().setFontWeight(accessMode == AccessMode.FULL ? Style.FontWeight.NORMAL :  Style.FontWeight.BOLD);
+        acm.setText(accessMode.getLabel());
 
         setButtonsEnabled(operDayWrapper.getEnabledButton());
-//        setCOB_OKInfo(operDayWrapper);
     }
 
     private void setButtonsEnabled(OperDayButtons button){
         open_OD.setEnable(button == OperDayButtons.OPEN_OD);
-//        close_Balance_Previous_OD.setEnable(button == OperDayButtons.CLOSE_BALANCE_PREVIOUS_OD);
         change_Phase_To_PRE_COB.setEnable(button == OperDayButtons.CHANGE_PHASE_TO_PRE_COB);
         switchPdMode.setEnable(true);
     }
@@ -240,7 +245,6 @@ public class OperDayForm extends BaseForm {
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
                 autoCloseAction.setEnable(false);
-//                WaitingManager.show("TEXT_CONSTANTS.waitMessage_Load()");
 
                 CommonEntryPoint.operDayService.getOperDay(new AuthCheckAsyncCallback<RpcRes_Base<OperDayWrapper>>() {
                     @Override
@@ -264,8 +268,6 @@ public class OperDayForm extends BaseForm {
                 BarsGLEntryPoint.operDayService.getCOB_OK(new AuthCheckAsyncCallback<RpcRes_Base<COB_OKWrapper>>() {
                     @Override
                     public void onFailureOthers(Throwable throwable) {
-//                        WaitingManager.hide();
-
                         Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
                     }
 
@@ -276,7 +278,6 @@ public class OperDayForm extends BaseForm {
                         } else {
                             setCOB_OKInfo(res.getResult());
                         }
-//                        WaitingManager.hide();
                     }
                 });
 
@@ -341,39 +342,6 @@ public class OperDayForm extends BaseForm {
         };
     }
 
-/*
-    private Action createCloseBalancePreviousODAction(){
-        return close_Balance_Previous_OD = new Action("Закрытие баланса предыдущего ОД", "", null, 5) {
-            @Override
-            public void execute() {
-                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                BarsGLEntryPoint.operDayService.runCloseLastWorkdayBalanceTask(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
-                    @Override
-                    public void onFailureOthers(Throwable throwable) {
-                        WaitingManager.hide();
-
-                        Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
-                    }
-
-                    @Override
-                    public void onSuccess(RpcRes_Base<Boolean> res) {
-                        WaitingManager.hide();
-
-                        if (res.isError()) {
-                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
-                        } else {
-                            refreshAction.execute();
-                            close_Balance_Previous_OD.setEnable(false);
-                            DialogManager.message("Инфо", "Задание 'Закрытие баланса предыдущего ОД' выполнено.\n" +
-                                    "Для обновления информации нажмите 'Обновить'. ");
-                        }
-                    }
-                });
-            }
-        };
-    }
-*/
-
     private Action createChangePhaseToPRE_COBAction(){
         return change_Phase_To_PRE_COB = new Action("Закрытие баланса предыдущего ОД и перевод фазы в PRE_COB", "", null, 5) {
             @Override
@@ -396,8 +364,6 @@ public class OperDayForm extends BaseForm {
                         } else {
                             refreshAction.execute();
                             change_Phase_To_PRE_COB.setEnable(false);
-//                            DialogManager.message("Инфо", "Задание 'Перевод фазы в PRE_COB' выполнено.\n" +
-//                                    "Для обновления информации нажмите 'Обновить'.");
                             DialogManager.message("Инфо", res.getMessage());
                         }
                     }
@@ -516,12 +482,49 @@ public class OperDayForm extends BaseForm {
                         if (result.isError()) {
                             DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + result.getMessage());
                         } else {
-                            //Window.alert(result.getResult().toString());
                             Window.alert(result.getMessage());
                         }
                         WaitingManager.hide();
                     }
                 });
+            }
+        };
+    }
+
+    private Action createSwitchAccessModeAction(){
+        return switchPdMode = new Action("Переключение режима доступа", "", null, 5) {
+            @Override
+            public void execute() {
+                DialogManager.confirm("Переключение режима доступа", Utils.Fmt("Подтверждаете установку режима {0} доступа?",
+                        accessMode == AccessMode.FULL ? "ограниченного" : "полного"), "Да", "Нет", new ClickHandler() {
+                    @Override
+                    public void onClick(ClickEvent clickEvent) {
+                        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                        OperDayWrapper wrapper = new OperDayWrapper();
+                        wrapper.setAccessMode(accessMode);
+                        BarsGLEntryPoint.operDayService.switchAccessMode(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+
+                            @Override
+                            public void onSuccess(RpcRes_Base<Boolean> res) {
+                                WaitingManager.hide();
+
+                                if (res.isError()) {
+                                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                                } else {
+                                    refreshAction.execute();
+                                    if (res.getResult() == false) {
+                                        DialogManager.error("Ошибка", "Операция изменения режима доступа не удалась");
+                                    } else {
+                                        DialogManager.message("Инфо", Utils.Fmt("Режим доступа изменен на {0}",
+                                                accessMode == AccessMode.FULL ? "ограниченный" : "полный"));
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }, null);
+
+
             }
         };
     }

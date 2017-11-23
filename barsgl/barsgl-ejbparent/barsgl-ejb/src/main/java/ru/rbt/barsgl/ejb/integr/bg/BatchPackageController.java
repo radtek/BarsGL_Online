@@ -111,7 +111,7 @@ public class BatchPackageController {
             String msg = "Ошибка обработки пакета ID = " + wrapper.getPkgId();
             String errorMsg = wrapper.getErrorMessage();
             if (!isEmpty(errorMsg)) {
-                auditController.error(BatchOperation, msg + ": " + errorMsg, null, e);
+                auditController.warning(BatchOperation, msg + ": " + errorMsg, null, e);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
                 auditController.error(BatchOperation, msg, null, e);
@@ -124,7 +124,8 @@ public class BatchPackageController {
         Long id = wrapper.getPkgId();
         final BatchPackage pkg = packageRepository.findById(id);
         if (null == pkg ) {
-                throw new DefaultApplicationException("Не найден пакет с Id = " + id + ". Обновите информацию");
+            wrapper.getErrorList().addErrorDescription("Не найден пакет с Id = " + id + ". Обновите информацию");
+            throw new DefaultApplicationException(wrapper.getErrorMessage());
         }
         Set<BatchPackageState> states = new HashSet<BatchPackageState>();
         if (packageState != null) {// !packageState.equals(pkg.getPackageState())) {

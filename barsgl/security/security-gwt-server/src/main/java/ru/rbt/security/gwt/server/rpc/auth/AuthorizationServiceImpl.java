@@ -1,21 +1,23 @@
 package ru.rbt.security.gwt.server.rpc.auth;
 
 
-import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
+import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.LoginParams;
-import ru.rbt.shared.LoginResult;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.shared.access.UserMenuWrapper;
+import ru.rbt.barsgl.shared.access.HttpSessionWrapper;
 import ru.rbt.barsgl.shared.dict.FormAction;
+import ru.rbt.gwt.security.ejb.AuthorizationServiceGwtSupport;
+import ru.rbt.shared.LoginResult;
+import ru.rbt.shared.access.UserMenuWrapper;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
-import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
+import java.util.Date;
 
 import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_LOGIN_RESULT;
 import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_NAME;
@@ -29,14 +31,22 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
     @Override
     public LoginResult login(String user, String password) throws Exception {
         HttpServletRequest request = getThreadLocalRequest();
-        GwtServerUtils.setUserRequest(new UserRequestHolder(user, null != request ? request.getRemoteAddr() : ""));
+        UserRequestHolder requestHolder = new UserRequestHolder(user, null != request ? request.getRemoteAddr() : "");
+        GwtServerUtils.setUserRequest(requestHolder);
         try {
             LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "login", user, password);
             if (null != request){
                 HttpSession httpSession = request.getSession(true);
-                LoginParams params = new LoginParams(result.getUserName(), result.getUserType(), request.getRemoteAddr());
+                LoginParams params = new LoginParams(result.getUserName(), result.getUserType(), request.getRemoteAddr(), httpSession.getId());
                 httpSession.setAttribute(USER_NAME.getPath(), params);  // user
                 httpSession.setAttribute(USER_LOGIN_RESULT.getPath(), result);  // login result
+
+                requestHolder.setDynamicValue(USER_LOGIN_RESULT.getPath(), params);
+
+                if (result.isSucceeded()) {
+                    localInvoker.invoke("ru.rbt.barsgl.ejb.monitoring.SessionSupportBean", "registerHttpSession",
+                            HttpSessionWrapper.createWrapper(httpSession.getId(), user, new Date(httpSession.getCreationTime()), new Date(httpSession.getCreationTime())));
+                }
                 return result;
             } else {
                 throw new RuntimeException("Request is not initialized");
@@ -66,7 +76,7 @@ public class AuthorizationServiceImpl extends AbstractGwtService implements Auth
         HttpSession httpSession = getThreadLocalRequest().getSession(true);
         LoginParams params = (LoginParams) httpSession.getAttribute(USER_NAME.getPath());
         if (params == null) {
-            params = new LoginParams("Not authorized user", "no type", "no host");
+            params = LoginParams.createNotAuthorizedLoginParams();
         }
         
         LoginResult result = localInvoker.invoke(AuthorizationServiceGwtSupport.class, "logoff", params.getUserName());

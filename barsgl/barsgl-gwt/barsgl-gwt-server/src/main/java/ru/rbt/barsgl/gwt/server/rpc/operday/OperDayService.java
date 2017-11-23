@@ -40,5 +40,6 @@ public interface OperDayService extends RemoteService {
 
         RpcRes_Base<TimerJobHistoryWrapper> runExecutePreCOBTask() throws Exception;
 
+        RpcRes_Base<Boolean> switchAccessMode(OperDayWrapper wrapper) throws Exception;
 }
 

@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat;
 /**
  * Created by akichigi on 23.03.15.
  */
-public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDayInfoService{
+public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDayInfoService {
 
     @Override
     public RpcRes_Base<OperDayWrapper> getOperDay() throws Exception {
@@ -38,6 +38,7 @@ public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDa
                 wrapper.setPreviousOD(new SimpleDateFormat("dd.MM.yyyy").format(od.getLastWorkingDay()));
                 wrapper.setPreviousODBalanceStatus(status.getLabel());
                 wrapper.setPdMode(od.getPdMode().name() + " (" + od.getPdMode().getLabel() + ")");
+                wrapper.setAccessMode(od.getAccessMode());
 
                 OperDayButtons buttonStatus = OperDayButtons.NONE;
 
@@ -71,9 +72,7 @@ public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDa
             }
         }.process();
     }
-    
+
     protected void additionalAction(OperDayWrapper wrapper) throws Exception {
-        //empty
     }
-    
 }

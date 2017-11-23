@@ -33,7 +33,7 @@ public class UserRequestHolder implements Serializable {
         this.user = user;
     }
 
-    public <T extends Serializable> void setDynamicValue(String key, T value) {
+    public void setDynamicValue(String key, Serializable value) {
         dynamicStore.put(key, value);
     }
 
@@ -59,6 +59,10 @@ public class UserRequestHolder implements Serializable {
 
     public void setUserWrapper(AppUserWrapper userWrapper) {
         this.userWrapper = userWrapper;
+    }
+
+    public boolean isEmptyHolder() {
+        return null == user || "".equals(user);
     }
 
 }

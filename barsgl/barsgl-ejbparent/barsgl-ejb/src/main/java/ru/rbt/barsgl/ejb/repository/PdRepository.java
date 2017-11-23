@@ -156,7 +156,7 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
             pd.setCtype(getCtype(bsaAcid, data.getString("PLCODE"), data.getInteger("CTYPE")));
         }
 
-        String pref = getPref(operation);
+        String pref = ifEmpty(getPref(operation), " ");
         pd.setPnar(getPnar(operation, pref));
 
         // PDEXT

@@ -164,4 +164,7 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"link_break.png"})
     public abstract ImageResource link_break();
 
+    @ClientBundle.Source({"male.png"})
+    public abstract ImageResource male();
+
 }

@@ -79,11 +79,11 @@ public class BackvalueJournalController {
         return processRecalcException(connection -> {
             final int[] count = {0};
             List<DataRecord> journal = journalRepository
-                    .select("select min(pod) min_pod, bsaacid, acid \n" +
+                    .selectMaxRows("select min(pod) min_pod, bsaacid, acid \n" +
                     " from gl_bvjrnl j \n" +
                     "where state = ? \n" +
                     "group by bsaacid, acid \n" +
-                    "order by 1,2,3", BackvalueJournalState.NEW.name());
+                    "order by 1,2,3", 20000, new Object[]{BackvalueJournalState.NEW.name()});
             if (!journal.isEmpty()) {
                 auditController.info(Task, format("Начало пересчета/локализации. Записей в журнале BACKVALUE: '%s'", journal.size()));
             } else {

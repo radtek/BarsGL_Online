@@ -57,9 +57,8 @@ import java.util.*;
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
-import static ru.rbt.ejbcore.util.StringUtils.*;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
-import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.rightPad;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
@@ -97,10 +96,10 @@ public abstract class AbstractRemoteIT  {
 
     static {
         try {
-            Context ctx = new InitialContext();
             Properties prop = new Properties();
             prop.load(AbstractRemoteIT.class.getResourceAsStream("/ejbname.properties"));
-            //remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");            
+            Context ctx = new InitialContext(prop);
+            //remoteAccessInternal = (ServerAccess) ctx.lookup("ServerAccessBean#ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBRemote");
             remoteAccessInternal = (ServerAccess) ctx.lookup(prop.getProperty("ejbname"));            
             remoteAccess = new ServiceAccessSupport() {
                 @Override

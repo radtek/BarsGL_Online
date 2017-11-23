@@ -12,6 +12,5 @@ import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 public interface OperDayInfoService extends RemoteService {
 
         RpcRes_Base<OperDayWrapper> getOperDay() throws Exception;
-        
 }
 

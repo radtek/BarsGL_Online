@@ -19,7 +19,8 @@
                 <include>**/logging.properties</include>
                 <include>**/web.xml</include>
                 <include>**/*.jsp</include>
-            </includes>            
+                <include>**/weblogic.xml</include>
+            </includes>
         </fileSet>
         <fileSet>
             <directory>src/main/resources</directory>

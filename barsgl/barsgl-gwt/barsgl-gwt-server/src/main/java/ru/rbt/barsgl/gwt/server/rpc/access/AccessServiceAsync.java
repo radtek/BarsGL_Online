@@ -19,4 +19,7 @@ public interface AccessServiceAsync {
     void getActionsByGroupId(int groupId, AsyncCallback<RpcRes_Base<ArrayList<ActionWrapper>>> callback);
     void getAccessRights(int userId, AsyncCallback<RpcRes_Base<AccessRightsWrapper>> callback);
     void setAccessRights(AccessRightsWrapper wrapper, AsyncCallback<RpcRes_Base<AccessRightsWrapper>> callback);
+    void killAllSession(AsyncCallback<RpcRes_Base<Boolean>> callback);
+    void killSessionById(String id, AsyncCallback<RpcRes_Base<Boolean>> callback);
+    void killSessionByName(String name, AsyncCallback<RpcRes_Base<Boolean>> callback);
 }

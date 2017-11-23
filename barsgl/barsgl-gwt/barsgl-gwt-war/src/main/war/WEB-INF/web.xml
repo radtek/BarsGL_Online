@@ -7,6 +7,10 @@
         <welcome-file>BarsGL.html</welcome-file>
     </welcome-file-list>
 
+    <listener>
+        <listener-class>ru.rbt.barsgl.gwt.server.service.AppSessionListener</listener-class>
+    </listener>
+
     <servlet>
         <servlet-name>AuthorizationServiceImpl</servlet-name>
         <servlet-class>ru.rbt.security.gwt.server.rpc.auth.AuthorizationServiceImpl</servlet-class>
