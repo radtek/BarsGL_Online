@@ -210,6 +210,8 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
                     throw new RuntimeException(t);
                 }
             }
+        } catch (NotAuthorizedUserException target) {
+            throw target;
         } catch (Throwable target) {
             localInvoker.invoke(AuditController.class, methodName, AuditRecord.LogCode.User, message + ": " + sql, null, t);
             throw target;
