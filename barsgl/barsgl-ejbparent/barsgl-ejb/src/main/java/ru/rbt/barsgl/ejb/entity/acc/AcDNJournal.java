@@ -13,7 +13,8 @@ import java.util.Date;
 @SequenceGenerator(name = "AcDNJournalIdSeq", sequenceName = "GL_ACDENO_SEQ", allocationSize = 1)
 public class AcDNJournal extends BaseEntity<Long> {
 
-    public enum Sources {MIDAS_OPEN, FCC, FCC_CLOSE}
+//    public enum Sources {MIDAS_OPEN, FCC, FCC_CLOSE}      // старый вариант
+    public enum Sources {@Deprecated  MIDAS, FCC, FC12}
     public enum Status {RAW,PARSED,VALIDATED,ENRICHED,PROCESSED,ERROR}
 
     @Id

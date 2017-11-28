@@ -262,6 +262,10 @@ public class AccountDetailsNotifyTask implements ParamsAwareRunnable {
         String[] parts = mqTopic.split(":");
 
         AcDNJournal.Sources source = AcDNJournal.Sources.valueOf(parts[0]);// "FCC".equals(parts[0]) ? AcDNJournal.Sources.FCC : AcDNJournal.Sources.MIDAS_OPEN;
+        if (null == source) {
+            auditController.error(AccountDetailsNotify, "Ошибка при подключении сервиса AccountDetailsNotify", null, String.format("Неверный параметр topik: '%s'", parts[0]));
+            return;
+        }
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + parts[1]);
         receiver = (MQQueueReceiver) session.createReceiver(queue);
 
@@ -280,6 +284,10 @@ public class AccountDetailsNotifyTask implements ParamsAwareRunnable {
         String[] parts = mqTopic.split(":");
 
         AcDNJournal.Sources source = AcDNJournal.Sources.valueOf(parts[0]);// "FCC".equals(parts[0]) ? AcDNJournal.Sources.FCC : AcDNJournal.Sources.MIDAS_OPEN;
+        if (null == source) {
+            auditController.error(AccountDetailsNotify, "Ошибка при подключении сервиса AccountDetailsNotify", null, String.format("Неверный параметр topik: '%s'", parts[0]));
+            return;
+        }
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + parts[1]);
         receiver = (MQQueueReceiver) session.createReceiver(queue);
         MQQueueBrowser browser = (MQQueueBrowser) session.createBrowser(queue);

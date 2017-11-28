@@ -37,7 +37,7 @@ public class AccountQueryProcessorIT extends AbstractRemoteIT {
         });
         
         String value = remoteAccess.invoke(AccountQueryProcessor.class, "process", testRequest, currencyMap, currencyNBDPMap, 0L, true);
-        
+
         logger.log(Level.INFO, "Return value: {0}", value);
         Assert.assertNotNull(value);
     }

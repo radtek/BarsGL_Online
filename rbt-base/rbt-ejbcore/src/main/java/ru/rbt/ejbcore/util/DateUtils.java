@@ -16,6 +16,21 @@ public class DateUtils {
     private final SimpleDateFormat fullDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss SSS z Z");
     private final static SimpleDateFormat timeDate = new SimpleDateFormat("dd.MM.yy HH:mm:ss.SSS");
 
+    private static final String finalDateStr = "2029-01-01";
+    private static final Date finalDate = parseFinalDate();
+
+    private static Date parseFinalDate() {
+        try {
+            return databaseDate.parse(finalDateStr);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
+    public static Date getFinalDate() {
+        return finalDate;
+    }
+
     static public Date addDay(Date d, int days){
         return new Date(d.getTime() + (1000 * 60 * 60 * 24 * days));
     }
@@ -67,7 +82,7 @@ public class DateUtils {
         return null == dateStr ? null : databaseDate.parse(dateStr);
     }
 
-    public Date addDays(Date date, int days) {
+    public static Date addDays(Date date, int days) {
         return org.apache.commons.lang3.time.DateUtils.addDays(date, days);
     }
 
@@ -96,5 +111,23 @@ public class DateUtils {
         }
     }
 
+    public static SimpleDateFormat getDatabaseDate() {
+        return databaseDate;
+    }
 
+    public SimpleDateFormat getOnlyDate() {
+        return onlyDate;
+    }
+
+    public SimpleDateFormat getFullDateFormat() {
+        return fullDateFormat;
+    }
+
+    public static SimpleDateFormat getTimeDate() {
+        return timeDate;
+    }
+
+    public static String getFinalDateStr() {
+        return finalDateStr;
+    }
 }

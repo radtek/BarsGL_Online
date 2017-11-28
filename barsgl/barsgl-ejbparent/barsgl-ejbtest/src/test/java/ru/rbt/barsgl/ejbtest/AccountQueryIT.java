@@ -6,12 +6,19 @@ import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueProcessor4;
+import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
@@ -22,6 +29,31 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 public class AccountQueryIT extends AbstractTimerJobIT {
 
     public static final Logger logger = Logger.getLogger(AccountQueryIT.class.getName());
+
+
+    @Test
+    public void testTaskMT() throws Exception {
+        SingleActionJob job =
+                SingleActionJobBuilder.create()
+                        .withClass(AccountQueryTaskMT.class)
+                        .withName("AccountQuery5")
+                        .withProps(
+                                "mq.batchSize = 30\n" + //todo
+                                        "mq.host = vs338\n" +
+                                        "mq.port = 1414\n" +
+                                        "mq.queueManager = QM_MBROKER10_TEST\n" +
+                                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
+                                        "mq.topics = " +
+                                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                                        "mq.user=user\n" +
+                                        "mq.password=passw\n"+
+                                        "unspents=show\n"+
+                                        "writeOut=true"
+                        )
+                        .build();
+        jobService.executeJob(job);
+
+    }
 
     @Test
     @Ignore
@@ -52,7 +84,7 @@ mq.password=UsATi8hU
  */
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryBAProcessor.fullTopicTestB);        
-        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST",new File("c:\\develop\\Projects\\er21775\\task53\\AccountListQuery-Simple.xml"));
+//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST",new File("c:\\develop\\Projects\\er21775\\task53\\AccountListQuery-Simple.xml"));
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST",new File("C:\\Projects\\task53\\AccountListQuery-Simple.xml"));
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B1"));
 //        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B2"));
@@ -82,6 +114,8 @@ mq.password=UsATi8hU
         jobService.executeJob(job);
 */
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
+        File file = new File(BatchMessageIT.class.getClassLoader().getResource("AccountQueryProcessorTest.xml").getFile());
+        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST", file);
         receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE");
         System.out.println();
 

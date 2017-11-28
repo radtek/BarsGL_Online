@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
-import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.entity.acc.AccCardId;
@@ -12,6 +11,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.operation.CardReportWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 
@@ -26,13 +26,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import static ru.rbt.ejbcore.util.DateUtils.getFinalDate;
+
 /**
  * Created by er18837 on 18.08.2017.
  */
 public class CardReportController {
-    private final static SimpleDateFormat databaseDate = new SimpleDateFormat("yyyy-MM-dd");
-    private final static String finalDateStr = "2029-01-01";
-    private final Date finalDate = getFinalDate();
+    public static final Date finalDate = getFinalDate();
 
     @Inject
     private AccCardRepository cardRepository;
@@ -154,7 +154,7 @@ public class CardReportController {
     }
 
     public String getReportSqlOld(Date dat, String filial) {
-        String dateStr = databaseDate.format(dat);
+        String dateStr = DateUtils.getDatabaseDate().format(dat);
         return String.format(
                 "select a.branch" +
                 "     , sum((coalesce(b.obac,0) + coalesce(b.dtac,0) + coalesce(b.ctac,0) + coalesce(c.dtac, 0) + coalesce(c.ctac,0)) * 0.01) as sum" +
@@ -170,7 +170,7 @@ public class CardReportController {
     }
 
     public String getReportSqlNew(Date dat, String filial) {
-        String dateStr = databaseDate.format(dat);
+        String dateStr = DateUtils.getDatabaseDate().format(dat);
         return String.format(
                 "select a.branch" +
                 "     , sum(coalesce(a.obac,0) + coalesce(a.dtct,0)) as sum" +
@@ -179,14 +179,6 @@ public class CardReportController {
                 "    where a.cbcc = '%s' and a.dat <= '%s' and a.datto >= '%s'" +
                 " group by a.ccy, a.branch, a.card" // + " order by a.card, a.branch, a.ccy"
                 , filial, dateStr, dateStr);
-    }
-
-    private Date getFinalDate() {
-        try {
-            return databaseDate.parse(finalDateStr);
-        } catch (ParseException e) {
-            return null;
-        }
     }
 
     public String getErrorMessage(Throwable throwable) {
