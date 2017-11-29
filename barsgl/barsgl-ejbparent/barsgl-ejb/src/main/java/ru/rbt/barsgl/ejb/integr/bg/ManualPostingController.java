@@ -333,11 +333,12 @@ public class ManualPostingController {
     public RpcRes_Base<ManualOperationWrapper> updateOperationRq(ManualOperationWrapper wrapper, BatchPostStatus newStatus) throws Exception {
         try {
             checkUserPermission(wrapper);
-            checkAccDeals(wrapper);
+            validateOperationRq(wrapper);
             //Проверка на deal subdeal
-            if (newStatus.equals(BatchPostAction.UPDATE) || newStatus.equals(BatchPostAction.UPDATE_CONTROL)){
-                checkAccDeals(wrapper);
-            }
+            checkAccDeals(wrapper);
+//            if (newStatus.equals(BatchPostAction.UPDATE) || newStatus.equals(BatchPostAction.UPDATE_CONTROL)){
+//                checkAccDeals(wrapper);       // вроде лишнее
+//            }
 
             //Контроль остатков по счёту
             if (newStatus==CONTROL) {

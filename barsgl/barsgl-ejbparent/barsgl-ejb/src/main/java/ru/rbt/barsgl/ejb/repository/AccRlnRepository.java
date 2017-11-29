@@ -181,9 +181,8 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
     public GlAccRln findAccRlnAccount(String bsaAcid) {
         try {
             DataRecord data = selectFirst("SELECT * FROM ACCRLN R WHERE R.BSAACID = ? ORDER BY R.DRLNC DESC", bsaAcid);
-            String acid = data.getString("ACID");
 
-            return (null == data) ? null : findById(GlAccRln.class, new AccRlnId(acid, bsaAcid));
+            return (null == data) ? null : findById(GlAccRln.class, new AccRlnId(data.getString("ACID"), bsaAcid));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
