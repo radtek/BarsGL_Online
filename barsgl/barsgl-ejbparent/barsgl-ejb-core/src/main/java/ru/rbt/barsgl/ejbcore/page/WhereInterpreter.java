@@ -135,6 +135,15 @@ public class WhereInterpreter {
     }
 
     private static String getColumnName(final CriterionColumn criterionColumn, String alias) {
-        return !isEmpty(alias) ? alias + "." + criterionColumn.getColumn() : criterionColumn.getColumn();
+        return !isEmpty(alias) ? addAlias(criterionColumn.getColumn(), alias) : criterionColumn.getColumn();
+    }
+
+    private static String addAlias(String col, String alias) {
+       if(col.toUpperCase().startsWith("TRUNC(") && col.endsWith(")")) {
+          //костыль для обработки TIMESTAMP (see FilterItem.java)
+          String tmp = col.substring(6, col.length()-1);
+          return String.join("", "TRUNC(", alias,  "." , tmp, ")");
+        }
+        return String.join("", alias, ".", col);
     }
 }
