@@ -72,6 +72,9 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
                         if (null != history) {
                             updateJobStatus(history, ERROR);
                         }
+                    } finally {
+                        properties.remove(HISTORY_ID.name());
+                        properties.setProperty(HISTORY_ID.name(), null);
                     }
                 } else
                 if (null != history && history.isRunning()) {
