@@ -74,7 +74,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
                         }
                     } finally {
                         properties.remove(HISTORY_ID.name());
-                        properties.setProperty(HISTORY_ID.name(), null);
+                        properties.setProperty(HISTORY_ID.name(), "");
                     }
                 } else
                 if (null != history && history.isRunning()) {
@@ -172,7 +172,12 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
      * @return
      */
     protected JobHistory getPreinstlledJobHistory(Properties properties) {
-        Long historyId = Long.parseLong(Optional.ofNullable(properties.getProperty(JobHistoryContext.HISTORY_ID.name())).orElse("-1"));
+        Long historyId;
+        try {
+            historyId = Long.parseLong(Optional.ofNullable(properties.getProperty(JobHistoryContext.HISTORY_ID.name())).orElse("-1"));
+        } catch (NumberFormatException e) {
+            historyId = -1L;
+        }
         if (0 < historyId) {
             return Assert.notNull(jobHistoryRepository.findById(JobHistory.class, historyId)
                     , format("Не найдена запись истории запуска с ИД: '%s'", historyId));
