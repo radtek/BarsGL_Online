@@ -112,7 +112,7 @@ public class OvpUnloadTask implements ParamsAwareRunnable {
 
     private void updateHeaderState(long headerId, DwhUnloadStatus status) throws Exception {
         repository.executeInNewTransaction(persistence -> {
-            repository.executeNativeUpdate("update GL_OCPTDS set parvalue = ? where id_key = ?", status.getFlag(), headerId);
+            repository.executeNativeUpdate("update GL_OCPTDS set parvalue = ?, end_load = systimestamp where id_key = ?", status.getFlag(), headerId);
             return null;
         });
     }
