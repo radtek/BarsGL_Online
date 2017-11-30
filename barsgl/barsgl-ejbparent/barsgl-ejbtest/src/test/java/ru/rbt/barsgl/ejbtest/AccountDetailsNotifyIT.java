@@ -33,9 +33,9 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     public static final String MBROKER = "QM_MBROKER10_TEST";
     
     public static final String HOST_NAME = "vs338";
-    public static final String USERNAME = "er22228";
-    public static final String PASSWORD = "Vugluskr4";
-    
+    public static final String USERNAME = "srvwbl4mqtest";   //"er22228";
+    public static final String PASSWORD = "UsATi8hU";   //"Vugluskr4";
+
 //    public static final String HOST_NAME = "localhost";
 //    public static final String USERNAME = "";
 //    public static final String PASSWORD = "";
@@ -147,7 +147,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
         baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS, AccountDetailsNotifyProcessor.messageMidas, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, AccountDetailsNotifyProcessor.messageMidas, null);
 
         // С проверкой заполнения ключевых полей
         assertTrue(null != baseEntityRepository.selectFirst(
@@ -215,7 +215,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40802810500014908835'");
         baseEntityRepository.executeNativeUpdate("delete from acc where id='00800458RUR400902065'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS, error1, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, error1, null);
 
         assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40802810500014908835"));
         assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40802810500014908835"));
@@ -232,7 +232,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
             reopenAccount(bsaacid);
         }
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, notifyFC12Close, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, notifyFC12Close, null);
 
         checkCloseDate(bsaacid, getDatabaseDate().parse(closeDateStr), true);
     }

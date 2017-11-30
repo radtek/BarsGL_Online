@@ -86,12 +86,11 @@ public class AccountDetailsNotifyProcessor implements Serializable {
     public void process(AcDNJournal.Sources source, String incomingEnvelope, final Long jId) throws Exception {
         switch(source) {
             case FC12:
-                processFC12(source, incomingEnvelope, jId);
+            case FCC_CLOSE:
+                processFC12(FC12, incomingEnvelope, jId);
                 return;
             case FCC:
-                processFCC(source, incomingEnvelope, jId);
-                return;
-            case MIDAS:
+            case MIDAS_OPEN:
                 processFCC(source, incomingEnvelope, jId);
                 return;
             default:
