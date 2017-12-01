@@ -112,7 +112,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
-                , 100, new Object[]{customerNo});
+                , Integer.MAX_VALUE, new Object[]{customerNo});
 
             return dataRecords;
         } catch (SQLException e) {
