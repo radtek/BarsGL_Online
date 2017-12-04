@@ -30,7 +30,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         try {
             String acidsStr = "'" + StringUtils.listToString(acids, "','") + "'";
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT * FROM GL_ACC A WHERE "
+                "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.BSAACID IN (" + acidsStr + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND A.DTC IS NULL "
@@ -80,7 +80,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             String glacods = "'" + StringUtils.listToString(accountSpecials, "','") + "'";
 
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT * FROM GL_ACC A WHERE "
+                "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACOD IN (" + glacods + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
@@ -106,13 +106,13 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             String acctypes = StringUtils.listToString(accountTypes, ",");
 
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT * FROM GL_ACC A WHERE "
+                "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE IN (" + acctypes + ") "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
-                , 100, new Object[]{customerNo});
+                , Integer.MAX_VALUE, new Object[]{customerNo});
 
             return dataRecords;
         } catch (SQLException e) {
@@ -124,7 +124,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         try {
             List<DataRecord> dataRecords = null;
             dataRecords = selectMaxRows(
-                "SELECT * FROM GL_ACC A WHERE "
+                "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "

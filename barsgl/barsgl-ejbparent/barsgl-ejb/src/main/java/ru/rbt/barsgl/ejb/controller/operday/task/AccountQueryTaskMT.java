@@ -6,6 +6,7 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
+import java.util.Optional;
 import java.util.Properties;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
@@ -29,8 +30,9 @@ public class AccountQueryTaskMT implements ParamsAwareRunnable {
         try {
             queueProcessor.process(properties);
         } catch (Exception e) {
-            log.info(jobName,e);
-            auditController.error(AccountQuery, "Ошибка при выполнении задачи AccountQueryTask", null, e);
+            String topics = Optional.ofNullable(properties.getProperty("mq.topics")).orElse("");
+            log.info(jobName + " " + topics,e);
+            auditController.error(AccountQuery, "Ошибка при выполнении задачи AccountQueryTask, topics:" + topics, null, e);
         }
     }
 }

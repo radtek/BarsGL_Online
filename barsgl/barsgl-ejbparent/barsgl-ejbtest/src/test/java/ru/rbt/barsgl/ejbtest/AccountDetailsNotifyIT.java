@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
@@ -14,9 +15,13 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
+import java.sql.SQLException;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import static junit.framework.TestCase.assertTrue;
+import static ru.rbt.ejbcore.util.DateUtils.getDatabaseDate;
+import static ru.rbt.ejbcore.util.DateUtils.getFinalDateStr;
 
 /**
  * Created by ER22228
@@ -28,9 +33,9 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     public static final String MBROKER = "QM_MBROKER10_TEST";
     
     public static final String HOST_NAME = "vs338";
-    public static final String USERNAME = "er22228";
-    public static final String PASSWORD = "Vugluskr4";
-    
+    public static final String USERNAME = "srvwbl4mqtest";   //"er22228";
+    public static final String PASSWORD = "UsATi8hU";   //"Vugluskr4";
+
 //    public static final String HOST_NAME = "localhost";
 //    public static final String USERNAME = "";
 //    public static final String PASSWORD = "";
@@ -47,7 +52,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
 
 
-        putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", notifyClose);
+        putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", notifyFC12Close);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
@@ -61,7 +66,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
                                         "mq.queueManager = " + MBROKER + "\n" +
                                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                                         "mq.batchSize = 7\n" +
-                                        "mq.topics = FCC_CLOSE:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF;MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                                        "mq.topics = FC12:UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF\n" +
                                         "mq.user=" + USERNAME + "\n" +
                                         "mq.password=" + PASSWORD + ""
                         )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -135,6 +140,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     @Test
+    @Ignore
     public void testMidas() throws Exception {
 
         baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
@@ -191,7 +197,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testFCC() throws Exception {
+    public void testFccOpen() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817810000010696538'");
         baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817810000010696538'");
         baseEntityRepository.executeNativeUpdate("delete from acc where id='00516770RUR000088001'");
@@ -217,11 +223,41 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testCloseEqualBranch() throws Exception {
+    public void testFC12Close() throws Exception {
+        String bsaacid = "40702810400094449118";
+        String closeDateStr = "2016-09-14";
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from ACCRLN where bsaacid = ?", bsaacid);
+        Date dtc = rec.getDate("DRLNC");
+        if (null == dtc || !getFinalDateStr().equals(dtc)) {
+            reopenAccount(bsaacid);
+        }
+
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, notifyFC12Close, null);
+
+        checkCloseDate(bsaacid, getDatabaseDate().parse(closeDateStr), true);
+    }
+
+    @Test
+    public void testFccClose() throws Exception {
+        String bsaacid = "40817810050450101811";
+        String closeDateStr = "2017-11-22";
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from ACCRLN where bsaacid = ?", bsaacid);
+        Date dtc = rec.getDate("DRLNC");
+        if (null == dtc || !getFinalDateStr().equals(dtc)) {
+            reopenAccount(bsaacid);
+        }
+
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, notifyFccClose, null);
+
+        checkCloseDate(bsaacid, getDatabaseDate().parse(closeDateStr), false);
+    }
+
+    @Test
+    public void testFC12EqualBranch() throws Exception {
         DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
         String oldBranch = rec.getString(0);
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, closeEqualBranch, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, closeEqualBranch, null);
 
         if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908' and branch=?", new Object[]{oldBranch}))
             assertTrue(true);
@@ -233,13 +269,13 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testCloseNoEqualBranch() throws Exception {
+    public void testFC12NoEqualBranch() throws Exception {
         DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
         String oldBranch = rec.getString(0);
         String errBranch = "054";
         baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID='40802810900014820908'", new Object[]{errBranch});
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE, closeEqualBranch, null);
+        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, closeEqualBranch, null);
 
         if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908' and branch=?", new Object[]{oldBranch})) {
             assertTrue(true);
@@ -281,6 +317,20 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         receiver.close();
         session.close();
         connection.close();
+    }
+
+    private void reopenAccount(String bsaacid) {
+        baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = null where BSAACID = ?", bsaacid);
+        baseEntityRepository.executeNativeUpdate("update ACCRLN set DRLNC = ? where BSAACID = ?", getFinalDateStr(),  bsaacid);
+        baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", getFinalDateStr(), bsaacid);
+    }
+
+    private void checkCloseDate(String bsaacid, Date closeDate, boolean withGL) throws SQLException {
+        if (withGL)
+            Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from GL_ACC where BSAACID=? and DTC = ?", bsaacid, closeDate));
+        Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from ACCRLN where BSAACID=? and DRLNC = ?", bsaacid, closeDate));
+        Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from BSAACC where ID=? and BSAACC = ?", bsaacid, closeDate));
+
     }
 
     private static String closeEqualBranch=
@@ -807,7 +857,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
                     "    </NS1:Body>\n" +
                     "</NS1:Envelope>";
 
-    String notifyClose="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+    String notifyFC12Close ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:gbo=\"urn:ucbru:gbo:v5\"\n" +
             "                  xmlns:acc=\"urn:ucbru:gbo:v5:acc\">\n" +
             "    <soapenv:Header>\n" +
@@ -1001,6 +1051,232 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
             "                <acc:OperationTypeCodes>\n" +
             "                    VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
             "                </acc:OperationTypeCodes>\n" +
+            "            </acc:AccountDetails>\n" +
+            "        </acc:AccountList>\n" +
+            "    </soapenv:Body>\n" +
+            "</soapenv:Envelope>";
+
+    String notifyFccClose ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:gbo=\"urn:ucbru:gbo:v5\"\n" +
+            "                  xmlns:acc=\"urn:ucbru:gbo:v5:acc\">\n" +
+            "    <soapenv:Header>\n" +
+            "        <NS1:UCBRUHeaders xmlns:NS1=\"urn:ucbru:gbo:v5\">\n" +
+            "            <NS1:Audit>\n" +
+            "                <NS1:MessagePath>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.v5.AcDeNo.NotificationHandler</NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.032+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>START</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Start of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.AccountListQuery.RequestHandler</NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.044+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>START</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Start of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.RequestHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.076+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>START</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Start of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.RequestHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.105+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>ROUTE</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>In the cache of the accounts not detected, will be requested ABS</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSRequestHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.119+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>START</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Start of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSRequestHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.126+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>ROUTE</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Routing by cache settings</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSResponseHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.190+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>ROUTE SUCCESS</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>The responses received from ECHO,FCC</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSResponseHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.194+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>SUCCESS</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Finish of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.MasterAccountPositioningBatchQuery.ResponseHandler\n" +
+            "                        </NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.204+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>SUCCESS</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Finish of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.AccountListQuery.ABSRouter</NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.214+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>ROUTE</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Routing by cache settings</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.AccountListQuery.ResponseHandler</NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.341+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>ROUTE SUCCESS</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>The responses received from ECHO,FCC</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.AccountListQuery.ResponseHandler</NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.346+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>SUCCESS</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Finish of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                    <NS1:Step>\n" +
+            "                        <NS1:Application.Module>SACC.v5.AcDeNo.PublishHandler</NS1:Application.Module>\n" +
+            "                        <NS1:VersionId>v5</NS1:VersionId>\n" +
+            "                        <NS1:TimeStamp>2017-11-22T14:13:42.359+03:00</NS1:TimeStamp>\n" +
+            "                        <NS1:RoutingRole>SUCCESS</NS1:RoutingRole>\n" +
+            "                        <NS1:Comment>Finish of message processing</NS1:Comment>\n" +
+            "                    </NS1:Step>\n" +
+            "                </NS1:MessagePath>\n" +
+            "            </NS1:Audit>\n" +
+            "        </NS1:UCBRUHeaders>\n" +
+            "    </soapenv:Header>\n" +
+            "    <soapenv:Body>\n" +
+            "        <acc:AccountList>\n" +
+            "            <acc:AccountDetails>\n" +
+            "                <acc:AccountNo>02372591RURPRDC101</acc:AccountNo>\n" +
+            "                <acc:Branch>M03</acc:Branch>\n" +
+            "                <acc:CBAccountNo>40817810050450101811</acc:CBAccountNo>\n" +
+            "                <acc:Ccy>RUR</acc:Ccy>\n" +
+            "                <acc:CcyDigital>810</acc:CcyDigital>\n" +
+            "                <acc:Status>C</acc:Status>\n" +
+            "                <acc:CustomerNo>02372591</acc:CustomerNo>\n" +
+            "                <acc:Special>PRDC1</acc:Special>\n" +
+            "                <acc:OpenDate>2017-02-15</acc:OpenDate>\n" +
+            "                <acc:AltAccountNo>02372591RURPRDC101</acc:AltAccountNo>\n" +
+            "                <acc:Type>S</acc:Type>\n" +
+            "                <acc:ATMAvailable>Y</acc:ATMAvailable>\n" +
+            "                <acc:IsDormant>N</acc:IsDormant>\n" +
+            "                <acc:PostAllowed>N</acc:PostAllowed>\n" +
+            "                <acc:CreditTransAllowed>Y</acc:CreditTransAllowed>\n" +
+            "                <acc:DebitTransAllowed>Y</acc:DebitTransAllowed>\n" +
+            "                <acc:ClearingBank>042202799</acc:ClearingBank>\n" +
+            "                <acc:CorBank>042202799</acc:CorBank>\n" +
+            "                <acc:Positioning>\n" +
+            "                    <acc:CBAccount>40817810050450101811</acc:CBAccount>\n" +
+            "                    <acc:IMBAccountNo>40817810050450101811</acc:IMBAccountNo>\n" +
+            "                    <acc:IMBBranch>M03</acc:IMBBranch>\n" +
+            "                    <acc:HostABSAccountNo>02372591RURPRDC101</acc:HostABSAccountNo>\n" +
+            "                    <acc:HostABSBranch>M03</acc:HostABSBranch>\n" +
+            "                    <acc:HostABS>FCC</acc:HostABS>\n" +
+            "                </acc:Positioning>\n" +
+            "                <acc:MIS>\n" +
+            "                    <acc:GroupComponent>R_P_MC</acc:GroupComponent>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS1</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS2</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS3</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS4</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS5</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS6</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS7</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS8</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS9</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:TransactionClass>\n" +
+            "                        <acc:Name>TXNMIS10</acc:Name>\n" +
+            "                    </acc:TransactionClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS1</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS2</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS3</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS4</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS5</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS6</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS7</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS8</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS9</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CompositeClass>\n" +
+            "                        <acc:Name>COMPMIS10</acc:Name>\n" +
+            "                    </acc:CompositeClass>\n" +
+            "                    <acc:CostCode>\n" +
+            "                        <acc:Name>COSTCOD1</acc:Name>\n" +
+            "                    </acc:CostCode>\n" +
+            "                    <acc:CostCode>\n" +
+            "                        <acc:Name>COSTCOD2</acc:Name>\n" +
+            "                    </acc:CostCode>\n" +
+            "                    <acc:CostCode>\n" +
+            "                        <acc:Name>COSTCOD3</acc:Name>\n" +
+            "                    </acc:CostCode>\n" +
+            "                    <acc:CostCode>\n" +
+            "                        <acc:Name>COSTCOD4</acc:Name>\n" +
+            "                    </acc:CostCode>\n" +
+            "                    <acc:CostCode>\n" +
+            "                        <acc:Name>COSTCOD5</acc:Name>\n" +
+            "                    </acc:CostCode>\n" +
+            "                </acc:MIS>\n" +
+            "                <acc:CloseDate>2017-11-22</acc:CloseDate>\n" +
+            "                <acc:OpenBalance>0.00</acc:OpenBalance>\n" +
+            "                <acc:CurrentBalance>0.00</acc:CurrentBalance>\n" +
+            "                <acc:GWSAccType>CURR</acc:GWSAccType>\n" +
+            "                <acc:OperationTypeCodes>VIEW=0,DOMPAY=1,CUPADE=0,CUPACO=0,</acc:OperationTypeCodes>\n" +
             "            </acc:AccountDetails>\n" +
             "        </acc:AccountList>\n" +
             "    </soapenv:Body>\n" +

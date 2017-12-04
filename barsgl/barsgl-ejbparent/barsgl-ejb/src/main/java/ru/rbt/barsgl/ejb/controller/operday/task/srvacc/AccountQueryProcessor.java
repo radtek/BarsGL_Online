@@ -281,6 +281,10 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
 
             sb.append("<asbo:Status>").append(record.getDate("DTC") == null ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");
 
+            if (record.getString("BIC") != null) {
+                sb.append("<asbo:CorBank>").append(record.getString("BIC")).append("</asbo:CorBank>\n");
+            }
+
             String sq = acid.length() == 20 ? acid.substring(15, 17) : "0";
             sb.append("<asbo:AccountSequence>").append(sq).append("</asbo:AccountSequence>\n");
 
