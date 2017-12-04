@@ -1,5 +1,0 @@
-set JAVA_HOME=c:\Development\jdk\jdk1.8.0_131
-set M2_HOME=C:\Develop\apache-maven-3.3.9
-set PATH=%PATH%;C:\Develop\apache-maven-3.3.9\bin;C:\Program Files\Git\bin
-
-mvn release:rollback -P with-remote-tests
