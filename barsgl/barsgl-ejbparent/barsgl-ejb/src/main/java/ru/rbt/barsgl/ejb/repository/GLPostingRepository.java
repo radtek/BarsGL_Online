@@ -19,6 +19,7 @@ import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
 
 import javax.annotation.PostConstruct;
@@ -362,7 +363,8 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
         BankCurrency bankCurrency = null;
         //сторона списания курсовой разницы - CR
         if (operation.getCurrencyDebit().equals(BankCurrency.RUB)) {
-            bsaAcid = operation.getAccountCredit();
+            // если проводка межфилиальная то берем AC_MFOLIAB (если заполнен)
+            bsaAcid = !StringUtils.isEmpty(operation.getAccountLiability()) ? operation.getAccountLiability() : operation.getAccountCredit();
             bankCurrency = operation.getCurrencyCredit();
         }
         //сторона списания курсовой разницы - DR

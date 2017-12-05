@@ -111,7 +111,7 @@ public class CreateIBCBrecord {
         if(!process.existBsaAccount( cb306))
             process.insertAccount(" ", cb306, Constants.ACTIV, process.currDay(), MAXDAY, "T", 0);
 
-        if(!existIbcb(cb1, cb2, cbccy ))
+        if(!existIbcb(cb1, cb2, ccy ))
             insertIbcb(brcaFrom, brcaTo, ccy, cb1, cb2, cb305, cb306);
     }
 

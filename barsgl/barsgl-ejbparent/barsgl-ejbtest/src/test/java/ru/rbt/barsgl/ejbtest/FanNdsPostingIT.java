@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Created by Ivan Sevastyanov on 23.11.2016.
@@ -33,8 +34,8 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
     @Test
     public void test() throws Exception {
 
-        Date workday = DateUtils.parseDate("25.02.2015", "dd.MM.yyyy");
-        Date operday = DateUtils.parseDate("26.02.2015", "dd.MM.yyyy");
+        Date workday = DateUtils.parseDate("25.02.2017", "dd.MM.yyyy");
+        Date operday = DateUtils.parseDate("26.02.2017", "dd.MM.yyyy");
         setOperday(operday, workday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 
         try{
@@ -71,7 +72,8 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
             Assert.assertTrue(psts.stream().allMatch(r -> 0 == r.getErrorCode()));
 
             List<GLOperation> opers = baseEntityRepository.select(GLOperation.class, "from GLOperation o where o.eventId like ?1", pd.getId()+"%");
-            Assert.assertTrue(opers.stream().allMatch(r -> r.getState() == OperState.LOAD));
+            Assert.assertTrue(opers.stream().map(o-> o.getId() + ":" + o.getState()).collect(Collectors.joining("!"))
+                    , opers.stream().allMatch(r -> r.getState() == OperState.LOAD));
 
             remoteAccess.invoke(PreCobStepController.class, "processFan");
             opers = baseEntityRepository.select(GLOperation.class, "from GLOperation o where o.eventId like ?1", pd.getId()+"%");
@@ -105,7 +107,7 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
         baseEntityRepository.executeNativeUpdate("insert into pdext2 (id, rnarlng, docn) " +
                 "values (?, ?, ?)", id, "12345", "");
 //                "values (?, ?, ?)", id, "12345", ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis()+"", 5));
-        baseEntityRepository.executeNativeUpdate("insert into pdext (id) values (?)", id);
+        baseEntityRepository.executeNativeUpdate("insert into pdext (id,pref) values (?,?)", id, id+"ref");
         baseEntityRepository.executeNativeUpdate("insert into pdext3 (id) values (?)", id);
         baseEntityRepository.executeNativeUpdate("insert into pdext5 (id) values (?)", id);
 

@@ -91,13 +91,13 @@ public class FanMfoOperationProcessor extends FanOperationProcessor {
             postingType = null != operation.getAccountLiability() ? MfoDebit : FanMain;
             accDt = operation.getAccountDebit();
             accCt = null != operation.getAccountLiability() ? operation.getAccountLiability() : operation.getAccountCredit();
-            equiv = operation.getEquivalentCreditRu();
+            equiv = operation.getAmountPosting();
             amntDt = null; amntCt = operation.getAmountCredit();
         } else {
             postingType = null != operation.getAccountAsset() ? MfoDebit : FanMain;
             accDt = null != operation.getAccountAsset() ? operation.getAccountAsset() : operation.getAccountDebit();
             accCt = operation.getAccountCredit();
-            equiv = operation.getEquivalentDebitRu();
+            equiv = operation.getAmountPosting();
             amntDt = operation.getAmountDebit(); amntCt = null;
         }
         glPostingRepository.addPostingPdWithSkip(
