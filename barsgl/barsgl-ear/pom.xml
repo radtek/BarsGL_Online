@@ -4,7 +4,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>4.0.3-SNAPSHOT</version>
+        <version>4.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>barsgl-ear</artifactId>
@@ -155,7 +155,7 @@
                 <schedtablename.ru.rbt>GL_SCHED</schedtablename.ru.rbt>
             </properties>
             <build>
-                <finalName>barsgl-prod(please_rename_to_barsgl)</finalName>
+                <finalName>barsgl</finalName>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
