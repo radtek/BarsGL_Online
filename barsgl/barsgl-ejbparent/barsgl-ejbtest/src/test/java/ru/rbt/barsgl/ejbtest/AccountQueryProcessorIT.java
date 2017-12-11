@@ -27,7 +27,7 @@ public class AccountQueryProcessorIT extends AbstractRemoteIT {
     public void process() throws Exception {
         Map<String, String> currencyMap = new HashMap<>();
         Map<String, Integer> currencyNBDPMap = new HashMap<>();
-        String testRequest = IOUtils.toString(this.getClass().getResourceAsStream("/AccountQueryProcessorTest.xml"), "UTF-8");
+        String testRequest = IOUtils.toString(this.getClass().getResourceAsStream("/AccountQueryProcessorTest_18.xml"), "UTF-8");
         Assert.assertNotNull(testRequest);        
 
         List<DataRecord> dataRecords = baseEntityRepository.selectMaxRows("SELECT GLCCY,CBCCY,NBDP FROM CURRENCY", Integer.MAX_VALUE, null);
