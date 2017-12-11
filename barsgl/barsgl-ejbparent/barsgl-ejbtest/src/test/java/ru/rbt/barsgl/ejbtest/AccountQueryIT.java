@@ -66,10 +66,10 @@ public class AccountQueryIT extends AbstractTimerJobIT {
 
 
         // Config
-        cf.setHostName("172.17.77.144");
+        cf.setHostName("vs338");
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-        cf.setQueueManager("QM_MBROKER4_T5");
+        cf.setQueueManager("QM_MBROKER10_TEST");
         cf.setChannel("SYSTEM.DEV.SVRCONN");
 /*
 mq.type = queue
