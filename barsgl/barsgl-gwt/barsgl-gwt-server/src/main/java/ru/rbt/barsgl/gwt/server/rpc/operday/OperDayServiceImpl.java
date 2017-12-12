@@ -198,7 +198,7 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
                 return new RpcRes_Base<>(null, true, "Есть незаконченная задача СОВ");
             }
             Properties properties = new Properties();
-            RpcRes_Base<Boolean> enableRun = localInvoker.invoke(ExecutePreCOBTaskNew.class, "checkEnableRun", COB_TASK_NAME, properties);
+            RpcRes_Base<Boolean> enableRun = localInvoker.invoke(ExecutePreCOBTaskNew.class, "checkEnableRun", COB_TASK_NAME);
             if (!enableRun.getResult()) {
                 return new RpcRes_Base<>(null, true, enableRun.getMessage());
             }
