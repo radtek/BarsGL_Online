@@ -185,6 +185,14 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return false;
     }
 
+    public Properties getTaskProperties(String taskName) throws Exception {
+        TimerJob job = jobRepository.selectOne(TimerJob.class, "from TimerJob j where j.name = ?1", taskName);
+        Properties properties = new Properties();
+        if (null != job.getProperties())
+            properties.load(new StringReader(job.getProperties()));
+        return properties;
+    }
+
     /**
      * step 1
      * @param operday
@@ -437,6 +445,9 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     }
 
 // ----------------- проверки возможности запуска
+    public RpcRes_Base<Boolean> checkEnableRun(String jobName) throws Exception {
+        return checkEnableRun(jobName, getTaskProperties(jobName));
+    }
 
     public RpcRes_Base<Boolean> checkEnableRun(String jobName, Properties properties) throws Exception {
         List<String> errList = new ArrayList<>();
@@ -444,7 +455,6 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
                 && checkRun(jobName, properties, errList);
         return new RpcRes_Base<>(check, false, StringUtils.listToString(errList, ";\n "));
     }
-
 
     protected boolean checkJobStatus(String jobName, Properties properties, List<String> errList) {
         try {
@@ -500,10 +510,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
      * @throws SQLException
      */
     public boolean checkPackagesToloadExists() throws Exception {
-        TimerJob job = jobRepository.selectOne(TimerJob.class, "from TimerJob j where j.name = ?1", this.getClass().getSimpleName());
-        Properties properties = new Properties();
-        if (null != job.getProperties())
-            properties.load(new StringReader(job.getProperties()));
+        Properties properties = getTaskProperties(this.getClass().getSimpleName());
         return checkPackagesToloadExists(properties, null);
     }
 
