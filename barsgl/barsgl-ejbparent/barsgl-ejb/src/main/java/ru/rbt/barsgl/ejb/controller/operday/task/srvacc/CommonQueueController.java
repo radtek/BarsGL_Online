@@ -1,0 +1,298 @@
+package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
+
+import com.ibm.mq.jms.MQQueueConnectionFactory;
+import com.ibm.msg.client.wmq.WMQConstants;
+import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
+import ru.rbt.barsgl.ejbcore.AsyncProcessor;
+import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
+
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.ejb.EJBContext;
+import javax.jms.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.QueueProcessor;
+import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+
+/**
+ * Created by er18837 on 12.12.2017.
+ */
+public abstract class CommonQueueController {
+    private static final Logger log = Logger.getLogger(CommonQueueController.class);
+
+    @Resource
+    protected EJBContext context;
+
+    @EJB
+    protected CoreRepository coreRepository;
+
+    @EJB
+    protected AsyncProcessor asyncProcessor;
+
+    @EJB
+    protected AuditController auditController;
+
+    @EJB
+    protected PropertiesRepository propertiesRepository;
+
+    protected JMSContext jmsContext = null;
+    protected QueueProperties queueProperties;
+
+    protected abstract void afterConnect() throws Exception;
+    protected abstract String processQuery(String queueType, String textMessage, Long jId) throws Exception;
+
+    protected abstract String getJournalName();
+    protected abstract Long createJournalEntry(String queueType, String textMessage) throws Exception;
+    protected abstract AclirqJournal updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception;
+    protected abstract AclirqJournal updateStatusErrorProc(Long journalId, Exception e) throws Exception;
+    protected abstract AclirqJournal updateStatusErrorOut(Long journalId, Exception e) throws Exception;
+
+    protected int getConcurencySize() {
+        return 1;
+    }
+
+    protected long getTimeoutMinutes() {
+        return 10L;
+    }
+
+    public void setQueueProperties(Properties properties) throws Exception {
+        this.queueProperties = new QueueProperties(properties);
+    }
+
+    public void setJmsContext(JMSContext jmsContext) {
+        this.jmsContext = jmsContext;
+    }
+
+    public void process(Properties properties) throws Exception {
+        try {
+            setQueueProperties(properties);
+            try{
+                startConnection();
+                afterConnect();
+                processSources();
+            }catch(JMSRuntimeException | JMSException ex){
+                // reset session
+                reConnect();
+                auditController.warning(AccountQuery, "Ошибка при обработке сообщений", null, ex);
+                throw ex;
+            }
+        } catch (Exception e) {
+            log.error("Ошибка в методе process", e);
+            throw e;
+        }
+    }
+
+    public void startConnection() throws JMSException {
+        if (jmsContext == null) {
+            MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
+            cf.setHostName(queueProperties.mqHost);
+            cf.setPort(queueProperties.mqPort);
+            cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+            cf.setQueueManager(queueProperties.mqQueueManager);
+            cf.setChannel(queueProperties.mqChannel);
+            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword, JMSContext.CLIENT_ACKNOWLEDGE));
+            jmsContext.setExceptionListener((JMSException e) -> {
+                log.info("\n\nonException calling");
+                reConnect();
+            });
+        }
+    }
+
+    protected void reConnect() {
+        log.info("\n\nreConnect calling");
+        closeConnection();
+        // На следующем старте задачи сработает startConnection()
+    }
+
+    private void processSources() throws Exception {
+        String[] params = queueProperties.mqTopics.split(":");
+        try (JMSConsumer consumer = jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));) {
+            int cuncurencySize = getConcurencySize();
+            long timeout = getTimeoutMinutes();
+            TimeUnit unit = TimeUnit.MINUTES;
+            ExecutorService executor = null;
+            try {
+                for (int i = 0; i < queueProperties.mqBatchSize; i++) {
+                    long startReceiveTime = System.currentTimeMillis();
+                    Message receivedMessage = consumer.receiveNoWait();
+                    long endReceiveTime = System.currentTimeMillis();
+                    if (receivedMessage != null) {
+                        if (executor == null) {
+                            executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(cuncurencySize, cuncurencySize, queueProperties.mqBatchSize);
+                        }
+
+                        executor.submit(() -> processMessage(receivedMessage, params[0], params[1], params[2], endReceiveTime - startReceiveTime, endReceiveTime));
+                    } else
+                        break;
+                }
+            } finally {
+                if(executor != null)
+                    awaitTermination(executor, timeout, unit);
+            }
+        }
+    }
+
+    private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
+        final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
+        asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
+    }
+
+    private void processMessage(Message receivedMessage, String queueType, String fromQueue, String queue, long receiveTime, long startThreadTime){
+        long waitingTime = System.currentTimeMillis() - startThreadTime;
+        Long journalId = null;
+        try {
+            String[] incMessage = readJMS(receivedMessage);
+
+            if (incMessage == null || incMessage[0] == null) {
+                return;
+            }
+
+            String textMessage = incMessage[0].trim();
+            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+                return createJournalEntry(queueType, textMessage);
+            });
+            processing(queueType, textMessage, journalId, incMessage, queue, receiveTime, waitingTime);
+
+        } catch (JMSException e) {
+            reConnect();
+            auditController.warning(QueueProcessor, getAuditMessage("при получении сообщения", fromQueue, journalId), null, e);
+        } catch (Exception e) {
+            log.error("Ошибка при обработке сообщения из " + fromQueue, e);
+            auditController.warning(QueueProcessor, getAuditMessage("при обработке сообщения", fromQueue, journalId), null, e);
+
+            try {
+                if(journalId != null) {
+                    Long finalJournalId = journalId;
+                    coreRepository.executeInNewTransaction((persistence) -> {
+                        updateStatusErrorProc(finalJournalId, e);
+                        return null;
+                    });
+                }
+            } catch (Exception e1) {
+                auditController.warning(QueueProcessor, getAuditMessage("при изменении статуса сообщения", fromQueue, journalId), null, e1);
+            }
+            context.setRollbackOnly();
+            // TODO ???
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    protected void processing(String queueType, String textMessage, Long journalId, String[] incMessage, String queue, long receiveTime, long waitingTime) throws Exception {
+        long startProcessing = System.currentTimeMillis();
+        String outMessage = (String) coreRepository.executeInNewTransaction(persistence1 -> {
+            return processQuery(queueType, textMessage, journalId);
+        });
+
+        if (!isEmpty(outMessage)) {
+            try {
+                long createAnswerTime = System.currentTimeMillis();
+                sendToQueue(outMessage, queueProperties, incMessage, queue);
+                long sendingAnswerTime = System.currentTimeMillis();
+                coreRepository.invokeAsynchronous(em -> {
+                    return updateStatusSuccess(journalId, getTimesComment(receiveTime, startProcessing, createAnswerTime, sendingAnswerTime, waitingTime),
+                            "true".equals(queueProperties.writeOut) ? outMessage : null);
+                });
+            } catch (JMSRuntimeException | JMSException e) {
+                auditController.warning(QueueProcessor, getAuditMessage("при отправке сообщения", queue, journalId), null, e);
+                auditController.error(AccountQuery, "Ошибка при отправке сообщения / Таблица GL_ACLIRQ / id=" + journalId, null, e);
+                coreRepository.invokeAsynchronous(em -> {
+                    return updateStatusErrorOut(journalId, e);
+                });
+            }
+        }
+    }
+
+    protected String[] readFromJMS(JMSConsumer consumer) throws JMSException {
+        Message receivedMessage = consumer.receiveNoWait();
+        if (receivedMessage == null) {
+            return null;
+        }
+        return readJMS(receivedMessage);
+    }
+
+    protected String[] readJMS(Message receivedMessage) throws JMSException {
+        if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
+            receivedMessage.acknowledge();
+        String textMessage = null;
+        if (receivedMessage instanceof TextMessage) {
+            textMessage = ((TextMessage) receivedMessage).getText();
+        } else if (receivedMessage instanceof BytesMessage) {
+            BytesMessage bytesMessage = (BytesMessage) receivedMessage;
+
+            int length = (int) bytesMessage.getBodyLength();
+            byte[] incomingBytes = new byte[length];
+            bytesMessage.readBytes(incomingBytes);
+
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
+            try (Reader r = new InputStreamReader(byteArrayInputStream, StandardCharsets.UTF_8)) {
+                StringBuilder sb = new StringBuilder();
+                char cb[] = new char[1024];
+                int s = r.read(cb);
+                while (s > -1) {
+                    sb.append(cb, 0, s);
+                    s = r.read(cb);
+                }
+                textMessage = sb.toString();
+            } catch (IOException e) {
+                log.error("Error during read message from QUEUE", e);
+            }
+        }
+        if (textMessage == null) {
+            return null;
+        }
+        return new String[]{textMessage, receivedMessage.getJMSMessageID(),
+                receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString()};
+    }
+
+    public void sendToQueue(String outMessage, QueueProperties queueProperties, String[] incMessage, String queue) throws JMSException {
+        TextMessage message = jmsContext.createTextMessage(outMessage);
+        message.setJMSCorrelationID(incMessage[1]);
+        JMSProducer producer = jmsContext.createProducer();
+        producer.send(jmsContext.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue), message);
+    }
+
+    protected String getAuditMessage(String msg, String fromQueue, Long jId) {
+        return String.format("Ошибка %s из %s / Таблица %s / id=%d", msg, fromQueue, getJournalName(), jId);
+    }
+
+    protected String getTimesComment(long receiveTime, long startProcessing, long createAnswerTime, long sendingAnswerTime, long waitingTime) {
+        return receiveTime
+                + "/"
+                + (createAnswerTime - startProcessing)
+                + "/"
+                + (sendingAnswerTime - createAnswerTime)
+                + "/"
+                + ("true".equals(queueProperties.writeSleepThreadTime) ? waitingTime : "")
+                + "/";
+    }
+
+    @PreDestroy
+    protected void closeConnection() {
+        log.info("\n\ncloseConnection calling");
+        try {
+            if (jmsContext != null) {
+                jmsContext.close();
+            }
+        } catch (Exception e) {
+            auditController.warning(QueueProcessor, "Ошибка при закрытии соединения", null, e);
+        }finally{
+            jmsContext = null;
+        }
+    }
+
+}

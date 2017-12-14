@@ -1,8 +1,9 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueProcessor4;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountQueryQueueController;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueProcessor4;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
@@ -24,6 +25,7 @@ public class AccountQueryTaskMT implements ParamsAwareRunnable {
 
     @EJB
     private CommonQueueProcessor4 queueProcessor;
+//    private AccountQueryQueueController queueProcessor;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {

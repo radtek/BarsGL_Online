@@ -9,12 +9,15 @@
 
     <!--changes in master 16.03-->
 
+<!--
     <target name="start-weblogic">
         <exec executable="cmd" dir=".">
             <arg line="/A /C ${DOMAIN_HOME}/startWebLogic"/>
         </exec>
     </target>
+-->
 
+<!--
     <target name="build-ejb-ear">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
             <arg line="/A /C build-rbt-base.bat"/>
@@ -23,6 +26,7 @@
             <arg line="/A /C build-ejb-ear.bat"/>
         </exec>
     </target>
+-->
 
     <target name="build-all">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
@@ -33,6 +37,16 @@
         </exec>
     </target>
 
+    <target name="build-srv">
+        <exec executable="cmd" dir="../rbt-base" failonerror="true">
+            <arg line="/A /C build-rbt-base.bat"/>
+        </exec>
+        <exec executable="cmd" dir="."  failonerror="true">
+            <arg line="/A /C build-srv.bat"/>
+        </exec>
+    </target>
+
+<!--
     <target name="build-prod" description="Сборка для Production Mode. Использует шифрацию пароля для Datasource и т.п.">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
             <arg line="/A /C build-rbt-base.bat"/>
@@ -41,7 +55,9 @@
             <arg line="/A /C build-prod.bat"/>
         </exec>
     </target>
+-->
 
+<!--
     <target name="build-gwtserver-ear">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
             <arg line="/A /C build-rbt-base.bat"/>
@@ -50,6 +66,7 @@
             <arg line="/A /C build-ejb-gwtserver-ear.bat"/>
         </exec>
     </target>
+-->
 
     <target name="build-ejbprofile-ear">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
@@ -64,24 +81,37 @@
         <copy file="./barsgl-ear/target/barsgl.ear" todir="${DOMAIN_HOME}/autodeploy"/>
     </target>
 
-    <target name="build-ejb-ear-deploy">
-        <antcall target="build-ejb-ear"/>
-        <antcall target="deploy-ear"/>
+    <target name="deploy-srv">
+        <copy file="./barsgl-ear/target/barssrv.ear" todir="${DOMAIN_HOME}/autodeploy"/>
     </target>
+
+    <!--
+        <target name="build-ejb-ear-deploy">
+            <antcall target="build-ejb-ear"/>
+            <antcall target="deploy-ear"/>
+        </target>
+    -->
 
     <target name="build-all-deploy">
         <antcall target="build-all"/>
         <antcall target="deploy-ear"/>
     </target>
 
+<!--
     <target name="build-gwtserver-ear-deploy">
         <antcall target="build-gwtserver-ear"/>
         <antcall target="deploy-ear"/>
     </target>
+-->
 
     <target name="build-ejbprofile-ear-deploy">
         <antcall target="build-ejbprofile-ear"/>
         <antcall target="deploy-ear"/>
+    </target>
+
+    <target name="build-srv-deploy">
+        <antcall target="build-srv"/>
+        <antcall target="deploy-srv"/>
     </target>
 
     <!--<target name="start-derbydb">
@@ -90,9 +120,11 @@
         </exec>
     </target>-->
 
+<!--
     <target name="build-gwt-war">
         <exec executable="cmd" dir="." failonerror="true">
             <arg line="/A /C build-gwt-war.bat"/>
         </exec>
     </target>
+-->
 </project>
