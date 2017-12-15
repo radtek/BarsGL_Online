@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static ru.rbt.ejbcore.util.StringUtils.substr;
+
 /**
  * Created by er23851 on 06.03.2017.
  */
@@ -140,7 +142,7 @@ public class TechOperationProcessor extends GLOperationProcessor
         }
 
         pdth.setPnar(operation.getNarrative());
-        pdth.setDepartment(operation.getDeptId()!=null ? operation.getDeptId() : " ");
+        pdth.setDepartment(operation.getDeptId() != null ? substr(operation.getDeptId(), 3) : " ");
         pdth.setRusNarrLong(operation.getRusNarrativeLong());
         pdth.setRusNarrShort(operation.getRusNarrativeShort());
         pdth.setGlOperationId(operation.getId());
