@@ -619,6 +619,9 @@ public abstract class AbstractRemoteIT  {
         baseEntityRepository.executeUpdate(
                 "update Operday o set o.currentDate=?1, o.lastWorkdayStatus=?2, o.lastWorkingDay=?3, o.phase=?4, o.pdMode = ?5, o.processingStatus =?6 "
                 , curentDate, status, lastWorkingDay, phase, pdMode, ProcessingStatus.STARTED);
+        baseEntityRepository
+                .executeNativeUpdate("update cal set hol = ' ', thol = ' ' where dat in (?, ?) and ccy = 'RUR'"
+                , curentDate, lastWorkingDay);
         refreshOperdayState();
     }
 
