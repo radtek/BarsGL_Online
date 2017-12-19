@@ -24,8 +24,8 @@ public class AccountQueryTaskMT implements ParamsAwareRunnable {
     private AuditController auditController;
 
     @EJB
-    private CommonQueueProcessor4 queueProcessor;
-//    private AccountQueryQueueController queueProcessor;
+//    private CommonQueueProcessor4 queueProcessor;
+    private AccountQueryQueueController queueProcessor;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {

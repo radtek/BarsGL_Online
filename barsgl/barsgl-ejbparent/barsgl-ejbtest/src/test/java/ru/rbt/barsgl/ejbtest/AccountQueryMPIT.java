@@ -11,6 +11,7 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -308,7 +309,7 @@ mq.password=UsATi8hU
         return textMessage;
     }
 
-    private void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password) throws JMSException {
+    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password) throws JMSException {
         byte[] incomingMessage = null;
         try {
             incomingMessage = FileUtils.readFileToByteArray(file);
@@ -330,8 +331,10 @@ mq.password=UsATi8hU
 
         JMSBytesMessage bytesMessage = (JMSBytesMessage) session.createBytesMessage();
         bytesMessage.writeBytes(incomingMessage);
-        MQQueue queueR2Q = (MQQueue) session.createQueue("queue:///" + replyToQ);
-        bytesMessage.setJMSReplyTo(queueR2Q);
+        if (!StringUtils.isEmpty(replyToQ)) {
+            MQQueue queueR2Q = (MQQueue) session.createQueue("queue:///" + replyToQ);
+            bytesMessage.setJMSReplyTo(queueR2Q);
+        }
         sender.send(bytesMessage);
         System.out.println("Sent message");
 

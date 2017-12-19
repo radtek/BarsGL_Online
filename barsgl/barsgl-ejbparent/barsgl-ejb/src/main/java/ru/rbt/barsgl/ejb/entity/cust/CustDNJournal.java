@@ -13,7 +13,7 @@ import java.util.Date;
 @SequenceGenerator(name = "CustDNJournalIdSeq", sequenceName = "GL_CUDENO_SEQ", allocationSize = 1)
 public class CustDNJournal extends BaseEntity<Long> {
 
-    public enum Status {RAW, VALIDATED, MAPPED, PROCESSED, ERR_VAL, ERR_MAP};
+    public enum Status {RAW, VALIDATED, MAPPED, PROCESSED, ERR_VAL, ERR_MAP, ERR_PROC, EMULATED};
 
     @Id
     @Column(name = "MESSAGE_ID")

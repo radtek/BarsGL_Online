@@ -31,7 +31,7 @@ import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 @SuppressWarnings("ALL")
 @Stateless
 @LocalBean
-public class AccountQueryQueueController extends CommonQueueController implements MessageListener {
+public class AccountQueryQueueController extends CommonQueueController {
     private static final Logger log = Logger.getLogger(CommonQueueProcessor4.class);
     //private static final String SCHEDULED_TASK_NAME = "AccountQuery";
 
@@ -137,50 +137,4 @@ public class AccountQueryQueueController extends CommonQueueController implement
         return answerBody;
     }
 
-    // TODO не используется??
-    @Override
-    public void onMessage(Message message) {
-        Long jId = 0L;
-        String[] params = queueProperties.mqTopics.split(":");
-        try {
-            String[] incMessage = readJMS(message);
-            String textMessage = incMessage[0].trim();
-
-            jId = journalRepository.executeInNewTransaction(persistence -> {
-                return journalRepository.createJournalEntry(params[0], textMessage);
-            });
-
-            asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], -1L), getConcurencySize());
-
-        } catch (JMSException e) {
-            //reConnect();
-            auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
-        } catch (Exception ex) {
-            log.error("Ошибка при обработке сообщения", ex);
-        }
-    }
-
-    protected class CommonRqCallback implements JpaAccessCallback<Void> {
-        String textMessage;
-        Long jId;
-        String[] incMessage;
-        String queue;
-        String queueType;
-        long receiveTime;
-
-        CommonRqCallback(String queueType, String textMessage, Long jId, String[] incMessage, String queue, long receiveTime) {
-            this.textMessage = textMessage;
-            this.jId = jId;
-            this.incMessage = incMessage;
-            this.queue = queue;
-            this.queueType = queueType;
-            this.receiveTime = receiveTime;
-        }
-
-        @Override
-        public Void call(EntityManager persistence) throws Exception {
-            processing(queueType, textMessage, jId, incMessage, queue, receiveTime, -1L);
-            return null;
-        }
-    }
 }

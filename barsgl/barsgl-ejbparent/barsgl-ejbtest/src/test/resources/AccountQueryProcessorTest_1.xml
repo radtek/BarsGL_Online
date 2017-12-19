@@ -1,31 +1,10 @@
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <SOAP-ENV:Header>
-        <gbo:UCBRUHeaders xmlns:gbo="urn:imb:gbo:v2">
-            <gbo:Correlation>
-                <gbo:XRef>PHACCOUNT2333451</gbo:XRef>
-            </gbo:Correlation>
-            <gbo:Audit>
-                <gbo:MessagePath>
-                    <gbo:Step>
-                        <gbo:Application.Module>PAYMENT_HUB</gbo:Application.Module>
-                        <gbo:TimeStamp>2017-01-16T12:44:52Z</gbo:TimeStamp>
-                    </gbo:Step>
-                </gbo:MessagePath>
-                <gbo:ProcessInfo>
-                    <gbo:Name>PAYMENT_HUB</gbo:Name>
-                    <gbo:InstanceId>57555-888-223-69652296</gbo:InstanceId>
-                </gbo:ProcessInfo>
-            </gbo:Audit>
-        </gbo:UCBRUHeaders>
-    </SOAP-ENV:Header>
-    <SOAP-ENV:Body>
-        <bars:AccountListQuery xmlns:bars="urn:asbo:barsgl">
-            <bars:AccountQuery>
-                <bars:CustomerNo>00689326</bars:CustomerNo>
-                <bars:AccountingType>443010100</bars:AccountingType>
-                <bars:AccountingType>443020100</bars:AccountingType>
-                <bars:AccountingType>443040100</bars:AccountingType>
-            </bars:AccountQuery>
-        </bars:AccountListQuery>
-    </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
+<bars:AccountListQuery xmlns:bars="urn:asbo:barsgl">
+    <bars:AccountQuery>
+        <bars:CustomerNo>00275178</bars:CustomerNo>
+        <bars:AccountingType>161020100</bars:AccountingType>
+    </bars:AccountQuery>
+    <bars:AccountQuery>
+        <bars:CustomerNo>00605428</bars:CustomerNo>
+        <bars:AccountingType>161020100</bars:AccountingType>
+    </bars:AccountQuery>
+</bars:AccountListQuery>

@@ -9,12 +9,15 @@ import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.JpaAccessCallback;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.EJBContext;
 import javax.jms.*;
+import javax.persistence.EntityManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,7 +35,7 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 /**
  * Created by er18837 on 12.12.2017.
  */
-public abstract class CommonQueueController {
+public abstract class CommonQueueController implements MessageListener {
     private static final Logger log = Logger.getLogger(CommonQueueController.class);
 
     @Resource
@@ -58,14 +61,13 @@ public abstract class CommonQueueController {
 
     protected abstract String getJournalName();
     protected abstract Long createJournalEntry(String queueType, String textMessage) throws Exception;
-    protected abstract AclirqJournal updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception;
-    protected abstract AclirqJournal updateStatusErrorProc(Long journalId, Exception e) throws Exception;
-    protected abstract AclirqJournal updateStatusErrorOut(Long journalId, Exception e) throws Exception;
+    protected abstract BaseEntity updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception;
+    protected abstract BaseEntity updateStatusErrorProc(Long journalId, Exception e) throws Exception;
+    protected abstract BaseEntity updateStatusErrorOut(Long journalId, Exception e) throws Exception;
 
     protected int getConcurencySize() {
         return 1;
     }
-
     protected long getTimeoutMinutes() {
         return 10L;
     }
@@ -76,25 +78,6 @@ public abstract class CommonQueueController {
 
     public void setJmsContext(JMSContext jmsContext) {
         this.jmsContext = jmsContext;
-    }
-
-    public void process(Properties properties) throws Exception {
-        try {
-            setQueueProperties(properties);
-            try{
-                startConnection();
-                afterConnect();
-                processSources();
-            }catch(JMSRuntimeException | JMSException ex){
-                // reset session
-                reConnect();
-                auditController.warning(AccountQuery, "Ошибка при обработке сообщений", null, ex);
-                throw ex;
-            }
-        } catch (Exception e) {
-            log.error("Ошибка в методе process", e);
-            throw e;
-        }
     }
 
     public void startConnection() throws JMSException {
@@ -119,9 +102,50 @@ public abstract class CommonQueueController {
         // На следующем старте задачи сработает startConnection()
     }
 
+    @PreDestroy
+    public void closeConnection() {
+        log.info("\n\ncloseConnection calling");
+        try {
+            if (jmsContext != null) {
+                jmsContext.close();
+            }
+        } catch (Exception e) {
+            auditController.warning(QueueProcessor, "Ошибка при закрытии соединения", null, e);
+        }finally{
+            jmsContext = null;
+        }
+    }
+
+    public void process(Properties properties) throws Exception {
+        try {
+            setQueueProperties(properties);
+            try{
+                startConnection();
+                afterConnect();
+                processSources();
+            }catch(JMSRuntimeException | JMSException ex){
+                // reset session
+                reConnect();
+                auditController.warning(QueueProcessor, "Ошибка при обработке сообщений", null, ex);
+                throw ex;
+            }
+        } catch (Exception e) {
+            log.error("Ошибка в методе process", e);
+            throw e;
+        }
+    }
+
     private void processSources() throws Exception {
         String[] params = queueProperties.mqTopics.split(":");
-        try (JMSConsumer consumer = jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));) {
+        if (params.length < 2 || isEmpty(params[1])) {
+            auditController.warning(QueueProcessor, "Неверный формат topic: " + queueProperties.mqTopics);
+            return;
+        }
+        String queueType = params[0];
+        String inQueue = params[1];
+        String outQueue = params.length > 2 ? params[2] : null;
+
+        try (JMSConsumer consumer = jmsContext.createConsumer(jmsContext.createQueue("queue:///" + inQueue));) {
             int cuncurencySize = getConcurencySize();
             long timeout = getTimeoutMinutes();
             TimeUnit unit = TimeUnit.MINUTES;
@@ -136,7 +160,7 @@ public abstract class CommonQueueController {
                             executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(cuncurencySize, cuncurencySize, queueProperties.mqBatchSize);
                         }
 
-                        executor.submit(() -> processMessage(receivedMessage, params[0], params[1], params[2], endReceiveTime - startReceiveTime, endReceiveTime));
+                        executor.submit(() -> processMessage(receivedMessage, queueType, inQueue, outQueue , endReceiveTime - startReceiveTime, endReceiveTime));
                     } else
                         break;
                 }
@@ -152,7 +176,7 @@ public abstract class CommonQueueController {
         asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
     }
 
-    private void processMessage(Message receivedMessage, String queueType, String fromQueue, String queue, long receiveTime, long startThreadTime){
+    private void processMessage(Message receivedMessage, String queueType, String fromQueue, String toQueue, long receiveTime, long startThreadTime){
         long waitingTime = System.currentTimeMillis() - startThreadTime;
         Long journalId = null;
         try {
@@ -162,11 +186,11 @@ public abstract class CommonQueueController {
                 return;
             }
 
-            String textMessage = incMessage[0].trim();
-            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
-                return createJournalEntry(queueType, textMessage);
-            });
-            processing(queueType, textMessage, journalId, incMessage, queue, receiveTime, waitingTime);
+//            String textMessage = incMessage[0].trim();
+//            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+//                return createJournalEntry(queueType, textMessage);
+//            });
+            processing(queueType, incMessage, toQueue, receiveTime, waitingTime);
 
         } catch (JMSException e) {
             reConnect();
@@ -192,7 +216,13 @@ public abstract class CommonQueueController {
         }
     }
 
-    protected void processing(String queueType, String textMessage, Long journalId, String[] incMessage, String queue, long receiveTime, long waitingTime) throws Exception {
+    // Удобно для тестирования
+    public Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
+        String textMessage = incMessage[0].trim();
+        Long journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+            return createJournalEntry(queueType, textMessage);
+        });
+
         long startProcessing = System.currentTimeMillis();
         String outMessage = (String) coreRepository.executeInNewTransaction(persistence1 -> {
             return processQuery(queueType, textMessage, journalId);
@@ -201,20 +231,21 @@ public abstract class CommonQueueController {
         if (!isEmpty(outMessage)) {
             try {
                 long createAnswerTime = System.currentTimeMillis();
-                sendToQueue(outMessage, queueProperties, incMessage, queue);
+                sendToQueue(outMessage, queueProperties, incMessage, toQueue);
                 long sendingAnswerTime = System.currentTimeMillis();
                 coreRepository.invokeAsynchronous(em -> {
                     return updateStatusSuccess(journalId, getTimesComment(receiveTime, startProcessing, createAnswerTime, sendingAnswerTime, waitingTime),
                             "true".equals(queueProperties.writeOut) ? outMessage : null);
                 });
             } catch (JMSRuntimeException | JMSException e) {
-                auditController.warning(QueueProcessor, getAuditMessage("при отправке сообщения", queue, journalId), null, e);
-                auditController.error(AccountQuery, "Ошибка при отправке сообщения / Таблица GL_ACLIRQ / id=" + journalId, null, e);
+                auditController.warning(QueueProcessor, getAuditMessage("при отправке сообщения", toQueue, journalId), null, e);
                 coreRepository.invokeAsynchronous(em -> {
                     return updateStatusErrorOut(journalId, e);
                 });
             }
         }
+        return journalId;
+
     }
 
     protected String[] readFromJMS(JMSConsumer consumer) throws JMSException {
@@ -281,18 +312,43 @@ public abstract class CommonQueueController {
                 + "/";
     }
 
-    @PreDestroy
-    protected void closeConnection() {
-        log.info("\n\ncloseConnection calling");
+    // TODO асинхронная обработка - не проверялась и сейчас не используется
+    @Override
+    public void onMessage(Message message) {
+        String[] params = queueProperties.mqTopics.split(":");
+        // TODO вместо всего блока можно использовать
+        // processMessage(message, params[0], params[1], params.length > 2 ? params[2] : null, -1, -1);
         try {
-            if (jmsContext != null) {
-                jmsContext.close();
-            }
-        } catch (Exception e) {
-            auditController.warning(QueueProcessor, "Ошибка при закрытии соединения", null, e);
-        }finally{
-            jmsContext = null;
+            String[] incMessage = readJMS(message);
+
+//            asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], incMessage, params[2], -1L), getConcurencySize());
+            processing(params[0], incMessage, params[2], -1L, -1L);
+
+        } catch (JMSException e) {
+            //reConnect();
+            auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=", null, e);
+        } catch (Exception ex) {
+            log.error("Ошибка при обработке сообщения", ex);
         }
     }
 
+    protected class CommonRqCallback implements JpaAccessCallback<Void> {
+        String[] incMessage;
+        String queue;
+        String queueType;
+        long receiveTime;
+
+        CommonRqCallback(String queueType, String[] incMessage, String queue, long receiveTime) {
+            this.incMessage = incMessage;
+            this.queue = queue;
+            this.queueType = queueType;
+            this.receiveTime = receiveTime;
+        }
+
+        @Override
+        public Void call(EntityManager persistence) throws Exception {
+            processing(queueType, incMessage, queue, receiveTime, -1L);
+            return null;
+        }
+    }
 }
