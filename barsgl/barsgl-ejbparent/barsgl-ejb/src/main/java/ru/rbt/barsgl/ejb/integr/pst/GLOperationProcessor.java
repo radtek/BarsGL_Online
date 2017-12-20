@@ -216,15 +216,14 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
         BankCurrency ccyCredit = operation.getCurrencyCredit();
         String filialCredit = operation.getFilialCredit();
 
-//        BankCurrency ccyMfo = (!ccyDebit.equals(ccyCredit)           // если валюты разные
-//                && filialCredit.equals("MOS")) ?    // и филиал по кредиту - головной
-//                ccyDebit :                          // валютв МФО - по деьбету
-//                ccyCredit;                          // иначе валюта МФО - по кредиту
-
-//        Bug_CCYExch+Interbanch v0.01.doc
-//        Если выполняется ССYDR=’RUR’ OR CCYCR=’RUR’, то CCY_MFO=’RUR’
-//        Иначе – CCY_MFO=CCYCR
-        BankCurrency ccyMfo = ccyDebit.equals(BankCurrency.RUB)? ccyDebit : ccyCredit;
+        BankCurrency ccyMfo;
+        if (ccyDebit.equals(BankCurrency.RUB)) {
+            ccyMfo = ccyDebit;
+            operation.setCcyMfoSide(D);
+        } else {
+            ccyMfo = ccyCredit;
+            operation.setCcyMfoSide(C);
+        }
 
         boolean isClients = glPostingRepository.isMfoClientPosting(operation.getAccountDebit(),
                 operation.getAccountCredit());

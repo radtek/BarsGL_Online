@@ -19,7 +19,6 @@ import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.Assert;
 
 import javax.annotation.PostConstruct;
@@ -39,6 +38,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static ru.rb.ucb.util.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
@@ -149,7 +149,7 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
         long drId = (fpSide == GLOperation.OperSide.N ? pcId : 0);
         // по кредиту всегда новый ID
         long crId = 0;
-        boolean skipDebit = (fpSide == GLOperation.OperSide.C);  // пропустить дебет, если перья веера по кредиту
+        boolean skipDebit = (fpSide == C);  // пропустить дебет, если перья веера по кредиту
         boolean skipCredit = (fpSide == GLOperation.OperSide.D);  // пропустить кредит, если перья веера по дебету
 
         String pbr = getPdPbr(operation, postType);
@@ -207,7 +207,7 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
                     -bankCurrencyRepository.getMinorAmount(ccyDr, eqvivalent));
             posting.addPd(pdDr);
         }
-        else if (fbSide == GLOperation.OperSide.C) {             // РУЧКА веера по кредиту
+        else if (fbSide == C) {             // РУЧКА веера по кредиту
             Pd pdCr = pdRepository.createPd(operation, pcId, pcId, pbr, evType, bsaAcidCr, ccyCr,
                     bankCurrencyRepository.getMinorAmount(ccyCr, amount),
                     bankCurrencyRepository.getMinorAmount(ccyCr, eqvivalent));
@@ -359,19 +359,10 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
      * @throws SQLException
      */
     public String getExchangeAccount(GLOperation operation) throws Exception{
-        String bsaAcid = null;
-        BankCurrency bankCurrency = null;
-        //сторона списания курсовой разницы - CR
-        if (operation.getCurrencyDebit().equals(BankCurrency.RUB)) {
-            // если проводка межфилиальная то берем AC_MFOLIAB (если заполнен)
-            bsaAcid = !StringUtils.isEmpty(operation.getAccountLiability()) ? operation.getAccountLiability() : operation.getAccountCredit();
-            bankCurrency = operation.getCurrencyCredit();
-        }
-        //сторона списания курсовой разницы - DR
-        else {
-            bsaAcid = operation. getAccountDebit();
-            bankCurrency = operation.getCurrencyDebit();
-    }
+
+        String bsaAcid = operation.getCcyMfoSide() == C ? operation.getAccountDebit() : operation.getAccountCredit();
+        BankCurrency bankCurrency = BankCurrency.RUB.equals(operation.getCurrencyDebit()) ? operation.getCurrencyCredit() : operation.getCurrencyDebit();
+
         // поиск существующего счета курсовой разницы
         String ccode = glOperationRepository.getCompanyCode(bsaAcid);
         String psav = operation.getExchangeDifference().signum() > 0 ? Constants.PASIV : Constants.ACTIV;
