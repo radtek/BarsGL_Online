@@ -50,6 +50,7 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
 public class CustomerNotifyProcessor implements Serializable {
     private static final Logger log = Logger.getLogger(CustomerNotifyProcessor.class);
 
+    public static final String journalName = "GL_CUDENO1";
     private final static String parentNodeName = "/Customer";
     private final static XmlParam[] paramNamesCust = {
              new XmlParam("CUST_NUM",   "CustomerNum",      false, 8)
@@ -96,6 +97,12 @@ public class CustomerNotifyProcessor implements Serializable {
             return;
         }
 
+        String clientType = xmlData.get("FCTYPE");
+        if ("I".equals(clientType)) {       // пропускаем физиков
+            journalRepository.updateLogStatus(journalId, SKIPPED);
+            return;
+        }
+
         // TODO validate
         String err = validateXmlParams(xmlData);
         if (!isEmpty(err)) {
@@ -106,9 +113,11 @@ public class CustomerNotifyProcessor implements Serializable {
         CustDNInput inputParams = createInputParams(journalId, xmlData);
 
         CustDNMapped mappedParams = createMappedParams(journalId, inputParams);
+        if (null == mappedParams)
+            return;
 
-        CustDNMapped.CustResult result = NOCHANGE;
-        Customer customer = customerRepository.findById(Customer.class, mappedParams.getCustNo());
+        CustDNMapped.CustResult result;
+        Customer customer = customerRepository.findById(Customer.class, inputParams.getCustNo());
         if (null == customer) {
             result = createCustomer(journalId, mappedParams);
         } else {
@@ -180,18 +189,18 @@ public class CustomerNotifyProcessor implements Serializable {
         return builder.toString();
     }
 
-    private CustDNInput createInputParams(Long id, Map<String, String> xmlData) throws Exception {
+    private CustDNInput createInputParams(Long journalId, Map<String, String> xmlData) throws Exception {
         CustDNInput inputParam = journalRepository.executeInNewTransaction( persistence -> {
-            CustDNInput input = inputRepository.createInputParams(id, xmlData);
-            journalRepository.updateLogStatus(id, VALIDATED);
+            CustDNInput input = inputRepository.createInputParams(journalId, xmlData);
+            journalRepository.updateLogStatus(journalId, VALIDATED);
             return input;
         });
         return inputParam;
     }
 
-    private CustDNMapped createMappedParams(Long id, CustDNInput inputData) throws Exception {
+    private CustDNMapped createMappedParams(Long journalId, CustDNInput inputData) throws Exception {
         StringBuilder err = new StringBuilder();
-        CustDNMapped mappedParam = new CustDNMapped(id);
+        CustDNMapped mappedParam = new CustDNMapped(journalId);
         mappedParam.setCustNo(inputData.getCustNo());
         mappedParam.setNameEng(substr(inputData.getNameEng(), 35));
         mappedParam.setNameEngShort(substr(inputData.getNameEng(), 20));
@@ -225,13 +234,13 @@ public class CustomerNotifyProcessor implements Serializable {
         }
 
         if (0 != err.length()) {
-            setErrorStatus(id, ERR_MAP, "Ошибка преобразования данных", err.toString());
+            setErrorStatus(journalId, ERR_MAP, "Ошибка преобразования данных", err.toString());
             return null;
         }
 
         return journalRepository.executeInNewTransaction(persistence -> {
                 CustDNMapped mapped = mappedRepository.save(mappedParam);
-                journalRepository.updateLogStatus(id, MAPPED);
+                journalRepository.updateLogStatus(journalId, MAPPED);
                 return mapped;
         });
     }
@@ -242,10 +251,10 @@ public class CustomerNotifyProcessor implements Serializable {
             mappedRepository.updateResult(journalId, result);
             if (doOnline()) {
                 customerRepository.createCustomer(mappedParams);
-                journalRepository.updateLogStatus(journalId, PROCESSED);
+                journalRepository.updateLogStatus(journalId, PROCESSED, result.name());
                 return result;
             } else {
-                journalRepository.updateLogStatus(journalId, EMULATED);
+                journalRepository.updateLogStatus(journalId, EMULATED, result.name());
                 return result;
             }
         });
@@ -261,19 +270,21 @@ public class CustomerNotifyProcessor implements Serializable {
             mappedRepository.updateOldFields(journalId, customer, result);
 
             if (doOnline()) {
-                customerRepository.updateCustomer(customer, mappedParams);
-                journalRepository.updateLogStatus(journalId, PROCESSED);
+                if (!noChange) {
+                    customerRepository.updateCustomer(customer, mappedParams);
+                }
+                journalRepository.updateLogStatus(journalId, PROCESSED, result.name());
                 return result;
             } else {
-                journalRepository.updateLogStatus(journalId, EMULATED);
+                journalRepository.updateLogStatus(journalId, EMULATED, result.name());
                 return result;
             }
         });
     }
 
     private void setErrorStatus(Long journalId, CustDNJournal.Status status, String msg, String errorMsg) {
-        CustDNJournal journal = journalRepository.updateLogStatus(journalId, status, substr(msg + ": " + errorMsg, 255));
-        auditController.warning(CustomerDetailsNotify, msg, journal, errorMsg);
+        journalRepository.updateLogStatus(journalId, status, substr(msg + ": " + errorMsg, 255));
+        auditController.warning(CustomerDetailsNotify, msg, journalName, journalId.toString(), errorMsg);
     }
 
     private boolean doOnline() {

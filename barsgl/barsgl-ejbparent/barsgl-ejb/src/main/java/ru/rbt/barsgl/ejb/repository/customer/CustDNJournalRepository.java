@@ -25,16 +25,13 @@ public class CustDNJournalRepository  extends AbstractBaseEntityRepository<CustD
         return journal.getId();
     }
 
-    public CustDNJournal updateLogStatus(Long jId, CustDNJournal.Status status) {
+    public int updateLogStatus(Long jId, CustDNJournal.Status status) {
         return updateLogStatus(jId, status, null);
     }
 
-    public CustDNJournal updateLogStatus(Long jId, CustDNJournal.Status status, String errorMessage) {
-        CustDNJournal journal = findById(CustDNJournal.class, jId);
-        journal.setComment(errorMessage);
-        journal.setStatusDate(new Date());
-        journal.setStatus(status);
-        return update(journal);
+    public int updateLogStatus(Long jId, CustDNJournal.Status status, String errorMessage) {
+        return executeUpdate("update CustDNJournal j set j.comment = ?1, j.statusDate = ?2, j.status = ?3 where j.id = ?4" ,
+                errorMessage, new Date(), status, jId);
     }
 
 

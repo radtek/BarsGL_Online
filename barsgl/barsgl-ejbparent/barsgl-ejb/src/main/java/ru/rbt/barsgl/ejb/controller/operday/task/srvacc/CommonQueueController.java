@@ -61,9 +61,9 @@ public abstract class CommonQueueController implements MessageListener {
 
     protected abstract String getJournalName();
     protected abstract Long createJournalEntry(String queueType, String textMessage) throws Exception;
-    protected abstract BaseEntity updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception;
-    protected abstract BaseEntity updateStatusErrorProc(Long journalId, Exception e) throws Exception;
-    protected abstract BaseEntity updateStatusErrorOut(Long journalId, Exception e) throws Exception;
+    protected abstract void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception;
+    protected abstract void updateStatusErrorProc(Long journalId, Throwable e) throws Exception;
+    protected abstract void updateStatusErrorOut(Long journalId, Throwable e) throws Exception;
 
     protected int getConcurencySize() {
         return 1;
@@ -186,18 +186,18 @@ public abstract class CommonQueueController implements MessageListener {
                 return;
             }
 
-//            String textMessage = incMessage[0].trim();
-//            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
-//                return createJournalEntry(queueType, textMessage);
-//            });
-            processing(queueType, incMessage, toQueue, receiveTime, waitingTime);
+            String textMessage = incMessage[0].trim();
+            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+                return createJournalEntry(queueType, textMessage);
+            });
+            processing(queueType, textMessage, journalId, incMessage, toQueue, receiveTime, waitingTime);
 
         } catch (JMSException e) {
             reConnect();
-            auditController.warning(QueueProcessor, getAuditMessage("при получении сообщения", fromQueue, journalId), null, e);
-        } catch (Exception e) {
+            auditController.warning(QueueProcessor, getAuditMessage("при получении сообщения", fromQueue, journalId), getJournalName(), journalId.toString(), e);
+        } catch (Throwable e) {
             log.error("Ошибка при обработке сообщения из " + fromQueue, e);
-            auditController.warning(QueueProcessor, getAuditMessage("при обработке сообщения", fromQueue, journalId), null, e);
+            auditController.warning(QueueProcessor, getAuditMessage("при обработке сообщения", fromQueue, journalId), getJournalName(), journalId.toString(), e);
 
             try {
                 if(journalId != null) {
@@ -207,8 +207,8 @@ public abstract class CommonQueueController implements MessageListener {
                         return null;
                     });
                 }
-            } catch (Exception e1) {
-                auditController.warning(QueueProcessor, getAuditMessage("при изменении статуса сообщения", fromQueue, journalId), null, e1);
+            } catch (Throwable e1) {
+                auditController.warning(QueueProcessor, getAuditMessage("при изменении статуса сообщения", fromQueue, journalId), getJournalName(), journalId.toString(), e1);
             }
             context.setRollbackOnly();
             // TODO ???
@@ -217,12 +217,21 @@ public abstract class CommonQueueController implements MessageListener {
     }
 
     // Удобно для тестирования
-    public Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
+    public Long processingWithLog(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
         String textMessage = incMessage[0].trim();
         Long journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
             return createJournalEntry(queueType, textMessage);
         });
+        processing(queueType, textMessage, journalId, incMessage, toQueue, receiveTime, waitingTime);
+        return journalId;
+    }
 
+    private void processing(String queueType, String textMessage, Long journalId, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
+//    public Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
+//        String textMessage = incMessage[0].trim();
+//        Long journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+//            return createJournalEntry(queueType, textMessage);
+//        });
         long startProcessing = System.currentTimeMillis();
         String outMessage = (String) coreRepository.executeInNewTransaction(persistence1 -> {
             return processQuery(queueType, textMessage, journalId);
@@ -234,18 +243,18 @@ public abstract class CommonQueueController implements MessageListener {
                 sendToQueue(outMessage, queueProperties, incMessage, toQueue);
                 long sendingAnswerTime = System.currentTimeMillis();
                 coreRepository.invokeAsynchronous(em -> {
-                    return updateStatusSuccess(journalId, getTimesComment(receiveTime, startProcessing, createAnswerTime, sendingAnswerTime, waitingTime),
+                    updateStatusSuccess(journalId, getTimesComment(receiveTime, startProcessing, createAnswerTime, sendingAnswerTime, waitingTime),
                             "true".equals(queueProperties.writeOut) ? outMessage : null);
+                    return null;
                 });
             } catch (JMSRuntimeException | JMSException e) {
-                auditController.warning(QueueProcessor, getAuditMessage("при отправке сообщения", toQueue, journalId), null, e);
+                auditController.warning(QueueProcessor, getAuditMessage("при отправке сообщения", toQueue, journalId), getJournalName(), journalId.toString(), e);
                 coreRepository.invokeAsynchronous(em -> {
-                    return updateStatusErrorOut(journalId, e);
+                    updateStatusErrorOut(journalId, e);
+                    return null;
                 });
             }
         }
-        return journalId;
-
     }
 
     protected String[] readFromJMS(JMSConsumer consumer) throws JMSException {
@@ -318,37 +327,23 @@ public abstract class CommonQueueController implements MessageListener {
         String[] params = queueProperties.mqTopics.split(":");
         // TODO вместо всего блока можно использовать
         // processMessage(message, params[0], params[1], params.length > 2 ? params[2] : null, -1, -1);
+        Long journalId = null;
         try {
             String[] incMessage = readJMS(message);
+            String queueType = params[0];
+            String textMessage = incMessage[0].trim();
+            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
+                return createJournalEntry(queueType, textMessage);
+            });
 
-//            asyncProcessor.submitToDefaultExecutor(new CommonRqCallback(params[0], incMessage, params[2], -1L), getConcurencySize());
-            processing(params[0], incMessage, params[2], -1L, -1L);
+            processing(queueType, textMessage, journalId, incMessage, params[2], -1L, -1L);
 
         } catch (JMSException e) {
             //reConnect();
-            auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=", null, e);
+            String fromQueue = params[1];
+            auditController.warning(QueueProcessor, getAuditMessage("при обработке сообщения", fromQueue, journalId), getJournalName(), journalId.toString(), e);
         } catch (Exception ex) {
             log.error("Ошибка при обработке сообщения", ex);
-        }
-    }
-
-    protected class CommonRqCallback implements JpaAccessCallback<Void> {
-        String[] incMessage;
-        String queue;
-        String queueType;
-        long receiveTime;
-
-        CommonRqCallback(String queueType, String[] incMessage, String queue, long receiveTime) {
-            this.incMessage = incMessage;
-            this.queue = queue;
-            this.queueType = queueType;
-            this.receiveTime = receiveTime;
-        }
-
-        @Override
-        public Void call(EntityManager persistence) throws Exception {
-            processing(queueType, incMessage, queue, receiveTime, -1L);
-            return null;
         }
     }
 }

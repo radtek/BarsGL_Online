@@ -42,7 +42,7 @@ public class CustomerNotifyQueueController extends CommonQueueController {
 
     @Override
     protected String getJournalName() {
-        return "GL_CUDENO";
+        return "GL_CUDENO1";
     }
 
     @Override
@@ -51,18 +51,18 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected CustDNJournal updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
-        return journalRepository.updateLogStatus(journalId, CustDNJournal.Status.PROCESSED, comment);
+    protected void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
+        journalRepository.updateLogStatus(journalId, CustDNJournal.Status.PROCESSED, comment);
     }
 
     @Override
-    protected CustDNJournal updateStatusErrorProc(Long journalId, Exception e) throws Exception {
-        return journalRepository.updateLogStatus(journalId, CustDNJournal.Status.ERR_PROC, getErrorMessage(e));
+    protected void updateStatusErrorProc(Long journalId, Throwable e) throws Exception {
+        journalRepository.updateLogStatus(journalId, CustDNJournal.Status.ERR_PROC, getErrorMessage(e));
     }
 
     @Override
-    protected CustDNJournal updateStatusErrorOut(Long journalId, Exception e) throws Exception {
-        return null;
+    protected void updateStatusErrorOut(Long journalId, Throwable e) throws Exception {
+        journalRepository.updateLogStatus(journalId, CustDNJournal.Status.ERR_PROC, getErrorMessage(e));
     }
 
     private String getErrorMessage(Throwable t) {

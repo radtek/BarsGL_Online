@@ -1,0 +1,137 @@
+<gbo:Customer xmlns:gbo="urn:ucbru:gbo:v3">
+<gbo:CustomerNum>02528152</gbo:CustomerNum>
+<gbo:ShortName>ZAS</gbo:ShortName>
+<gbo:BranchCode>A02</gbo:BranchCode>
+<gbo:OriginalBranchCode>A02</gbo:OriginalBranchCode>
+<gbo:Type>I</gbo:Type>
+<gbo:CbType>15</gbo:CbType>
+<gbo:Category>PRIV</gbo:Category>
+<gbo:Status>O</gbo:Status>
+<gbo:Segment>PRVO</gbo:Segment>
+<gbo:PublicIndicator>OTHR</gbo:PublicIndicator>
+<gbo:BacaSegment>107330</gbo:BacaSegment>
+<gbo:BacaDescription>Retail-Indiv-MassMar-Mass</gbo:BacaDescription>
+<gbo:Resident>Y</gbo:Resident>
+<gbo:Offshore>N</gbo:Offshore>
+<gbo:ActivityType>0</gbo:ActivityType>
+<gbo:AccountOfficerCode>00WZ</gbo:AccountOfficerCode>
+<gbo:AccountOfficerName>Тимофеева Е.А. Масс 002</gbo:AccountOfficerName>
+<gbo:ChargeGroup>PRIV</gbo:ChargeGroup>
+<gbo:PcChargeGroup>PRIV</gbo:PcChargeGroup>
+<gbo:RiskLevel>0</gbo:RiskLevel>
+<gbo:LiabilityCustomerNum>02528152</gbo:LiabilityCustomerNum>
+<gbo:CountryCode>RU</gbo:CountryCode>
+<gbo:ExposureCountryCode>RU</gbo:ExposureCountryCode>
+<gbo:NationalityCountryCode>RU</gbo:NationalityCountryCode>
+<gbo:LanguageCode>RUS</gbo:LanguageCode>
+<gbo:OpenDate>2017-10-05</gbo:OpenDate>
+<gbo:OkatoCode>01201813</gbo:OkatoCode>
+<gbo:DefaultMedia>MAIL</gbo:DefaultMedia>
+<gbo:Email>zaharov_05@mail.ru</gbo:Email>
+<gbo:Phone>84956667788</gbo:Phone>
+<gbo:DepartmentCode>RSE</gbo:DepartmentCode>
+<gbo:PrivateDetails>
+    <gbo:FirstNameRus>АЛЕКСАНДР</gbo:FirstNameRus>
+    <gbo:LastNameRus>ЗАХАРОВ</gbo:LastNameRus>
+    <gbo:MiddleNameRus>СЕРГЕЕВИЧ</gbo:MiddleNameRus>
+    <gbo:FirstNameEng>ALEKSANDR</gbo:FirstNameEng>
+    <gbo:LastNameEng>ZAKHAROV</gbo:LastNameEng>
+    <gbo:MiddleNameEng>SERGEEVICH</gbo:MiddleNameEng>
+    <gbo:Sex>M</gbo:Sex>
+    <gbo:Vip>N</gbo:Vip>
+    <gbo:BirthDate>1970-12-01</gbo:BirthDate>
+    <gbo:Mobile>89095554553</gbo:Mobile>
+</gbo:PrivateDetails>
+<gbo:AML>
+    <gbo:Required>Y</gbo:Required>
+    <gbo:TerrorStatus>N</gbo:TerrorStatus>
+    <gbo:TerrorResult>NFND</gbo:TerrorResult>
+</gbo:AML>
+<gbo:MIS>
+    <gbo:Group>N_P_MC</gbo:Group>
+</gbo:MIS>
+<gbo:Address>
+    <gbo:Type>DOMICILE</gbo:Type>
+    <gbo:CountryCbrCode>860</gbo:CountryCbrCode>
+    <gbo:CountryCode>RU</gbo:CountryCode>
+    <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+    <gbo:CountryName>Россия</gbo:CountryName>
+    <gbo:RegionCode>77</gbo:RegionCode>
+    <gbo:RegionName>МОСКВА</gbo:RegionName>
+    <gbo:CityType>Г</gbo:CityType>
+    <gbo:CityName>МОСКВА</gbo:CityName>
+    <gbo:StreetType>УЛ</gbo:StreetType>
+    <gbo:StreetName>Минская</gbo:StreetName>
+    <gbo:House>22</gbo:House>
+    <gbo:Apartment>33</gbo:Apartment>
+    <gbo:ZipCode>121433</gbo:ZipCode>
+    <gbo:AddressFull>121433, Г. МОСКВА, Минская УЛ, д. 22, кв. 33</gbo:AddressFull>
+</gbo:Address>
+<gbo:Address>
+    <gbo:Type>PERMANENT</gbo:Type>
+    <gbo:CountryCbrCode>643</gbo:CountryCbrCode>
+    <gbo:CountryCode>RU</gbo:CountryCode>
+    <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+    <gbo:CountryName>Россия</gbo:CountryName>
+    <gbo:RegionCode>77</gbo:RegionCode>
+    <gbo:RegionName>Г</gbo:RegionName>
+    <gbo:CityType>Г</gbo:CityType>
+    <gbo:CityName>МОСКВА</gbo:CityName>
+    <gbo:StreetType>УЛ</gbo:StreetType>
+    <gbo:StreetName>Минская</gbo:StreetName>
+    <gbo:House>22</gbo:House>
+    <gbo:Apartment>33</gbo:Apartment>
+    <gbo:AddressFull>Г. МОСКВА, Минская УЛ, д. 22, кв. 33</gbo:AddressFull>
+</gbo:Address>
+<gbo:Address>
+    <gbo:Type>CORRESPONDENCE</gbo:Type>
+    <gbo:CountryCode>RU</gbo:CountryCode>
+    <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+    <gbo:CountryName>Россия</gbo:CountryName>
+    <gbo:AddressFull>UL.Minskaya,d.22-33121433,G.MOSKVA</gbo:AddressFull>
+    <gbo:AddressLine1>UL.Minskaya,d.22-33</gbo:AddressLine1>
+    <gbo:AddressLine2>121433,G.MOSKVA</gbo:AddressLine2>
+    <gbo:NameLine1>OCHILOV TIMUR</gbo:NameLine1>
+    <gbo:NameLine2>UTKIROVICH</gbo:NameLine2>
+</gbo:Address>
+<gbo:Address>
+    <gbo:Type>BIRTH</gbo:Type>
+    <gbo:CountryCode>RU</gbo:CountryCode>
+    <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+    <gbo:CountryName>Россия</gbo:CountryName>
+    <gbo:RegionCode>77</gbo:RegionCode>
+    <gbo:RegionName>Г</gbo:RegionName>
+    <gbo:CityType>Г</gbo:CityType>
+    <gbo:CityName>Москва</gbo:CityName>
+    <gbo:AddressFull>Russian Federation, Г. Москва</gbo:AddressFull>
+</gbo:Address>
+<gbo:Document>
+    <gbo:Category>PRIMARY_IDENTITY</gbo:Category>
+    <gbo:Type>RP</gbo:Type>
+    <gbo:Number>77 65 656878</gbo:Number>
+    <gbo:Authority>ОВД Филевский парк</gbo:Authority>
+    <gbo:DepartmentCode>435-766</gbo:DepartmentCode>
+    <gbo:ValidFrom>2016-12-03</gbo:ValidFrom>
+</gbo:Document>
+<gbo:Identifiers>
+    <gbo:ObjectType>Customer</gbo:ObjectType>
+    <gbo:Identifier>
+        <gbo:Value>02528152</gbo:Value>
+        <gbo:System>
+            <gbo:Name>FCC</gbo:Name>
+        </gbo:System>
+    </gbo:Identifier>
+</gbo:Identifiers>
+<gbo:AccessHistory>
+    <gbo:Record>
+        <gbo:User>SYSTEM</gbo:User>
+        <gbo:DateTime>2017-10-11T00:00:00</gbo:DateTime>
+        <gbo:AccessType>Modification</gbo:AccessType>
+    </gbo:Record>
+    <gbo:Record>
+        <gbo:User>SYSTEM</gbo:User>
+        <gbo:DateTime>2017-10-11T00:00:00</gbo:DateTime>
+        <gbo:AccessType>Authorization</gbo:AccessType>
+    </gbo:Record>
+</gbo:AccessHistory>
+</gbo:Customer>

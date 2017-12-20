@@ -4,6 +4,7 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
@@ -11,16 +12,24 @@ import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueContr
 import ru.rbt.barsgl.ejb.entity.cust.CustDNInput;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNMapped;
+import ru.rbt.barsgl.ejb.entity.cust.Customer;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import sun.net.www.protocol.file.FileURLConnection;
 
 import javax.jms.JMSException;
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import static ru.rbt.barsgl.ejb.entity.cust.CustDNJournal.Status.*;
+import static ru.rbt.barsgl.ejb.entity.cust.CustDNMapped.CustResult.INSERT;
+import static ru.rbt.barsgl.ejb.entity.cust.CustDNMapped.CustResult.NOCHANGE;
+import static ru.rbt.barsgl.ejb.entity.cust.CustDNMapped.CustResult.UPDATE;
+import static ru.rbt.barsgl.ejb.entity.cust.Customer.Resident.N;
+import static ru.rbt.barsgl.ejb.entity.cust.Customer.Resident.R;
+import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
 import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.sendToQueue;
 
 /**
@@ -37,11 +46,22 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
     private final static String inQueue = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
 //    private final static String inQueue = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
 //    private final static String outQueue = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
-    public static final String login = "srvwbl4mqtest";
-    public static final String passw = "UsATi8hU";
+    private static final String login = "srvwbl4mqtest";
+    private static final String passw = "UsATi8hU";
 
-    public static final String qType = "CUST";
+    private static final String qType = "CUST";
 
+    private static final String fakeCustomer = "00000010";
+
+//    @BeforeClass
+    public static void before() {
+        deletePropertyOnline();
+    }
+
+    /**
+     * Тест получения сообщения из очереди
+     * @throws Exception
+     */
     @Test
     public void testReadQueue() throws Exception {
         long idAudit = getAuditMaxId();
@@ -59,8 +79,13 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
     }
 
+    /**
+     * Тест обработки сообщения из очереди
+     * @throws Exception
+     */
     @Test
     public void testLoadParams() throws Exception {
+        deletePropertyOnline();
 
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
@@ -69,7 +94,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 
         sendToQueue(cf, inQueue,
-                new File(this.getClass().getResource("/CustomerDetailsTest_1.xml").getFile()),
+                new File(this.getClass().getResource("/CustomerDetailsTest_B.xml").getFile()),
                 null, login, passw);
 
         SingleActionJob job =
@@ -85,43 +110,209 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 
         CustDNJournal journal = getCudenoNewRecord(idCudeno);
         Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
-        Assert.assertEquals(MAPPED, journal.getStatus());
-
-        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
-        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", getCudenoMapped(journal.getId()));
-    }
-    @Test
-
-    public void testNoChangeCustomer() throws Exception {
-
-        long idAudit = getAuditMaxId();
-        long idCudeno = getCudenoMaxId();
-
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_1.xml").getFile()), "UTF-8");
-
-        // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processing", qType, new String[] {textMessage}, null, -1, -1);
-
-        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
-
-        CustDNJournal journal = getCudenoNewRecord(idCudeno);
-        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
         Assert.assertEquals(PROCESSED, journal.getStatus());
 
         Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
         Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", getCudenoMapped(journal.getId()));
     }
 
-        @Test
+    /**
+     * Тест обработки сообщения по клиенту-физ.лицу (пропустить)
+     * @throws Exception
+     */
+    @Test
+    public void testSkipCustomer() throws Exception {
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_I.xml").getFile()), "UTF-8");
+        // 00488888
+
+        // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(SKIPPED, journal.getStatus());
+
+    }
+
+    /**
+     * Тест обработки сообщения без изменения клиента
+     * @throws Exception
+     */
+    @Test
+    public void testNoChangeCustomer() throws Exception {
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), "UTF-8");
+        // 00694379 A35	12 : 064 18
+
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(PROCESSED, journal.getStatus());
+        Assert.assertEquals(NOCHANGE.name(), journal.getComment());
+
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
+        CustDNMapped mapped = getCudenoMapped(journal.getId());
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", mapped);
+        Assert.assertEquals(NOCHANGE, mapped.getResult());
+    }
+
+    /**
+     * Тест обработки сообщения с изменением клиента
+     * @throws Exception
+     */
+    @Test
+    public void testUpdateCustomer() throws Exception {
+        setPropertyOnline(true);   // режим Online
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), "UTF-8");
+        // 00694379 A35	12 : 064 18
+
+        updateCustomer("00694379", "001", "11", N);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(PROCESSED, journal.getStatus());
+        Assert.assertEquals(UPDATE.name(), journal.getComment());
+
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
+        CustDNMapped mapped = getCudenoMapped(journal.getId());
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", mapped);
+        Assert.assertEquals(UPDATE, mapped.getResult());
+
+        checkCustomer("00694379", "064", "18", R);
+    }
+
+    /**
+     * Тест обработки сообщения с созданием клиента
+     * @throws Exception
+     */
+    @Test
+    public void testCreateCustomer() throws Exception {
+        setPropertyOnline(true);   // режим Online
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_insert.xml").getFile()), "UTF-8");
+        // 00000010 A35	12 : 064 18
+
+        deleteCustomer(fakeCustomer);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(PROCESSED, journal.getStatus());
+        Assert.assertEquals(INSERT.name(), journal.getComment());
+
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
+        CustDNMapped mapped = getCudenoMapped(journal.getId());
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", mapped);
+        Assert.assertEquals(INSERT, mapped.getResult());
+
+        checkCustomer(fakeCustomer, "064", "18", R);
+    }
+
+    /**
+     * Тест обработки сообщения без изменения клиента
+     * @throws Exception
+     */
+    @Test
+    public void testEmulateCreateCustomer() throws Exception {
+
+        setPropertyOnline(false);   // режим эмуляции
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_insert.xml").getFile()), "UTF-8");
+        deleteCustomer(fakeCustomer);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(EMULATED, journal.getStatus());
+        Assert.assertEquals(INSERT.name(), journal.getComment());
+
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
+        CustDNMapped mapped = getCudenoMapped(journal.getId());
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", mapped);
+        Assert.assertEquals(INSERT, mapped.getResult());
+
+        Assert.assertNull(getCustomer(fakeCustomer));
+        setPropertyOnline(true);   // режим эмуляции
+    }
+
+    /**
+     * Тест обработки сообщения без изменения клиента
+     * @throws Exception
+     */
+    @Test
+    public void testEmulateUpdateCustomer() throws Exception {
+
+        setPropertyOnline(false);   // режим эмуляции
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), "UTF-8");
+        updateCustomer("00694379", "001", "11", N);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(EMULATED, journal.getStatus());
+        Assert.assertEquals(UPDATE.name(), journal.getComment());
+
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
+        CustDNMapped mapped = getCudenoMapped(journal.getId());
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", mapped);
+        Assert.assertEquals(UPDATE, mapped.getResult());
+
+        Assert.assertNull(getCustomer(fakeCustomer));
+        checkCustomer("00694379", "001", "11", N);
+        updateCustomer("00694379", "064", "18", R);
+
+        setPropertyOnline(true);   // режим эмуляции
+    }
+
+    /**
+     * Тест обработки сообщения с ошибкой в формате XML
+     * @throws Exception
+     */
+    @Test
     public void testValidationError() throws Exception {
 
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_err1.xml").getFile()), "UTF-8");
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errval.xml").getFile()), "UTF-8");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processing", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
 
         Thread.sleep(2000L);
         Assert.assertNotNull("Нет записи об ошибке в аудит", getAuditError(idAudit));
@@ -132,16 +323,20 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         System.out.println(journal.getComment());
     }
 
+    /**
+     * Тест обработки сообщения с ошибкой в параметрах
+     * @throws Exception
+     */
     @Test
     public void testMappedError() throws Exception {
 
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_err2.xml").getFile()), "UTF-8");
+        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errmap.xml").getFile()), "UTF-8");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processing", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
 
         Thread.sleep(2000L);
         AuditRecord auditRecord = getAuditError(idAudit);
@@ -205,5 +400,40 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
     private AuditRecord getAuditError(long idFrom ) throws SQLException {
         return (AuditRecord) baseEntityRepository.selectFirst(AuditRecord.class,
                 "from AuditRecord a where a.logCode in ('CustomerDetailsNotify', 'QueueProcessor') and a.logLevel <> 'Info' and a.id > ?1 ", idFrom);
+    }
+
+    private int updateCustomer(String custNo, String branch, String cbType, Customer.Resident resident) {
+        return baseEntityRepository.executeUpdate("update Customer c set c.branch = ?1, c.resident = ?2, c.cbType = ?3 where c.id = ?4",
+                branch, resident, cbType, custNo);
+    }
+
+    private int deleteCustomer(String custNo) {
+        return baseEntityRepository.executeUpdate("delete from Customer c where c.id = ?1", custNo);
+    }
+
+    private Customer getCustomer(String custNo) {
+        return (Customer) baseEntityRepository.findById(Customer.class, custNo);
+
+    }
+
+    private boolean checkCustomer(String custNo, String branch, String cbType, Customer.Resident resident) {
+        Customer customer = getCustomer(custNo);
+        Assert.assertNotNull("Не найден клиент " + custNo, customer);
+        return customer.getBranch().equals(branch)
+                && customer.getResident().equals(resident)
+                && customer.getCbType().equals(cbType);
+    }
+
+    private void setPropertyOnline(boolean updateOn) {
+        deletePropertyOnline();
+        baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
+                "('customer.load.online', 'root', 'Y', 'STRING_TYPE', 'Признак загрузки клиентов по нотификации Online (Yes / No, default = Yes)', null, ?, null)",
+                updateOn ? "Yes" : "No");
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+    }
+
+    private static void deletePropertyOnline() {
+        baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP = ?", CUST_LOAD_ONLINE.getName());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
 }

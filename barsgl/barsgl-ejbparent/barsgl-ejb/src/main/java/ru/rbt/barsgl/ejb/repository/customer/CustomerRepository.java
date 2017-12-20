@@ -21,11 +21,9 @@ public class CustomerRepository extends AbstractBaseEntityRepository<Customer, S
         return save(customer);
     }
 
-    public Customer updateCustomer(Customer customer, CustDNMapped mappedParam) {
-        customer.setBranch(mappedParam.getBranch());
-        customer.setResident(mappedParam.getResident());
-        customer.setCbType(mappedParam.getCbType());
-        return update(customer);
+    public int updateCustomer(Customer customer, CustDNMapped mappedParam) {
+        return executeUpdate("update Customer c set c.branch = ?1, c.resident = ?2, c.cbType = ?3 where c.id = ?4",
+                    mappedParam.getBranch(), mappedParam.getResident(), mappedParam.getCbType(), customer.getId());
     }
 
 }

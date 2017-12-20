@@ -12,8 +12,21 @@ import javax.persistence.*;
 @Table(name = "SDCUSTPD")
 public class Customer extends BaseEntity<String> {
 
-    public enum ClientType {P, B, C};
-    public enum Resident {R, N};
+    public enum ClientType {
+        P("I"), B("B"), C("C");
+        private String fcType;
+        ClientType(String fcType) {
+            this.fcType = fcType;
+        }
+    };
+
+    public enum Resident {
+        R("Y"), N("N");
+        private String fcResident;
+        Resident(String fcResident) {
+            this.fcResident = fcResident;
+        }
+    };
 
     @Id
     @Column(name = "BBCUST")

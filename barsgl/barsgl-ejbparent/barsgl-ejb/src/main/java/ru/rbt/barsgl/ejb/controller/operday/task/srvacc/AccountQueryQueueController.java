@@ -104,18 +104,18 @@ public class AccountQueryQueueController extends CommonQueueController {
     }
 
     @Override
-    protected AclirqJournal updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
-        return  journalRepository.updateLogStatus(journalId, AclirqJournal.Status.PROCESSED, comment, outMessage);
+    protected void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
+        journalRepository.updateLogStatus(journalId, AclirqJournal.Status.PROCESSED, comment, outMessage);
     }
 
     @Override
-    protected AclirqJournal updateStatusErrorProc(Long journalId, Exception e) throws Exception {
-        return journalRepository.updateLogStatus(journalId, AclirqJournal.Status.ERROR, "Ошибка при обработке сообщения. " + e.getMessage());
+    protected void updateStatusErrorProc(Long journalId, Throwable e) throws Exception {
+        journalRepository.updateLogStatus(journalId, AclirqJournal.Status.ERROR, "Ошибка при обработке сообщения. " + e.getMessage());
     }
 
     @Override
-    protected AclirqJournal updateStatusErrorOut(Long journalId, Exception e) throws Exception {
-        return journalRepository.updateLogStatus(journalId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
+    protected void updateStatusErrorOut(Long journalId, Throwable e) throws Exception {
+        journalRepository.updateLogStatus(journalId, AclirqJournal.Status.ERROR, "Ошибка отправки ответа. " + e.getMessage());
     }
 
     public String getErrorMessage(String message) throws DatatypeConfigurationException {
