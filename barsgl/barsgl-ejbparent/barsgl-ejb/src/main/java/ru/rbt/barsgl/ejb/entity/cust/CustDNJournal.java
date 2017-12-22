@@ -31,7 +31,7 @@ public class CustDNJournal extends BaseEntity<Long> {
     @Temporal(TemporalType.TIMESTAMP)
     private Date loadDate;
 
-    @Column(name = "STATUS_DATE")
+    @Column(name = "STATUS_DATE", insertable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date statusDate;
 

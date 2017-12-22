@@ -4,20 +4,18 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.EJBContext;
 import javax.jms.*;
-import javax.persistence.EntityManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,8 +25,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.QueueProcessor;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
@@ -65,15 +63,16 @@ public abstract class CommonQueueController implements MessageListener {
     protected abstract void updateStatusErrorProc(Long journalId, Throwable e) throws Exception;
     protected abstract void updateStatusErrorOut(Long journalId, Throwable e) throws Exception;
 
-    protected int getConcurencySize() {
-        return 1;
-    }
-    protected long getTimeoutMinutes() {
-        return 10L;
-    }
+    protected int getConcurencySize() { return 10; }
+    protected long getTimeout() { return 10L; }
+    protected TimeUnit getTimeoutUnit() { return TimeUnit.MINUTES; };
 
     public void setQueueProperties(Properties properties) throws Exception {
         this.queueProperties = new QueueProperties(properties);
+    }
+
+    public QueueProperties getQueueProperties() {
+        return queueProperties;
     }
 
     public void setJmsContext(JMSContext jmsContext) {
@@ -147,8 +146,8 @@ public abstract class CommonQueueController implements MessageListener {
 
         try (JMSConsumer consumer = jmsContext.createConsumer(jmsContext.createQueue("queue:///" + inQueue));) {
             int cuncurencySize = getConcurencySize();
-            long timeout = getTimeoutMinutes();
-            TimeUnit unit = TimeUnit.MINUTES;
+            long timeout = getTimeout(); // 10
+            TimeUnit unit = getTimeoutUnit();   // TimeUnit.MINUTES;
             ExecutorService executor = null;
             try {
                 for (int i = 0; i < queueProperties.mqBatchSize; i++) {
@@ -173,7 +172,11 @@ public abstract class CommonQueueController implements MessageListener {
 
     private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
-        asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
+        try {
+            asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
+        } catch (TimeoutException e) {  // TODO не проверено
+            throw new ValidationError(ErrorCode.QUEUE_ERROR, e.getMessage());
+        }
     }
 
     private void processMessage(Message receivedMessage, String queueType, String fromQueue, String toQueue, long receiveTime, long startThreadTime){

@@ -4,11 +4,11 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNInput;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNMapped;
@@ -17,9 +17,11 @@ import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.jms.JMSException;
 import java.io.File;
+import java.io.StringReader;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -30,6 +32,8 @@ import static ru.rbt.barsgl.ejb.entity.cust.CustDNMapped.CustResult.UPDATE;
 import static ru.rbt.barsgl.ejb.entity.cust.Customer.Resident.N;
 import static ru.rbt.barsgl.ejb.entity.cust.Customer.Resident.R;
 import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
+import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.getConnectionFactory;
+import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.getQueueProperty;
 import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.sendToQueue;
 
 /**
@@ -43,7 +47,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
     private final static String host = "vs338";
     private final static String broker = "QM_MBROKER10_TEST";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
-    private final static String inQueue = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
+    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
 //    private final static String inQueue = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
 //    private final static String outQueue = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
     private static final String login = "srvwbl4mqtest";
@@ -56,6 +60,50 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 //    @BeforeClass
     public static void before() {
         deletePropertyOnline();
+    }
+
+    private String getQProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
+        return getQueueProperty (topic, cudenoIn, null, ahost, "1414", abroker, channel, alogin, apassw, "30");
+    }
+
+    /**
+     * Тест определения параметров очереди из настроек задачи
+     * @throws Exception
+     */
+    @Test
+    public void testReadProperties() throws Exception {
+        testProperties(qType, host, "1414", broker, login, passw, "30");
+        testProperties(qType, host, " 1414 ", broker, login, passw, "30");
+        testProperties(qType, host, "1414", "", login, passw, "-1");
+        testProperties(qType, "", "1414", broker, login, passw, "-1");
+        testProperties(qType, host, "1414a", broker, login, passw, "0");
+        testProperties("mq.batchSize = 30\n"
+                + "mq.host = " + host + "\n"
+                + "mq.port = 1414\n"
+//                + "mq.queueManager = " + broker + "\n"
+//                + "mq.channel = SYSTEM.DEF.SVRCONN\n"
+                + "mq.topics = " + qType + ":" + cudenoIn + "\n"   // + ":" + outQueue
+                + "mq.user=" + login + "\n"
+                + "mq.password=" + passw +"\n");
+    }
+
+/*
+*/
+
+    private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch) throws Exception {
+        testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch));
+    }
+
+    private void testProperties(String propStr) throws Exception {
+        System.out.print(propStr);
+        Properties properties = new Properties();
+        properties.load(new StringReader(propStr));
+        try {
+            QueueProperties queueProperties = new QueueProperties(properties);
+            System.out.println(queueProperties.toString());
+        } catch (Exception e) {
+        }
+        System.out.println();
     }
 
     /**
@@ -71,7 +119,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
                 SingleActionJobBuilder.create()
                         .withClass(CustomerDetailsNotifyTask.class)
                         .withName("CustomerNotify1")
-                        .withProps(getProperty (qType, host, broker, login, passw))
+                        .withProps(getQProperty(qType, host, broker, login, passw))
                         .build();
         jobService.executeJob(job);
 
@@ -93,7 +141,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 
-        sendToQueue(cf, inQueue,
+        sendToQueue(cf, cudenoIn,
                 new File(this.getClass().getResource("/CustomerDetailsTest_B.xml").getFile()),
                 null, login, passw);
 
@@ -101,7 +149,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
                 SingleActionJobBuilder.create()
                         .withClass(CustomerDetailsNotifyTask.class)
                         .withName("CustomerNotify2")
-                        .withProps(getProperty (qType, host, broker, login, passw))
+                        .withProps(getQProperty(qType, host, broker, login, passw))
                         .build();
         jobService.executeJob(job);
 
@@ -348,31 +396,6 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         System.out.println(journal.getComment());
 
         Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
-    }
-
-    private MQQueueConnectionFactory getConnectionFactory(String ahost, String abroker, String achannel) throws JMSException {
-        MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
-
-        cf.setHostName(ahost);
-        cf.setPort(1414);
-        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-        cf.setQueueManager(abroker);
-        cf.setChannel(achannel);
-        return cf;
-    }
-
-    private String getProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
-        return  "mq.batchSize = 30\n"  //todo
-                + "mq.host = " + ahost + "\n"
-                + "mq.port = 1414\n"
-                + "mq.queueManager = " + abroker + "\n"
-                + "mq.channel = SYSTEM.DEF.SVRCONN\n"
-                + "mq.topics = " + topic + ":" + inQueue + "\n"   // + ":" + outQueue
-                + "mq.user=" + alogin + "\n"
-                + "mq.password=" + apassw +"\n"
-//                                        + "unspents=show\n"
-//                                        + "writeOut=true"
-            ;
     }
 
     private long getCudenoMaxId() throws SQLException {

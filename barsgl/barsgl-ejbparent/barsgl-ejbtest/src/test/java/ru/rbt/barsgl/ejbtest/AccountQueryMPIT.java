@@ -27,80 +27,74 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
     public static final Logger logger = Logger.getLogger(AccountQueryMPIT.class.getName());
 
-    //@Test
-    public void testA() throws Exception {
-        // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
-        // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
-        // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+    private static final String qType = "LIRQ";
+    private final static String host = "vs338";
+    private final static String broker = "QM_MBROKER10_TEST";
+    private final static String channel= "SYSTEM.DEF.SVRCONN";
+//    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
+    private final static String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
+    private final static String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
+    private final static String acdenoF = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
+    private final static String acdenoM = "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF";
+    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
+    private static final String login = "srvwbl4mqtest";
+    private static final String passw = "UsATi8hU";
 
+    private String getQProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
+        return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30");
+    }
+
+    public static MQQueueConnectionFactory getConnectionFactory(String ahost, String abroker, String achannel) throws JMSException {
         MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
 
-
-        // Config
-
-//        cf.setHostName("vs338");
-//        cf.setPort(1414);
-//        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-//        cf.setQueueManager("QM_MBROKER10_TEST");
-//        cf.setChannel("SYSTEM.DEF.SVRCONN");
-        cf.setHostName("172.17.77.144");
+        cf.setHostName(ahost);
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-        cf.setQueueManager("QM_MBROKER4_T5");
-        cf.setChannel("SYSTEM.DEV.SVRCONN");
-/*
-mq.type = queue
-mq.host = vs529
-mq.port = 1414
-mq.queueManager = QM_MBROKER4_T5
-mq.channel = SYSTEM.ADMIN.SVRCONN
-mq.batchSize = 30
-mq.topics = LIRQ:UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST:UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE;BALIRQ:UCBRU.ADP.BARSGL.V3.ACBALIQU.REQUEST:UCBRU.ADP.BARSGL.V3.ACBALIQU.RESPONSE
-mq.user=srvwbl4mqtest
-mq.password=UsATi8hU
- */
+        cf.setQueueManager(abroker);
+        cf.setChannel(achannel);
+        return cf;
+    }
+
+    public static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw, String batchSize) {
+        return  "mq.batchSize = " + batchSize + "\n"  //todo
+                + "mq.host = " + ahost + "\n"
+                + "mq.port = " + aport + "\n"
+                + "mq.queueManager = " + abroker + "\n"
+                + "mq.channel = " + achannel + "\n"
+                + "mq.topics = " + topic + ":" + inQueue +
+                (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue) + "\n"
+                + "mq.user=" + alogin + "\n"
+                + "mq.password=" + apassw +"\n"
+//                                        + "unspents=show\n"
+//                                        + "writeOut=true"
+                ;
+    }
+
+    @Test
+    public void testA() throws Exception {
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        clearQueue(cf, acliquIn, login, passw, 100);
+        clearQueue(cf, acliquOut, login, passw, 100);
+
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryBAProcessor.fullTopicTestB);
 
-        // 00375106 //00200428
-        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\AccountListQuery-Simple.xml"), "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", "srvwbl4mqtest", "UsATi8hU");
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B4.xml"),"UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE","srvwbl4mqtest","UsATi8hU");
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B1"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B2"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", new File("C:\\Projects\\task53\\AccountBalanceListQuery-B3.txt"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF",new File("C:\\Projects\\task53\\AccountListQuery-Over100000.xml"));
+//        sendToQueue(cf, acdenoF, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acdenoM, login, passw);
+        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw);
 
-        /*SingleActionJob job =
+/*
+        SingleActionJob job =
             SingleActionJobBuilder.create()
                 .withClass(AccountQueryTaskMT.class)
-                .withProps(
-                    "mq.batchSize = 30\n" + //todo
-
-                        "mq.type = queue\n" +
-                        "mq.host = 172.17.77.144\n" +
-                        "mq.port = 1414\n" +
-                        "mq.queueManager = QM_MBROKER4_T5\n" +
-                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
-//                        "mq.host = vs338\n" +
-//                        "mq.port = 1414\n" +
-//                        "mq.queueManager = QM_MBROKER10_TEST\n" +
-//                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
-                        "mq.topics = LIRQ:UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST:UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE"+
-                        ";BALIRQ:UCBRU.ADP.BARSGL.V3.ACBALIQU.REQUEST:UCBRU.ADP.BARSGL.V3.ACBALIQU.RESPONSE\n"+
-//                        "mq.topics = LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF" +
-//                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-                        "mq.user=srvwbl4mqtest\n" +
-                        "mq.password=UsATi8hU"
-//                        "mq.user=er22228\n" +
-//                        "mq.password=Vugluskr7"
-
-                )
+                .withName("AccountQueryTaskMT_A")
+                .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30"))
                 .build();
         jobService.executeJob(job);
+*/
 
-//        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
-        receiveFromQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE","srvwbl4mqtest","UsATi8hU");
-        System.out.println();*/
+        receiveFromQueue(cf, acliquOut, login, passw);
+        System.out.println();
 
     }
 
@@ -137,17 +131,12 @@ mq.user=srvwbl4mqtest
 mq.password=UsATi8hU
  */
         String vugluskr9 = "Vugluskr4";
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\newRequests\\MasterAccountPositioningBatchQuery_02_req.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\AccountBalanceListQuery-B4.xml"), "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", "er22228", vugluskr9);
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\AccountListQueryFull.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\test\\lirq1.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
+
+
         sendToQueue(cf, inQueue,
-//                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
-                new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()),
-                //new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
-//                new File("C:\\Projects\\task53\\test\\ma1.xml"),
+                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
                 outQueue,"er22228",vugluskr9);
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", new File("C:\\Projects\\task53\\newRequests\\AccountListQuery_01_req.xml"),"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","er22228",vugluskr9);
+
 
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryBAProcessor.fullTopicTestB);
@@ -259,7 +248,33 @@ mq.password=UsATi8hU
         System.out.println();
 
     }
-    
+
+    private void clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
+        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
+        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+//        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
+        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
+
+        connection.start();
+
+//        JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
+//        System.out.println("\\nReceived message:\\n" + receivedMessage);
+        int i=0;
+        for (; i<count; i++) {
+            JMSMessage message = (JMSMessage) receiver.receiveNoWait();
+            if (null == message)
+                break;
+            System.out.println("DeliveryTime=" + message.getJMSTimestamp() + " MessageID=" + message.getJMSMessageID());
+        }
+        System.out.println("Deleted from " + queueName + ": " + i);
+
+//        sender.close();
+        receiver.close();
+        session.close();
+        connection.close();
+    }
+
     private void receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -282,6 +297,7 @@ mq.password=UsATi8hU
 
     private String readFromJMS(MQMessageConsumer receiver) throws JMSException {
         JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
+//        receivedMessage.acknowledge();
         String textMessage = null;
         if (receivedMessage instanceof JMSTextMessage) {
             textMessage = ((JMSTextMessage) receivedMessage).getText();

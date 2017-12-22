@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
@@ -29,6 +30,11 @@ public class CustomerNotifyQueueController extends CommonQueueController {
 
     @Inject
     private CustomerNotifyProcessor messageProcessor;
+
+    @Override
+    protected int getConcurencySize() {
+        return 10;
+    }
 
     @Override
     protected void afterConnect() throws Exception {

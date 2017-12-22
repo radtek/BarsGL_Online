@@ -20,8 +20,11 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
+import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIMEOUT;
+import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIME_UNIT;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 
 /**
@@ -58,6 +61,23 @@ public class AccountQueryQueueController extends CommonQueueController {
     @Override
     protected int getConcurencySize() {
         return propertiesRepository.getNumberDef(PD_CONCURENCY.getName(), 10L).intValue();
+    }
+
+    @Override
+    protected long getTimeout() {
+        return propertiesRepository.getNumberDef(ACLIRQ_TIMEOUT.getName(), 10L);
+    }
+
+    @Override
+    protected TimeUnit getTimeoutUnit() {   // TODO только для отладки!
+        TimeUnit unit = TimeUnit.MINUTES;
+        String prp = propertiesRepository.getStringDef(ACLIRQ_TIME_UNIT.getName(), "MINUTES");
+        try {
+            unit = TimeUnit.valueOf(prp);
+        } catch (IllegalArgumentException e) {
+            log.error("Illegal time unit value in GL_PRPRP for " + ACLIRQ_TIME_UNIT.getName() + ": " + prp);
+        }
+        return unit;
     }
 
     @Override

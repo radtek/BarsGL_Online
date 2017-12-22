@@ -16,6 +16,8 @@ public enum PropertyName {
     , COB_STAT_INC("cob.stat.increase")
     , STOP_PROC_TIMEOUT("process.stop.timeout.minute")
     , CUST_LOAD_ONLINE("customer.load.online")
+    , ACLIRQ_TIMEOUT("aclirq.timeout")
+    , ACLIRQ_TIME_UNIT("aclirq.timeout.unit")
 
     , BARSGL_LOADER_TYPE("barsgl.loader.type")
     , BARSGL_LOCALIZATION_TYPE("barsgl.localize.type")
