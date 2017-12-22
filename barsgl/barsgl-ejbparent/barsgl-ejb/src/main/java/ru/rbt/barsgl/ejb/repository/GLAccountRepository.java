@@ -714,7 +714,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {
         try {
-            DataRecord data = selectFirst("SELECT * from BALTUR where DAT < ? and ACID = ? and BSAACID = ? "
+            DataRecord data = selectFirst("select 1 from dual where exists (SELECT * from BALTUR where DAT < ? and ACID = ? and BSAACID = ?) "
                     , dat, acid, bsaAcid);
             return (null != data);
         } catch (SQLException e) {
@@ -724,7 +724,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public Boolean hasAccountBalanceAfter(String bsaAcid, String acid, Date dat) {
         try {
-            DataRecord data = selectFirst("SELECT * from BALTUR where DAT > ? and ACID = ? and BSAACID = ? "
+            DataRecord data = selectFirst("select 1 from dual where exists (SELECT * from BALTUR where DAT > ? and ACID = ? and BSAACID = ?) "
                     , dat, acid, bsaAcid);
             return (null != data);
         } catch (SQLException e) {
