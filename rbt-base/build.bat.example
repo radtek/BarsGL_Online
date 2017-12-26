@@ -1,3 +1,0 @@
-set JAVA_HOME="C:\dev\tools\jdk8"
-
-mvn clean install
