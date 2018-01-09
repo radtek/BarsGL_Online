@@ -72,11 +72,11 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
      */
     @Test
     public void testReadProperties() throws Exception {
-        testProperties(qType, host, "1414", broker, login, passw, "30");
-        testProperties(qType, host, " 1414 ", broker, login, passw, "30");
-        testProperties(qType, host, "1414", "", login, passw, "-1");
-        testProperties(qType, "", "1414", broker, login, passw, "-1");
-        testProperties(qType, host, "1414a", broker, login, passw, "0");
+        testProperties(qType, host, "1414", broker, login, passw, "30", false);
+        testProperties(qType, host, " 1414 ", broker, login, passw, "30", false);
+        testProperties(qType, host, "1414", "", login, passw, "-1", true);
+        testProperties(qType, "", "1414", broker, login, passw, "-1", true);
+        testProperties(qType, host, "1414a", broker, login, passw, "0", true);
         testProperties("mq.batchSize = 30\n"
                 + "mq.host = " + host + "\n"
                 + "mq.port = 1414\n"
@@ -84,24 +84,28 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 //                + "mq.channel = SYSTEM.DEF.SVRCONN\n"
                 + "mq.topics = " + qType + ":" + cudenoIn + "\n"   // + ":" + outQueue
                 + "mq.user=" + login + "\n"
-                + "mq.password=" + passw +"\n");
+                + "mq.password=" + passw +"\n"
+                , true);
     }
 
 /*
 */
 
-    private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch) throws Exception {
-        testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch));
+    private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch, boolean isError) throws Exception {
+        testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch), isError);
     }
 
-    private void testProperties(String propStr) throws Exception {
+    private void testProperties(String propStr, boolean isError) throws Exception {
         System.out.print(propStr);
         Properties properties = new Properties();
         properties.load(new StringReader(propStr));
         try {
             QueueProperties queueProperties = new QueueProperties(properties);
             System.out.println(queueProperties.toString());
-        } catch (Exception e) {
+            Assert.assertFalse(isError);
+        } catch (Throwable e) {
+            System.out.println("Error!");
+            Assert.assertTrue(isError);
         }
         System.out.println();
     }
@@ -286,7 +290,6 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
      */
     @Test
     public void testEmulateCreateCustomer() throws Exception {
-
         setPropertyOnline(false);   // режим эмуляции
 
         long idAudit = getAuditMaxId();
@@ -318,7 +321,6 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
      */
     @Test
     public void testEmulateUpdateCustomer() throws Exception {
-
         setPropertyOnline(false);   // режим эмуляции
 
         long idAudit = getAuditMaxId();
