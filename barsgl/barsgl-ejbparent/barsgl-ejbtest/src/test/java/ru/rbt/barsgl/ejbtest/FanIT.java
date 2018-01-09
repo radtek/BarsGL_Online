@@ -22,10 +22,12 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.Iterables.find;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov
@@ -310,9 +312,10 @@ public class FanIT extends AbstractTimerJobIT {
         GLOperation oper1 = (GLOperation) postingController.processMessage(pst1);
         Assert.assertFalse(oper1.isInterFilial());
 
+        final String childEurAccount = "47427978400404502369";
         // неосновная проводка (счета открыты в разных филиалах + курсовая разница)
         EtlPosting pst2 = createFanPosting(st, etlPackage, "40806810700010000465"
-                , "47427978400404502369", new BigDecimal("100.12"), BankCurrency.RUB
+                , childEurAccount, new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("5.23"), BankCurrency.EUR, paymentRef + "_child", paymentRef, YesNo.Y);
 
         GLOperation oper2 = (GLOperation) postingController.processMessage(pst2);
@@ -366,6 +369,113 @@ public class FanIT extends AbstractTimerJobIT {
 
         // проверка статуса обработки
         checkStatePost(paymentRef);
+
+        Pd pdProfitLoss = pds2.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+        Pd pdMfoProfitLoss = pds2.stream().filter(p -> Objects.equals(p.getPcId(), pdProfitLoss.getPcId()) && !Objects.equals(p.getId(), pdProfitLoss.getId()))
+                .findFirst().orElseThrow(() -> new RuntimeException("Other side is not found by pcid " + pdProfitLoss.getPcId()));
+
+        Assert.assertEquals(pdMfoProfitLoss.getBsaAcid() + ":" + pdProfitLoss.getBsaAcid()
+                , substr(pdMfoProfitLoss.getBsaAcid(), 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
+
+    }
+
+    /**
+     * Обработка веерной операции в разных филиалах, с курсовой разницей (3 проводка) (веер по дебету)
+     * @fsd 7.6.3
+     * @throws SQLException
+     */
+    @Test
+    public void testFanMfoExchD_val() throws SQLException {
+        final long st = System.currentTimeMillis();
+        EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO with exchange");
+        etlPackage.setAccountCnt(2);                        // число перьев в веере
+        etlPackage = (EtlPackage) baseEntityRepository.save(etlPackage);
+
+        String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
+
+        final String mainFanValAccount = "47427978400404502369";
+        // основная проводка
+        EtlPosting pst1 = createFanPosting(st, etlPackage, mainFanValAccount, "40806810700010000465"
+                , new BigDecimal("5.23"), BankCurrency.EUR
+                , new BigDecimal("100.12"), BankCurrency.RUB
+                , paymentRef, paymentRef, YesNo.Y);
+
+        GLOperation oper1 = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertTrue(oper1.isInterFilial());
+
+        // неосновная проводка (счета открыты в разных филиалах + курсовая разница)
+        EtlPosting pst2 = createFanPosting(st, etlPackage, mainFanValAccount, "47425810300404802944"
+                , new BigDecimal("2.12"), BankCurrency.EUR
+                , new BigDecimal("50.06"), BankCurrency.RUB
+                , paymentRef + "_child", paymentRef, YesNo.Y);
+
+        GLOperation oper2 = (GLOperation) postingController.processMessage(pst2);
+
+        // process fan fully
+        List<GLOperation> operList = fanPostingController.processOperations(paymentRef);
+        Assert.assertEquals(2, operList.size());
+
+        oper2 = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper2.getId());
+        Assert.assertFalse(oper2.isInterFilial());
+
+        oper1 = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper1.getId());
+        Assert.assertNotNull(oper1.getCurrencyMfo());
+        Assert.assertNotNull(oper1.getAccountLiability());
+        Assert.assertNotNull(oper1.getAccountAsset());
+        Assert.assertTrue(oper1.isExchangeDifferenceA());
+
+        // по основной проводке три записи в PD
+        long pcidMain = baseEntityRepository.selectOne(
+                "select count(1) cnt, p.pcid\n" +
+                        " from gl_posting p, pd d\n" +
+                        "where p.pcid = d.pcid\n" +
+                        "  and p.glo_ref = ?\n" +
+                        "group by p.pcid\n" +
+                        "having count(1) = 3", oper1.getId()).getLong(1);
+
+        // по основной проводке три записи в PD
+        List<Pd> pds1 = baseEntityRepository.select(Pd.class,
+                "select p from Pd p where p.pcId = ?1", pcidMain);
+        Assert.assertEquals(3, pds1.size());
+
+        // Основной счет веера
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals(mainFanValAccount), null));
+        // Не основной счет по кредиту главной операции
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("47425810300404802944"), null));
+        // счет заменен на счет МФО
+        Assert.assertNull(find(pds1, input -> input.getBsaAcid().equals("40806810700010000465"), null));
+
+        // для другой операции формируется проводка по курсовой разнице
+        List<Pd> pds2 = baseEntityRepository.select(Pd.class,
+                "select p from Pd p, GLPosting pst where pst.operation = ?1 and pst.id = p.pcId", oper2);
+        Assert.assertEquals(2, pds2.size());
+        Assert.assertTrue(pds2.stream().allMatch(p -> p.getBsaAcid().equals("47427978400404502369") || p.getBsaAcid().startsWith("706")));
+
+        // проверка суммы
+        checkFunSumma(pst1.getParentReference(), oper1.getId(), GLOperation.OperSide.D);
+
+        // проверка статуса обработки
+        checkStatePost(paymentRef);
+
+        Pd pdProfitLoss = pds2.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+        Pd pdMfoProfitLoss = pds2.stream().filter(p -> Objects.equals(p.getPcId(), pdProfitLoss.getPcId()) && !Objects.equals(p.getId(), pdProfitLoss.getId())
+        )
+                .findFirst().orElseThrow(() -> new RuntimeException("Other side is not found by pcid " + pdProfitLoss.getPcId()));
+
+        Assert.assertEquals(pdMfoProfitLoss.getBsaAcid() + ":" + pdProfitLoss.getBsaAcid()
+                , substr(pdMfoProfitLoss.getBsaAcid(), 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
+
+        List<Pd> pds3 = baseEntityRepository.select(Pd.class,  "select p from Pd p, GLPosting pst where pst.operation = ?1 and pst.id = p.pcId and p.pbr = '@@GLRCA'", oper1);
+        Assert.assertEquals(2, pds3.size());
+
+        Pd pdProfitLossM = pds3.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+        Pd pdMfoProfitLossM = pds3.stream().filter(p -> Objects.equals(p.getPcId(), pdProfitLossM.getPcId()) && !Objects.equals(p.getId(), pdProfitLossM.getId()))
+                .findFirst().orElseThrow(() -> new RuntimeException("Other side is not found by pcid " + pdProfitLossM.getPcId()));
+
+        // филиал отвода курсовой разницы в счетах должен совпадать
+        Assert.assertEquals(pdMfoProfitLossM.getBsaAcid() + ":" + pdProfitLossM.getBsaAcid()
+                , substr(pdMfoProfitLossM.getBsaAcid(), 10, 13), substr(pdProfitLossM.getBsaAcid(), 10, 13));
+
     }
 
     /**
@@ -419,7 +529,7 @@ public class FanIT extends AbstractTimerJobIT {
 
         // Основной счет веера
         Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("40806810700010000465"), null));
-        // Не основной счет по кредиту главной операции
+        // Не основной счет по дебету главной операции
         Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("40702810100013995679"), null));
         // счет заменен на счет МФО
         Assert.assertNull(find(pds1, input -> input.getBsaAcid().equals("47427978400404502369"), null));
@@ -450,6 +560,118 @@ public class FanIT extends AbstractTimerJobIT {
 
         // проверка статуса обработки
         checkStatePost(paymentRef);
+
+        Pd pdProfitLoss = pds2.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+        Pd pdMfoProfitLoss = pds2.stream().filter(p -> Objects.equals(p.getPcId(), pdProfitLoss.getPcId()) && !Objects.equals(p.getId(), pdProfitLoss.getId()))
+                .findFirst().orElseThrow(() -> new RuntimeException("Other side is not found by pcid " + pdProfitLoss.getPcId()));
+
+        Assert.assertEquals(pdMfoProfitLoss.getBsaAcid() + ":" + pdProfitLoss.getBsaAcid()
+                , substr(pdMfoProfitLoss.getBsaAcid(), 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
+    }
+
+    /**
+     * Обработка веерной операции в разных филиалах, с курсовой разницей (3 проводка) (веер по кредиту, перья рублевые)
+     * @fsd 7.6.3
+     * @throws SQLException
+     */
+    @Test
+    public void testFanMfoExchC_val() throws SQLException {
+        final long st = System.currentTimeMillis();
+        EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO with exchange");
+        etlPackage.setAccountCnt(2);                        // число перьев в веере
+        etlPackage = (EtlPackage) baseEntityRepository.save(etlPackage);
+
+        String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
+
+        // основная проводка
+        EtlPosting pst1 = createFanPosting(st, etlPackage
+                , "40702810100013995679", "47427978400404502369"
+                , new BigDecimal("100.12"), BankCurrency.RUB
+                , new BigDecimal("5.23"), BankCurrency.EUR
+                , paymentRef, paymentRef, YesNo.Y);
+
+        GLOperation oper1 = (GLOperation) postingController.processMessage(pst1);
+
+        // неосновная проводка (счета открыты в разных филиалах + курсовая разница)
+        EtlPosting pst2 = createFanPosting(st, etlPackage
+                , "47425810300404802944", "47427978400404502369"
+                , new BigDecimal("50.06"), BankCurrency.RUB
+                , new BigDecimal("2.12"), BankCurrency.EUR
+                , paymentRef + "_child", paymentRef, YesNo.Y);
+
+        GLOperation oper2 = (GLOperation) postingController.processMessage(pst2);
+
+        // process fan fully
+        List<GLOperation> operList = fanPostingController.processOperations(paymentRef);
+        Assert.assertEquals(2, operList.size());
+
+        oper2 = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper2.getId());
+
+        oper1 = (GLOperation) baseEntityRepository.findById(GLOperation.class, oper1.getId());
+        Assert.assertTrue(oper1.isInterFilial());
+        Assert.assertNotNull(oper1.getCurrencyMfo());
+        Assert.assertNotNull(oper1.getAccountLiability());
+        Assert.assertNotNull(oper1.getAccountAsset());
+        Assert.assertTrue(oper1.isExchangeDifferenceA());
+
+        Assert.assertFalse(oper2.isInterFilial());
+
+        long pcidMain = baseEntityRepository.selectOne(
+                "select count(1) cnt, p.pcid\n" +
+                " from gl_posting p, pd d\n" +
+                "where p.pcid = d.pcid\n" +
+                "  and p.glo_ref = ?\n" +
+                "group by p.pcid\n" +
+                "having count(1) = 3", oper1.getId()).getLong(1);
+
+        // по основной проводке три записи в PD
+        List<Pd> pds1 = baseEntityRepository.select(Pd.class,
+                "select p from Pd p where p.pcId = ?1", pcidMain);
+        Assert.assertEquals(3, pds1.size());
+
+        // Основной счет веера
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("47427978400404502369"), null));
+        // Не основной счет по дебету веера
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("47425810300404802944"), null));
+        // счет заменен на счет МФО
+        Assert.assertNull(find(pds1, input -> input.getBsaAcid().equals("40702810100013995679"), null));
+
+        // проверки по проводке МФО: счет заменен на счет МФО
+        Pd pdNotReplaced = find(pds1, input -> input.getBsaAcid().equals("47425810300404802944"), null);
+        Assert.assertNotNull(pdNotReplaced);
+        // replaced here
+        Assert.assertNull(find(pds1, input -> input.getBsaAcid().equals("40702810100013995679"), null));
+
+        // для другой операции формируется проводка по курсовой разнице
+        List<Pd> pds2 = baseEntityRepository.select(Pd.class,
+                "select p from Pd p, GLPosting pst where pst.operation = ?1 and pst.id = p.pcId", oper2);
+        Assert.assertEquals(2, pds2.size());
+        Assert.assertTrue(pds2.stream().allMatch(p -> p.getBsaAcid().equals("47427978400404502369") || p.getBsaAcid().startsWith("706")));
+
+        // проверка суммы
+        checkFunSumma(pst1.getParentReference(), oper1.getId(), GLOperation.OperSide.C);
+
+        // проверка статуса обработки
+        checkStatePost(paymentRef);
+
+        Pd pdProfitLoss = pds2.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+        Pd pdMfoProfitLoss = pds2.stream().filter(p ->
+                Objects.equals(p.getPcId(), pdProfitLoss.getPcId()) && !Objects.equals(p.getId(), pdProfitLoss.getId()))
+                .findFirst().orElseThrow(() -> new RuntimeException("Other side is not found by pcid " + pdProfitLoss.getPcId()));
+
+        Assert.assertEquals(pdMfoProfitLoss.getBsaAcid() + ":" + pdProfitLoss.getBsaAcid()
+                , substr(pdMfoProfitLoss.getBsaAcid(), 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
+
+        List<Pd> pds3 = baseEntityRepository.select(Pd.class,  "select p from Pd p, GLPosting pst where pst.operation = ?1 and pst.id = p.pcId and p.pbr = '@@GLRCA'", oper1);
+        Assert.assertEquals(2, pds3.size());
+
+        Pd pdProfitLossM = pds3.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+        Pd pdMfoProfitLossM = pds3.stream().filter(p -> Objects.equals(p.getPcId(), pdProfitLossM.getPcId()) && !Objects.equals(p.getId(), pdProfitLossM.getId())
+        ).findFirst().orElseThrow(() -> new RuntimeException("Other side is not found by pcid " + pdProfitLossM.getPcId()));
+
+        // филиал отвода курсовой разницы в счетах должен совпадать
+        Assert.assertEquals(pdMfoProfitLossM.getBsaAcid() + ":" + pdProfitLossM.getBsaAcid()
+                , substr(pdMfoProfitLossM.getBsaAcid(), 10, 13), substr(pdProfitLossM.getBsaAcid(), 10, 13));
     }
 
     /**

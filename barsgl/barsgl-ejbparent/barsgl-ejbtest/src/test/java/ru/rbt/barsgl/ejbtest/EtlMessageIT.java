@@ -23,7 +23,6 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
@@ -37,10 +36,10 @@ import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
 import static ru.rbt.barsgl.shared.enums.DealSource.*;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov
@@ -168,8 +167,8 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
         Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
         Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
-        Assert.assertEquals(null, pdDr.getPref());
-        Assert.assertEquals(null, pdCr.getPref());
+        Assert.assertNull(null, pdDr.getPref());
+        Assert.assertNull(null, pdCr.getPref());
 
         Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
@@ -296,7 +295,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      * @fsd 7.5.2.2, 10.5
      * @throws ParseException
      */
-    @Test public void testMfoExch() throws ParseException {
+    @Test public void testMfoExchD() throws ParseException {
 
         long stamp = System.currentTimeMillis();
 
@@ -307,7 +306,8 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setDealId("1234");
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountDebit("30302840700010000033");    // "MOS"
+        String accVal = "40702840000010002486";
+        pst.setAccountDebit(accVal);    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
 
@@ -355,11 +355,157 @@ public class EtlMessageIT extends AbstractTimerJobIT {
 
         Assert.assertTrue(pdCrE.getAmountBC() == operation.getExchangeDifference().movePointRight(2).abs().longValue());  // в рублях
 
-        // сумма эквивалентов по дебету и
-//        Assert.assertTrue(
-//                (pdDr1.getAmountBC() + pdDr2.getAmountBC() == -operation.getEquivalentDebit().movePointRight(2).longValue())
-//                        ||  (pdCr1.getAmountBC() + pdCr2.getAmountBC() == operation.getEquivalentCredit().movePointRight(2).longValue())
-//        );
+        Pd pdProfitLoss = pdList3.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+
+        Assert.assertEquals(accVal + ":" + pdProfitLoss.getBsaAcid()
+                , substr(accVal, 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
+
+    }
+
+    /**
+     * Обработка межфилиальной операции в разной валюте с курсовой разницей (3 проводки)
+     * оба счета валютные
+     * @fsd 7.5.2.2, 10.5
+     * @throws ParseException
+     */
+    @Test public void testMfoExchD_val() throws ParseException {
+
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "MfoExchange");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setDealId("1234");
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        String accountDebit = "40702840000010002486";
+        pst.setAccountDebit(accountDebit);    // "MOS"
+        pst.setCurrencyDebit(BankCurrency.USD);
+        pst.setAmountDebit(new BigDecimal("100.00"));
+
+        pst.setAccountCredit("40702978000164522105");     // "CHL"
+        pst.setCurrencyCredit(BankCurrency.EUR);
+        pst.setAmountCredit(new BigDecimal("90.00"));
+        pst.setSourcePosting("FC12_LD");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());       // операция создана
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(operation.getState(), OperState.POST);
+
+        List<GLPosting> postList = getPostings(operation);
+        Assert.assertNotNull(postList);
+        Assert.assertEquals(3,postList.size());
+
+        // дебет
+        List<Pd> pdList1 = getPostingPd( findGLPosting("3", postList) );
+        Pd pdDr1 = pdList1.get(0);
+        Pd pdCr1 = pdList1.get(1);
+
+        // кредит
+        List<Pd> pdList2 = getPostingPd( findGLPosting("4", postList) );
+        Pd pdDr2 = pdList2.get(0);
+        Pd pdCr2 = pdList2.get(1);
+
+        // курсовая разница
+        List<Pd> pdList3 = getPostingPd( findGLPosting("2", postList) );
+        Pd pdDrE = pdList3.get(0);
+        Pd pdCrE = pdList3.get(1);
+
+        // основные проводки
+        Assert.assertTrue(pdDr1.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
+        Assert.assertTrue(pdCr2.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
+
+        Assert.assertTrue(-pdDr1.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
+        Assert.assertTrue(pdCr2.getAmount() == operation.getAmountCredit().movePointRight(2).longValue());  // сумма в валюте
+
+        // курсовая разница
+        Assert.assertTrue(pdDrE.getCcy().equals(BankCurrency.RUB));  // валюта дебет
+        Assert.assertTrue(pdCrE.getCcy().equals(BankCurrency.RUB)); // валюта кредит
+
+        Assert.assertTrue(pdCrE.getAmountBC() == operation.getExchangeDifference().movePointRight(2).abs().longValue());  // в рублях
+
+
+        Pd pdProfitLoss = pdList3.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+
+        Assert.assertEquals(accountDebit + ":" + pdProfitLoss.getBsaAcid()
+                , substr(accountDebit, 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
+
+    }
+
+    /**
+     * Обработка межфилиальной операции в разной валюте с курсовой разницей (3 проводки)
+     * валютный счет по кредиту
+     * @fsd 7.5.2.2, 10.5
+     * @throws ParseException
+     */
+    @Test public void testMfoExchC() throws ParseException {
+
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "MfoExchange");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setDealId("1234");
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setAccountDebit("47427810550160009330");     // "CHL"
+        pst.setCurrencyDebit(BankCurrency.RUB);
+        pst.setAmountDebit(new BigDecimal("3500.00"));
+
+        final String accValMos = "40702840000010002486";
+        pst.setAccountCredit(accValMos);   // "MOS"
+        pst.setCurrencyCredit(BankCurrency.USD);
+        pst.setAmountCredit(new BigDecimal("100.00"));
+        pst.setSourcePosting("FC12_LD");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());       // операция создана
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(operation.getState(), OperState.POST);
+
+        List<GLPosting> postList = getPostings(operation);
+        Assert.assertNotNull(postList);                 // 2 проводки
+        Assert.assertEquals(postList.size(), 3);
+
+        // дебет
+        List<Pd> pdList1 = getPostingPd( findGLPosting("3", postList) );
+        Pd pdDr1 = pdList1.get(0);
+        Pd pdCr1 = pdList1.get(1);
+
+        // кредит
+        List<Pd> pdList2 = getPostingPd( findGLPosting("4", postList) );
+        Pd pdDr2 = pdList2.get(0);
+        Pd pdCr2 = pdList2.get(1);
+
+        // курсовая разница
+        List<Pd> pdList3 = getPostingPd( findGLPosting("2", postList) );
+        Pd pdDrE = pdList3.get(0);
+        Pd pdCrE = pdList3.get(1);
+
+        // основные проводки
+        Assert.assertTrue(pdDr1.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
+        Assert.assertTrue(pdCr2.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
+
+        Assert.assertTrue(-pdDr1.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
+        Assert.assertTrue(pdCr2.getAmount() == operation.getAmountCredit().movePointRight(2).longValue());  // сумма в валюте
+
+        // курсовая разница
+        Assert.assertTrue(pdDrE.getCcy().equals(BankCurrency.RUB));  // валюта дебет
+        Assert.assertTrue(pdCrE.getCcy().equals(BankCurrency.RUB)); // валюта кредит
+
+        Assert.assertTrue(pdCrE.getAmountBC() == operation.getExchangeDifference().movePointRight(2).abs().longValue());  // в рублях
+
+        Pd pdProfitLoss = pdList3.stream().filter(p -> p.getBsaAcid().startsWith("706")).findFirst().orElseThrow(() -> new RuntimeException("Not found 706% posting"));
+
+        Assert.assertEquals(accValMos + ":" + pdProfitLoss.getBsaAcid()
+                , substr(accValMos, 10, 13), substr(pdProfitLoss.getBsaAcid(), 10, 13));
 
     }
 

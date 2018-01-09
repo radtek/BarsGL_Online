@@ -47,6 +47,11 @@
     </target>
 
 <!--
+    <target name="build-all-unix">
+        <exec executable="./build-rbt-base.bat" dir="../rbt-base" failonerror="true" osfamily="unix"/>
+        <exec executable="./build.bat" dir="."  failonerror="true" osfamily="unix"/>
+    </target>
+
     <target name="build-prod" description="Сборка для Production Mode. Использует шифрацию пароля для Datasource и т.п.">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
             <arg line="/A /C build-rbt-base.bat"/>
@@ -94,6 +99,11 @@
 
     <target name="build-all-deploy">
         <antcall target="build-all"/>
+        <antcall target="deploy-ear"/>
+    </target>
+
+    <target name="build-all-deploy-unix">
+        <antcall target="build-all-unix"/>
         <antcall target="deploy-ear"/>
     </target>
 

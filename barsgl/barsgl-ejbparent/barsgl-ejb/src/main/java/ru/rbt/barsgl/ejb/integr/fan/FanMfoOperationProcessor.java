@@ -16,6 +16,7 @@ import java.util.List;
 
 import static com.google.common.collect.Iterables.find;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
 import static ru.rbt.barsgl.ejb.entity.gl.GLPosting.PostingType.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.MFO_ACCOUNT_NOT_FOUND;
@@ -51,8 +52,10 @@ public class FanMfoOperationProcessor extends FanOperationProcessor {
         BankCurrency ccyMfo;
         if (C == operation.getFpSide()) {
             ccyMfo = operation.getCurrencyCredit();
+            operation.setCcyMfoSide(C);
         } else {
             ccyMfo = operation.getCurrencyDebit();
+            operation.setCcyMfoSide(D);
         }
 
         boolean isClients = glPostingRepository.isMfoClientPosting(operation.getAccountDebit(),

@@ -3,19 +3,17 @@ package ru.rbt.barsgl.ejb.entity.gl;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.ejbcore.mapping.BaseEntity;
-import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
 import static java.math.BigDecimal.ZERO;
-import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
-import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
-import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
+import static ru.rbt.barsgl.shared.enums.DealSource.*;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
@@ -332,6 +330,12 @@ public class GLOperation extends BaseEntity<Long> {
 
     @Transient
     private BackValueParameters backValueParameters;
+
+    /**
+     * для хранения стороны проводки, с которой определяяем валюту
+     */
+    @Transient
+    private OperSide ccyMfoSide;
 
     // ====================================================
 
@@ -994,6 +998,14 @@ public class GLOperation extends BaseEntity<Long> {
 
     public void setBackValueParameters(BackValueParameters backValueParameters) {
         this.backValueParameters = backValueParameters;
+    }
+
+    public OperSide getCcyMfoSide() {
+        return ccyMfoSide;
+    }
+
+    public void setCcyMfoSide(OperSide ccyMfoSide) {
+        this.ccyMfoSide = ccyMfoSide;
     }
 }
 
