@@ -6,19 +6,30 @@ import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
+import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueController;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.*;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIMEOUT;
+import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIME_UNIT;
+import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
+import static ru.rbt.barsgl.ejbtest.CustomerDetailsNotifyIT.getAuditMaxId;
 
 /**
  * Created by ER22228
@@ -39,6 +50,11 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
+
+    @After
+    public void after() {
+        setPropertyTimeout("MINUTES", 10);
+    }
 
     private String getQProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
         return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30");
@@ -74,8 +90,8 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     public void testA() throws Exception {
 
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
-        clearQueue(cf, acliquIn, login, passw, 100);
-        clearQueue(cf, acliquOut, login, passw, 100);
+        clearQueue(cf, acliquIn, login, passw, 1000);
+        clearQueue(cf, acliquOut, login, passw, 1000);
 
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
 //        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryBAProcessor.fullTopicTestB);
@@ -83,19 +99,49 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 //        sendToQueue(cf, acdenoF, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acdenoM, login, passw);
         sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw);
 
-/*
+        Thread.sleep(1000L);
         SingleActionJob job =
-            SingleActionJobBuilder.create()
-                .withClass(AccountQueryTaskMT.class)
-                .withName("AccountQueryTaskMT_A")
-                .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30"))
-                .build();
+                SingleActionJobBuilder.create()
+                        .withClass(AccountQueryTaskMT.class)
+                        .withName("AccountQueryTaskMT_A")
+                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30"))
+                        .build();
         jobService.executeJob(job);
-*/
 
-        receiveFromQueue(cf, acliquOut, login, passw);
+        Thread.sleep(4000L);
+        Assert.assertFalse(StringUtils.isEmpty(receiveFromQueue(cf, acliquOut, login, passw)));
         System.out.println();
 
+    }
+
+    @Test
+    public void testStressA() throws Exception {
+
+        int cnt = 30;
+        int cntmax = 1000;
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        clearQueue(cf, acliquIn, login, passw, cntmax);
+        clearQueue(cf, acliquOut, login, passw, cntmax);
+
+        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw, cnt);
+
+        setPropertyTimeout("SECONDS", 10);
+        Thread.sleep(4000L);
+        long idAudit = getAuditMaxId();
+        SingleActionJob job =
+                SingleActionJobBuilder.create()
+                        .withClass(AccountQueryTaskMT.class)
+                        .withName("AccountQueryTaskMT_A")
+                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30"))
+                        .build();
+        jobService.executeJob(job);
+
+        Thread.sleep(4000L);
+        int n = clearQueue(cf, acliquOut, login, passw, cntmax);
+        Assert.assertTrue(n < cnt);
+
+        Assert.assertNotNull("Нет записи об ошибке в аудит", getAuditError(idAudit));
     }
 
     @Test
@@ -249,7 +295,28 @@ mq.password=UsATi8hU
 
     }
 
-    private void clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
+    private static void setPropertyTimeout(String unit, int interval) {
+        deletePropertyTimeout();
+        baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
+                        "(?, 'root', 'Y', 'STRING_TYPE', 'Единицы времени обработки сообщений из очереди ACLIRQ', null, ?, null)",
+                ACLIRQ_TIME_UNIT.getName(), unit);
+        baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
+                        "(?, 'root', 'Y', 'NUMBER_TYPE', 'Макс. время обработки сообщений из очереди ACLIRQ', null, null, ?)",
+                ACLIRQ_TIMEOUT.getName(), interval);
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+    }
+
+    private static void deletePropertyTimeout() {
+        baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?, ?)", ACLIRQ_TIMEOUT.getName(), ACLIRQ_TIME_UNIT.getName());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+    }
+
+    private AuditRecord getAuditError(long idFrom ) throws SQLException {
+        return (AuditRecord) baseEntityRepository.selectFirst(AuditRecord.class,
+                "from AuditRecord a where a.logCode in ('AccountQuery') and a.logLevel = 'Error' and a.id > ?1 ", idFrom);
+    }
+
+    private int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -265,7 +332,7 @@ mq.password=UsATi8hU
             JMSMessage message = (JMSMessage) receiver.receiveNoWait();
             if (null == message)
                 break;
-            System.out.println("DeliveryTime=" + message.getJMSTimestamp() + " MessageID=" + message.getJMSMessageID());
+//            System.out.println("DeliveryTime=" + message.getJMSTimestamp() + " MessageID=" + message.getJMSMessageID());
         }
         System.out.println("Deleted from " + queueName + ": " + i);
 
@@ -273,9 +340,11 @@ mq.password=UsATi8hU
         receiver.close();
         session.close();
         connection.close();
+
+        return i;
     }
 
-    private void receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
+    private String receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -287,12 +356,14 @@ mq.password=UsATi8hU
 //        JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
 //        System.out.println("\\nReceived message:\\n" + receivedMessage);
 
-        System.out.println("\nReceived message:\n" + readFromJMS(receiver));
+        String answer = readFromJMS(receiver);
+        System.out.println("\nReceived message from " + queueName + ":\n" + answer);
 
 //        sender.close();
         receiver.close();
         session.close();
         connection.close();
+        return answer;
     }
 
     private String readFromJMS(MQMessageConsumer receiver) throws JMSException {
@@ -326,6 +397,10 @@ mq.password=UsATi8hU
     }
 
     public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password) throws JMSException {
+        sendToQueue (cf, queueName, file, replyToQ, username, password, 1);
+    }
+
+    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password, int cnt) throws JMSException {
         byte[] incomingMessage = null;
         try {
             incomingMessage = FileUtils.readFileToByteArray(file);
@@ -351,8 +426,9 @@ mq.password=UsATi8hU
             MQQueue queueR2Q = (MQQueue) session.createQueue("queue:///" + replyToQ);
             bytesMessage.setJMSReplyTo(queueR2Q);
         }
-        sender.send(bytesMessage);
-        System.out.println("Sent message");
+        for(int i=0; i<cnt; i++)
+            sender.send(bytesMessage);
+        System.out.println(String.format("Sent %d message to %s", cnt, queueName));
 
         sender.close();
         receiver.close();

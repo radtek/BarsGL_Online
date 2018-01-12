@@ -321,6 +321,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
      */
     @Test
     public void testEmulateUpdateCustomer() throws Exception {
+
         setPropertyOnline(false);   // режим эмуляции
 
         long idAudit = getAuditMaxId();
@@ -417,7 +418,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         return (CustDNMapped) baseEntityRepository.selectFirst(CustDNMapped.class, "from CustDNMapped j where j.id = ?1", id);
     }
 
-    private long getAuditMaxId() throws SQLException {
+    public static long getAuditMaxId() throws SQLException {
         DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
         return null == res ? 0 : res.getLong(0);
     }
