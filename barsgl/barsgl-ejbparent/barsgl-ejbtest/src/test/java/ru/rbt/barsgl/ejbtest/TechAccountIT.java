@@ -121,6 +121,8 @@ public class TechAccountIT extends AbstractRemoteIT {
         List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
         Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
 
+        Assert.assertEquals("PCIDы п/проводок должны совпадать", pdList.get(0).getPcId(), pdList.get(1).getPcId());
+
         setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
     }
