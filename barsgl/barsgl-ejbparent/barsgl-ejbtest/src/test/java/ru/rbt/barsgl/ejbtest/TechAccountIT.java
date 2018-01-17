@@ -33,7 +33,7 @@ import java.util.List;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.shared.enums.DealSource.TBO;
 
 /**
  * Created by Ivan Sevastyanov on 03.04.2017.
@@ -326,7 +326,7 @@ public class TechAccountIT extends AbstractRemoteIT {
 
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.USD);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("2316768");
         pst.setDeptId("TBM");
         pst.setDealId("921458");
@@ -360,7 +360,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("2316768");
         pst.setDeptId("TBM");
         pst.setDealId("875859");
@@ -394,7 +394,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("3370547");
         pst.setDeptId("TBM");
         pst.setDealId("1287387");
@@ -428,7 +428,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("3370547");
         pst.setStornoReference("3370547");
         pst.setDeptId("TBM");
