@@ -14,6 +14,7 @@ import ru.rbt.barsgl.ejb.controller.excel.CardMessageProcessorBean;
 import ru.rbt.barsgl.ejb.controller.excel.ParamsParserException;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.shared.ExceptionUtils;
 
 import javax.servlet.ServletConfig;
@@ -80,33 +81,12 @@ public class UploadFileHandler extends HttpServlet {
             }
 
         } catch (Exception e) {
-            String rusErr = "";
-            if (ExceptionUtils.isExistsInException(e, ParamsParserException.class)) {
-                ParamsParserException exception = ExceptionUtils.findException(e, ParamsParserException.class);
-                if (exception.getMessage() == null || exception.getMessage().trim().isEmpty())
-                    rusErr = "Ошибки формата данных при загрузке пакета из файла";
-                else rusErr = exception.getMessage();
-            }else if (ExceptionUtils.isExistsInException(e.getCause(), IllegalStateException.class)){
-                rusErr = "Файл содержит формулы. Загрузка файла невозможна";
-            }else if (ExceptionUtils.isExistsInException(e.getCause(), POIXMLException.class)){
-                rusErr = "Неверный формат файла. Нужен файл в формате 'xlsx'";
-            }
+            String rusErr = getRusError(e);
             if (!rusErr.isEmpty()){
-                try {
-                    localInvoker.invoke(AuditController.class, "warning",
-                            AuditRecord.LogCode.BatchOperation, rusErr, null, null);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
+                auditRecord("warning", rusErr, null);
                 resp.getWriter().print(rusErr);
-
             }else{
-                try {
-                    localInvoker.invoke(AuditController.class, "error",
-                            AuditRecord.LogCode.BatchOperation, e.getMessage(), null, e);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
+                auditRecord("error", "Системная ошибка при загрузке файла:" + e.getMessage(), e);
                 e.printStackTrace(resp.getWriter());
             }
         }
@@ -135,5 +115,31 @@ public class UploadFileHandler extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         localInvoker = findServerAccess();
+    }
+
+    private void auditRecord(String method, String message, Throwable exc) {
+        try {
+            localInvoker.invoke(AuditController.class, method, AuditRecord.LogCode.BatchOperation, message, null, exc);
+        } catch (Exception e) {
+            log.error("error on create error audit record, on exception:", exc);
+            log.error("error on create error audit record:", e);
+        }
+    }
+
+    private String getRusError(Throwable e) {
+        String rusErr = "";
+        if (ExceptionUtils.isExistsInException(e, ParamsParserException.class)) {
+            ParamsParserException exception = ExceptionUtils.findException(e, ParamsParserException.class);
+            if (exception.getMessage() == null || exception.getMessage().trim().isEmpty())
+                rusErr = "Ошибки формата данных при загрузке пакета из файла";
+            else rusErr = exception.getMessage();
+        }else if (ExceptionUtils.isExistsInException(e.getCause(), IllegalStateException.class)){
+            rusErr = "Файл содержит формулы. Загрузка файла невозможна";
+        }else if (ExceptionUtils.isExistsInException(e.getCause(), POIXMLException.class)){
+            rusErr = "Неверный формат файла. Нужен файл в формате 'xlsx'";
+        }else if (ExceptionUtils.isExistsInException(e, NotAuthorizedUserException.class)){
+            rusErr = "Истек срок неактивности сеанса. Пожалуйста, нажмите F5 или Ctrl+R.";
+        }
+        return rusErr;
     }
 }
