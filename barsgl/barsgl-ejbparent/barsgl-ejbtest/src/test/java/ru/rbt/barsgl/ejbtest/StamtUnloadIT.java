@@ -769,7 +769,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date lwdate = ru.rbt.ejbcore.util.DateUtils.addDay(operday, -1);
         setOperday(operday, lwdate, ONLINE, OPEN);
         DataRecord account = baseEntityRepository
-                .selectFirst("select * from gl_acc a where rownum < 2 and GL_STMFILTER_BAL(A.BSAACID) = '1'");
+                .selectFirst("select /*+ parallel 4 */ * from gl_acc a where rownum < 2 and GL_STMFILTER_BAL(A.BSAACID) = '1'");
         Assert.assertNotNull(account);
         baseEntityRepository.executeNativeUpdate("update gl_acc set dtr = ? where dtr = ?", lwdate, operday);
         baseEntityRepository.executeNativeUpdate("update gl_acc set dtr = ? where id = ?", operday, account.getLong("id"));
