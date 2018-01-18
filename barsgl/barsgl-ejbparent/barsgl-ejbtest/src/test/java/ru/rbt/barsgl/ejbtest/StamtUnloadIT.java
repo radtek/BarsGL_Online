@@ -784,6 +784,12 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         DataRecord accRecord = baseEntityRepository.selectFirst("select * from GL_ACCSTM");
         Assert.assertNotNull(accRecord);
         Assert.assertEquals(account.getString("bsaacid"), accRecord.getString("CBACCOUNT"));
+
+        // Next unloading only after TDS processed previouse unloading
+        jobService.executeJob(job);
+        DataRecord accheader2 = getLastUnloadHeader(NEW_ACCOUNTS);
+        Assert.assertNotNull(accheader2);
+        Assert.assertTrue(Objects.equals(accheader2.getLong("id"), accheader1.getLong("id")));
     }
 
     private void registerForStamtUnload(String bsaacid) {

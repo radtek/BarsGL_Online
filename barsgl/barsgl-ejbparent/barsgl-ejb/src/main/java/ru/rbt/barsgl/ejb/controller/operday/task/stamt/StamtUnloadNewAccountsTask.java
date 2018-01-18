@@ -59,9 +59,11 @@ public class StamtUnloadNewAccountsTask implements ParamsAwareRunnable{
     private int fillData(Date operday) throws Exception {
         return (int) repository.executeInNewTransaction(persistence -> {
             return repository.executeTransactionally(connection -> {
-                try (CallableStatement proc = connection.prepareCall("{call GL_ACCSTM_UNLOAD(?, ?) }")) {
+                try (CallableStatement proc = connection.prepareCall("{call GL_ACCSTM_UNLOAD(?, ?, ?, ?) }")) {
                     proc.setDate(1, new java.sql.Date(operday.getTime()));
                     proc.registerOutParameter(2,  Types.INTEGER);
+                    proc.setString(3, UnloadStamtParams.NEW_ACCOUNTS.getParamName());
+                    proc.setString(4, UnloadStamtParams.NEW_ACCOUNTS.getParamDesc());
                     proc.executeUpdate();
                     return proc.getInt(2);
                 }
@@ -88,7 +90,7 @@ public class StamtUnloadNewAccountsTask implements ParamsAwareRunnable{
                 return true;
             } catch (ValidationError e) {
                 auditController.warning(NewAccounts, "Невозможно выгрузить новые счета в STAMT", null, e);
-                return true;
+                return false;
             }
         } else {
             return true;
