@@ -35,6 +35,7 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
  */
 public abstract class CommonQueueController implements MessageListener {
     private static final Logger log = Logger.getLogger(CommonQueueController.class);
+    private static final int defaultQueueBachSize = 10;
 
     @Resource
     protected EJBContext context;
@@ -149,14 +150,16 @@ public abstract class CommonQueueController implements MessageListener {
             long timeout = getTimeout(); // 10
             TimeUnit unit = getTimeoutUnit();   // TimeUnit.MINUTES;
             ExecutorService executor = null;
+            int batchSize = queueProperties.mqBatchSize;
+            batchSize = batchSize == -1 ? defaultQueueBachSize : batchSize;
             try {
-                for (int i = 0; i < queueProperties.mqBatchSize; i++) {
+                for (int i = 0; i < batchSize; i++) {
                     long startReceiveTime = System.currentTimeMillis();
                     Message receivedMessage = consumer.receiveNoWait();
                     long endReceiveTime = System.currentTimeMillis();
                     if (receivedMessage != null) {
                         if (executor == null) {
-                            executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(cuncurencySize, cuncurencySize, queueProperties.mqBatchSize);
+                            executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(cuncurencySize, cuncurencySize, batchSize);
                         }
 
                         executor.submit(() -> processMessage(receivedMessage, queueType, inQueue, outQueue , endReceiveTime - startReceiveTime, endReceiveTime));
@@ -174,7 +177,7 @@ public abstract class CommonQueueController implements MessageListener {
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
         try {
             asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
-        } catch (TimeoutException e) {  // TODO не проверено
+        } catch (TimeoutException e) {
             throw new ValidationError(ErrorCode.QUEUE_ERROR, e.getMessage());
         }
     }

@@ -52,6 +52,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 //    private final static String outQueue = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
+    private static final boolean writeOut = true;
 
     private static final String qType = "CUST";
 
@@ -63,7 +64,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     private String getQProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
-        return getQueueProperty (topic, cudenoIn, null, ahost, "1414", abroker, channel, alogin, apassw, "30");
+        return getQueueProperty (topic, cudenoIn, null, ahost, "1414", abroker, channel, alogin, apassw, "30", writeOut);
     }
 
     /**
@@ -92,7 +93,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 */
 
     private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch, boolean isError) throws Exception {
-        testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch), isError);
+        testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch, writeOut), isError);
     }
 
     private void testProperties(String propStr, boolean isError) throws Exception {
@@ -111,11 +112,11 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
     }
 
     /**
-     * Тест получения сообщения из очереди
+     * Тест подключения
      * @throws Exception
      */
     @Test
-    public void testReadQueue() throws Exception {
+    public void testConnectToQueue() throws Exception {
         long idAudit = getAuditMaxId();
         remoteAccess.invoke(CustomerNotifyQueueController.class, "closeConnection");
 
@@ -126,6 +127,27 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
                         .withProps(getQProperty(qType, host, broker, login, passw))
                         .build();
         jobService.executeJob(job);
+
+        Thread.sleep(2000L);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+    }
+
+    /**
+     * Тест отправки сообщения в очередь
+     * @throws Exception
+     */
+    @Test
+    public void testSendQueue() throws Exception {
+        long idAudit = getAuditMaxId();
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "closeConnection");
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        sendToQueue(cf, cudenoIn,
+                new File(this.getClass().getResource("/CustomerDetailsTest_B.xml").getFile()),
+                null, login, passw);
+        sendToQueue(cf, cudenoIn,
+                new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()),
+                null, login, passw);
 
         Thread.sleep(2000L);
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));

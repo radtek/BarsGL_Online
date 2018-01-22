@@ -12,24 +12,34 @@ import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
-import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueController;
+import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.JobSchedulingType;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.*;
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
+import static ru.rbt.audit.entity.AuditRecord.LogLevel.SysError;
+import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
+import static ru.rbt.barsgl.ejb.common.CommonConstants.ACLIRQ_TASK;
 import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIMEOUT;
 import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIME_UNIT;
-import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
+import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.ejbtest.CustomerDetailsNotifyIT.getAuditMaxId;
+import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
+import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
 /**
  * Created by ER22228
@@ -50,6 +60,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
+    private static final boolean writeOut = true;
 
     @After
     public void after() {
@@ -57,7 +68,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     }
 
     private String getQProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
-        return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30");
+        return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30", writeOut);
     }
 
     public static MQQueueConnectionFactory getConnectionFactory(String ahost, String abroker, String achannel) throws JMSException {
@@ -71,19 +82,21 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         return cf;
     }
 
-    public static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw, String batchSize) {
-        return  "mq.batchSize = " + batchSize + "\n"  //todo
+    public static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw, String batchSize, boolean writeOut) {
+        return  "mq.type = queue\n"
                 + "mq.host = " + ahost + "\n"
                 + "mq.port = " + aport + "\n"
                 + "mq.queueManager = " + abroker + "\n"
                 + "mq.channel = " + achannel + "\n"
-                + "mq.topics = " + topic + ":" + inQueue +
-                (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue) + "\n"
+                + "mq.batchSize = " + batchSize + "\n"
+                + "mq.topics = " + topic + ":" + inQueue + (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue) + "\n"
                 + "mq.user=" + alogin + "\n"
                 + "mq.password=" + apassw +"\n"
-//                                        + "unspents=show\n"
-//                                        + "writeOut=true"
-                ;
+                + "unspents=show\n"
+                + "writeOut=" + writeOut +"\n"
+                + "writeSleepThreadTime=true\n"
+
+        ;
     }
 
     @Test
@@ -104,21 +117,24 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
                         .withName("AccountQueryTaskMT_A")
-                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30"))
+                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut))
                         .build();
         jobService.executeJob(job);
 
         Thread.sleep(4000L);
-        Assert.assertFalse(StringUtils.isEmpty(receiveFromQueue(cf, acliquOut, login, passw)));
+        String answer = receiveFromQueue(cf, acliquOut, login, passw);
+        Assert.assertFalse(StringUtils.isEmpty(answer));
+        Assert.assertFalse(answer.contains("Error"));
+        System.out.println("\nReceived message from " + acliquOut + ":\n" + answer);
         System.out.println();
 
     }
 
     @Test
-    public void testStressA() throws Exception {
+    public void testStressError() throws Exception {
 
         int cnt = 30;
-        int cntmax = 1000;
+        int cntmax = 5000;
 
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
         clearQueue(cf, acliquIn, login, passw, cntmax);
@@ -126,22 +142,88 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
         sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw, cnt);
 
-        setPropertyTimeout("SECONDS", 10);
-        Thread.sleep(4000L);
         long idAudit = getAuditMaxId();
+
+        setPropertyTimeout("SECONDS", 5);
+        Thread.sleep(5000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
                         .withName("AccountQueryTaskMT_A")
-                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30"))
+                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut))
                         .build();
         jobService.executeJob(job);
 
-        Thread.sleep(4000L);
+        Thread.sleep(6000L);
         int n = clearQueue(cf, acliquOut, login, passw, cntmax);
         Assert.assertTrue(n < cnt);
 
-        Assert.assertNotNull("Нет записи об ошибке в аудит", getAuditError(idAudit));
+        AuditRecord record = getAuditError(idAudit, Error);
+        Assert.assertNotNull("Нет записи об ошибке в аудит", record);
+        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
+    }
+
+    @Test
+    public void testStress500() throws Exception {
+
+        int cnt = 500;
+        int cntmax = 5000;
+
+        shutdownJob(ACLIRQ_TASK);
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        clearQueue(cf, acliquIn, login, passw, cntmax);
+        clearQueue(cf, acliquOut, login, passw, cntmax);
+
+        // длинный тест
+//        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw, cnt);
+        // короткий тест
+        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, login, passw, cnt);
+
+        long idAudit = getAuditMaxId();
+
+        setPropertyTimeout("MINUTES", 10);
+        runAclirqJob(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
+        Thread.sleep(60 * 1000L);
+        shutdownJob(ACLIRQ_TASK);
+
+        int n = clearQueue(cf, acliquOut, login, passw, cntmax);
+        Assert.assertTrue(n >= cnt);
+        Assert.assertNull("Есть записи об ошибке в аудит", getAuditError(idAudit, SysError, Error, Warning));
+
+        Assert.assertTrue(getStatistics() == n);
+        // static 31.046  old 37.191
+    }
+
+    @Test
+    public void testStress5000() throws Exception {
+
+        int cnt = 5000;
+        int cntmax = cnt * 2;
+
+        shutdownJob(ACLIRQ_TASK);
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        clearQueue(cf, acliquIn, login, passw, cntmax);
+        clearQueue(cf, acliquOut, login, passw, cntmax);
+
+        long idAudit = getAuditMaxId();
+        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, login, passw, cnt);
+
+        setPropertyTimeout("MINUTES", 10);
+        runAclirqJob(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
+
+        long cntrec = 0;
+        while(cntrec < cnt) {
+            Thread.sleep(60 * 1000L);
+            cntrec  = getStatistics();
+        }
+        Assert.assertNull("Есть записи об ошибке в аудит", getAuditError(idAudit, SysError, Error, Warning));
+
+        shutdownJob(ACLIRQ_TASK);
+        int n = clearQueue(cf, acliquOut, login, passw, cntmax);
+        // new   6:12.409
+        // old   6:47.807
     }
 
     @Test
@@ -311,9 +393,26 @@ mq.password=UsATi8hU
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
 
-    private AuditRecord getAuditError(long idFrom ) throws SQLException {
+    private AuditRecord getAuditError(long idFrom, AuditRecord.LogLevel ... levels ) throws SQLException {
+        String level = "";
+        if (null != levels && levels.length > 0) {
+            level = StringUtils.arrayToString(levels, ",", "'");
+        } else
+            level = "'Error'";
+
         return (AuditRecord) baseEntityRepository.selectFirst(AuditRecord.class,
-                "from AuditRecord a where a.logCode in ('AccountQuery') and a.logLevel = 'Error' and a.id > ?1 ", idFrom);
+                "from AuditRecord a where a.logCode in ('AccountQuery') and a.logLevel in (" + level + ") and a.id > ?1 ", idFrom);
+    }
+
+    private long getStatistics() throws SQLException {
+        DataRecord record = baseEntityRepository.selectOne("select min(id), max(id), count(*), max(status_date) - min(status_date) from gl_aclirq where status_date > " +
+                "(select max(sys_time) from gl_audit where message like 'Запуск задачи ''AccountQueryTaskLIRQ%')");
+        long cnt = record.getLong(2);
+        DataRecord record1 = baseEntityRepository.selectOne("select count(*) from gl_aclirq where id between ? and ? and out like '%Error%'", record.getLong(0), record.getLong(1));
+        long ers = record1.getLong(0);
+        System.out.println(String.format("Всего записей: %d, ошибок: %d, время: %s", cnt, ers, record.getString(3)));
+        Assert.assertEquals("Есть ошибки в ответе", 0, ers);
+        return cnt;
     }
 
     private int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
@@ -357,7 +456,7 @@ mq.password=UsATi8hU
 //        System.out.println("\\nReceived message:\\n" + receivedMessage);
 
         String answer = readFromJMS(receiver);
-        System.out.println("\nReceived message from " + queueName + ":\n" + answer);
+//        System.out.println("\nReceived message from " + queueName + ":\n" + answer);
 
 //        sender.close();
         receiver.close();
@@ -453,6 +552,35 @@ mq.password=UsATi8hU
         receiver.close();
         session.close();
         connection.close();
+    }
+
+    public static void runAclirqJob(String props) {
+        TimerJob aclirqTaskJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
+                , "from TimerJob j where j.name = ?1", ACLIRQ_TASK);
+        if(null != aclirqTaskJob &&
+                (!aclirqTaskJob.getSchedulingType().equals(JobSchedulingType.INTERVAL)
+                        || aclirqTaskJob.getInterval() != 50L
+                        || !props.equals(aclirqTaskJob.getProperties())
+                )) {
+            baseEntityRepository.executeUpdate("delete from TimerJob j where j.name = ?1", ACLIRQ_TASK);
+            aclirqTaskJob = null;
+        }
+        if (null == aclirqTaskJob) {
+            IntervalJob aclirqJob = new IntervalJob();
+            aclirqJob.setDelay(0L);
+            aclirqJob.setDescription("AccountQueryTaskLIRQ1");
+            aclirqJob.setRunnableClass(AccountQueryTaskMT.class.getName());
+            aclirqJob.setProperties(props);
+            aclirqJob.setStartupType(MANUAL);
+            aclirqJob.setState(STOPPED);
+            aclirqJob.setName(ACLIRQ_TASK);
+            aclirqJob.setInterval(50L);
+            aclirqTaskJob = (IntervalJob) baseEntityRepository.save(aclirqJob);
+
+        }
+        remoteAccess.invoke(BackgroundJobsController.class, "startupJob", aclirqTaskJob );
+//            jobService.startupJob(aclirqJob);
+//            registerJob(aclirqJob);
     }
 
     static String fullTopicTest =

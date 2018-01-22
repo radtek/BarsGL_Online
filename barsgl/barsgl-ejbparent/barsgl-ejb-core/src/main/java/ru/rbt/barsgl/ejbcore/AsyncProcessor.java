@@ -46,9 +46,9 @@ public class AsyncProcessor {
 
     private BlockingQueue<InternalAsyncTask> internalQueue;
 
-    
+    // Bug in weblogic 12.2.1.3 in massive threads!!!
     @Resource
-    private ManagedThreadFactory managedThreadFactory;    
+    private ManagedThreadFactory managedThreadFactory;
     
     private ThreadPoolExecutor defaultThreadPoolExecutor;
     
@@ -161,8 +161,9 @@ public class AsyncProcessor {
               corePoolSize,
               0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS, 
               MILLISECONDS,
-              new LinkedBlockingQueue<>(), 
-              managedThreadFactory);
+              new LinkedBlockingQueue<>()
+              //  ,managedThreadFactory
+        );
         
       }
       defaultThreadPoolExecutor.setCorePoolSize(corePoolSize);
@@ -177,8 +178,9 @@ public class AsyncProcessor {
                 maximumPoolSize,
                 0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
                 MILLISECONDS,
-                new ArrayBlockingQueue<>(queueSize),
-                managedThreadFactory);
+                new ArrayBlockingQueue<>(queueSize)
+//                , managedThreadFactory
+        );
         return threadPoolExecutor;
     }
     
