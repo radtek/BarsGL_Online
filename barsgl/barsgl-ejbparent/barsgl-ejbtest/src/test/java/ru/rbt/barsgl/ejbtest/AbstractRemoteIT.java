@@ -13,8 +13,6 @@ import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
-import ru.rbt.barsgl.ejb.entity.etl.EtlAccount;
-import ru.rbt.barsgl.ejb.entity.etl.EtlAccountId;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -486,28 +484,6 @@ public abstract class AbstractRemoteIT  {
             pstS.setAmountDebit(fpAmount == null ? fbAmount : fpAmount);
         }
         return pstS;
-    }
-
-    public static EtlAccount newAccount(EtlPackage pkg, String bsaAcid, boolean toDelete ) throws SQLException {
-        if ( toDelete ) {
-                DataRecord rec = baseEntityRepository.selectFirst("select 1 from BSAACC where ID = ?", bsaAcid);
-                DataRecord acidRec = baseEntityRepository.selectFirst("select ACID from ACCRLN where BSAACID = ?", bsaAcid);
-                baseEntityRepository.executeUpdate("delete from GLAccount g where g.bsaAcid = ?1", bsaAcid);
-                if (null != acidRec && !acidRec.getString(0).isEmpty()) {
-                    String acid = acidRec.getString(0);
-                    baseEntityRepository.executeUpdate("delete from GlAccRln g where g.id.acid = ?1 and g.id.bsaAcid = ?2", acid, bsaAcid);
-                    baseEntityRepository.executeUpdate("delete from Acc a where a.id = ?1", acid);
-                }
-                if (null != rec) {
-                    baseEntityRepository.executeUpdate("delete from BsaAcc b where b.id = ?1", bsaAcid);
-                }
-        }
-        EtlAccountId id = new EtlAccountId(pkg.getId(), bsaAcid);
-        EtlAccount etlAcc = new EtlAccount();
-        etlAcc.setId(id);
-        etlAcc.setDateOpen(new Date());
-        return etlAcc;
-
     }
 
     protected static GLPosting findGLPosting(final String post_type, List<GLPosting> posts) {
