@@ -46,6 +46,7 @@ import javax.persistence.PersistenceException;
 import java.math.BigDecimal;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -859,8 +860,9 @@ public class ManualPostingController {
 
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
-                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
-                PersistenceException.class);
+                ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
+                PersistenceException.class, SQLIntegrityConstraintViolationException.class,
+                DefaultApplicationException.class);
     }
 
     public String logPostingError(Throwable e, String msg, ManualOperationWrapper wrapper,
