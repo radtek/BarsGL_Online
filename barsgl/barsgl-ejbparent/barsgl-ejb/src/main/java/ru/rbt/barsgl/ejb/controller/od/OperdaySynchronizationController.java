@@ -6,9 +6,8 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
-import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
@@ -271,7 +270,7 @@ public class OperdaySynchronizationController {
     }
 
     /**
-     * отключаем триггера на PD
+     * отключаем/включаем триггера на PD (за исключением журналирующих)
      * @return false если не было отключено ни одного триггера
      */
     private void swithTriggersPD(boolean off) throws Exception {
@@ -775,6 +774,18 @@ public class OperdaySynchronizationController {
         } else {
             return true;
         }
+    }
+
+    public void setOnlineBalanceCalc() throws Exception {
+        final String tableName = "PST";
+        removeLock(tableName);
+        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_DIRECT_MODE; end;");
+    }
+
+    public void setGibridBalanceCalc() throws Exception {
+        final String tableName = "PST";
+        removeLock(tableName);
+        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_GIBRID_MODE; end;");
     }
 
     private void switchOffTriggers() {

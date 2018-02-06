@@ -22,6 +22,13 @@ public class DbTryingExecutor {
     private CoreRepository repository;
 
     public <E> E tryExecuteTransactionally(TryingDataAccessCallback<E> callback, final int attemptNumber, TimeUnit delayUnit, long delay) throws Exception {
+        return tryExecuteTransactionally(callback, (exception, currentAttempt) -> {
+            logger.log(Level.SEVERE, "Error on attempting callback", exception);
+            return true;
+        }, attemptNumber, delayUnit, delay);
+    }
+
+    public <E> E tryExecuteTransactionally(TryingDataAccessCallback<E> callback, TryingDataAccessErrorCallback onErrorCallback, final int attemptNumber, TimeUnit delayUnit, long delay) throws Exception {
         int cnt = 0;
         Throwable throwable = null;
         while (attemptNumber - cnt > 0) {
@@ -33,15 +40,32 @@ public class DbTryingExecutor {
                 );
             } catch (Throwable e) {
                 throwable = e;
-                logger.log(Level.SEVERE, "Error on attempting callback", e);
-                if (attemptNumber - cnt > 0) {
-                    // задержка только если будет еще попытка
-                    delayUnit.sleep(delay);
+                if (onErrorCallback.onTryingError(e, cnt)) {
+                    if (attemptNumber - cnt > 0) {
+                        // задержка только если будет еще попытка
+                        delayUnit.sleep(delay);
+                    }
+                } else {
+                    // если обработчик ошибки вернул FALSE прерываемся и выпадаем
+                    break;
                 }
             }
         }
-        InterruptedException exception = new InterruptedException(format("Exceeds attemts count '%s' of executing callback", attemptNumber));
+        InterruptedException exception = new InterruptedException(format("Attemting was failed, attemts initial number '%s', current counter '%s'", attemptNumber, cnt));
         throw new Exception(exception.initCause(throwable));
+    }
+
+    /**
+     * Обработчик ошибки при очередной попытке выполнения ru.rbt.barsgl.ejbcore.TryingDataAccessCallback
+     */
+    public interface TryingDataAccessErrorCallback {
+        /**
+         * анализ ошибки и принятие решения о продолжении попыток
+         * @param exception Ошибка выполнения
+         * @param currentAttempt текущее значение счетчика попыток
+         * @return true - продолжаем выполнение, иначе false - заканчиваем
+         */
+        boolean onTryingError(Throwable exception, int currentAttempt);
     }
 
 
