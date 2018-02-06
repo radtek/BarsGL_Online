@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -22,20 +23,18 @@ import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
+import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.ejbcore.util.StringUtils.listToString;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ALL;
@@ -93,28 +92,22 @@ public class EditPostingController {
     public List<? extends AbstractPd> processMessage(ManualOperationWrapper operationWrapper, PostingAction postingAction) throws Exception {
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
-            throw new DefaultApplicationException(format("Изменение проводок невозможна. Операционный день в статусе: '%s'"
-                    , operdayController.getOperday().getPhase()));
+            throw new ValidationError(ErrorCode.OPERDAY_NOT_ONLINE, "Изменение проводок невозможно", operdayController.getOperday().getPhase().name());
         }
-
         if ( !operdayController.isProcessingAllowed()) {
-            throw new DefaultApplicationException("Изменение проводок невозможно. Выполняется синхронизация проводок,\n повторите попытку через несколько минут");
+            throw new ValidationError(ErrorCode.OPERDAY_IN_SYNCHRO, "Изменение проводок невозможно");
         }
 
-//        try {
-            return operationRepository.executeInNewTransaction(persistence1 -> {
-                switch (postingAction) {
-                    case PST_EDIT:
-                        return updatePostings(operationWrapper);
-                    case PST_SUPP:
-                        return suppressPostings(operationWrapper);
-                    default:
-                        return null;
-                }
-            });
-//        } catch (Throwable e) {
-//            throw new DefaultApplicationException("Ошибка при изменении проводок", e);
-//        }
+        return operationRepository.executeInNewTransaction(persistence1 -> {
+            switch (postingAction) {
+                case PST_EDIT:
+                    return updatePostings(operationWrapper);
+                case PST_SUPP:
+                    return suppressPostings(operationWrapper);
+                default:
+                    return null;
+            }
+        });
     }
 
     /**
@@ -228,23 +221,17 @@ public class EditPostingController {
                 backValuePostingController.checkUserAccessToBackValue(operationWrapper.getUserId(), postDateNew, postDateOld);
 
             } catch (ValidationError e) {
-                String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-                auditController.warning(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>( operationWrapper, true, errMessage);
+                return showWarning(operationWrapper, msg, e);
             } catch (Exception e){
-                String errorMsg = manualPostingController.getErrorMessage(e);
-                auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), errorMsg);
-                return new RpcRes_Base<>(operationWrapper, true, errorMsg);
+                return showError(operationWrapper, msg, e);
             }
 
             List<? extends AbstractPd> pdList = processMessage(operationWrapper, PostingAction.PST_EDIT);
             msg = "Изменены полупроводки c ID: " + listToString(pdList, ",") + operationWrapper.getErrorMessage();
             auditController.info(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
-        } catch (Exception e) {
-            String errorMsg = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-            auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), errorMsg);
-            return new RpcRes_Base<>(operationWrapper, true, errorMsg);
+        } catch (Throwable e) {
+            return showError(operationWrapper, msg, e);
         }
     }
 
@@ -255,23 +242,30 @@ public class EditPostingController {
                 accessServiceSupport.checkUserAccessToBackValueDate(dateUtils.onlyDateParse(operationWrapper.getPostDateStr()), operationWrapper.getUserId());
 
             } catch (ValidationError e) {
-                String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-                auditController.warning(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>( operationWrapper, true, errMessage);
+                return showWarning(operationWrapper, msg, e);
             } catch (Exception e){
-                auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>(operationWrapper, true, e.getMessage());
+                return showError(operationWrapper, msg, e);
             }
 
             List<? extends AbstractPd> pdList = processMessage(operationWrapper, PostingAction.PST_SUPP);
             msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки c ID: " + listToString(pdList, ",");
             auditController.info(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
-        } catch (Exception e) {
-            String errorMsg = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-            auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), errorMsg);
-            return new RpcRes_Base<>(operationWrapper, true, errorMsg);
+        } catch (Throwable e) {
+            return showError(operationWrapper, msg, e);
         }
+    }
+
+    private RpcRes_Base<ManualOperationWrapper> showError(ManualOperationWrapper operationWrapper, String msg, Throwable t) {
+        auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), t);
+        String errorMsg = manualPostingController.addOperationErrorMessage(t, msg, operationWrapper.getErrorList(), initSource());
+        return new RpcRes_Base<>(operationWrapper, true, errorMsg);
+    }
+
+    private RpcRes_Base<ManualOperationWrapper> showWarning(ManualOperationWrapper operationWrapper, String msg, Throwable t) {
+        auditController.warning(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), t);
+        String errorMsg = manualPostingController.addOperationErrorMessage(t, msg, operationWrapper.getErrorList(), initSource());
+        return new RpcRes_Base<>(operationWrapper, true, errorMsg);
     }
 
 }

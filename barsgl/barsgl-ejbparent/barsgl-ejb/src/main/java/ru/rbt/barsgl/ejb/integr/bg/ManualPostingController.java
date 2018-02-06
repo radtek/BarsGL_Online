@@ -861,7 +861,7 @@ public class ManualPostingController {
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
-                PersistenceException.class, SQLIntegrityConstraintViolationException.class,
+                SQLIntegrityConstraintViolationException.class, PersistenceException.class,
                 DefaultApplicationException.class);
     }
 
