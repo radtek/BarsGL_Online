@@ -58,6 +58,7 @@ public class DbTryingExecutor {
     /**
      * Обработчик ошибки при очередной попытке выполнения ru.rbt.barsgl.ejbcore.TryingDataAccessCallback
      */
+    @FunctionalInterface
     public interface TryingDataAccessErrorCallback {
         /**
          * анализ ошибки и принятие решения о продолжении попыток

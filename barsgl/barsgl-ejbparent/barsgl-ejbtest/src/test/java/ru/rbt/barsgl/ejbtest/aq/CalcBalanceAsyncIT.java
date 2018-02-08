@@ -18,6 +18,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(CalcBalanceAsyncIT.class.getName());
 
+    private enum QUEUE {
+        BAL_QUEUE, AQ$_BAL_QUEUE_TAB_E
+    }
+
     @Test public void test() throws SQLException {
         purgeQueueTable();
 
@@ -35,12 +39,14 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Long amnt = 100L; Long amntbc = amnt + 1;
         long id = baseEntityRepository.nextId("PD_SEQ");
         log.info("PST id= " + id);
-        createPosting(id, id, account.getAcid(), account.getBsaAcid(), amnt, amntbc, "@@GL-K+", operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode());
+        final String pbr = "@@GL-K+";
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), amnt, amntbc, pbr, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), null);
 
-        // проверка остатков - нет изменений
+        // проверка остатков - нет изменений - включен гибридный режим
         List<DataRecord> balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
         Assert.assertEquals(0, balturs.size());
 
+        checkMessageCount(QUEUE.BAL_QUEUE, 1);
         dequeueProcessOne();
 
         // есть изменения (проверка сумм!)
@@ -57,8 +63,26 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         // invisible
         baseEntityRepository.executeNativeUpdate("update pst set invisible = '1' where id = ?", id);
 
+        checkMessageCount(QUEUE.BAL_QUEUE, 1);
         dequeueProcessOne();
 
+        balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertEquals(1, balturs.size());
+        Assert.assertEquals(zero, balturs.get(0).getLong("obac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("obbc"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("dtac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("dtbc"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("ctac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("ctbc"));
+
+        // insert already invisible
+        long id2 = baseEntityRepository.nextId("PD_SEQ");
+        createPosting(id2,id2, account.getAcid(), account.getBsaAcid(),amnt, amntbc, pbr, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), "1");
+
+        checkMessageCount(QUEUE.BAL_QUEUE, 0);
+
+        dequeueProcessOne();
+        // balance is zero
         balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
         Assert.assertEquals(1, balturs.size());
         Assert.assertEquals(zero, balturs.get(0).getLong("obac"));
@@ -78,9 +102,9 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         }
     }
 
-    private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy) {
-        String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy) values (?,?,?,?,?,?,?,?,?,?)";
-        baseEntityRepository.executeNativeUpdate(insert, id, pcid, acid, bsaacid, amount, amountbc, pbr, pod, vald, ccy);
+    private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
+        String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy, invisible) values (?,?,?,?,?,?,?,?,?,?,?)";
+        baseEntityRepository.executeNativeUpdate(insert, id, pcid, acid, bsaacid, amount, amountbc, pbr, pod, vald, ccy, invisible);
     }
 
     private void purgeQueueTable() {
@@ -100,4 +124,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private void dequeueProcessOne() {
         baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_NORMAL_QUEUE_NAME); end;");
     }
+
+    private void checkMessageCount(QUEUE queue, long expect) throws SQLException {
+        List<DataRecord> records = baseEntityRepository.select("select queue from AQ$BAL_QUEUE_TAB where queue = ?", queue.name());
+        Assert.assertEquals(expect, records.size());
+    }
+
 }
