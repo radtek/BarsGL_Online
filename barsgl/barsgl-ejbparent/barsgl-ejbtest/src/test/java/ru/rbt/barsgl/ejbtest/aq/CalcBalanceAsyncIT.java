@@ -23,6 +23,15 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private static final Long zero = new Long(0);
 
     private static final String pbrGibrid = "@@GL-K+";
+    private static String pbrOnline;
+
+    static {
+        try {
+            pbrOnline = baseEntityRepository.selectFirst("select * from GL_AQPBR").getString("PBRVALUE");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private enum QUEUE {
         BAL_QUEUE, AQ$_BAL_QUEUE_TAB_E
@@ -144,6 +153,40 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
                    Objects.equals(r.getString("trigger_name"), "PST_AD_JRN")
                 || Objects.equals(r.getString("trigger_name"), "PST_AI_JRN")
                 || Objects.equals(r.getString("trigger_name"), "PST_AU_JRN")));
+
+    }
+
+    @Test public void testGibridOnSpecificPBR() throws SQLException {
+        setGibridMode();
+        stopListeningQueue();
+        purgeQueueTable();
+
+        GLAccount account = findAccount("40702810%");
+        log.info("Account " + account.getBsaAcid());
+        baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
+
+        Long amnt = 100L;
+        Long amntbc = 101L;
+
+        // онлайн пересчет остатков, в очередь ничего не поступает, остатки считаются в триггерах
+
+        Operday operday = getOperday();
+        long id = baseEntityRepository.nextId("PD_SEQ");
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), amnt, amntbc, pbrOnline, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), "0");
+
+        checkMessageCount(QUEUE.BAL_QUEUE, 0);
+
+        List<DataRecord> balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertEquals(1, balturs.size());
+
+        balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertEquals(1, balturs.size());
+        Assert.assertEquals(zero, balturs.get(0).getLong("obac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("obbc"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("dtac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("dtbc"));
+        Assert.assertEquals(amnt, balturs.get(0).getLong("ctac"));
+        Assert.assertEquals(amntbc, balturs.get(0).getLong("ctbc"));
 
     }
 
