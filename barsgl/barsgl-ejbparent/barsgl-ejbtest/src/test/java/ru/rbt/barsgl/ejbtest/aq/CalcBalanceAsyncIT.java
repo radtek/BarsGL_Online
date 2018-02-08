@@ -12,24 +12,31 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(CalcBalanceAsyncIT.class.getName());
 
+    private static final Long zero = new Long(0);
+
+    private static final String pbrGibrid = "@@GL-K+";
+
     private enum QUEUE {
         BAL_QUEUE, AQ$_BAL_QUEUE_TAB_E
     }
 
-    @Test public void test() throws SQLException {
+    @Test public void testGibrid() throws SQLException {
+        stopListeningQueue();
         purgeQueueTable();
 
         Operday operday = getOperday();
 
         // отключены все триггера, кроме AQ
 
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setGibridBalanceCalc");
+        setGibridMode();
 
         // удаление baltur по счету
         GLAccount account = findAccount("40702810%");
@@ -39,8 +46,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Long amnt = 100L; Long amntbc = amnt + 1;
         long id = baseEntityRepository.nextId("PD_SEQ");
         log.info("PST id= " + id);
-        final String pbr = "@@GL-K+";
-        createPosting(id, id, account.getAcid(), account.getBsaAcid(), amnt, amntbc, pbr, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), null);
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), amnt, amntbc, pbrGibrid, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), null);
 
         // проверка остатков - нет изменений - включен гибридный режим
         List<DataRecord> balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
@@ -52,7 +58,6 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         // есть изменения (проверка сумм!)
         balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
         Assert.assertEquals(1, balturs.size());
-        final Long zero = new Long(0);
         Assert.assertEquals(zero, balturs.get(0).getLong("obac"));
         Assert.assertEquals(zero, balturs.get(0).getLong("obbc"));
         Assert.assertEquals(zero, balturs.get(0).getLong("dtac"));
@@ -77,11 +82,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         // insert already invisible
         long id2 = baseEntityRepository.nextId("PD_SEQ");
-        createPosting(id2,id2, account.getAcid(), account.getBsaAcid(),amnt, amntbc, pbr, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), "1");
+        createPosting(id2,id2, account.getAcid(), account.getBsaAcid(),amnt, amntbc, pbrGibrid, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), "1");
 
         checkMessageCount(QUEUE.BAL_QUEUE, 0);
 
-        dequeueProcessOne();
         // balance is zero
         balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
         Assert.assertEquals(1, balturs.size());
@@ -91,6 +95,56 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(zero, balturs.get(0).getLong("dtbc"));
         Assert.assertEquals(zero, balturs.get(0).getLong("ctac"));
         Assert.assertEquals(zero, balturs.get(0).getLong("ctbc"));
+
+    }
+
+    @Test
+    public void testOnline() throws SQLException {
+        setOnlineMode();
+        stopListeningQueue();
+        purgeQueueTable();
+
+        GLAccount account = findAccount("40702810%");
+        log.info("Account " + account.getBsaAcid());
+        baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
+
+        Long amnt = 100L;
+        Long amntbc = 101L;
+
+        // онлайн пересчет остатков, в очередь ничего не поступает, остатки считаются в триггерах
+
+        Operday operday = getOperday();
+        long id = baseEntityRepository.nextId("PD_SEQ");
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), amnt, amntbc, pbrGibrid, operday.getCurrentDate(), operday.getCurrentDate(), BankCurrency.RUB.getCurrencyCode(), "1");
+
+
+        checkMessageCount(QUEUE.BAL_QUEUE, 0);
+
+        List<DataRecord> balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertEquals(0, balturs.size());
+
+        baseEntityRepository.executeNativeUpdate("update pst set invisible = '0' where id = ?", id);
+        balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertEquals(1, balturs.size());
+        Assert.assertEquals(zero, balturs.get(0).getLong("obac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("obbc"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("dtac"));
+        Assert.assertEquals(zero, balturs.get(0).getLong("dtbc"));
+        Assert.assertEquals(amnt, balturs.get(0).getLong("ctac"));
+        Assert.assertEquals(amntbc, balturs.get(0).getLong("ctbc"));
+    }
+
+    @Test public void testOndemand() throws SQLException {
+        setOndemanMode();
+
+        List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
+        List<DataRecord> enabled = triggers.stream().filter(r -> "ENABLED".equals(r.getString("status"))).collect(Collectors.toList());
+        Assert.assertEquals(3, enabled.size());
+        Assert.assertTrue(enabled.stream().anyMatch(r ->
+                   Objects.equals(r.getString("trigger_name"), "PST_AD_JRN")
+                || Objects.equals(r.getString("trigger_name"), "PST_AI_JRN")
+                || Objects.equals(r.getString("trigger_name"), "PST_AU_JRN")));
+
     }
 
     private static GLAccount findAccount(String bsaacidLike) throws SQLException {
@@ -130,4 +184,24 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(expect, records.size());
     }
 
+    private void setGibridMode() {
+        remoteAccess.invoke(OperdaySynchronizationController.class, "setGibridBalanceCalc");
+    }
+
+    private void setOnlineMode() {
+        remoteAccess.invoke(OperdaySynchronizationController.class, "setOnlineBalanceCalc");
+    }
+
+    private void setOndemanMode() {
+        remoteAccess.invoke(OperdaySynchronizationController.class, "setOndemandBalanceCalc");
+    }
+
+    private void stopListeningQueue() {
+        baseEntityRepository.executeNativeUpdate(
+                "begin\n" +
+                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%LISTEN%') loop\n" +
+                "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
+                "    end loop;\n" +
+                "end;");
+    }
 }

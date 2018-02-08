@@ -779,13 +779,19 @@ public class OperdaySynchronizationController {
     public void setOnlineBalanceCalc() throws Exception {
         final String tableName = "PST";
         removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_DIRECT_MODE; end;");
+        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONLINE_MODE; end;");
     }
 
     public void setGibridBalanceCalc() throws Exception {
         final String tableName = "PST";
         removeLock(tableName);
         pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_GIBRID_MODE; end;");
+    }
+
+    public void setOndemandBalanceCalc() throws Exception {
+        final String tableName = "PST";
+        removeLock(tableName);
+        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONDEMAND_MODE; end;");
     }
 
     private void switchOffTriggers() {
