@@ -86,7 +86,7 @@ public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> 
     private void checkBalance(GLAccount account, Date dateFrom, Date dateTo, String fieldName) {
         BigDecimal balance = glTechAccountRepository.getAccountBalance(account.getBsaAcid(), account.getId(), dateTo);
         if (!balance.equals(BigDecimal.ZERO)) {
-            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid(), dateUtils.onlyDateString(dateFrom));
+            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid());
         }
     }
 

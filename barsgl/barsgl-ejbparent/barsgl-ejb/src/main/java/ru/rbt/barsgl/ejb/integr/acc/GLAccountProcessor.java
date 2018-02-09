@@ -252,7 +252,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     private void checkBalance(GLAccount account, Date dateFrom, Date dateTo, String fieldName) {
         BigDecimal balance = glAccountRepository.getAccountBalance(account.getBsaAcid(), account.getAcid(), dateTo);
         if (!balance.equals(BigDecimal.ZERO)) {
-            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid(), dateUtils.onlyDateString(dateFrom));
+            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid());
         }
     }
 

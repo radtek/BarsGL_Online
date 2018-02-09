@@ -103,7 +103,7 @@ public enum ErrorCode {
     , CLOSEDATE_NOT_VALID(2015, "Дата закрытия счета '%s' < даты открытия '%s'")
     , ACCOUNT_RLN_INVALID(2016, "Не найдена запись в таблице ACCRLN для BSAACID = '%s', ACID = '%s'")
     , ACCOUNT_BSA_INVALID(2017, "Не найдена запись в таблице BSAACC для ID (BSAACID) = '%s'")
-    , BALANCE_NOT_ZERO(2018, "Баланс счета '%s' на дату '%s' не нулевой")
+    , BALANCE_NOT_ZERO(2018, "Баланс счета '%s' не нулевой")
     , ACCOUNT_IN_USE_AFTER(2019, "По счету '%s' есть операции: %s (необработанные или после даты '%s') ")
     , ACCOUNT2_NOT_VALID(2020, "Ключи счета %s: Неверный балансовый счет 2-го порядка '%s', должен быть '%s'\n для AccountType = '%s', CustomerType = '%s', Term = '%s' (поле %s)")
     , MIDAS_PARAMS_NOT_VALID(2021, "Ключи счета %s: Неверные параметры Midas: '%s' '%s', должны быть '%s' '%s'\n для AccountType = '%s', CustomerType = '%s', Term = '%s' (поля %s)")
