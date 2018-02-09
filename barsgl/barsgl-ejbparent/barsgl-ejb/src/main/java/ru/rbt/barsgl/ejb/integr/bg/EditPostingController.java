@@ -215,6 +215,7 @@ public class EditPostingController {
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(minEditDay));
 
                 // проверка закрытого отчетного периода
+                backValuePostingController.checkClosedPeriod(operationWrapper.getUserId(), postDateOld);
                 backValuePostingController.checkClosedPeriod(operationWrapper.getUserId(), postDateNew);
 
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад

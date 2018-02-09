@@ -16,9 +16,7 @@ public class GLTechAccountRepository extends AbstractBaseEntityRepository<GLAcco
 
     public BigDecimal getAccountBalance(String bsaAcid, Long glacid, Date datto) {
         try {
-            DataRecord data = selectFirst("SELECT sum(OBAC) + sum(DTAC) + sum(CTAC) \n" +
-                    "from (SELECT BSAACID, GLACID, OBAC, DTAC, CTAC from GL_BTTH where DATTO = ? and GLACID = ? and BSAACID = ?) T \n" +
-                    "group by BSAACID, GLACID", datto, glacid, bsaAcid);
+            DataRecord data = selectFirst("select PKG_CHK_ACC.GET_BALANCE_TODATE_TECH(?, ?, ?) from dual", bsaAcid, glacid, datto);
             return (null == data) ? BigDecimal.ZERO : data.getBigDecimal(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -27,9 +25,8 @@ public class GLTechAccountRepository extends AbstractBaseEntityRepository<GLAcco
 
     public Boolean hasAccountBalanceBefore(String bsaAcid, Long glacid, Date dat) {
         try {
-            DataRecord data = selectFirst("SELECT * from GL_BTTH where DATTO < ? and GLACID = ? and BSAACID = ? "
-                    , dat, glacid, bsaAcid);
-            return (null != data);
+            DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE_TECH(?, ?, ?) from dual", bsaAcid, glacid, dat);
+            return (null != data && data.getInteger(0) == 1);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -37,9 +34,8 @@ public class GLTechAccountRepository extends AbstractBaseEntityRepository<GLAcco
 
     public Boolean hasAccountBalanceAfter(String bsaAcid, Long glacid, Date dat) {
         try {
-            DataRecord data = selectFirst("SELECT * from GL_BTTH where DAT > ? and GLACID = ? and BSAACID = ? "
-                    , dat, glacid, bsaAcid);
-            return (null != data);
+            DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_AFTER_TECH(?, ?, ?) from dual", bsaAcid, glacid, dat);
+            return (null != data && data.getInteger(0) == 1);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

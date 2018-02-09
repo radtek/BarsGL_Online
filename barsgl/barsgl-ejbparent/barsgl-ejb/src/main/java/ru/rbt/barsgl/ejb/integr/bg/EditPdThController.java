@@ -154,6 +154,7 @@ public class EditPdThController {
         String msg = "Ошибка при редактировании проводки";
         try {
             try {
+                Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
                 Date newDate = dateUtils.onlyDateParse(operationWrapper.getPostDateStr());
                 Date editDay = org.apache.commons.lang3.time.DateUtils.addDays(operdayController.getOperday().getCurrentDate(), -30); // TODO -30
                 // нельзя установить дату ранее 30 дней назад
@@ -161,11 +162,11 @@ public class EditPdThController {
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
 
                 // проверка закрытого отчетного периода
+                checkClosedPeriod(operationWrapper.getUserId(), oldDate);
                 checkClosedPeriod(operationWrapper.getUserId(), newDate);
 
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
                 if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.TechOperPstChngDate) ) {
-                    Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
                     Date minDate = newDate.before(oldDate) ? newDate : oldDate;
                     accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
                 }
