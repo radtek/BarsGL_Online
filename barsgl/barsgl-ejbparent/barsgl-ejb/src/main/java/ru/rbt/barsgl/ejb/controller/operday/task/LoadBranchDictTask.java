@@ -14,6 +14,7 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.List;
@@ -73,11 +74,20 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
 
     private void fillInfTables() throws Exception {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
-            try (PreparedStatement query = connection.prepareStatement("INSERT INTO DWH_IMBCBBRP_INF (A8BRCD, A8LCCD, A8BICN, A8BRNM, BBRRI, BCORI, BCBBR, BR_HEAD, BR_OPER, FCC_CODE, VALID_FROM) select A8BRCD, A8LCCD, A8BICN, A8BRNM, BBRRI, BCORI, BCBBR, BR_HEAD, BR_OPER, FCC_CODE, VALID_FROM from V_GL_DWH_IMBCBBRP");
-                 PreparedStatement query2 = connection.prepareStatement("INSERT INTO DWH_IMBCBCMP_INF (CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM) select CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM from V_GL_DWH_IMBCBCMP")) {
-                query.execute();
-                query2.execute();
+            String ablok = "DECLARE PRAGMA AUTONOMOUS_TRANSACTION;"+
+                           " BEGIN"+
+                           " INSERT INTO DWH_IMBCBCMP_INF (CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM) select CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM from V_GL_DWH_IMBCBCMP; "+
+                           " COMMIT;"+
+                           " END;";
+
+            try(CallableStatement cs = connection.prepareCall(ablok)){
+                cs.execute();
             }
+//            try (PreparedStatement query = connection.prepareStatement("INSERT INTO DWH_IMBCBBRP_INF (A8BRCD, A8LCCD, A8BICN, A8BRNM, BBRRI, BCORI, BCBBR, BR_HEAD, BR_OPER, FCC_CODE, VALID_FROM) select A8BRCD, A8LCCD, A8BICN, A8BRNM, BBRRI, BCORI, BCBBR, BR_HEAD, BR_OPER, FCC_CODE, VALID_FROM from V_GL_DWH_IMBCBBRP");
+//                 PreparedStatement query2 = connection.prepareStatement("INSERT INTO DWH_IMBCBCMP_INF (CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM) select CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM from V_GL_DWH_IMBCBCMP")) {
+//                query.execute();
+//                query2.execute();
+//            }
             return 1;
         }), 60 * 60);
     }
