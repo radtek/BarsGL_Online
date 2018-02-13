@@ -377,6 +377,7 @@ public class GLAccountController {
         });
     }
 
+    @Lock(LockType.READ)
     public void validateGLAccountMnl(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
         List<ValidationError> errors = glAccountProcessor.validate(keys, new ValidationContext());
@@ -406,6 +407,7 @@ public class GLAccountController {
         });
     }
 
+    @Lock(LockType.READ)
     public void validateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
                                      AccountKeys keys, ErrorList descriptors) throws Exception {
         List<ValidationError> errors = glAccountProcessorTech.validate(keys, new ValidationContext());
