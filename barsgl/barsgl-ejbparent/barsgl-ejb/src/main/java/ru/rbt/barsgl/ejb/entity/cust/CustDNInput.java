@@ -32,10 +32,10 @@ public class CustDNInput extends BaseEntity<Long>{
     @Column(name = "RESIDENT", nullable = false, length = 1)
     private String resident;
 
-    @Column(name = "NAME_ENG", nullable = false, length = 50)
+    @Column(name = "NAME_ENG", nullable = false, length = 90)
     private String nameEng;
 
-    @Column(name = "NAME_RUS", nullable = false, length = 50)
+    @Column(name = "NAME_RUS", nullable = false, length = 80)
     private String nameRus;
 
     @Column(name = "LEGAL_FORM", length = 20)

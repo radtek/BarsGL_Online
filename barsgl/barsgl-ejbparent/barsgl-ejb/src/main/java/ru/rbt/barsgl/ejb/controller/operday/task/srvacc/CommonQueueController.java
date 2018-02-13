@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -272,6 +273,10 @@ public abstract class CommonQueueController implements MessageListener {
     }
 
     protected String[] readJMS(Message receivedMessage) throws JMSException {
+        return readJMS(receivedMessage, StandardCharsets.UTF_8);
+    }
+
+    protected String[] readJMS(Message receivedMessage, Charset cs) throws JMSException {
         if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
             receivedMessage.acknowledge();
         String textMessage = null;
@@ -285,7 +290,7 @@ public abstract class CommonQueueController implements MessageListener {
             bytesMessage.readBytes(incomingBytes);
 
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
-            try (Reader r = new InputStreamReader(byteArrayInputStream, StandardCharsets.UTF_8)) {
+            try (Reader r = new InputStreamReader(byteArrayInputStream, cs)) { //} StandardCharsets.UTF_8)) {
                 StringBuilder sb = new StringBuilder();
                 char cb[] = new char[1024];
                 int s = r.read(cb);

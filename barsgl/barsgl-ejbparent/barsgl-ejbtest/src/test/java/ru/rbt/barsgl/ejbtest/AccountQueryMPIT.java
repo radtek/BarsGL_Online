@@ -192,7 +192,8 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         Assert.assertNull("Есть записи об ошибке в аудит", getAuditError(idAudit, SysError, Error, Warning));
 
         Assert.assertTrue(getStatistics() == n);
-        // static 31.046  old 37.191
+        // new 31.046   old 37.191
+        // new 22.405   old 40.067
     }
 
     @Test
@@ -222,8 +223,8 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
         shutdownJob(ACLIRQ_TASK);
         int n = clearQueue(cf, acliquOut, login, passw, cntmax);
-        // new   6:12.409
-        // old   6:47.807
+        // new   6:12.409   7:34.93
+        // old   6:47.807   7:6.07
     }
 
     @Test

@@ -10,7 +10,11 @@ import ru.rbt.shared.ExceptionUtils;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.persistence.PersistenceException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +42,11 @@ public class CustomerNotifyQueueController extends CommonQueueController {
 
     @Override
     protected void afterConnect() throws Exception {
+    }
+
+    @Override
+    protected String[] readJMS(Message receivedMessage) throws JMSException {
+        return super.readJMS(receivedMessage, Charset.forName(messageProcessor.charsetName));
     }
 
     @Override

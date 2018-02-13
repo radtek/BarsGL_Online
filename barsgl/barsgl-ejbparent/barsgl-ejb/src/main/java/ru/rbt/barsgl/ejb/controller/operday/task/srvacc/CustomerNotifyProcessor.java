@@ -23,6 +23,8 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -31,6 +33,7 @@ import javax.xml.xpath.XPathExpressionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,15 +54,16 @@ public class CustomerNotifyProcessor implements Serializable {
     private static final Logger log = Logger.getLogger(CustomerNotifyProcessor.class);
 
     public static final String journalName = "GL_CUDENO1";
-    private final static String parentNodeName = "/Customer";
-    private final static XmlParam[] paramNamesCust = {
+    public static final String charsetName = "IBM866";
+    private static final String parentNodeName = "/Customer";
+    private static final XmlParam[] paramNamesCust = {
              new XmlParam("CUST_NUM",   "CustomerNum",      false, 8)
             ,new XmlParam("BRANCHCODE", "BranchCode",       false, 3)
             ,new XmlParam("FCTYPE",     "Type",             false, 1)
             ,new XmlParam("CBTYPE",     "CbType",           false, 3)
             ,new XmlParam("RESIDENT",   "Resident",         false, 1)
-            ,new XmlParam("NAME_ENG",   "CorporateDetails/ShortNameRus",        false, 50)
-            ,new XmlParam("NAME_RUS",   "CorporateDetails/ShortNameEng",        false, 50)
+            ,new XmlParam("NAME_ENG",   "CorporateDetails/ShortNameEng",        false, 90)
+            ,new XmlParam("NAME_RUS",   "CorporateDetails/ShortNameRus",        false, 80)
             ,new XmlParam("LEGAL_FORM", "CorporateDetails/ShortLegalFormRus",   true, 20)
     };
 
@@ -131,12 +135,12 @@ public class CustomerNotifyProcessor implements Serializable {
     private Map<String, String> readFromXML(String bodyXML, Long jId, String parentName, XmlParam[] paramNames) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
         org.w3c.dom.Document doc = null;
         if (!bodyXML.startsWith("<?xml")) {
-            bodyXML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + bodyXML;
+            bodyXML = "<?xml version=\"1.0\" encoding=\"" + charsetName + "\"?>\n" + bodyXML;
         }
 
         try {
             DocumentBuilder b = XmlUtilityLocator.getInstance().newDocumentBuilder();
-            doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes("UTF-8")));
+            doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes(charsetName )));
             if (doc == null) {
                 //Ошибка XML
                 journalRepository.updateLogStatus(jId, ERR_VAL, "Ошибка при преобразовании входящего XML");
