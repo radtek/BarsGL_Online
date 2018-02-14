@@ -10,7 +10,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "DWH_IMBCBCMP_INF")
-public class FilialsInf extends BaseEntity<String> {
+public class FilialsInf extends BaseEntity<String> implements Comparable<FilialsInf>{
 
     @Id
     @Column(name = "CCPCD")
@@ -36,7 +36,7 @@ public class FilialsInf extends BaseEntity<String> {
     private Date validFrom;
 
     public String getId() {
-        return null;
+        return id;
     }
 
     public String getCcpne() {
@@ -87,4 +87,7 @@ public class FilialsInf extends BaseEntity<String> {
         this.validFrom = validFrom;
     }
 
+    public int compareTo(FilialsInf filials){
+        return this.getAltCode().compareTo(filials.getAltCode());
+    }
 }

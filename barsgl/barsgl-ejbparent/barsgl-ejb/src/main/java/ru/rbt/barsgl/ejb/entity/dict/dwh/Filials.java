@@ -12,7 +12,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "IMBCBCMP")
-public class Filials  extends BaseEntity<String> {
+public class Filials  extends BaseEntity<String> implements Comparable<Filials>{
 
     @Id
     @Column(name = "CCPCD")
@@ -29,6 +29,16 @@ public class Filials  extends BaseEntity<String> {
 
     @Column(name = "CCBBR")
     private String ccbbr;
+
+    public Filials(){}
+
+    public Filials(String id, String ccpne, String ccpnr, String ccpri, String ccbbr){
+        this.id = id;
+        this.ccpne = ccpne;
+        this.ccpnr = ccpnr;
+        this.ccpri = ccpri;
+        this.ccbbr = ccbbr;
+    }
 
     @Override
     public String getId() {
@@ -66,4 +76,16 @@ public class Filials  extends BaseEntity<String> {
     public void setCcbbr(String ccbbr) {
         this.ccbbr = ccbbr;
     }
+
+    public int compareTo(Filials filials){
+        return this.getId().compareTo(filials.getId());
+    }
+//    @Override
+//    public boolean equals(Object o){
+//        if (o instanceof FilialsInf){
+//            return ((FilialsInf) o).getId().equals(this.getId());
+//        }else
+//            super.equals(o);
+//        return false;
+//    }
 }
