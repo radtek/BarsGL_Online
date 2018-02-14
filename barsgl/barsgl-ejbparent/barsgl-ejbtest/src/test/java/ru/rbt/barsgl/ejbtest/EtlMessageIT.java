@@ -19,6 +19,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
+import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
@@ -886,8 +887,8 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         setOperday(curr, prev, ONLINE, OPEN, pdMode);
 
         // ARMPRO
-        hold = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
-        pst.setValueDate(hold);
+        Date holdMonth = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
+        pst.setValueDate(holdMonth);
         pst.setSourcePosting(ARMPRO.getLabel());
         operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
@@ -896,9 +897,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", hold, operation.getPostDate());
+        Assert.assertEquals(operation.getPostDate()+"", holdMonth, operation.getPostDate());
 
         // AOS  // TODO нужна доработка
+        setFwPostingSource(AOS.getLabel(), curr);
         pst.setSourcePosting(AOS.getLabel());
         operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
@@ -907,7 +909,8 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
         Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
+        wday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", holdMonth, false);
+        Assert.assertEquals(operation.getPostDate()+"", wday, operation.getPostDate());
 
         // дата в будущем !!
         setOperday(curr, prev, ONLINE, OPEN, pdMode);
@@ -921,6 +924,12 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertNotNull(operation.getProcDate());
         Assert.assertEquals(curr, operation.getProcDate());
 
+    }
+
+    private void setFwPostingSource(String src, Date procdate) {
+        baseEntityRepository.executeNativeUpdate("delete from GL_FWPSTD where ID_SRC = ?", src);
+        baseEntityRepository.executeNativeUpdate("insert into GL_FWPSTD (ID_SRC, DTB) values (?, ?)", src, procdate);
+        remoteAccess.invoke(FwPostSourceCachedRepository.class, "flushCache");
     }
 
     /**
