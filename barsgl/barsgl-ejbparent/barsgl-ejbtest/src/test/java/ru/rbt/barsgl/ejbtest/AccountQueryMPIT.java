@@ -184,7 +184,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
         setPropertyTimeout("MINUTES", 10);
         runAclirqJob(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
-        Thread.sleep(60 * 1000L);
+        Thread.sleep(60 * 3000L);
         shutdownJob(ACLIRQ_TASK);
 
         int n = clearQueue(cf, acliquOut, login, passw, cntmax);
