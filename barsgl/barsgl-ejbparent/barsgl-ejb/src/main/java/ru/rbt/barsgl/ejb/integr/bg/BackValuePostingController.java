@@ -233,11 +233,11 @@ public class BackValuePostingController {
 
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
-            throw new ValidationError(ErrorCode.OPERDAY_NOT_ONLINE, operdayController.getOperday().getPhase().name());
+            throw new ValidationError(ErrorCode.OPERDAY_NOT_ONLINE, "Обработка операций невозможна", operdayController.getOperday().getPhase().name());
         }
 
         if ( !operdayController.isProcessingAllowed()) {
-            throw new ValidationError(ErrorCode.OPERDAY_IN_SYNCHRO);
+            throw new ValidationError(ErrorCode.OPERDAY_IN_SYNCHRO, "Обработка операций невозможна");
         }
 
         try {

@@ -21,6 +21,7 @@ import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.BackValueOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
@@ -625,6 +626,11 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1 where o.id in (" + ops + ")", bsaDt);
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0).getId() + ")", BackValuePostStatus.SIGNEDDATE);
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", ReprocessWtacOparationsTask.JOB_NAME);
+
+        if (!(boolean)remoteAccess.invoke(WorkprocRepository.class, "isStepOK", ReprocessWtacOparationsTask.DEFAULT_STEP_NAME, od.getLastWorkingDay())) {
+            baseEntityRepository.executeNativeUpdate("insert into workproc (DAT, ID, RESULT, COUNT, STARTTIME, ENDTIME) values (?, ?, ?, ?, sysdate, sysdate)",
+                    od.getLastWorkingDay(), ReprocessWtacOparationsTask.DEFAULT_STEP_NAME, "O", 1);
+        };
 
         // обработка WTAC
         setOperday(od.getCurrentDate(), od.getLastWorkingDay(), ONLINE, OPEN);

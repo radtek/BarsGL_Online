@@ -343,6 +343,9 @@ public class DomBuilderTest {
         Assert.assertEquals("c1", dom.getNodeByXPath("//c1[b1 = '123']").getNodeName());
         Assert.assertEquals("1", dom.getNodeByXPath("//c1[b1 = '123' and b2='0909']").getAttributes().getNamedItem("attr").getTextContent());
         Assert.assertEquals("2", dom.getNodeByXPath("//c1[b1 = '456']").getAttributes().getNamedItem("attr").getTextContent());
+        Assert.assertEquals("1", dom.getNodeByXPath("//c1[count(b2) = 1]").getAttributes().getNamedItem("attr").getTextContent());
+        Assert.assertEquals("1", dom.getNodeByXPath("//c1[count(*) = 2]").getAttributes().getNamedItem("attr").getTextContent());
+        Assert.assertEquals("2", dom.getNodeByXPath("//c1[count(*) = 1]").getAttributes().getNamedItem("attr").getTextContent());
     }
 
     @Test public void testGetNodeByChildContents()  throws Exception {

@@ -174,6 +174,30 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         // TODO дата открытия
     }
 
+    public void checkDateOpenMnl(GLAccount glAccount, Date dateOpen) {
+        // проверка даты открытия
+        checkDateOpen(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
+        // проверка даты открытия для 707 счетов
+        checkDateOpen707(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
+        // проверка необарботанных операций
+//        checkOperationsBefore(glAccount, dateOpen, "Операции");
+        // проверка движений после
+        checkBalanceBefore(glAccount, dateOpen, "Баланс");
+    }
+
+    public void checkDateCloseMnl(GLAccount glAccount, Date dateOpen, Date dateClose) {
+        if (null != dateClose) {
+            // проверка даты закрытия
+            checkDateClose(dateOpen, dateClose, "Дата закрытия");
+            // проверка баланса
+            checkBalance(glAccount, dateClose, glAccount.getDateLast(), "Баланс");
+            // проверка необарботанных операций
+//            checkOperationsAfter(glAccount, dateClose, "Операции");
+            // проверка движений после
+            checkBalanceAfter(glAccount, dateClose, "Баланс");
+        }
+    }
+
     // Дата открытия счета
     private void checkDateOpen(Date dateOpen, String bsaAcid, String fieldName) {
         Date currentDate = operdayController.getOperday().getCurrentDate();     // текущий опердень
@@ -228,7 +252,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     private void checkBalance(GLAccount account, Date dateFrom, Date dateTo, String fieldName) {
         BigDecimal balance = glAccountRepository.getAccountBalance(account.getBsaAcid(), account.getAcid(), dateTo);
         if (!balance.equals(BigDecimal.ZERO)) {
-            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid(), dateUtils.onlyDateString(dateFrom));
+            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid());
         }
     }
 
@@ -539,6 +563,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     }
 
     public void setDateOpen(GLAccount glAccount, Date dateOpen) {
+/*
         // проверка даты открытия
         checkDateOpen(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
         // проверка даты открытия для 707 счетов
@@ -547,7 +572,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         checkOperationsBefore(glAccount, dateOpen, "Операции");
         // проверка движений после
         checkBalanceBefore(glAccount, dateOpen, "Баланс");
-
+*/
         glAccount.setDateOpen(dateOpen);
         // счет ЦБ
         //Отключаем проверку для технических счетов
@@ -561,6 +586,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     }
 
     public void setDateClose(GLAccount glAccount, Date dateOpen, Date dateClose) {
+/*
         if (null != dateClose) {
             // проверка даты закрытия
             checkDateClose(dateOpen, dateClose, "Дата закрытия");
@@ -571,6 +597,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
             // проверка движений после
             checkBalanceAfter(glAccount, dateClose, "Баланс");
         }
+*/
         glAccount.setDateClose(dateClose);
         // счет ЦБ
         bsaAccRepository.setDateClose(glAccount);

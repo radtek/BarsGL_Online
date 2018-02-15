@@ -978,12 +978,12 @@ public class GLOperation extends BaseEntity<Long> {
         return KondorPlus.getLabel().equals(sourcePosting);
     }
 
-    public boolean fromARMPRO() {
-        return ARMPRO.getLabel().equals(sourcePosting);
+    public boolean fromTBO() {
+        return TBO.getLabel().equals(sourcePosting);
     }
 
     public boolean isNonStandard() {
-        return fromKondorPlus() || Y.equals(fan);
+        return fromKondorPlus() || fromTBO() || Y.equals(fan);
     }
 
     public boolean isAutomatic() {return true;}
