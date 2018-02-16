@@ -160,7 +160,9 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
                     writeErr2Card(card, ee);
                     return null;
                 });
-            }catch (Exception e){}
+            }catch (Exception e){
+                auditController.warning(AuditRecord.LogCode.CardMessageProcessorBean,"Ошибка записи ошибки обработки картотеки: " + e.getMessage(), null, e);
+            }
         }
         return card;
     }
