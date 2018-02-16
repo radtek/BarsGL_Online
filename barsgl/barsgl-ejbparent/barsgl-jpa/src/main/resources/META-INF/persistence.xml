@@ -83,6 +83,8 @@
         <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.dwh.FilialsInf</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Filials</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.BranchsInf</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Branchs</class>
 
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPackage</class>
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPosting</class>

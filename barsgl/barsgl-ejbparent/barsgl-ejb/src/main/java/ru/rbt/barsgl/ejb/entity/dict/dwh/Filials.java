@@ -80,12 +80,4 @@ public class Filials  extends BaseEntity<String> implements Comparable<Filials>{
     public int compareTo(Filials filials){
         return this.getId().compareTo(filials.getId());
     }
-//    @Override
-//    public boolean equals(Object o){
-//        if (o instanceof FilialsInf){
-//            return ((FilialsInf) o).getId().equals(this.getId());
-//        }else
-//            super.equals(o);
-//        return false;
-//    }
 }
