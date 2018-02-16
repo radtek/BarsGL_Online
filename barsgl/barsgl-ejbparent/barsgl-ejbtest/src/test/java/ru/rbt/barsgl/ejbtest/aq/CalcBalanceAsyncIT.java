@@ -1,11 +1,13 @@
 package ru.rbt.barsgl.ejbtest.aq;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
@@ -190,6 +192,22 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     }
 
+    @Test public void testBvjrnl() throws Exception {
+
+        GLAccount account = findAccount("40702810%");
+        Date pod0 = DateUtils.parseDate("2018-09-01", "yyyy-MM-dd");
+        Date pod1 = DateUtils.addDays(pod0, 1);
+        Date pod2 = DateUtils.addDays(pod0, 2);
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+        insertBvJrnl(account, BackvalueJournal.BackvalueJournalState.NEW, pod0);
+        insertBvJrnl(account, BackvalueJournal.BackvalueJournalState.NEW, pod1);
+        insertBvJrnl(account, BackvalueJournal.BackvalueJournalState.NEW, pod2);
+
+        List<DataRecord> bvs = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+        Assert.assertTrue(bvs.stream().anyMatch(r -> r.getLong("seq") != null));
+    }
+
+
     private static GLAccount findAccount(String bsaacidLike) throws SQLException {
         DataRecord record = baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ?", bsaacidLike);
         if (record != null) {
@@ -246,5 +264,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
                 "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
                 "    end loop;\n" +
                 "end;");
+    }
+
+    private void insertBvJrnl(GLAccount account, BackvalueJournal.BackvalueJournalState state, Date pod) {
+        baseEntityRepository.executeNativeUpdate("insert into gl_bvjrnl (bsaacid,acid,pod,state) values (?, ?, ?, ?)",
+                account.getBsaAcid(), account.getAcid(), pod, state.name());
     }
 }
