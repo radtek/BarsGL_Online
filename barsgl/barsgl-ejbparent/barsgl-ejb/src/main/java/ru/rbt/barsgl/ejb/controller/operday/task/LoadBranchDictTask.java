@@ -2,15 +2,11 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.entity.dict.dwh.Filials;
-import ru.rbt.barsgl.ejb.entity.dict.dwh.FilialsInf;
 import ru.rbt.barsgl.ejb.repository.BranchDictRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -97,33 +93,33 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
         auditController.info(LoadBranchDict, "LoadBranchDictTask тавлицы очищены", "", String.valueOf(_loadStatId));
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try{
-            Callable<Boolean> filsTask = ()->{
-                try {
-                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                        loadDictFil.fillTargetTables(dateLoad);
-                        return null;
-                    }, 60 * 60);
-                    return true;
-                }catch (Throwable e){
-                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictFil.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
-                    return false;
-                }
-            };
-            Callable<Boolean> brchsTask = ()->{
-                try {
-                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                        loadDictBr.fillTargetTables(dateLoad);
-                        return null;
-                    }, 60 * 60);
-                    return true;
-                }catch (Throwable e){
-                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictBr.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
-                    return false;
-                }
-            };
-            Future<Boolean> fuFils = pool.submit(filsTask);
-            Future<Boolean> fuBrchs = pool.submit(brchsTask);
-            if (fuFils.get()&&fuBrchs.get()){
+//            Callable<Boolean> filsTask = ()->{
+//                try {
+//                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+//                        loadDictFil.fillTargetTables(dateLoad);
+//                        return null;
+//                    }, 60 * 60);
+//                    return true;
+//                }catch (Throwable e){
+//                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictFil.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
+//                    return false;
+//                }
+//            };
+//            Callable<Boolean> brchsTask = ()->{
+//                try {
+//                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+//                        loadDictBr.fillTargetTables(dateLoad);
+//                        return null;
+//                    }, 60 * 60);
+//                    return true;
+//                }catch (Throwable e){
+//                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictBr.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
+//                    return false;
+//                }
+//            };
+            Future<Boolean> fuFils = pool.submit(task(loadDictFil, dateLoad));
+            Future<Boolean> fuBrchs = pool.submit(task(loadDictBr, dateLoad));
+            if (fuFils.get() && fuBrchs.get()){
                 branchDictRepository.updGlLoadStat(_loadStatId, "P");
                 return true;
             }else{
@@ -133,6 +129,21 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
         }finally {
             pool.shutdown();
         }
+    }
+
+    private Callable<Boolean> task(LoadDict loadDict, Date dateLoad){
+        return ()->{
+                    try {
+                        beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+                            loadDict.fillTargetTables(dateLoad);
+                            return null;
+                        }, 60 * 60);
+                        return true;
+                    }catch (Throwable e){
+                        auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDict.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
+                        return false;
+                    }
+                };
     }
 
     public boolean checkRun(Date dateLoad, MODE mode, boolean forceStart) throws Exception {
