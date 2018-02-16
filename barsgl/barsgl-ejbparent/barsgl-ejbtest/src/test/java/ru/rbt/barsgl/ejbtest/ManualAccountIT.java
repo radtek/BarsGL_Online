@@ -253,7 +253,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
      */
     @Test
     public void testEditManualAccount() throws SQLException {
-        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00103796", 132010300, getOperday().getCurrentDate(), "subdeal", "01");
+        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00103796", 132020100, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
         bsaList.add(account.getBsaAcid());
 
@@ -281,7 +281,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
      */
     @Test
     public void testEditManualAccountError() throws SQLException {
-        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00103796", 132010300, getOperday().getCurrentDate(), "subdeal", "01");
+        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00103796", 132020100, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
         bsaList.add(account.getBsaAcid());
 
@@ -425,14 +425,14 @@ public class ManualAccountIT extends AbstractRemoteIT {
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
         pst.setParentReference("fanRef_" + stamp);
-        pst.setFan(YesNo.Y);
+        pst.setFan(YesNo.N);
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.LOAD, operation.getState());
+        Assert.assertEquals(OperState.POST, operation.getState());
 
         Date dateClose = getOperday().getCurrentDate();
         wrapper.setDateCloseStr(new SimpleDateFormat(wrapper.dateFormat).format(dateClose));

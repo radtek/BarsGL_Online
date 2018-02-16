@@ -428,7 +428,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
     protected void setEnabled(boolean isManual) {
         if (SecurityChecker.checkActions(TechOperPstChngDate)) {
-            mDateValue.setEnabled(true);
+            mDateValue.setEnabled(isManual);
             mDateOperation.setEnabled(true);
         }
 

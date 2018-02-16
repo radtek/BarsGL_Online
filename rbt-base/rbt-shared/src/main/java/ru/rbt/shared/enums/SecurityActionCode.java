@@ -92,6 +92,7 @@ public enum SecurityActionCode {
     , TechOperHistory("История создания операций по техсчетам для admin")
     , TechOperHistoryUser("История создания операций по техсчетам для user")
     , TechOperPstChngDate("Изменение даты проводки по техсчетам без анализа прав доступа в архив")
+    , TechOperPstChngSuper("Изменение реквизитов проводки по техсчету, включая закрытый период")
     , Replication("Ручная репликация")
     , ReferAcc2Deals("Настройка списка счетов для контроля сделки")
     ;

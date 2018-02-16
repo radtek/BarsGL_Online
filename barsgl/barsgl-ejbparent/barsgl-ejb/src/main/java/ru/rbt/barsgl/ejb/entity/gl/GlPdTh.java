@@ -396,4 +396,9 @@ public class GlPdTh extends BaseEntity<Long> implements Comparable<GlPdTh> {
     public int compareTo(GlPdTh pd) {
         return this.bsaAcid.compareTo(pd.getBsaAcid());
     }
+
+    @Override
+    public String toString() {
+        return getId().toString();
+    }
 }

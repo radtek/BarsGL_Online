@@ -15,15 +15,11 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.validation.constraints.Future;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
 import static ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask.MODE.Auto;
@@ -74,60 +70,66 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
             mode = Manual;
         }
         auditController.info(LoadBranchDict, "LoadBranchDictTask стартовала в "+mode.getValue()+" режиме за дату "+yyyyMMdd.format(dateLoad));
-//        beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
             if (checkRun(dateLoad, mode, isForceStart)) {
-                executeWork(dateLoad);
-                branchDictRepository.updGlLoadStat(_loadStatId, "P");
+                try {
+                    if (!executeWork(dateLoad)){
+                        throw new DefaultApplicationException("Ошибка задачи");
+                    }
+                }finally{
+                    taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
+                }
+//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
                 auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
             }else {
                 auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
             }
-//            return null;
-//        }, 60 * 60);
         }catch (Throwable e){
-            taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
-            if (_loadStatId > 0){
-                branchDictRepository.updGlLoadStat(_loadStatId, "E");
-            }
-            auditController.error(LoadBranchDict, "LoadBranchDictTask завершилась с ошибкой","", String.valueOf(_loadStatId), e);
+//            if (_loadStatId > 0){
+//                branchDictRepository.updGlLoadStat(_loadStatId, "E");
+//            }
+//            auditController.error(LoadBranchDict, "LoadBranchDictTask завершилась с ошибкой","", String.valueOf(_loadStatId), e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 
-    private void executeWork(Date dateLoad) throws Exception {
+    private boolean executeWork(Date dateLoad) throws Exception {
         clearInfTables();
         auditController.info(LoadBranchDict, "LoadBranchDictTask тавлицы очищены", "", String.valueOf(_loadStatId));
-        loadDictFil.fillTargetTables(dateLoad);
-        loadDictBr.fillTargetTables(dateLoad);
-
         ExecutorService pool = Executors.newFixedThreadPool(2);
-        Callable<String> t = new Callable<String>{
-            public String call()  {
-                loadDictFil.fillTargetTables(dateLoad);
-                return "";
+        try{
+            Callable<Boolean> filsTask = ()->{
+                try {
+                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+                        loadDictFil.fillTargetTables(dateLoad);
+                        return null;
+                    }, 60 * 60);
+                    return true;
+                }catch (Throwable e){
+                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictFil.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
+                    return false;
+                }
+            };
+            Callable<Boolean> brchsTask = ()->{
+                try {
+                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+                        loadDictBr.fillTargetTables(dateLoad);
+                        return null;
+                    }, 60 * 60);
+                    return true;
+                }catch (Throwable e){
+                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictBr.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
+                    return false;
+                }
+            };
+            Future<Boolean> fuFils = pool.submit(filsTask);
+            Future<Boolean> fuBrchs = pool.submit(brchsTask);
+            if (fuFils.get()&&fuBrchs.get()){
+                branchDictRepository.updGlLoadStat(_loadStatId, "P");
+                return true;
+            }else{
+                branchDictRepository.updGlLoadStat(_loadStatId, "E");
+                return false;
             }
-        }
-
-//        Future fu = pool.submit(new Callable() {
-//            @Override
-//            public Object call() throws Exception {
-//                return "";
-//            }
-//        });
-
-        try {
-            pool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    loadDictFil.fillTargetTables(dateLoad);
-                }
-            });
-            pool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    loadDictBr.fillTargetTables(dateLoad);
-                }
-            });
         }finally {
             pool.shutdown();
         }

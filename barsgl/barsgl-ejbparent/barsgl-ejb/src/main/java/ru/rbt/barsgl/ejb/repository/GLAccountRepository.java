@@ -702,10 +702,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public BigDecimal getAccountBalance(String bsaAcid, String acid, Date datto) {
         try {
-            DataRecord data = selectFirst("SELECT sum(OBAC) + sum(DTAC) + sum(CTAC) from" +
-                    " (SELECT BSAACID, ACID, OBAC, DTAC, CTAC from BALTUR where DATTO = ? and ACID = ? and BSAACID = ? union all" +
-                    " SELECT BSAACID, ACID, 0 as OBAC, DTAC, CTAC from GL_BALTUR WHERE MOVED = 'N' and DAT <= ? and ACID = ? and BSAACID = ?" +
-                    ") T group by BSAACID, ACID", datto, acid, bsaAcid, datto, acid, bsaAcid);
+            DataRecord data = selectFirst("select PKG_CHK_ACC.GET_BALANCE_TODATE(?, ?, ?) from dual"
+                    , bsaAcid, acid, datto);
             return (null == data) ? BigDecimal.ZERO : data.getBigDecimal(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -714,9 +712,9 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {
         try {
-            DataRecord data = selectFirst("select 1 from dual where exists (SELECT * from BALTUR where DAT < ? and ACID = ? and BSAACID = ?) "
-                    , dat, acid, bsaAcid);
-            return (null != data);
+            DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE(?, ?, ?) from dual"
+                    , bsaAcid, acid, dat);
+            return (null != data && data.getInteger(0) == 1);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -724,9 +722,9 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public Boolean hasAccountBalanceAfter(String bsaAcid, String acid, Date dat) {
         try {
-            DataRecord data = selectFirst("select 1 from dual where exists (SELECT * from BALTUR where DAT > ? and ACID = ? and BSAACID = ?) "
-                    , dat, acid, bsaAcid);
-            return (null != data);
+            DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_AFTER(?, ?, ?) from dual"
+                    , bsaAcid, acid, dat);
+            return (null != data && data.getInteger(0) == 1);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -1038,7 +1036,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     public boolean checkTechAccountExists(Long glaccid, String bsaAcid, Date date) {
         try {
             DataRecord res = selectFirst("select count(1) from GL_ACC where BSAACID = ?" +
-                    " and coalesce(DTC, Date('2029-01-01')) = ? and ID <> ?", bsaAcid,  date == null ? new Date(129, 0, 1) : date,glaccid);
+                    " and coalesce(DTC, TO_DATE('2029-01-01')) = ? and ID <> ?", bsaAcid,  date == null ? new Date(129, 0, 1) : date,glaccid);
             return res.getInteger(0) > 0;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -1049,10 +1047,10 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     {
         try {
             DataRecord res = selectFirst("select count(1) from GL_ACC where BSAACID = ?" +
-                    " and DTO <= ? and coalesce(DTC, Date('2029-01-01')) >= ? and ID <> ?",
+                    " and DTO <= ? and coalesce(DTC, TO_DATE('2029-01-01')) >= ? and ID <> ?",
                         bsaAcid, dateClose == null ? new Date(129, 0, 1) : dateClose, dateOpen, glaccid);
 
-            //" and (? between DTO and coalesce(DTC, Date('2029-01-01')) or ? between DTO and coalesce(DTC, Date('2029-01-01')) or ? <= DTO) and ID <> ?",
+            //" and (? between DTO and coalesce(DTC, TO_Date('2029-01-01')) or ? between DTO and coalesce(DTC, TO_Date('2029-01-01')) or ? <= DTO) and ID <> ?",
 
             boolean result = res.getInteger(0) > 0;
             return result;

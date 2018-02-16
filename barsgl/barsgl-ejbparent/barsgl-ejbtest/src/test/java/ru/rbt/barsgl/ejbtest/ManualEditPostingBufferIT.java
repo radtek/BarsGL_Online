@@ -46,7 +46,7 @@ public class ManualEditPostingBufferIT  extends AbstractTimerJobIT {
     public void testEditManualOperationBuffer() throws SQLException {
         // создаем ручную операцию
         BigDecimal sum = new BigDecimal("50.25");
-        String bsaDt = Utl4Tests.findBsaacidBal(baseEntityRepository, getOperday(), "20202810_0001%", sum);
+        String bsaDt = Utl4Tests.findBsaacidBal(baseEntityRepository, getOperday(), "47425810%", sum);
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", sum,

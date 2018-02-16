@@ -86,7 +86,7 @@ public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> 
     private void checkBalance(GLAccount account, Date dateFrom, Date dateTo, String fieldName) {
         BigDecimal balance = glTechAccountRepository.getAccountBalance(account.getBsaAcid(), account.getId(), dateTo);
         if (!balance.equals(BigDecimal.ZERO)) {
-            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid(), dateUtils.onlyDateString(dateFrom));
+            throw new ValidationError(BALANCE_NOT_ZERO, account.getBsaAcid());
         }
     }
 
@@ -105,18 +105,16 @@ public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> 
         }
     }
 
-    public void setDateOpen(GLAccount glAccount, Date dateOpen) {
+    public void checkDateOpenMnl(GLAccount glAccount, Date dateOpen) {
         // проверка даты открытия
         checkDateOpen(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
         // проверка необарботанных операций
         checkOperationsBefore(glAccount, dateOpen, "Операции");
         // проверка движений после
         checkBalanceBefore(glAccount, dateOpen, "Баланс");
-
-        glAccount.setDateOpen(dateOpen);
     }
 
-    public void setDateClose(GLAccount glAccount, Date dateOpen, Date dateClose) {
+    public void checkDateCloseMnl(GLAccount glAccount, Date dateOpen, Date dateClose) {
         if (null != dateClose) {
             // проверка даты закрытия
             checkDateClose(dateOpen, dateClose, "Дата закрытия");
@@ -127,7 +125,6 @@ public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> 
             // проверка движений после
             checkBalanceAfter(glAccount, dateClose, "Баланс");
         }
-        glAccount.setDateClose(dateClose);
     }
 
     // Операции по счету
