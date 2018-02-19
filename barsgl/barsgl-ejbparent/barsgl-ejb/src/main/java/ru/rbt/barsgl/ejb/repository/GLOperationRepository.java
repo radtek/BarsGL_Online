@@ -58,7 +58,8 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getCompanyCode(String bsaAcid) {
         try {
-            String sql = "select BRCA from BSAACC B where B.ID = ?";
+//            String sql = "select BRCA from BSAACC B where B.ID = ?";
+            String sql = "SELECT CBCCN BRCA FROM GL_ACC WHERE BSAACID = ? ";
             DataRecord res = selectFirst(sql, bsaAcid);
             return (null != res) ? res.getString("BRCA") : "";
         } catch (SQLException e) {
@@ -498,12 +499,14 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      * @throws SQLException
      */
     public DataRecord getAcidByAccRln(String bsaAcid, Date valDate) {
-        String rln = bsaAcid.substring(0, 1).equals("7") ? "'2', '5'" : "'0', '4', '1'";   // RLNTYPE
-        String sql = "select NVL(ACID, ' ') ACID, PLCODE, CTYPE from ACCRLN " +
-                         "where BSAACID = ? and ? between DRLNO and DRLNC " +
-                         "and RLNTYPE in (" + rln + ") order by RLNTYPE";
+//        String rln = bsaAcid.substring(0, 1).equals("7") ? "'2', '5'" : "'0', '4', '1'";   // RLNTYPE
+//        String sql = "select NVL(ACID, ' ') ACID, PLCODE, CTYPE from ACCRLN " +
+//                         "where BSAACID = ? and ? between DRLNO and DRLNC " +
+//                         "and RLNTYPE in (" + rln + ") order by RLNTYPE";
         try {
-            DataRecord res = selectFirst(sql, bsaAcid, valDate);
+            DataRecord res = selectFirst(
+                    "SELECT NVL(ACID, ' ') ACID, PLCODE, CBCUSTTYPE AS CTYPE " +
+                    "  FROM GL_ACC WHERE BSAACID = ? AND ? BETWEEN DTO AND NVL(DTC,TO_DATE('2029-01-01'))", bsaAcid, valDate);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

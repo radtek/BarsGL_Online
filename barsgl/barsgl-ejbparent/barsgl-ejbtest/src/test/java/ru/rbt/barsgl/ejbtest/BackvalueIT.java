@@ -39,12 +39,14 @@ public class BackvalueIT extends AbstractTimerJobIT {
      * @throws ParseException
      */
     @Test
-    public void testBackValue() throws ParseException {
+    public void testBackValue() throws ParseException, SQLException {
 
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, Operday.PdMode.DIRECT);
 
-        final String bsaAcidCt = "40817036200012959997";
-        final String bsaAcidDt = "40817036250010000018";
+        List<DataRecord> accounts = baseEntityRepository.select("select * from gl_acc where bsaacid like '40702036%' and rownum <= 2 and dtc is null");
+        Assert.assertEquals(2, accounts.size());
+        final String bsaAcidCt = accounts.get(0).getString("bsaacid");
+        final String bsaAcidDt = accounts.get(1).getString("bsaacid");
 
         baseEntityRepository.executeUpdate("delete from BackvalueJournal j where j.id.bsaAcid = ?1", bsaAcidCt);
         baseEntityRepository.executeUpdate("delete from BackvalueJournal j where j.id.bsaAcid = ?1", bsaAcidDt);
@@ -123,10 +125,6 @@ public class BackvalueIT extends AbstractTimerJobIT {
     public void testBackValueBuffer() throws Exception {
 
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, Operday.PdMode.BUFFER);
-//        40702036700014697040
-//        40702036100014906975
-//        final String bsaAcidCt = findAccount("40702036%40").getBsaAcid();
-//        final String bsaAcidDt = findAccount("40702036%75").getBsaAcid();
         List<DataRecord> accounts = baseEntityRepository.select("select * from gl_acc where bsaacid like '40702036%' and rownum <= 2 and dtc is null");
         Assert.assertEquals(2, accounts.size());
         final String bsaAcidCt = accounts.get(0).getString("bsaacid");
