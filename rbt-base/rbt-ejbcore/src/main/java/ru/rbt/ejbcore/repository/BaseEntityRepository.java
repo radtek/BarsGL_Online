@@ -1,5 +1,6 @@
 package ru.rbt.ejbcore.repository;
 
+import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
@@ -80,5 +81,7 @@ public interface BaseEntityRepository<T extends BaseEntity, K extends Serializab
             , Object[] params, Map<String, String> hints);
 
     List<DataRecord> selectMaxRows(String sqlString, int maxRows, Object[] params) throws SQLException;
+
+    DBParams executeCallable(String sql, DBParams params) throws SQLException;
 
 }

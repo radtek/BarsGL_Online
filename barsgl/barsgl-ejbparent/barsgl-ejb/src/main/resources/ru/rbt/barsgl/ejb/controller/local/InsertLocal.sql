@@ -1,0 +1,7 @@
+DECLARE
+    L_CNT NUMBER;
+    L_TOT NUMBER;
+BEGIN
+    PKG_LOCAL.INS_TO_LOCAL(L_CNT, L_TOT);
+    ? := L_CNT; ? := L_TOT;
+END;

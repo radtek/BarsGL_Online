@@ -5,6 +5,7 @@ import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.PersistenceProvider;
+import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.mapping.BaseEntity;
@@ -588,7 +589,12 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         }
     }
 
-//    @PostConstruct
+    @Override
+    public DBParams executeCallable(String callable, DBParams params) throws SQLException {
+        return executeCallable(getDataSource(), callable, params);
+    }
+
+    //    @PostConstruct
 //    public void init() {
 //        dataSource = findConnection(barsglDataSourceName);
 //        try{

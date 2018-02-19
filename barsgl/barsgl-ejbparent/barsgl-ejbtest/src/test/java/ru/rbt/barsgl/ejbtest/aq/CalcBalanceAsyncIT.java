@@ -9,9 +9,12 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
+import ru.rbt.ejbcore.datarec.DBParam;
+import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -194,17 +197,57 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     @Test public void testBvjrnl() throws Exception {
 
-        GLAccount account = findAccount("40702810%");
+        GLAccount account1 = findAccount("40702810%");
         Date pod0 = DateUtils.parseDate("2018-09-01", "yyyy-MM-dd");
         Date pod1 = DateUtils.addDays(pod0, 1);
         Date pod2 = DateUtils.addDays(pod0, 2);
-        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
-        insertBvJrnl(account, BackvalueJournal.BackvalueJournalState.NEW, pod0);
-        insertBvJrnl(account, BackvalueJournal.BackvalueJournalState.NEW, pod1);
-        insertBvJrnl(account, BackvalueJournal.BackvalueJournalState.NEW, pod2);
+        cleanBvjrnlRecord(account1);
+        insertBvJrnl(account1, BackvalueJournal.BackvalueJournalState.NEW, pod0);
+        insertBvJrnl(account1, BackvalueJournal.BackvalueJournalState.NEW, pod1);
+        insertBvJrnl(account1, BackvalueJournal.BackvalueJournalState.NEW, pod2);
 
-        List<DataRecord> bvs = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+        List<DataRecord> bvs = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid = ?", account1.getBsaAcid());
         Assert.assertTrue(bvs.stream().anyMatch(r -> r.getLong("seq") != null));
+
+        GLAccount account2 = findAccount("40701810%");
+        cleanBvjrnlRecord(account2);
+        insertBvJrnl(account2, BackvalueJournal.BackvalueJournalState.NEW, pod0);
+
+        DBParams params = DBParams.createParams(new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT)
+                ,new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT));
+        params = baseEntityRepository.executeCallable(
+                "declare\n" +
+                "    l_cnt number;\n" +
+                "    l_tot number;\n" +
+                "begin\n" +
+                "    PKG_LOCAL.INS_TO_LOCAL(l_cnt, l_tot);\n" +
+                "    \n" +
+                "    ? := l_cnt;\n" +
+                "    ? := l_tot;\n" +
+                "end;", params);
+        Assert.assertEquals(2, params.getParams().get(0).getValue());
+        Assert.assertEquals(4, params.getParams().get(1).getValue());
+        // проверка статусов обработки процессом локализации
+        // проверяем
+        DBParams params2 = DBParams.createParams(new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT));
+        params2 = baseEntityRepository.executeCallable(
+                "declare\n" +
+                "    l_cnt number;\n" +
+                "begin\n" +
+                "    PKG_LOCAL.UPDATE_BVJRNL(l_cnt, '1');\n" +
+                "    ? := l_cnt;\n" +
+                "end;", params2);
+        // проверка статусов обработки процессом локализации
+        // не проверяем
+        Assert.assertEquals(0, params2.getParams().get(0).getValue());
+        params2 = baseEntityRepository.executeCallable(
+                "declare\n" +
+                "    l_cnt number;\n" +
+                "begin\n" +
+                "    PKG_LOCAL.UPDATE_BVJRNL(l_cnt);\n" +
+                "    ? := l_cnt;\n" +
+                "end;", params2);
+        Assert.assertEquals(4, params2.getParams().get(0).getValue());
     }
 
 
@@ -269,5 +312,9 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private void insertBvJrnl(GLAccount account, BackvalueJournal.BackvalueJournalState state, Date pod) {
         baseEntityRepository.executeNativeUpdate("insert into gl_bvjrnl (bsaacid,acid,pod,state) values (?, ?, ?, ?)",
                 account.getBsaAcid(), account.getAcid(), pod, state.name());
+    }
+
+    private void cleanBvjrnlRecord(GLAccount account) {
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
     }
 }

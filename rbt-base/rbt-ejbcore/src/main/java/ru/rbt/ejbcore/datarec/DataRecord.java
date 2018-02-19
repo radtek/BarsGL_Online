@@ -54,26 +54,6 @@ public final class DataRecord implements Serializable {
         }
     }
 
-    /**
-     * Создает новый экземпляр {@link DataRecord}, инициализируя его значениями параметров хранимой процедуры.<br/>
-     * Для параметров, у которых задано имя, будут созданы соответствующие поля записи с такими именами. Имена
-     * остальных полей будут иметь вид <code>@PARAM&lt;X&gt;</code>, где &lt;X&gt; - номер параметра, начиная с 0
-     *
-     * @param params Параметры хранимой процедуры
-     */
-    public DataRecord(CallParam[] params) {
-        if (params == null) {
-            throw new IllegalArgumentException("Parameters cannot be null");
-        }
-        for (int i = 0; i < params.length; i++) {
-            String name = params[i].getName();
-            if (name == null) {
-                name = "@PARAM" + i;
-            }
-            _cols.add(new DataColumn(name, params[i].getValue()));
-        }
-    }
-
     public int getColumnCount() {
         return _cols.size();
     }

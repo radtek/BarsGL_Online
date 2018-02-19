@@ -165,7 +165,6 @@ public class BackvalueIT extends AbstractTimerJobIT {
         remoteAccess.invoke(EtlStructureMonitorTask.class, "executeWork");
 
         remoteAccess.invoke(BackvalueJournalController.class, "recalculateLocal");
-        remoteAccess.invoke(BackvalueJournalController.class, "recalculateBS2");
 
         GLOperation operation = (GLOperation) baseEntityRepository
                 .selectFirst(GLOperation.class, "from GLOperation o where o.aePostingId = ?1", pst.getAePostingId());
