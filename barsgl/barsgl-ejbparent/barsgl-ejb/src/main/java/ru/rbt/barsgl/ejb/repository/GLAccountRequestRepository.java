@@ -52,13 +52,6 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
         return id;
     }
 
-    public Long getGlAccIdForTH()
-    {
-        Long id = nextId("GL_SEQ_ACC");
-        return id;
-    }
-
-
     /**
      * Загрузка запросов на открытие счета
      * @return

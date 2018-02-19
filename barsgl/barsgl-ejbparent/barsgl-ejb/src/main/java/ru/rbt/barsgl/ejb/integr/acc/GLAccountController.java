@@ -397,8 +397,8 @@ public class GLAccountController {
     public GLAccount updateGLAccountMnl(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
-            glAccountProcessor.setDateOpen(glAccount, dateOpen);
-            glAccountProcessor.setDateClose(glAccount, dateOpen, dateClose);
+            glAccount.setDateOpen(dateOpen);
+            glAccount.setDateClose(dateClose);
             glAccount.setDealId(keys.getDealId());
             glAccount.setSubdealId(keys.getSubDealId());
             glAccount.setDescription(keys.getDescription());
@@ -437,7 +437,7 @@ public class GLAccountController {
     public GLAccount closeGLAccountMnl(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
-            glAccountProcessor.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
+            glAccount.setDateClose(dateClose);
 
             return glAccountRepository.update(glAccount);
         });
@@ -466,7 +466,7 @@ public class GLAccountController {
                         if (bsaAcid == null) {  // нету - создаем
                             bsaAcid = ofrAccountProcessor.createAccount(connection, keys, dateOpen, DAY20290101, dateStart446P);     // 1.0.5
                             if (bsaAcid != null) {  // запись в GL_ACC
-                                createAccountGlAcc(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
+                                createAccount(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
                             }
                         }
                         return bsaAcid;
@@ -552,10 +552,7 @@ public class GLAccountController {
         // создать счет GL
         GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
         // определить дополнительные папаметры счета
-
         glAccountProcessor.enrichment(glAccount, keys);
-        // записать счет в таблицы BARS
-        glAccountProcessor.createBarsAccounts(glAccount);
         // сохранить счет GL
         return glAccountRepository.save(glAccount);
     }
@@ -565,43 +562,6 @@ public class GLAccountController {
 
         // создать счет GL
         GLAccount glAccount = glAccountProcessor.createGlAccountTH(bsaAcid, operation, operSide, dateOpen, keys, openType);
-        // определить дополнительные папаметры счета
-        //glAccountProcessor.enrichmentTH(glAccount, keys);
-        // записать счет в таблицы BARS
-        //glAccountProcessor.createBarsAccounts(glAccount);
-        // сохранить счет GL
-        return glAccountRepository.save(glAccount);
-    }
-
-    /**
-     * счет без привязки к счету Майдас
-     * @param bsaAcid
-     * @param operation
-     * @param operSide
-     * @param dateOpen
-     * @param keys
-     * @param openType
-     * @return
-     */
-    private GLAccount createPureAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
-                                    AccountKeys keys, GLAccount.OpenType openType) {
-        // создать счет GL
-        GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
-        // определить дополнительные папаметры счета
-        glAccountProcessor.enrichmentPureParams(glAccount, keys);
-        // записать счет в таблицы BARS
-        glAccountProcessor.createPureBarsAccounts(glAccount);
-        // сохранить счет GL
-        return glAccountRepository.save(glAccount);
-    }
-
-    private GLAccount createAccountGlAcc(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
-                                         AccountKeys keys, GLAccount.OpenType openType) {
-        // создать счет GL
-        GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
-        // определить дополнительные папаметры счета
-        glAccountProcessor.enrichment(glAccount, keys);
-        // сохранить счет GL
         return glAccountRepository.save(glAccount);
     }
 
@@ -941,7 +901,7 @@ public class GLAccountController {
             // сформировать строку номера счета
             bsaAcid = generateAccountNumber(acc2, ccyn, cbccn, plcode);
             // проверить наличие счета в БД
-            isNewNumber = !glAccountRepository.checkBsaAccountExists(bsaAcid);
+            isNewNumber = !glAccountRepository.checkAccountExists(bsaAcid);
             if (!isNewNumber){
                 log.warn("Generated BSAACID: '" + bsaAcid + "' already exists");
                 if (bsaacidFrom == null) bsaacidFrom = bsaAcid;
@@ -1020,7 +980,7 @@ public class GLAccountController {
                     .executeInNonTransaction(connection -> AccountUtil.generateAccountNumber(connection
                             , acc2, ccyn, cbccn, plcode));
             // проверить наличие счета в БД
-            isNewNumber = !glAccountRepository.checkBsaAccountExists(bsaAcid);
+            isNewNumber = !glAccountRepository.checkAccountExists(bsaAcid);
             if (!isNewNumber)
                 log.warn("Generated PL BSAACID: '" + bsaAcid + "' already exists");
         } while (!isNewNumber && count++ < 100);
@@ -1211,7 +1171,7 @@ public class GLAccountController {
                     }
                     // сгенерировать номер счета ЦБ
                     String bsaacid = getPureAccountNumber(GLOperation.OperSide.N, dateOpen, keys);
-                    GLAccount account = createPureAccount(bsaacid, null, N, dateOpen, keys, GLAccount.OpenType.AENEW);
+                    GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, GLAccount.OpenType.AENEW);
                     // меняем RLNTYPE
                     account.setRelationType(E);
                     accRlnRepository.updateRelationType(new AccRlnId("", account.getBsaAcid()), E);

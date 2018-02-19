@@ -535,15 +535,6 @@ public class ManualAccountIT extends AbstractRemoteIT {
                 "from GLAccount a where a.bsaAcid = ?1 and a.dateClose = ?2", bsaAcid, dateClose);
         Assert.assertNotNull(account);
         Assert.assertEquals(account.getDateClose(), dateClose);
-
-        DataRecord data = baseEntityRepository.selectOne("select BSAACC from BsaAcc a where a.ID = ?", bsaAcid);
-        Assert.assertNotNull(data);                     // bsaAcid есть в таблице BSAACC
-        Assert.assertEquals(data.getDate(0), dateClose);
-
-        data = baseEntityRepository.selectOne("select DRLNC from AccRln a where BSAACID = ? and ACID = ? and RLNTYPE = ?",
-                bsaAcid, account.getAcid(), account.getRelationType());
-        Assert.assertNotNull(data);                 // bsaAcid + acid есть в таблице ACCRLN
-        Assert.assertEquals(data.getDate(0), dateClose);
     }
 
     private void checkUpdateAccount(String bsaAcid, ManualAccountWrapper wrapper, Date dateOpen, Date dateClose) throws SQLException {
@@ -556,17 +547,6 @@ public class ManualAccountIT extends AbstractRemoteIT {
         Assert.assertEquals(wrapper.getDescription(), account.getDescription());
         Assert.assertEquals(wrapper.getDealId(), account.getDealId());
         Assert.assertEquals(wrapper.getSubDealId(), account.getSubDealId());
-
-        DataRecord data = baseEntityRepository.selectOne("select BSAACO, BSAACC from BsaAcc a where a.ID = ?", bsaAcid);
-        Assert.assertNotNull(data);                     // bsaAcid есть в таблице BSAACC
-        Assert.assertEquals(data.getDate(0), dateOpen);
-        Assert.assertEquals(data.getDate(1), dateClose);
-
-        data = baseEntityRepository.selectOne("select DRLNO, DRLNC from AccRln a where BSAACID = ? and ACID = ? and RLNTYPE = ?",
-                bsaAcid, account.getAcid(), account.getRelationType());
-        Assert.assertNotNull(data);                 // bsaAcid + acid есть в таблице ACCRLN
-        Assert.assertEquals(data.getDate(0), dateOpen);
-        Assert.assertEquals(data.getDate(1), dateClose);
     }
 
 }
