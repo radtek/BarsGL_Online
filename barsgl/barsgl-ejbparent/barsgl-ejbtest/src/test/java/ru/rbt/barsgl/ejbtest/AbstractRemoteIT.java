@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
@@ -799,4 +800,12 @@ public abstract class AbstractRemoteIT  {
         return data.getString(0);
     }
 
+    protected static GLAccount findAccount(String bsaacidLike) throws SQLException {
+        DataRecord record = baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ?", bsaacidLike);
+        if (record != null) {
+            return (GLAccount) baseEntityRepository.findById(GLAccount.class, record.getLong("id"));
+        } else {
+            throw new RuntimeException(bsaacidLike + " not found");
+        }
+    }
 }

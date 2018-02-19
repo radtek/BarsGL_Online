@@ -251,15 +251,6 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
 
-    private static GLAccount findAccount(String bsaacidLike) throws SQLException {
-        DataRecord record = baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ?", bsaacidLike);
-        if (record != null) {
-            return (GLAccount) baseEntityRepository.findById(GLAccount.class, record.getLong("id"));
-        } else {
-            throw new RuntimeException(bsaacidLike + " not found");
-        }
-    }
-
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
         String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy, invisible) values (?,?,?,?,?,?,?,?,?,?,?)";
         baseEntityRepository.executeNativeUpdate(insert, id, pcid, acid, bsaacid, amount, amountbc, pbr, pod, vald, ccy, invisible);
