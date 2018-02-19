@@ -15,6 +15,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_ACC")
+@SequenceGenerator(name = "GLAccountIdSeq", sequenceName = "GL_SEQ_ACC", allocationSize = 1)
 public class GLAccount extends BaseEntity<Long> {
 
     public enum OpenType {AENEW, AEMID, MNL, SRV};
@@ -48,7 +49,7 @@ public class GLAccount extends BaseEntity<Long> {
 
     @Id
     @Column(name = "ID")
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "GLAccountIdSeq")
     private Long id;
 
     @Column(name = "BSAACID")

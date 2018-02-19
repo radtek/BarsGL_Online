@@ -338,7 +338,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
      */
     public GLAccount createGlAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType) {
 //1        GLAccount glAccount = new GLAccount();
-        GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccId(keys.getAccountMidas(), bsaAcid));
+        GLAccount glAccount = new GLAccount();
 
         // номер счета, способ создания, операция, сторона операции
         glAccount.setBsaAcid(bsaAcid);
@@ -387,10 +387,8 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     }
 
     public GLAccount createGlAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType) {
-//1        GLAccount glAccount = new GLAccount();
 
-        //GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccId(keys.getAccountMidas(), bsaAcid));
-        GLAccount glAccount = new GLAccount(accountRequestRepository.getGlAccIdForTH());
+        GLAccount glAccount = new GLAccount();
 
         // номер счета, способ создания, операция, сторона операции
         glAccount.setBsaAcid(bsaAcid);
@@ -534,77 +532,6 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
             accountName = glAccountRepository.getAccountNameByType(glAccount.getAccountType());
         glAccount.setDescription(accountName);
 
-    }
-
-    /**
-     * Создает счета BARS
-     * @param glAccount
-     */
-    public void createBarsAccounts(GLAccount glAccount) {
-        createPureBarsAccounts(glAccount);
-        // счет Майдас - если его нет
-        if (!glAccountRepository.checkMidasAccountExists(glAccount.getAcid(), glAccount.getDateOpen())) {
-            Acc acc = accRepository.createAcc(glAccount);
-        }
-    }
-
-    /**
-     * Создает счета BARS без привязки к счету ЦБ
-     * @param glAccount
-     */
-    public void createPureBarsAccounts(GLAccount glAccount)  {
-        // счет ЦБ
-
-        BsaAcc bsaAcc = bsaAccRepository.findBsaAcc(glAccount.getBsaAcid())
-                    .orElseGet(() -> bsaAccRepository.createBsaAcc(glAccount));
-        // связь счета ЦБ и Майдас
-        GlAccRln accRln = accRlnRepository.findAccRln(glAccount)
-                    .orElseGet(() -> accRlnRepository.createAccRln(glAccount));
-    }
-
-    public void setDateOpen(GLAccount glAccount, Date dateOpen) {
-/*
-        // проверка даты открытия
-        checkDateOpen(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
-        // проверка даты открытия для 707 счетов
-        checkDateOpen707(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
-        // проверка необарботанных операций
-        checkOperationsBefore(glAccount, dateOpen, "Операции");
-        // проверка движений после
-        checkBalanceBefore(glAccount, dateOpen, "Баланс");
-*/
-        glAccount.setDateOpen(dateOpen);
-        // счет ЦБ
-        //Отключаем проверку для технических счетов
-        if (!glAccount.getRelationType().equals("9")) {
-            bsaAccRepository.setDateOpen(glAccount);
-            // связь счета ЦБ и Майдас
-            accRlnRepository.setDateOpen(glAccount);
-            // счет Майдас - не меняем, он мог быть открыт не BARS GL
-//        accRepository.setDateOpen(glAccount);
-        }
-    }
-
-    public void setDateClose(GLAccount glAccount, Date dateOpen, Date dateClose) {
-/*
-        if (null != dateClose) {
-            // проверка даты закрытия
-            checkDateClose(dateOpen, dateClose, "Дата закрытия");
-            // проверка баланса
-            checkBalance(glAccount, dateClose, glAccount.getDateLast(), "Баланс");
-            // проверка необарботанных операций
-            checkOperationsAfter(glAccount, dateClose, "Операции");
-            // проверка движений после
-            checkBalanceAfter(glAccount, dateClose, "Баланс");
-        }
-*/
-        glAccount.setDateClose(dateClose);
-        // счет ЦБ
-        bsaAccRepository.setDateClose(glAccount);
-        // связь счета ЦБ и Майдас
-        accRlnRepository.setDateClose(glAccount);
-        // счет Майдас - не закрываем, он мог быть открыт не BARS GL
-//        accRepository.setDateClose(glAccount);
     }
 
     public long stringToLong(GLOperation.OperSide side, String fieldName, String fieldValue, int fieldIndex) {

@@ -1132,8 +1132,6 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
             , String bsaAcid, String keyString, GLAccount.RelationType relationType) throws SQLException {
         AccountKeys keys = new AccountKeys(keyString);
         Assert.assertFalse(isEmpty(bsaAcid));
-        DataRecord data = baseEntityRepository.selectOne("select 1 from BSAACC where ID = ?", bsaAcid);
-        Assert.assertNotNull(data);                     // bsaAcid есть в таблице BSAACC
         String acid;
         GLAccount account = (GLAccount) baseEntityRepository.selectOne(GLAccount.class,
                 "from GLAccount a where a.bsaAcid = ?1", bsaAcid);
@@ -1159,11 +1157,6 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
             acid = keys1.getAccountMidas();
             Assert.assertFalse(isEmpty(acid));
         }
-        data = baseEntityRepository.selectOne("select 1 from ACC where ID = ?", acid);
-        Assert.assertNotNull(data);                 // acid есть в таблице ACC
-        data = baseEntityRepository.selectOne("select 1 from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?",
-                bsaAcid, acid, rlnType);
-        Assert.assertNotNull(data);                 // bsaAcid + acid есть в таблице ACCRLN
         return acid;
     }
 

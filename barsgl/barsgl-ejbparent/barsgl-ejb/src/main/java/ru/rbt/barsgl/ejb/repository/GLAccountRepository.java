@@ -89,10 +89,10 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @param bsaAcid - счет ЦБ
      * @return - true - есть
      */
-    public boolean checkBsaAccountExists(String bsaAcid) {
+    public boolean checkAccountExists(String bsaAcid) {
         try {
-            DataRecord res = selectFirst("select count(1) from BSAACC B where B.ID = ?", bsaAcid);
-            return res.getInteger(0) > 0;
+            DataRecord res = selectFirst("select 1 from GL_ACC a where a.BSAACID = ?", bsaAcid);
+            return null != res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -110,10 +110,10 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public ResultCode checkBsaAccountAnal(String bsaAcid, Date vDate, Date operDate, Date lastOperDate) {
         try {
-            DataRecord res = selectFirst("select case when BSAACO > ? then " + ResultCode.ACCOUNT_IS_OPEN_LATER.getValue() +
-                                                " when BSAACC < ? then "+ ResultCode.ACCOUNT_IS_CLOSED_BEFOR.getValue() +
-                                                " else "+ ResultCode.SUCCESS.getValue() +" end " +
-                                         "from BSAACC where ID = ?"
+            DataRecord res = selectFirst("select case when DTO > ? then " + ResultCode.ACCOUNT_IS_OPEN_LATER.getValue() +
+                            " when not DTC is null and  DTC < ? then "+ ResultCode.ACCOUNT_IS_CLOSED_BEFOR.getValue() +
+                            " else "+ ResultCode.SUCCESS.getValue() +" end " +
+                            "from GL_ACC where BSAACID = ?"
                     , vDate, !vDate.before(lastOperDate)? vDate: operDate, bsaAcid);
 
             return (null == res) ? ResultCode.ACCOUNT_NOT_FOUND : ResultCode.valueOf(res.getInteger(0));
@@ -121,7 +121,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
-
 
     public GLAccount getDealSubDealGlAcc(String bsaAcid){
         try{

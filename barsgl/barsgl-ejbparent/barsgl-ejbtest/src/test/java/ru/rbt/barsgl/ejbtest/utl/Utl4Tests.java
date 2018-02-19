@@ -58,33 +58,11 @@ public class Utl4Tests {
                 glSeq = SEQ_EMPTY;
             String where = "where BRANCH = ? and CUSTNO = ? and ACCTYPE = ? and COALESCE(CBCUSTTYPE, " + CUST_EMPTY + ") = ? and COALESCE(GL_SEQ, '" + glSeq + "') = ? and CCY = ?";
 
-            int cntAcc = baseEntityRepository.executeNativeUpdate(
-                    "delete from ACC where ID in (select ACID from GL_ACC " + where +")" +
-                            " and DACO >= ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency(), date);
-
-
-            int cntAccRln = baseEntityRepository.executeNativeUpdate(
-                    "delete from ACCRLN where BSAACID in (select BSAACID from GL_ACC " + where +")" +
-                            " and DRLNO >= ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency(), date);
-
-            int cntAccRlnExt = baseEntityRepository.executeNativeUpdate(
-                    "delete from ACCRLNEXT where BSAACID in (select BSAACID from GL_ACC " + where +")"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency());
-
-            // BALTUR ??
-
-            int cntBsaAcc = baseEntityRepository.executeNativeUpdate(
-                    "delete from BSAACC where ID in (select BSAACID from GL_ACC " + where +")" +
-                            " and BSAACO >= ?"
-                    , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency(), date);
-
             int cntGlAcc = baseEntityRepository.executeNativeUpdate(
                     "delete from GL_ACC " + where
                     , keys.getBranch(), keys.getCustomerNumber(), keys.getAccountType(), custType, glSeq, keys.getCurrency());
 
-            logger.info("deleted from GL_ACC:" + cntGlAcc + "; ACC:" + cntAcc + "; ACCRLN:" + cntAccRln + "; ACCRLNEXT:" + cntAccRlnExt + "; BSAACC:" + cntBsaAcc);
+            logger.info("deleted from GL_ACC:" + cntGlAcc);
         }finally {
 
         }
@@ -119,10 +97,7 @@ public class Utl4Tests {
     public static void deleteAccountByBsaAcid(BaseEntityRepository baseEntityRepository, String bsaAcid) {
         try {
             int cntGlAcc = baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ? ", bsaAcid);
-            int cntBsaAcc = baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ? ", bsaAcid);
-            int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from ACCRLN where BSAACID = ? ", bsaAcid);
-            int cntAccRlnExt = baseEntityRepository.executeNativeUpdate("delete from ACCRLNEXT where BSAACID = ? ", bsaAcid);
-            logger.info("deleted BSAACID '" + bsaAcid + "' from GL_ACC:" + cntGlAcc + "; ACCRLN:" + cntAccRln + "; ACCRLNEXT:" + cntAccRlnExt + "; BSAACC:" + cntBsaAcc);
+            logger.info("deleted BSAACID '" + bsaAcid + "' from GL_ACC:" + cntGlAcc);
         }finally {
 
         }

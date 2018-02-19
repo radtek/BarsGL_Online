@@ -86,9 +86,9 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
      */
     public String getFilialByAccount(String bsaAcid) {
         try {
-            String sql = "select I.CCPCD as CBCC from BSAACC B join IMBCBCMP I on I.CCBBR = B.BRCA where B.ID = ?";
+            String sql = "select CBCC from GL_ACC a where a.BSAACID = ?";
             DataRecord res = selectFirst(sql, bsaAcid);
-            return (null != res) ? res.getString("CBCC") : "";
+            return (null != res) ? res.getString(0) : null;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
