@@ -8,7 +8,10 @@ import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.sql.CallableStatement;
@@ -40,8 +43,6 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
     private AuditController auditController;
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
-//    @EJB
-//    private PropertiesRepository propertiesRepository;
 //    @Inject
 //    private Provider<BranchDictRepository> repositoryProvider;
     @EJB
@@ -80,10 +81,6 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
                 auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
             }
         }catch (Throwable e){
-//            if (_loadStatId > 0){
-//                branchDictRepository.updGlLoadStat(_loadStatId, "E");
-//            }
-//            auditController.error(LoadBranchDict, "LoadBranchDictTask завершилась с ошибкой","", String.valueOf(_loadStatId), e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
@@ -92,34 +89,11 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
         clearInfTables();
         auditController.info(LoadBranchDict, "LoadBranchDictTask тавлицы очищены", "", String.valueOf(_loadStatId));
         ExecutorService pool = Executors.newFixedThreadPool(2);
+
         try{
-//            Callable<Boolean> filsTask = ()->{
-//                try {
-//                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-//                        loadDictFil.fillTargetTables(dateLoad);
-//                        return null;
-//                    }, 60 * 60);
-//                    return true;
-//                }catch (Throwable e){
-//                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictFil.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
-//                    return false;
-//                }
-//            };
-//            Callable<Boolean> brchsTask = ()->{
-//                try {
-//                    beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-//                        loadDictBr.fillTargetTables(dateLoad);
-//                        return null;
-//                    }, 60 * 60);
-//                    return true;
-//                }catch (Throwable e){
-//                    auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDictBr.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
-//                    return false;
-//                }
-//            };
-            Future<Boolean> fuFils = pool.submit(task(loadDictFil, dateLoad));
-            Future<Boolean> fuBrchs = pool.submit(task(loadDictBr, dateLoad));
-            if (fuFils.get() && fuBrchs.get()){
+            Future<Boolean> fuFils = pool.submit(task(loadDictFil, dateLoad, _loadStatId));
+            Future<Boolean> fuBrchs = pool.submit(task(loadDictBr, dateLoad, _loadStatId));
+            if (fuFils.get() & fuBrchs.get()){
                 branchDictRepository.updGlLoadStat(_loadStatId, "P");
                 return true;
             }else{
@@ -131,11 +105,11 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
         }
     }
 
-    private Callable<Boolean> task(LoadDict loadDict, Date dateLoad){
+    private Callable<Boolean> task(LoadDict loadDict, Date dateLoad, long _loadStatId){
         return ()->{
                     try {
                         beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                            loadDict.fillTargetTables(dateLoad);
+                            loadDict.fillTargetTables(dateLoad, _loadStatId);
                             return null;
                         }, 60 * 60);
                         return true;

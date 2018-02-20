@@ -7,17 +7,16 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * Created by er22317 on 09.02.2018.
  */
 public class LoadBranchDictTest extends AbstractRemoteIT {
     private static final Logger log = Logger.getLogger(FanNdsPostingIT.class.getName());
+    Map<String, String> tableScript = new HashMap<String, String>();
 
     @Test
     public void test() throws Exception {
@@ -70,73 +69,18 @@ public class LoadBranchDictTest extends AbstractRemoteIT {
 
     private void initTables(String VITRINA) throws SQLException {
 //        String sqlTableExist = "select count(*) cnt from user_tables where table_name = ?";
-        String createCMP = "CREATE TABLE V_GL_DWH_IMBCBCMP" +
-                "                            (CCPCD CHAR(3) NOT NULL," +
-                "                            CCPNE VARCHAR2(30) NOT NULL," +
-                "                            CCPNR VARCHAR2(80) NOT NULL," +
-                "                            CCPRI CHAR(1) NOT NULL," +
-                "                            CCBBR CHAR(4) NOT NULL," +
-                "                            ALT_CODE CHAR(3) NOT NULL," +
-                "                            VALID_FROM DATE NOT NULL" +
-                "                            )";
-        String createBRP = "CREATE TABLE V_GL_DWH_IMBCBBRP"+
-                "(	A8BRCD CHAR(3) NOT NULL,"+
-                        "A8LCCD CHAR(3) NOT NULL,"+
-                        "A8BICN CHAR(8) NOT NULL,"+
-                        "A8BRNM VARCHAR2(30) NOT NULL,"+
-                        "BBRRI CHAR(1) NOT NULL,"+
-                        "BCORI CHAR(1) NOT NULL,"+
-                        "BCBBR CHAR(4) NOT NULL,"+
-                        "BR_HEAD CHAR(1) DEFAULT 'N' NOT NULL,"+
-        "BR_OPER CHAR(1) DEFAULT 'N' NOT NULL,"+
-        "FCC_CODE CHAR(3) NOT NULL,"+
-        "VALID_FROM DATE DEFAULT SYSDATE NOT NULL)";
-        String createBRP_BKP = "CREATE TABLE IMBCBBRP_BKP"+
-                "(A8BRCD CHAR(3),"+
-                        "A8CMCD CHAR(3),"+
-                        "A8LCCD CHAR(3),"+
-                        "A8DFAC CHAR(4),"+
-                        "A8DTAC CHAR(4),"+
-                        "A8BICN CHAR(8),"+
-                        "A8LCD NUMBER(10,0),"+
-                        "A8TYLC CHAR(1),"+
-                        "A8BRNM VARCHAR2(30),"+
-                        "A8BRSN CHAR(3),"+
-                        "BBRRI CHAR(1),"+
-                        "BCORI CHAR(1),"+
-                        "BCBBR CHAR(4),"+
-                        "BR_HEAD CHAR(1) DEFAULT 'N',"+
-                "BR_OPER CHAR(1) DEFAULT 'N')";
-        String createCMP_BKP = "CREATE TABLE IMBCBCMP_BKP"+
-                               "(	CCPCD CHAR(3), "+
-                               " CCPNE VARCHAR2(30),"+
-                               "CCPNR VARCHAR2(80),"+
-                               "CCPRI CHAR(1),"+
-                               "CCBBR CHAR(4))";
-        String createLOAD_STATUS = "CREATE TABLE V_GL_DWH_LOAD_STATUS(MAX_LOAD_DATE DATE NOT NULL)";
-        String DH_BR_MAP_BKP = "  CREATE TABLE DH_BR_MAP_BKP \n" +
-                "   (\tFCC_BRANCH CHAR(3), \n" +
-                "\t    MIDAS_BRANCH CHAR(3), \n" +
-                "\t    CBR_BRANCH CHAR(4))";
         Long cnt = 0l;
-        Arrays.asList(new String[]{"V_GL_DWH_IMBCBBRP", "V_GL_DWH_IMBCBCMP", "IMBCBBRP_BKP", "IMBCBCMP_BKP", "DH_BR_MAP_BKP", "V_GL_DWH_LOAD_STATUS"}).
-        forEach(item -> {
+        Stream.of("V_GL_DWH_IMBCBBRP", "V_GL_DWH_IMBCBCMP", "IMBCBBRP_BKP", "IMBCBCMP_BKP", "DH_BR_MAP_BKP", "V_GL_DWH_LOAD_STATUS")
+                .forEach(item -> {
                     try {
-                        isTableExists(item);
+                        DataRecord rec = baseEntityRepository.selectFirst( "select count(*) cnt from user_tables where table_name = ?", item);
+//        Assert.assertFalse("Необходимо создать таблицу "+table, rec.getLong("cnt") == 0l);
+                        if (rec.getLong("cnt") == 0l) createTable(item);
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
                 });
-//        DataRecord rec = baseEntityRepository.selectFirst( sqlTableExist, new Object[]{"V_GL_DWH_IMBCBCMP"});
-//        Assert.assertFalse("Необходимо создать таблицу V_GL_DWH_IMBCBCMP", rec.getLong("cnt") == 0l);
-//        rec = baseEntityRepository.selectFirst( sqlTableExist, new Object[]{"IMBCBCMP_BKP"});
-//        Assert.assertFalse("Необходимо создать таблицу IMBCBCMP_BKP", rec.getLong("cnt") == 0l);
-//        rec = baseEntityRepository.selectFirst( sqlTableExist, new Object[]{"DH_BR_MAP_BKP"});
-//        Assert.assertFalse("Необходимо создать таблицу DH_BR_MAP_BKP", rec.getLong("cnt") == 0l);
-//        rec = baseEntityRepository.selectFirst( sqlTableExist, new Object[]{"V_GL_DWH_LOAD_STATUS"});
-//        Assert.assertFalse("Необходимо создать таблицу V_GL_DWH_LOAD_STATUS", rec.getLong("cnt") == 0l);
 
-//        rec = baseEntityRepository.selectFirst( "select count(*) cnt from V_GL_DWH_LOAD_STATUS", new Object[]{});
         if (baseEntityRepository.selectFirst( "select count(*) cnt from V_GL_DWH_LOAD_STATUS", new Object[]{}).getInteger(0) == 0){
             baseEntityRepository.executeNativeUpdate("insert into V_GL_DWH_LOAD_STATUS values(to_date('"+VITRINA+"','DD.MM.RR'))", new Object[]{});
         }
@@ -150,9 +94,9 @@ public class LoadBranchDictTest extends AbstractRemoteIT {
 
     }
 
-    private void isTableExists(String table) throws SQLException {
-        DataRecord rec = baseEntityRepository.selectFirst( "select count(*) cnt from user_tables where table_name = ?", table);
-        Assert.assertFalse("Необходимо создать таблицу "+table, rec.getLong("cnt") == 0l);
+    private void createTable(String tableName){
+        if (tableScript.isEmpty()) fillScriptMap();
+        baseEntityRepository.executeNativeUpdate(tableScript.get(tableName));
     }
 
     private void testToV_GL_DWH_IMBCBBRP() {
@@ -348,4 +292,84 @@ public class LoadBranchDictTest extends AbstractRemoteIT {
     private String saveFix() throws SQLException {
         return(baseEntityRepository.selectFirst("select NUMBER_VALUE from gl_prprp where id_prp = 'dwh.fix.branch.code'",new Object[]{}).getString(0));
     }
+
+    private void fillScriptMap(){
+        tableScript.put("V_GL_DWH_IMBCBCMP", "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; "+
+                                             " BEGIN " +
+                                             "EXECUTE IMMEDIATE 'CREATE TABLE V_GL_DWH_IMBCBCMP " +
+                "                            (CCPCD CHAR(3) NOT NULL," +
+                "                            CCPNE VARCHAR2(30) NOT NULL," +
+                "                            CCPNR VARCHAR2(80) NOT NULL," +
+                "                            CCPRI CHAR(1) NOT NULL," +
+                "                            CCBBR CHAR(4) NOT NULL," +
+                "                            ALT_CODE CHAR(3) NOT NULL," +
+                "                            VALID_FROM DATE NOT NULL" +
+                "                            )';  END;");
+        tableScript.put("V_GL_DWH_IMBCBBRP","DECLARE PRAGMA AUTONOMOUS_TRANSACTION; " +
+                                            " BEGIN " +
+                                            "EXECUTE IMMEDIATE 'CREATE TABLE V_GL_DWH_IMBCBBRP"+
+                                            "(	A8BRCD CHAR(3) NOT NULL,"+
+                                            "A8LCCD CHAR(3) NOT NULL,"+
+                                            "A8BICN CHAR(8) NOT NULL,"+
+                                            "A8BRNM VARCHAR2(30) NOT NULL,"+
+                                            "BBRRI CHAR(1) NOT NULL,"+
+                                            "BCORI CHAR(1) NOT NULL,"+
+                                            "BCBBR CHAR(4) NOT NULL,"+
+                                            "BR_HEAD CHAR(1) DEFAULT ''N'' NOT NULL,"+
+                                            "BR_OPER CHAR(1) DEFAULT ''N'' NOT NULL,"+
+                                            "FCC_CODE CHAR(3) NOT NULL,"+
+                                            "VALID_FROM DATE DEFAULT SYSDATE NOT NULL)'; END;");
+        tableScript.put("IMBCBBRP_BKP", "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; " +
+                                        " BEGIN " +
+                                        "EXECUTE IMMEDIATE 'CREATE TABLE IMBCBBRP_BKP"+
+                                        "(A8BRCD CHAR(3),"+
+                                        "A8CMCD CHAR(3),"+
+                                        "A8LCCD CHAR(3),"+
+                                        "A8DFAC CHAR(4),"+
+                                        "A8DTAC CHAR(4),"+
+                                        "A8BICN CHAR(8),"+
+                                        "A8LCD NUMBER(10,0),"+
+                                        "A8TYLC CHAR(1),"+
+                                        "A8BRNM VARCHAR2(30),"+
+                                        "A8BRSN CHAR(3),"+
+                                        "BBRRI CHAR(1),"+
+                                        "BCORI CHAR(1),"+
+                                        "BCBBR CHAR(4),"+
+                                        "BR_HEAD CHAR(1) DEFAULT ''N'',"+
+                                        "BR_OPER CHAR(1) DEFAULT ''N'')';  END;");
+        tableScript.put("IMBCBCMP_BKP", "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; " +
+                                        " BEGIN " +
+                                        "EXECUTE IMMEDIATE 'CREATE TABLE IMBCBCMP_BKP"+
+                                        "(	CCPCD CHAR(3), "+
+                                        " CCPNE VARCHAR2(30),"+
+                                        "CCPNR VARCHAR2(80),"+
+                                        "CCPRI CHAR(1),"+
+                                        "CCBBR CHAR(4))'; END;");
+        tableScript.put( "V_GL_DWH_LOAD_STATUS", "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; " +
+                                          " BEGIN " +
+                                          "EXECUTE IMMEDIATE 'CREATE TABLE V_GL_DWH_LOAD_STATUS(MAX_LOAD_DATE DATE NOT NULL)'; END;");
+        tableScript.put( "DH_BR_MAP_BKP", "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; " +
+                                          " BEGIN " +
+                                          "EXECUTE IMMEDIATE 'CREATE TABLE DH_BR_MAP_BKP " +
+                                          "(FCC_BRANCH CHAR(3)," +
+                                          "MIDAS_BRANCH CHAR(3)," +
+                                          "CBR_BRANCH CHAR(4))'; END;");
+    }
+    public void test1() throws Exception {
+        String ablok = "DECLARE PRAGMA AUTONOMOUS_TRANSACTION;"+
+                " BEGIN " +
+                "EXECUTE IMMEDIATE 'CREATE TABLE V_GL_DWH_IMBCBCMP2" +
+                "                            (CCPCD CHAR(3) NOT NULL," +
+                "                            CCPNE VARCHAR2(30) NOT NULL," +
+                "                            CCPNR VARCHAR2(80) NOT NULL," +
+                "                            CCPRI CHAR(1) NOT NULL," +
+                "                            CCBBR CHAR(4) NOT NULL," +
+                "                            ALT_CODE CHAR(3) NOT NULL," +
+                "                            VALID_FROM DATE NOT NULL" +
+                "                            )';"+
+                " END;";
+
+        baseEntityRepository.executeNativeUpdate(ablok);
+    }
+
 }

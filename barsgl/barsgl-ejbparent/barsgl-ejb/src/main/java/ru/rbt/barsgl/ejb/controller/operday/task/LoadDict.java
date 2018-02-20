@@ -1,8 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejb.entity.dict.dwh.Filials;
-import ru.rbt.barsgl.ejb.entity.dict.dwh.FilialsInf;
 import ru.rbt.barsgl.ejb.repository.BranchDictRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -10,9 +8,9 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import javax.ejb.EJB;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Predicate;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
+
 
 /**
  * Created by er22317 on 14.02.2018.
@@ -20,7 +18,6 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
 public abstract class LoadDict<E, F> {
     public static final String streamId = "DWH_BRANCH_LOAD";
     public static final String propOperDay = "operday";
-    long _loadStatId;
     private Class<E> clazzE;
     private Class<F> clazzF;
 
@@ -36,7 +33,7 @@ public abstract class LoadDict<E, F> {
     @EJB
     private AuditController auditController;
 //E - filialsInf, F - Filials
-    public void fillTargetTables(Date dateLoad ) {
+    public void fillTargetTables(Date dateLoad, long _loadStatId) {
         StringBuilder insFils = new StringBuilder();
         StringBuilder updFils = new StringBuilder();
 
@@ -48,6 +45,7 @@ public abstract class LoadDict<E, F> {
         listInf.stream().filter(item->getFixFilter(item, dateLoad)).forEach(item -> fixList.add(item));
 
         List<F> target = branchDictRepository.getAll(clazzF);
+        auditController.info(LoadBranchDict, "target "+clazzF.getSimpleName()+" = " + target.size());
         Collections.sort((ArrayList)target);
         for (E item : fixList) {
             Optional<F> f = target.stream().filter(x ->getIdFilter(item, x)).findFirst();
