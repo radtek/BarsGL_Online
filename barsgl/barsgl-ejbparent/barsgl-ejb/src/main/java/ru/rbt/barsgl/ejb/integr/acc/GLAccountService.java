@@ -48,6 +48,9 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FIVE;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FOUR;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.TWO;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.D;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -138,10 +141,9 @@ public class GLAccountService {
             return getAccountByPlcode(operation, operSide, keys, dateOpen);
         } else if (!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
                 && keys.getGlSequence().toUpperCase().startsWith("GL")) {
-            // получаем счет ЦБ сразу из ACCRLN
-            BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
-            keys.setCurrencyDigital(currency.getDigitalCode());
-            return accRlnRepository.findForSequenceGL(keys);
+            // получаем счет ЦБ сразу из GL_ACC
+            return glAccountRepository.findForSequenceGL(keys);
+/*
         } else // заполнены и ключи и счет
         if(isAccountWithKeys(operation, operSide) && !keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
@@ -154,6 +156,7 @@ public class GLAccountService {
                     throw new DefaultApplicationException(e);
                 }
             }).getBsaAcid();
+*/
         } else if(!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
@@ -256,34 +259,24 @@ public class GLAccountService {
             BankCurrency bankCurrency = (operSide.equals(operSide.D) ? operation.getCurrencyCredit() : operation.getCurrencyDebit());
             return Optional.ofNullable(excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype))
                     .orElseGet(() -> glAccountController.createAccountsExDiff(operation, operSide, keys, dateOpen, bankCurrency, optype))
-                    .getId().getBsaAcid();
+                    .getBsaAcid();
         } else {
             // Перенесено сюда, так как портит данные для других этапов
             Date dateStart446P = glAccountRepository.getDateStart446p();
             glAccountController.fillAccountOfrKeysMidas(operSide, dateOpen, keys);
             glAccountController.fillAccountOfrKeys(operSide, dateOpen, keys); // Обогащение
 
-            if (accountingTypeRepository.findById(AccountingType.class, keys.getAccountType()).isBarsAllowed()) {
+            GLAccount.RelationType rlnType = accountingTypeRepository.findById(AccountingType.class, keys.getAccountType()).isBarsAllowed() ? FIVE : TWO;
                 return Optional.ofNullable(glAccountRepository
                         .findGLPLAccount(keys.getCurrency(), keys.getCustomerNumber(), keys.getAccountType()
                             , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
                         .map(GLAccount::getBsaAcid).orElseGet(() -> {
                             try {
-                                return glAccountController.createGLPLAccount(keys, operation, operSide);
+                                return glAccountController.createGLPLAccount(keys, rlnType, operation, operSide);
                             } catch (Exception e) {
                                 throw new DefaultApplicationException(e.getMessage(), e);
                             }
                         });
-            } else {
-                return Optional.ofNullable(glAccountController.findForPlcodeNo7903(keys, dateOpen, dateStart446P))
-                        .orElseGet(() -> {
-                            try {
-                                return glAccountController.processNotOwnPLAccount(operation, operSide, keys, dateOpen, dateStart446P);
-                            } catch (Exception e) {
-                                throw new DefaultApplicationException(e.getMessage(), e);
-                            }
-                        });
-            }
         }
     }
 
@@ -430,38 +423,26 @@ public class GLAccountService {
                 if (null != (glAccount = glAccountController.findGLPLAccountMnl(keys, dateOpen))) {
                     throw new ValidationError(ACCOUNTGL_ALREADY_EXISTS, glAccount.getBsaAcid(), glAccount.getAcid());
                 }
-/*
-                // для 707 проверяем дату открытия
-                if (keys.getAccount2().substring(0,3).equals("707")) {
-                    Date lastSpod = glAccountRepository.getLastSpodDate(operdayController.getOperday().getCurrentDate());   // TODO dateOpen ?
-                    if (dateOpen.after(lastSpod)) {
-                        throw new ValidationError(ACCOUNT_707_AFTER_SPOD, dateUtils.onlyDateString(lastSpod));
-                    }
-                }
-*/
 
                 plAccountProcessor.fillAccountKeysMidas(accountWrapper, keys);
+                GLAccount.RelationType rlnType;
                 // проверяем признак PL_ACT
-                DataRecord data = glAccountRepository.getAccountTypeParams(accountWrapper.getAccountType().toString());
-                if (data.getString("PL_ACT").equals("Y")) {
-                    keys.setRelationType("5");
-                } else {
-                    // поиск в ACCRLN
-                    data = glAccountRepository.getAccountForPl(keys.getAccountMidas(), accountWrapper.getCbCustomerType(),
-                            accountWrapper.getPlCode(), accountWrapper.getBalanceAccount2(), dateOpen);
-                    if (null != data ) {
-                        throw new ValidationError(ACCOUNT_PL_ALREADY_EXISTS, data.getString(0), data.getString(1), keys.getAccountType());
-                    }
-                    keys.setRelationType("2");
-                }
                 if (keys.getAccount2().startsWith("707")) {
-                    keys.setRelationType("4");
+                    rlnType = FOUR;
+                } else {
+                    DataRecord data = glAccountRepository.getAccountTypeParams(accountWrapper.getAccountType().toString());
+                    if (data.getString("PL_ACT").equals("Y")) {
+                        rlnType = FIVE;
+                    } else {
+                        rlnType = TWO;
+                    }
                 }
+                keys.setRelationType(rlnType.getValue());
 
                 BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
                 keys.setCurrencyDigital(currency.getDigitalCode());
                 keys.setFilial(glAccountRepository.getFilialByCompanyCode(keys.getCompanyCode()));
-                glAccount = glAccountController.createGLPLAccountMnl(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+                glAccount = glAccountController.createGLPLAccountMnl(keys, rlnType, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
                 auditController.info(Account, format("Создан счет ОФР '%s' по ручному вводу",
                         glAccount.getBsaAcid()), glAccount);
                 glAccountController.fillWrapperFields(accountWrapper, glAccount);
@@ -787,7 +768,7 @@ public class GLAccountService {
 //            GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
 //            if (glAccount != null) return glAccount.getBsaAcid();
 
-            GLAccount glAccount = glAccountController.createGLAccountMnlInRequiredTrans(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+            GLAccount glAccount = glAccountController.createGLAccountMnlInRequiredTrans(keys, FOUR, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
             auditController.info(Account, format("Создан счет '%s'  по массовому открытию счетов",
                     glAccount.getBsaAcid()), glAccount);
             glAccountController.fillWrapperFields(accountWrapper, glAccount);
@@ -800,6 +781,7 @@ public class GLAccountService {
         }
     }
 
+/*
     public GLAccount createBulkOpeningAccount(AccountKeys keys, Date dateOpen) {
         //checkAccountPermission(accountWrapper, FormAction.CREATE);
         ErrorList errList = new ErrorList();
@@ -810,10 +792,12 @@ public class GLAccountService {
             auditController.info(Account, format("Создан счет '%s' по массовому открытию счетов",
                     glAccount.getBsaAcid()), glAccount);
 
-            /*
+            */
+/*
         // Такой счет уже есть?
         GLAccount glAccount = glAccountController.findGLAccountMnl(keys);
-             */
+             *//*
+
         } catch (Throwable e) {
             String errMessage = accountErrorMessage(e, errList, initSource());
             auditController.error(Account, format("Ошибка при создании счета по массовому открытию счетов для acid: '%s'",
@@ -821,7 +805,8 @@ public class GLAccountService {
         }
         return glAccount;
     }
-    
+*/
+
     /**
      * Поиск/создание технического счета
      * @param accountingType

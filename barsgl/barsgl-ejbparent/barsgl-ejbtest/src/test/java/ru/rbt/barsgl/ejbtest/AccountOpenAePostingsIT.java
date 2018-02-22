@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
@@ -11,6 +12,7 @@ import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
@@ -19,6 +21,7 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountExcludeInterval;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountFrontPartController;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
+import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -40,6 +43,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.substring;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.ZERO;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
@@ -288,7 +292,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * Тест создания счетов ЦБ по проводке
      * @throws ParseException
      */
-    @Test public void testPostingCreateAccount() throws ParseException, SQLException {
+    @Test public void testPostingCreateAccountDirect() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -369,12 +373,129 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 
     }
 
+    @Test public void testPostingCreateAccountBuffer() throws ParseException, SQLException {
+
+        long stamp = System.currentTimeMillis();
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+//        pst.setAccountCredit("47407840700010060039");
+        pst.setAccountCredit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringCredit = "001;USD;00674113;356030405;00;00;17;;47423;;1871;05;DEALSRC;123456;SUBDEALID";  //   00114240
+        Assert.assertTrue(isEmpty(new AccountKeys(keyStringCredit).getPlCode()));
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
+        pst.setAccountKeyCredit(keyStringCredit);
+
+//        pst.setAccountDebit("47408840700010262894");
+        pst.setAccountDebit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        // 001;RUR;0000000018;912030101;;;XX00000007;0001;99997;;6280;01;K+TP;955304;
+        final String keyStringDebit = "001;USD;00448806;356030405;00;00;17;;47423;;;;DEALSRC;123457;SUBDEALID";
+        Assert.assertTrue(isEmpty(new AccountKeys(keyStringDebit).getPlCode()));
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
+        pst.setAccountKeyDebit(keyStringDebit);
+
+        pst.setAmountCredit(new BigDecimal("13.99"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.USD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        // проверка счетов
+        String acidDr = "", acidCr = "";
+        if (isEmpty(pst.getAccountDebit()))
+            acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit());
+        if (isEmpty(pst.getAccountCredit()))
+            acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
+
+        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2 and a.dateOpen = ?3";
+        GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
+                operation, D, operation.getCurrentDate());
+        Assert.assertNotNull(accountDt);
+        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+
+        GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
+                operation, C, operation.getCurrentDate());
+        Assert.assertNotNull(accountCt);
+        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+
+        // проверка проводок
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+
+        List<GLPd> pdList = getGLPostingPd(operation);
+        Assert.assertNotNull(pdList);                 // 2 полупроводки
+        Assert.assertEquals(pdList.size(), 2);
+
+        GLPd pdDr = Utl4Tests.findDebitPd(pdList);
+        GLPd pdCr = Utl4Tests.findCreditPd(pdList);
+
+        Assert.assertEquals(acidDr, pdDr.getAcid());
+        Assert.assertEquals(acidCr, pdCr.getAcid());
+
+        Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
+        Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
+        Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
+
+        Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
+        Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
+
+    }
+
+
     /**
      * Тест создания счетов ЦБ по проводке и поиска его (тип клиента и код срока: 00 == null)
      * @throws ParseException
      */
-    @Test public void testPostingFindAccountWith00() throws ParseException, SQLException {
+    @Test public void testPostingFindAccountWith00Direct() throws ParseException, SQLException {
 
+        EtlPosting pst = createPostingByCustTerm("00", "", "", "00", true );
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        // проверка счетов
+        if (isEmpty(pst.getAccountDebit()))
+            checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit());
+        if (isEmpty(pst.getAccountCredit()))
+            checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
+
+        final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2 and a.dateOpen = ?3";
+        GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, D, operation.getCurrentDate());
+        Assert.assertNotNull(accountDt);
+        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+
+        GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, C, operation.getCurrentDate());
+        Assert.assertNotNull(accountCt);
+        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+
+        EtlPosting pst1 = createPostingByCustTerm("", "00", "00", "", false );
+
+        GLOperation operation1 = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        Assert.assertEquals(operation.getAccountDebit(), operation1.getAccountDebit());
+        Assert.assertEquals(operation.getAccountCredit(), operation1.getAccountCredit());
+    }
+
+    @Test public void testPostingFindAccountWith00Buffer() throws ParseException, SQLException {
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
         EtlPosting pst = createPostingByCustTerm("00", "", "", "00", true );
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
@@ -449,7 +570,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * Тест создания счетов ЦБ (майдас-опц.) по проводке в случае если передены и ключи и счет
      * @throws ParseException
      */
-    @Test public void testPostingCreateAccountWithKeys() throws ParseException, SQLException {
+    @Test public void testPostingCreateAccountWithKeysDirect() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -555,6 +676,113 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 
     }
 
+    @Test public void testPostingCreateAccountWithKeysBuffer() throws ParseException, SQLException {
+
+        long stamp = System.currentTimeMillis();
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        final String bsaacidCredit = "47407840020010000083";//"47407840700010060039";
+
+        deleteAllReleations(bsaacidCredit);
+
+        pst.setAccountCredit(bsaacidCredit);
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringCredit = "001;USD;00114240;501020501;00;00;17;;;;;;DEALSRC;123456;SUBDEALID";
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
+        pst.setAccountKeyCredit(keyStringCredit);
+
+        final String bsaacidDebit = "47408840020010000121";//"47408840700010262894";
+        deleteAllReleations(bsaacidDebit);
+
+        pst.setAccountDebit(bsaacidDebit);
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        // 001;RUR;0000000018;912030101;;;XX00000007;0001;99997;;6280;01;K+TP;955304;
+        final String keyStringDebit = "001;USD;00448806;351020301;00;00;17;;;;;;DEALSRC;123457;SUBDEALID";
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
+        pst.setAccountKeyDebit(keyStringDebit);
+
+        pst.setAmountCredit(new BigDecimal("13.99"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.USD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+//        Assert.assertEquals(OperState.POST, operation.getState());
+
+        Assert.assertEquals(bsaacidCredit, operation.getAccountCredit());
+        Assert.assertEquals(bsaacidDebit, operation.getAccountDebit());
+
+        GLAccount accountCt = findGlAccount(bsaacidCredit);
+        Assert.assertNotNull(accountCt);
+        Assert.assertEquals(operation, accountCt.getOperation());
+
+        GLAccount accountDt = findGlAccount(bsaacidDebit);
+        Assert.assertNotNull(accountDt);
+        Assert.assertEquals(operation, accountDt.getOperation());
+
+        // проверка счетов
+        String acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit(), ZERO);
+        String acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit(), ZERO);
+
+        // проверка проводок
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+
+        List<GLPosting> postList = getPostings(operation);
+        Assert.assertNotNull(postList);                 // 1 проводка
+        Assert.assertEquals(postList.size(), 1);
+
+        List<Pd> pdList = getPostingPd(postList.get(0));
+        Pd pdDr = pdList.get(0);
+        Pd pdCr = pdList.get(1);
+        Assert.assertEquals(acidDr, pdDr.getAcid());
+        Assert.assertEquals(acidCr, pdCr.getAcid());
+
+        Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
+        Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
+        Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
+
+        Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
+        Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
+
+        final String accrlnSql = "select rlntype from accrln where bsaacid = ?";
+        Assert.assertEquals(ZERO.getValue()
+                , baseEntityRepository.selectOne(accrlnSql, bsaacidCredit).getString("rlntype"));
+        Assert.assertEquals(ZERO.getValue()
+                , baseEntityRepository.selectOne(accrlnSql, bsaacidDebit).getString("rlntype"));
+
+        List<GLAccount> accountsCreated = baseEntityRepository.select(GLAccount.class, "from GLAccount a where a.operation = ?1 and a.dateOpen = ?2"
+                , operation, operation.getCurrentDate());
+        Assert.assertTrue(accountsCreated.stream()
+                        .map(acc -> acc.getId() + ":" + acc.getRelationType()).collect(Collectors.joining(";"))
+                ,accountsCreated.stream().allMatch(acc -> acc.getRelationTypeEnum() == ZERO));
+
+        // теперь, может быть ситуация, когда у нас в GL_ACC счета нет, а в BSAACC и в ACCRLN счет есть
+        // удаляем из GL_ACC
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid = ?", bsaacidDebit));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid = ?", bsaacidCredit));
+
+        operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        accountsCreated = baseEntityRepository.select(GLAccount.class, "from GLAccount a where a.operation = ?1 and a.dateOpen = ?2"
+                , operation, operation.getCurrentDate());
+        Assert.assertTrue(accountsCreated.stream().allMatch(acc -> acc.getRelationTypeEnum() == ZERO));
+
+    }
+
     /**
      *
      * @param bsaacid
@@ -562,10 +790,6 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      */
     private void deleteAllReleations(String bsaacid) {
         logger.info("deleted GL_ACC: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid = ?", bsaacid));
-        logger.info("deleted ACC: " + baseEntityRepository.executeNativeUpdate("delete from acc a where a.id in (select r.acid from accrln r where r.bsaacid = ?)", bsaacid));
-        logger.info("deleted ACCRLN: " + baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid = ?", bsaacid));
-        logger.info("deleted ACCRLNEXT: " + baseEntityRepository.executeNativeUpdate("delete from accrlnext where bsaacid = ?", bsaacid));
-        logger.info("deleted BSAACC: " + baseEntityRepository.executeNativeUpdate("delete from BSAACC where id = ?", bsaacid));
     }
 
     private static GLAccount findGlAccount(String bsaacid) {
@@ -586,8 +810,72 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * Обработка ситуации если счета Майдас не найден
      */
     @Test
-    public void testProcessAccountCreateNotExistsXX() throws SQLException {
+    public void testProcessAccountCreateNotExistsXXDirect() throws SQLException {
         long stamp = System.currentTimeMillis();
+
+        // убираем все не наши WTAC
+        baseEntityRepository.executeUpdate("update GLOperation o set o.state = ?1 where o.state = ?2 and o.valueDate IN (?3 , ?4)"
+                , OperState.ERCHK, OperState.WTAC, getOperday().getCurrentDate(), getOperday().getLastWorkingDay());
+
+        EtlPackage pkg = newPackage(stamp, "MIDAS");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setCurrencyCredit(RUB);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        pst.setAccountCredit("");
+        pst.setAccountDebit("");
+
+        final String acctype= "643010101";
+        DataRecord record = Optional.ofNullable(baseEntityRepository.selectFirst("select * from gl_actparm where acctype = ?", acctype)).orElseThrow(() -> new RuntimeException("gl_actparm not found"));
+
+        final AccountKeys acCt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency(pst.getCurrencyCredit().getCurrencyCode()).withCustomerNumber("00000018")
+                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00").withPlCode(record.getString("PLCODE").trim())
+                .withGlSequence("PL").withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim()).withAccSequence(record.getString("ac_sq").trim())
+                .build();
+        final AccountKeys acDt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency(pst.getCurrencyDebit().getCurrencyCode()).withCustomerNumber("00000018")
+                .withAccountType(acctype).withCustomerType(acCt.getCustomerType()).withTerm("00").withPlCode(acCt.getPlCode())
+                .withGlSequence("XX").withAcc2(acCt.getAccount2()).withAccountCode(acCt.getAccountCode()).withAccSequence(acCt.getAccSequence())
+                .build();
+        String accountKeyCt = acCt.toString();
+        String accountKeyDt = acDt.toString();
+        deleteGlAccountWithLinks(baseEntityRepository, accountKeyCt);
+        deleteGlAccountWithLinks(baseEntityRepository, accountKeyDt);
+
+        final AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class
+                , "fillAccountKeysMidas", C, pst.getValueDate(), acCt);
+        if (!isEmpty(keys1.getAccountMidas())) {
+            deleteAccountByAcid(baseEntityRepository, keys1.getAccountMidas());
+        }
+
+        //todo сообщение 'Счет по дебету задан ключом ACCTYPE=643010101, CUSTNO=00000018, ACOD=7301, SQ=01
+        // , DEALID=, PLCODE=16101, GL_SEQ=XX некорректно, PLCODE в таблице GL_ACTPARM д.б.пустым'
+        // , источник ru.rbt.barsgl.ejb.integr.acc.GLAccountController:595
+        Throwable exception = null;
+        try {
+            remoteAccess.invoke(GLAccountController.class
+                    , "fillAccountKeysMidas", D, pst.getValueDate(), acDt);
+        }catch(Throwable e){
+            exception = e;
+        }
+        Assert.assertNotNull(exception);
+        ValidationError error = ExceptionUtils.findException(exception, ValidationError.class);
+        Assert.assertNotNull(error);
+        Assert.assertEquals(ErrorCode.GL_SEQ_XX_KEY_WITH_DB_PLCODE, error.getCode());
+
+    }
+
+    @Test
+    public void testProcessAccountCreateNotExistsXXBuffer() throws SQLException {
+        long stamp = System.currentTimeMillis();
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
 
         // убираем все не наши WTAC
         baseEntityRepository.executeUpdate("update GLOperation o set o.state = ?1 where o.state = ?2 and o.valueDate IN (?3 , ?4)"
@@ -653,8 +941,56 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * Обработка ситуации когда счета Майдас вообще нет физически
      */
     @Test
-    public void testProcessAccountCreateMidasNotExistsGL() throws SQLException {
+    public void testProcessAccountCreateMidasNotExistsGLDirect() throws SQLException {
         long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "NOMIDAS");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setCurrencyCredit(RUB);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        pst.setAccountCredit("40702810400010002676");
+        pst.setAccountDebit("");
+
+        final AccountKeys acDt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency(pst.getCurrencyDebit().getCurrencyCode()).withCustomerNumber("00000018")
+                .withAccountType("643010101").withCustomerType("23").withTerm("05").withPlCode("17101")
+                .withGlSequence("GL").withAcc2("30102").withCompanyCode("0001")
+                .build();
+        String accountKeyDt = acDt.toString();
+        deleteGlAccountWithLinks(baseEntityRepository, accountKeyDt);
+
+        pst.setAccountKeyDebit(accountKeyDt);
+
+        pst.setAmountCredit(new BigDecimal("13.99"));
+        pst.setAmountDebit(pst.getAmountCredit());
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation.getId());
+        Assert.assertTrue(0 < operation.getId());
+
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertTrue(!isEmpty(operation.getAccountKeyDebit()));
+
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        Assert.assertTrue(!StringUtils.isEmpty(operation.getAccountDebit()));
+
+    }
+
+    @Test
+    public void testProcessAccountCreateMidasNotExistsGLBuffer() throws SQLException {
+        long stamp = System.currentTimeMillis();
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
 
         EtlPackage pkg = newPackage(stamp, "NOMIDAS");
         Assert.assertTrue(pkg.getId() > 0);
@@ -876,7 +1212,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
          * Тест создания счетов ЦБ по проводке из FLEX с подменой сиквенса Midas
          * @throws ParseException
          */
-    @Test public void testPostingCreateAccountFlex() throws ParseException, SQLException {
+    @Test public void testPostingCreateAccountFlexDirect() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -947,13 +1283,149 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 
     }
 
+    @Test public void testPostingCreateAccountFlexBuffer() throws ParseException, SQLException {
+
+        long stamp = System.currentTimeMillis();
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        String dealId = "FL_" + System.currentTimeMillis();
+        pst.setAccountCredit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringCredit = "001;RUR;00000018;161020100;18;06;0000001645;0001;45205;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
+        deleteSQvalue(new AccountKeys(keyStringCredit));
+        pst.setAccountKeyCredit(keyStringCredit);
+
+        pst.setAccountDebit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringDebit = "001;RUR;00000018;161020200;18;10;0000001898;0001;45812;;;;FC12_CL;" + dealId + ";00204487RURSN0100001"; // 00100198
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
+        deleteSQvalue(new AccountKeys(keyStringDebit));
+        pst.setAccountKeyDebit(keyStringDebit);
+
+        pst.setAmountCredit(new BigDecimal("15.99"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.RUB);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        // проверка счетов
+        String acidDr = "", acidCr = "";
+        if (isEmpty(pst.getAccountDebit()))
+            acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit());
+        if (isEmpty(pst.getAccountCredit()))
+            acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit());
+
+        GLAccount accountDr = getGLAccount(operation.getAccountDebit());
+        GLAccount accountCr = getGLAccount(operation.getAccountCredit());
+        Assert.assertNotEquals("00", accountCr.getAccountSequence());
+        Assert.assertEquals(accountCr.getAccountSequence(), accountDr.getAccountSequence());
+
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+
+        List<GLPd> pdList = getGLPostingPd(operation);
+        Assert.assertNotNull(pdList);                 // 2 полупроводки
+        Assert.assertEquals(pdList.size(), 2);
+
+        GLPd pdDr = Utl4Tests.findDebitPd(pdList);
+        GLPd pdCr = Utl4Tests.findCreditPd(pdList);
+
+        Assert.assertEquals(acidDr, pdDr.getAcid());
+        Assert.assertEquals(acidCr, pdCr.getAcid());
+
+        Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
+        Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
+        Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
+
+        Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
+        Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
+
+    }
+
     /**
      * Тест создания счетов ЦБ для пакета из FLEX с подменой сиквенса Midas
      * @throws ParseException
      */
-    @Test public void testPackageCreateAccountFlex() throws ParseException, SQLException {
+    @Test public void testPackageCreateAccountFlexDirect() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst1 = newPosting(stamp, pkg);
+        pst1.setValueDate(getOperday().getCurrentDate());
+
+        String dealId1 = "FL_" + System.currentTimeMillis();
+        pst1.setAccountCredit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringCredit = "001;RUR;00204487;161020100;18;06;0000001645;0001;45205;;;;FC12_CL;" + dealId1 + ";00204487RURSN0100001";
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
+        deleteSQvalue(new AccountKeys(keyStringCredit));
+        pst1.setAccountKeyCredit(keyStringCredit);
+
+        String dealId2 = "FL_" + System.currentTimeMillis();
+        pst1.setAccountDebit("");
+        // BRANCH.CCY.CUSTNO.ATYPE.CUSTTYPE.TERM.GL_SEQ.CBCCN.ACC2.PLCODE.ACOD.SQ.DEALSRC.DEALID.SUBDEALID
+        final String keyStringDebit = "001;RUR;00204487;161020200;8;10;0000001898;0001;45804;;;;FC12_CL;" + dealId2 + ";00204487RURSN0100001";
+        deleteGlAccountWithLinks(baseEntityRepository, keyStringDebit);
+        deleteSQvalue(new AccountKeys(keyStringDebit));
+        pst1.setAccountKeyDebit(keyStringDebit);
+
+        pst1.setAmountCredit(new BigDecimal("15.99"));
+        pst1.setAmountDebit(pst1.getAmountCredit());
+        pst1.setCurrencyCredit(BankCurrency.RUB);
+        pst1.setCurrencyDebit(pst1.getCurrencyCredit());
+        pst1 = (EtlPosting) baseEntityRepository.save(pst1);
+
+        // во второй операции меняем меятами номер сделки по дебету и кредиту
+        EtlPosting pst2 = newPosting(stamp, pkg);
+        pst2.setValueDate(pst1.getValueDate());
+        pst2.setAccountKeyCredit(pst1.getAccountKeyDebit());
+        pst2.setAccountKeyDebit(pst1.getAccountKeyCredit());
+        pst2.setAmountCredit(new BigDecimal("19.99"));
+        pst2.setAmountDebit(pst2.getAmountCredit());
+        pst2.setCurrencyCredit(pst1.getCurrencyCredit());
+        pst2.setCurrencyDebit(pst2.getCurrencyCredit());
+        pst2 = (EtlPosting) baseEntityRepository.save(pst2);
+
+        remoteAccess.invoke(EtlStructureMonitorTask.class, "processEtlPackage", pkg);
+
+        GLOperation oper1 = getOperation(pst1.getId());
+        Assert.assertEquals(OperState.POST, oper1.getState());
+        Assert.assertTrue(0 < oper1.getId());
+        GLOperation oper2 = getOperation(pst2.getId());
+        Assert.assertEquals(OperState.POST, oper2.getState());
+        Assert.assertTrue(0 < oper2.getId());
+
+        GLAccount accountDr1 = getGLAccount(oper1.getAccountDebit());
+        GLAccount accountCr1 = getGLAccount(oper1.getAccountCredit());
+        GLAccount accountDr2 = getGLAccount(oper2.getAccountDebit());
+        GLAccount accountCr2 = getGLAccount(oper2.getAccountCredit());
+
+        Assert.assertNotEquals("00", accountDr1.getAccountSequence());
+        Assert.assertEquals(accountDr1.getAccountSequence(), accountCr2.getAccountSequence());
+        Assert.assertNotEquals("00", accountCr1.getAccountSequence());
+        Assert.assertEquals(accountCr1.getAccountSequence(), accountDr2.getAccountSequence());
+    }
+
+    @Test public void testPackageCreateAccountFlexBuffer() throws ParseException, SQLException {
+
+        long stamp = System.currentTimeMillis();
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1063,7 +1535,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
      * в этом случае создается счет в т.ч в GL_ACC
      * @throws SQLException
      */
-    @Test public void testPLAccountOpenByAccountTypeOwnGLAccount() throws SQLException {
+    @Test public void testPLAccountOpenByAccountTypeOwnGLAccountDirect() throws SQLException {
 
         GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
                 , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
@@ -1113,6 +1585,64 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         GlAccRln rln = (GlAccRln) baseEntityRepository.findById(GlAccRln.class, new AccRlnId(account.getAcid(), account.getBsaAcid()));
         Assert.assertNotNull(rln);
         Assert.assertEquals(GLAccount.RelationType.FIVE.getValue(), rln.getRelationType());
+
+        // поиск возвращает уже созданный счет
+        String bsaacid2 = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertEquals(bsaacid, bsaacid2);
+    }
+
+    @Test public void testPLAccountOpenByAccountTypeOwnGLAccountBuffer() throws SQLException {
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
+                , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
+
+        final String acctype= "643010101";
+        DataRecord record = Optional.ofNullable(baseEntityRepository
+                .selectFirst("select * from gl_actparm where acctype = ?", acctype))
+                .orElseThrow(() -> new RuntimeException("gl_actparm not found"));
+
+        AccountingType accountingType = Optional
+                .ofNullable((AccountingType) baseEntityRepository.findById(AccountingType.class, "643010101"))
+                .orElseThrow(() -> new RuntimeException("GL_ACTNAME is not found"));
+        if (N == accountingType.getBarsAllowed()) {
+            baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1 where a.id = ?2"
+                    , Y, accountingType.getId());
+        }
+
+        AccountKeys acCt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency("RUR").withCustomerNumber("00000018")
+                .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00")
+                .withPlCode(record.getString("PLCODE").trim()).withGlSequence("PL")
+                .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
+                .withAccSequence(record.getString("ac_sq").trim())
+                .build();
+        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeysMidas"
+                , C, getOperday().getCurrentDate(), acCt);
+        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeys"
+                , C, getOperday().getCurrentDate(), acCt);
+
+        cleanAccountsByMidas(acCt.getAccountMidas());
+
+        String bsaacid = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertTrue(bsaacid, !StringUtils.isEmpty(bsaacid));
+        logger.info("Account has created: " + bsaacid);
+
+        GLAccount account = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, "from GLAccount a where a.bsaAcid = ?1", bsaacid);
+        Assert.assertEquals(account.getRelationTypeEnum(), GLAccount.RelationType.FIVE);
+
+        // проверяем содержимое GL_RLNACT
+        GLRelationAccountingType relationAccountingType
+                = (GLRelationAccountingType) baseEntityRepository.selectFirst(GLRelationAccountingType.class
+                , "from GLRelationAccountingType r where r.id.bsaacid = ?1", account.getBsaAcid());
+        Assert.assertNotNull(relationAccountingType);
+
+        GLAccount acc = (GLAccount) remoteAccess.invoke(GLAccountRepository.class, "findGLAccount", account.getBsaAcid());
+        Assert.assertNotNull(acc);
+        Assert.assertEquals(GLAccount.RelationType.FIVE.getValue(), acc.getRelationType());
 
         // поиск возвращает уже созданный счет
         String bsaacid2 = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
@@ -1183,9 +1713,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
     }
 
     private void cleanAccountsByMidas(String acid) {
-        logger.info("deleted accrln: " + baseEntityRepository.executeNativeUpdate("delete from accrln where acid = ?", acid));
-        logger.info("deleted acc: " + baseEntityRepository.executeNativeUpdate("delete from acc where id = ?", acid));
-        logger.info("deleted acc: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where acid = ?", acid));
+        logger.info("deleted gl_acc: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where acid = ?", acid));
 
     }
 

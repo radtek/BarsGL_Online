@@ -185,8 +185,6 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
      */
     protected void updateOpenDate(String bsaacid, Date vdate) throws Exception{
         glAccountRepository.updGlAccOpenDate(bsaacid, vdate);
-        glAccountRepository.updBsaaccOpenDate(bsaacid, vdate);
-        glAccountRepository.updAccrlnOpenDate(bsaacid, vdate);
     }
 
     /**

@@ -167,50 +167,62 @@ public class ManualAccountIT extends AbstractRemoteIT {
         Assert.assertEquals(sq, account1.getAccountSequence());
 
         // FLEX - SQ задан - не меняется
-        final String dealId6 = "DEAL_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 9);
-        Short sq6 = 90;
-        ManualAccountWrapper wrapper6 = createManualAccountSQ("007", ccy, custNo, accType, null, "FC12_CL", dealId6, subdealId, term, sq6);
-        GLAccount account6 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper6.getId());
-        Assert.assertNotNull(account6);
-        bsaList.add(account6.getBsaAcid());
-        Assert.assertEquals(sq6, account6.getAccountSequence());
+        String src = "FC12_CL";
+        DataRecord param = remoteAccess.invoke(GLAccountRepository.class, "getDealSQParams", src, getOperday().getCurrentDate());
+        if (null != param) {
+            final String dealId6 = "DEAL_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 9);
+            Short sq6 = 90;
+            ManualAccountWrapper wrapper6 = createManualAccountSQ("007", ccy, custNo, accType, null, src, dealId6, subdealId, term, sq6);
+            GLAccount account6 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper6.getId());
+            Assert.assertNotNull(account6);
+            bsaList.add(account6.getBsaAcid());
+            Assert.assertEquals(sq6, account6.getAccountSequence());
 
-        // FLEX - SQ не задан, та же сделка - SQ из предыдущей
-        ManualAccountWrapper wrapper7 = createManualAccountSQ("008", ccy, custNo, accType, null, "FC12_CL", dealId6, subdealId, term, null);
-        GLAccount account7 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper7.getId());
-        Assert.assertNotNull(account7);
-        bsaList.add(account7.getBsaAcid());
-        Assert.assertEquals(sq6, account7.getAccountSequence());
+            // FLEX - SQ не задан, та же сделка - SQ из предыдущей
+            ManualAccountWrapper wrapper7 = createManualAccountSQ("008", ccy, custNo, accType, null, src, dealId6, subdealId, term, null);
+            GLAccount account7 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper7.getId());
+            Assert.assertNotNull(account7);
+            bsaList.add(account7.getBsaAcid());
+            Assert.assertEquals(sq6, account7.getAccountSequence());
+        }
 
         // ARMPRO - SQ задан - не меняется
-        Short sq2 = 91;
-        ManualAccountWrapper wrapper2 = createManualAccountSQ("007", ccy, custNo, accType, null, "ARMPRO", dealId, subdealId, term, sq2);
-        GLAccount account2 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper2.getId());
-        Assert.assertNotNull(account2);
-        bsaList.add(account2.getBsaAcid());
-        Assert.assertEquals(sq, account2.getAccountSequence());
+        src = "ARMPRO";
+        param = remoteAccess.invoke(GLAccountRepository.class, "getDealSQParams", src, getOperday().getCurrentDate());
+        if (null != param) {
+            Short sq2 = 91;
+            ManualAccountWrapper wrapper2 = createManualAccountSQ("007", ccy, custNo, accType, null, src, dealId, subdealId, term, sq2);
+            GLAccount account2 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper2.getId());
+            Assert.assertNotNull(account2);
+            bsaList.add(account2.getBsaAcid());
+            Assert.assertEquals(sq, account2.getAccountSequence());
 
-        // ARMPRO - SQ не задан, та же сделка - SQ из параметров
-        ManualAccountWrapper wrapper4 = createManualAccountSQ("008", ccy, custNo, accType, null, "ARMPRO", dealId, subdealId, term, null);
-        GLAccount account4 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper4.getId());
-        Assert.assertNotNull(account4);
-        bsaList.add(account4.getBsaAcid());
-        Assert.assertEquals(sq, account4.getAccountSequence());
+            // ARMPRO - SQ не задан, та же сделка - SQ из параметров
+            ManualAccountWrapper wrapper4 = createManualAccountSQ("008", ccy, custNo, accType, null, src, dealId, subdealId, term, null);
+            GLAccount account4 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper4.getId());
+            Assert.assertNotNull(account4);
+            bsaList.add(account4.getBsaAcid());
+            Assert.assertEquals(sq, account4.getAccountSequence());
+        }
 
         // MZO - другая сделка, SQ задан - не меняется
-        Short sq3 = 92;
-        final String dealId3 = "DEAL_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 9);
-        final String subdealId3 = "SUB_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 2);
-        ManualAccountWrapper wrapper3 = createManualAccountSQ("007", ccy, custNo, accType, null, "MZO", dealId3, subdealId3, term, sq3);
-        GLAccount account3 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper3.getId());
-        Assert.assertNotNull(account3);
-        bsaList.add(account3.getBsaAcid());
-        Assert.assertEquals(sq3, account3.getAccountSequence());
+        src = "MZO";
+        param = remoteAccess.invoke(GLAccountRepository.class, "getDealSQParams", src, getOperday().getCurrentDate());
+        if (null != param) {
+            Short sq3 = 92;
+            final String dealId3 = "DEAL_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 9);
+            final String subdealId3 = "SUB_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 2);
+            ManualAccountWrapper wrapper3 = createManualAccountSQ("007", ccy, custNo, accType, null, src, dealId3, subdealId3, term, sq3);
+            GLAccount account3 = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper3.getId());
+            Assert.assertNotNull(account3);
+            bsaList.add(account3.getBsaAcid());
+            Assert.assertEquals(sq3, account3.getAccountSequence());
 
-        // MZO - та же сделка, другой SQ - ошибка
-        Short sq5 = 93;
-        RpcRes_Base<ManualAccountWrapper> res = createManualAccountOnly("008", ccy, custNo, accType, null, "MZO", dealId3, subdealId3, term, sq5);
-        Assert.assertTrue(res.isError());
+            // MZO - та же сделка, другой SQ - ошибка
+            Short sq5 = 93;
+            RpcRes_Base<ManualAccountWrapper> res = createManualAccountOnly("008", ccy, custNo, accType, null, src, dealId3, subdealId3, term, sq5);
+            Assert.assertTrue(res.isError());
+        }
 
     }
 

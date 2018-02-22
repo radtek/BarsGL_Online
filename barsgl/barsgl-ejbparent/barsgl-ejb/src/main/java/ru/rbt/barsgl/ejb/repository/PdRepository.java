@@ -86,24 +86,6 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
     @EJB
     private SourcesDealsRepository sourcesDealsRepository;
 
-    /**
-     * Определяет номер клиента по счету ЦБ + Midas
-     *
-     * @param bsaAcid - счет ЦБ
-     * @param acid    - счет Midas
-     * @param valDate - дата валидности
-     * @return - номер клиента
-     * @throws SQLException
-     */
-    public Integer getCnum(String bsaAcid, String acid, Date valDate) throws SQLException {
-        String sql = "select CNUM from ACCRLN " +   // , CTYPE
-                         "where (?  = BSAACID) and (? between DRLNO and DRLNC) " +
-                         "and (? = ACID)";
-        DataRecord res = selectFirst(sql, bsaAcid, valDate, acid);
-        return (null != res) && !isEmpty(res.getString("CNUM"))
-                   ? Integer.parseInt(res.getString("CNUM")) : 0;
-    }
-
     public long getNextId() {
         return nextId("PD_SEQ");
     }

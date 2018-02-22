@@ -42,31 +42,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             throw new Exception(e);
         }
     }
-    
-    /*
-    public Set<String> getCountsByAcid(String customerNo, List<String> acids) {
-        try {
-            String acidsStr = "'" + StringUtils.listToString(acids, ",") + "'";
-            List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM DWH.ACCRLN A WHERE VALUE(BSAACID,'')<>'' AND ACID IN (" + acidsStr + ") "+
-                    "AND EXISTS(SELECT * FROM DWH.GL_ACC G WHERE A.BSAACID=G.BSAACID AND G.RLNTYPE <> 1) " +
-                    "AND (CURRENT DATE - DRLNC) <= 1131 "+
-                    "AND A.RLNTYPE <> 1"
-                , Integer.MAX_VALUE,null);
 
-            Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
-            return result;
-        } catch (NoResultException e) {
-            return Collections.emptySet();
-        } catch (SQLException e) {
-            log.error("",e);
-        } catch (Exception e) {
-            log.error("",e);
-        }
-        return Collections.emptySet();
-    }
-    */
-    
     public List<DataRecord> getCountsByAcod(String customerNo, List<String> accountSpecials) throws Exception {
         try {
             accountSpecials = accountSpecials.stream().filter(accountSpecial -> accountSpecial.matches("\\d+")).collect(Collectors.toList());

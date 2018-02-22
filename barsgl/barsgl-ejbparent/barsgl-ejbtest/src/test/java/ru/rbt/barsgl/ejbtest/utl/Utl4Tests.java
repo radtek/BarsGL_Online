@@ -83,12 +83,8 @@ public class Utl4Tests {
 
     public static void deleteAccountByAcid(BaseEntityRepository baseEntityRepository, String acid) {
         try {
-            int cntGlAcc = baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID in " +
-                    "(select BSAACID from accrln where acid = ? and RLNTYPE = '2')", acid);
-            int cntBsaAcc = baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID in " +
-                    "(select BSAACID from accrln where acid = ? and RLNTYPE = '2')", acid);
-            int cntAccRln = baseEntityRepository.executeNativeUpdate("delete from ACCRLN where acid = ?", acid);
-            logger.info("deleted Midas from GL_ACC:" + cntGlAcc + "; ACCRLN:" + cntAccRln + "; BSAACC:" + cntBsaAcc);
+            int cntGlAcc = baseEntityRepository.executeNativeUpdate("delete from GL_ACC where ACID = ? and RLNTYPE = '2'", acid);
+            logger.info("deleted Midas from GL_ACC:" + cntGlAcc);
         }finally {
 
         }

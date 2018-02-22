@@ -8,7 +8,7 @@ import ru.rbt.barsgl.bankjar.CreateIBCBrecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
-import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccParam;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -367,18 +367,18 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
         String ccode = glOperationRepository.getCompanyCode(bsaAcid);
         String psav = operation.getExchangeDifference().signum() > 0 ? Constants.PASIV : Constants.ACTIV;
         String optype = isCach(operation);
-        GlAccRln accRln = excacRlnRepository.findAccountExchange(ccode, bankCurrency.getCurrencyCode(), psav, optype);
+        GLAccParam accId = excacRlnRepository.findAccountExchange(ccode, bankCurrency.getCurrencyCode(), psav, optype);
 
-        if (accRln == null) {
+        if (accId == null) {
         // создание счета курсовой разницы
             AccountKeys keys = AccountKeysBuilder.create().
                     withCompanyCode(ccode).
                     withPassiveActive(psav).
                     withBranch(glOperationRepository.getHeadBranchByCCode(ccode)).build();
-            accRln = glAccountController.createAccountsExDiff(operation, GLOperation.OperSide.N, keys, operation.getPostDate(), bankCurrency, optype);
+            accId = glAccountController.createAccountsExDiff(operation, GLOperation.OperSide.N, keys, operation.getPostDate(), bankCurrency, optype);
         }
 
-        return accRln.getId().getBsaAcid();
+        return accId.getBsaAcid();
     }
 
     /**

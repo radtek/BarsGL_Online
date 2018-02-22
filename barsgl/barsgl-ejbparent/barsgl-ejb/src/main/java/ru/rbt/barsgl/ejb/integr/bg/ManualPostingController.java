@@ -195,13 +195,13 @@ public class ManualPostingController {
             wrapper.setBalanceError(false);
             return;
         }
-        GlAccRln accountDr = accRlnRepository.checkAccointIsPair(wrapper.getAccountDebit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountDebit());
-        GlAccRln accountCr = accRlnRepository.checkAccointIsPair(wrapper.getAccountCredit())?null:accRlnRepository.findAccRlnAccount(wrapper.getAccountCredit());
+        GLAccount accountDr = accRlnRepository.checkAccointIsPair(wrapper.getAccountDebit()) ? null : glAccountRepository.findGLAccount(wrapper.getAccountDebit());
+        GLAccount accountCr = accRlnRepository.checkAccointIsPair(wrapper.getAccountCredit())? null : glAccountRepository.findGLAccount(wrapper.getAccountCredit());
 
         Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
         if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
-            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getId().getBsaAcid(),accountDr.getId().getAcid());
+            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getBsaAcid(),accountDr.getAcid());
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
             DataRecord resDr = null;
@@ -215,13 +215,13 @@ public class ManualPostingController {
                 wrapper.setBalanceError(true);
                 BigDecimal bac = convertFromScale(resDr.getBigDecimal(1),currencyDr.getScale().intValue());
                 BigDecimal outrest = convertFromScale(resDr.getBigDecimal(2),currencyDr.getScale().intValue());
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getId().getBsaAcid(),
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)", accountDr.getBsaAcid(),
                         dateFormat.format(resDr.getDate(0)),  bac, outrest));
             }
         }
 
         if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
-            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getId().getBsaAcid(),accountCr.getId().getAcid());
+            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getBsaAcid(),accountCr.getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
             DataRecord resCr = null;
@@ -235,7 +235,7 @@ public class ManualPostingController {
                 wrapper.setBalanceError(true);
                 BigDecimal bac = convertFromScale(resCr.getBigDecimal(1),currencyCr.getScale().intValue());
                 BigDecimal outrest = convertFromScale(resCr.getBigDecimal(2),currencyCr.getScale().intValue());
-                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)",  accountCr.getId().getBsaAcid(),
+                wrapper.getErrorList().addErrorDescription(String.format("На счёте %s не хватает средств. \n Текущий отстаток на дату %s = %s (с учётом операции = %s)",  accountCr.getBsaAcid(),
                         dateFormat.format(resCr.getDate(0)), bac, outrest));
             }
         }

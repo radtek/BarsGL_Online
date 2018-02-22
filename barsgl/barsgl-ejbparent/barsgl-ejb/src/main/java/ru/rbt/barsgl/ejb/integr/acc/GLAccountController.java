@@ -32,8 +32,6 @@ import javax.inject.Inject;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +45,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.E;
-import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FIVE;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FOUR;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
 import static ru.rbt.ejbcore.util.StringUtils.*;
@@ -181,7 +179,7 @@ public class GLAccountController {
                 // сгенерировать номер счета ЦБ
                 String bsaAcid = getAccountNumber(operSide, dateOpen, keys);
                 // создать счет с этим номером в GL и BARS
-                glAccount[0] = createAccount(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
+                glAccount[0] = createAccount(bsaAcid, operation, operSide, dateOpen, keys, FOUR, GLAccount.OpenType.AENEW);
                 return glAccount[0];
             });
         });
@@ -213,7 +211,7 @@ public class GLAccountController {
             // сгенерировать номер счета ЦБ
             String bsaAcid = getAccountNumber(operSide, dateOpen, keys);
             // создать счет с этим номером в GL и BARS
-            return createAccount(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW).getBsaAcid();
+            return createAccount(bsaAcid, operation, operSide, dateOpen, keys, FOUR, GLAccount.OpenType.AENEW).getBsaAcid();
         });
     }
 
@@ -226,6 +224,7 @@ public class GLAccountController {
      * @return
      * @throws Exception
      */
+/*
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount findOrCreateGLAccountAEWithKeys(
@@ -249,6 +248,7 @@ public class GLAccountController {
             return glAccount;
         });
     }
+*/
 
     /**
      * Открытие техническолго счета, когда заполнены ключи и счет
@@ -346,16 +346,16 @@ public class GLAccountController {
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLAccountMnl(AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
-        return internalCreateGLAccountMnl(keys, descriptors, dateOpen, openType);
+        return internalCreateGLAccountMnl(keys, FOUR, descriptors, dateOpen, openType);
     }
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public GLAccount createGLAccountMnlInRequiredTrans(AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
-        return internalCreateGLAccountMnl(keys, descriptors, dateOpen, openType);
+    public GLAccount createGLAccountMnlInRequiredTrans(AccountKeys keys, GLAccount.RelationType rlnType, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
+        return internalCreateGLAccountMnl(keys, rlnType, descriptors, dateOpen, openType);
     }
 
-    private GLAccount internalCreateGLAccountMnl(AccountKeys keys, ErrorList descriptors, Date dateOpen, GLAccount.OpenType openType) throws Exception {
+    private GLAccount internalCreateGLAccountMnl(AccountKeys keys, GLAccount.RelationType rlnType, ErrorList descriptors, Date dateOpen, GLAccount.OpenType openType) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
             GLAccount glAccount = findGLAccountMnlnoLock(keys);     // счет создается вручную
             if (null != glAccount) {
@@ -371,7 +371,7 @@ public class GLAccountController {
             // сгенерировать номер счета ЦБ
             String bsaAcid = getAccountNumber(GLOperation.OperSide.N, dateOpen, keys);
             // создать счет с этим номером в GL и BARS
-            glAccount = createAccount(bsaAcid, null, GLOperation.OperSide.N, dateOpen, keys, openType);
+            glAccount = createAccount(bsaAcid, null, GLOperation.OperSide.N, dateOpen, keys, rlnType, openType);
 
             return glAccount;
         });
@@ -454,32 +454,6 @@ public class GLAccountController {
         });
     }
 
-    @Lock(LockType.WRITE)
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String createPlAccount(AccountKeys keys, Date dateOpen, Date dateStart446P, GLOperation operation, GLOperation.OperSide operSide) throws Exception {
-        return synchronizer.callSynchronously(monitor, () -> {
-            try {
-                return glAccountRepository.executeInNonTransaction(connection -> {
-                    try {
-                        // Поиск счета в таблице ACCRLN
-                        String bsaAcid = ofrAccountProcessor.findAccount(connection, keys, dateStart446P);
-                        if (bsaAcid == null) {  // нету - создаем
-                            bsaAcid = ofrAccountProcessor.createAccount(connection, keys, dateOpen, DAY20290101, dateStart446P);     // 1.0.5
-                            if (bsaAcid != null) {  // запись в GL_ACC
-                                createAccount(bsaAcid, operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
-                            }
-                        }
-                        return bsaAcid;
-                    } catch (Exception e) {
-                        throw new DefaultApplicationException(getErrorMessage(e), e);
-                    }
-                });
-            } catch (SQLException e) {
-                throw new DefaultApplicationException(getErrorMessage(e), e);
-            }
-        });
-    }
-
     /**
      * GL счета доходов/расходов
      * @param keys
@@ -488,7 +462,7 @@ public class GLAccountController {
      */
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String createGLPLAccount(final AccountKeys keys, final GLOperation operation, GLOperation.OperSide operSide) throws Exception {
+    public String createGLPLAccount(final AccountKeys keys, GLAccount.RelationType rlnType, final GLOperation operation, GLOperation.OperSide operSide) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
             return Optional.ofNullable(glAccountRepository.findGLPLAccount(keys.getCurrency()
                     , keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType()
@@ -499,8 +473,7 @@ public class GLAccountController {
                             final String bsaacid = glAccountRepository
                                     .executeInNonTransaction(connection -> AccountUtil.generateAccountNumber(connection
                                             , keys.getAccount2(), keys.getCurrencyDigital(), keys.getCompanyCode(), keys.getPlCode()));
-                            final GLAccount account = createAccount(bsaacid, operation, N, operation.getValueDate(), keys, GLAccount.OpenType.AENEW);
-                            glAccountRepository.updateRelationType(account, FIVE);
+                            final GLAccount account = createAccount(bsaacid, operation, N, operation.getValueDate(), keys, rlnType, GLAccount.OpenType.AENEW);
                             GLRelationAccountingType rt = Optional.ofNullable(relationAccountingTypeRepository
                                     .findById(GLRelationAccountingType.class, new GLRelationAccountingTypeId(account.getBsaAcid()
                                             , account.getAcid()))).orElseGet(() -> relationAccountingTypeRepository.createRelation(account.getAcid()
@@ -517,7 +490,7 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public GLAccount createGLPLAccountMnl(final AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
+    public GLAccount createGLPLAccountMnl(final AccountKeys keys, GLAccount.RelationType rlnType, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
         return synchronizer.callSynchronously(monitor, () ->{
             GLAccount glAccount = findGLPLAccountMnlnoLock(keys, dateOpen);     // счет создается вручную
             if (null != glAccount) {
@@ -530,9 +503,8 @@ public class GLAccountController {
             }
 
             final String bsaacid = getPlAccountNumber(keys.getAccount2(), keys.getCurrencyDigital(), keys.getCompanyCode(), keys.getPlCode());
-            final GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, openType);
-            Assert.notNull(keys.getRelationType(), "Не задан RLNTYPE для создания счета доходов / расходов");
-            glAccountRepository.updateRelationType(account, GLAccount.RelationType.parse(keys.getRelationType()));
+            final GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, rlnType, openType);
+            Assert.notNull(rlnType, "Не задан RLNTYPE для создания счета доходов / расходов");
             relationAccountingTypeRepository.createRelation(account.getAcid()
                     , account.getBsaAcid(), Long.toString(account.getAccountType()));
 //        auditController.info(Account
@@ -547,10 +519,10 @@ public class GLAccountController {
     }
 
     private GLAccount createAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
-                                    AccountKeys keys, GLAccount.OpenType openType) {
+                                    AccountKeys keys, GLAccount.RelationType rlnType, GLAccount.OpenType openType) {
 
         // создать счет GL
-        GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType);
+        GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType, rlnType);
         // определить дополнительные папаметры счета
         glAccountProcessor.enrichment(glAccount, keys);
         // сохранить счет GL
@@ -567,40 +539,36 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public GlAccRln createAccountsExDiff(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, BankCurrency bankCurrency, String optype) {
-        GlAccRln accRln = excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype);
-        if (accRln == null) {
-            accRln = calculateAcidBsaacid(operSide, keys, bankCurrency, optype);
+    public GLAccParam createAccountsExDiff(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, BankCurrency bankCurrency, String optype) {
+        GLAccParam accountId = excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype);
+        if (accountId == null) {
+            accountId = calculateAcidBsaacid(operSide, keys, bankCurrency, optype);
             // Возвращаемое значение
             GLAccount glAccount = new GLAccount();
 
-            glAccount.setAcid(accRln.getId().getAcid());
-            glAccount.setBsaAcid(accRln.getId().getBsaAcid());
+            glAccount.setAcid(accountId.getAcid());
+            glAccount.setBsaAcid(accountId.getBsaAcid());
             glAccount.setDateOpen(dateOpen);
             glAccount.setDateClose(GLAccountController.DAY20290101);
-            glAccount.setCustomerNumber(accRln.getId().getAcid().substring(0, 8));
+            glAccount.setCustomerNumber(accountId.getAcid().substring(0, 8));
             glAccount.setCompanyCode(keys.getCompanyCode());
             glAccount.setPassiveActive(keys.getPassiveActive());
             glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
             glAccount.setCurrency(bankCurrencyRepository.getCurrency("RUR"));
             glAccount.setPlCode(keys.getPlCode());
             glAccount.setRelationType(GLAccount.RelationType.TWO);
-
-            accRlnRepository.createAccRln(glAccount);
-            BsaAcc bsaAcc = bsaAccRepository.createBsaAcc(glAccount);
-
             glAccount.setCurrency(bankCurrency);
 
             GlExcacRln excacRln = excacRlnRepository.createExcacRln(glAccount, optype);
             auditController.info(Account, format("Создан счет курсовой разницы '%s' для операции '%d' %s",
-                    bsaAcc.getId(), operation.getId(), operSide.getMsgName()), bsaAcc);
-            accRln = new GlAccRln(excacRln.getId());
+                    accountId.getBsaAcid(), operation.getId(), operSide.getMsgName()), excacRln);
+            accountId = new GLAccParam(excacRln.getId());
         }
 
-        return accRln;
+        return accountId;
     }
 
-    private GlAccRln calculateAcidBsaacid(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
+    private GLAccParam calculateAcidBsaacid(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
         try {
             String psav = keys.getPassiveActive();
             DataRecord dataRecord = glAccountRepository.selectFirst("select ACC2, PLCODE, ACOD, ACSQ from excacparm where (CCY = ? or CCY = '000') and OPTYPE = ? and PSAV = ?",
@@ -634,7 +602,7 @@ public class GLAccountController {
 
             // Счет Midas
             String acid = new StringBuilder().append(a8bicnRec.getString("a8bicn")).append("RUR").append(keys.getAccountCode()).append(acsq).append(keys.getBranch()).toString();
-            return new GlAccRln(acid, bsaacid);
+            return new GLAccParam(acid, bsaacid);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -1171,9 +1139,7 @@ public class GLAccountController {
                     }
                     // сгенерировать номер счета ЦБ
                     String bsaacid = getPureAccountNumber(GLOperation.OperSide.N, dateOpen, keys);
-                    GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, GLAccount.OpenType.AENEW);
-                    // меняем RLNTYPE
-                    account.setRelationType(E);
+                    GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, E, GLAccount.OpenType.AENEW);
                     accRlnRepository.updateRelationType(new AccRlnId("", account.getBsaAcid()), E);
                     return glAccountRepository.update(account);
                 } catch (SQLException e) {
@@ -1209,14 +1175,12 @@ public class GLAccountController {
         final List<DataRecord> glacc = glAccountRepository.findByAcidRlntype04(requiredNotEmpty(acid, ""), operday);
         if (1 == glacc.size()) {
             return glacc.get(0).getString("BSAACID");
-//            return glAccountRepository.findById(GLAccount.class, glacc.get(0).getLong("ID"));
         }else if (1 < glacc.size()){
             String keyAcctype = defaultString(keys.getAccountType());
             final List<DataRecord> filtered = glacc.stream().filter(
                     r -> r.getString("ACCTYPE").equals(keyAcctype)).collect(toList());
             if (filtered.size() == 1){
                 return filtered.get(0).getString("BSAACID");
-//                return glAccountRepository.findById(GLAccount.class,filtered.get(0).getLong("ID"));
             }else if (filtered.size() > 1){
                 throw new ValidationError(GL_SEQ_XX_GL_ACC_NOT_FOUND, operside
                         , defaultString(keys.getAccountType())
@@ -1227,21 +1191,6 @@ public class GLAccountController {
                         , defaultString(keys.getPlCode())
                         , defaultString(keys.getGlSequence())
                         , acid);
-            }
-        }else{
-            final List<DataRecord> accrln = accRlnRepository.findByAcid_Rlntype0(acid, operday);
-            if (accrln.size() == 1) return accrln.get(0).getString("BSAACID");
-//            if (accrln.size() == 1) return glAccountRepository.findById(GLAccount.class,accrln.get(0).getLong("ID"));
-            else if (accrln.size() > 1){
-                throw new ValidationError(GL_SEQ_XX_ACCRLN_NOT_FOUND, operside
-                        , defaultString(keys.getAccountType())
-                        , defaultString(keys.getCustomerNumber())
-                        , defaultString(keys.getAccountCode())
-                        , defaultString(keys.getAccSequence())
-                        , defaultString(keys.getDealId())
-                        , defaultString(keys.getPlCode())
-                        , defaultString(keys.getGlSequence())
-                        , acid );
             }
         }
         return null;
@@ -1256,6 +1205,7 @@ public class GLAccountController {
      * Поиск/открытие счетов доходов/расходов
      * Ищем не наш счет, иначе создаем в т.ч. у нас
      */
+/*
     @Lock(LockType.WRITE)
     public String processNotOwnPLAccount(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, Date dateStart446P) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
@@ -1290,6 +1240,7 @@ public class GLAccountController {
             }
         });
     }
+*/
     private int getAccountIterateCount() {
         try {
             return propertiesRepository.getNumber("account.iterate.count").intValue();

@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.repository;
 import ru.rb.cfg.SystemConfiguration;
 import ru.rb.cfg.db.DbConfiguration;
 import ru.rb.cfg.exception.ConfigurationException;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
@@ -11,6 +12,7 @@ import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
@@ -55,7 +57,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      */
     public boolean checkMidasAccountExists(String acid, Date dateCurrent) {
         try {
-            DataRecord res = selectFirst("select 1 from ACC A where A.ID = ?", acid);
+            DataRecord res = selectFirst("select 1 from GL_ACC A where A.ACID = ?", acid);
             return null != res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -73,14 +75,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public void updGlAccOpenDate(String bsaacid, Date newDate) throws Exception{
             executeNativeUpdate("update gl_acc set dto=? where bsaacid=?", newDate, bsaacid);
-    }
-
-    public void updBsaaccOpenDate(String bsaacid, Date newDate) throws Exception {
-        executeNativeUpdate("update Bsaacc set bsaaco=? where id=?", newDate, bsaacid);
-    }
-
-    public void updAccrlnOpenDate(String bsaacid, Date newDate) throws Exception {
-        executeNativeUpdate("update Accrln set drlno=? where bsaacid=?", newDate, bsaacid);
     }
 
     /**
@@ -119,6 +113,18 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             return (null == res) ? ResultCode.ACCOUNT_NOT_FOUND : ResultCode.valueOf(res.getInteger(0));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public String findForSequenceGL(AccountKeys keys) throws Exception {
+        List<DataRecord> results = select("select BSAACID from GL_ACC where CBCCN = ? and CCY = ? and ACC2 = ? and RLNTYPE = 'T' and ACOD is null"
+                , keys.getCompanyCode(), keys.getCurrency(), keys.getAccount2());
+        if (1 == results.size()) {
+            return results.get(0).getString("BSAACID");
+        } else if (1 < results.size()) {
+            throw new ValidationError(ErrorCode.TOO_MANY_ACCRLN_ENTRIES, keys.getCompanyCode(), keys.getCurrencyDigital(), keys.getAccount2());
+        } else {
+            throw new ValidationError(ErrorCode.NOT_FOUND_ACCRLN_GL, keys.getCompanyCode(), keys.getCurrencyDigital(), keys.getAccount2());
         }
     }
 
@@ -162,21 +168,10 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public boolean checkAccountRlnExists(String bsaAcid, String acid) {
-        try {
-            DataRecord res = selectFirst("select count(1) from ACCRLN where BSAACID = ? and ACID = ?", bsaAcid, acid);
-            return res.getInteger(0) > 0;
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
-
-
     public boolean checkAccountRlnExists(String bsaAcid, String acid, String rlntype) {
         try {
-            DataRecord res = selectFirst("select count(1) from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?", bsaAcid, acid, rlntype);
-            return res.getInteger(0) > 0;
+            DataRecord res = selectFirst("select 1 from GL_ACC where BSAACID = ? and ACID = ? and RLNTYPE = ?", bsaAcid, acid, rlntype);
+            return null != res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -184,18 +179,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public boolean checkAccountRlnNotPseudo(String bsaAcid) {
         try {
-            DataRecord res = selectFirst("select count(1) from ACCRLN where BSAACID = ? and RLNTYPE in ('2', '5') and CBCCY='810'", bsaAcid);
-            return res.getInteger(0) > 0;
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
-    public DataRecord getAcc2ByAcid(String acid, Date dateOpen) {
-        try {
-            String sql = "select ACC2, PSAV from ACCRLN where ACID = ? and RLNTYPE = '0' and ? between DRLNO and DRLNC";
-            DataRecord res = selectFirst(sql, acid, dateOpen);
-            return res;
+            DataRecord res = selectFirst("select 1 from GL_ACC where BSAACID = ? and RLNTYPE in ('2', '5') and CBCCY='RUR'", bsaAcid);
+            return null != res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -661,20 +646,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     }
 
     /**
-     * Обновляем RLNTYPE в GL_ACC и ACCRLN
-     * @param account счет GL
-     * @param relationType relationType
-     * @return обновленный счет
-     */
-    public GLAccount updateRelationType(final GLAccount account, final GLAccount.RelationType relationType) {
-        int count = executeUpdate("update GlAccRln r set r.relationType = ?1 where r.id.bsaAcid = ?2", relationType.getValue(), account.getBsaAcid());
-        Assert.isTrue(1 == count
-            , () -> new DefaultApplicationException(format("Неверное кол-во записей '%s' в ACCRLN по счету '%s'", count, account.getBsaAcid())));
-        account.setRelationType(relationType);
-        return update(account);
-    }
-
-    /**
      * Находит счет GLпо номеру счета ЦБ
      *
      * @param bsaAcid
@@ -878,35 +849,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    /*
-    * -	счет Midas: ACID = Код клиента + ‘RUR’ + ACOD + SQ + «Отделение»
--	«Тип собственности» (CTYPE),
--	«Символ доходов/расходов» (PLCODE)
--	RLNTYPE = ‘2’
--	«Б/счет 2-го порядка» (из формы)
-    */
-    public DataRecord getAccountForPl(String acid, Short ctype, String plcode, String acc2, Date dateOpen) {
-        try {
-            DataRecord res = selectFirst("select a.BSAACID, a.ACID, a.CTYPE, a.PLCODE, a.ACC2 " +
-                            "from ACCRLN a where not exists (select 1 from GL_ACC g " +
-                            "where g.ACID = a.ACID and g.CBCUSTTYPE = a.CTYPE and g.PLCODE = a.PLCODE and g.ACC2 = a.ACC2) and " +
-                            "a.ACID = ? and a.CTYPE = ? and a.PLCODE = ? and a.ACC2 = ? and a.RLNTYPE = '2' " +
-                            "and a.DRLNO >= ? and a.DRLNC > ?",    // датой открытия >= datestart446P "И" с датой закрытия > даты открытия нового счета
-                    acid, ctype, plcode, acc2, getDateStart446p(), dateOpen);
-
-           /* DataRecord res = selectFirst("select a.BSAACID, a.ACID, a.CTYPE, a.PLCODE, a.ACC2" +
-                    " from ACCRLN a exception join GL_ACC g" +
-                    " on g.ACID = a.ACID and g.CBCUSTTYPE = a.CTYPE and g.PLCODE = a.PLCODE and g.ACC2 = a.ACC2" +
-                    " where a.ACID = ? and a.CTYPE = ? and a.PLCODE = ? and a.ACC2 = ? and a.RLNTYPE = ?" +
-                    " and DRLNO >= ? and DRLNC > ?",    // датой открытия >= datestart446P "И" с датой закрытия > даты открытия нового счета
-                    acid, ctype, plcode, acc2, '2', getDateStart446p(), dateOpen);*/
-            return res;
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-
-    }
-
     /**
      * Проверяет правильность корреспонденции счетов 9999
      * @param account1
@@ -956,7 +898,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @throws SQLException
      */
     public String getAccount9999Corr(String accountNotCorresp) throws SQLException {
-        DataRecord res = selectFirst("select ACC2, CCODE from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?", accountNotCorresp, " ", "T");
+        DataRecord res = selectFirst("select ACC2, CCODE from GL_ACC where BSAACID = ? and ACID = ? and RLNTYPE = ?", accountNotCorresp, " ", "T");
         if (null == res)
             return "";
         String acc2 = res.getString(0);
@@ -979,7 +921,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         };
         String acc2corr = acc2.substring(0, 4) + corr;
         String filial = res.getString(1);
-        res = selectFirst("select BSAACID from ACCRLN where ACC2 = ? and CCODE = ? and ACID = ? and RLNTYPE = ? ", acc2corr, filial, " ", "T");
+        res = selectFirst("select BSAACID from GL_ACC where ACC2 = ? and CBCCN = ? and ACID = ? and RLNTYPE = ? ", acc2corr, filial, " ", "T");
         return null == res ? "" : res.getString(0);
     }
 

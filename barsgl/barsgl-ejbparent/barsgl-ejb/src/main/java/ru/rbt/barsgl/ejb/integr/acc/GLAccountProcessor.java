@@ -53,9 +53,6 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     private BsaAccRepository bsaAccRepository;
 
     @Inject
-    private AccRlnRepository accRlnRepository;
-
-    @Inject
     private BankCurrencyRepository bankCurrencyRepository;
 
     @Inject
@@ -336,8 +333,8 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
      * @param keys          - ключи счета
      * @return
      */
-    public GLAccount createGlAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType) {
-//1        GLAccount glAccount = new GLAccount();
+    public GLAccount createGlAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType, GLAccount.RelationType rlnType) {
+        Assert.notNull(rlnType);
         GLAccount glAccount = new GLAccount();
 
         // номер счета, способ создания, операция, сторона операции
@@ -380,8 +377,9 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         // номер последовательности из АЕ
         glAccount.setGlSequence(keys.getGlSequence());
 
-        glAccount.setRelationType(null != operation && accountService.isAccountWithKeys(operation, side)
-                ? ZERO : (isEmpty(keys.getPlCode()) ? FOUR : TWO));
+        glAccount.setRelationType(rlnType);
+//        glAccount.setRelationType(null != operation && accountService.isAccountWithKeys(operation, side)
+//                ? ZERO : (isEmpty(keys.getPlCode()) ? FOUR : TWO));
 
         return glAccount;
     }

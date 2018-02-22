@@ -32,7 +32,7 @@ public class ExcacRlnRepository extends AbstractBaseEntityRepository<GlExcacRln,
         return excacRln;
     }
 
-    public GlAccRln findForPlcode7903(AccountKeys keys, BankCurrency bankCurrency, String optype) {
+    public GLAccParam findForPlcode7903(AccountKeys keys, BankCurrency bankCurrency, String optype) {
                 // select bcbbr from imbcbbrp where a8brcd='001' ccode by branch
         try {
             return findAccountExchange(keys.getCompanyCode(), bankCurrency.getCurrencyCode(), keys.getPassiveActive(), optype);
@@ -41,14 +41,14 @@ public class ExcacRlnRepository extends AbstractBaseEntityRepository<GlExcacRln,
         }
     }
 
-    public GlAccRln findAccountExchange(String ccode, String ccy, String psav, String optype) throws SQLException {
+    public GLAccParam findAccountExchange(String ccode, String ccy, String psav, String optype) throws SQLException {
         // select bcbbr from imbcbbrp where a8brcd='001' ccode by branch
         List<DataRecord> results = select(
                 "select acid, bsaacid from excacrln where CCODE = ? and CCY = ? and CASH = ? and PSAV = ?"
                 , ccode, ccy, optype, psav);
 
         if (1 == results.size()) {
-            return new GlAccRln(results.get(0).getString("ACID"), results.get(0).getString("BSAACID"));
+            return new GLAccParam(results.get(0).getString("ACID"), results.get(0).getString("BSAACID"));
         } else if (1 < results.size()) {
             throw new ValidationError(ErrorCode.TOO_MANY_ACCRLN_ENTRIES, ccode, ccy, "N", psav);
         } else {

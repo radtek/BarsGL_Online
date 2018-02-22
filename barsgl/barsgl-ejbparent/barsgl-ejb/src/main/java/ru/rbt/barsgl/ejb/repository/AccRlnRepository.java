@@ -60,80 +60,13 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
     }
 
     /**
-     * Поиск по счету Майдас
-     *
-     * @param acid   счет Майдас
-     * @param ondate на дату
-     * @return
-     */
-//    public List<DataRecord> findByAcid(String acid, String acc2, Date ondate, boolean plCodeExists) throws SQLException {
-//        return select("select * from ACCRLN r where R.ACID = ? and ACC2 = ? and R.DRLNC > ? and RLNTYPE in (" +
-//                (plCodeExists ? "'2'" : "'0', '4'") + ")"
-//            , acid, acc2, DateUtils.onlyDate(ondate));
-//    }
-    public List<DataRecord> findByAcid_Rlntype0(String acid, Date ondate) throws SQLException {
-        return select("select * from ACCRLN r where R.ACID = ? and R.DRLNC > ? and r.RLNTYPE='0' " +
-                        "and not exists(select 1 from gl_acc g where g.bsaacid=r.bsaacid and g.acid=r.acid and " +
-                        "DTO <= ? and (DTC is null or DTC > ?))",
-                acid, DateUtils.onlyDate(ondate), DateUtils.onlyDate(ondate), DateUtils.onlyDate(ondate));
-    }
-
-    /**
      * Поиск по счету ЦБ
      *
      * @param bsaacid счет ЦБ
      * @return
      */
     public DataRecord findByBsaacid(String bsaacid) throws SQLException {
-        return selectFirst("SELECT * FROM ACCRLN R WHERE R.BSAACID = ? ORDER BY R.DRLNC DESC", bsaacid);
-    }
-//
-//    public Optional<GlAccRln> findByBsaacid (String bsaacid) {
-//        return Optional.ofNullable(selectFirst(GlAccRln.class, "FROM ACCRLN WHERE BSAACID = ? ORDER BY DRLNC DESC", bsaacid));
-//    }
-
-    /**
-     * Поиск счета ЦБ по ключам для GLSEQ="GL%"
-     *
-     * @param keys
-     * @return счет ЦБ
-     */
-    public String findForSequenceGL(AccountKeys keys) throws Exception {
-        List<DataRecord> results = select("select bsaacid from accrln where CCODE = ? and CBCCY = ? and ACC2 = ? and RLNTYPE = 'T' and GLACOD = ' '"
-            , keys.getCompanyCode(), keys.getCurrencyDigital(), keys.getAccount2());
-        if (1 == results.size()) {
-            return results.get(0).getString("BSAACID");
-        } else if (1 < results.size()) {
-            throw new ValidationError(ErrorCode.TOO_MANY_ACCRLN_ENTRIES, keys.getCompanyCode(), keys.getCurrencyDigital(), keys.getAccount2());
-        } else {
-            throw new ValidationError(ErrorCode.NOT_FOUND_ACCRLN_GL, keys.getCompanyCode(), keys.getCurrencyDigital(), keys.getAccount2());
-        }
-    }
-
-    /**
-     * Обновляет дату закрытия счета
-     *
-     * @param glAccount
-     */
-    public void setDateOpen(GLAccount glAccount) {
-        int cnt = executeNativeUpdate("update ACCRLN set DRLNO = ? where ACID = ? and BSAACID = ?",
-                glAccount.getDateOpen(), glAccount.getAcid(), glAccount.getBsaAcid());
-        if (1 != cnt) {
-            throw new ValidationError(ACCOUNT_RLN_INVALID, glAccount.getBsaAcid(), glAccount.getAcid());
-        }
-    }
-
-    /**
-     * Обновляет дату закрытия счета
-     *
-     * @param glAccount
-     */
-    public void setDateClose(GLAccount glAccount) {
-        int cnt = executeNativeUpdate("update ACCRLN set DRLNC = ? where ACID = ? and BSAACID = ?",
-                glAccount.getDateCloseNotNull(), glAccount.getAcid(), glAccount.getBsaAcid());
-        if (1 != cnt) {
-            throw new ValidationError(ACCOUNT_RLN_INVALID, glAccount.getBsaAcid(), glAccount.getAcid());
-        }
+        return selectFirst("SELECT * FROM GL_ACC R WHERE R.BSAACID = ? ORDER BY R.DTC DESC", bsaacid);
     }
 
     /**
@@ -152,7 +85,8 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
             // Встречается keys.getCustomerType() == ""
             int customerType = isEmpty(keys.getCustomerType()) ? 0 : Integer.parseInt(keys.getCustomerType());
 
-            List<DataRecord> results = select("select bsaacid from accrln where ACID = ? and RLNTYPE = ? and PLCODE = ? and CTYPE = ? and DRLNO >= ? and DRLNC >= ? "
+            List<DataRecord> results = select("select BSAACID from GL_ACC where ACID = ? and RLNTYPE = ?" +
+                            " and PLCODE = ? and CBCUSTTYPE = ? and DTO >= ? and (DTC is null or DTC >= ?) "
                     , m_acid, "2", keys.getPlCode(), customerType, dateStart446P, dateOpen);
 
             if (1 == results.size()) {
@@ -178,6 +112,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
      * @param bsaAcid
      * @return
      */
+/*
     public GlAccRln findAccRlnAccount(String bsaAcid) {
         try {
             DataRecord data = selectFirst("SELECT * FROM ACCRLN R WHERE R.BSAACID = ? ORDER BY R.DRLNC DESC", bsaAcid);
@@ -187,8 +122,9 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+*/
 
-    public DataRecord checkAccountBalance(GlAccRln account, Date operDate, BigDecimal amount)
+    public DataRecord checkAccountBalance(GLAccount account, Date operDate, BigDecimal amount)
     {
         try{
             String where = "П".equalsIgnoreCase(account.getPassiveActive())?"outrest<0":"outrest>0";
@@ -203,14 +139,14 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                         "select dat,(select sum(bac) from acc_tover a where a.dat <= o.dat) as bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                         "from ACC_TOVER o " +
                         ")t " +
-                        "where %s order by dat",where), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, amount);
+                        "where %s order by dat",where), operDate, account.getBsaAcid(), account.getAcid(), operDate, account.getBsaAcid(), account.getAcid(), operDate, amount);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 
-    public DataRecord checkAccountBalance(GlAccRln account, Date operDate, BigDecimal amount,GlAccRln tehover)
+    public DataRecord checkAccountBalance(GLAccount account, Date operDate, BigDecimal amount,GlAccRln tehover)
     {
         try {
             String where = "П".equalsIgnoreCase(account.getPassiveActive())?"outrest<0":"outrest>0";
@@ -234,7 +170,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                     "select dat,(select sum(bac) from acc_tover a where a.dat <= o.dat) as bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                     "from ACC_TOVER o)t " +
                     " where %s ",where);
-            DataRecord res = selectFirst(sql, operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, account.getId().getBsaAcid(), account.getId().getAcid(), operDate,operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, amount);
+            DataRecord res = selectFirst(sql, operDate, account.getBsaAcid(), account.getAcid(), operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, account.getBsaAcid(), account.getAcid(), operDate,operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, amount);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
