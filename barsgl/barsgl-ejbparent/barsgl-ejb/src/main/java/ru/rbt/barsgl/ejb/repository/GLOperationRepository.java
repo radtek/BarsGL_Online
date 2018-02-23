@@ -24,6 +24,7 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -61,7 +62,8 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 //            String sql = "select BRCA from BSAACC B where B.ID = ?";
             String sql = "SELECT CBCCN BRCA FROM GL_ACC WHERE BSAACID = ? ";
             DataRecord res = selectFirst(sql, bsaAcid);
-            return (null != res) ? res.getString("BRCA") : "";
+            return Optional.ofNullable(res).map(r -> r.getString("BRCA"))
+                    .orElseThrow(() -> new DefaultApplicationException(String.format("Счет %s не найден", bsaAcid)));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

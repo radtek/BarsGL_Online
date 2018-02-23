@@ -746,9 +746,11 @@ public abstract class AbstractRemoteIT  {
     }
 
     public static String findBsaAccount(String bsaacidLike, Date dateClose) throws SQLException {
+//        return Optional.ofNullable(baseEntityRepository.selectFirst(
+//                "SELECT \"BSAACID\" FROM \"ACCRLN\" \"R\", \"BSAACC\" \"A\" " +
+//                        "WHERE \"R\".\"BSAACID\" LIKE ? AND \"R\".\"BSAACID\" = \"A\".\"ID\" AND \"A\".\"BSAACC\" > ?"
         return Optional.ofNullable(baseEntityRepository.selectFirst(
-                "SELECT \"BSAACID\" FROM \"ACCRLN\" \"R\", \"BSAACC\" \"A\" " +
-                        "WHERE \"R\".\"BSAACID\" LIKE ? AND \"R\".\"BSAACID\" = \"A\".\"ID\" AND \"A\".\"BSAACC\" > ?"
+                "select bsaacid from gl_acc where bsaacid like ? and nvl(dtc, to_date('2029-01-01', 'yyyy-mm-dd')) > ?"
                 , bsaacidLike, dateClose))
                 .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike + " " + dateClose));
     }

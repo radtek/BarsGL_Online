@@ -58,7 +58,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Date operday = DateUtils.parseDate("2016-03-23", "yyyy-MM-dd");
         setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN, pdMode);
 
-        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaaco = ? where id like '93307392%'", DateUtils.parseDate("2015-01-01", "yyyy-MM-dd"));
+        baseEntityRepository.executeNativeUpdate("update gl_acc set dto = ? where bsaacid like '93307392%'", DateUtils.parseDate("2015-01-01", "yyyy-MM-dd"));
 
         baseEntityRepository.executeNativeUpdate("delete from CAL where DAT between '2015-01-23' and '2015-01-26' and CCY = 'RUR'");
         baseEntityRepository.executeNativeUpdate("insert into CAL values ('2015-01-23', ' ', 'RUR', ' ')");
