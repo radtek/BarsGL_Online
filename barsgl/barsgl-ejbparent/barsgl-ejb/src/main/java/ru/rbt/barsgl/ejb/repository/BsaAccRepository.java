@@ -13,8 +13,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Optional;
 
-import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_BSA_INVALID;
-
 /**
  * Created by ER18837 on 05.05.15.
  */
@@ -64,23 +62,26 @@ public class BsaAccRepository extends AbstractBaseEntityRepository<BsaAcc, Strin
      * Обновляет дату закрытия счета
      * @param glAccount
      */
+/*
     public void setDateOpen(GLAccount glAccount) {
         int cnt = executeNativeUpdate("update BSAACC set BSAACO = ? where ID = ?", glAccount.getDateOpen(), glAccount.getBsaAcid());
         if (1 != cnt) {
             throw new ValidationError(ACCOUNT_BSA_INVALID, glAccount.getBsaAcid());
         }
     }
+*/
 
     /**
      * Обновляет дату закрытия счета
-     * @param glAccount
      */
+/*
     public void setDateClose(GLAccount glAccount) {
         int cnt = executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", glAccount.getDateCloseNotNull(), glAccount.getBsaAcid());
         if (1 != cnt) {
             throw new ValidationError(ACCOUNT_BSA_INVALID, glAccount.getBsaAcid());
         }
     }
+*/
 
     public Optional<BsaAcc> findBsaAcc (String bsaacid) {
         return Optional.ofNullable(selectFirst(BsaAcc.class, "from BsaAcc a where a.id = ?1", bsaacid));

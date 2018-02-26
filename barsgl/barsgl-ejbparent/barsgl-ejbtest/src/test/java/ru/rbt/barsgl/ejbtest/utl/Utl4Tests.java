@@ -4,6 +4,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccParam;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -132,6 +133,17 @@ public class Utl4Tests {
 
     public static String toString(Date date, String format) {
         return new SimpleDateFormat(format).format(date);
+    }
+
+    public static String findBsaacidGL(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
+        return findAccountParam(baseEntityRepository, operday, like).getBsaAcid();
+    }
+
+    public static GLAccParam findAccountParam(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository.selectFirst(
+                "select BSAACID, ACID from GL_ACC " +
+                        "where BSAACID like ? and DTO <= ? and (DTC is null or DTC >= ?)", like, operday.getCurrentDate(), operday.getCurrentDate()))
+                .map(r -> new GLAccParam(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
     public static String findBsaacid(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {

@@ -29,8 +29,8 @@ public enum ErrorCode {
     , DATE_IS_HOLIDAY(19, "Неверная дата %s: '%s'. Это выходной день")
     , POSTDATE_NOT_VALID(20, "Дата проводки '%s' < даты валютирования '%s'")
     , FILIAL_NOT_VALID(21, "Неверный филиал %s: '%s'. Филиал по счету: '%s'")
-    , TOO_MANY_ACCRLN_GL(22, "Найдено более одной записи ACCRLN (контрсчет) филиал '%s', валюта '%s', БС2 '%s'")
-    , NOT_FOUND_ACCRLN_GL(23, "Не найдено ни одной записи ACCRLN (контрсчет) филиал '%s', валюта '%s', БС2 '%s'")
+    , TOO_MANY_ACCRLN_GL(22, "Найдено более одной записи GL_ACC (контрсчет) филиал '%s', валюта '%s', БС2 '%s'")
+    , NOT_FOUND_ACCRLN_GL(23, "Не найдено ни одной записи GL_ACC (контрсчет) филиал '%s', валюта '%s', БС2 '%s'")
     , ACCOUNT_IS_CLOSED(24, "Дата открытия/закрытия счета %s ('%s') не соответствует дате проводки (поле '%s')")
     , ACCOUNT_706_NOT_RUR(25, "Счет %s: валютный счет по доходам-расходам недопустим '%s' (поле '%s')")
     , ACCOUNT_706_PSEUDO(26, "Счет %s: псевдо-счет MIDAS недопустим '%s' (поле '%s')")
@@ -84,8 +84,8 @@ public enum ErrorCode {
     /**
      * Ошибки при валидации и создании счета
      */
-    , ACCOUNT_ALREADY_EXISTS(2001, "Счет ЦБ уже существует в таблице BSAACC: '%s'")
-    , ACCOUNT_MIDAS_ALREADY_EXISTS(2002, "Счет Midas уже существует в таблице ACC: '%s'")
+//    , ACCOUNT_ALREADY_EXISTS(2001, "Счет ЦБ уже существует в таблице BSAACC: '%s'")
+//    , ACCOUNT_MIDAS_ALREADY_EXISTS(2002, "Счет Midas уже существует в таблице ACC: '%s'")
     , CUSTOMER_FORMAT_INVALID(2003, "Неверный формат номера клиента: '%s' (поле '%s')")
     // Ключи счета
     , ACCOUNT_KEY_FORMAT_INVALID(2004, "Ключи счета %s: Неверное значение ключа '%s': '%s' (поле '%s')")
@@ -101,8 +101,8 @@ public enum ErrorCode {
     , ACCOUNTGL_ALREADY_EXISTS(2014, "Счет BarsGL с таким набором ключей уже существует в таблице GL_ACC\n<pre>Счет ЦБ:      %s</pre><pre>Счет Midas:   %s</pre>")
     , ACCOUNTGLTH_ALREADY_EXISTS(2060, "Технический счет BarsGL с таким набором ключей уже существует\n<pre>Счет ЦБ:      %s</pre>")
     , CLOSEDATE_NOT_VALID(2015, "Дата закрытия счета '%s' < даты открытия '%s'")
-    , ACCOUNT_RLN_INVALID(2016, "Не найдена запись в таблице ACCRLN для BSAACID = '%s', ACID = '%s'")
-    , ACCOUNT_BSA_INVALID(2017, "Не найдена запись в таблице BSAACC для ID (BSAACID) = '%s'")
+//    , ACCOUNT_RLN_INVALID(2016, "Не найдена запись в таблице ACCRLN для BSAACID = '%s', ACID = '%s'")
+//    , ACCOUNT_BSA_INVALID(2017, "Не найдена запись в таблице BSAACC для ID (BSAACID) = '%s'")
     , BALANCE_NOT_ZERO(2018, "Баланс счета '%s' не нулевой")
     , ACCOUNT_IN_USE_AFTER(2019, "По счету '%s' есть операции: %s (необработанные или после даты '%s') ")
     , ACCOUNT2_NOT_VALID(2020, "Ключи счета %s: Неверный балансовый счет 2-го порядка '%s', должен быть '%s'\n для AccountType = '%s', CustomerType = '%s', Term = '%s' (поле %s)")

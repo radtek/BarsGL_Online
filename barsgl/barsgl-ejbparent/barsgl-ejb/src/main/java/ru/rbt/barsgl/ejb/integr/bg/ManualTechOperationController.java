@@ -600,7 +600,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             GLAccount accountDr = glAccountController.findGLAccount(wrapper.getAccountDebit());
             if (accountDr==null)
             {
-                throw new ValidationError(ACCOUNT_NOT_FOUND,wrapper.getAccountDebit(), "", "");
+                throw new ValidationError(ACCOUNT_NOT_FOUND, "", wrapper.getAccountDebit(), "");
             }
             else {
                 SimpleDateFormat df = new SimpleDateFormat("DD.MM.YYYY");
@@ -620,7 +620,7 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
             GLAccount accountCr = glAccountController.findGLAccount(wrapper.getAccountCredit());
             if (accountCr==null)
             {
-                throw new ValidationError(ACCOUNT_NOT_FOUND,wrapper.getAccountCredit(), "", "");
+                throw new ValidationError(ACCOUNT_NOT_FOUND, "", wrapper.getAccountCredit(), "");
             }
             else {
                 SimpleDateFormat df = new SimpleDateFormat("DD.MM.YYYY");

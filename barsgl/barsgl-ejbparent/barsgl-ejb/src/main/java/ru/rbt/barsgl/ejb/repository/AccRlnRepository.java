@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
-import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_RLN_INVALID;
 
 /**
  * Created by ER18837 on 05.05.15.
@@ -109,7 +108,6 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
     /**
      * Находит счет GLпо номеру счета ЦБ
      *
-     * @param bsaAcid
      * @return
      */
 /*

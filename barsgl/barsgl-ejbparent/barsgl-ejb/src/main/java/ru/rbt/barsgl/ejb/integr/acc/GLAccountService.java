@@ -132,7 +132,7 @@ public class GLAccountService {
             String bsaacidXX = glAccountController.findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
             if (bsaacidXX != null) {
                 return bsaacidXX;
-            } else{//создание в accrln,accrlnext(триггер),bsaacc,gl_acc
+            } else{ //создание в accrln,accrlnext(триггер),bsaacc,gl_acc
                 checkNotStorno(operation, operSide);
                 return glAccountController.createGLAccountXX(operation, operSide, dateOpen, keys, null);
             }
@@ -143,20 +143,6 @@ public class GLAccountService {
                 && keys.getGlSequence().toUpperCase().startsWith("GL")) {
             // получаем счет ЦБ сразу из GL_ACC
             return glAccountRepository.findForSequenceGL(keys);
-/*
-        } else // заполнены и ключи и счет
-        if(isAccountWithKeys(operation, operSide) && !keys.getGlSequence().toUpperCase().startsWith("TH")) {
-            // заполнены и ключи и счет
-            glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
-            return Optional.ofNullable(glAccountController.findGLAccountWithKeys(operation, operSide)).orElseGet(() -> {
-                try {
-                    checkNotStorno(operation, operSide);
-                    return glAccountController.findOrCreateGLAccountAEWithKeys(operation, operSide, dateOpen, keys);
-                } catch (Exception e) {
-                    throw new DefaultApplicationException(e);
-                }
-            }).getBsaAcid();
-*/
         } else if(!isEmpty(keys.getGlSequence())                           // технические счета 99999, 99998
                 && keys.getGlSequence().toUpperCase().startsWith("TH")) {
             // заполнены и ключи и счет
@@ -173,7 +159,15 @@ public class GLAccountService {
                     throw new DefaultApplicationException(e);
                 }
             }).getBsaAcid();
-        } else {
+        // Этот функционал юольше не нужен. Если ключи и счет - счет
+        } else // заполнены и ключи и счет
+            if(isAccountWithKeys(operation, operSide)) {
+                // заполнены и ключи и счет
+                String bsaacid = glAccountController.getGlAccountNumberWithKeys(operation, operSide);
+                return Optional.ofNullable(glAccountController.findGLAccount(bsaacid)).orElseGet(() -> {
+                    throw new ValidationError(ACCOUNT_NOT_FOUND, operSide.getMsgName(), bsaacid, "");
+                }).getBsaAcid();
+            } else {
             // поиск открытого счета по ключам
             return Optional.ofNullable(glAccountController.findGLAccountAE(keys, operSide)).orElseGet(() -> {
                 try {
@@ -492,7 +486,7 @@ public class GLAccountService {
         try {
             GLAccount account = glAccountRepository.findById(GLAccount.class, accountWrapper.getId());
             if (null == account) {      // Такого счета нет!
-                throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
+                throw new ValidationError(ACCOUNT_NOT_FOUND, "", accountWrapper.getBsaAcid(), "Счет ЦБ");
             }
             checkAccountPermission(accountWrapper, FormAction.UPDATE);
             String dateOpenStr = accountWrapper.getDateOpenStr();
@@ -522,7 +516,7 @@ public class GLAccountService {
         try {
             GLAccount account = glAccountRepository.findById(GLAccount.class, accountWrapper.getId());
             if (null == account) {      // Такого счета нет!
-                throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
+                throw new ValidationError(ACCOUNT_NOT_FOUND, "", accountWrapper.getBsaAcid(), "Счет ЦБ");
             }
             checkAccountPermission(accountWrapper, FormAction.UPDATE);
             String dateOpenStr = accountWrapper.getDateOpenStr();
@@ -595,7 +589,7 @@ public class GLAccountService {
                 //GLAccount account = glAccountController.findGLAccount(accountWrapper.getBsaAcid());
                 GLAccount account = glAccountRepository.findById(GLAccount.class, accountWrapper.getId());
                 if (null == account) {      // Такого счета нет!
-                    throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
+                    throw new ValidationError(ACCOUNT_NOT_FOUND, "", accountWrapper.getBsaAcid(), "Счет ЦБ");
                 }
                 String dateCloseStr = accountWrapper.getDateCloseStr();
                 Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
@@ -673,7 +667,7 @@ public class GLAccountService {
 
                 GLAccount account = glAccountController.findGLAccount(accountWrapper.getBsaAcid());
                 if (null == account) {      // Такого счета нет!
-                    throw new ValidationError(ACCOUNT_NOT_FOUND, accountWrapper.getBsaAcid(), "Счет ЦБ");
+                    throw new ValidationError(ACCOUNT_NOT_FOUND, "", accountWrapper.getBsaAcid(), "Счет ЦБ");
                 }
                 String dateCloseStr = accountWrapper.getDateCloseStr();
                 Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);

@@ -117,7 +117,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     }
 
     public String findForSequenceGL(AccountKeys keys) throws Exception {
-        List<DataRecord> results = select("select BSAACID from GL_ACC where CBCCN = ? and CCY = ? and ACC2 = ? and RLNTYPE = 'T' and ACOD is null"
+        List<DataRecord> results = select("select BSAACID from GL_ACC where CBCCN = ? and CCY = ? and ACC2 = ? and RLNTYPE = 'T'" // and ACOD = ' '" - для GL_ACC это поле заполнено
                 , keys.getCompanyCode(), keys.getCurrency(), keys.getAccount2());
         if (1 == results.size()) {
             return results.get(0).getString("BSAACID");
@@ -179,7 +179,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
 
     public boolean checkAccountRlnNotPseudo(String bsaAcid) {
         try {
-            DataRecord res = selectFirst("select 1 from GL_ACC where BSAACID = ? and RLNTYPE in ('2', '5') and CBCCY='RUR'", bsaAcid);
+            DataRecord res = selectFirst("select 1 from GL_ACC where BSAACID = ? and RLNTYPE in ('2', '5') and CCY='RUR'", bsaAcid);
             return null != res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

@@ -417,7 +417,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testCloseManualAccountOperError() throws SQLException {
         String custType = "20";
         String custNo = getCustomerNumberByType(custType);
-        Long accType = Long.parseLong(getAccountType(custType, "00", "706%"));
+        Long accType = Long.parseLong(getAccountType(custType, "00", "47425"));
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", custNo, accType, getOperday().getCurrentDate(), "subdeal", "01");
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
         bsaList.add(account.getBsaAcid());

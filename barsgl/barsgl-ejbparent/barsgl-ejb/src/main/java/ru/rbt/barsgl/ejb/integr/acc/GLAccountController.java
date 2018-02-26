@@ -46,6 +46,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.E;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FOUR;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.ZERO;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
 import static ru.rbt.ejbcore.util.StringUtils.*;
@@ -243,7 +244,7 @@ public class GLAccountController {
             keys.setFilial(companyCode.getString("a8cmcd"));
 
             // создать счет с этим номером в GL и BARS
-            glAccount = createAccount(getGlAccountNumberWithKeys(operation, operSide), operation, operSide, dateOpen, keys, GLAccount.OpenType.AENEW);
+            glAccount = createAccount(getGlAccountNumberWithKeys(operation, operSide), operation, operSide, dateOpen, keys, ZERO, GLAccount.OpenType.AENEW);
 
             return glAccount;
         });
@@ -281,10 +282,12 @@ public class GLAccountController {
      * @param operSide сторона дебит/крети
      * @return счет
      */
+/*
     @Lock(LockType.READ)
     public GLAccount findGLAccountWithKeys(GLOperation operation, GLOperation.OperSide operSide) {
         return glAccountRepository.findGLAccount(getGlAccountNumberWithKeys(operation, operSide));
     }
+*/
 
     @Lock(LockType.READ)
     public String getGlAccountNumberWithKeys(GLOperation operation, GLOperation.OperSide operSide) {
