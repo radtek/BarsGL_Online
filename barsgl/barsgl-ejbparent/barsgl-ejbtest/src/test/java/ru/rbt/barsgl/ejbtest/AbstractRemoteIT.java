@@ -29,13 +29,18 @@ import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
+import ru.rbt.barsgl.ejbcore.page.SQL;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
+import ru.rbt.barsgl.ejbcore.page.WhereInterpreter;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.ejbtest.service.ProxyFactory;
 import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
+import ru.rbt.barsgl.shared.criteria.Criteria;
+import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
+import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -729,7 +734,11 @@ public abstract class AbstractRemoteIT  {
     }
 
     public static String findBsaAccount(String bsaacidLike) throws SQLException {
-        return findBsaAccount(bsaacidLike, new Date());
+        return findBsaAccount(bsaacidLike, getOperday().getCurrentDate(), null);
+    }
+
+    public static String findBsaAccount(String bsaacidLike, Date operday) throws SQLException {
+        return findBsaAccount(bsaacidLike, operday, null);
     }
 
     public static AccRlnId findAccRln(String bsaacidLike) throws SQLException {
@@ -745,13 +754,17 @@ public abstract class AbstractRemoteIT  {
         return id;
     }
 
-    public static String findBsaAccount(String bsaacidLike, Date dateClose) throws SQLException {
-//        return Optional.ofNullable(baseEntityRepository.selectFirst(
-//                "SELECT \"BSAACID\" FROM \"ACCRLN\" \"R\", \"BSAACC\" \"A\" " +
-//                        "WHERE \"R\".\"BSAACID\" LIKE ? AND \"R\".\"BSAACID\" = \"A\".\"ID\" AND \"A\".\"BSAACC\" > ?"
+    public static String findBsaAccount(String bsaacidLike, Date dateClose, Criteria criteria) throws SQLException {
+        List<Object> resultParamsList = new ArrayList<>(Arrays.asList(bsaacidLike, dateClose));
+        SQL and = null;
+        if (criteria != null) {
+            and = WhereInterpreter.interpret(criteria, "");
+            resultParamsList.addAll(Arrays.asList(and.getParams()));
+        }
         return Optional.ofNullable(baseEntityRepository.selectFirst(
-                "select bsaacid from gl_acc where bsaacid like ? and nvl(dtc, to_date('2029-01-01', 'yyyy-mm-dd')) > ?"
-                , bsaacidLike, dateClose))
+                "SELECT BSAACID FROM GL_ACC WHERE BSAACID LIKE ? AND NVL(DTC, TO_DATE('2029-01-01', 'YYYY-MM-DD')) > ? "
+                        + (null != criteria ? " AND " + and.getQuery() : "")
+                , resultParamsList.toArray()))
                 .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike + " " + dateClose));
     }
 
@@ -809,5 +822,9 @@ public abstract class AbstractRemoteIT  {
         } else {
             throw new RuntimeException(bsaacidLike + " not found");
         }
+    }
+
+    protected Criteria filialCriteria(String filial) {
+        return CriteriaBuilder.create(CriteriaLogic.AND).appendEQ("cbcc", filial).build();
     }
 }

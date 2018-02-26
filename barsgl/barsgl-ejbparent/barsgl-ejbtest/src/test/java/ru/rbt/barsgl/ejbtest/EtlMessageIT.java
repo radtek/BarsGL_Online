@@ -694,7 +694,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      * @fsd 7.5.2.1, 10.5
      * @throws ParseException
      */
-    @Test public void testNoExchRu() throws ParseException {
+    @Test public void testNoExchRu() throws Exception {
 
         long stamp = System.currentTimeMillis();
 
@@ -704,12 +704,12 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountDebit("30302840700010000033");    // "MOS"
+        pst.setAccountDebit(findBsaAccount("40701840%", getOperday().getCurrentDate(), filialCriteria("MOS")));    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
         pst.setAmountDebitRu(new BigDecimal("6000.00"));
 
-        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountCredit(findBsaAccount("408__036%", getOperday().getCurrentDate(), filialCriteria("MOS")));
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setAmountCredit(new BigDecimal("200"));
         pst.setAmountCreditRu(new BigDecimal("6000.00"));
@@ -717,14 +717,15 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(operation.getState(), OperState.POST);
+        Assert.assertEquals(OperState.POST, operation.getState());
         Assert.assertEquals(operation.getAmountPosting(), operation.getAmountDebitRu());
 
         List<GLPosting> postList = getPostings(operation);
         Assert.assertNotNull(postList);                 // 1 проводка
-        Assert.assertEquals(postList.size(), 1);
+        Assert.assertEquals(1, postList.size());
 
         List<Pd> pdList = getPostingPd(postList.get(0));
         Pd pdDr = pdList.get(0);
@@ -754,11 +755,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
 
         pst.setAccountDebit("");
 
-        String accdt = Optional.ofNullable(baseEntityRepository
-                .selectFirst("SELECT BSAACID FROM ACCRLN R, BSAACC b\n" +
-                             " WHERE \"R\".\"BSAACID\" LIKE '47427392%' AND R.BSAACID = B.ID AND B.BSAACC > ?"
-                        , getOperday().getCurrentDate()))
-                .orElseThrow(() -> new RuntimeException("Account debit not initialized")).getString(0);
+        String accdt = findBsaAccount("47427392%");
 
         pst.setAccountDebit(accdt);
         pst.setAmountDebit(new BigDecimal("600000000.000"));
