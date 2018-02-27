@@ -15,6 +15,7 @@ import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
@@ -29,6 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_NOT_FOUND;
 
 
 /**
@@ -63,7 +65,7 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
             String sql = "SELECT CBCCN BRCA FROM GL_ACC WHERE BSAACID = ? ";
             DataRecord res = selectFirst(sql, bsaAcid);
             return Optional.ofNullable(res).map(r -> r.getString("BRCA"))
-                    .orElseThrow(() -> new DefaultApplicationException(String.format("Счет %s не найден", bsaAcid)));
+                    .orElseThrow(() -> new ValidationError(ACCOUNT_NOT_FOUND, "", bsaAcid, ""));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

@@ -46,8 +46,8 @@ public class ManualEditPostingBufferIT  extends AbstractTimerJobIT {
     public void testEditManualOperationBuffer() throws SQLException {
         // создаем ручную операцию
         BigDecimal sum = new BigDecimal("50.25");
-        String bsaDt = Utl4Tests.findBsaacidBal(baseEntityRepository, getOperday(), "47425810%", sum);
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%");
+        String bsaDt = Utl4Tests.findBsaacidBal(baseEntityRepository, getOperday(), "47425810_0001%", sum);
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", sum,
                 "MOS", bsaCt, "RUR", sum
@@ -103,7 +103,7 @@ public class ManualEditPostingBufferIT  extends AbstractTimerJobIT {
      */
     @Test
     public void testEditAeOperationBuffer() throws SQLException {
-        GLOperation operation = createMfoExchOperation();
+        GLOperation operation = createExchOperation();
         List<AbstractPd> pdList = getGLPdList(operation);
         Assert.assertNotNull(pdList);
         final String dealId = operation.getDealId();
@@ -162,7 +162,7 @@ public class ManualEditPostingBufferIT  extends AbstractTimerJobIT {
 
     @Test
     public void testSuppressOperationBuffer() throws SQLException {
-        GLOperation operation = createMfoExchOperation();
+        GLOperation operation = createExchOperation();
         List<AbstractPd> pdList = getGLPdList(operation);
         Assert.assertNotNull(pdList);
 
@@ -223,5 +223,9 @@ public class ManualEditPostingBufferIT  extends AbstractTimerJobIT {
 
     private GLOperation createMfoExchOperation() throws SQLException {
         return ManualEditPostingDirectIT.createMfoExchOperation();
+    }
+
+    private GLOperation createExchOperation() throws SQLException {
+        return ManualEditPostingDirectIT.createExchOperation();
     }
 }

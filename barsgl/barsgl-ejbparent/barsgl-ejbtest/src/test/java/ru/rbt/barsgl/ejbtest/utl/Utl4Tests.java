@@ -154,14 +154,16 @@ public class Utl4Tests {
         return findBsaacidBalance(baseEntityRepository, operday, like, sum).getBsaAcid();
     }
 
+/*
     public static AccRlnId findBsaacidRln(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
                 "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
-                        "where B.ID like ? and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?)" +
+                        "where B.ID like ? and B.BSAACO <= ? and (a.BSAACC is null or a.BSAACC >= ?)" +
                         " and R.BSAACID = B.ID", like, operday.getCurrentDate(), operday.getCurrentDate()))
                 .map(r -> new AccRlnId(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
+*/
     public static List<AccRlnId> findBsaacidRlns(BaseEntityRepository baseEntityRepository, Operday operday, final String like, int count) throws SQLException {
         return (List<AccRlnId>) baseEntityRepository.select(
                 "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
@@ -174,13 +176,13 @@ public class Utl4Tests {
                 }).collect(Collectors.toList());
     }
 
-    public static AccRlnId findBsaacidBalance(BaseEntityRepository baseEntityRepository, Operday operday, final String like, final BigDecimal sum) throws SQLException {
+    public static GLAccParam findBsaacidBalance(BaseEntityRepository baseEntityRepository, Operday operday, final String like, final BigDecimal sum) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
-                "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r, BALTUR t " +
-                        "where B.ID like ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID" +
-                        "  and t.BSAACID = r.BSAACID and t.ACID = r.ACID and t.DATTO = '2029-01-01' and OBAC + DTAC + CTAC >= ?"
+                "select a.BSAACID, a.ACID from GL_ACC a, BALTUR t " +
+                        "where a.BSAACID like ? and (a.DTC is null or a.DTC >= ?) " +
+                        "  and t.BSAACID = a.BSAACID and t.ACID = a.ACID and t.DATTO = '2029-01-01' and OBAC + DTAC + CTAC >= ?"
                 , like, operday.getCurrentDate(), sum))
-                .map(r -> new AccRlnId(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
+                .map(r -> new GLAccParam(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
     public static void cleanHeader(BaseEntityRepository baseEntityRepository, String pardesc) {

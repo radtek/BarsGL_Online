@@ -47,10 +47,10 @@ public class ManualEditPostingDirectIT extends AbstractTimerJobIT {
     public void testEditManualOperationDirect() throws SQLException {
         // создаем ручную операцию
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0040%");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0016%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702840_0040%");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "EKB", bsaDt, "RUR", new BigDecimal("650.25"),
-                "CHL", bsaCt, "RUR", new BigDecimal("650.25")
+                "EKB", bsaCt, "USD", new BigDecimal("105")
         );
 
         final String src = "FC12_CL";
@@ -101,7 +101,7 @@ public class ManualEditPostingDirectIT extends AbstractTimerJobIT {
      */
     @Test
     public void testEditAeOperationDirect() throws SQLException {
-        GLOperation operation = createMfoExchOperation();
+        GLOperation operation = createExchOperation();
         List<GLPosting> postList = getPostings(operation);
         Assert.assertNotNull(postList);
         final String dealId = operation.getDealId();
@@ -159,7 +159,7 @@ public class ManualEditPostingDirectIT extends AbstractTimerJobIT {
 
     @Test
     public void testSuppressOperationDirect() throws SQLException {
-        GLOperation operation = createMfoExchOperation();
+        GLOperation operation = createExchOperation();
         List<GLPosting> postList = getPostings(operation);
         Assert.assertNotNull(postList);
 
@@ -234,6 +234,36 @@ public class ManualEditPostingDirectIT extends AbstractTimerJobIT {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0050%");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47427840_0045%");
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setSourcePosting("FC12_CL");
+        pst.setDealId("DD_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 4));
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setAccountDebit(bsaDt);    // "NVS"
+        pst.setCurrencyDebit(BankCurrency.RUB);
+        pst.setAmountDebit(new BigDecimal("200.00"));
+
+        pst.setAccountCredit(bsaCt);     // "NNV"
+        pst.setCurrencyCredit(BankCurrency.USD);
+        pst.setAmountCredit(new BigDecimal("13000.78"));
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());       // операция создана
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(operation.getState(), OperState.POST);
+        return operation;
+    }
+
+    public static GLOperation createExchOperation() throws SQLException {
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "MfoExchange");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0050%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47427840_0050%");
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setSourcePosting("FC12_CL");
         pst.setDealId("DD_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 4));
