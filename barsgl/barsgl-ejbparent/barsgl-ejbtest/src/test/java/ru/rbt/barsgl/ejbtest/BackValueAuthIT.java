@@ -109,10 +109,10 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
          * авторизовать
          * запустить обработку
          */
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%5");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%7");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47407840%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408840%");
         BigDecimal amt = new BigDecimal("44.88");
-        BankCurrency currency = AUD;
+        BankCurrency currency = USD;
 
         Date vdate = DateUtils.addDays(getOperday().getCurrentDate(), -7);
         EtlPosting pst = createEtlPosting(vdate, PaymentHub.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);
@@ -289,13 +289,14 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
          * авторизовать
          * запустить обработку
          */
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40806810%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810%2");
+        Date curdate = getOperday().getCurrentDate();
+        Date vdate = DateUtils.addDays(curdate, -21);
+
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, vdate, "47427810_0001%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, vdate, "47425810_0001%");
         BigDecimal amt = new BigDecimal("897.65");
         BankCurrency currency = RUB;
 
-        Date curdate = getOperday().getCurrentDate();
-        Date vdate = DateUtils.addDays(curdate, -21);
         EtlPosting pst = createEtlPosting(vdate, KondorPlus.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);
         Assert.assertNotNull(pst);
 
@@ -327,9 +328,9 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
          * авторизовать
          * запустить обработку
          */
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(),  "40902810_0001%");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(),  "40802810_0001%");
         String bsaCt1 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%");
-        String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "70601810_9_01%");
+        String bsaCt2 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47427810_0001%");
         BigDecimal amt1 = new BigDecimal("897.65");
         BigDecimal amt2 = new BigDecimal("100.01");
         BankCurrency currency = RUB;
@@ -377,8 +378,8 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
 
     @Test
     public void testEditWithClosedPeriod() throws SQLException {
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40806810_0001%3");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0050%4");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%4");
         BigDecimal amt = new BigDecimal("404.04");
         BankCurrency currency = RUB;
 
@@ -391,7 +392,6 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(curdate, operation.getPostDate());
         Assert.assertEquals(POST, operation.getState());
-
 
         BackValueWrapper bvWrapper = createWrapper(vdate, null, EDIT_DATE, ONE, new GLOperation[]{operation});
         bvWrapper.setUserId(USER_ID);
@@ -431,8 +431,8 @@ public class BackValueAuthIT extends AbstractTimerJobIT {
     private void createOperationsBv(EtlPosting[] postings, GLBackValueOperation operations[], DealSource src, Date vdate, BigDecimal amt, BigDecimal plus) throws SQLException {
         BankCurrency currency = USD;
         for (int i = 0; i < postings.length; i++) {
-            String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817840%" + i);
-            String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817840%" + (i + 5));
+            String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408840%" + i);
+            String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408840%" + (i + 5));
             EtlPosting pst = createEtlPosting(vdate, src.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);
             Assert.assertNotNull(pst);
             amt = amt.add(plus);

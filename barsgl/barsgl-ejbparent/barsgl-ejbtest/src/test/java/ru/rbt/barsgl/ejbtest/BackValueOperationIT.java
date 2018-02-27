@@ -279,7 +279,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testCreateBackWtacOperation() throws SQLException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40807810%1");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40807810_0001%1");
         String bsaCt = "00000810000000000000";
         BigDecimal amt = new BigDecimal("98.76");
 
@@ -502,8 +502,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testPostingBV() throws Exception {
         EtlPosting postings[];
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%3");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%4");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036_0001%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036_0001%4");
         BigDecimal amt = new BigDecimal("76.54");
         BankCurrency currency = AUD;
 
@@ -621,7 +621,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
                 OperState.BWTAC, CONTROL, od.getLastWorkingDay());
         Assert.assertTrue(gloids.size() >= 2);
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810%2");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%2");
         String ops = gloids.stream().map(op -> " " + op.getId()).collect(Collectors.joining(","));
         baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1 where o.id in (" + ops + ")", bsaDt);
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0).getId() + ")", BackValuePostStatus.SIGNEDDATE);

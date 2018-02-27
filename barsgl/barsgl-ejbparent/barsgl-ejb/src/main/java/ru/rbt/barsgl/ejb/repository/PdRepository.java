@@ -409,10 +409,9 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
     }
 
     public List<Long> getOperationPdIdList(long parentId) {
-        String sql = "select PD.ID from GL_OPER o" +
-                         " join GL_POSTING p on o.GLOID = p.GLO_REF" +
-                         " join PD on p.PCID = PD.PCID" +
-                         " where NVL(PAR_GLO, GLOID) = ?";
+        String sql = "select p.ID from GL_OPER o" +
+                         " join PST p on o.GLOID = p.GLO_REF" +
+                         " where NVL(o.PAR_GLO, o.GLOID) = ?";
         try {
             List<DataRecord> res = select(sql, parentId);
             if (null == res)

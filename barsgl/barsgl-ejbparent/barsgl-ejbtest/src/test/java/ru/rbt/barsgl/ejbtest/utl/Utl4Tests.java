@@ -135,15 +135,19 @@ public class Utl4Tests {
         return new SimpleDateFormat(format).format(date);
     }
 
-    public static GLAccParam findAccountParam(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
+    public static GLAccParam findAccountParam(BaseEntityRepository baseEntityRepository, Date todate, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
                 "select BSAACID, ACID from GL_ACC " +
-                        "where BSAACID like ? and DTO <= ? and (DTC is null or DTC >= ?)", like, operday.getCurrentDate(), operday.getCurrentDate()))
+                        "where BSAACID like ? and DTO <= ? and (DTC is null or DTC >= ?)", like, todate, todate))
                 .map(r -> new GLAccParam(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
+    public static String findBsaacid(BaseEntityRepository baseEntityRepository,  Date todate, final String like) throws SQLException {
+        return findAccountParam(baseEntityRepository, todate, like).getBsaAcid();
+    }
+
     public static String findBsaacid(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
-        return findAccountParam(baseEntityRepository, operday, like).getBsaAcid();
+        return findAccountParam(baseEntityRepository, operday.getCurrentDate(), like).getBsaAcid();
     }
 
     public static String findBsaacidBal(BaseEntityRepository baseEntityRepository, Operday operday, final String like, BigDecimal sum) throws SQLException {
