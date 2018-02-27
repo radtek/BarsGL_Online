@@ -135,10 +135,6 @@ public class Utl4Tests {
         return new SimpleDateFormat(format).format(date);
     }
 
-    public static String findBsaacidGL(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
-        return findAccountParam(baseEntityRepository, operday, like).getBsaAcid();
-    }
-
     public static GLAccParam findAccountParam(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
                 "select BSAACID, ACID from GL_ACC " +
@@ -147,7 +143,7 @@ public class Utl4Tests {
     }
 
     public static String findBsaacid(BaseEntityRepository baseEntityRepository, Operday operday, final String like) throws SQLException {
-        return findBsaacidRln(baseEntityRepository, operday, like).getBsaAcid();
+        return findAccountParam(baseEntityRepository, operday, like).getBsaAcid();
     }
 
     public static String findBsaacidBal(BaseEntityRepository baseEntityRepository, Operday operday, final String like, BigDecimal sum) throws SQLException {

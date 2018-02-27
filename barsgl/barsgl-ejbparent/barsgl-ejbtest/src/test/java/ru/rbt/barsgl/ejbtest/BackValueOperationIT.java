@@ -153,8 +153,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 
     @Test
     public void testCalculateOperationClass() throws SQLException {
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%3");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810%1");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810%3");
         BigDecimal amt = new BigDecimal("45.67");
         Date vdateARM = getOperday().getCurrentDate();
 
@@ -214,8 +214,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testCreateBackValueOperation() throws SQLException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%3");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810%1");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810%3");
         BigDecimal amt = new BigDecimal("98.76");
 
         ClosedReportPeriodView period = remoteAccess.invoke(ClosedPeriodCashedRepository.class, "getPeriod");
@@ -279,7 +279,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testCreateBackWtacOperation() throws SQLException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%1");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40807810%1");
         String bsaCt = "00000810000000000000";
         BigDecimal amt = new BigDecimal("98.76");
 
@@ -320,8 +320,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testPostingWorkDate() throws Exception {
         EtlPosting postings[];
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%3");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%4");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%4");
         BigDecimal amt = new BigDecimal("76.54");
         BankCurrency currency = AUD;
 
@@ -416,8 +416,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testPostingHolidays() throws Exception {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%7");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%8");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%7");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%8");
         BigDecimal amt = new BigDecimal("87.65");
         BankCurrency currency = AUD;
 
@@ -502,8 +502,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testPostingBV() throws Exception {
         EtlPosting postings[];
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%3");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%4");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%4");
         BigDecimal amt = new BigDecimal("76.54");
         BankCurrency currency = AUD;
 
@@ -550,8 +550,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testProcessOperation() throws SQLException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%5");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%6");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%5");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%6");
         BigDecimal amt = new BigDecimal("65.43");
         BankCurrency currency = AUD;
 
@@ -621,7 +621,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
                 OperState.BWTAC, CONTROL, od.getLastWorkingDay());
         Assert.assertTrue(gloids.size() >= 2);
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810%2");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810%2");
         String ops = gloids.stream().map(op -> " " + op.getId()).collect(Collectors.joining(","));
         baseEntityRepository.executeUpdate("update GLOperation o set o.accountCredit = ?1 where o.id in (" + ops + ")", bsaDt);
         baseEntityRepository.executeUpdate("update GLOperationExt e set e.manualStatus = ?1 where e.id in (" + gloids.get(0).getId() + ")", BackValuePostStatus.SIGNEDDATE);
@@ -662,8 +662,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 
     @Test
     public void testReprocessStorno() throws Exception {
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%8");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036%9");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%8");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%9");
         BigDecimal amtBv = new BigDecimal("18.65");
         BigDecimal amt = new BigDecimal("218.65");
         BankCurrency currency = AUD;
@@ -741,7 +741,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test public void testReprocessBERCHK() throws Exception {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40502840%");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425840%");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408840%");
         String bsaCt9 = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "91418840%");
         BigDecimal amt = new BigDecimal("331.56");
         BankCurrency currency = USD;

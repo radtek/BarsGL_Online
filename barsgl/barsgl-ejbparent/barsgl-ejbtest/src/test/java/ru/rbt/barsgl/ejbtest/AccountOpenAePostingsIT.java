@@ -581,7 +581,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        final String bsaacidCredit = Utl4Tests.findBsaacidGL(baseEntityRepository, getOperday(), "47407840_2001%");
+        final String bsaacidCredit = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47407840_2001%");
 
 //        deleteAllReleations(bsaacidCredit);
 
@@ -591,7 +591,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 //        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         pst.setAccountKeyCredit(keyStringCredit);
 
-        final String bsaacidDebit = Utl4Tests.findBsaacidGL(baseEntityRepository, getOperday(), "47408_4002001%");//"47407840700010060039";
+        final String bsaacidDebit = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408_4002001%");//"47407840700010060039";
 //        deleteAllReleations(bsaacidDebit);
 
         pst.setAccountDebit(bsaacidDebit);
@@ -662,7 +662,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        final String bsaacidCredit = Utl4Tests.findBsaacidGL(baseEntityRepository, getOperday(), "47407840_2001%");
+        final String bsaacidCredit = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47407840_2001%");
 
 //        deleteAllReleations(bsaacidCredit);
 
@@ -672,7 +672,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 //        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         pst.setAccountKeyCredit(keyStringCredit);
 
-        final String bsaacidDebit = Utl4Tests.findBsaacidGL(baseEntityRepository, getOperday(), "47408_4002001%");//"47407840700010060039";
+        final String bsaacidDebit = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408_4002001%");//"47407840700010060039";
 //        deleteAllReleations(bsaacidDebit);
 
         pst.setAccountDebit(bsaacidDebit);
@@ -755,7 +755,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 //        deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         pst.setAccountKeyCredit(keyStringCredit);
 
-        final String bsaacidDebit = Utl4Tests.findBsaacidGL(baseEntityRepository, getOperday(), "47408_4002001%");//"47407840700010060039";
+        final String bsaacidDebit = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47408_4002001%");//"47407840700010060039";
 //        deleteAllReleations(bsaacidDebit);
 
         pst.setAccountDebit(bsaacidDebit);
