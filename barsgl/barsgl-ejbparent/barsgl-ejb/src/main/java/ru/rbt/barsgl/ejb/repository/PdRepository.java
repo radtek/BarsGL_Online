@@ -279,7 +279,7 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
         }
         String strInvisible = invisible ? "1" : "0";
         StringBuilder pcidIn = new StringBuilder();
-        pcidIn.append("update Pd set invisible = ? where pcId in (");
+        pcidIn.append("update PST set INVISIBLE = ? where PCID in (");
         for (GLPosting posting : postings) {
             pcidIn.append(posting.getId()).append(",");
         }
@@ -409,9 +409,10 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
     }
 
     public List<Long> getOperationPdIdList(long parentId) {
-        String sql = "select p.ID from GL_OPER o" +
-                         " join PST p on o.GLOID = p.GLO_REF" +
-                         " where NVL(o.PAR_GLO, o.GLOID) = ?";
+        String sql = "select PST.ID from GL_OPER o" +
+                " join GL_POSTING p on o.GLOID = p.GLO_REF" +
+                " join PST on p.PCID = PST.PCID" +
+                " where NVL(PAR_GLO, GLOID) = ?";
         try {
             List<DataRecord> res = select(sql, parentId);
             if (null == res)

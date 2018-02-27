@@ -53,7 +53,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     @Test
     public void testCloseOne() throws SQLException {
         EtlPackage pkgOk = newPackage(System.currentTimeMillis(), "WithoutError");
-        EtlPosting pstOk = createPosting(pkgOk, "SECMOD", "40817810%1", "40817810%2", BankCurrency.RUB, new BigDecimal("315.45"));
+        EtlPosting pstOk = createPosting(pkgOk, "SECMOD", "40702810%1", "40702810%2", BankCurrency.RUB, new BigDecimal("315.45"));
         Assert.assertTrue(pstOk.getId() > 0);
 
         EtlPackage pkgErr = newPackage(System.currentTimeMillis(), "WithError");
@@ -107,7 +107,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     public void testReprocessOne() throws SQLException {
         EtlPackage pkg = newPackage(System.currentTimeMillis(), "WithError");
         Assert.assertTrue(pkg.getId() > 0);
-        EtlPosting pst = createPostingBad(pkg, "ARMPRO", "40817036%3", "40817036%4", BankCurrency.AUD, new BigDecimal("415.45") );
+        EtlPosting pst = createPostingBad(pkg, "ARMPRO", "40702840%3", "40702840%4", BankCurrency.USD, new BigDecimal("415.45") );
         Assert.assertTrue(pst.getId() > 0);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
@@ -148,13 +148,13 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         EtlPosting[] psts = new EtlPosting[3];
         pkgs[0] = newPackage(System.currentTimeMillis(), "WithError1");
         Assert.assertTrue(pkgs[0].getId() > 0);
-        psts[0] = createPostingBad(pkgs[0], "ARMPRO", "40817036%5", "40817036%6", BankCurrency.AUD, new BigDecimal("315.43") );
+        psts[0] = createPostingBad(pkgs[0], "ARMPRO", "40702840%5", "40702840%6", BankCurrency.USD, new BigDecimal("315.43") );
         Assert.assertTrue(psts[0].getId() > 0);
-        psts[1] = createPostingBad(pkgs[0], "ARMPRO", "40817036%7", "40817036%8", BankCurrency.AUD, new BigDecimal("915.43") );
+        psts[1] = createPostingBad(pkgs[0], "ARMPRO", "40702840%7", "40702840%8", BankCurrency.USD, new BigDecimal("915.43") );
         Assert.assertTrue(psts[1].getId() > 0);
         pkgs[1] = newPackage(System.currentTimeMillis(), "WithError2");
         Assert.assertTrue(pkgs[1].getId() > 0);
-        psts[2] = createPostingBad(pkgs[1], "ARMPRO", "40817036%9", "40817036%0", BankCurrency.AUD, new BigDecimal("815.43") );
+        psts[2] = createPostingBad(pkgs[1], "ARMPRO", "40702840%9", "40702840%0", BankCurrency.USD, new BigDecimal("815.43") );
         Assert.assertTrue(psts[2].getId() > 0);
 
         for (EtlPosting pst: psts) {
@@ -202,13 +202,13 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         EtlPosting[] psts = new EtlPosting[3];
         pkgs[0] = newPackage(System.currentTimeMillis(), "WithError1");
         Assert.assertTrue(pkgs[0].getId() > 0);
-        psts[0] = createPostingBad(pkgs[0], "SECMOD", "40817036%5", "40817036%6", BankCurrency.AUD, new BigDecimal("315.43") );
+        psts[0] = createPostingBad(pkgs[0], "SECMOD", "40702840%5", "40702840%6", BankCurrency.USD, new BigDecimal("315.43") );
         Assert.assertTrue(psts[0].getId() > 0);
-        psts[1] = createPostingBad(pkgs[0], "PH", "40817036%7", "40817036%8", BankCurrency.AUD, new BigDecimal("915.43") );
+        psts[1] = createPostingBad(pkgs[0], "PH", "40702840%7", "40702840%8", BankCurrency.USD, new BigDecimal("915.43") );
         Assert.assertTrue(psts[1].getId() > 0);
         pkgs[1] = newPackage(System.currentTimeMillis(), "WithError2");
         Assert.assertTrue(pkgs[1].getId() > 0);
-        psts[2] = createPostingBad(pkgs[1], "ARMPRO", "40817036%9", "40817036%0", BankCurrency.AUD, new BigDecimal("815.43"));
+        psts[2] = createPostingBad(pkgs[1], "ARMPRO", "40702840%9", "40702840%0", BankCurrency.USD, new BigDecimal("815.43"));
         Assert.assertTrue(psts[2].getId() > 0);
 
         for (EtlPosting pst: psts) {
@@ -254,7 +254,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
     @Test
     public void testReprocessStorno() throws SQLException {
         EtlPackage pkgParent = newPackage(System.currentTimeMillis(), "Parent");
-        EtlPosting pstParent = createPosting(pkgParent, "SECMOD", "40817810%1", "40817810%2", BankCurrency.RUB, new BigDecimal("315.45") );
+        EtlPosting pstParent = createPosting(pkgParent, "SECMOD", "40702810%1", "40702810%2", BankCurrency.RUB, new BigDecimal("315.45") );
         Assert.assertTrue(pstParent.getId() > 0);
 
         EtlPackage pkgStorno = newPackage(System.currentTimeMillis(), "Storno");

@@ -48,17 +48,17 @@ public class FanIT extends AbstractTimerJobIT {
      * Регистрация частичной веерной операции (статус операции LOAD)
      * @fsd 7.6.1
      */
-    @Test public void test() {
+    @Test public void test() throws SQLException {
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackage(st, "Checking fan base logic");
         EtlPosting pst = newPosting(st, etlPackage);
-        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
         pst.setValueDate(getOperday().getCurrentDate());
         pst.setFan(YesNo.Y);
         pst.setParentReference("fanRef_" + st);
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702840_0040%1"));
+        pst.setAccountDebit(Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702840_0040%3"));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -78,17 +78,17 @@ public class FanIT extends AbstractTimerJobIT {
      * (в случае проводке в прошлом ОД дата проводки всегда равна текущей)
      * @fsd 7.3 ?
      */
-    @Test public void testLoadBackValue() {
+    @Test public void testLoadBackValue() throws SQLException {
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackage(st, "Checking fan base logic");
         EtlPosting pst = newPosting(st, etlPackage);
-        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyCredit(BankCurrency.USD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
         pst.setValueDate(getOperday().getLastWorkingDay());
         pst.setFan(YesNo.Y);
         pst.setParentReference("fanRef_" + st);
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702840_0040%1"));
+        pst.setAccountDebit(Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702840_0040%3"));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -109,12 +109,16 @@ public class FanIT extends AbstractTimerJobIT {
      *  Регистрация веерной операции из трех частичных веерных операций
      *  @fsd 7.6.2
      */
-    @Test public void testFanPostingSimple() {
+    @Test public void testFanPostingSimple() throws SQLException {
         registerSimpleFans();
     }
 
-    private String registerSimpleFans() {
-        return registerSimpleFans("40806810700010000465", "40702810100013995679", "40702810900010002613");
+    private String registerSimpleFans() throws SQLException {
+//        return registerSimpleFans("40806810700010000465", "40702810100013995679", "40702810900010002613");
+        return registerSimpleFans(
+                Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40802810_0001%"),
+                Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%1"),
+                Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%3"));
     }
 
     private String registerSimpleFans(String accDebit, String accCredit, String accThree) {
@@ -725,17 +729,25 @@ public class FanIT extends AbstractTimerJobIT {
 
         String paymentRef = "PM_" + ("" + System.currentTimeMillis()).substring(5);
 
-        // основная проводка
-        EtlPosting pst1 = createFanPosting(st, etlPackage, "40806810700010000465"
-                , "40702810100013995679", new BigDecimal("100.12"), BankCurrency.RUB
+        String acMain = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40802810_0001%");
+        String acRur = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%");
+        String acUsd = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702840_0001%");
+
+                // основная проводка
+        EtlPosting pst1 = createFanPosting(st, etlPackage
+                , acMain    // "40806810700010000465"
+                , acRur       //"40702810100013995679"
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("100.12"), BankCurrency.RUB, paymentRef, paymentRef, YesNo.Y);
 
         GLOperation oper1 = (GLOperation) postingController.processMessage(pst1);
         Assert.assertFalse(oper1.isInterFilial());
 
         // неосновная проводка (счета открыты в одном филиале , но есть курсовая разница)
-        EtlPosting pst2 = createFanPosting(st, etlPackage, "40806810700010000465"
-                , "30302840700010000033", new BigDecimal("100.12"), BankCurrency.RUB
+        EtlPosting pst2 = createFanPosting(st, etlPackage
+                , acMain    //"40806810700010000465"
+                , acUsd       //"30302840700010000033"
+                , new BigDecimal("100.12"), BankCurrency.RUB
                 , new BigDecimal("55.23"), BankCurrency.USD, paymentRef + "_child", paymentRef, YesNo.Y);
 
         GLOperation oper2 = (GLOperation) postingController.processMessage(pst2);
@@ -753,18 +765,18 @@ public class FanIT extends AbstractTimerJobIT {
                 "select p from Pd p, GLPosting pst where pst.operation = ?1 and pst.id = p.pcId", oper1);
         Assert.assertEquals(3, pds1.size());
         // Основной счет веера
-        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("40806810700010000465"), null));
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals(acMain), null));
         // Не основной счет по кредиту главной операции
-        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("40702810100013995679"), null));
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals(acRur), null));
         // Не основной счет по кредиту главной операции
-        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("30302840700010000033"), null));
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals(acUsd), null));
 
         // для другой операции формируется проводка по курсовой разнице в
         List<Pd> pds2 = baseEntityRepository.select(Pd.class,
                 "select p from Pd p, GLPosting pst where pst.operation = ?1 and pst.id = p.pcId", oper2);
         Assert.assertEquals(2, pds2.size());
         // курсовую разницу отводим с кредита
-        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals("30302840700010000033"), null));
+        Assert.assertNotNull(find(pds1, input -> input.getBsaAcid().equals(acUsd), null));
 
         // проверка суммы
         checkFunSumma(pst1.getParentReference(), oper1.getId(), GLOperation.OperSide.D);

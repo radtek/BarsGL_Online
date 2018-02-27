@@ -983,8 +983,6 @@ public class ValidationIT extends AbstractTimerJobIT {
 
         // коррекция счетов
         baseEntityRepository.executeNativeUpdate("update gl_acc set dto = ?, dtc = null where bsaacid in ('99999810200010000001', '91319810420010000100')", "1993-01-01");
-        baseEntityRepository.executeNativeUpdate("update accrln set drlno = ?, drlnc = null where bsaacid in ('99999810200010000001', '91319810420010000100')", "1993-01-01");
-        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaaco = ?, bsaacc = ? where ID in ('99999810200010000001', '91319810420010000100')", "1993-01-01", "2029-01-01");
 
         pst1.setValueDate(valDate);
         pst1.setAccountKeyDebit("001;RUR;00000018;999999999;;;GL00000015;0001;99999;;;;;;");
@@ -1112,7 +1110,7 @@ public class ValidationIT extends AbstractTimerJobIT {
         Long pstRef = operation.getEtlPostingRef();
         Long gloRef = operation.getId();
         GLOperation oper = (GLOperation) baseEntityRepository.refresh(operation, true);
-        Assert.assertEquals(oper.getState(), state);
+        Assert.assertEquals(state, oper.getState());
         String errorMessage = oper.getErrorMessage();
         Assert.assertTrue(errorMessage.contains(errorCode));
 

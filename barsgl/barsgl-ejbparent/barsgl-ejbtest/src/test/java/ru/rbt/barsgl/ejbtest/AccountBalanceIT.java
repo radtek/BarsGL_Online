@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * Created by er23851 on 24.07.2017.
  */
-@Ignore  // TODO тест не имеет смысла, тк не метода ManualOperationController.ManualOperationController - надо полностью переписать
+@Ignore("TODO тест не имеет смысла, тк не метода ManualOperationController.ManualOperationController - надо полностью переписать")
 public class AccountBalanceIT extends AbstractRemoteIT {
 
 

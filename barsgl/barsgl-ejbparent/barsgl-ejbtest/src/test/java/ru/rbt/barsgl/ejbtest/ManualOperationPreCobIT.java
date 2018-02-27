@@ -210,7 +210,7 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
     @Test
     public void testBalturRecalcSuppress() throws SQLException, ParseException {
         Date dateFrom = new SimpleDateFormat("yyyy-MM-dd").parse("2015-02-01");
-        DataRecord rec = getAccountInBaltur("30223", dateFrom);
+        DataRecord rec = getAccountInBaltur("40702", dateFrom); //30223
         Assert.assertNotNull("Не найден счет для тестирования", rec);
         String acid = rec.getString("ACID");
         String bsaacid = rec.getString("BSAACID");
@@ -354,12 +354,12 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
     };
 
     private DataRecord getAccountInBaltur(String acc2, Date dateFrom) throws SQLException {
-        return baseEntityRepository.selectFirst("select ACID, BSAACID from ACCRLN where DRLNC > sysdate and CCODE = '0001' and CBCCY = '810'" +
+        return baseEntityRepository.selectFirst("select ACID, BSAACID from GL_ACC where (DTC is null or DTC > sysdate) and CBCCN = '0001' and CCY = 'RUR'" +
                 " and ACC2 = ? and (BSAACID, ACID) in (select BSAACID, ACID from BALTUR where DAT >= ?)", acc2, dateFrom);
     }
 
     private DataRecord getAccountNotBaltur(String acc2, Date dateFrom) throws SQLException {
-        return baseEntityRepository.selectFirst("select ACID, BSAACID from ACCRLN where DRLNC > sysdate and CCODE = '0001' and CBCCY = '810'" +
+        return baseEntityRepository.selectFirst("select ACID, BSAACID from GL_ACC where (DTC is null or DTC > sysdate) and CBCCN = '0001' and CCY = 'RUR'" +
                 " and ACC2 = ? and (BSAACID, ACID) not in (select BSAACID, ACID from BALTUR where DAT >= ?)", acc2, dateFrom);
     }
 

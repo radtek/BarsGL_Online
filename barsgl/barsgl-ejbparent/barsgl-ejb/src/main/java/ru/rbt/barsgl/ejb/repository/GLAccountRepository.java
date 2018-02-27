@@ -897,7 +897,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @throws SQLException
      */
     public String getAccount9999Corr(String accountNotCorresp) throws SQLException {
-        DataRecord res = selectFirst("select ACC2, CCODE from GL_ACC where BSAACID = ? and ACID = ? and RLNTYPE = ?", accountNotCorresp, " ", "T");
+        DataRecord res = selectFirst("select ACC2, CBCCN from GL_ACC where BSAACID = ? and ACID = ? and RLNTYPE = ?", accountNotCorresp, " ", "T");
         if (null == res)
             return "";
         String acc2 = res.getString(0);

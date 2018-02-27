@@ -805,15 +805,15 @@ public class OperdaySynchronizationController {
     private void trySwitchTriggers(boolean off) {
         try {
             pdRepository.executeInNewTransaction(persistence1 -> {
-                removeLock("PD");
-                lockTable("PD");
-                auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PD установлена");
+                removeLock("PST");
+                lockTable("PST");
+                auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PST установлена");
                 swithTriggersPD(off);
                 auditController.info(BufferModeSync, String.format("%s триггеров прошло успешно", off ? "Отключение" : "Включение"));
                 return null;
             });
         } catch (Exception e) {
-            throw new DefaultApplicationException("Ошибка при установке блокировки на таблицу PD", e);
+            throw new DefaultApplicationException("Ошибка при установке блокировки на таблицу PST", e);
         }
     }
 
