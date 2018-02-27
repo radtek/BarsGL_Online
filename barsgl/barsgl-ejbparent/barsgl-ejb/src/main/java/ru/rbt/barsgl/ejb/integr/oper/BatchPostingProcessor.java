@@ -309,7 +309,7 @@ public class BatchPostingProcessor extends ValidationAwareHandler<ManualOperatio
         }
 
         // счет существует и открыт
-        int flag = glAccountRepository.checkBsaAccount(account, checkDateFormat(target.getValueDateStr(), "Дата валютирования"));
+        int flag = glAccountRepository.checkAccountDate(account, checkDateFormat(target.getValueDateStr(), "Дата валютирования"));
         if (flag == -1) {
             throw new ValidationError(ACCOUNT_NOT_FOUND, sideRus, account, accountField);
         } else if (flag == 0) {

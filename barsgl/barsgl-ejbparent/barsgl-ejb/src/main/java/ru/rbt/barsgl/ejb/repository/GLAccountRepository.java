@@ -155,12 +155,11 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-
-    public int checkBsaAccount(String bsaAcid, Date dateCurrent) {
+    public int checkAccountDate(String bsaAcid, Date dateCurrent) {
         try {
             DataRecord res = selectFirst("select" +
-                    " case when BSAACO > ? or BSAACC < ? then 0 else 1 end" +
-                    " from BSAACC B where B.ID = ?"
+                    " case when DTO > ? or DTC < ? then 0 else 1 end" +
+                    " from GL_ACC a where a.BSAACID = ?"
                     , dateCurrent, dateCurrent, bsaAcid);
             return (null == res) ? -1 : res.getInteger(0);
         } catch (SQLException e) {

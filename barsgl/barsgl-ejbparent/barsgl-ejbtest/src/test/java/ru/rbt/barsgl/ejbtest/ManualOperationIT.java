@@ -47,7 +47,7 @@ public class ManualOperationIT extends AbstractTimerJobIT {
     public void test() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%3");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("12.056"),
                 "MOS", bsaCt, "RUR", new BigDecimal("12.056")
@@ -81,7 +81,7 @@ public class ManualOperationIT extends AbstractTimerJobIT {
     public void testPH() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%2");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%4");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%4");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("12.056"),
                 "MOS", bsaCt, "RUR", new BigDecimal("12.056")
@@ -119,7 +119,7 @@ public class ManualOperationIT extends AbstractTimerJobIT {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, Operday.PdMode.BUFFER);
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%5");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%7");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%7");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("12.056"),
                 "MOS", bsaCt, "RUR", new BigDecimal("12.056")
@@ -164,7 +164,7 @@ public class ManualOperationIT extends AbstractTimerJobIT {
     public void testManualBackvalue() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%6");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%8");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47425810_0001%8");
         cleanBackvaluejournal(bsaDt, bsaCt);
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("12.056"),

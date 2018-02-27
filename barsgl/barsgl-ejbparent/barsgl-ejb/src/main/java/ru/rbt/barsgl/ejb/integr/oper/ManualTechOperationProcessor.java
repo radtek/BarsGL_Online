@@ -239,7 +239,7 @@ public class ManualTechOperationProcessor extends ValidationAwareHandler<BatchPo
         }
 
         // счет существует и открыт
-        int flag = glAccountRepository.checkBsaAccount(account, target.getValueDate());
+        int flag = glAccountRepository.checkAccountDate(account, target.getValueDate());
         if (flag == -1) {
             throw new ValidationError(ACCOUNT_NOT_FOUND, sideRus, account, accountField);
         } else if (flag == 0) {
