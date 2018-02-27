@@ -44,7 +44,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
 
         BigDecimal sum = new BigDecimal("99.056");
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%3");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", sum,
                 "MOS", bsaCt, "RUR", sum
@@ -80,7 +80,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     public void testSaveForSignOperationRq() throws SQLException, ParseException {
         BigDecimal sum = new BigDecimal("102.056");
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%3");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", sum,
                 "MOS", bsaCt, "RUR", sum
@@ -105,8 +105,8 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     @Test
     public void testUpdateOperationRq() throws SQLException, ParseException {
 
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%2");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "4081703605%4");
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202036_0001%2");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202036_0001%4");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "AUD", new BigDecimal("102.056"),
                 "MOS", bsaCt, "AUD", new BigDecimal("102.056")
@@ -195,7 +195,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
 
         BigDecimal sum = new BigDecimal("149.056");
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%4");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%6");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%6");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", sum,
                 "MOS", bsaCt, "RUR", sum
@@ -253,7 +253,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     public void testAuthorizeOperationRq() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%4");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%6");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%6");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("152.057"),
                 "MOS", bsaCt, "RUR", new BigDecimal("152.057")
@@ -291,7 +291,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     public void testRefuseOperationRq() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%5");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%7");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%7");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("162.057"),
                 "MOS", bsaCt, "RUR", new BigDecimal("162.057")
@@ -327,7 +327,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
     public void testMovementProcessor() throws SQLException {
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20202810_0001%5");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817810_0001%7");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40702810_0001%7");
         ManualOperationWrapper wrapper = newOperationWrapper("А",
                 "MOS", bsaDt, "RUR", new BigDecimal("25015.57"),
                 "MOS", bsaCt, "RUR", new BigDecimal("25015.57")

@@ -1033,26 +1033,26 @@ public class ManualPostingController {
             data.setOperIdC(movementCr);
             data.setAccountCBC(posting.getAccountCredit());
             data.setOperAmountC(posting.getAmountCredit());
-        }        
+        }
 
-        DataRecord drForDebit = getCustomerInfo(posting.getAccountDebit());
+        CustomerInfo drForDebit = getCustomerInfo(posting.getAccountDebit());
         
         PaymentDetails debitPaymentDetails = new PaymentDetails(posting.getCurrencyDebit().getCurrencyCode(), 
-                posting.isControllableDebit(), 
-                (drForDebit != null) ? drForDebit.getString("BXRUNM").trim() : "", 
-                (drForDebit != null) ? drForDebit.getString("BXTPID").trim() : "",
+                posting.isControllableDebit(),
+                drForDebit.ruName,
+                drForDebit.inn,
                 posting.getAccountDebit(),
                 posting.getAmountDebit()
         );
                 
         data.setDebitPaymentDetails(debitPaymentDetails);
 
-        DataRecord drForCredit = getCustomerInfo(posting.getAccountCredit());
+        CustomerInfo drForCredit = getCustomerInfo(posting.getAccountCredit());
         
         PaymentDetails creditPaymentDetails = new PaymentDetails(posting.getCurrencyCredit().getCurrencyCode(),
-                posting.isControllableCredit(), 
-                (drForCredit != null) ? drForCredit.getString("BXRUNM").trim() : "", 
-                (drForCredit != null) ? drForCredit.getString("BXTPID").trim() : "",
+                posting.isControllableCredit(),
+                drForDebit.ruName,
+                drForDebit.inn,
                 posting.getAccountCredit(),
                 posting.getAmountCredit()
         );
@@ -1078,15 +1078,26 @@ public class ManualPostingController {
         return data;
     }
 
-    public DataRecord getCustomerInfo(String accountNumber) {
+    public CustomerInfo getCustomerInfo(String accountNumber) {
         try {
-            String sql = "SELECT BXRUNM, BXTPID FROM SDCUSTPD SD " +
-                            "JOIN BSAACC BSA ON BSA.BSAACNNUM = SD.BBCUST " +
-                            "WHERE BSA.ID = ?";
+            String sql = "SELECT TRIM(BXRUNM), TRIM(BXTPID) FROM SDCUSTPD SD " +
+                            "JOIN GL_ACC A ON A.CUSTNO = SD.BBCUST " +
+                            "WHERE A.BSAACID = ?";
             DataRecord res = postingRepository.selectFirst(sql, accountNumber);
-            return res;
+            return null == res ? new CustomerInfo("", "") : new CustomerInfo(res.getString(0), res.getString(1));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    private class CustomerInfo {
+
+        private String ruName;
+        private String inn;
+
+        public CustomerInfo(String ruName, String inn) {
+            this.ruName = ruName;
+            this.inn = inn;
         }
     }
     
