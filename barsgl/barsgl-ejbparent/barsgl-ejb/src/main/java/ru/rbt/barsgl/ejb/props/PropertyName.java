@@ -15,6 +15,9 @@ public enum PropertyName {
     , MC_TIMEOUT("mc.timeout.sec")
     , COB_STAT_INC("cob.stat.increase")
     , STOP_PROC_TIMEOUT("process.stop.timeout.minute")
+    , MQ_TIMEOUT("mq.process.timeout")
+    , MQ_TIME_UNIT("mq.process.timeout.unit")
+
     , BARSGL_LOADER_TYPE("barsgl.loader.type")
     , BARSGL_LOCALIZATION_TYPE("barsgl.localize.type")
 
