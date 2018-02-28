@@ -736,6 +736,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(pdCr.getAmountBC() == operation.getAmountPosting().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmountBC() == -pdDr.getAmountBC());       // сумма в валюте дебет - кредит
 
+
     }
 
     @Test public void testJPY() throws ParseException, SQLException {
