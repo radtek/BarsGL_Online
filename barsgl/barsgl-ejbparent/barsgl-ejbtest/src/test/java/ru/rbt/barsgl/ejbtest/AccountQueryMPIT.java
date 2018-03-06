@@ -34,9 +34,6 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.SysError;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
-import static ru.rbt.barsgl.ejb.common.CommonConstants.ACLIRQ_TASK;
-import static ru.rbt.barsgl.ejb.props.PropertyName.MQ_TIMEOUT;
-import static ru.rbt.barsgl.ejb.props.PropertyName.MQ_TIME_UNIT;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
@@ -62,10 +59,12 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
 
+/*
     @After
     public void after() {
         setPropertyTimeout("MINUTES", 10);
     }
+*/
 
     private String getQProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
         return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30", writeOut);
@@ -102,8 +101,8 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     @Test
     public void testA() throws Exception {
 
-        deletePropertyTimeout();
-        deletePropertyExecutor();
+//        deletePropertyTimeout();
+//        deletePropertyExecutor();
 
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
         clearQueue(cf, acliquIn, login, passw, 1000);
@@ -147,9 +146,9 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
         long idAudit = getAuditMaxId();
 
-        setPropertyTimeout("SECONDS", 5);
+//        setPropertyTimeout("SECONDS", 5);
 //        setPropertyTimeout("MINUTES", 1);
-        setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
+//        setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
 
         Thread.sleep(5000L);
         SingleActionJob job =
@@ -183,9 +182,9 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
         long idAudit = getAuditMaxId();
 
-        setPropertyTimeout("SECONDS", 5);
+//        setPropertyTimeout("SECONDS", 5);
 //        setPropertyTimeout("MINUTES", 1);
-        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
+//        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
 
         Thread.sleep(5000L);
         SingleActionJob job =
@@ -205,6 +204,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
     }
 
+/*
     @Test
     public void testStress500() throws Exception {
 
@@ -268,6 +268,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         // new   6:12.409   7:34.93
         // old   6:47.807   7:6.07
     }
+*/
 
     @Test
     @Ignore
@@ -420,6 +421,7 @@ mq.password=UsATi8hU
 
     }
 
+/*
     private static void setPropertyTimeout(String unit, int interval) {
         deletePropertyTimeout();
         baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
@@ -438,7 +440,9 @@ mq.password=UsATi8hU
                 AsyncProcessor.MQ_EXECUTOR, etype.name());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
+*/
 
+/*
     private static void deletePropertyTimeout() {
         baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?, ?)", MQ_TIMEOUT.getName(), MQ_TIME_UNIT.getName());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
@@ -448,6 +452,7 @@ mq.password=UsATi8hU
         baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?)", AsyncProcessor.MQ_EXECUTOR);
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
+*/
 
     private AuditRecord getAuditError(long idFrom, AuditRecord.LogLevel ... levels ) throws SQLException {
         String level = "";
@@ -610,6 +615,7 @@ mq.password=UsATi8hU
         connection.close();
     }
 
+/*
     public static void runAclirqJob(String props) {
         TimerJob aclirqTaskJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
                 , "from TimerJob j where j.name = ?1", ACLIRQ_TASK);
@@ -638,6 +644,7 @@ mq.password=UsATi8hU
 //            jobService.startupJob(aclirqJob);
 //            registerJob(aclirqJob);
     }
+*/
 
     public static long getAuditMaxId() throws SQLException {
         DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");

@@ -393,21 +393,21 @@ public class CommonQueueProcessor4 implements MessageListener {
         producer.send(jmsContext.createQueue(!isEmpty(incMessage[2]) ? incMessage[2] : "queue:///" + queue), message);
     }
 
-/*
     private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
         asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
     }
-*/
 
+/* // TODO пока оставляем SysError
     private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
         try {
             asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
-        } catch (TimeoutException e) {  // TODO не проверено
+        } catch (TimeoutException e) {
             throw new ValidationError(ErrorCode.QUEUE_ERROR, e.getMessage());
         }
     }
+*/
 
     public String getErrorMessage(String message) throws DatatypeConfigurationException {
         String answerBody;
