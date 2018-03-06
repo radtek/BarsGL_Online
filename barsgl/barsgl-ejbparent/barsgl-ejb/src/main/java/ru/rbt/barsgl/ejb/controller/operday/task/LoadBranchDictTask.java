@@ -67,19 +67,19 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
             mode = Manual;
         }
         auditController.info(LoadBranchDict, "LoadBranchDictTask стартовала в "+mode.getValue()+" режиме за дату "+yyyyMMdd.format(dateLoad));
-            if (checkRun(dateLoad, mode, isForceStart)) {
-                try {
-                    if (!executeWork(dateLoad)){
-                        throw new DefaultApplicationException("Ошибка задачи");
-                    }
-                }finally{
-                    taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
+        if (checkRun(dateLoad, mode, isForceStart)) {
+            try {
+                if (!executeWork(dateLoad)) {
+                    throw new DefaultApplicationException("Ошибка задачи");
                 }
-//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
-                auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
-            }else {
-                auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
+            } finally {
+                taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
             }
+//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
+            auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
+//            }else {
+//                auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
+        }
         }catch (Throwable e){
             throw new DefaultApplicationException(e.getMessage(), e);
         }
