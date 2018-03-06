@@ -57,10 +57,10 @@ public class Customer extends BaseEntity<String> {
 
     // ================ значения по умолчанию ================
     @Column(name = "BXBICC")
-    private String bxbicc  = " ";
+    private String bxbicc;
 
     @Column(name = "BXTPID")
-    private String bxtpid  = " ";
+    private String bxtpid;
 
     @Column(name = "BBCSSN")
     private String bbcssn  = "NEW";
