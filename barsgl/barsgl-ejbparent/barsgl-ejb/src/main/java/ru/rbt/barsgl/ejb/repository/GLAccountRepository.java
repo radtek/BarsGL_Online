@@ -203,18 +203,53 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public DataRecord getCbccy(String ccy)
+    public String getCbccy(String ccy)
     {
         try
         {
             String sql = "select CBCCY from CURRENCY where GLCCY = ?";
             DataRecord res = selectFirst(sql, ccy);
-            return res;
+            return Optional.ofNullable(res).orElseThrow(()->new SQLException("not found " + sql + " vs " + ccy)).getString(0);
         }
         catch (SQLException e){
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+
+    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) {
+        try {
+            String sql = "select ccbbr code, bxbicc bic from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
+                         "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
+            DataRecord res = selectFirst( sql, branch);
+            if (res != null){
+                code.append(res.getString(0));
+                bic.append(res.getString(1));
+            }else{
+                throw new SQLException("not found " + sql + " vs " + branch);
+            }
+        }catch (SQLException e){
+                throw new DefaultApplicationException(e.getMessage(), e);
+        }
+
+//        String sql = "select ccbbr, bxbicc from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
+//                "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
+//        try (PreparedStatement statement = process.connection().prepareStatement(sql)){
+//            statement.setString(1, branch);
+//            try (ResultSet result = statement.executeQuery()){
+//                String code = null;
+//                String bic = null;
+//                if(result.next())
+//                {
+//                    code = result.getString(1);
+//                    String _bic = result.getString(2);
+//                    if(_bic.length() >= 9)
+//                        bic = _bic.substring(6, 9);
+//                }
+//                return (new String[] {code, bic});
+//            }
+//        }
+    }
+
 
 
     public String getCBCC(String cbccn)

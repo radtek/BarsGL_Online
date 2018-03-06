@@ -78,10 +78,4 @@ public class BankProcess extends AbstractBankjarBean {
         return context.getCurrDay();
     }
 
-/*
-    public CoreRepository getRepository() {
-        return repository;
-    }
-*/
-
 }

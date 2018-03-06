@@ -186,6 +186,14 @@ public class GLAccountController {
         });
     }
 
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public String createGLAccountMF(){
+        return synchronizer.callSynchronously(monitor, () -> {
+            
+        }
+    }
+
     //todo XX
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -531,6 +539,8 @@ public class GLAccountController {
         // сохранить счет GL
         return glAccountRepository.save(glAccount);
     }
+
+
 
     public GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.OpenType openType) {
