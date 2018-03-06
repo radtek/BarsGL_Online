@@ -87,7 +87,7 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
 
     private boolean executeWork(Date dateLoad) throws Exception {
         clearInfTables();
-        auditController.info(LoadBranchDict, "LoadBranchDictTask тавлицы очищены", "", String.valueOf(_loadStatId));
+//        auditController.info(LoadBranchDict, "LoadBranchDictTask тавлицы очищены", "", String.valueOf(_loadStatId));
         ExecutorService pool = Executors.newFixedThreadPool(2);
 
         try{
