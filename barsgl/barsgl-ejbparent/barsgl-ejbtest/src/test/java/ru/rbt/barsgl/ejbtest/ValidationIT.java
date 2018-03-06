@@ -14,6 +14,7 @@ import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
+import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -332,11 +333,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         long gloid = operation.getId();
         //get any WTAC operation to revalidate
 
-//        String rightAcDr = "40817036250010000018";
-//        String rightAcCr = "40817036200012959997";
-
-        String rightAcDr = "40817978550160000066";     // "CHL"
-        String rightAcCr = "47427978400404502369";        // "EKB"
+        String rightAcDr = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817978_5016%");   // "40817978550160000066";     // "CHL"
+        String rightAcCr = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817978_0040%");   // "47427978400404502369";        // "EKB"
 
 //      //baseEntityRepository.executeNativeUpdate(" update GL_OPER set AC_DR = ?, AC_CR = ? where ((GL_OPER.STATE='WTAC'))", rightAcDr, rightAcCr);
         baseEntityRepository.executeUpdate("update GLOperation G set G.accountDebit = ?1, G.accountCredit = ?2 WHERE G.id=?3", rightAcDr, rightAcCr, gloid);

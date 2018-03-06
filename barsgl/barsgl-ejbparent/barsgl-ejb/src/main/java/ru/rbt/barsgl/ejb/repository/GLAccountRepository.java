@@ -216,20 +216,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-
-    public String getCBCC(String cbccn)
-    {
-        try
-        {
-            String sql = "select CCPCD from IMBCBCMP where CCBBR = ?";
-            DataRecord res = selectFirst(sql, cbccn);
-            return null!=res?res.getString("CCPCD"):"";
-        }
-        catch (SQLException e){
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
     public DataRecord getIMBCBBRP(String cbccn)
     {
         try

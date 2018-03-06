@@ -46,7 +46,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.E;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FOUR;
-import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.ZERO;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.TWO;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
 import static ru.rbt.ejbcore.util.StringUtils.*;
@@ -523,9 +523,14 @@ public class GLAccountController {
 
     private GLAccount createAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.RelationType rlnType, GLAccount.OpenType openType) {
+        return createAccount(bsaAcid, operation, operSide, dateOpen, keys, rlnType, null, openType);
+    }
+
+    private GLAccount createAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
+                                    AccountKeys keys, GLAccount.RelationType rlnType, String exCCY, GLAccount.OpenType openType) {
 
         // создать счет GL
-        GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, openType, rlnType);
+        GLAccount glAccount = glAccountProcessor.createGlAccount(bsaAcid, operation, operSide, dateOpen, keys, rlnType, exCCY, openType);
         // определить дополнительные папаметры счета
         glAccountProcessor.enrichment(glAccount, keys);
         // сохранить счет GL
@@ -534,7 +539,6 @@ public class GLAccountController {
 
     public GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.OpenType openType) {
-
         // создать счет GL
         GLAccount glAccount = glAccountProcessor.createGlAccountTH(bsaAcid, operation, operSide, dateOpen, keys, openType);
         return glAccountRepository.save(glAccount);
@@ -542,27 +546,15 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public GLAccParam createAccountsExDiff(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, BankCurrency bankCurrency, String optype) {
-        GLAccParam accountId = excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype);
+    public GLAccParam createAccountsExDiff(GLOperation operation, GLOperation.OperSide operSide, AccountKeys keys, Date dateOpen, BankCurrency exchCurrency, String optype) {
+        GLAccParam accountId = excacRlnRepository.findForPlcode7903(keys, exchCurrency, optype);
         if (accountId == null) {
-            accountId = calculateAcidBsaacid(operSide, keys, bankCurrency, optype);
-            // Возвращаемое значение
-            GLAccount glAccount = new GLAccount();
+            fillExDiffAccountKeys(operSide, keys, exchCurrency, optype);
+            accountId = calculateExDiffAccount(operSide, keys , exchCurrency, optype);
 
-            glAccount.setAcid(accountId.getAcid());
-            glAccount.setBsaAcid(accountId.getBsaAcid());
-            glAccount.setDateOpen(dateOpen);
-            glAccount.setDateClose(GLAccountController.DAY20290101);
-            glAccount.setCustomerNumber(accountId.getAcid().substring(0, 8));
-            glAccount.setCompanyCode(keys.getCompanyCode());
-            glAccount.setPassiveActive(keys.getPassiveActive());
-            glAccount.setAccountCode(Short.parseShort(keys.getAccountCode()));
-            glAccount.setCurrency(bankCurrencyRepository.getCurrency("RUR"));
-            glAccount.setPlCode(keys.getPlCode());
-            glAccount.setRelationType(GLAccount.RelationType.TWO);
-            glAccount.setCurrency(bankCurrency);
+            GLAccount glAccount = createAccount(accountId.getBsaAcid(), operation, operSide, dateOpen, keys, TWO, exchCurrency.getCurrencyCode(), GLAccount.OpenType.BARSGL);
+            GlExcacRln excacRln = excacRlnRepository.createExcacRln(glAccount, exchCurrency.getCurrencyCode(), optype);
 
-            GlExcacRln excacRln = excacRlnRepository.createExcacRln(glAccount, optype);
             auditController.info(Account, format("Создан счет курсовой разницы '%s' для операции '%d' %s",
                     accountId.getBsaAcid(), operation.getId(), operSide.getMsgName()), excacRln);
             accountId = new GLAccParam(excacRln.getId());
@@ -571,44 +563,72 @@ public class GLAccountController {
         return accountId;
     }
 
-    private GLAccParam calculateAcidBsaacid(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
+    private AccountKeys fillExDiffAccountKeys(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
         try {
             String psav = keys.getPassiveActive();
-            DataRecord dataRecord = glAccountRepository.selectFirst("select ACC2, PLCODE, ACOD, ACSQ from excacparm where (CCY = ? or CCY = '000') and OPTYPE = ? and PSAV = ?",
-                    bankCurrency.getCurrencyCode(), optype, psav);
 
-            if (null == dataRecord) {
-                throw new ValidationError(ACCOUNTEX_PARAMS_NOT_FOUND, operSide.getMsgName(),
-                        bankCurrency.getCurrencyCode(), optype, psav);
-            }
+            // параметры курсовой разницы
+            DataRecord excacParam = Optional.ofNullable(glAccountRepository.
+                    selectFirst("select ACC2, PLCODE, ACOD, ACSQ, case when CCY = '000' then 0 else 1 end ccy000 " +
+                                    "from EXCACPARM where (CCY = ? or CCY = '000') and OPTYPE = ? and PSAV = ? order by ccy000 desc",
+                            bankCurrency.getCurrencyCode(), optype, psav))
+                    .orElseThrow(() -> new ValidationError(ACCOUNTEX_PARAMS_NOT_FOUND, operSide.getMsgName(), bankCurrency.getCurrencyCode(), optype, psav));
+            keys.setAccount2(excacParam.getString("ACC2"));
+            keys.setPlCode(excacParam.getString("PLCODE"));
+            keys.setAccountCode(excacParam.getString("ACOD"));
+            String sq = excacParam.getString("ACSQ");
+            keys.setAccSequence(sq.length() == 1 ? "0" + sq : sq);
 
-            keys.setAccount2(dataRecord.getString("ACC2"));
-            keys.setAccSequence(dataRecord.getString("ACSQ"));
-            keys.setAccountCode(dataRecord.getString("ACOD"));
-            keys.setPlCode(dataRecord.getString("PLCODE"));
+            // AccountType
+            DataRecord accTypeParam = Optional.ofNullable(glAccountRepository.
+                    selectFirst("select ACCTYPE from GL_ACC2EXCH_ACCTYPE where ACC2 = ? and ACOD = ? and CASH = ?",
+                            keys.getAccount2(), keys.getAccountCode(), optype))
+                    .orElseThrow(() -> new ValidationError(ACCTYPE_EXDIFF_NOT_FOUND, keys.getAccount2(), keys.getAccountCode(), optype));
+            String accType = accTypeParam.getString(0);
+            if (isEmpty(keys.getAccountType()))
+                keys.setAccountType(accType);
+            else if (!accType.equals(keys.getAccountType()))
+                throw new ValidationError(ACCTYPE_EXDIFF_BAD, keys.getAccountType(), accType, keys.getAccount2(), keys.getAccountCode(), optype);
+            // Название счета заполнится в enrichment
 
+            // параметры бранча
+            DataRecord branchParam = Optional.ofNullable(operationRepository.getBranchParameters(keys.getBranch()))
+                    .orElseThrow(() -> new ValidationError(ErrorCode.BRANCH_NOT_FOUND, operSide.getMsgName(), keys.getBranch(), ""+keys.getiBranch()));
+            keys.setCustomerNumber(branchParam.getString("CNUM"));
+            keys.setFilial(branchParam.getString("CBCC"));
+            if (isEmpty(keys.getCompanyCode()))
+                keys.setCompanyCode(branchParam.getString("CBCCN"));
+
+            // общие параметры
+            keys.setCurrency("RUR");
+            keys.setCurrencyDigital("810");
+            if (isEmpty(keys.getCustomerType()))
+                keys.setCustomerType("0");
+            keys.setTerm(null);
+            keys.setGlSequence(null);
+            keys.setDealSource("BARSGL");
+            keys.setDealId(null);
+            keys.setSubDealId(null);
+
+            return keys;
+
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    };
+
+    private GLAccParam calculateExDiffAccount(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
             String nccy = bankCurrency.getDigitalCode();
             String c1 = String.valueOf(nccy.charAt(0));
             String c2 = nccy.substring(1, 3);
 
-            String accountMask = new StringBuilder().append(dataRecord.getString("ACC2")).append("810_").append(c1).append(keys.getCompanyCode().substring(1)).append(dataRecord.getString("PLCODE")).append(c2).toString();
-
-            String bsaacid = glAccountFrontPartController.calculateKeyDigit(accountMask, keys.getCompanyCode());   // TODO надо CBCCN
-
-            DataRecord a8bicnRec = Optional.ofNullable(glAccountRepository.selectFirst("select a8bicn from imbcbbrp where a8brcd = ?", keys.getBranch()))
-                    .orElseThrow(() -> new ValidationError(ErrorCode.CLIENT_NOT_FOUND, format("Клиент не найден по бранчу %s", keys.getBranch())));
-
-            String acsq = keys.getAccSequence();
-            if (acsq.length() == 1) {
-                acsq = "0" + acsq;
-            }
+            String accountMask = new StringBuilder().append(keys.getAccount2()).append("810_").append(c1).append(keys.getCompanyCode().substring(1)).append(keys.getPlCode()).append(c2).toString();
+            String bsaacid = glAccountFrontPartController.calculateKeyDigit(accountMask, keys.getCompanyCode());
 
             // Счет Midas
-            String acid = new StringBuilder().append(a8bicnRec.getString("a8bicn")).append("RUR").append(keys.getAccountCode()).append(acsq).append(keys.getBranch()).toString();
+            String acid = new StringBuilder().append(keys.getCustomerNumber()).append("RUR").append(keys.getAccountCode()).append(keys.getAccSequence()).append(keys.getBranch()).toString();
+            keys.setAccountMidas(acid);
             return new GLAccParam(acid, bsaacid);
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
     }
 
 

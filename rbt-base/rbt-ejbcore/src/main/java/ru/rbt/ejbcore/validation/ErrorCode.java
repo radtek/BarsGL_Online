@@ -145,6 +145,8 @@ public enum ErrorCode {
     , GL_SEQ_XX_KEY_WITH_SQ_0(2051, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, SQ=0")
     , GL_SEQ_XX_KEY_WITH_FL_CTRL(2052, "Счет %s задан ключом ACCTYPE=%s, CUSTNO=%s, ACOD=%s, SQ=%s, DEALID=%s, PLCODE=%s, GL_SEQ=%s некорректно, GL_ACTNAME.FL_CTRL=Y")
     , CLIENT_NOT_FOUND(2053, "%")
+    , ACCTYPE_EXDIFF_NOT_FOUND(2054, "Не найден ACCTYPE (GL_ACC2EXCH_ACCTYPE) для ACC2='%s', ACOD='%s', CASH='%s'")
+    , ACCTYPE_EXDIFF_BAD(2055, "ACCTYPE курсовой разницы '%s' неверный, должен быть '%s' для ACC2='%s', ACOD='%s', CASH='%s'")
 
     // Опердень и задачи
     , OPEN_OPERDAY_ERROR(3001, "%s")
