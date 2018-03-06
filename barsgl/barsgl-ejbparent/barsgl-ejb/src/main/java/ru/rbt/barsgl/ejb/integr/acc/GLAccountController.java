@@ -188,10 +188,48 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public String createGLAccountMF(){
+    public void insertIbcb(String brcaFrom, String brcaTo, String glccy, String cb1, String cb2,
+                             String cb305, String cb306)throws Exception{
+        String s =  synchronizer.callSynchronously(monitor, () -> {
+            if (!glAccountRepository.existIbcb(cb1, cb2, glccy )){
+                glAccountRepository.executeNativeUpdate("insert into ibcb (ibbrnm, ibcbrn, ibccy, ibacou, ibacin, iba305, iba306) values (?,?,?,?,?,?,?)",
+                        brcaFrom, brcaTo, glccy, cb1, cb2, cb305, cb306);
+            }
+            return "";
+        });
+    }
+
+        @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public String createGLAccountMF(String bsaAcid, String psav, Date currDate, String glccy)throws Exception{
         return synchronizer.callSynchronously(monitor, () -> {
-            
-        }
+            return Optional.ofNullable(findGLAccount(bsaAcid)).orElseGet(()->{
+                String vCcode = "00" + bsaAcid.substring(11,13);
+
+                GLAccount glAccount = new GLAccount();
+                glAccount.setBsaAcid(bsaAcid);
+                glAccount.setAcid(" ");
+                glAccount.setPassiveActive(psav);
+                glAccount.setFilial(glAccountRepository.getCBCC(vCcode));
+                glAccount.setCompanyCode(vCcode);
+                glAccount.setBranch(vCcode.substring(1,4));
+                glAccount.setCurrency(bankCurrencyRepository.getCurrency(glccy));
+                glAccount.setCustomerNumber(glAccountRepository.getIMBCBBRP_a8bicn(vCcode));
+                glAccount.setAccountType(0);
+                glAccount.setCbCustomerType((short)0);
+                glAccount.setBalanceAccount2(bsaAcid.substring(0, 5));
+                glAccount.setDateOpen(currDate);
+                glAccount.setDateModify(currDate);
+                glAccount.setDateRegister(currDate);
+                glAccount.setOpenType("BARSGL");
+                glAccount.setRelationType(GLAccount.RelationType.T);
+                glAccount.setTransactSrc("000");
+
+                glAccountRepository.save(glAccount);
+                return glAccount;
+               }
+            ).getBsaAcid();
+        });
     }
 
     //todo XX

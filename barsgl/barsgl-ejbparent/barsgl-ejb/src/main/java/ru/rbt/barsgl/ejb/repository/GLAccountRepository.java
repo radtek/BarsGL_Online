@@ -278,6 +278,24 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public String getIMBCBBRP_a8bicn(String bcbbr){
+        try{
+            String sql = "select a8bicn from imbcbbrp where bcbbr=? and br_head='Y'";
+            return Optional.ofNullable(selectFirst(sql, bcbbr)).orElseThrow(()->new SQLException(" not found "+sql+" vs "+bcbbr)).getString(0);
+        }catch (SQLException e){
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean existIbcb(String cb1, String cb2, String cbccy){
+        try{
+            String sql = "select 1 from ibcb where ibacou=? and ibacin=? and ibccy=?";
+            return null != selectFirst(sql, cb1, cb2, cbccy);
+        }catch (SQLException e){
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
     /**
      * Определяет код валюты ЦБ по номеру счета ЦБ
      *

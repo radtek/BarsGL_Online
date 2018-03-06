@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.bankjar.Constants;
-import ru.rbt.barsgl.bankjar.CreateIBCBrecord;
+import ru.rbt.barsgl.ejb.CreateIBCBrecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;

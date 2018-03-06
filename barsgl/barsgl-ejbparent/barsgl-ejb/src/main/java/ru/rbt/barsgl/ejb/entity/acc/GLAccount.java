@@ -21,7 +21,7 @@ public class GLAccount extends BaseEntity<Long> {
     public enum OpenType {AENEW, AEMID, MNL, SRV};
 
     public enum RelationType {
-        TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E"), NINE("9");
+        TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E"), NINE("9"), T("T");
 
         private String value;
 
@@ -152,6 +152,8 @@ public class GLAccount extends BaseEntity<Long> {
     @Column(name = "RLNTYPE")
     private String relationType;
 
+    @Column(name = "TRANSACTSRC")
+    private String transactSrc;
     // -----------------------------------
 
     @Override
@@ -422,5 +424,13 @@ public class GLAccount extends BaseEntity<Long> {
         }
         return null;
     }
+    public String getTransactSrc() {
+        return transactSrc;
+    }
+
+    public void setTransactSrc(String transactSrc) {
+        this.transactSrc = transactSrc;
+    }
+
 
 }
