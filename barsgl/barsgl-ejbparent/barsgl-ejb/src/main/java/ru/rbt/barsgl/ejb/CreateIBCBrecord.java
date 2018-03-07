@@ -26,7 +26,7 @@ public class CreateIBCBrecord {
     @EJB
     private OperdayController operdayController;
 
-    private Date currDate = operdayController.getOperday().getCurrentDate();
+    private Date currDate;
 
     public void calculateIBCBaccount(String brcaFrom, String brcaTo, String ccy)
             throws SQLException {
@@ -72,7 +72,7 @@ public class CreateIBCBrecord {
 
     private void calculateIBCBaccount(String glccy, String cbccy, String bicCode, String brca1,
                                       String lclCode, String brcaFrom, String brcaTo, String lclCode5) throws Exception {
-
+        currDate = operdayController.getOperday().getCurrentDate();
         String cb1 = calculateControlNumber(bicCode, "30301"+cbccy+"0"+brca1+lclCode);
 //        /*process.*/logger.debug("Calculate account =" + cb1);
 //        if(!process.existBsaAccount(cb1))
