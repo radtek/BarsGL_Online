@@ -29,12 +29,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.annotation.Resource;
 import javax.ejb.EJBContext;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
-import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
+
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+
+import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -84,6 +89,22 @@ public class CommonQueueProcessor4 implements MessageListener {
 
     private JMSContext jmsContext = null;
     private final int defaultBatchSize = 50;
+
+    protected long getTimeout() {
+        long tout = propertiesRepository.getNumberDef(MQ_TIMEOUT.getName(), 10L);
+        return (tout > 0 ? tout : 10L);
+    }
+
+    protected TimeUnit getTimeoutUnit() {   // TODO только для отладки!
+        TimeUnit unit = TimeUnit.MINUTES;
+        String prp = propertiesRepository.getStringDef(MQ_TIME_UNIT.getName(), "MINUTES");
+        try {
+            unit = TimeUnit.valueOf(prp);
+        } catch (IllegalArgumentException e) {
+            log.error("Illegal time unit value in GL_PRPRP for " + MQ_TIME_UNIT.getName() + ": " + prp);
+        }
+        return unit;
+    }
 
     public void startConnection() throws JMSException {
         if (jmsContext == null) {
@@ -200,8 +221,8 @@ public class CommonQueueProcessor4 implements MessageListener {
         String[] params = queueProperties.mqTopics.split(":");
         try (JMSConsumer consumer = jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));) {
             int cuncurencySize = propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue();
-            long timeout = 10L;
-            TimeUnit unit = TimeUnit.MINUTES;
+            long timeout = getTimeout();        // 10L
+            TimeUnit unit = getTimeoutUnit();   // TimeUnit.MINUTES;
             ExecutorService executor = null;
             try {
                 for (int i = 0; i < queueProperties.mqBatchSize; i++) {
@@ -376,6 +397,17 @@ public class CommonQueueProcessor4 implements MessageListener {
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
         asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
     }
+
+/* // TODO пока оставляем SysError
+    private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
+        final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
+        try {
+            asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
+        } catch (TimeoutException e) {
+            throw new ValidationError(ErrorCode.QUEUE_ERROR, e.getMessage());
+        }
+    }
+*/
 
     public String getErrorMessage(String message) throws DatatypeConfigurationException {
         String answerBody;
