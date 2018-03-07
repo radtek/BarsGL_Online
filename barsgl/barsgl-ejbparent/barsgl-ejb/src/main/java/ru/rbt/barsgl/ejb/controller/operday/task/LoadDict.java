@@ -45,7 +45,7 @@ public abstract class LoadDict<E, F> {
         listInf.stream().filter(item->getFixFilter(item, dateLoad)).forEach(item -> fixList.add(item));
 
         List<F> target = branchDictRepository.getAll(clazzF);
-        auditController.info(LoadBranchDict, "LoadBranchDictTask витрина "+clazzF.getSimpleName()+" загружена из dwh (" + target.size()+" записей)", "", String.valueOf(_loadStatId));
+        auditController.info(LoadBranchDict, "LoadBranchDictTask витрина "+clazzF.getSimpleName()+" загружена из dwh (" + listInf.size()+" записей)", "", String.valueOf(_loadStatId));
         Collections.sort((ArrayList)target);
         for (E item : fixList) {
             Optional<F> f = target.stream().filter(x ->getIdFilter(item, x)).findFirst();
@@ -61,7 +61,7 @@ public abstract class LoadDict<E, F> {
         }
         branchDictRepository.flush();
         if (insFils.length() > 0 || updFils.length() > 0)
-            auditController.info(LoadBranchDict, "LoadBranchDictTask "+clazzF.getSimpleName()+ " " +(insFils.length()>0?"добавлены "+insFils:"")+ (updFils.length()>0?"обновлены "+updFils:""), "", String.valueOf(_loadStatId));
+            auditController.info(LoadBranchDict, "LoadBranchDictTask "+clazzF.getSimpleName()+ " " +(insFils.length()>0?"добавлены с кодом "+insFils:"")+ (updFils.length()>0?"обновлены с кодом "+updFils:""), "", String.valueOf(_loadStatId));
         else
             auditController.info(LoadBranchDict,"LoadBranchDictTask справочник "+clazzF.getSimpleName()+" не обновлен - нет данных для обновления", "", String.valueOf(_loadStatId));
     }
