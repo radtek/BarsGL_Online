@@ -67,19 +67,24 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
             mode = Manual;
         }
         auditController.info(LoadBranchDict, "LoadBranchDictTask стартовала в "+mode.getValue()+" режиме за дату "+yyyyMMdd.format(dateLoad));
-        if (checkRun(dateLoad, mode, isForceStart)) {
-            try {
-                if (!executeWork(dateLoad)) {
-                    throw new DefaultApplicationException("Ошибка задачи");
+
+        if (!taskUniqueController.Start(TaskUniqueController.TaskId.LoadBranchDictTask, isForceStart)){
+            auditController.info(LoadBranchDict, "LoadBranchDictTask за "+yyyyMMdd.format(dateLoad)+" уже запущена");
+        }else {
+            try{
+                if (checkRun(dateLoad, mode, isForceStart)) {
+                    if (!executeWork(dateLoad)) {
+                        throw new DefaultApplicationException("Ошибка задачи");
+                    }
                 }
             } finally {
                 taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
             }
+        }
 //                branchDictRepository.updGlLoadStat(_loadStatId, "P");
-            auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
+        auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
 //            }else {
 //                auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
-        }
         }catch (Throwable e){
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -124,10 +129,10 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
         return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
             Date maxLoadDate = null;
 
-            if (!taskUniqueController.Start(TaskUniqueController.TaskId.LoadBranchDictTask, forceStart)){
-                auditController.info(LoadBranchDict, "LoadBranchDictTask за "+yyyyMMdd.format(dateLoad)+" уже запущена");
-                return false;
-            }
+//            if (!taskUniqueController.Start(TaskUniqueController.TaskId.LoadBranchDictTask, forceStart)){
+//                auditController.info(LoadBranchDict, "LoadBranchDictTask за "+yyyyMMdd.format(dateLoad)+" уже запущена");
+//                return false;
+//            }
 
             if (mode.equals(Auto)){
                 //dateLoad = lwdate
