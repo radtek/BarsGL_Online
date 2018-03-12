@@ -90,6 +90,8 @@ public class AuditRecord extends BaseEntity<Long> {
         , Localization
         , Ocp
         , NewAccounts
+        , AuditRecord
+        , LoadBranchDict
     }
 
     public enum LogLevel {

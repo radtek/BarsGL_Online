@@ -223,7 +223,11 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             DataRecord res = selectFirst( sql, branch);
             if (res != null){
                 code.append(res.getString(0));
-                bic.append(res.getString(1));
+                if (res.getString(1).length() >= 9){
+                    bic.append(res.getString(1).substring(6, 9));
+                }else {
+                    bic.append(res.getString(1));
+                }
             }else{
                 throw new SQLException("not found " + sql + " vs " + branch);
             }

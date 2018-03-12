@@ -468,7 +468,7 @@ public class OperdaySynchronizationController {
                 st.registerOutParameter(2, Types.INTEGER);
                 st.executeUpdate();
                 int killed = st.getInt(2);
-                auditController.warning(AuditRecord.LogCode.KillSession, format("Удалено сеансов '%s' блокирующих таблицу '%s'", killed, table));
+                auditController.warning(KillSession, format("Удалено сеансов '%s' блокирующих таблицу '%s'", killed, table));
             }
             return null;
         });

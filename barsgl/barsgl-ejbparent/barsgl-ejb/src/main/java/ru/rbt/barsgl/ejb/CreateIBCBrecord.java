@@ -76,7 +76,7 @@ public class CreateIBCBrecord {
         String cb1 = calculateControlNumber(bicCode, "30301"+cbccy+"0"+brca1+lclCode);
 //        /*process.*/logger.debug("Calculate account =" + cb1);
 //        if(!process.existBsaAccount(cb1))
-        if(glAccountRepository.checkAccountExists(cb1))
+        if(!glAccountRepository.checkAccountExists(cb1))
             glAccountController.createGLAccountMF( cb1, Constants.PASIV, currDate, glccy);
 
         String cb2 = calculateControlNumber(bicCode, "30302"+cbccy+"0"+brca1+lclCode);

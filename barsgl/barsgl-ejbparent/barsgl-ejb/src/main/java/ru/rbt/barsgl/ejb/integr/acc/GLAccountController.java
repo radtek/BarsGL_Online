@@ -199,7 +199,7 @@ public class GLAccountController {
         });
     }
 
-        @Lock(LockType.WRITE)
+    @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public String createGLAccountMF(String bsaAcid, String psav, Date currDate, String glccy)throws Exception{
         return synchronizer.callSynchronously(monitor, () -> {
