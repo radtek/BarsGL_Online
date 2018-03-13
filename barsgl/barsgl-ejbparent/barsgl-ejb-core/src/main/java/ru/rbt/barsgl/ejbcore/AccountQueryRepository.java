@@ -175,7 +175,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             DataRecord record = selectFirst(
 //                "SELECT BRANCH FROM DH_ACC_INF WHERE CBRF_ACC_NUMBER=? AND DAT=? AND DATTO=?", bsaacid, workday, workday);
                     "SELECT /*+ INDEX(D DH_ACC) */ BRANCH FROM DH_ACC_INF D WHERE \n" +
-                            "CBRF_ACC_NUMBER=? AND DAT=? AND DATTO=?", bsaacid, workday, workday);
+                            "CBRF_ACC_NUMBER=? AND DAT <= ? AND DATTO >= ?", bsaacid, workday, workday);
 
             if (record != null && !isEmpty(record.getString("BRANCH"))) {
                 return record.getString("BRANCH");
