@@ -334,7 +334,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
      * @return
      */
     public GLAccount createGlAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen,
-                                     AccountKeys keys, GLAccount.RelationType rlnType, String exCCY, GLAccount.OpenType openType) {
+                                     AccountKeys keys, GLAccount.RelationType rlnType, GLAccount.OpenType openType) {
         Assert.notNull(rlnType);
         GLAccount glAccount = new GLAccount();
 
@@ -382,7 +382,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 //        glAccount.setRelationType(null != operation && accountService.isAccountWithKeys(operation, side)
 //                ? ZERO : (isEmpty(keys.getPlCode()) ? FOUR : TWO));
 
-        glAccount.setExcangeCurrency(exCCY);
+        glAccount.setExcangeCurrency(keys.getExchangeCurrency());
 
         return glAccount;
     }
@@ -491,11 +491,6 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         glAccount.setDealId(keys.getDealId());
         glAccount.setSubdealId(keys.getSubDealId());
 
-        String customerName = glAccountRepository.getCustomerName(keys.getCustomerNumber());
-        if (isEmpty(customerName)) {
-            throw new ValidationError(CUSTOMER_NUMBER_NOT_FOUND,
-                    keys.getCustomerNumber(), Long.toString(AccountKeys.getiCustomerNumber()), "номер клиента");
-        }
         String accountName = keys.getDescription();
         if (isEmpty(accountName))
             accountName = glAccountRepository.getAccountNameByType(glAccount.getAccountType());

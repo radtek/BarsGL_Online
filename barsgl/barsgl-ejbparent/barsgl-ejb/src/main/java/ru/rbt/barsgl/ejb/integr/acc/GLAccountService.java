@@ -252,7 +252,7 @@ public class GLAccountService {
             keys.setPassiveActive("7904".equals(keys.getAccountCode()) ? Constants.PASIV : Constants.ACTIV);
             BankCurrency bankCurrency = (operSide.equals(operSide.D) ? operation.getCurrencyCredit() : operation.getCurrencyDebit());
             return Optional.ofNullable(excacRlnRepository.findForPlcode7903(keys, bankCurrency, optype))
-                    .orElseGet(() -> glAccountController.createAccountsExDiff(operation, operSide, keys, dateOpen, bankCurrency, optype))
+                    .orElseGet(() -> glAccountController.createAccountsExDiff(operation, operSide, keys, bankCurrency, dateOpen, optype))
                     .getBsaAcid();
         } else {
             // Перенесено сюда, так как портит данные для других этапов

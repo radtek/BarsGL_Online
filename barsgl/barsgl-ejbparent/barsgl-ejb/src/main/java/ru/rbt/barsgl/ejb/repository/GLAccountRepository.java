@@ -73,10 +73,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public void updGlAccOpenDate(String bsaacid, Date newDate) throws Exception{
-            executeNativeUpdate("update gl_acc set dto=? where bsaacid=?", newDate, bsaacid);
-    }
-
     /**
      * Проверяет наличие в БД счета ЦБ
      *
@@ -352,6 +348,19 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public Short getCustomerType(String cnum, String acc2) throws SQLException {
+        DataRecord dataRecord = selectFirst("SELECT BXCTYP FROM SDCUSTPD WHERE BBCUST = ?", cnum);
+        if (dataRecord != null && dataRecord.getShort(0) != null) {
+            return dataRecord.getShort(0);
+        }
+
+        dataRecord = selectFirst("SELECT CTYPE FROM GL_SVTYPNO WHERE ACC2 = ?", acc2);
+        if (dataRecord != null && dataRecord.getShort(0) != null) {
+            return dataRecord.getShort(0);
+        }
+        return 0;
+    }
+
     /**
      * Определяет признак актив / пассив для балансового счета второго порядка)
      *
@@ -563,6 +572,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @return
      */
     public String getAccountNameByType(Long accType) {
+        if (0 == accType)
+            return null;          // не наши счета
         try {
             String sql = "select ACCNAME from GL_ACTNAME where ACCTYPE = ?";
             DataRecord res = selectFirst(sql, accType);
@@ -716,6 +727,14 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public boolean isExistsGLAccount(String bsaAcid, Date toDate) {
+        try {
+            DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and (DTC is null or DTC >= ?)", bsaAcid, toDate);
+            return null != data;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 
     public boolean isExistsGLAccountByOpenType(String bsaAcid) {
         try {
@@ -1055,4 +1074,18 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+
+    public void updGlAccOpenDate(String bsaacid, Date newDate) throws Exception{
+        executeNativeUpdate("update gl_acc set dto=? where bsaacid=?", newDate, bsaacid);
+    }
+
+    public void updGlAccCloseDate(String bsaacid, Date dateClose) {
+        executeNativeUpdate("UPDATE GL_ACC SET DTC=? WHERE BSAACID=?", dateClose, bsaacid);
+    }
+
+    public boolean validateBranch(String branch) throws SQLException {
+        DataRecord dataRecord = selectFirst("SELECT * FROM IMBCBBRP WHERE A8BRCD = (SELECT MIDAS_BRANCH FROM DH_BR_MAP WHERE FCC_BRANCH=?)", branch);
+        return dataRecord != null;
+    }
+
 }

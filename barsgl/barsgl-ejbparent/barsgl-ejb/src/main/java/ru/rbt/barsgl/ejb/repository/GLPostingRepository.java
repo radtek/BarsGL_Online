@@ -375,7 +375,7 @@ public class GLPostingRepository extends AbstractBaseEntityRepository<GLPosting,
                     withCompanyCode(ccode).
                     withPassiveActive(psav).
                     withBranch(glOperationRepository.getHeadBranchByCCode(ccode)).build();
-            accId = glAccountController.createAccountsExDiff(operation, GLOperation.OperSide.N, keys, operation.getPostDate(), bankCurrency, optype);
+            accId = glAccountController.createAccountsExDiff(operation, GLOperation.OperSide.N, keys, bankCurrency, operation.getPostDate(), optype);
         }
 
         return accId.getBsaAcid();

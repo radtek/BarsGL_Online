@@ -49,8 +49,9 @@ public class AccountKeys implements Serializable {
     private static final int I_PSAV = 19;
 
     private static final int I_DESC = 20;
+    private static final int I_EXCCY = 21;
 
-    private static final int ACCKEY_LENGTH = 21;
+    private static final int ACCKEY_LENGTH = 22;
 
     private List<String> accKeyList;
 
@@ -240,6 +241,14 @@ public class AccountKeys implements Serializable {
         accKeyList.set(I_DESC, description);
     }
 
+    public String getExchangeCurrency() {
+        return getItem(I_EXCCY);
+    }
+
+    public void setExchangeCurrency(String exccy) {
+        accKeyList.set(I_EXCCY, exccy);
+    }
+
     // -------- Индексы ----------
 
     public static int getiBranch() {
@@ -310,7 +319,9 @@ public class AccountKeys implements Serializable {
 
     public static int getiPassiveActive() { return I_PSAV; }
 
-    public static int getiDesc() { return I_DESC; }
+    public static int getiDesccription() { return I_DESC; }
+
+    public static int getiExchangeCurrency() { return I_EXCCY; }
 
     public static String getFieldName(int i) {
         return Long.toString(i);

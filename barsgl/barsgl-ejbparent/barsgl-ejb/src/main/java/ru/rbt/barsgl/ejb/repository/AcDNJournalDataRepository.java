@@ -18,6 +18,7 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 /**
  * Created by ER22228 30.03.2016
  */
+@Deprecated
 @Stateless
 @LocalBean
 public class AcDNJournalDataRepository extends AbstractBaseEntityRepository<AcDNJournalData, Long> {
