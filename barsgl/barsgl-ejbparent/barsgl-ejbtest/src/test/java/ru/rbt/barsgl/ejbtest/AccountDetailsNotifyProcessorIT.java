@@ -63,15 +63,19 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         xPath = XmlUtilityLocator.getInstance().newXPath();
     }
 
+    // TODO тесты на ошибку
+
     @Test
     public void testOpenFcc() throws Exception {
         String message = IOUtils.toString(this.getClass().getResourceAsStream("/AccountDetailsOpenFcc.xml"), "UTF-8");
 
         Document doc = getDocument(message);
         String bsaacid = getAccountParam(doc, cbNode);
-        Date dateOpen = DateUtils.dbDateParse(getAccountParam(doc, openNode));
+        String dateOpenStr = getAccountParam(doc, openNode);
         String midasBranch = getMidasBranch(getAccountParam(doc, branchNode));
         String acid = getAccountParam(doc, customerNode) + getAccountParam(doc, ccyNode) + "000090" + midasBranch;
+        Date dateOpen = DateUtils.onlyDate(DateUtils.addDay(getOperday().getCurrentDate(), -200));
+        message = changeAccountParam(message, openNode, dateOpenStr, DateUtils.dbDateString(dateOpen));
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
 
