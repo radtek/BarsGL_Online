@@ -18,7 +18,7 @@ import java.util.Date;
 @SequenceGenerator(name = "GLAccountIdSeq", sequenceName = "GL_SEQ_ACC", allocationSize = 1)
 public class GLAccount extends BaseEntity<Long> {
 
-    public enum OpenType {AENEW, AEMID, MNL, SRV};
+    public enum OpenType {AENEW, AEMID, MNL, SRV, BARSGL};
 
     public enum RelationType {
         TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E"), NINE("9"), T("T");
@@ -154,6 +154,10 @@ public class GLAccount extends BaseEntity<Long> {
 
     @Column(name = "TRANSACTSRC")
     private String transactSrc;
+
+    @Column(name = "REV_CCY")
+    private String excangeCurrency;
+
     // -----------------------------------
 
     @Override
@@ -413,6 +417,10 @@ public class GLAccount extends BaseEntity<Long> {
 
     public void setCustomerNumberD(Integer customerNumberD) {
         this.customerNumberD = customerNumberD;
+    }
+
+    public void setExcangeCurrency(String excangeCurrency) {
+        this.excangeCurrency = excangeCurrency;
     }
 
     public Date getDateLast() {

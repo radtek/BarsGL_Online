@@ -218,10 +218,10 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
             sb.append("<asbo:Time>").append(xmlGregorianCalendar.toString().substring(11, 19)).append("</asbo:Time>\n");
             sb.append("</asbo:CurrentBalance>\n");
 
-            sb.append("<asbo:AccountOpenDate>").append(sdf.format(record.getDate("DRLNO"))).append("</asbo:AccountOpenDate>\n");
+            sb.append("<asbo:AccountOpenDate>").append(sdf.format(record.getDate("DRLNO").toInstant())).append("</asbo:AccountOpenDate>\n");
 
             if (!lastDate.equals(record.getDate("DRLNC"))) {
-                sb.append("<asbo:AccountCloseDate>").append(sdf.format(record.getDate("DRLNC"))).append("</asbo:AccountCloseDate>\n");
+                sb.append("<asbo:AccountCloseDate>").append(sdf.format(record.getDate("DRLNC").toInstant())).append("</asbo:AccountCloseDate>\n");
             }
 
             String sq = acid.length() == 20 ? acid.substring(15, 17) : "0";

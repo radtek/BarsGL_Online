@@ -20,6 +20,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -32,7 +34,9 @@ public class CommonAccountQueryProcessor {
     private static final Logger log = Logger.getLogger(CommonAccountQueryProcessor.class);
     public static final int descriptionLength=35;
 
-    protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    // многопоточный форматтер
+    protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+//    protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public String prepareDescription(String desc){
         if(isEmpty(desc)) return "";

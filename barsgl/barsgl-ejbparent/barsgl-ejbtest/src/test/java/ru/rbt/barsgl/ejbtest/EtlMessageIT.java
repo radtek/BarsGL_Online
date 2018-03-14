@@ -19,6 +19,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
+import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
@@ -809,13 +810,9 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         final Date longPrev = DateUtils.parseDate("18.01.2015", "dd.MM.yyyy");
         Assert.assertFalse(remoteAccess.invoke(BankCalendarDayRepository.class, "isWorkday", longPrev));
         Date prev = DateUtils.parseDate("23.01.2015", "dd.MM.yyyy");
-
-        // TODO не уверена, что надо
-//        Assert.assertEquals(1, baseEntityRepository.executeUpdate("update BankCalendarDay c set c.holiday = ' ' where c.id.calendarCode = ?1 and c.id.calendarDate = ?2", "RUR", prev));
-//        baseEntityRepository.executeUpdate("delete from BankCalendarDay c where c.id.calendarCode = ?1 and c.id.calendarDate = ?2", "RUR", DateUtils.parseDate("26.01.2015", "dd.MM.yyyy"));
-
         Date hold = DateUtils.parseDate("25.01.2015", "dd.MM.yyyy");
         Date curr = DateUtils.parseDate("26.01.2015", "dd.MM.yyyy");
+
         List<DataRecord> days = baseEntityRepository.select("select * from cal where dat between ? and ? and ccy = 'RUR' and thol <> 'X'"
                 , prev, curr);
         Assert.assertEquals(2, days.size());
@@ -830,53 +827,31 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(pkg.getId() > 0);
 
         EtlPosting pst = newPosting(stamp, pkg);
-        pst.setValueDate(hold);
-
         pst.setAccountCredit("40817036200012959997");
         pst.setAccountDebit("40817036250010000018");
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setSourcePosting(DealSource.KondorPlus.getLabel());
         pst.setDealId("123");
 
+        pst.setSourcePosting(DealSource.PaymentHub.getLabel());
+        pst.setValueDate(hold);
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
-        GLOperation operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
-        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"",curr, operation.getPostDate());
+        // K+TP выходной
+        processPst(pst, curr);
 
         // далеко назад выходной
         pst.setValueDate(longPrev);
-        operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
-        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
         Date wday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", longPrev, false);
-        Assert.assertEquals(operation.getPostDate()+"", wday, operation.getPostDate());
+        processPst(pst, wday);
 
         // переход через месяц
         curr = DateUtils.parseDate("16.02.2015", "dd.MM.yyyy");
         setOperday(curr, prev, ONLINE,OPEN, pdMode);
-
         pst.setValueDate(prev);
-        operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.POST, operation.getState());
-        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", prev, operation.getPostDate());
+        processPst(pst, prev);
 
         // переход через месяц - технический опердень
         curr = DateUtils.parseDate("10.02.2015", "dd.MM.yyyy");
@@ -884,34 +859,21 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         setOperday(curr, prev, ONLINE, OPEN, pdMode);
 
         // ARMPRO
-        hold = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
-        pst.setValueDate(hold);
+        Date holdMonth = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
+        pst.setValueDate(holdMonth);
         pst.setSourcePosting(ARMPRO.getLabel());
-        operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
-        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", hold, operation.getPostDate());
+        processPst(pst, holdMonth);
 
-        // AOS  // TODO нужна доработка
+        // AOS
+        setFwPostingSource(AOS.getLabel(), curr, null);
         pst.setSourcePosting(AOS.getLabel());
-        operation = (GLOperation) postingController.processMessage(pst);
-        Assert.assertNotNull(operation);
-        Assert.assertTrue(0 < operation.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
-        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
-        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
-        Assert.assertEquals(operation.getPostDate()+"", curr, operation.getPostDate());
+        wday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", holdMonth, false);
+        processPst(pst, wday);
 
         // дата в будущем !!
         setOperday(curr, prev, ONLINE, OPEN, pdMode);
-
         pst.setValueDate(DateUtils.addDays(curr, 1));
-        operation = (GLOperation) postingController.processMessage(pst);
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
@@ -919,6 +881,68 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertNotNull(operation.getProcDate());
         Assert.assertEquals(curr, operation.getProcDate());
 
+    }
+
+    @Test public void testFwPostSources() throws Exception {
+        long stamp = System.currentTimeMillis();
+
+        Date holdMonth = DateUtils.parseDate("31.01.2015", "dd.MM.yyyy");
+
+        Date prev = DateUtils.parseDate("06.02.2015", "dd.MM.yyyy");
+        Date curr = DateUtils.parseDate("09.02.2015", "dd.MM.yyyy");
+        Date next = DateUtils.parseDate("10.02.2015", "dd.MM.yyyy");
+        EtlPackage pkg = newPackage(stamp, "AOSPST");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        setOperday(curr, prev, ONLINE, OPEN, pdMode);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountDebit("40817036250010000018");
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setDealId("123");
+
+        pst.setSourcePosting(AOS.getLabel());
+        pst.setValueDate(holdMonth);
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+        Date nextday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateAfter", holdMonth, false);
+        Date prevday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", holdMonth, false);
+
+        setFwPostingSource(AOS.getLabel(), curr, null);
+        processPst(pst, nextday);
+
+        setFwPostingSource(AOS.getLabel(), prev, prev);
+        processPst(pst, prevday);
+
+        setFwPostingSource(AOS.getLabel(), next, null);
+        processPst(pst, prevday);
+
+        setFwPostingSource(AOS.getLabel(), null, null);
+        processPst(pst, prevday);
+
+        setFwPostingSource(AOS.getLabel(), curr, null);
+        processPst(pst, nextday);
+    }
+
+    private void processPst(EtlPosting pst, Date wday) {
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertTrue(OperState.POST == operation.getState() || OperState.BLOAD == operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+        Assert.assertEquals(operation.getPostDate()+"", wday, operation.getPostDate());
+    }
+
+    private void setFwPostingSource(String src, Date startdate, Date enddate) {
+        baseEntityRepository.executeNativeUpdate("delete from GL_FWPSTD where ID_SRC = ?", src);
+        if (null != startdate)
+            baseEntityRepository.executeNativeUpdate("insert into GL_FWPSTD (ID_SRC, DTB, DTE) values (?, ?, ?)", src, startdate, enddate);
+        remoteAccess.invoke(FwPostSourceCachedRepository.class, "flushCache");
     }
 
     /**

@@ -646,14 +646,16 @@ public class ManualTechOperationController extends ValidationAwareHandler<Manual
         return accountFilial;
     }
 
+/*
     private String getFilialByAlphaCode(String code)
     {
-        String codeFilial = glOperationRepository.getFilialCBCCNbyCBCC(code);
+        String codeFilial = glAccountRepository.getCompanyCodeByFilial(code);
         if (isEmpty(codeFilial) ){
             throw new ValidationError(FILIAL_NOT_VALID, "Неверный код филиала", code, "");
         }
         return codeFilial;
     }
+*/
 
     /**
      * Интерфейс: Передает запрос на операцию на подпись

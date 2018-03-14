@@ -582,7 +582,6 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         pst.setValueDate(getOperday().getCurrentDate());
 
         final String bsaacidCredit = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "47407840_2001%");
-
 //        deleteAllReleations(bsaacidCredit);
 
         pst.setAccountCredit(bsaacidCredit);

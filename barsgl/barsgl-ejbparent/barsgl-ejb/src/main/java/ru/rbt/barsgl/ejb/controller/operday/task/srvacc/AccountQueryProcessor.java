@@ -273,10 +273,10 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                 sb.append("</asbo:CurrentBalance>\n");
             }
 
-            sb.append("<asbo:OpenDate>").append(sdf.format(record.getDate("DTO"))).append("</asbo:OpenDate>\n");
+            sb.append("<asbo:OpenDate>").append(sdf.format(record.getDate("DTO").toInstant())).append("</asbo:OpenDate>\n");
 
             if (record.getDate("DTC") != null) {
-                sb.append("<asbo:CloseDate>").append(sdf.format(record.getDate("DTC"))).append("</asbo:CloseDate>\n");
+                sb.append("<asbo:CloseDate>").append(sdf.format(record.getDate("DTC").toInstant())).append("</asbo:CloseDate>\n");
             }
 
             sb.append("<asbo:Status>").append(record.getDate("DTC") == null ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");

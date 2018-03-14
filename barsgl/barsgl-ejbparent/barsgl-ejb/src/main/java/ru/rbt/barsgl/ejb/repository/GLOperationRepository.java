@@ -71,17 +71,6 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
         }
     }
 
-    public String getFilialCBCCNbyCBCC(String cbcc)
-    {
-        try {
-            String sql = "select * from IMBCBCMP where CCPCD = ?";
-            DataRecord res = selectFirst(sql, cbcc);
-            return (null != res) ? res.getString("CCBBR") : "";
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
     /**
      * Определяет филиал, в котором открыт счет
      *

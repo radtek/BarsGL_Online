@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class ExcacRlnRepository extends AbstractBaseEntityRepository<GlExcacRln, String> {
 
-    public GlExcacRln createExcacRln(GLAccount glAccount, String optype) {
+    public GlExcacRln createExcacRln(GLAccount glAccount, String exchCcy, String optype) {
         GlExcacRln excacRln = new GlExcacRln();
         AccRlnId id = new AccRlnId();
         id.setAcid(glAccount.getAcid());
@@ -24,7 +24,7 @@ public class ExcacRlnRepository extends AbstractBaseEntityRepository<GlExcacRln,
         excacRln.setId(id);
 
         excacRln.setCompanyCode(glAccount.getCompanyCode());
-        excacRln.setCurrency(glAccount.getCurrency().getCurrencyCode());
+        excacRln.setCurrency(exchCcy);
         excacRln.setPassiveActive(glAccount.getPassiveActive());
         excacRln.setCash(optype);
 

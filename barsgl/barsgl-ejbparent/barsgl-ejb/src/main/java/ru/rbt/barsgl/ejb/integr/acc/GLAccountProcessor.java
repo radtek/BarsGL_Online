@@ -333,7 +333,8 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
      * @param keys          - ключи счета
      * @return
      */
-    public GLAccount createGlAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys, GLAccount.OpenType openType, GLAccount.RelationType rlnType) {
+    public GLAccount createGlAccount(String bsaAcid, GLOperation operation, GLOperation.OperSide side, Date dateOpen,
+                                     AccountKeys keys, GLAccount.RelationType rlnType, String exCCY, GLAccount.OpenType openType) {
         Assert.notNull(rlnType);
         GLAccount glAccount = new GLAccount();
 
@@ -381,6 +382,8 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 //        glAccount.setRelationType(null != operation && accountService.isAccountWithKeys(operation, side)
 //                ? ZERO : (isEmpty(keys.getPlCode()) ? FOUR : TWO));
 
+        glAccount.setExcangeCurrency(exCCY);
+
         return glAccount;
     }
 
@@ -408,7 +411,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         BankCurrency ccy = bankCurrencyRepository.getCurrency(keys.getCurrency());
         glAccount.setCurrency(ccy);
 
-        glAccount.setFilial(glAccountRepository.getCBCC(keys.getCompanyCode()));
+        glAccount.setFilial(glAccountRepository.getFilialByCompanyCode(keys.getCompanyCode()));
         glAccount.setCompanyCode(keys.getCompanyCode());
         // бранч
         DataRecord dr = glAccountRepository.getIMBCBBRP(keys.getCompanyCode());
