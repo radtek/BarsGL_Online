@@ -2,10 +2,7 @@ package ru.rbt.barsgl.ejb.entity.dict.dwh;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by er22317 on 08.02.2018.
@@ -29,6 +26,9 @@ public class Filials  extends BaseEntity<String> implements Comparable<Filials>{
 
     @Column(name = "CCBBR")
     private String ccbbr;
+
+    @Transient
+    private String ALT_CODE = "";
 
     public Filials(){}
 
@@ -75,6 +75,14 @@ public class Filials  extends BaseEntity<String> implements Comparable<Filials>{
 
     public void setCcbbr(String ccbbr) {
         this.ccbbr = ccbbr;
+    }
+
+    public String getALT_CODE() {
+        return ALT_CODE;
+    }
+
+    public void setALT_CODE(String ALT_CODE) {
+        this.ALT_CODE = ALT_CODE;
     }
 
     public int compareTo(Filials filials){

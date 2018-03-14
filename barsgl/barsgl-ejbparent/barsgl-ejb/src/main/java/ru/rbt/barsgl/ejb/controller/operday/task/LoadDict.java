@@ -4,8 +4,10 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.repository.BranchDictRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.ejb.EJB;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -33,7 +35,7 @@ public abstract class LoadDict<E, F> {
     @EJB
     private AuditController auditController;
 //E - filialsInf, F - Filials
-    public void fillTargetTables(Date dateLoad, long _loadStatId) {
+    public void fillTargetTables(Date dateLoad, long _loadStatId) throws SQLException {
         StringBuilder insFils = new StringBuilder();
         StringBuilder updFils = new StringBuilder();
 
@@ -45,6 +47,9 @@ public abstract class LoadDict<E, F> {
         listInf.stream().filter(item->getFixFilter(item, dateLoad)).forEach(item -> fixList.add(item));
 
         List<F> target = branchDictRepository.getAll(clazzF);
+//        List<DataRecord> map  = branchDictRepository.select("select * from dh_br_map", null);
+        fillTransient(branchDictRepository.select("select * from dh_br_map", new Object[]{}), target);
+
         auditController.info(LoadBranchDict, "LoadBranchDictTask витрина "+clazzF.getSimpleName()+" загружена из dwh (" + listInf.size()+" записей)", "", String.valueOf(_loadStatId));
         Collections.sort((ArrayList)target);
         for (E item : fixList) {
@@ -80,7 +85,7 @@ public abstract class LoadDict<E, F> {
     protected abstract boolean getFixFilter(E item, Date dateLoad);
     protected abstract boolean getIdFilter( E itemInf, F item);
     protected abstract void saveT(E item);
-    protected abstract String insMap(E item);
-    protected abstract String updE(E item, F f);
-
+    protected abstract String insMap(E item) throws SQLException;
+    protected abstract String updE(E item, F f) throws SQLException;
+    protected abstract void fillTransient(List<DataRecord> map, List<F> target);
 }

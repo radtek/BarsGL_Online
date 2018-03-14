@@ -2,10 +2,7 @@ package ru.rbt.barsgl.ejb.entity.dict.dwh;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by er22317 on 14.02.2018.
@@ -59,6 +56,8 @@ public class Branchs extends BaseEntity<String> implements Comparable<Branchs>{
     @Column(name = "BR_OPER")
     private String BR_OPER;
 
+    @Transient
+    private String FCC_CODE = "";
 
     public Branchs(){}
 
@@ -200,6 +199,14 @@ public class Branchs extends BaseEntity<String> implements Comparable<Branchs>{
 
     public void setBR_OPER(String BR_OPER) {
         this.BR_OPER = BR_OPER;
+    }
+
+    public String getFCC_CODE() {
+        return FCC_CODE;
+    }
+
+    public void setFCC_CODE(String FCC_CODE) {
+        this.FCC_CODE = FCC_CODE;
     }
 
     public int compareTo(Branchs b){
