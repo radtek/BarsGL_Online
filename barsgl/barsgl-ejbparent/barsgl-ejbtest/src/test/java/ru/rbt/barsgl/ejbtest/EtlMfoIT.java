@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -45,16 +46,26 @@ public class EtlMfoIT extends AbstractTimerJobIT{
     }
 
     @Test
-    public void test() throws ParseException, SQLException {
+    public void test() throws Exception {
         long stamp = System.currentTimeMillis();
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
 
+        final String accountCredit = "40802810500012433881";
+        GLAccount accCredit = findAccount(accountCredit);
+        Assert.assertNotNull(accCredit);
+        final String accountDebit = "40802810700164226099";
+        GLAccount accDebit = findAccount(accountDebit);
+        Assert.assertNotNull(accDebit);
+
+        // в разных бранчах
+        Assert.assertFalse(accCredit.getBranch().equals(accDebit.getBranch()));
+
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
-        pst.setAccountCredit("40802810500012433881");
-        pst.setAccountDebit("40802810700164226099");
+        pst.setAccountCredit(accountCredit);
+        pst.setAccountDebit(accountDebit);
         pst.setAmountCredit(new BigDecimal("1200"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.RUB);
