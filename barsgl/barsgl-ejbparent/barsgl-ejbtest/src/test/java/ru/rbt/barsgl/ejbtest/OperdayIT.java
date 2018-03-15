@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
@@ -137,6 +138,8 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         updateOperday(COB, CLOSED);
 
+        operdayToOpen = getOperDayToOpen(getOperday().getCurrentDate());
+        checkCreateBankCurrency(operdayToOpen, USD, new BigDecimal("100.01"));
         checkCreateFinalFlexStep(getOperday().getCurrentDate());
         jobService.executeJob(openOperdayTaskBuilder.build());
 
@@ -423,21 +426,21 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         updateOperday(ONLINE, OPEN);
 
-        AccRlnId rlnId = findAccRln("47422810%");
+        GLAccount account = Optional.ofNullable(findAccount("40702%")).orElseThrow(() -> new RuntimeException("account is not found"));
 
         logger.info("deleted BALTUR entries: " + baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ? and acid = ?"
-                , rlnId.getBsaAcid(), rlnId.getAcid()));
+                , account.getBsaAcid(), account.getAcid()));
 
         logger.info("deleted GL_PDJCHG entries: " + baseEntityRepository.executeNativeUpdate("delete from GL_PDJCHG where bsaacid = ? and acid = ?"
-                , rlnId.getBsaAcid(), rlnId.getAcid()));
+                , account.getBsaAcid(), account.getAcid()));
 
         Date day1 = DateUtils.parseDate("2017-07-01", "yyyy-MM-dd");
         Date day2 = DateUtils.parseDate("2017-07-04", "yyyy-MM-dd");
         Date day3 = DateUtils.parseDate("2017-07-10", "yyyy-MM-dd");
 
-        Long id1 = createPd(day1, rlnId.getAcid(), rlnId.getBsaAcid(), "RUR", "@@GL123");
-        Long id2 = createPd(day2, rlnId.getAcid(), rlnId.getBsaAcid(), "RUR", "@@GL123");
-        Long id3 = createPd(day3, rlnId.getAcid(), rlnId.getBsaAcid(), "RUR", "@@GL123");
+        Long id1 = createPd(day1, account.getAcid(), account.getBsaAcid(), "RUR", "@@GL123");
+        Long id2 = createPd(day2, account.getAcid(), account.getBsaAcid(), "RUR", "@@GL123");
+        Long id3 = createPd(day3, account.getAcid(), account.getBsaAcid(), "RUR", "@@GL123");
 
         logger.info(id1 + ":" + id2 + ":" + id3);
 
@@ -451,33 +454,33 @@ public class OperdayIT extends AbstractTimerJobIT {
         Assert.assertEquals(dateArr[1], day2);
         Assert.assertEquals(dateArr[2], day3);
 
-        List<DataRecord> balturs = getBalturList(rlnId);
+        List<DataRecord> balturs = getBalturList(account);
 
         Assert.assertEquals(3, balturs.size());
         Assert.assertTrue("Все записи baltur DAT = DATL перед удаление проводок", balturs.stream().allMatch(r -> r.getDate("DATL").equals(r.getDate("DAT"))));
 
         // удалить среднюю проводку DATL будет равна из предыдущей записи
-        baseEntityRepository.executeNativeUpdate("delete from pd where id = ?", id2);
+        baseEntityRepository.executeNativeUpdate("delete from pst where id = ?", id2);
 
         List<DataRecord> pdjrns = baseEntityRepository.select("select * from GL_PDJCHG where bsaacid = ? and acid = ? "
-                , rlnId.getBsaAcid(), rlnId.getAcid());
+                , account.getBsaAcid(), account.getAcid());
         Assert.assertEquals(1, pdjrns.size());
 
-        checkCorrectCount(rlnId, 0);
+        checkCorrectCount(account, 0);
         Assert.assertTrue((Long)remoteAccess.invoke(DatLCorrector.class, "correctDatL") >= 1L);
-        checkCorrectCount(rlnId, 1);
+        checkCorrectCount(account, 1);
 
-        balturs = getBalturList(rlnId);
+        balturs = getBalturList(account);
         Assert.assertEquals(day1, balturs.get(0).getDate("DATL"));
         Assert.assertEquals(day1, balturs.get(1).getDate("DATL"));
         Assert.assertEquals(day3, balturs.get(2).getDate("DATL"));
 
         // давим первую проводку
-        baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id1);
+        baseEntityRepository.executeNativeUpdate("update pst set invisible = '1' where id = ?", id1);
         Assert.assertTrue((Long)remoteAccess.invoke(DatLCorrector.class, "correctDatL") >= 2L);
-        checkCorrectCount(rlnId, 2);
+        checkCorrectCount(account, 2);
 
-        balturs = getBalturList(rlnId);
+        balturs = getBalturList(account);
         Assert.assertNull(balturs.get(0).getDate("DATL"));
         Assert.assertNull(balturs.get(1).getDate("DATL"));
         Assert.assertEquals(day3, balturs.get(2).getDate("DATL"));
@@ -489,7 +492,7 @@ public class OperdayIT extends AbstractTimerJobIT {
             logger.info("updated statistics to success: " + baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set status = 'Success' where ID_COB = ?", idCobOld));
         }
 
-        baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id3);
+        baseEntityRepository.executeNativeUpdate("update pst set invisible = '1' where id = ?", id3);
 
         SingleActionJob job = SingleActionJobBuilder.create()
                 .withClass(ExecutePreCOBTaskNew.class).withName(System.currentTimeMillis() + "").build();
@@ -497,16 +500,16 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         jobService.executeJob(job);
 
-        balturs = getBalturList(rlnId);
+        balturs = getBalturList(account);
         Assert.assertNull(balturs.get(0).getDate("DATL"));
         Assert.assertNull(balturs.get(1).getDate("DATL"));
         Assert.assertNull(balturs.get(2).getDate("DATL"));
 
     }
 
-    private void checkCorrectCount(AccRlnId rlnId, int corr) throws SQLException {
+    private void checkCorrectCount(GLAccount account, int corr) throws SQLException {
         List<DataRecord> balt2 = baseEntityRepository.select("select DAT, DATL from BALTUR where bsaacid = ? and acid = ? "
-                , rlnId.getBsaAcid(), rlnId.getAcid());
+                , account.getBsaAcid(), account.getAcid());
         final int[] cntDiff = {0};
         balt2.forEach((DataRecord rec) -> {if (!rec.getDate(0).equals(rec.getDate(1)))  cntDiff[0]++;});
         Assert.assertEquals(corr, cntDiff[0]);
@@ -772,9 +775,9 @@ public class OperdayIT extends AbstractTimerJobIT {
     }
 */
 
-    private List<DataRecord> getBalturList(AccRlnId rlnId) throws SQLException {
+    private List<DataRecord> getBalturList(GLAccount acc) throws SQLException {
         return baseEntityRepository.select("select * from baltur where bsaacid = ? and acid = ? order by dat"
-                , rlnId.getBsaAcid(), rlnId.getAcid());
+                , acc.getBsaAcid(), acc.getAcid());
     }
 
 }
