@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 
@@ -16,6 +17,7 @@ import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.EJBContext;
 import javax.jms.*;
+import javax.persistence.EntityManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,12 +25,16 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.QueueProcessor;
+import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -176,12 +182,19 @@ public abstract class CommonQueueController implements MessageListener {
 
     private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
         final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
+        asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
+    }
+
+/* // TODO пока оставляем SysError
+    private void awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws Exception {
+        final long tillTo = System.currentTimeMillis() + unit.toMillis(timeout);
         try {
             asyncProcessor.awaitTermination(executor, timeout, unit, tillTo);
         } catch (TimeoutException e) {
             throw new ValidationError(ErrorCode.QUEUE_ERROR, e.getMessage());
         }
     }
+*/
 
     private void processMessage(Message receivedMessage, String queueType, String fromQueue, String toQueue, long receiveTime, long startThreadTime){
         long waitingTime = System.currentTimeMillis() - startThreadTime;
@@ -332,7 +345,72 @@ public abstract class CommonQueueController implements MessageListener {
                 + "/";
     }
 
-    // TODO асинхронная обработка - не проверялась и сейчас не используется
+    // =================== оставлено на всякий случай ===========================
+
+    // старый вариант параллельной обработки (И. Севастьянов) - проверить здесь
+    private void processSourcesOld() throws Exception {
+        String[] params = queueProperties.mqTopics.split(":");
+
+        try(JMSConsumer consumer =  jmsContext.createConsumer(jmsContext.createQueue("queue:///" + params[1]));){
+
+            List<JpaAccessCallback<Void>> callbacks = new ArrayList<>();
+
+            for (int i = 0; i < queueProperties.mqBatchSize; i++) {
+                long createReceiveTime = System.currentTimeMillis();
+
+                String[] incMessage = readFromJMS(consumer);
+                if (incMessage == null || incMessage[0] == null) {
+                    break;
+                }
+                long receiveTime = System.currentTimeMillis() - createReceiveTime;
+
+                String textMessage = incMessage[0].trim();
+                Long jId = 0L;
+                try {
+                    jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
+                        return createJournalEntry(params[0], textMessage);
+                    });
+                    callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], receiveTime));
+                } catch (JMSException e) {
+                    reConnect();
+                    auditController.warning(AccountQuery, "Ошибка при обработке сообщения из " + params[1] + " / Таблица GL_ACLIRQ / id=" + jId, null, e);
+                }
+            }
+
+            if (callbacks.size() > 0) {
+                //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов");
+                //asyncProcessor.asyncProcessPooled(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
+                asyncProcessor.asyncProcessPooledByExecutor(callbacks, propertiesRepository.getNumber(PD_CONCURENCY.getName()).intValue(), 10, TimeUnit.MINUTES);
+                //            log.info("Из очереди " + params[1] + " принято на обработку " + callbacks.size() + " запросов. Обработка завершена");
+            }
+        }
+    }
+
+    private class CommonRqCallback implements JpaAccessCallback<Void> {
+        String textMessage;
+        Long jId;
+        String[] incMessage;
+        String queue;
+        String queueType;
+        long receiveTime;
+
+        CommonRqCallback(String queueType, String textMessage, Long jId, String[] incMessage, String queue, long receiveTime) {
+            this.textMessage = textMessage;
+            this.jId = jId;
+            this.incMessage = incMessage;
+            this.queue = queue;
+            this.queueType = queueType;
+            this.receiveTime = receiveTime;
+        }
+
+        @Override
+        public Void call(EntityManager persistence) throws Exception {
+            processing(queueType, textMessage, jId, incMessage, queue, receiveTime, -1L);
+            return null;
+        }
+    }
+
+    // асинхронная обработка - не проверялась и сейчас не используется
     @Override
     public void onMessage(Message message) {
         String[] params = queueProperties.mqTopics.split(":");
