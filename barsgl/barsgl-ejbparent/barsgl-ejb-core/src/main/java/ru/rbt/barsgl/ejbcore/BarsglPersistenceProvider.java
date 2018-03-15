@@ -29,7 +29,7 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
     @PersistenceContext(unitName="RepAS400DataSource")
     protected EntityManager barsrepPersistence;
 
-    @Resource(lookup="java:app/env/jdbc/OracleGLNoXA")
+    @Resource(lookup="java:app/env/jdbc/NoXaOracleGL")
     private DataSource dataSourceNoXA;
 
     @Resource(lookup="java:app/env/jdbc/OracleGL")

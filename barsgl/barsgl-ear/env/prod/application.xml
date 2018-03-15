@@ -59,6 +59,14 @@
     </resource-ref>
 
     <resource-ref>
+        <res-ref-name>java:app/env/jdbc/NoXaOracleGL</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+        <lookup-name>jdbc/NoXaOracleGL</lookup-name>
+    </resource-ref>
+
+    <resource-ref>
         <res-ref-name>java:app/env/jdbc/As400Rep</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>

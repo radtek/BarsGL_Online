@@ -154,7 +154,7 @@
 
     <persistence-unit name="GLOracleDataSourceNoXA" transaction-type="JTA">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <jta-data-source>jdbc/OracleGLNoXA</jta-data-source>
+        <jta-data-source>jdbc/NoXaOracleGL</jta-data-source>
 
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 
