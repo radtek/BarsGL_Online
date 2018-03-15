@@ -263,25 +263,25 @@ public class GLAccountController {
         });
     }
 
-    @Lock(LockType.READ)
+    @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLAccountNotify(String bsaAcid, Date dateOpen, AccountKeys keys) throws Exception {
-        pdRepository.createOrUpdateAccountLock(bsaAcid);
-        final GLAccount glAccount = findGLAccount(bsaAcid);     // TODO с учетом даты!
-        if (null != glAccount) {
-            return glAccount;
-        }
-        return glAccountRepository.executeInNewTransaction(persistence -> {
-            // создать счет с этим номером в GL и BARS
-            GLAccount newAccount = createAccount(bsaAcid, null, GLOperation.OperSide.N, dateOpen, keys, ZERO, GLAccount.OpenType.NOTIF, false);
-            return newAccount;
+        return synchronizer.callSynchronously(monitor, () -> {
+            final GLAccount glAccount = findGLAccount(bsaAcid);     // TODO с учетом даты!
+            if (null != glAccount) {
+                return glAccount;
+            }
+            return glAccountRepository.executeInNewTransaction(persistence -> {
+                // создать счет с этим номером в GL и BARS
+                GLAccount newAccount = createAccount(bsaAcid, null, GLOperation.OperSide.N, dateOpen, keys, ZERO, GLAccount.OpenType.NOTIF, false);
+                return newAccount;
+            });
         });
     }
 
     @Lock(LockType.READ)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void closeGLAccountNotify(String bsaAcid, Date dateClose) throws Exception {
-        pdRepository.createOrUpdateAccountLock(bsaAcid);
         glAccountRepository.updGlAccCloseDate(bsaAcid, dateClose);
     }
 
