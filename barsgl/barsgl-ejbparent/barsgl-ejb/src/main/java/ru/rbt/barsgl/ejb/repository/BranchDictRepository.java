@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
+import static ru.rbt.barsgl.shared.Repository.BARSGLNOXA;
 
 /**
  * Created by er22317 on 08.02.2018.
@@ -28,10 +29,8 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
         return 0 < selectOne("select count(*) cnt from gl_loadstat where stream_id=? and dtl=? and status='P'", LoadBranchDictTask.streamId, dtl).getInteger(0);
    }
 
-
-   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-   public Date getMaxLoadDate() throws SQLException {
-        return selectOne("select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS", null).getDate(0);
+   public Date getMaxLoadDate() throws Exception {
+        return selectOne( BARSGLNOXA,"select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS", null).getDate(0);
    }
    public long insGlLoadStat(Date dtl, Date operday) throws SQLException {
         Long id = selectOne("select GL_LOADSTAT_SEQ.nextval from dual", new Object[]{}).getLong(0);
@@ -42,9 +41,9 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
         executeNativeUpdate("update GL_LOADSTAT set STATUS=?, END_LOAD=SYSDATE where ID=?", status, id);
    }
 
-   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-   public List<E> tableToList(Class<E> clazz, String nativeSql){
-        return (List<E>) getPersistence().createNativeQuery( nativeSql, clazz).getResultList();
+//   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+   public List<E> tableToList(Class<E> clazz, String nativeSql) throws Exception {
+        return (List<E>) getPersistence(BARSGLNOXA).createNativeQuery( nativeSql, clazz).getResultList();
    }
 
     public void listToTable(List<E> list){
@@ -64,7 +63,7 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
         }
 
     }
-    public void jpaUpdateNoFlash(E entity){
+   public void jpaUpdateNoFlash(E entity){
         update(entity, false);
     }
 

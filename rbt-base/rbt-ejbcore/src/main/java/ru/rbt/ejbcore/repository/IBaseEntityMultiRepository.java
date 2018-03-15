@@ -20,6 +20,9 @@ import java.util.concurrent.Future;
  * Created by SotnikovAV on 25.10.2016.
  */
 public interface IBaseEntityMultiRepository<T extends BaseEntity, K extends Serializable> extends BaseEntityRepository<T, K> {
+
+    <T extends Enum> DataRecord selectOne(T enumRepository, String sqlString, Object... params) throws Exception;
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     List<DataRecord> selectNonTransaction(DataSource dataSource, String sqlString, Object... params) throws SQLException;
 
