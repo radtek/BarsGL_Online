@@ -11,9 +11,7 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
-import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
-import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
+import static ru.rbt.barsgl.shared.enums.DealSource.*;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 
 /**
@@ -442,13 +440,14 @@ public class EtlPosting extends BaseEntity <Long> {
         return KondorPlus.getLabel().equals(sourcePosting);
     }
 
-    public boolean fromARMPRO() {
-        return ARMPRO.getLabel().equals(sourcePosting);
+    public boolean fromTBO() {
+        return TBO.getLabel().equals(sourcePosting);
     }
 
     public boolean isNonStandard() {
-        return fromKondorPlus() || Y.equals(fan);
+        return fromKondorPlus() || fromTBO() || Y.equals(fan);
     }
+
 
     public BackValueParameters getBackValueParameters() {
         return backValueParameters;

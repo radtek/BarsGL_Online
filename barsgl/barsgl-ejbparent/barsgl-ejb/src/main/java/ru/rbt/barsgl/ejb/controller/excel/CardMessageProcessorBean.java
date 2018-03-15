@@ -1,13 +1,14 @@
 package ru.rbt.barsgl.ejb.controller.excel;
 
 import org.apache.commons.lang3.StringUtils;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.card.CardPst;
 import ru.rbt.barsgl.ejb.entity.card.CardXls;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
@@ -17,21 +18,20 @@ import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.dict.CardPostingRepository;
 import ru.rbt.barsgl.ejb.repository.dict.CardXlsRepository;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.shared.security.RequestContext;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
-import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.ctx.UserRequestHolder;
+import ru.rbt.shared.security.RequestContext;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -126,7 +126,7 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
             StringBuilder err =  new StringBuilder();
             if (hasNull(row, header, err)) {
                 card.setEcode("1");
-                card.setEmsg(err.toString().substring(0, 255));
+                card.setEmsg(ru.rbt.ejbcore.util.StringUtils.substr(err.toString(), 255));
             }else if (row.size() != FieldNum){
                 card.setEcode("1");
                 card.setEmsg("Строка " + rowNum + ": должно быть " +FieldNum + " полей");
@@ -160,7 +160,9 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
                     writeErr2Card(card, ee);
                     return null;
                 });
-            }catch (Exception e){}
+            }catch (Exception e){
+                auditController.warning(AuditRecord.LogCode.CardMessageProcessorBean,"Ошибка записи ошибки обработки картотеки: " + e.getMessage(), null, e);
+            }
         }
         return card;
     }

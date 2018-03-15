@@ -173,7 +173,9 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     public String getBranchByBsaacidorAcid(String bsaacid, String acid, Date workday) throws Exception { //todo код БРАНЧА Midas
         try {
             DataRecord record = selectFirst(
-                "SELECT BRANCH FROM DH_ACC_INF WHERE CBRF_ACC_NUMBER=? AND DAT=? AND DATTO=?", bsaacid, workday, workday);
+//                "SELECT BRANCH FROM DH_ACC_INF WHERE CBRF_ACC_NUMBER=? AND DAT=? AND DATTO=?", bsaacid, workday, workday);
+                    "SELECT /*+ INDEX(D DH_ACC) */ BRANCH FROM DH_ACC_INF D WHERE \n" +
+                            "CBRF_ACC_NUMBER=? AND DAT <= ? AND DATTO >= ?", bsaacid, workday, workday);
 
             if (record != null && !isEmpty(record.getString("BRANCH"))) {
                 return record.getString("BRANCH");

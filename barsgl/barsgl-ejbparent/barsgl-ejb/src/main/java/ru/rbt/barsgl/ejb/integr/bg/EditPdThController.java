@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
+import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
+import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -32,6 +34,7 @@ import java.util.List;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.ejbcore.validation.ErrorCode.BV_MANUAL_ERROR;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
@@ -64,6 +67,9 @@ public class EditPdThController {
     @Inject
     private ManualTechOperationController manualTechOperationController;
 
+    @EJB
+    private ClosedPeriodCashedRepository closedPeriodRepository;
+
     @Inject
     private SecurityActionRepository actionRepository;
 
@@ -95,29 +101,23 @@ public class EditPdThController {
     }
 
     public RpcRes_Base<ManualTechOperationWrapper> suppressPostingsWrapper(ManualTechOperationWrapper operationWrapper) {
+        String msg = "Ошибка при подавлении проводки";
         try {
-            String msg = "Ошибка при подавлении проводки";
             try {
                 accessServiceSupport.checkUserAccessToBackValueDate(dateUtils.onlyDateParse(operationWrapper.getPostDateStr()), operationWrapper.getUserId());
 
             } catch (ValidationError e) {
-                String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-                auditController.warning(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>( operationWrapper, true, errMessage);
+                return showWarning(operationWrapper, msg, e);
             } catch (Exception e){
-                auditController.error(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>(operationWrapper, true, e.getMessage());
+                return showError(operationWrapper, msg, e);
             }
 
-            List<GlPdTh> pdList = suppressPdTh(operationWrapper);
-            msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки по тех.счету c ID: " + listToString(pdList, ",");
+            List<GlPdTh> pdList = operationRepository.executeInNewTransaction(persistence -> suppressPdTh(operationWrapper));
+            msg = (operationWrapper.isInvisible() ? "Подавлены" : "Восстановлены") + " полупроводки по тех.счетам c ID: " + listToString(pdList, ",");
             auditController.info(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString());
             return new RpcRes_Base<>( operationWrapper, false, msg);
         } catch (Throwable e) {
-            String errMessage = operationWrapper.getErrorMessage() + "\n" + e.getMessage();
-            if (e.getCause() != null ) errMessage += "\n" + e.getCause().getMessage();
-            auditController.error(ManualOperation, errMessage, "GL_PDTH", operationWrapper.getId().toString(), e);
-            return new RpcRes_Base<ManualTechOperationWrapper>( operationWrapper, true, errMessage);
+            return showError(operationWrapper, msg, e);
         }
     }
 
@@ -150,38 +150,39 @@ public class EditPdThController {
         }
     }
 
-    public RpcRes_Base<ManualOperationWrapper> updatePdThWrapper(ManualTechOperationWrapper operationWrapper) {
+    public RpcRes_Base<ManualTechOperationWrapper> updatePdThWrapper(ManualTechOperationWrapper operationWrapper) {
+        String msg = "Ошибка при редактировании проводки";
         try {
-            String msg = "Ошибка при редактировании проводки";
             try {
+                Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
                 Date newDate = dateUtils.onlyDateParse(operationWrapper.getPostDateStr());
                 Date editDay = org.apache.commons.lang3.time.DateUtils.addDays(operdayController.getOperday().getCurrentDate(), -30); // TODO -30
                 // нельзя установить дату ранее 30 дней назад
                 if (editDay.after(newDate))
                     throw new ValidationError(ErrorCode.POSTING_BACK_GT_30, dateUtils.onlyDateString(editDay));
+
+                // проверка закрытого отчетного периода
+                checkClosedPeriod(operationWrapper.getUserId(), oldDate);
+                checkClosedPeriod(operationWrapper.getUserId(), newDate);
+
                 // для пользователей с OperPstChngDate не надо проверять колич-во дней назад
                 if (!actionRepository.getAvailableActions(operationWrapper.getUserId()).contains(SecurityActionCode.TechOperPstChngDate) ) {
-                    Date oldDate = operationRepository.findById(GLOperation.class, operationWrapper.getId()).getPostDate();
                     Date minDate = newDate.before(oldDate) ? newDate : oldDate;
                     accessServiceSupport.checkUserAccessToBackValueDate(minDate, operationWrapper.getUserId());
                 }
 
             } catch (ValidationError e) {
-                String errMessage = manualPostingController.addOperationErrorMessage(e, msg, operationWrapper.getErrorList(), initSource());
-                auditController.warning(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>( operationWrapper, true, errMessage);
+                return showError(operationWrapper, msg, e);
             } catch (Exception e){
-                auditController.error(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString(), e);
-                return new RpcRes_Base<>(operationWrapper, true, e.getMessage());
+                return showError(operationWrapper, msg, e);
             }
 
-            List<GlPdTh> pdList = updatePdTh(operationWrapper);
-            msg = "Изменены полупроводки c ID: " + listToString(pdList, ",") + operationWrapper.getErrorMessage();
+            List<GlPdTh> pdList = operationRepository.executeInNewTransaction(persistence -> updatePdTh(operationWrapper));
+            msg = "Изменены полупроводки по тех.счетам c ID: " + listToString(pdList, ",") + operationWrapper.getErrorMessage();
             auditController.info(ManualOperation, msg, "GL_PDTH", operationWrapper.getId().toString());
-            return new RpcRes_Base<>( operationWrapper, false, msg);
-        } catch (Exception e) {
-            String errMessage = operationWrapper.getErrorMessage();
-            return new RpcRes_Base<>(operationWrapper, true, errMessage);
+            return new RpcRes_Base<>(operationWrapper, false, msg);
+        } catch (Throwable e) {
+            return showError(operationWrapper, msg, e);
         }
     }
 
@@ -190,5 +191,28 @@ public class EditPdThController {
                 wrapper.getDealId(), wrapper.getSubdealId(), wrapper.getPaymentRefernce());
     }
 
+    public void checkClosedPeriod(Long userId, Date postDateNew) {
+        ClosedReportPeriodView period = closedPeriodRepository.getPeriod();
+        if(!postDateNew.after(period.getLastDate()) &&                // разрешено только для суперпользователя
+                !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.TechOperPstChngSuper)) {
+            throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено.\n" +
+                            "Дата проводки '%s' попадает в закрытый отчетный период до '%s', который закрыт с '%s'"
+                    , dateUtils.onlyDateString(postDateNew)
+                    , dateUtils.onlyDateString(period.getLastDate())
+                    , dateUtils.onlyDateString(period.getCutDate())));
+        }
+    }
+
+    private RpcRes_Base<ManualTechOperationWrapper> showError(ManualTechOperationWrapper operationWrapper, String msg, Throwable t) {
+        auditController.error(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), t);
+        String errorMsg = manualPostingController.addOperationErrorMessage(t, msg, operationWrapper.getErrorList(), initSource());
+        return new RpcRes_Base<>(operationWrapper, true, errorMsg);
+    }
+
+    private RpcRes_Base<ManualTechOperationWrapper> showWarning(ManualTechOperationWrapper operationWrapper, String msg, Throwable t) {
+        auditController.warning(ManualOperation, msg, "GL_OPER", operationWrapper.getId().toString(), t);
+        String errorMsg = manualPostingController.addOperationErrorMessage(t, msg, operationWrapper.getErrorList(), initSource());
+        return new RpcRes_Base<>(operationWrapper, true, errorMsg);
+    }
 
 }

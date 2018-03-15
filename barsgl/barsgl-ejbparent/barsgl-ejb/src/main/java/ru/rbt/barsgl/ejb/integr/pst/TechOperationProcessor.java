@@ -77,7 +77,9 @@ public class TechOperationProcessor extends GLOperationProcessor
         List<GlPdTh> pdthList = new ArrayList<GlPdTh>();
         pdthList.add(this.getPdTh(operation, GLOperation.OperSide.D));
         pdthList.add(this.getPdTh(operation, GLOperation.OperSide.C));
-        Collections.sort(pdthList);
+        long pcid = pdthList.get(0).getId();
+        pdthList.forEach(item->item.setPcId(pcid));
+//        Collections.sort(pdthList);
 
         return pdthList;
     }

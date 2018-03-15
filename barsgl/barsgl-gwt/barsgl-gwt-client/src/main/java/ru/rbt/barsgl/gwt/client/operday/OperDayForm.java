@@ -183,7 +183,6 @@ public class OperDayForm extends BaseForm {
         grid.setWidget(0, 1, vip = new Label(""));
         grid.setWidget(1, 1, not_vip = new Label(""));
         grid.getCellFormatter().setWidth(0, 0, "285px");
-        grid.setVisible(false);
 
         return grid;
     }
@@ -206,7 +205,6 @@ public class OperDayForm extends BaseForm {
         reason.setText("");
         vip.setText("");
         not_vip.setText("");
-        vip_errors.setVisible(false);
 
         if (wrapper == null) return;
 
@@ -216,7 +214,6 @@ public class OperDayForm extends BaseForm {
         not_vip.setText(wrapper.getNotVipCount() == null ? "0 (OK)" :
                 (wrapper.getNotVipCount() <= 10 ? Utils.Fmt("{0} (OK)", wrapper.getNotVipCount()) : wrapper.getNotVipCount().toString()));
 
-        vip_errors.setVisible(wrapper.getState() != null && wrapper.getState() == 0);
     }
 
     private void operDateRefresh(OperDayWrapper operDayWrapper){

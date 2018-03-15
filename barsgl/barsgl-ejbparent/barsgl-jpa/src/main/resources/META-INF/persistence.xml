@@ -86,6 +86,7 @@
         <class>ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.ForwardPostSources</class>
 
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPackage</class>
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPosting</class>

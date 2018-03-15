@@ -24,6 +24,7 @@ public abstract class AbstractLocalServerAccess implements ServerAccess {
         LOGIN_BEAN("AuthorizationServiceGwtSupport", "login")
         , LOGOFF_BEAN("AuthorizationServiceGwtSupport", "logoff")
         , AUDIT_ERROR_BEAN("AuditController", "error")
+        , AUDIT_WARN_BEAN("AuditController", "warning")
         , SESS_REGISTRATOR_BEAN("SessionSupportBean", "registerHttpSession")
         , SESS_UNREGISTRATOR_BEAN("SessionSupportBean", "unregisterHttpSession")
         , SESS_CHECKSTORE_BEAN("SessionSupportBean", "checkSessionInStore");

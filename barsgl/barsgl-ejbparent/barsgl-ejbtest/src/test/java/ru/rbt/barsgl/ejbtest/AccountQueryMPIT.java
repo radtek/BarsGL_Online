@@ -12,6 +12,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
+import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
@@ -33,11 +34,7 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.SysError;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
-import static ru.rbt.barsgl.ejb.common.CommonConstants.ACLIRQ_TASK;
-import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIMEOUT;
-import static ru.rbt.barsgl.ejb.props.PropertyName.ACLIRQ_TIME_UNIT;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
-import static ru.rbt.barsgl.ejbtest.CustomerDetailsNotifyIT.getAuditMaxId;
 import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
@@ -52,7 +49,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     private final static String host = "vs338";
     private final static String broker = "QM_MBROKER10_TEST";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
-//    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
+    //    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private final static String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
     private final static String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
     private final static String acdenoF = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
@@ -62,10 +59,12 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
 
+/*
     @After
     public void after() {
         setPropertyTimeout("MINUTES", 10);
     }
+*/
 
     private String getQProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
         return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30", writeOut);
@@ -96,11 +95,14 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
                 + "writeOut=" + writeOut +"\n"
                 + "writeSleepThreadTime=true\n"
 
-        ;
+                ;
     }
 
     @Test
     public void testA() throws Exception {
+
+//        deletePropertyTimeout();
+//        deletePropertyExecutor();
 
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
         clearQueue(cf, acliquIn, login, passw, 1000);
@@ -131,9 +133,9 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testStressError() throws Exception {
+    public void testStressErrorEE() throws Exception {
 
-        int cnt = 30;
+        int cnt = 50;
         int cntmax = 5000;
 
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
@@ -144,7 +146,10 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
 
         long idAudit = getAuditMaxId();
 
-        setPropertyTimeout("SECONDS", 5);
+//        setPropertyTimeout("SECONDS", 5);
+//        setPropertyTimeout("MINUTES", 1);
+//        setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
+
         Thread.sleep(5000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
@@ -163,6 +168,43 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
     }
 
+    @Test
+    public void testStressErrorSE() throws Exception {
+
+        int cnt = 50;
+        int cntmax = 5000;
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        clearQueue(cf, acliquIn, login, passw, cntmax);
+        clearQueue(cf, acliquOut, login, passw, cntmax);
+
+        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw, cnt);
+
+        long idAudit = getAuditMaxId();
+
+//        setPropertyTimeout("SECONDS", 5);
+//        setPropertyTimeout("MINUTES", 1);
+//        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
+
+        Thread.sleep(5000L);
+        SingleActionJob job =
+                SingleActionJobBuilder.create()
+                        .withClass(AccountQueryTaskMT.class)
+                        .withName("AccountQueryTaskMT_A")
+                        .withProps(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut))
+                        .build();
+        jobService.executeJob(job);
+
+        Thread.sleep(6000L);
+        int n = clearQueue(cf, acliquOut, login, passw, cntmax);
+        Assert.assertTrue(n < cnt);
+
+        AuditRecord record = getAuditError(idAudit, Error);
+        Assert.assertNotNull("Нет записи об ошибке в аудит", record);
+        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
+    }
+
+/*
     @Test
     public void testStress500() throws Exception {
 
@@ -226,6 +268,7 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         // new   6:12.409   7:34.93
         // old   6:47.807   7:6.07
     }
+*/
 
     @Test
     @Ignore
@@ -319,7 +362,7 @@ mq.password=UsATi8hU
     @Ignore
     public void testLocalStress() throws Exception {
         //System.setProperty("com.ibm.msg.client.commonservices.trace.status", "ON");
-        
+
         MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
 
         // Config
@@ -328,30 +371,30 @@ mq.password=UsATi8hU
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         cf.setQueueManager("QM_MBROKER4_T4");
         cf.setChannel("SYSTEM.DEF.SVRCONN");
-        
+
         int count = 1000;
         //*
-        for (int i = 0; i < count; i++) {        
-        sendToQueue(cf, 
-//                "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", 
+        for (int i = 0; i < count; i++) {
+            sendToQueue(cf,
+//                "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF",
 //                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
 //                "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF","","");
-                
+
 //                "UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST",
 //                new File(this.getClass().getResource("/MasterAccountPositioningBatchQuery_01_req.xml").getFile()),
 //                "UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE","","");
 
-                "UCBRU.ADP.BARSGL.ACLIQU.REQUEST",
-                new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
-                "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE","","");
+                    "UCBRU.ADP.BARSGL.ACLIQU.REQUEST",
+                    new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()),
+                    "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE","","");
         }
-        
+
 /*
      SingleActionJob job =
             SingleActionJobBuilder.create()
                 .withClass(AccountQueryTaskMT.class)
                 .withName("AccountQuery5")
-                .withProps(                        
+                .withProps(
                     "mq.batchSize = 100\n" + //todo
                         "mq.host = localhost\n" +
                         "mq.port = 1414\n" +
@@ -363,13 +406,13 @@ mq.password=UsATi8hU
 //                        "MAPBRQ:UCBRU.ADP.BARSGL.MAACPOBAQU.REQUEST:UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE\n" +
 //                        "BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
                         "mq.user=\n" +
-                        "mq.password=\n"+ 
+                        "mq.password=\n"+
 //                        "writeOut=true\n"+
                         "unspents=show"
                 )
                 .build();
         jobService.executeJob(job);
-        for (int i = 0; i < count; i++) {        
+        for (int i = 0; i < count; i++) {
           receiveFromQueue(cf, "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE", "", "");
 //        receiveFromQueue(cf, "UCBRU.ADP.BARSGL.MAACPOBAQU.RESPONSE", "", "");
         }
@@ -378,21 +421,38 @@ mq.password=UsATi8hU
 
     }
 
+/*
     private static void setPropertyTimeout(String unit, int interval) {
         deletePropertyTimeout();
         baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
                         "(?, 'root', 'Y', 'STRING_TYPE', 'Единицы времени обработки сообщений из очереди ACLIRQ', null, ?, null)",
-                ACLIRQ_TIME_UNIT.getName(), unit);
+                MQ_TIME_UNIT.getName(), unit);
         baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
                         "(?, 'root', 'Y', 'NUMBER_TYPE', 'Макс. время обработки сообщений из очереди ACLIRQ', null, null, ?)",
-                ACLIRQ_TIMEOUT.getName(), interval);
+                MQ_TIMEOUT.getName(), interval);
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
 
-    private static void deletePropertyTimeout() {
-        baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?, ?)", ACLIRQ_TIMEOUT.getName(), ACLIRQ_TIME_UNIT.getName());
+    private static void setPropertyExecutor(AsyncProcessor.ExecutorType etype) {
+        deletePropertyExecutor();
+        baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
+                        "(?, 'root', 'Y', 'STRING_TYPE', 'Тип ThreadFactory', null, ?, null)",
+                AsyncProcessor.MQ_EXECUTOR, etype.name());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
+*/
+
+/*
+    private static void deletePropertyTimeout() {
+        baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?, ?)", MQ_TIMEOUT.getName(), MQ_TIME_UNIT.getName());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+    }
+
+    private static void deletePropertyExecutor() {
+        baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?)", AsyncProcessor.MQ_EXECUTOR);
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+    }
+*/
 
     private AuditRecord getAuditError(long idFrom, AuditRecord.LogLevel ... levels ) throws SQLException {
         String level = "";
@@ -555,6 +615,7 @@ mq.password=UsATi8hU
         connection.close();
     }
 
+/*
     public static void runAclirqJob(String props) {
         TimerJob aclirqTaskJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
                 , "from TimerJob j where j.name = ?1", ACLIRQ_TASK);
@@ -583,95 +644,101 @@ mq.password=UsATi8hU
 //            jobService.startupJob(aclirqJob);
 //            registerJob(aclirqJob);
     }
+*/
+
+    public static long getAuditMaxId() throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
+        return null == res ? 0 : res.getLong(0);
+    }
 
     static String fullTopicTest =
-        "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
-            "<NS1:Header>\n" +
-            "    <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
-            "        <NS2:Audit>\n" +
-            "            <NS2:MessagePath>\n" +
-            "                <NS2:Step>\n" +
-            "                    <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
-            "                    <NS2:VersionId>v4</NS2:VersionId>\n" +
-            "                    <NS2:TimeStamp>2016-03-30T08:15:15.175+03:00</NS2:TimeStamp>\n" +
-            "                    <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                    <NS2:Comment/>\n" +
-            "                </NS2:Step>\n" +
-            "                <NS2:Step>\n" +
-            "                    <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                    <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                    <NS2:TimeStamp>2016-03-30T08:15:15.216+03:00</NS2:TimeStamp>\n" +
-            "                    <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
-            "                    <NS2:Comment/>\n" +
-            "                </NS2:Step>\n" +
-            "                <NS2:Step>\n" +
-            "                    <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
-            "                    <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                    <NS2:TimeStamp>2016-03-30T08:15:15.422+03:00</NS2:TimeStamp>\n" +
-            "                    <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                    <NS2:Comment/>\n" +
-            "                </NS2:Step>\n" +
-            "                <NS2:Step>\n" +
-            "                    <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
-            "                    <NS2:VersionId>v2</NS2:VersionId>\n" +
-            "                    <NS2:TimeStamp>2016-03-30T08:15:15.440+03:00</NS2:TimeStamp>\n" +
-            "                    <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
-            "                    <NS2:Comment></NS2:Comment>\n" +
-            "                </NS2:Step>\n" +
-            "            </NS2:MessagePath>\n" +
-            "        </NS2:Audit>\n" +
-            "    </NS2:UCBRUHeaders>\n" +
-            "</NS1:Header>\n" +
-            "<NS1:Body>\n" +
-            "<!-- Midas -->\n" +
-            "    <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
-            "        <gbo:AccountDetails>\n" +
-            "            <gbo:AccountNo>057438RUR401102040</gbo:AccountNo>\n" +
-            "            <gbo:Branch>040</gbo:Branch>\n" +
-            "            <gbo:CBAccountNo>40702810800404496871</gbo:CBAccountNo>\n" +
-            "            <gbo:Ccy>RUR</gbo:Ccy>\n" +
-            "            <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
-            "            <gbo:Description>GENERATSIYA NGO</gbo:Description>\n" +
-            "            <gbo:Status>O</gbo:Status>\n" +
-            "            <gbo:CustomerNo>00057438</gbo:CustomerNo>\n" +
-            "            <gbo:Special>4011</gbo:Special>\n" +
-            "            <gbo:OpenDate>2012-02-03</gbo:OpenDate>\n" +
-            "            <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
-            "            <gbo:DebitTransAllowed>N</gbo:DebitTransAllowed>\n" +
-            "            <gbo:CorBank>046577971</gbo:CorBank>\n" +
-            "            <gbo:CorINN>6670216662</gbo:CorINN>\n" +
-            "            <gbo:Positioning>\n" +
-            "                <gbo:CBAccount>40702810800404496871</gbo:CBAccount>\n" +
-            "                <gbo:IMBAccountNo>40702810800404496871</gbo:IMBAccountNo>\n" +
-            "                <gbo:IMBBranch>040</gbo:IMBBranch>\n" +
-            "                <gbo:HostABSAccountNo>057438RUR401102040</gbo:HostABSAccountNo>\n" +
-            "                <gbo:HostABSBranch>040</gbo:HostABSBranch>\n" +
-            "                <gbo:HostABS>MIDAS</gbo:HostABS>\n" +
-            "            </gbo:Positioning>\n" +
-            "            <gbo:UDF>\n" +
-            "                <gbo:Name>GWSAccType</gbo:Name>\n" +
-            "                <gbo:Value>CURR</gbo:Value>\n" +
-            "            </gbo:UDF>\n" +
-            "            <gbo:UDF>\n" +
-            "                <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
-            "                <gbo:Value>VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
-            "                </gbo:Value>\n" +
-            "            </gbo:UDF>\n" +
-            "            <gbo:UDF>\n" +
-            "                <gbo:Name>ParentBranchName</gbo:Name>\n" +
-            "                <gbo:Value>UCB, Ekaterinburg Branch</gbo:Value>\n" +
-            "            </gbo:UDF>\n" +
-            "            <gbo:UDF>\n" +
-            "                <gbo:Name>CusSegment</gbo:Name>\n" +
-            "                <gbo:Value>TIER_I</gbo:Value>\n" +
-            "            </gbo:UDF>\n" +
-            "            <gbo:ShadowAccounts>\n" +
-            "                <gbo:HostABS>FCC</gbo:HostABS>\n" +
-            "                <gbo:AccountNo>00057438RURCOSA101</gbo:AccountNo>\n" +
-            "                <gbo:Branch>K01</gbo:Branch>\n" +
-            "            </gbo:ShadowAccounts>\n" +
-            "        </gbo:AccountDetails>\n" +
-            "    </gbo:AccountList>\n" +
-            "</NS1:Body>\n" +
-            "</NS1:Envelope>";
+            "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+                    "<NS1:Header>\n" +
+                    "    <NS2:UCBRUHeaders xmlns:NS2=\"urn:imb:gbo:v2\">\n" +
+                    "        <NS2:Audit>\n" +
+                    "            <NS2:MessagePath>\n" +
+                    "                <NS2:Step>\n" +
+                    "                    <NS2:Application.Module>SRVACC.AccountDetailsNotify.NotificationHandler</NS2:Application.Module>\n" +
+                    "                    <NS2:VersionId>v4</NS2:VersionId>\n" +
+                    "                    <NS2:TimeStamp>2016-03-30T08:15:15.175+03:00</NS2:TimeStamp>\n" +
+                    "                    <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                    <NS2:Comment/>\n" +
+                    "                </NS2:Step>\n" +
+                    "                <NS2:Step>\n" +
+                    "                    <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                    <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                    <NS2:TimeStamp>2016-03-30T08:15:15.216+03:00</NS2:TimeStamp>\n" +
+                    "                    <NS2:RoutingRole>START</NS2:RoutingRole>\n" +
+                    "                    <NS2:Comment/>\n" +
+                    "                </NS2:Step>\n" +
+                    "                <NS2:Step>\n" +
+                    "                    <NS2:Application.Module>SRVACC.AccountListQuery</NS2:Application.Module>\n" +
+                    "                    <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                    <NS2:TimeStamp>2016-03-30T08:15:15.422+03:00</NS2:TimeStamp>\n" +
+                    "                    <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                    <NS2:Comment/>\n" +
+                    "                </NS2:Step>\n" +
+                    "                <NS2:Step>\n" +
+                    "                    <NS2:Application.Module>SRVACC.AccountDetailsNotify.Publisher</NS2:Application.Module>\n" +
+                    "                    <NS2:VersionId>v2</NS2:VersionId>\n" +
+                    "                    <NS2:TimeStamp>2016-03-30T08:15:15.440+03:00</NS2:TimeStamp>\n" +
+                    "                    <NS2:RoutingRole>SUCCESS</NS2:RoutingRole>\n" +
+                    "                    <NS2:Comment></NS2:Comment>\n" +
+                    "                </NS2:Step>\n" +
+                    "            </NS2:MessagePath>\n" +
+                    "        </NS2:Audit>\n" +
+                    "    </NS2:UCBRUHeaders>\n" +
+                    "</NS1:Header>\n" +
+                    "<NS1:Body>\n" +
+                    "<!-- Midas -->\n" +
+                    "    <gbo:AccountList xmlns:gbo=\"urn:imb:gbo:v2\">\n" +
+                    "        <gbo:AccountDetails>\n" +
+                    "            <gbo:AccountNo>057438RUR401102040</gbo:AccountNo>\n" +
+                    "            <gbo:Branch>040</gbo:Branch>\n" +
+                    "            <gbo:CBAccountNo>40702810800404496871</gbo:CBAccountNo>\n" +
+                    "            <gbo:Ccy>RUR</gbo:Ccy>\n" +
+                    "            <gbo:CcyDigital>810</gbo:CcyDigital>\n" +
+                    "            <gbo:Description>GENERATSIYA NGO</gbo:Description>\n" +
+                    "            <gbo:Status>O</gbo:Status>\n" +
+                    "            <gbo:CustomerNo>00057438</gbo:CustomerNo>\n" +
+                    "            <gbo:Special>4011</gbo:Special>\n" +
+                    "            <gbo:OpenDate>2012-02-03</gbo:OpenDate>\n" +
+                    "            <gbo:CreditTransAllowed>Y</gbo:CreditTransAllowed>\n" +
+                    "            <gbo:DebitTransAllowed>N</gbo:DebitTransAllowed>\n" +
+                    "            <gbo:CorBank>046577971</gbo:CorBank>\n" +
+                    "            <gbo:CorINN>6670216662</gbo:CorINN>\n" +
+                    "            <gbo:Positioning>\n" +
+                    "                <gbo:CBAccount>40702810800404496871</gbo:CBAccount>\n" +
+                    "                <gbo:IMBAccountNo>40702810800404496871</gbo:IMBAccountNo>\n" +
+                    "                <gbo:IMBBranch>040</gbo:IMBBranch>\n" +
+                    "                <gbo:HostABSAccountNo>057438RUR401102040</gbo:HostABSAccountNo>\n" +
+                    "                <gbo:HostABSBranch>040</gbo:HostABSBranch>\n" +
+                    "                <gbo:HostABS>MIDAS</gbo:HostABS>\n" +
+                    "            </gbo:Positioning>\n" +
+                    "            <gbo:UDF>\n" +
+                    "                <gbo:Name>GWSAccType</gbo:Name>\n" +
+                    "                <gbo:Value>CURR</gbo:Value>\n" +
+                    "            </gbo:UDF>\n" +
+                    "            <gbo:UDF>\n" +
+                    "                <gbo:Name>OperationTypeCodes</gbo:Name>\n" +
+                    "                <gbo:Value>VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,\n" +
+                    "                </gbo:Value>\n" +
+                    "            </gbo:UDF>\n" +
+                    "            <gbo:UDF>\n" +
+                    "                <gbo:Name>ParentBranchName</gbo:Name>\n" +
+                    "                <gbo:Value>UCB, Ekaterinburg Branch</gbo:Value>\n" +
+                    "            </gbo:UDF>\n" +
+                    "            <gbo:UDF>\n" +
+                    "                <gbo:Name>CusSegment</gbo:Name>\n" +
+                    "                <gbo:Value>TIER_I</gbo:Value>\n" +
+                    "            </gbo:UDF>\n" +
+                    "            <gbo:ShadowAccounts>\n" +
+                    "                <gbo:HostABS>FCC</gbo:HostABS>\n" +
+                    "                <gbo:AccountNo>00057438RURCOSA101</gbo:AccountNo>\n" +
+                    "                <gbo:Branch>K01</gbo:Branch>\n" +
+                    "            </gbo:ShadowAccounts>\n" +
+                    "        </gbo:AccountDetails>\n" +
+                    "    </gbo:AccountList>\n" +
+                    "</NS1:Body>\n" +
+                    "</NS1:Envelope>";
 }

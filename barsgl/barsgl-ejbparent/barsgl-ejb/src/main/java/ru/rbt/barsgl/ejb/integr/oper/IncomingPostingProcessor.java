@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
+import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
@@ -86,6 +87,9 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
 
     @EJB
     private BVSouceCachedRepository sourceRepository;
+
+    @EJB
+    private FwPostSourceCachedRepository fwSourceRepository;
 
     @EJB
     private ClosedPeriodCashedRepository closedPeriodRepository;
@@ -801,7 +805,7 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         Calendar vnextcal = Calendar.getInstance();
         vnextcal.setTime(nextWork);
 
-        if (vdatecal.get(Calendar.MONTH) == vnextcal.get(Calendar.MONTH)) {
+        if (vdatecal.get(Calendar.MONTH) == vnextcal.get(Calendar.MONTH) || fwSourceRepository.isForward(operation.getSourcePosting(), operation.getProcDate())) {
             // ОД находится в том же месяце
             return nextWork;
         } else {

@@ -32,9 +32,11 @@ import static ru.rbt.ejbcore.util.StringUtils.*;
  */
 public class CommonAccountQueryProcessor {
     private static final Logger log = Logger.getLogger(CommonAccountQueryProcessor.class);
+    public static final int descriptionLength=35;
+
     // многопоточный форматтер
     protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
-    public static final int descriptionLength=35;
+//    protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public String prepareDescription(String desc){
         if(isEmpty(desc)) return "";

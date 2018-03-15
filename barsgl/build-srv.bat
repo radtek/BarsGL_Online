@@ -1,0 +1,5 @@
+set JAVA_HOME=c:\Development\jdk\jdk1.8.0_131
+M2_HOME=c:\Development\apache-maven-3.5.0
+set PATH=%PATH%;c:\Development\apache-maven-3.5.0\bin;C:\Program Files\Git\bin
+
+mvn clean install -DskipTests -e -Denv=barssrv

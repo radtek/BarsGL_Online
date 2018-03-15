@@ -377,17 +377,26 @@ public class GLAccountController {
         });
     }
 
+    @Lock(LockType.READ)
+    public void validateGLAccountMnl(GLAccount glAccount, Date dateOpen, Date dateClose,
+                                        AccountKeys keys, ErrorList descriptors) throws Exception {
+        List<ValidationError> errors = glAccountProcessor.validate(keys, new ValidationContext());
+        if (!errors.isEmpty()) {
+            throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(N, errors, descriptors));
+        }
+        // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
+//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
+        glAccountProcessor.checkDateOpenMnl(glAccount, dateOpen);
+        if (null != dateClose) {
+            glAccountProcessor.checkDateCloseMnl(glAccount, dateOpen, dateClose);
+        }
+    }
+
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount updateGLAccountMnl(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
-            List<ValidationError> errors = glAccountProcessor.validate(keys, new ValidationContext());
-            if (!errors.isEmpty()) {
-                throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(N, errors, descriptors));
-            }
-            // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
-//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
             glAccountProcessor.setDateOpen(glAccount, dateOpen);
             glAccountProcessor.setDateClose(glAccount, dateOpen, dateClose);
             glAccount.setDealId(keys.getDealId());
@@ -398,22 +407,26 @@ public class GLAccountController {
         });
     }
 
+    @Lock(LockType.READ)
+    public void validateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
+                                     AccountKeys keys, ErrorList descriptors) throws Exception {
+        List<ValidationError> errors = glAccountProcessorTech.validate(keys, new ValidationContext());
+        if (!errors.isEmpty()) {
+            throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(N, errors, descriptors));
+        }
+        glAccountProcessorTech.checkDateOpenMnl(glAccount, dateOpen);
+        if (null != dateClose) {
+            glAccountProcessorTech.checkDateCloseMnl(glAccount, dateOpen, dateClose);
+        }
+    }
+
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public GLAccount updateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
-            List<ValidationError> errors = glAccountProcessorTech.validate(keys, new ValidationContext());
-            if (!errors.isEmpty()) {
-                throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(N, errors, descriptors));
-            }
-            // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
-//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
-            glAccountProcessorTech.setDateOpen(glAccount, dateOpen);
-            glAccountProcessorTech.setDateClose(glAccount, dateOpen, dateClose);
-            //glAccount.setDealId(keys.getDealId());
-            //glAccount.setSubdealId(keys.getSubDealId());
-            //glAccount.setDescription(keys.getDescription());
+            glAccount.setDateOpen(dateOpen);
+            glAccount.setDateClose(dateClose);
 
             return glAccountRepository.update(glAccount);
         });
@@ -435,7 +448,7 @@ public class GLAccountController {
     public GLAccount closeGLAccountMnlTech(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
-            glAccountProcessorTech.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
+            glAccount.setDateClose(dateClose);
 
             return glAccountRepository.update(glAccount);
         });

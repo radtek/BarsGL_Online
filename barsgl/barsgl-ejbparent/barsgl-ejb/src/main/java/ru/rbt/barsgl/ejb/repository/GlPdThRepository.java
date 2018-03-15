@@ -96,24 +96,12 @@ public class GlPdThRepository extends AbstractBaseEntityRepository<GlPdTh, Long>
                 final int finalCounter = i;
                 beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                     try {
-                        // записать полупроводки
-                        GlPdTh pdTh1 = null;
+                        // записать полупроводки, в pdthList сначала OperSide.D, потом OperSide.C
                         for (GlPdTh pdth : pdthList) {
                             createOrUpdateAccountLock(pdth.getBsaAcid());
-                            if ((pdTh1!=null) && (pdTh1.getOperSide()== GLOperation.OperSide.D) && (pdth.getOperSide()== GLOperation.OperSide.C))
-                            {
-                                pdth.setPcId(pdTh1.getPcId());
-                                pdTh1 = save(pdth);
-                            }
-                            else{
-                                pdth.setPcId(pdth.getId());
-                                pdTh1 = save(pdth);
-                            }
-                            // пересчет/локализация только в рамках задачи мониторинга вход сообщений по журналу backvalue recalculate(pd);
+                            save(pdth);
+// пересчет/локализация только в рамках задачи мониторинга вход сообщений по журналу backvalue recalculate(pd);
                         }
-
-                        //registerBackvalueJournal(pstList); // todo удалить потом
-
                         if (null != targetState) {
                             operationRepository.updateOperationStatusSuccess(operation, targetState);
                         }

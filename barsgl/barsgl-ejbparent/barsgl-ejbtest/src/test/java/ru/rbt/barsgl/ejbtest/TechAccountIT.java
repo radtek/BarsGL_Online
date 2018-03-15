@@ -33,7 +33,7 @@ import java.util.List;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.shared.enums.DealSource.TBO;
 
 /**
  * Created by Ivan Sevastyanov on 03.04.2017.
@@ -120,6 +120,8 @@ public class TechAccountIT extends AbstractRemoteIT {
 
         List<GlPdTh> pdList = baseEntityRepository.select(GlPdTh.class,"from GlPdTh pd where pd.glOperationId = ?1",operation_2.getId());
         Assert.assertEquals("Неверное количество проводок созданных по операции",pdList.size(), 2);
+
+        Assert.assertEquals("PCIDы п/проводок должны совпадать", pdList.get(0).getPcId(), pdList.get(1).getPcId());
 
         setOperday(oldOperday.getCurrentDate(),oldOperday.getLastWorkingDay(), oldOperday.getPhase(), oldOperday.getLastWorkdayStatus());
         updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
@@ -324,7 +326,7 @@ public class TechAccountIT extends AbstractRemoteIT {
 
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.USD);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("2316768");
         pst.setDeptId("TBM");
         pst.setDealId("921458");
@@ -358,7 +360,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("2316768");
         pst.setDeptId("TBM");
         pst.setDealId("875859");
@@ -392,7 +394,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("3370547");
         pst.setDeptId("TBM");
         pst.setDealId("1287387");
@@ -426,7 +428,7 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setAmountDebitRu(pst.getAmountDebit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(BankCurrency.RUB);
-        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setSourcePosting(TBO.getLabel());
         pst.setEventId("3370547");
         pst.setStornoReference("3370547");
         pst.setDeptId("TBM");
