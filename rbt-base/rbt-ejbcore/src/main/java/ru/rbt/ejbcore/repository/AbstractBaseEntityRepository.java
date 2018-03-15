@@ -102,6 +102,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return this.selectOne(getDataSource(), sqlString, params);
     }
 
+//    @Override
+//    public DataRecord selectOneNoXA(String sqlString, Object... params) throws SQLException {
+//        return this.selectOne(getDataSource(), sqlString, params);
+//    }
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public <E> E executeInNonTransaction(DataAccessCallback<E> callback) throws Exception {
         return this.executeInNonTransaction(getDataSource(), callback);

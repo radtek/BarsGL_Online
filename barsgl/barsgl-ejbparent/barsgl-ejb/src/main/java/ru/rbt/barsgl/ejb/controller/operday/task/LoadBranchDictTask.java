@@ -82,10 +82,11 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
             }
         }
 //                branchDictRepository.updGlLoadStat(_loadStatId, "P");
-        auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
+            auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
 //            }else {
 //                auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
         }catch (Throwable e){
+            auditController.error(LoadBranchDict,"Завершение с ошибкой", null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
@@ -128,11 +129,6 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
     public boolean checkRun(Date dateLoad, MODE mode, boolean forceStart) throws Exception {
         return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
             Date maxLoadDate = null;
-
-//            if (!taskUniqueController.Start(TaskUniqueController.TaskId.LoadBranchDictTask, forceStart)){
-//                auditController.info(LoadBranchDict, "LoadBranchDictTask за "+yyyyMMdd.format(dateLoad)+" уже запущена");
-//                return false;
-//            }
 
             if (mode.equals(Auto)){
                 //dateLoad = lwdate

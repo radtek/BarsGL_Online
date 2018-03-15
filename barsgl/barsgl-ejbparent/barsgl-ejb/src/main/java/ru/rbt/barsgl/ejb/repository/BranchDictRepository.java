@@ -27,8 +27,11 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
    public boolean isTaskProcessed(Date dtl) throws SQLException {
         return 0 < selectOne("select count(*) cnt from gl_loadstat where stream_id=? and dtl=? and status='P'", LoadBranchDictTask.streamId, dtl).getInteger(0);
    }
+
+
+   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
    public Date getMaxLoadDate() throws SQLException {
-        return selectOne("select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS", new Object[]{}).getDate(0);
+        return selectOne("select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS", null).getDate(0);
    }
    public long insGlLoadStat(Date dtl, Date operday) throws SQLException {
         Long id = selectOne("select GL_LOADSTAT_SEQ.nextval from dual", new Object[]{}).getLong(0);
