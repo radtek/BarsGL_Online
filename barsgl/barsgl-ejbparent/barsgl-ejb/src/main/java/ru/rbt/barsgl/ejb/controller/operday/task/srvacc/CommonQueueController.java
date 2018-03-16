@@ -9,8 +9,6 @@ import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
@@ -30,7 +28,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountQuery;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.QueueProcessor;
@@ -66,7 +63,7 @@ public abstract class CommonQueueController implements MessageListener {
     protected abstract String processQuery(String queueType, String textMessage, Long jId) throws Exception;
 
     protected abstract String getJournalName();
-    protected abstract Long createJournalEntry(String queueType, String textMessage) throws Exception;
+    protected abstract Long createJournalEntryInternal(String queueType, String textMessage) throws Exception;
     protected abstract void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception;
     protected abstract void updateStatusErrorProc(Long journalId, Throwable e) throws Exception;
     protected abstract void updateStatusErrorOut(Long journalId, Throwable e) throws Exception;
@@ -122,6 +119,12 @@ public abstract class CommonQueueController implements MessageListener {
             jmsContext = null;
         }
     }
+
+    public Long createJournalEntry(String queueType, String textMessage) throws Exception{
+        return (Long) coreRepository.executeInNewTransaction((persistence) -> {
+            return createJournalEntryInternal(queueType, textMessage);
+        });
+    };
 
     public void process(Properties properties) throws Exception {
         try {
@@ -207,9 +210,7 @@ public abstract class CommonQueueController implements MessageListener {
             }
 
             String textMessage = incMessage[0].trim();
-            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
-                return createJournalEntry(queueType, textMessage);
-            });
+            journalId = createJournalEntry(queueType, textMessage);
             processing(queueType, textMessage, journalId, incMessage, toQueue, receiveTime, waitingTime);
 
         } catch (JMSException e) {
@@ -239,19 +240,12 @@ public abstract class CommonQueueController implements MessageListener {
     // Удобно для тестирования
     public Long processingWithLog(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
         String textMessage = incMessage[0].trim();
-        Long journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
-            return createJournalEntry(queueType, textMessage);
-        });
+        Long journalId = createJournalEntry(queueType, textMessage);
         processing(queueType, textMessage, journalId, incMessage, toQueue, receiveTime, waitingTime);
         return journalId;
     }
 
     private void processing(String queueType, String textMessage, Long journalId, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-//    public Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-//        String textMessage = incMessage[0].trim();
-//        Long journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
-//            return createJournalEntry(queueType, textMessage);
-//        });
         long startProcessing = System.currentTimeMillis();
         String outMessage = (String) coreRepository.executeInNewTransaction(persistence1 -> {
             return processQuery(queueType, textMessage, journalId);
@@ -345,6 +339,7 @@ public abstract class CommonQueueController implements MessageListener {
                 + "/";
     }
 
+
     // =================== оставлено на всякий случай ===========================
 
     // старый вариант параллельной обработки (И. Севастьянов) - проверить здесь
@@ -367,9 +362,7 @@ public abstract class CommonQueueController implements MessageListener {
                 String textMessage = incMessage[0].trim();
                 Long jId = 0L;
                 try {
-                    jId = (Long) coreRepository.executeInNewTransaction(persistence -> {
-                        return createJournalEntry(params[0], textMessage);
-                    });
+                    jId = createJournalEntry(params[0], textMessage);
                     callbacks.add(new CommonRqCallback(params[0], textMessage, jId, incMessage, params[2], receiveTime));
                 } catch (JMSException e) {
                     reConnect();
@@ -421,9 +414,7 @@ public abstract class CommonQueueController implements MessageListener {
             String[] incMessage = readJMS(message);
             String queueType = params[0];
             String textMessage = incMessage[0].trim();
-            journalId = (Long) coreRepository.executeInNewTransaction((persistence) -> {
-                return createJournalEntry(queueType, textMessage);
-            });
+            journalId = createJournalEntry(queueType, textMessage);
 
             processing(queueType, textMessage, journalId, incMessage, params[2], -1L, -1L);
 

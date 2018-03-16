@@ -50,12 +50,12 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
  */
 @Stateless
 @LocalBean
-public class CustomerNotifyProcessor implements Serializable {
+public class CustomerNotifyProcessor extends CommonNotifyProcessor implements Serializable {
     private static final Logger log = Logger.getLogger(CustomerNotifyProcessor.class);
 
     public static final String journalName = "GL_CUDENO1";
     public static final String charsetName = "IBM866";
-    private static final String parentNodeName = "/Customer";
+    private static final String parentNodeName = "Customer";
     private static final XmlParam[] paramNamesCust = {
              new XmlParam("CUST_NUM",   "CustomerNum",      false, 8)
             ,new XmlParam("BRANCHCODE", "BranchCode",       false, 3)
@@ -89,12 +89,12 @@ public class CustomerNotifyProcessor implements Serializable {
     AuditController auditController;
 
     public void process(String fullTopic, final Long journalId) throws Exception {
-        if (fullTopic == null || !fullTopic.contains("Customer")) {
+        if (fullTopic == null || !fullTopic.contains(parentNodeName)) {
             setErrorStatus(journalId, ERR_VAL, "Ошибка в содержании сообщения", "");
             return;
         }
 
-        Map<String, String> xmlData = readFromXML(fullTopic, journalId, parentNodeName, paramNamesCust);
+        Map<String, String> xmlData = readFromXML(fullTopic, charsetName, "/" + parentNodeName, paramNamesCust, journalId);
         if (xmlData == null) {
             // Запись в аудит, в таблицу аудита, в лог и возврат
             setErrorStatus(journalId, ERR_VAL, "Ошибка во время распознования XML", "");
@@ -108,7 +108,7 @@ public class CustomerNotifyProcessor implements Serializable {
         }
 
         // TODO validate
-        String err = validateXmlParams(xmlData);
+        String err = validateXmlParams(xmlData, paramNamesCust);
         if (!isEmpty(err)) {
             setErrorStatus(journalId, ERR_VAL, "Ошибка в формате XML", err);
             return;
@@ -130,67 +130,6 @@ public class CustomerNotifyProcessor implements Serializable {
 
         log.info(String.format("Обработка сообщения по клиенту '%s' завершена, результат: '%s'", inputParams.getCustNo(), result.name()));
 
-    }
-
-    private Map<String, String> readFromXML(String bodyXML, Long jId, String parentName, XmlParam[] paramNames) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
-        org.w3c.dom.Document doc = null;
-        if (!bodyXML.startsWith("<?xml")) {
-            bodyXML = "<?xml version=\"1.0\" encoding=\"" + charsetName + "\"?>\n" + bodyXML;
-        }
-
-        try {
-            DocumentBuilder b = XmlUtilityLocator.getInstance().newDocumentBuilder();
-            doc = b.parse(new ByteArrayInputStream(bodyXML.getBytes(charsetName )));
-            if (doc == null) {
-                //Ошибка XML
-                journalRepository.updateLogStatus(jId, ERR_VAL, "Ошибка при преобразовании входящего XML");
-                return null;
-            }
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            journalRepository.updateLogStatus(jId, ERR_VAL, "Ошибка при преобразовании входящего XML\n" + e.getMessage());
-            throw e;
-        }
-
-        NodeList nodes;
-        XPath xPath = XmlUtilityLocator.getInstance().newXPath();
-        try {
-            Element element = doc.getDocumentElement();
-            nodes = (NodeList) xPath.evaluate(parentName, element, XPathConstants.NODESET);
-            if (nodes == null || nodes.getLength() != 1) {
-                nodes = (NodeList) xPath.evaluate("Body" + parentName, element, XPathConstants.NODESET);
-                if (nodes == null || nodes.getLength() != 1) {
-                    //Ошибка XML
-                    journalRepository.updateLogStatus(jId, ERR_VAL, "Отсутствуют неоходимые данные " + parentName);
-                    return null;
-                }
-            }
-        } catch (XPathExpressionException e) {
-            journalRepository.updateLogStatus(jId, ERR_VAL, "Ошибка при чтении входящего XML\n" + e.getMessage());
-            throw e;
-        }
-
-        Node parentNode = nodes.item(0);
-
-        Map<String, String> params = new HashMap<>();
-
-        for (XmlParam item : paramNames) {
-            params.put(item.fieldName, (String) xPath.evaluate("./" + item.xmlName, parentNode, XPathConstants.STRING));
-        }
-
-        return params;
-    }
-
-    private String validateXmlParams(Map<String, String> xmlData) {
-        StringBuilder builder = new StringBuilder();
-        for (XmlParam item: paramNamesCust) {
-            String value = xmlData.get(item.fieldName);
-            if (isEmpty(value)) {
-                if (!item.nullable)
-                    builder.append(String.format("Не задано поле '%s'; ", item.xmlName));
-            } else if (value.length() > item.length)
-                builder.append(String.format("Длина поля '%s' > %d; ", item.xmlName, item.length));
-        }
-        return builder.toString();
     }
 
     private CustDNInput createInputParams(Long journalId, Map<String, String> xmlData) throws Exception {
@@ -296,18 +235,8 @@ public class CustomerNotifyProcessor implements Serializable {
         return !isEmpty(prop) && "Y".equals(prop.toUpperCase().substring(0, 1));
     }
 
-    private static class XmlParam {
-        String fieldName;
-        String xmlName;
-        int length;
-        boolean nullable;
-
-        public XmlParam(String fieldName, String xmlName, boolean nullable, int length) {
-            this.fieldName = fieldName;
-            this.xmlName = xmlName;
-            this.length = length;
-            this.nullable = nullable;
-        }
+    @Override
+    protected void updateLogStatusError(Long jourbnalId, String message) {
+        journalRepository.updateLogStatus(jourbnalId, ERR_VAL, message);
     }
-
 }

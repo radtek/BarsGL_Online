@@ -61,7 +61,7 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected Long createJournalEntry(String queueType, String textMessage) throws Exception {
+    protected Long createJournalEntryInternal(String queueType, String textMessage) throws Exception {
         return journalRepository.createJournalEntry(textMessage);
     }
 

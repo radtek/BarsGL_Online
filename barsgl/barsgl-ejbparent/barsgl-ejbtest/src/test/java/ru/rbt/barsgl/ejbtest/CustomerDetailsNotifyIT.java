@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
@@ -51,7 +52,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
     private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
 //    private final static String inQueue = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
 //    private final static String outQueue = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
-    private static final String login = "srvwbl4mqtest";
+    private static final String login = "srvwbl4mqtest";    // srvwb14mqtest    l != 1 !!!
     private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
 
@@ -152,6 +153,31 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 
         Thread.sleep(2000L);
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+    }
+
+    /**
+     * Тест обработки сообщения из очереди
+     * @throws Exception
+     */
+    @Test
+    public void testProcessCustomer() throws Exception {
+        deletePropertyOnline();
+
+        long idAudit = getAuditMaxId();
+        long idCudeno = getCudenoMaxId();
+
+        String message = IOUtils.toString(this.getClass().getResourceAsStream("/CustomerDetailsTest_B.xml"), "UTF-8");
+
+        Long jId = remoteAccess.invoke(CustomerNotifyQueueController.class, "createJournalEntry", qType, message);
+        remoteAccess.invoke(CustomerNotifyProcessor.class, "process", message, jId);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        CustDNJournal journal = getCudenoNewRecord(idCudeno);
+        Assert.assertNotNull("Нет новой записи в таблице GL_CUDENO1", journal);
+        Assert.assertEquals(PROCESSED, journal.getStatus());
+
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO2", getCudenoInput(journal.getId()));
+        Assert.assertNotNull("Нет записи в таблице GL_CUDENO3", getCudenoMapped(journal.getId()));
     }
 
     /**
