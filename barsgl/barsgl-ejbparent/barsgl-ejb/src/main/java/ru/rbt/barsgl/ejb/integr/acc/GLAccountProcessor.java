@@ -585,7 +585,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         }
     }
 
-    public void setDateClose(GLAccount glAccount, Date dateOpen, Date dateClose) {
+    public void setDateClose(GLAccount glAccount, Date dateClose) {
 /*
         if (null != dateClose) {
             // проверка даты закрытия
