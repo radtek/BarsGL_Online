@@ -61,6 +61,17 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
 @AccessTimeout(value = 15, unit = MINUTES)
 public class GLAccountController {
 
+    public enum AccountCloseType{
+        ERR("ERR"), NoChange("NoChange");
+        private String value;
+        AccountCloseType(String value) {
+            this.value = value;
+        }
+        public String getValue() {
+            return value;
+        }
+    }
+
     private static final Logger log = Logger.getLogger(GLAccountController.class);
 
     private java.util.concurrent.locks.Lock monitor = new ReentrantLock();
@@ -398,7 +409,7 @@ public class GLAccountController {
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> {
             glAccountProcessor.setDateOpen(glAccount, dateOpen);
-            glAccountProcessor.setDateClose(glAccount, dateOpen, dateClose);
+            glAccountProcessor.setDateClose(glAccount, dateClose);
             glAccount.setDealId(keys.getDealId());
             glAccount.setSubdealId(keys.getSubDealId());
             glAccount.setDescription(keys.getDescription());
@@ -434,10 +445,22 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount closeGLAccountDeals(GLAccount glAccount, Date dateClose, AccountCloseType closeType) throws Exception {
+        return glAccountRepository.executeInNewTransaction(persistence -> {
+            if (closeType.equals(AccountCloseType.ERR)){
+                glAccount.setOpenType(AccountCloseType.ERR.getValue());
+            }
+            glAccountProcessor.setDateClose(glAccount, dateClose);
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnl(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
-            glAccountProcessor.setDateClose(glAccount, glAccount.getDateOpen(), dateClose);
+            glAccountProcessor.setDateClose(glAccount, dateClose);
 
             return glAccountRepository.update(glAccount);
         });
