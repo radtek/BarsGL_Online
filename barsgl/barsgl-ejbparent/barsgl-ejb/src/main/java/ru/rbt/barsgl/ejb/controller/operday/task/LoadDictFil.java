@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import static ru.rbt.barsgl.shared.Repository.BARSGLNOXA;
+
 /**
  * Created by er22317 on 14.02.2018.
  */
@@ -39,7 +41,7 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
     }
 
     @Override
-    protected void saveT(FilialsInf item) {
+    protected void saveT(FilialsInf item) throws Exception {
         branchDictRepository.saveEntityNoFlash(new Filials(item.getId(), item.getCcpne(), item.getCcpnr(), item.getCcpri(), item.getCcbbr()));
 
     }
@@ -59,7 +61,7 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
     }
 
     @Override
-    protected String updE(FilialsInf item, Filials f) throws SQLException {
+    protected String updE(FilialsInf item, Filials f) throws Exception {
         if (!item.getCcpne().equals(f.getCcpne()) ||
                 !item.getCcpnr().equals(f.getCcpnr()) ||
                 !item.getCcpri().equals(f.getCcpri()) ||

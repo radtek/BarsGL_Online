@@ -35,7 +35,7 @@ public class LoadDictBr  extends LoadDict<BranchsInf, Branchs> {
     }
 
     @Override
-    protected void saveT(BranchsInf item) {
+    protected void saveT(BranchsInf item) throws Exception {
         branchDictRepository.saveEntityNoFlash(new Branchs(item.getId(), item.getA8LCCD(), item.getA8LCCD(), item.getA8BICN(), item.getA8BRNM(), item.getBBRRI(), item.getBCORI(), item.getBCBBR(), item.getBR_HEAD(), item.getBR_OPER()));
     }
 
@@ -53,7 +53,7 @@ public class LoadDictBr  extends LoadDict<BranchsInf, Branchs> {
     }
 
     @Override
-    protected String updE(BranchsInf item, Branchs f) throws SQLException {
+    protected String updE(BranchsInf item, Branchs f) throws Exception {
         if (!item.getFCC_CODE().equals(f.getFCC_CODE())){
             branchDictRepository.nativeUpdate("delete from DH_BR_MAP where FCC_BRANCH = ?", new Object[]{f.getFCC_CODE()});
             insMap(item);

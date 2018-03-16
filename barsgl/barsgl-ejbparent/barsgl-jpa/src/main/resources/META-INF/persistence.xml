@@ -82,10 +82,6 @@
         <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut</class>
         <class>ru.rbt.barsgl.ejb.entity.dict.ForwardPostSources</class>
-        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.FilialsInf</class>
-        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Filials</class>
-        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.BranchsInf</class>
-        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Branchs</class>
 
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPackage</class>
         <class>ru.rbt.barsgl.ejb.entity.etl.BatchPosting</class>
@@ -155,6 +151,11 @@
     <persistence-unit name="GLOracleDataSourceNoXA" transaction-type="JTA">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <jta-data-source>jdbc/NoXaOracleGL</jta-data-source>
+
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.FilialsInf</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Filials</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.BranchsInf</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Branchs</class>
 
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 

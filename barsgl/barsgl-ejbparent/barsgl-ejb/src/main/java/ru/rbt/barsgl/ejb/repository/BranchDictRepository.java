@@ -25,6 +25,8 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
     @EJB
     private AuditController auditController;
 
+
+
    public boolean isTaskProcessed(Date dtl) throws SQLException {
         return 0 < selectOne("select count(*) cnt from gl_loadstat where stream_id=? and dtl=? and status='P'", LoadBranchDictTask.streamId, dtl).getInteger(0);
    }
@@ -32,13 +34,13 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
    public Date getMaxLoadDate() throws Exception {
         return selectOne( BARSGLNOXA,"select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS", null).getDate(0);
    }
-   public long insGlLoadStat(Date dtl, Date operday) throws SQLException {
-        Long id = selectOne("select GL_LOADSTAT_SEQ.nextval from dual", new Object[]{}).getLong(0);
+   public long insGlLoadStat(Date dtl, Date operday) throws Exception {
+        Long id = selectOne(BARSGLNOXA,"select GL_LOADSTAT_SEQ.nextval from dual", null).getLong(0);
         executeNativeUpdate("insert into GL_LOADSTAT(ID, STREAM_ID, DTL, STATUS, OPERDAY, START_LOAD ) values(?,?,?,?,?,SYSDATE)", id, LoadBranchDictTask.streamId, dtl, "N", operday);
         return id;
    }
-   public void updGlLoadStat(Long id, String status) throws SQLException {
-        executeNativeUpdate("update GL_LOADSTAT set STATUS=?, END_LOAD=SYSDATE where ID=?", status, id);
+   public void updGlLoadStat(Long id, String status) throws Exception {
+        executeNativeUpdate(BARSGLNOXA,"update GL_LOADSTAT set STATUS=?, END_LOAD=SYSDATE where ID=?", status, id);
    }
 
 //   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -46,29 +48,31 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
         return (List<E>) getPersistence(BARSGLNOXA).createNativeQuery( nativeSql, clazz).getResultList();
    }
 
-    public void listToTable(List<E> list){
-        list.forEach((item) -> save(item));
-    }
+   public void listToTable(List<E> list) throws Exception{
+//        list.forEach((item) -> save(getPersistence(BARSGLNOXA), item));
+        for(E item: list){
+            save(getPersistence(BARSGLNOXA), item);
+        }
+   }
 
-    public void saveEntityNoFlash(E entity){
-        save(entity, false);
+   public void saveEntityNoFlash(E entity) throws Exception {
+        save(getPersistence(BARSGLNOXA), entity, false);
     }
 
    public void nativeUpdate(String sql, Object[] params) {
         try {
-            executeNativeUpdate(sql, params);
+            executeNativeUpdate(BARSGLNOXA, sql, params);
         } catch (Throwable e){
             auditController.error(LoadBranchDict, sql + " vs " + Arrays.stream(params).map(x->x.toString()).collect( Collectors.joining(",")), null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
-
     }
-   public void jpaUpdateNoFlash(E entity){
-        update(entity, false);
+   public void jpaUpdateNoFlash(E entity) throws Exception {
+        update(getPersistence(BARSGLNOXA), entity, false);
     }
 
-   public <E> List<E> getAll(Class<E> clazz) {
-        return select(clazz, "select t from " + clazz.getName() + " t", new Object[]{});
+   public <E> List<E> getAll(Class<E> clazz) throws Exception {
+        return select( BARSGLNOXA, clazz, "select t from " + clazz.getName() + " t", new Object[]{});
    }
 
 }

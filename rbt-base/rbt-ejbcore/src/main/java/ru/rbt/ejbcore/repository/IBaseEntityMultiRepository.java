@@ -23,6 +23,10 @@ public interface IBaseEntityMultiRepository<T extends BaseEntity, K extends Seri
 
     <T extends Enum> DataRecord selectOne(T enumRepository, String sqlString, Object... params) throws Exception;
 
+    public <E, T extends Enum> List<E> select(T enumRepository, Class<E> clazz, String jpaQuery, Object ... params) throws Exception;
+
+    <T extends Enum> int executeNativeUpdate(T repository, String nativeSQL, Object... params) throws Exception;
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     List<DataRecord> selectNonTransaction(DataSource dataSource, String sqlString, Object... params) throws SQLException;
 

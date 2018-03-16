@@ -148,6 +148,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     }
 
     @Override
+    public <E, T extends Enum> List<E> select(T enumRepository, Class<E> clazz, String jpaQuery, Object ... params) throws Exception {
+        return this.select(getPersistence(enumRepository), clazz, jpaQuery, 0, params);
+    }
+
+    @Override
     public <E> List<E> selectHinted(Class<E> clazz, String jpaQuery
             , Object[] params, Map<String,String> hints) {
         return this.selectHinted(getPersistence(), clazz, jpaQuery, 0, params, hints);
@@ -179,6 +184,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     @Override
     public int executeUpdate(String jpQuery, Object... params) {
         return this.executeUpdate(getPersistence(), jpQuery, params);
+    }
+
+    @Override
+    public <T extends Enum> int executeNativeUpdate(T repository, String nativeSQL, Object... params) throws Exception {
+        return this.executeNativeUpdate(getDataSource(repository), nativeSQL, params);
     }
 
     @Override
@@ -227,6 +237,9 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     public void flush() {
         this.flush(getPersistence());
+    }
+    public <T extends Enum> void flush(T enumRepository) throws Exception {
+        this.flush(getPersistence(enumRepository));
     }
 
     @Override

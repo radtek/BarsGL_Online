@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
+import static ru.rbt.barsgl.shared.Repository.BARSGLNOXA;
 
 
 /**
@@ -35,7 +36,7 @@ public abstract class LoadDict<E, F> {
     @EJB
     private AuditController auditController;
 //E - filialsInf, F - Filials
-    public void fillTargetTables(Date dateLoad, long _loadStatId) throws SQLException {
+    public void fillTargetTables(Date dateLoad, long _loadStatId) throws Exception {
         StringBuilder insFils = new StringBuilder();
         StringBuilder updFils = new StringBuilder();
 
@@ -48,7 +49,7 @@ public abstract class LoadDict<E, F> {
 
         List<F> target = branchDictRepository.getAll(clazzF);
 //        List<DataRecord> map  = branchDictRepository.select("select * from dh_br_map", null);
-        fillTransient(branchDictRepository.select("select * from dh_br_map", new Object[]{}), target);
+        fillTransient(branchDictRepository.select("select * from dh_br_map", null), target);
 
         auditController.info(LoadBranchDict, "LoadBranchDictTask витрина "+clazzF.getSimpleName()+" загружена из dwh (" + listInf.size()+" записей)", "", String.valueOf(_loadStatId));
         Collections.sort((ArrayList)target);
@@ -64,7 +65,7 @@ public abstract class LoadDict<E, F> {
                 updFils.append(updE(item, f.get()));
             }
         }
-        branchDictRepository.flush();
+        branchDictRepository.flush(BARSGLNOXA);
         if (insFils.length() > 0 || updFils.length() > 0)
             auditController.info(LoadBranchDict, "LoadBranchDictTask "+clazzF.getSimpleName()+ " " +(insFils.length()>0?"добавлены с кодом "+insFils:"")+ (updFils.length()>0?"обновлены с кодом "+updFils:""), "", String.valueOf(_loadStatId));
         else
@@ -84,8 +85,8 @@ public abstract class LoadDict<E, F> {
     protected abstract String sqlVitrina();
     protected abstract boolean getFixFilter(E item, Date dateLoad);
     protected abstract boolean getIdFilter( E itemInf, F item);
-    protected abstract void saveT(E item);
+    protected abstract void saveT(E item) throws Exception;
     protected abstract String insMap(E item) throws SQLException;
-    protected abstract String updE(E item, F f) throws SQLException;
+    protected abstract String updE(E item, F f) throws Exception;
     protected abstract void fillTransient(List<DataRecord> map, List<F> target);
 }
