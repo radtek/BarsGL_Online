@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.repository.CloseAccountsRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
@@ -19,7 +20,7 @@ public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
     PreparedStatement query;
     ResultSet rec;
     private String cnum, dealid, subdealid, source;
-    private List<DataRecord> accounts = new ArrayList<DataRecord>();
+    private List<GLAccount> accounts = new ArrayList<GLAccount>();
 
     @EJB
     private CloseAccountsRepository closeAccountsRepository;
@@ -38,11 +39,6 @@ public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
             subdealid = rec.getString("subdealid");
             source = rec.getString("source");
             accounts = closeAccountsRepository.dealsAccounts( cnum, dealid, subdealid);
-//            queryAccounts.setString(1, rec.getString("dealid"));
-//            queryAccounts.setString(2, rec.getString("subdealid"));
-//            queryAccounts.setString(3, rec.getString("cnum"));
-//            ResultSet gl_acc = queryAccounts.executeQuery();
-//            setBsaacid(gl_acc.getString("bsaacid"));
         }
         return true;
     }
@@ -53,11 +49,11 @@ public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
         if (rec != null) { rec.close();}
     }
 
-    public List<DataRecord> getAccounts() {
+    public List<GLAccount> getAccounts() {
         return accounts;
     }
 
-    public void setAccounts(List<DataRecord> accounts) {
+    public void setAccounts(List<GLAccount> accounts) {
         this.accounts = accounts;
     }
     public String getCnum() {

@@ -92,7 +92,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , QueueProcessor
         , CustomerDetailsNotify
         , NewAccounts
-        , AccountCloseTask
+        , AccDealCloseTask
     }
 
     public enum LogLevel {

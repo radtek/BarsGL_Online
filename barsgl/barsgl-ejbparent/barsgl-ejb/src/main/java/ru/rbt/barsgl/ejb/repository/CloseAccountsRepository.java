@@ -8,6 +8,7 @@ import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,6 +35,23 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
     public void moveToHistory(String cnum, String dealid, String subdealid, String source){
         executeNativeUpdate("insert into GL_DEALCLOSE_H (DEALID,SUBDEALID,CNUM,CLOSE_DT,MATURITY_DT,STATUS,SOURCE,STREAM_ID,VALID_FROM,DEAL_TYPE,DWH_TABLE,LOADDATE) select * from GL_DEALCLOSE");
         executeNativeUpdate("DELETE FROM GL_DEALCLOSE where cnum=? and source=? and dealid=? and subdealid=?", cnum, source, dealid, subdealid);
+        flush();
+    }
+
+    public void moveToWaitClose(GLAccount glAccount, Date loadDate, String closeType) throws SQLException {
+        if (0 < selectOne("select count(*) from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()).getInteger(0))
+            return;
+        executeNativeUpdate("insert into gl_acwaitclose(BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?,?)",
+                            glAccount.getBsaAcid(),
+                            glAccount.getAcid(),
+                            glAccount.getCurrency().getCurrencyCode(),
+                            glAccount.getDealId(),
+                            glAccount.getSubDealId(),
+                            glAccount.getDateOpen(),
+                            glAccount.getDateRegister(),
+                            glAccount.getOpenType(),
+                            closeType,
+                            loadDate);
         flush();
     }
 }
