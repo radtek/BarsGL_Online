@@ -90,7 +90,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , Localization
         , Ocp
         , NewAccounts
-        , CloseAccountsForClosedDeals
+        , AccountCloseTask
     }
 
     public enum LogLevel {

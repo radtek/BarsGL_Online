@@ -2,18 +2,21 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.repository.CloseAccountsRepository;
+import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
-import static ru.rbt.audit.entity.AuditRecord.LogCode.CloseAccountsForClosedDeals;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountCloseTask;
 import static ru.rbt.ejbcore.util.DateUtils.dbDateString;
 
 /**
@@ -24,44 +27,50 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
     private AuditController auditController;
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
+    @EJB
+    private CloseAccountsRepository closeAccountsRepository;
     @Inject
     private OperdayController operdayController;
+    @Inject
+    private GLAccountRepository glAccountRepository;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         Date dateLoad = operdayController.getOperday().getCurrentDate();
         try {
-            auditController.info(CloseAccountsForClosedDeals, this.getClass().getSimpleName() + " стартовала в режиме за дату " + dbDateString(dateLoad));
-            executeWork(dateLoad);
+            auditController.info(AccountCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
+            if (checkRun()) executeWork(dateLoad);
         }catch (Throwable e){
-            auditController.error(CloseAccountsForClosedDeals,"Завершение с ошибкой", null, e);
+            auditController.error(AccountCloseTask,"Завершение с ошибкой", null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
 
-    private void executeWork(Date dateLoad) throws Exception {
-        //delete processed deals
-        beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
-            try (PreparedStatement query = connection.prepareStatement("DELETE FROM GL_DEALCLOSE d where exists(select 1 from GL_DEALCLOSE_H h where d.cnum=h.cnum and d.source=h.source and d.dealid=h.dealid and d.subdealid=h.subdealid)");) {
-                query.execute();
-            }
-            return 1;
-        }), 60 * 60);
+    public boolean checkRun() throws Exception {
+        closeAccountsRepository.delOldDeals();
+        long cnt = closeAccountsRepository.countDeals();
+        if (cnt == 0) {
+            auditController.info(AccountCloseTask, "Нет сделок для закрытия счетов (таблица GL_DEALCLOSE пустая)");
+            return false;
+        }else{
+            auditController.info(AccountCloseTask, "Начало обработки закрытых сделок в количестве "+cnt);
+        }
+        return true;
+    }
 
+    private void executeWork(Date dateLoad) throws Exception {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
-            try (PreparedStatement query = connection.prepareStatement("select a.bsaacid from GL_DEALCLOSE d left join gl_acc a on a.dealid=d.dealid and a.subdealid=d.subdealid and a.custno=d.cnum and a.dtc is null order by d.dealid");
-                 ResultSet rec = query.executeQuery()) {
-                String bsaacid = rec.getString("bsaacid");
-                if (bsaacid == null){
-                    moveToHistory();
+            try (CloseAccountsForClosedDealsIterate rec = new CloseAccountsForClosedDealsIterate(connection)) {
+                while(rec.next()){
+                    if (!rec.getAccounts().isEmpty()) rec.getAccounts().forEach(item->closeAccounts(item));
+                    closeAccountsRepository.moveToHistory( rec.getCnum(), rec.getDealid(), rec.getSubdealid(), rec.getSource());
                 }
             }
             return 1;
         }), 60 * 60);
-
     }
 
-    void moveToHistory(){
-
+    void closeAccounts(DataRecord accounts){
+//        glAccountRepository.getAccountBalance(accounts.);
     }
 }
