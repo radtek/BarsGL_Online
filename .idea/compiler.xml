@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="barsgl-bankjar" />
+        <module name="barsgl-common" />
+        <module name="barsgl-ear" />
+        <module name="barsgl-ejb" />
+        <module name="barsgl-ejb-common" />
+        <module name="barsgl-ejb-core" />
+        <module name="barsgl-ejb-testing" />
+        <module name="barsgl-ejbtest" />
+        <module name="barsgl-gwt-client" />
+        <module name="barsgl-gwt-core" />
+        <module name="barsgl-gwt-server" />
+        <module name="barsgl-gwt-serverutil" />
+        <module name="barsgl-gwt-servlet" />
+        <module name="barsgl-gwt-war" />
+        <module name="barsgl-jpa" />
+        <module name="barsgl-shared" />
+        <module name="barsgl-testjavadoc" />
+        <module name="grid-gwt-client" />
+        <module name="grid-gwt-server" />
+        <module name="maven-archiver (1)" />
+        <module name="maven-archiver (10)" />
+        <module name="maven-archiver (11)" />
+        <module name="maven-archiver (12)" />
+        <module name="maven-archiver (13)" />
+        <module name="maven-archiver (14)" />
+        <module name="maven-archiver (15)" />
+        <module name="maven-archiver (16)" />
+        <module name="maven-archiver (17)" />
+        <module name="maven-archiver (18)" />
+        <module name="maven-archiver (19)" />
+        <module name="maven-archiver (2)" />
+        <module name="maven-archiver (20)" />
+        <module name="maven-archiver (21)" />
+        <module name="maven-archiver (22)" />
+        <module name="maven-archiver (23)" />
+        <module name="maven-archiver (24)" />
+        <module name="maven-archiver (25)" />
+        <module name="maven-archiver (26)" />
+        <module name="maven-archiver (27)" />
+        <module name="maven-archiver (28)" />
+        <module name="maven-archiver (29)" />
+        <module name="maven-archiver (3)" />
+        <module name="maven-archiver (30)" />
+        <module name="maven-archiver (4)" />
+        <module name="maven-archiver (5)" />
+        <module name="maven-archiver (6)" />
+        <module name="maven-archiver (7)" />
+        <module name="maven-archiver (8)" />
+        <module name="maven-archiver (9)" />
+        <module name="rbt-audit" />
+        <module name="rbt-ejbcore" />
+        <module name="rbt-prop" />
+        <module name="rbt-shared" />
+        <module name="security-ejb" />
+        <module name="security-gwt-client" />
+        <module name="security-gwt-ejb" />
+        <module name="security-gwt-server" />
+        <module name="security-jpa" />
+        <module name="tasks-ejb" />
+        <module name="tasks-gwt-client" />
+        <module name="tasks-gwt-server" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="barsgl" target="1.8" />
+      <module name="barsgl-bankjar" target="1.8" />
+      <module name="barsgl-common" target="1.8" />
+      <module name="barsgl-ear" target="1.8" />
+      <module name="barsgl-ejb" target="1.8" />
+      <module name="barsgl-ejb-common" target="1.8" />
+      <module name="barsgl-ejb-core" target="1.8" />
+      <module name="barsgl-ejb-testing" target="1.8" />
+      <module name="barsgl-ejbparent" target="1.8" />
+      <module name="barsgl-ejbtest" target="1.8" />
+      <module name="barsgl-gwt" target="1.8" />
+      <module name="barsgl-gwt-client" target="1.8" />
+      <module name="barsgl-gwt-core" target="1.8" />
+      <module name="barsgl-gwt-server" target="1.8" />
+      <module name="barsgl-gwt-serverutil" target="1.8" />
+      <module name="barsgl-gwt-servlet" target="1.8" />
+      <module name="barsgl-gwt-war" target="1.8" />
+      <module name="barsgl-jpa" target="1.8" />
+      <module name="barsgl-shared" target="1.8" />
+      <module name="barsgl-testjavadoc" target="1.8" />
+      <module name="grid" target="1.8" />
+      <module name="grid-gwt-client" target="1.8" />
+      <module name="grid-gwt-server" target="1.8" />
+      <module name="maven-archiver (1)" target="1.5" />
+      <module name="maven-archiver (10)" target="1.5" />
+      <module name="maven-archiver (11)" target="1.5" />
+      <module name="maven-archiver (12)" target="1.5" />
+      <module name="maven-archiver (13)" target="1.5" />
+      <module name="maven-archiver (14)" target="1.5" />
+      <module name="maven-archiver (15)" target="1.5" />
+      <module name="maven-archiver (16)" target="1.5" />
+      <module name="maven-archiver (17)" target="1.5" />
+      <module name="maven-archiver (18)" target="1.5" />
+      <module name="maven-archiver (19)" target="1.5" />
+      <module name="maven-archiver (2)" target="1.5" />
+      <module name="maven-archiver (20)" target="1.5" />
+      <module name="maven-archiver (21)" target="1.5" />
+      <module name="maven-archiver (22)" target="1.5" />
+      <module name="maven-archiver (23)" target="1.5" />
+      <module name="maven-archiver (24)" target="1.5" />
+      <module name="maven-archiver (25)" target="1.5" />
+      <module name="maven-archiver (26)" target="1.5" />
+      <module name="maven-archiver (27)" target="1.5" />
+      <module name="maven-archiver (28)" target="1.5" />
+      <module name="maven-archiver (29)" target="1.5" />
+      <module name="maven-archiver (3)" target="1.5" />
+      <module name="maven-archiver (30)" target="1.5" />
+      <module name="maven-archiver (4)" target="1.5" />
+      <module name="maven-archiver (5)" target="1.5" />
+      <module name="maven-archiver (6)" target="1.5" />
+      <module name="maven-archiver (7)" target="1.5" />
+      <module name="maven-archiver (8)" target="1.5" />
+      <module name="maven-archiver (9)" target="1.5" />
+      <module name="rbt-audit" target="1.8" />
+      <module name="rbt-base" target="1.8" />
+      <module name="rbt-ejbcore" target="1.8" />
+      <module name="rbt-prop" target="1.8" />
+      <module name="rbt-shared" target="1.8" />
+      <module name="security" target="1.8" />
+      <module name="security-ejb" target="1.8" />
+      <module name="security-gwt-client" target="1.8" />
+      <module name="security-gwt-ejb" target="1.8" />
+      <module name="security-gwt-server" target="1.8" />
+      <module name="security-jpa" target="1.8" />
+      <module name="tasks" target="1.8" />
+      <module name="tasks-ejb" target="1.8" />
+      <module name="tasks-gwt-client" target="1.8" />
+      <module name="tasks-gwt-server" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
