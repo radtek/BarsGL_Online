@@ -61,17 +61,6 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
 @AccessTimeout(value = 15, unit = MINUTES)
 public class GLAccountController {
 
-    public enum AccountCloseType{
-        ERR("ERR"), NoChange("NoChange");
-        private String value;
-        AccountCloseType(String value) {
-            this.value = value;
-        }
-        public String getValue() {
-            return value;
-        }
-    }
-
     private static final Logger log = Logger.getLogger(GLAccountController.class);
 
     private java.util.concurrent.locks.Lock monitor = new ReentrantLock();
@@ -445,10 +434,10 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public GLAccount closeGLAccountDeals(GLAccount glAccount, Date dateClose, AccountCloseType closeType) throws Exception {
+    public GLAccount closeGLAccountDeals(GLAccount glAccount, Date dateClose, GLAccount.CloseType closeType) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
-            if (closeType.equals(AccountCloseType.ERR)){
-                glAccount.setOpenType(AccountCloseType.ERR.getValue());
+            if (closeType.equals(GLAccount.CloseType.ERR)){
+                glAccount.setOpenType(GLAccount.OpenType.ERR.name());
             }
             glAccountProcessor.setDateClose(glAccount, dateClose);
             return glAccountRepository.update(glAccount);

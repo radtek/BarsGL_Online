@@ -2,13 +2,9 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
-import ru.rbt.barsgl.ejb.repository.AcDNJournalDataRepository;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
-import ru.rbt.barsgl.ejb.repository.customer.CustDNInputRepository;
-import ru.rbt.barsgl.ejb.repository.customer.CustDNJournalRepository;
-import ru.rbt.barsgl.ejb.repository.customer.CustDNMappedRepository;
-import ru.rbt.barsgl.ejb.repository.customer.CustomerRepository;
+import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 
 import javax.ejb.EJB;
@@ -17,7 +13,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
-import static ru.rbt.barsgl.ejb.entity.cust.CustDNJournal.Status.ERR_VAL;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -35,8 +30,13 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             ,new XmlParam("DEALID",    "DealID",     false, 20)
     };
 
+    public enum CloseErrorFlag {ZERO, ONE, TWE};
+
     @EJB
     AcDNJournalRepository journalRepository;
+
+    @Inject
+    GLAccountRepository glAccountRepository;
 
     @EJB
     private PropertiesRepository propertiesRepository;
@@ -70,5 +70,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
         }
 
 
+
     }
+
 }
