@@ -718,6 +718,11 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    public boolean isAccountBalanceZero(String bsaAcid, String acid, Date datto) {
+        BigDecimal bal = getAccountBalance(bsaAcid, acid, datto);
+        return BigDecimal.ZERO.equals(bal);
+    }
+
     public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {
         try {
             DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE(?, ?, ?) from dual"

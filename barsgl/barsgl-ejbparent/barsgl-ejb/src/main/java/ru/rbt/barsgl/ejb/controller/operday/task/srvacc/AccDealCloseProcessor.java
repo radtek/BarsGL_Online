@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
@@ -10,9 +11,13 @@ import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Map;
 
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.ERR;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.NoChange;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -30,10 +35,13 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             ,new XmlParam("DEALID",    "DealID",     false, 20)
     };
 
-    public enum CloseErrorFlag {ZERO, ONE, TWE};
+    public enum CloseErrorFlag {ZERO, ONE, TWO};
 
     @EJB
     AcDNJournalRepository journalRepository;
+
+    @Inject
+    GLAccountController glAccountController;
 
     @Inject
     GLAccountRepository glAccountRepository;
@@ -71,6 +79,21 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
 
 
 
+    }
+
+    private boolean processOneAccount(GLAccount account, Date closeDate, CloseErrorFlag flag) {
+        if (!glAccountRepository.isAccountBalanceZero(account.getBsaAcid(), account.getAcid(), closeDate)) {
+            GLAccount.CloseType closeType = CloseErrorFlag.ZERO.equals(flag) ? GLAccount.CloseType.NoChange : GLAccount.CloseType.ERR;
+            try {
+                glAccountController.closeGLAccountDeals(account, closeDate, closeType);
+            } catch (Exception e) {
+                e.printStackTrace();    // TODO
+            }
+            return true;
+        } else {
+            // TODO создать запись в GL_ACWAITCLOSE
+            return false;
+        }
     }
 
 }
