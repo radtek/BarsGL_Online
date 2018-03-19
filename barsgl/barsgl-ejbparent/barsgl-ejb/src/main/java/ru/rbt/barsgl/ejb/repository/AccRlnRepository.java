@@ -195,7 +195,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
             DataRecord res = selectFirst(String.format("with ACC_TOVER as (" +
                         "select  DAT,  DTAC + CTAC + BUF_DTAC + BUF_CTAC as BAC from V_GL_ACC_TOVER where DAT > CAST(? AS DATE) and bsaacid = ? and acid = ? " +
                         "UNION ALL " +
-                        "select CAST(? AS DATE) as dat, NVL(GET_BALANCE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual " +
+                        "select CAST(? AS DATE) as dat, NVL(PKG_CHK_ACC.GET_BALANCE_TODATE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual " +
                         ") " +
                         "select * " +
                         "FROM " +
@@ -225,9 +225,9 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                     " UNION ALL " +
                     "SELECT dat,sum(bac) as bac " +
                     "FROM(" +
-                    "select CAST(? AS DATE) as dat, NVL(GET_BALANCE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual" +
+                    "select CAST(? AS DATE) as dat, NVL(PKG_CHK_ACC.GET_BALANCE_TODATE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual" +
                     " UNION ALL " +
-                    "select CAST(? AS DATE) as dat, NVL(GET_BALANCE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual" +
+                    "select CAST(? AS DATE) as dat, NVL(PKG_CHK_ACC.GET_BALANCE_TODATE(CAST(? AS VARCHAR2(20)),CAST(? AS VARCHAR2(20)),CAST(? AS DATE)),0) as bac from dual" +
                     ") t2" +
                     " group by dat) " +
                     "select * FROM (" +

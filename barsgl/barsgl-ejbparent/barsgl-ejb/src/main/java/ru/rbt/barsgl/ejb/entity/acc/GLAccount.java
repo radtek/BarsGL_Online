@@ -17,7 +17,8 @@ import java.util.Date;
 @Table(name = "GL_ACC")
 public class GLAccount extends BaseEntity<Long> {
 
-    public enum OpenType {AENEW, AEMID, MNL, SRV};
+    public enum OpenType {AENEW, AEMID, MNL, SRV, ERR};
+    public enum CloseType{ERR, NoChange}
 
     public enum RelationType {
         TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E"), NINE("9");

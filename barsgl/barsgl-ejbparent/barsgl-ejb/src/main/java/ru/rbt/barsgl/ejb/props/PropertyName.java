@@ -18,6 +18,8 @@ public enum PropertyName {
     , MQ_TIMEOUT("mq.process.timeout")
     , MQ_TIME_UNIT("mq.process.timeout.unit")
 
+    , CUST_LOAD_ONLINE("customer.load.online")
+
     , BARSGL_LOADER_TYPE("barsgl.loader.type")
     , BARSGL_LOCALIZATION_TYPE("barsgl.localize.type")
 

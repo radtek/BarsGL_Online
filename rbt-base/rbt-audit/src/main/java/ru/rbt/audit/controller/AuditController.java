@@ -30,6 +30,7 @@ public interface AuditController {
   void warning(AuditRecord.LogCode operCode, String message, BaseEntity entity, String errorMessage);
   void warning(AuditRecord.LogCode operCode, String message, BaseEntity entity, Throwable e);
   void warning(AuditRecord.LogCode operCode, String message, String entity_type, String entity_id, Throwable e);
+  void warning(AuditRecord.LogCode operCode, String message, String entity_type, String entity_id, String errorMessage);
 
   void stat(AuditRecord.LogCode operCode, String message, String longMessage, String entityId);
   void stat(AuditRecord.LogCode operCode, String message, String longMessage);

@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.ejb.entity.acc;
+package ru.rbt.barsgl.ejb.entity.cust;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
@@ -6,24 +6,19 @@ import javax.persistence.*;
 import java.util.Date;
 
 /**
- * Created by ER22228 on 30.03.2016
+ * Created by er18837 on 12.12.2017.
  */
 @Entity
-@Table(name = "GL_ACDENO")
-@SequenceGenerator(name = "AcDNJournalIdSeq", sequenceName = "GL_ACDENO_SEQ", allocationSize = 1)
-public class AcDNJournal extends BaseEntity<Long> {
+@Table(name = "GL_CUDENO1")
+@SequenceGenerator(name = "CustDNJournalIdSeq", sequenceName = "GL_CUDENO_SEQ", allocationSize = 1)
+public class CustDNJournal extends BaseEntity<Long> {
 
-    public enum Sources {MIDAS_OPEN, FCC, FC12, FCC_CLOSE, KTP_CLOSE}
-    public enum Status {RAW,PARSED,VALIDATED,ENRICHED,PROCESSED,ERROR}
+    public enum Status {RAW, SKIPPED, VALIDATED, MAPPED, PROCESSED, ERR_VAL, ERR_MAP, ERR_PROC, EMULATED};
 
     @Id
     @Column(name = "MESSAGE_ID")
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "AcDNJournalIdSeq")
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "CustDNJournalIdSeq")
     private Long id;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "SOURCE")
-    private Sources source;
 
     @Column(name = "MESSAGE")
     private String message;
@@ -32,7 +27,11 @@ public class AcDNJournal extends BaseEntity<Long> {
     @Column(name = "STATUS")
     private Status status;
 
-    @Column(name = "STATUS_DATE")
+    @Column(name = "LOAD_DATE", insertable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date loadDate;
+
+    @Column(name = "STATUS_DATE", insertable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date statusDate;
 
@@ -81,23 +80,20 @@ public class AcDNJournal extends BaseEntity<Long> {
         this.status = status;
     }
 
-    public Sources getSource() {
-        return source;
-    }
-
-    public void setSource(Sources source) {
-        this.source = source;
+    public Date getLoadDate() {
+        return loadDate;
     }
 
     @Override
     public String toString() {
-        return "AcDNJournal{" +
+        return "CustDNJournal{" +
                 "id='" + id + '\'' +
-                ", source=" + source +
                 ", status=" + status +
+                ", loadDate=" + loadDate +
                 ", statusDate=" + statusDate +
                 ", comment='" + comment + '\'' +
                 ", message='" + message + '\'' +
                 '}';
     }
 }
+

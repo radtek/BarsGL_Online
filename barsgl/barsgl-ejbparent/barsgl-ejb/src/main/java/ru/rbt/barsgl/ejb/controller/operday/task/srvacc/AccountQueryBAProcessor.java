@@ -18,11 +18,9 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -149,6 +147,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         List<String> stringList = countsToProcess==null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                                      "<asbo:AccountBalanceList xmlns:asbo=\"urn:asbo:barsgl\">\n");
+
         for (int i = 0; i < stringList.size(); i += batchSize) {
             result.append(batchCreateOutMessage(stringList.subList(i, Math.min(i + batchSize, stringList.size())), currencyMap, workday, currencyNBDPMap));
         }
@@ -157,6 +156,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     }
 
     private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
+
         StringBuilder sb = new StringBuilder();
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
