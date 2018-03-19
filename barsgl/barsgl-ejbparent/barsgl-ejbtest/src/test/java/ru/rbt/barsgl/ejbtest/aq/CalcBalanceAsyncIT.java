@@ -153,11 +153,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
         List<DataRecord> enabled = triggers.stream().filter(r -> "ENABLED".equals(r.getString("status"))).collect(Collectors.toList());
-        Assert.assertEquals(3, enabled.size());
-        Assert.assertTrue(enabled.stream().anyMatch(r ->
-                   Objects.equals(r.getString("trigger_name"), "PST_AD_JRN")
-                || Objects.equals(r.getString("trigger_name"), "PST_AI_JRN")
-                || Objects.equals(r.getString("trigger_name"), "PST_AU_JRN")));
+        Assert.assertEquals(0, enabled.size());
 
     }
 
