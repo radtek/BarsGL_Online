@@ -436,7 +436,7 @@ public class GLAccountController {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountDeals(GLAccount glAccount, Date dateClose, GLAccount.CloseType closeType) throws Exception {
         return glAccountRepository.executeInNewTransaction(persistence -> {
-            if (closeType.equals(GLAccount.CloseType.ERR)){
+            if (!closeType.equals(GLAccount.CloseType.Normal)){
                 glAccount.setOpenType(GLAccount.OpenType.ERR.name());
             }
             glAccountProcessor.setDateClose(glAccount, dateClose);

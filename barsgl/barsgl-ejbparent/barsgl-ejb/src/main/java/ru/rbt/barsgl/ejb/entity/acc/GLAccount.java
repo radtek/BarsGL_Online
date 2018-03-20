@@ -18,7 +18,20 @@ import java.util.Date;
 public class GLAccount extends BaseEntity<Long> {
 
     public enum OpenType {AENEW, AEMID, MNL, SRV, ERR};
-    public enum CloseType{ERR, NoChange}
+//    public enum CloseType{ERR, NoChange}
+    public enum CloseType {
+        Normal("0"), Cancel("1"), Change("2");
+        private String flag;
+
+        CloseType(String flag) {
+            this.flag = flag;
+        }
+
+        public String getFlag() {
+            return flag;
+        }
+    };
+
 
     public enum RelationType {
         TWO("2"), FOUR("4"), ZERO("0"), FIVE("5"), E("E"), NINE("9");
