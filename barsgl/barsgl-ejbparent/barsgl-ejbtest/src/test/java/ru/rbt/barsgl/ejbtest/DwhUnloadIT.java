@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -35,18 +36,15 @@ import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.cleanHeader;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 
 /**
- * Created by ER18837 on 18.06.15.
- * Выгрузка данных о проводках в DWH
- * @fsd 8.2
+ * загрузка данных из DWH
  */
-@Ignore("задача не выполняется на проде")
 public class DwhUnloadIT extends AbstractTimerJobIT {
 
     public static final Logger logger = Logger.getLogger(DwhUnloadIT.class.getName());
 
     @BeforeClass
     public static void beforeClass() throws SQLException {
-        DataRecord record = baseEntityRepository.selectFirst("select * from DWH_CLOSED_DEALS_STATUS");
+        DataRecord record = remoteAccess.invoke(ServerTestingFacade.class, "select * from DWH_CLOSED_DEALS_STATUS");
     }
 
 
