@@ -178,7 +178,7 @@ public class GLPdRepository extends AbstractBaseEntityRepository<GLPd, Long> {
             glPd.setInvisible(pd.getInvisible());
             glPd.setDepartment(pd.getDepartment());
             glPd.setStornoRef(pd.getStornoRef());
-            glPd.setAsoc(pd.getAsoc());
+//            glPd.setAsoc(pd.getAsoc());
             glPd.setCtype(pd.getCtype());
             return glPd;
         }).collect(Collectors.toList()));

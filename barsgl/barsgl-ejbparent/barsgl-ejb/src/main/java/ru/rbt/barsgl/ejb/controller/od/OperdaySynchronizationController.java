@@ -264,7 +264,7 @@ public class OperdaySynchronizationController {
         pd.setInvisible(glPd.getInvisible());
         pd.setDepartment(glPd.getDepartment());
         pd.setStornoRef(glPd.getStornoRef());
-        pd.setAsoc(glPd.getAsoc());
+//        pd.setAsoc(glPd.getAsoc());
         pd.setCtype(glPd.getCtype());
         return pdRepository.save(pd, false);
     }

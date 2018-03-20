@@ -48,8 +48,8 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     @Column(name = "AMNTBC")
     private Long amountBC;
 
-    @Column(name = "AMNTUC")
-    protected Long amountUC;
+//    @Column(name = "AMNTUC")
+//    protected Long amountUC;
 
     @Column(name = "PBR")
     private String pbr;         // 7
@@ -63,17 +63,17 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     @Column(name = "INVISIBLE")
     protected String invisible;   // 1
 
-    @Column(name = "FINALETRS") // 1
-    protected String finaletrs;
+//    @Column(name = "FINALETRS") // 1
+//    protected String finaletrs;
 
-    @Column(name = "LASTD")     // 1
-    protected String lastd;
+//    @Column(name = "LASTD")     // 1
+//    protected String lastd;
 
-    @Column(name = "STATUS")    // 1
-    protected String status;
+//    @Column(name = "STATUS")    // 1
+//    protected String status;
 
-    @Column(name = "ASOC")
-    protected Integer asoc;
+//    @Column(name = "ASOC")
+//    protected Integer asoc;
 
     @Column(name = "PNAR")      // 30
     private String pnar;
@@ -85,11 +85,11 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
     @Column(table="PDEXT", name = "PREF")
     private String pref;
 
-    @Column(table="PDEXT", name = "DLID")
-    private Long dlId;
+//    @Column(table="PDEXT", name = "DLID")
+//    private Long dlId;
 
-    @Column(table="PDEXT", name = "DLTYPE")
-    protected String dlType;
+//    @Column(table="PDEXT", name = "DLTYPE")
+//    protected String dlType;
 
     @Column(table="PDEXT", name = "DPMT")
     private String department;
@@ -239,9 +239,9 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
         this.amountBC = amountBC;
     }
 
-    public void setAmountUC(Long amountUC) {
-        this.amountUC = amountUC;
-    }
+//    public void setAmountUC(Long amountUC) {
+//        this.amountUC = amountUC;
+//    }
 
     public void setPbr(String pbr) {
         this.pbr = pbr;
@@ -255,25 +255,25 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
         this.invisible = invisible;
     }
 
-    public void setFinaletrs(String finaletrs) {
-        this.finaletrs = finaletrs;
-    }
+//    public void setFinaletrs(String finaletrs) {
+//        this.finaletrs = finaletrs;
+//    }
 
-    public void setLastd(String lastd) {
-        this.lastd = lastd;
-    }
+//    public void setLastd(String lastd) {
+//        this.lastd = lastd;
+//    }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+//    public void setStatus(String status) {
+//        this.status = status;
+//    }
 
-    public void setAsoc(Integer asoc) {
-        this.asoc = asoc;
-    }
-
-    public Integer getAsoc() {
-        return asoc;
-    }
+//    public void setAsoc(Integer asoc) {
+//        this.asoc = asoc;
+//    }
+//
+//    public Integer getAsoc() {
+//        return asoc;
+//    }
 
     public void setPnar(String pnar) {
         this.pnar = pnar;
@@ -472,17 +472,17 @@ public abstract class AbstractPd extends BaseEntity<Long> implements Comparable<
         // PD
         this.acid = " ";
         this.ctype = "";
-        this.amountUC = 0L;
+//        this.amountUC = 0L;
         this.pdrf = 0L;
         this.stornoRef = 0L;
         this.invisible = "0";
-        this.finaletrs = "";
-        this.lastd = "";
-        this.status = "";
-        this.asoc = 0;
+//        this.finaletrs = "";
+//        this.lastd = "";
+//        this.status = "";
+//        this.asoc = 0;
 
         // PDEXT
-        this.dlType = "";
+//        this.dlType = "";
         this.flexCode = "";
         // PDEXT2
         this.operReference = "";
