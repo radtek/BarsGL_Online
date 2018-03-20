@@ -66,8 +66,6 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
  */
 public abstract class AbstractRemoteIT  {
 
-    private static Map<String,Object> services = Collections.synchronizedMap(new HashMap<>());
-
     private static final ServerAccess remoteAccessInternal;
     protected static final ServiceAccessSupport remoteAccess;
     protected static BaseEntityRepository baseEntityRepository = null;
