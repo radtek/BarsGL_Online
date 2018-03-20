@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.repository;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
@@ -25,7 +26,9 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
     @EJB
     private AuditController auditController;
 
-
+   public List<DataRecord> getMapAll() throws SQLException {
+       return select("select * from dh_br_map", null);
+   }
 
    public boolean isTaskProcessed(Date dtl) throws SQLException {
         return 0 < selectOne("select count(*) cnt from gl_loadstat where stream_id=? and dtl=? and status='P'", LoadBranchDictTask.streamId, dtl).getInteger(0);
