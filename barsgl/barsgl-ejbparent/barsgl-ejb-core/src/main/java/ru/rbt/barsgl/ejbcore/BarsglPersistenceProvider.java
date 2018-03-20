@@ -23,8 +23,14 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
     @PersistenceContext(unitName="GLOracleDataSource")
     protected EntityManager persistence;
 
+    @PersistenceContext(unitName="GLOracleDataSourceNoXA")
+    protected EntityManager persistenceNoXA;
+
     @PersistenceContext(unitName="RepAS400DataSource")
     protected EntityManager barsrepPersistence;
+
+    @Resource(lookup="java:app/env/jdbc/NoXaOracleGL")
+    private DataSource dataSourceNoXA;
 
     @Resource(lookup="java:app/env/jdbc/OracleGL")
     private DataSource dataSource;
@@ -40,6 +46,8 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
         switch (repository) {
             case BARSGL:
                 return persistence;
+            case BARSGLNOXA:
+                return  persistenceNoXA;
             case BARSREP:
                 return barsrepPersistence;
             default:
@@ -55,6 +63,8 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
         switch (repository) {
             case BARSGL:
                 return dataSource;
+            case BARSGLNOXA:
+                return dataSourceNoXA;
             case BARSREP:
                 return barsrepDataSource;
             default:

@@ -152,6 +152,47 @@
 
         </properties>
     </persistence-unit>
+
+    <persistence-unit name="GLOracleDataSourceNoXA" transaction-type="JTA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>jdbc/NoXaOracleGL</jta-data-source>
+
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.FilialsInf</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Filials</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.BranchsInf</class>
+        <class>ru.rbt.barsgl.ejb.entity.dict.dwh.Branchs</class>
+
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+
+        <properties>
+            <property name="eclipselink.ddl-generation" value="none"/>
+            <!--<property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.DB2Platform"/>-->
+            <property name="eclipselink.target-database" value="Oracle"/>
+            <property name="eclipselink.target-server" value="WebLogic"/>
+            <property name="eclipselink.logging.logger" value="ServerLogger"/>
+            <property name="eclipselink.logging.session" value="true"/>
+            <property name="eclipselink.logging.level" value="INFO"/>
+            <!--<property name="eclipselink.jdbc.property.connection.transactionIsolation" value="2"/>-->
+
+            <property name="hibernate.id.new_generator_mappings" value="true"/>
+            <property name="hibernate.dialect" value="Oracle10g"/>
+
+            <property name = "hibernate.create_empty_composites.enabled" value = "true"/>
+            <property name = "hibernate.integration.envers.enabled" value = "false"/>
+            <property name = "hibernate.listeners.envers.autoRegister" value = "false"/>
+            <!--from documentation: used during performance testing only <property name = "hibernate.enable_specj_proprietary_syntax" value = "true"/>-->
+            <property name = "hibernate.show_sql" value = "false"/>
+            <property name = "hibernate.format_sql" value = "false"/>
+            <property name = "hibernate.max_fetch_depth" value = "1"/>
+            <property name = "hibernate.default_batch_fetch_size" value = "8"/>
+
+            <property name = "hibernate.transaction.jta.platform" value = "Weblogic"/>
+
+        </properties>
+    </persistence-unit>
+
 	<persistence-unit name="RepAS400DataSource" transaction-type="JTA">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 <!--        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>-->
