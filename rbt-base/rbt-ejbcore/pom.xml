@@ -48,10 +48,5 @@
       <version>7.0</version>
       <scope>provided</scope>
     </dependency>
-      <dependency>
-          <groupId>ru.rbt</groupId>
-          <artifactId>barsgl-shared</artifactId>
-          <version>3.0.22-SNAPSHOT</version>
-      </dependency>
   </dependencies>
 </project>
