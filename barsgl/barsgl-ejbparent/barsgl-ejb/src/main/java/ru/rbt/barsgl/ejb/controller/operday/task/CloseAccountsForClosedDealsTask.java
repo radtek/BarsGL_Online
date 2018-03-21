@@ -93,7 +93,7 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
                                                     GLAccount.CloseType.Normal);
             cntClosedAcc++;
         }else{
-            closeAccountsRepository.moveToWaitClose( glAccount, dateLoad, "0");
+            closeAccountsRepository.moveToWaitClose( glAccount, dateLoad, GLAccount.CloseType.Normal);
             cntWaitAcc++;
         }
     }

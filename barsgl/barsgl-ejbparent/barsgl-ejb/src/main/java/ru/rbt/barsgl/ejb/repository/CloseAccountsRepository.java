@@ -48,7 +48,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         flush();
     }
 
-    public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, String closeType) throws SQLException {
+    public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType) throws SQLException {
         if (0 < selectOne("select count(*) from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()).getInteger(0))
             return false;
         executeNativeUpdate("insert into gl_acwaitclose(BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?)",
@@ -61,7 +61,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
                             glAccount.getDateOpen(),
                             glAccount.getDateRegister(),
                             glAccount.getOpenType(),
-                            closeType,//= 0, 1, 2
+                            closeType.name(),//= 0, 1, 2
                             loadDate);
         flush();
         return true;
