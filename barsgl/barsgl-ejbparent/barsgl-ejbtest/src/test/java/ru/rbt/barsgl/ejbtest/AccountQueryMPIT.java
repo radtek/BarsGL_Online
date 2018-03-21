@@ -476,7 +476,7 @@ mq.password=UsATi8hU
         return cnt;
     }
 
-    private int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
+    public static int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -504,7 +504,7 @@ mq.password=UsATi8hU
         return i;
     }
 
-    private String receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
+    public static String receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -526,7 +526,7 @@ mq.password=UsATi8hU
         return answer;
     }
 
-    private String readFromJMS(MQMessageConsumer receiver) throws JMSException {
+    public static String readFromJMS(MQMessageConsumer receiver) throws JMSException {
         JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
 //        receivedMessage.acknowledge();
         String textMessage = null;
@@ -567,7 +567,10 @@ mq.password=UsATi8hU
         } catch (IOException e) {
             e.printStackTrace();
         }
+        sendToQueue(cf, queueName, incomingMessage, replyToQ, username, password, cnt);
+    }
 
+    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String replyToQ, String username, String password, int cnt) throws JMSException {
         if (isEmpty(incomingMessage)) {
             System.exit(1);
         }
@@ -576,7 +579,7 @@ mq.password=UsATi8hU
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
         MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
+//        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
 
         connection.start();
 
@@ -591,7 +594,7 @@ mq.password=UsATi8hU
         System.out.println(String.format("Sent %d message to %s", cnt, queueName));
 
         sender.close();
-        receiver.close();
+//        receiver.close();
         session.close();
         connection.close();
     }
