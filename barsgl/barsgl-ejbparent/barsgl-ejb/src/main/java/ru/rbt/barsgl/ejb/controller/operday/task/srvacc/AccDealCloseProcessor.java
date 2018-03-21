@@ -31,6 +31,7 @@ import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.PROCESSED;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Cancel;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Change;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Normal;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.ACCCLOSE_ERROR;
@@ -115,7 +116,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             if (Cancel == errorFlag) {
                 List<GLAccount> accounts = closeAccountsRepository.getDealCustAccounts(mainAccount);
                 for (GLAccount account: accounts) {
-                    processOneAccount(account, curDate, GLAccount.CloseType.Normal);
+                    processOneAccount(account, curDate, Normal);
                 }
             }
         } catch (Throwable ex) {
@@ -137,10 +138,13 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             glAccountController.closeGLAccountDeals(account, closeDate, closeType);
             auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт по нотификации от %s", account.getBsaAcid(), KondorPlus.name()));
             return true;
-        } else {
-            // не нулевой, создать запись в GL_ACWAITCLOSE
-            journalRepository.executeInNewTransaction(persistence ->
-                    closeAccountsRepository.moveToWaitClose(account, curDate, closeType.getFlag()));
+        } else { // не нулевой
+            if (Normal != closeType) {      // обновить OpenType
+                glAccountController.updateGLAccountOpenType(account, GLAccount.OpenType.ERR);
+            }
+            // создать запись в GL_ACWAITCLOSE
+//            journalRepository.executeInNewTransaction(persistence ->
+            closeAccountsRepository.moveToWaitClose(account, curDate, closeType.getFlag()); //);
             return false;
         }
     }
