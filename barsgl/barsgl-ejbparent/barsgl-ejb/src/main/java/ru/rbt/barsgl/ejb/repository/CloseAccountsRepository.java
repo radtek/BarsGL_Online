@@ -61,7 +61,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
                             glAccount.getDateOpen(),
                             glAccount.getDateRegister(),
                             glAccount.getOpenType(),
-                            closeType,
+                            closeType,//= 0, 1, 2
                             loadDate);
         flush();
         return true;
