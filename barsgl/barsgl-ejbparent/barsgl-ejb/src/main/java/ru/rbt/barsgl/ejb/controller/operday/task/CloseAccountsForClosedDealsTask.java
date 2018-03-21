@@ -40,12 +40,17 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
     private GLAccountController glAccountController;
 
     Date dateLoad = operdayController.getOperday().getCurrentDate();
+    int cntProcessedDeals, cntClosedAcc, cntWaitAcc;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         try {
             auditController.info(AccDealCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
-            if (checkRun()) executeWork(dateLoad);
+            if (checkRun()) {
+                executeWork(dateLoad);
+                auditController.info(AccDealCloseTask, "Обработано закрытых сделок в количестве "+cntProcessedDeals+
+                                                                ", закрыто счетов "+cntClosedAcc+", в листе ожидания счетов " + cntWaitAcc);
+            }
         }catch (Throwable e){
             auditController.error(AccDealCloseTask,"Завершение с ошибкой", null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -68,19 +73,28 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             try (CloseAccountsForClosedDealsIterate rec = new CloseAccountsForClosedDealsIterate(connection)) {
                 while(rec.next()){
-                    if (!rec.getAccounts().isEmpty()) rec.getAccounts().forEach(item->closeAccounts(item));
+                    if (!rec.getAccounts().isEmpty()) {
+                        for(GLAccount item: rec.getAccounts()) {
+                            closeAccount(item);
+                        }
+                    }
                     closeAccountsRepository.moveToHistory( rec.getCnum(), rec.getDealid(), rec.getSubdealid(), rec.getSource());
+                    cntProcessedDeals++;
                 }
             }
             return 1;
         }), 60 * 60);
     }
 
-    void closeAccounts(GLAccount glAccount){
+    void closeAccount(GLAccount glAccount) throws Exception {
         if (glAccountRepository.isAccountBalanceZero(glAccount.getBsaAcid(), glAccount.getAcid(), getFinalDate())){
-//            glAccountController.closeGLAccountDeals(glAccount, dateLoad,
+            glAccountController.closeGLAccountDeals(glAccount,
+                                                    dateLoad.compareTo(glAccount.getDateRegister())==0?glAccount.getDateOpen():dateLoad,
+                                                    GLAccount.CloseType.Normal);
+            cntClosedAcc++;
         }else{
-
+            closeAccountsRepository.moveToWaitClose( glAccount, dateLoad, GLAccount.CloseType.Normal);
+            cntWaitAcc++;
         }
     }
 }

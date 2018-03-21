@@ -29,6 +29,11 @@ abstract public class CommonNotifyProcessor implements Serializable {
 
     protected Map<String, String> readFromXML(String bodyXML, String charsetName, String parentName, XmlParam[] paramNames, Long journalId)
             throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
+        if (bodyXML == null || !bodyXML.contains(parentName)) {
+            updateLogStatusError(journalId, "Не найден родительский узел " + parentName);
+            return null;
+        }
+
         org.w3c.dom.Document doc = null;
         if (!bodyXML.startsWith("<?xml")) {
             bodyXML = "<?xml version=\"1.0\" encoding=\"" + charsetName + "\"?>\n" + bodyXML;
@@ -51,12 +56,12 @@ abstract public class CommonNotifyProcessor implements Serializable {
         XPath xPath = XmlUtilityLocator.getInstance().newXPath();
         try {
             Element element = doc.getDocumentElement();
-            nodes = (NodeList) xPath.evaluate(parentName, element, XPathConstants.NODESET);
+            nodes = (NodeList) xPath.evaluate("/" + parentName, element, XPathConstants.NODESET);
             if (nodes == null || nodes.getLength() != 1) {
-                nodes = (NodeList) xPath.evaluate("Body" + parentName, element, XPathConstants.NODESET);
+                nodes = (NodeList) xPath.evaluate("Body/" + parentName, element, XPathConstants.NODESET);
                 if (nodes == null || nodes.getLength() != 1) {
                     //Ошибка XML
-                    updateLogStatusError(journalId, "Отсутствуют неоходимые данные " + parentName);
+                    updateLogStatusError(journalId, "Отсутствуют необходимые данные в XML: " + parentName);
                     return null;
                 }
             }

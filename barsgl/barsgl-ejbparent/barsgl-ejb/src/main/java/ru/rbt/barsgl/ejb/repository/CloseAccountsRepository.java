@@ -4,6 +4,7 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -27,6 +28,15 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         flush();
     }
 
+    public GLAccount getAccountByDeal(String bsaAcid, String dealId) {
+        return selectFirst(GLAccount.class, "from GLAccount a where a.bsaAcid = ?1 and a.dealId = ?2", bsaAcid, dealId);
+    }
+
+    public List<GLAccount> getDealCustAccounts(GLAccount mainAccount) throws SQLException {
+        return selectMaxRows(GLAccount.class,"from GLAccount a where a.customerNumber=?1 and a.dealId=?2 and a.bsaAcid != ?3 and a.dateClose is null", 100,
+                mainAccount.getCustomerNumber(), mainAccount.getDealId(), mainAccount.getBsaAcid());
+    }
+
     public List<GLAccount> dealsAccounts(String cnum, String dealid, String subdealid) throws SQLException {
 //        return select("select * from GL_ACC where custno=? and dealid=? and subdealid=? and dtc is null", cnum, dealid, subdealid);
         return selectMaxRows(GLAccount.class,"select a from GLAccount a where a.custno=?1 and a.dealid=?2 and a.subdealid=?3 and a.dtc is null", 100, cnum, dealid, subdealid);
@@ -38,20 +48,22 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         flush();
     }
 
-    public void moveToWaitClose(GLAccount glAccount, Date loadDate, String closeType) throws SQLException {
+    public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType) throws SQLException {
         if (0 < selectOne("select count(*) from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()).getInteger(0))
-            return;
-        executeNativeUpdate("insert into gl_acwaitclose(BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?,?)",
+            return false;
+        executeNativeUpdate("insert into gl_acwaitclose(BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?)",
                             glAccount.getBsaAcid(),
                             glAccount.getAcid(),
                             glAccount.getCurrency().getCurrencyCode(),
                             glAccount.getDealId(),
                             glAccount.getSubDealId(),
+                            glAccount.getDealSource(),
                             glAccount.getDateOpen(),
                             glAccount.getDateRegister(),
                             glAccount.getOpenType(),
-                            closeType,
+                            closeType.name(),//= 0, 1, 2
                             loadDate);
         flush();
+        return true;
     }
 }
