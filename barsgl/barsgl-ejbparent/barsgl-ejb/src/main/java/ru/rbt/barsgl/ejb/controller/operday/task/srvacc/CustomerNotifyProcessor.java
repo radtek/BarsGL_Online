@@ -89,12 +89,7 @@ public class CustomerNotifyProcessor extends CommonNotifyProcessor implements Se
     AuditController auditController;
 
     public void process(String fullTopic, final Long journalId) throws Exception {
-        if (fullTopic == null || !fullTopic.contains(parentNodeName)) {
-            setErrorStatus(journalId, ERR_VAL, "Ошибка в содержании сообщения", "");
-            return;
-        }
-
-        Map<String, String> xmlData = readFromXML(fullTopic, charsetName, "/" + parentNodeName, paramNamesCust, journalId);
+        Map<String, String> xmlData = readFromXML(fullTopic, charsetName, parentNodeName, paramNamesCust, journalId);
         if (xmlData == null) {
             // Запись в аудит, в таблицу аудита, в лог и возврат
             setErrorStatus(journalId, ERR_VAL, "Ошибка во время распознования XML", "");

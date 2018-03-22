@@ -92,6 +92,8 @@ public class AuditRecord extends BaseEntity<Long> {
         , QueueProcessor
         , CustomerDetailsNotify
         , NewAccounts
+        , LoadBranchDict
+        , AuditRecord
         , AccDealCloseTask
     }
 

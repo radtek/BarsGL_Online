@@ -145,10 +145,11 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
                     card.setAmount(new BigDecimal((Integer)row.get(2)));
                 else throw new IllegalArgumentException("Формат поля суммы может быть строковым или числовым");
 
-                card.setCnum(StringUtils.leftPad((String) row.get(3), 8, "0"));
+                card.setCnum(StringUtils.leftPad(col2String(row.get(3)), 8, "0"));
+
                 card.setMdacc((String) row.get(4));
                 card.setBsaacid((String) row.get(5));
-                card.setCard((String) row.get(6));
+                card.setCard( col2String(row.get(6)));
                 card.setPnar((String) row.get(7));
                 card.setRnrtl((String) row.get(8));
 //throw new Exception("hhhhhhhhh");
@@ -165,6 +166,11 @@ public class CardMessageProcessorBean implements CardMessageProcessor {
             }
         }
         return card;
+    }
+
+    private String col2String(Object col){
+        if (col instanceof Double || col instanceof Integer) return String.valueOf(col);
+        return col.toString();
     }
 
     private boolean hasNull(List<Object> r, List<Object> h, StringBuilder err){
