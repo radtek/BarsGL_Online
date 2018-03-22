@@ -19,13 +19,21 @@ import java.util.Optional;
 public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
     PreparedStatement query;
     ResultSet rec;
-    private String cnum, dealid, subdealid, source;
+    private String cnum, dealid, source;
+    private Optional<String> subdealid;
     private List<GLAccount> accounts = new ArrayList<GLAccount>();
 
     @EJB
     private CloseAccountsRepository closeAccountsRepository;
 
-    public CloseAccountsForClosedDealsIterate(Connection connection) throws SQLException {
+    public CloseAccountsForClosedDealsIterate(){}
+
+//    public CloseAccountsForClosedDealsIterate(Connection connection) throws SQLException {
+//        query = connection.prepareStatement("select * from GL_DEALCLOSE");
+//        rec = query.executeQuery();
+//    }
+
+    public void init(Connection connection) throws SQLException {
         query = connection.prepareStatement("select * from GL_DEALCLOSE");
         rec = query.executeQuery();
     }
@@ -36,7 +44,7 @@ public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
         }else {
             cnum = rec.getString("cnum");
             dealid = rec.getString("dealid");
-            subdealid = rec.getString("subdealid");
+            subdealid = Optional.ofNullable(rec.getString("subdealid"));
             source = rec.getString("source");
             accounts = closeAccountsRepository.dealsAccounts( cnum, dealid, subdealid);
         }
@@ -72,11 +80,11 @@ public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
         this.dealid = dealid;
     }
 
-    public String getSubdealid() {
+    public Optional<String> getSubdealid() {
         return subdealid;
     }
 
-    public void setSubdealid(String subdealid) {
+    public void setSubdealid(Optional<String> subdealid) {
         this.subdealid = subdealid;
     }
 

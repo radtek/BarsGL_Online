@@ -144,7 +144,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             }
             // создать запись в GL_ACWAITCLOSE
 //            journalRepository.executeInNewTransaction(persistence ->
-            closeAccountsRepository.moveToWaitClose(account, curDate, closeType.getFlag()); //);
+            closeAccountsRepository.moveToWaitClose(account, curDate, closeType); //);
             return false;
         }
     }

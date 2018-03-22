@@ -11,6 +11,7 @@ import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by er22317 on 19.03.2018.
@@ -23,9 +24,10 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
        return selectOne("select count(*) FROM GL_DEALCLOSE", null).getLong(0);
     }
 
-    public void delOldDeals(){
-        executeNativeUpdate("DELETE FROM GL_DEALCLOSE d where exists(select 1 from GL_DEALCLOSE_H h where d.cnum=h.cnum and d.source=h.source and d.dealid=h.dealid and d.subdealid=h.subdealid)",null);
+    public int delOldDeals(){
+        int cnt = executeNativeUpdate("DELETE FROM GL_DEALCLOSE d where exists(select 1 from GL_DEALCLOSE_H h where d.cnum=h.cnum and d.source=h.source and d.dealid=h.dealid and coalesce(d.subdealid,' ')=coalesce(h.subdealid,' '))",null);
         flush();
+        return cnt;
     }
 
     public GLAccount getAccountByDeal(String bsaAcid, String dealId) {
@@ -37,14 +39,14 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
                 mainAccount.getCustomerNumber(), mainAccount.getDealId(), mainAccount.getBsaAcid());
     }
 
-    public List<GLAccount> dealsAccounts(String cnum, String dealid, String subdealid) throws SQLException {
+    public List<GLAccount> dealsAccounts(String cnum, String dealid, Optional<String> subdealid) throws SQLException {
 //        return select("select * from GL_ACC where custno=? and dealid=? and subdealid=? and dtc is null", cnum, dealid, subdealid);
-        return selectMaxRows(GLAccount.class,"select a from GLAccount a where a.custno=?1 and a.dealid=?2 and a.subdealid=?3 and a.dtc is null", 100, cnum, dealid, subdealid);
+        return select(GLAccount.class,"from GLAccount a where a.customerNumber=?1 and a.dealId=?2 and coalesce(a.subDealId,'null')=?3 and a.dateClose is null", cnum, dealid, subdealid.orElse("null"));
     }
 
-    public void moveToHistory(String cnum, String dealid, String subdealid, String source){
-        executeNativeUpdate("insert into GL_DEALCLOSE_H (DEALID,SUBDEALID,CNUM,CLOSE_DT,MATURITY_DT,STATUS,SOURCE,STREAM_ID,VALID_FROM,DEAL_TYPE,DWH_TABLE,LOADDATE) select * from GL_DEALCLOSE");
-        executeNativeUpdate("DELETE FROM GL_DEALCLOSE where cnum=? and source=? and dealid=? and subdealid=?", cnum, source, dealid, subdealid);
+    public void moveToHistory(String cnum, String dealid, Optional<String> subdealid, String source){
+        executeNativeUpdate("insert into GL_DEALCLOSE_H (DEALID,SUBDEALID,CNUM,CLOSE_DT,MATURITY_DT,STATUS,SOURCE,STREAM_ID,VALID_FROM,DEAL_TYPE,DWH_TABLE,LOADDATE) select * from GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
+        executeNativeUpdate("DELETE FROM GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
         flush();
     }
 

@@ -25,7 +25,7 @@ import static ru.rbt.ejbcore.util.DateUtils.getFinalDate;
 /**
  * Created by er22317 on 19.03.2018.
  */
-public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
+public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDealsIterate implements ParamsAwareRunnable {
     @EJB
     private AuditController auditController;
     @EJB
@@ -39,15 +39,19 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
     @EJB
     private GLAccountController glAccountController;
 
-    Date dateLoad = operdayController.getOperday().getCurrentDate();
+    Date dateLoad;
     int cntProcessedDeals, cntClosedAcc, cntWaitAcc;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
+        dateLoad = operdayController.getOperday().getCurrentDate();
         try {
             auditController.info(AccDealCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
+            beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {closeAccountsRepository.delOldDeals();
+                return 1;
+            }), 60 * 60);
             if (checkRun()) {
-                executeWork(dateLoad);
+                executeWork();
                 auditController.info(AccDealCloseTask, "Обработано закрытых сделок в количестве "+cntProcessedDeals+
                                                                 ", закрыто счетов "+cntClosedAcc+", в листе ожидания счетов " + cntWaitAcc);
             }
@@ -58,7 +62,6 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
     }
 
     public boolean checkRun() throws Exception {
-        closeAccountsRepository.delOldDeals();
         long cnt = closeAccountsRepository.countDeals();
         if (cnt == 0) {
             auditController.info(AccDealCloseTask, "Нет сделок для закрытия счетов (таблица GL_DEALCLOSE пустая)");
@@ -69,18 +72,21 @@ public class CloseAccountsForClosedDealsTask implements ParamsAwareRunnable {
         return true;
     }
 
-    private void executeWork(Date dateLoad) throws Exception {
+    private void executeWork() throws Exception {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
-            try (CloseAccountsForClosedDealsIterate rec = new CloseAccountsForClosedDealsIterate(connection)) {
-                while(rec.next()){
-                    if (!rec.getAccounts().isEmpty()) {
-                        for(GLAccount item: rec.getAccounts()) {
+            try{
+                init(connection);
+                while(next()){
+                    if (!getAccounts().isEmpty()) {
+                        for(GLAccount item: getAccounts()) {
                             closeAccount(item);
                         }
                     }
-                    closeAccountsRepository.moveToHistory( rec.getCnum(), rec.getDealid(), rec.getSubdealid(), rec.getSource());
+                    closeAccountsRepository.moveToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
                     cntProcessedDeals++;
                 }
+            }finally {
+                close();
             }
             return 1;
         }), 60 * 60);
