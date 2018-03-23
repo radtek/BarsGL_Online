@@ -41,13 +41,15 @@ import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 /**
  * Created by ER22228
  */
-public class AccountQueryMPIT extends AbstractTimerJobIT {
+public class AccountQueryMPIT extends AbstractQueueIT {
 
     public static final Logger logger = Logger.getLogger(AccountQueryMPIT.class.getName());
 
     private static final String qType = "LIRQ";
-    private final static String host = "vs338";
-    private final static String broker = "QM_MBROKER10_TEST";
+//    private final static String host = "vs338";
+//    private final static String broker = "QM_MBROKER10_TEST";
+    private final static String host = "vs569";
+    private final static String broker = "QM_MBROKER4_T4";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
     //    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private final static String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
@@ -65,38 +67,6 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         setPropertyTimeout("MINUTES", 10);
     }
 */
-
-    private String getQProperty (String topic, String ahost, String abroker, String alogin, String apassw) {
-        return getQueueProperty (topic, acliquIn, acliquOut, ahost, "1414", abroker, "SYSTEM.DEF.SVRCONN", alogin, apassw, "30", writeOut);
-    }
-
-    public static MQQueueConnectionFactory getConnectionFactory(String ahost, String abroker, String achannel) throws JMSException {
-        MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
-
-        cf.setHostName(ahost);
-        cf.setPort(1414);
-        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-        cf.setQueueManager(abroker);
-        cf.setChannel(achannel);
-        return cf;
-    }
-
-    public static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw, String batchSize, boolean writeOut) {
-        return  "mq.type = queue\n"
-                + "mq.host = " + ahost + "\n"
-                + "mq.port = " + aport + "\n"
-                + "mq.queueManager = " + abroker + "\n"
-                + "mq.channel = " + achannel + "\n"
-                + "mq.batchSize = " + batchSize + "\n"
-                + "mq.topics = " + topic + ":" + inQueue + (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue) + "\n"
-                + "mq.user=" + alogin + "\n"
-                + "mq.password=" + apassw +"\n"
-                + "unspents=show\n"
-                + "writeOut=" + writeOut +"\n"
-                + "writeSleepThreadTime=true\n"
-
-                ;
-    }
 
     @Test
     public void testA() throws Exception {
@@ -124,10 +94,10 @@ public class AccountQueryMPIT extends AbstractTimerJobIT {
         jobService.executeJob(job);
 
         Thread.sleep(4000L);
-        String answer = receiveFromQueue(cf, acliquOut, login, passw);
-        Assert.assertFalse(StringUtils.isEmpty(answer));
-        Assert.assertFalse(answer.contains("Error"));
-        System.out.println("\nReceived message from " + acliquOut + ":\n" + answer);
+        String[] answer = receiveFromQueue(cf, acliquOut, login, passw);
+        Assert.assertFalse(StringUtils.isEmpty(answer[0]));
+        Assert.assertFalse(answer[0].contains("Error"));
+        System.out.println("\nReceived message from " + acliquOut + ":\n" + answer[0]);
         System.out.println();
 
     }
@@ -476,148 +446,6 @@ mq.password=UsATi8hU
         return cnt;
     }
 
-    public static int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
-//        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
-
-        connection.start();
-
-//        JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
-//        System.out.println("\\nReceived message:\\n" + receivedMessage);
-        int i=0;
-        for (; i<count; i++) {
-            JMSMessage message = (JMSMessage) receiver.receiveNoWait();
-            if (null == message)
-                break;
-//            System.out.println("DeliveryTime=" + message.getJMSTimestamp() + " MessageID=" + message.getJMSMessageID());
-        }
-        System.out.println("Deleted from " + queueName + ": " + i);
-
-//        sender.close();
-        receiver.close();
-        session.close();
-        connection.close();
-
-        return i;
-    }
-
-    public static String receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
-//        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
-
-        connection.start();
-
-//        JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
-//        System.out.println("\\nReceived message:\\n" + receivedMessage);
-
-        String answer = readFromJMS(receiver);
-//        System.out.println("\nReceived message from " + queueName + ":\n" + answer);
-
-//        sender.close();
-        receiver.close();
-        session.close();
-        connection.close();
-        return answer;
-    }
-
-    public static String readFromJMS(MQMessageConsumer receiver) throws JMSException {
-        JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
-//        receivedMessage.acknowledge();
-        String textMessage = null;
-        if (receivedMessage instanceof JMSTextMessage) {
-            textMessage = ((JMSTextMessage) receivedMessage).getText();
-        } else if (receivedMessage instanceof JMSBytesMessage) {
-            JMSBytesMessage bytesMessage = (JMSBytesMessage) receivedMessage;
-
-            int length = (int) bytesMessage.getBodyLength();
-            byte[] incomingBytes = new byte[length];
-            bytesMessage.readBytes(incomingBytes);
-
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
-            try (Reader r = new InputStreamReader(byteArrayInputStream, "UTF-8")) {
-                StringBuilder sb = new StringBuilder();
-                char cb[] = new char[1024];
-                int s = r.read(cb);
-                while (s > -1) {
-                    sb.append(cb, 0, s);
-                    s = r.read(cb);
-                }
-                textMessage = sb.toString();
-            } catch (IOException e) {
-                System.out.println("Error during read message from QUEUE");
-            }
-        }
-        return textMessage;
-    }
-
-    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password) throws JMSException {
-        sendToQueue (cf, queueName, file, replyToQ, username, password, 1);
-    }
-
-    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password, int cnt) throws JMSException {
-        byte[] incomingMessage = null;
-        try {
-            incomingMessage = FileUtils.readFileToByteArray(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        sendToQueue(cf, queueName, incomingMessage, replyToQ, username, password, cnt);
-    }
-
-    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String replyToQ, String username, String password, int cnt) throws JMSException {
-        if (isEmpty(incomingMessage)) {
-            System.exit(1);
-        }
-
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
-        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-//        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
-
-        connection.start();
-
-        JMSBytesMessage bytesMessage = (JMSBytesMessage) session.createBytesMessage();
-        bytesMessage.writeBytes(incomingMessage);
-        if (!StringUtils.isEmpty(replyToQ)) {
-            MQQueue queueR2Q = (MQQueue) session.createQueue("queue:///" + replyToQ);
-            bytesMessage.setJMSReplyTo(queueR2Q);
-        }
-        for(int i=0; i<cnt; i++)
-            sender.send(bytesMessage);
-        System.out.println(String.format("Sent %d message to %s", cnt, queueName));
-
-        sender.close();
-//        receiver.close();
-        session.close();
-        connection.close();
-    }
-
-    private void sendToQueue(MQQueueConnectionFactory cf, String queueName, String fullTopicTest) throws JMSException {
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
-        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
-
-        connection.start();
-
-        JMSTextMessage message = (JMSTextMessage) session.createTextMessage(fullTopicTest);
-        sender.send(message);
-        System.out.println("Sent message:\\n" + message);
-
-        sender.close();
-        receiver.close();
-        session.close();
-        connection.close();
-    }
-
 /*
     public static void runAclirqJob(String props) {
         TimerJob aclirqTaskJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
@@ -648,11 +476,6 @@ mq.password=UsATi8hU
 //            registerJob(aclirqJob);
     }
 */
-
-    public static long getAuditMaxId() throws SQLException {
-        DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
-        return null == res ? 0 : res.getLong(0);
-    }
 
     static String fullTopicTest =
             "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +

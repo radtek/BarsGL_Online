@@ -16,7 +16,6 @@ import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 
-import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Sources.KTP_CLOSE;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.PROCESSED;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -45,7 +44,7 @@ public class AccDealCloseQueueController extends CommonQueueController {
     }
 
     @Override
-    protected String processQuery(String queueType, String textMessage, Long jId) throws Exception {
+    protected ProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
         return messageProcessor.process(textMessage, jId);
     }
 
@@ -60,8 +59,11 @@ public class AccDealCloseQueueController extends CommonQueueController {
     }
 
     @Override
-    protected void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
-        journalRepository.updateLogStatus(journalId, PROCESSED);
+    protected void updateStatusSuccessOut(Long journalId, String comment, ProcessResult processResult) throws Exception {
+        if (!processResult.isError())
+            journalRepository.updateLogStatus(journalId, PROCESSED);
+        else
+            journalRepository.updateLogStatus(journalId, ERROR);
     }
 
     @Override

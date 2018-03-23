@@ -846,4 +846,10 @@ public abstract class AbstractRemoteIT  {
         return message.replace(paramName + ">" + oldValue, paramName + ">" + newValue);
     }
 
+    public long getAuditMaxId() throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
+        return null == res ? 0 : res.getLong(0);
+    }
+
+
 }

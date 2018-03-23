@@ -4,15 +4,10 @@ import org.apache.log4j.Logger;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejbcore.AccountQueryRepository;
-import ru.rbt.ejbcore.JpaAccessCallback;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.persistence.EntityManager;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -84,7 +79,7 @@ public class AccountQueryQueueController extends CommonQueueController {
     }
 
     @Override
-    protected String processQuery(String queueType, String textMessage, Long jId) throws Exception {
+    protected ProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
         try {
             switch (queueType) {
                 case "LIRQ":
@@ -93,16 +88,17 @@ public class AccountQueryQueueController extends CommonQueueController {
                     return queryProcessorBA.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
                 case "MAPBRQ":
                     return queryProcessorMAPB.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
-            }
+                default:
+                    return new ProcessResult("Неверный тип очереди: " + queueType, true);
+        }
         } catch (Exception e) {
             log.error("Ошибка при подготовке ответа. ", e);
             auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица GL_ACLIRQ / id=" + jId, null, e);
             return journalRepository.executeInNewTransaction(persistence2 -> {
                 AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
-                return getErrorMessage(aclirqJournal.getComment());
+                return new ProcessResult(getErrorMessage(aclirqJournal.getComment()), true);
             });
         }
-        return "";
     }
 
     private void loadCurrency() throws Exception {
@@ -122,8 +118,9 @@ public class AccountQueryQueueController extends CommonQueueController {
     }
 
     @Override
-    protected void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
-        journalRepository.updateLogStatus(journalId, AclirqJournal.Status.PROCESSED, comment, outMessage);
+    protected void updateStatusSuccessOut(Long journalId, String comment, ProcessResult processResult) throws Exception {
+        journalRepository.updateLogStatus(journalId, AclirqJournal.Status.PROCESSED, comment,
+                processResult.isWriteOut() ? processResult.getOutMessage() : null);
     }
 
     @Override

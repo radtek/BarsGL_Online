@@ -62,11 +62,11 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
     private WorkdayRepository workdayRepository;
 
 
-    public String process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
+    public ProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
         return process(fullTopic, jId);
     }
 
-    public String process(String fullTopic, long jId) throws Exception {
+    public ProcessResult process(String fullTopic, long jId) throws Exception {
         if (!fullTopic.startsWith("<?xml")) {
             fullTopic = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + fullTopic;
         }
@@ -74,11 +74,11 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
         if (fullTopic == null || !fullTopic.contains("MasterAccountPositioningBatchQuery")) {
             journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка при распозновании сообщения");
             // Меняем содержание на ошибку
-            return getEmptyBodyMessage();
+            return new ProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountListQuery(fullTopic, jId);
-        return answerBody;
+        return new ProcessResult(answerBody, false);
     }
 
     private Set<String> readFromXML(String bodyXML, Long jId) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {

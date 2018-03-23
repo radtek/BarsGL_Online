@@ -60,7 +60,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     private WorkdayRepository workdayRepository;
 
 
-    public String process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
+    public ProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
         String XRef;
         // Преобразуем данные из сообщения
         if (!fullTopic.startsWith("<?xml")) {
@@ -70,11 +70,11 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         if (fullTopic == null || !fullTopic.contains("AccountBalanceListQuery")) {
             journalRepository.updateLogStatus(jId, ERROR, "Ошибка при распозновании сообщения");
             // Меняем содержание на ошибку
-            return getEmptyBodyMessage();
+            return new ProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountBalanceListQuery(fullTopic, jId, currencyMap, workdayRepository.getWorkday(), currencyNBDPMap);
-        return answerBody;
+        return new ProcessResult(answerBody, false);
     }
 
     private String processAccountBalanceListQuery(String fullTopic, Long jId, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {

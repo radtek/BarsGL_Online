@@ -5,7 +5,7 @@
  <SOAP-ENV:Body>
   <gbo:SGLAccountTBOCloseRequest xmlns:gbo="urn:ucbru:gbo:v4">
    <gbo:AccNum>12345678901234567890</gbo:AccNum>
-   <gbo:IsErrAcc>0</gbo:IsErrAcc>
+   <gbo:IsErrAcc>1</gbo:IsErrAcc>
    <gbo:DealID>123456</gbo:DealID>
   </gbo:SGLAccountTBOCloseRequest>
  </SOAP-ENV:Body>

@@ -10,6 +10,7 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.InputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNInput;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
@@ -34,22 +35,22 @@ import static ru.rbt.barsgl.ejb.entity.cust.CustDNMapped.CustResult.UPDATE;
 import static ru.rbt.barsgl.ejb.entity.cust.Customer.Resident.N;
 import static ru.rbt.barsgl.ejb.entity.cust.Customer.Resident.R;
 import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
-import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.getConnectionFactory;
-import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.getQueueProperty;
-import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.sendToQueue;
 
 /**
  * Created by er18837 on 14.12.2017.
  */
-public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
+public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
 //    private final String host = "vs569";
 //    private final String broker = "QM_MBROKER4_T4";
 
-    private final static String host = "vs338";
-    private final static String broker = "QM_MBROKER10_TEST";
+//    private final static String host = "vs338";
+//    private final static String broker = "QM_MBROKER10_TEST";
+    private final static String host = "vs569";
+    private final static String broker = "QM_MBROKER4_T4";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
-    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
+//    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
+    private final static String cudenoIn = "UCBRU.P2P.KTP2GL.CLOSEACC.REQUEST";
 //    private final static String inQueue = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
 //    private final static String outQueue = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
     private static final String login = "srvwbl4mqtest";    // srvwb14mqtest    l != 1 !!!
@@ -91,26 +92,8 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
                 , true);
     }
 
-/*
-*/
-
     private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch, boolean isError) throws Exception {
         testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch, writeOut), isError);
-    }
-
-    private void testProperties(String propStr, boolean isError) throws Exception {
-        System.out.print(propStr);
-        Properties properties = new Properties();
-        properties.load(new StringReader(propStr));
-        try {
-            QueueProperties queueProperties = new QueueProperties(properties);
-            System.out.println(queueProperties.toString());
-            Assert.assertFalse(isError);
-        } catch (Throwable e) {
-            System.out.println("Error!");
-            Assert.assertTrue(isError);
-        }
-        System.out.println();
     }
 
     /**
@@ -268,7 +251,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         // 00488888
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -291,7 +274,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
         // 00694379 A35	12 : 064 18
 
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -321,7 +304,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         // 00694379 A35	12 : 064 18
 
         updateCustomer("00694379", "001", "11", N);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -353,7 +336,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         // 00000010 A35	12 : 064 18
 
         deleteCustomer(fakeCustomer);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -383,7 +366,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_insert.xml").getFile())); //, "UTF-8");
         deleteCustomer(fakeCustomer);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -416,7 +399,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
         updateCustomer("00694379", "001", "11", N);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -450,7 +433,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errval.xml").getFile())); //, "UTF-8");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Thread.sleep(2000L);
         Assert.assertNotNull("Нет записи об ошибке в аудит", getAuditError(idAudit));
@@ -474,7 +457,7 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errmap.xml").getFile())); //, "UTF-8");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new String[] {textMessage}, null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
 
         Thread.sleep(2000L);
         AuditRecord auditRecord = getAuditError(idAudit);
@@ -503,11 +486,6 @@ public class CustomerDetailsNotifyIT extends AbstractTimerJobIT {
 
     private CustDNMapped getCudenoMapped(long id) throws SQLException {
         return (CustDNMapped) baseEntityRepository.selectFirst(CustDNMapped.class, "from CustDNMapped j where j.id = ?1", id);
-    }
-
-    public static long getAuditMaxId() throws SQLException {
-        DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
-        return null == res ? 0 : res.getLong(0);
     }
 
     private AuditRecord getAuditError(long idFrom ) throws SQLException {

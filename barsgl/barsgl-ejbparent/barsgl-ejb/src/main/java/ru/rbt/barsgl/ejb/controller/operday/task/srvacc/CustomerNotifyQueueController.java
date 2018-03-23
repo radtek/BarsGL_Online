@@ -45,12 +45,12 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected String[] readJMS(Message receivedMessage) throws JMSException {
+    protected InputMessage readJMS(Message receivedMessage) throws JMSException {
         return super.readJMS(receivedMessage, Charset.forName(messageProcessor.charsetName));
     }
 
     @Override
-    protected String processQuery(String queueType, String textMessage, Long jId) throws Exception {
+    protected ProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
         messageProcessor.process(textMessage, jId);
         return null;
     }
@@ -66,7 +66,7 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected void updateStatusSuccess(Long journalId, String comment, String outMessage) throws Exception {
+    protected void updateStatusSuccessOut(Long journalId, String comment, ProcessResult processResult) throws Exception {
         journalRepository.updateLogStatus(journalId, CustDNJournal.Status.PROCESSED, comment);
     }
 

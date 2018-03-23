@@ -712,7 +712,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         try {
             DataRecord data = selectFirst("select PKG_CHK_ACC.GET_BALANCE_TODATE(?, ?, ?) from dual"
                     , bsaAcid, acid, datto);
-            return (null == data) ? BigDecimal.ZERO : data.getBigDecimal(0);
+            return ( null == data || null == data.getBigDecimal(0) ) ? BigDecimal.ZERO : data.getBigDecimal(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
