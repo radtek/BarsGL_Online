@@ -17,7 +17,6 @@
     </target>
 -->
 
-<!--
     <target name="build-ejb-ear">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
             <arg line="/A /C build-rbt-base.bat"/>
@@ -26,7 +25,6 @@
             <arg line="/A /C build-ejb-ear.bat"/>
         </exec>
     </target>
--->
 
     <target name="build-all">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
@@ -46,7 +44,6 @@
         </exec>
     </target>
 
-<!--
     <target name="build-all-unix">
         <exec executable="./build-rbt-base.bat" dir="../rbt-base" failonerror="true" osfamily="unix"/>
         <exec executable="./build.bat" dir="."  failonerror="true" osfamily="unix"/>
@@ -60,9 +57,7 @@
             <arg line="/A /C build-prod.bat"/>
         </exec>
     </target>
--->
 
-<!--
     <target name="build-gwtserver-ear">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
             <arg line="/A /C build-rbt-base.bat"/>
@@ -71,7 +66,6 @@
             <arg line="/A /C build-ejb-gwtserver-ear.bat"/>
         </exec>
     </target>
--->
 
     <target name="build-ejbprofile-ear">
         <exec executable="cmd" dir="../rbt-base" failonerror="true">
@@ -82,6 +76,11 @@
         </exec>
     </target>
 
+    <target name="build-ejbprofile-ear-unix">
+        <exec executable="./build-rbt-base.bat" dir="../rbt-base" failonerror="true" osfamily="unix"/>
+        <exec executable="./build-ejbprofile-ear.bat" dir="."  failonerror="true" osfamily="unix"/>
+    </target>
+
     <target name="deploy-ear">
         <copy file="./barsgl-ear/target/barsgl.ear" todir="${DOMAIN_HOME}/autodeploy"/>
     </target>
@@ -90,12 +89,10 @@
         <copy file="./barsgl-ear/target/barssrv.ear" todir="${DOMAIN_HOME}/autodeploy"/>
     </target>
 
-    <!--
         <target name="build-ejb-ear-deploy">
             <antcall target="build-ejb-ear"/>
             <antcall target="deploy-ear"/>
         </target>
-    -->
 
     <target name="build-all-deploy">
         <antcall target="build-all"/>
@@ -107,15 +104,18 @@
         <antcall target="deploy-ear"/>
     </target>
 
-<!--
     <target name="build-gwtserver-ear-deploy">
         <antcall target="build-gwtserver-ear"/>
         <antcall target="deploy-ear"/>
     </target>
--->
 
     <target name="build-ejbprofile-ear-deploy">
         <antcall target="build-ejbprofile-ear"/>
+        <antcall target="deploy-ear"/>
+    </target>
+
+    <target name="build-ejbprofile-ear-deploy-unix">
+        <antcall target="build-ejbprofile-ear-unix"/>
         <antcall target="deploy-ear"/>
     </target>
 
