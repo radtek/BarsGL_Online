@@ -55,6 +55,9 @@ public class Customer extends BaseEntity<String> {
     @Column(name = "BXRUNM")
     private String nameRus;
 
+    @Column(name = "SYS_INF")
+    private String sysinf;
+
     // ================ значения по умолчанию ================
     @Column(name = "BXBICC")
     private String bxbicc;
@@ -195,6 +198,14 @@ public class Customer extends BaseEntity<String> {
 
     public void setNameRus(String nameRus) {
         this.nameRus = nameRus;
+    }
+
+    public String getSysinf() {
+        return sysinf;
+    }
+
+    public void setSysinf(String sysinf) {
+        this.sysinf = sysinf;
     }
 
     public Customer(String custNo) {

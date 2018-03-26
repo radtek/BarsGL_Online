@@ -17,6 +17,7 @@ public class CustomerRepository extends AbstractBaseEntityRepository<Customer, S
         customer.setNameEng(mappedParam.getNameEng());
         customer.setShortNameEng(mappedParam.getShortNameEng());
         customer.setNameRus(mappedParam.getNameRus());
+        customer.setSysinf("F");
 
         return save(customer);
     }
