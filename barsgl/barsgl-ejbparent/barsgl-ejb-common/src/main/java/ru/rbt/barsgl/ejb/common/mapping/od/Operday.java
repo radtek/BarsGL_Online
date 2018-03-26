@@ -50,6 +50,24 @@ public class Operday extends BaseEntity<Date> {
     }
 
     /**
+     * режим обновления остатков BALTUR
+     */
+    public enum BalanceMode {
+        /**
+         * В зависимости от PST.PBR остатки обновляются асинхронно или онлайн
+         */
+        GIBRID,
+        /**
+         * остатки обновляются онлайн
+         */
+        ONLINE,
+        /**
+         * все триггера на PST отключены, пересчет остатков осуществл. внешней программой
+         */
+        ONDEMAND
+    }
+
+    /**
      * режим обработки проводок
      */
     public enum PdMode implements HasLabel {

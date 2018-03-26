@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
@@ -31,13 +32,16 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONLINE;
 import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
 
 /**
@@ -50,6 +54,8 @@ import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxG
 public class OperdaySynchronizationController {
 
     private static final Logger log = Logger.getLogger(OperdaySynchronizationController.class.getName());
+
+    private static final String PST_TABLE_NAME = "PST";
 
     @Inject
     private GLPdRepository glPdRepository;
@@ -99,7 +105,14 @@ public class OperdaySynchronizationController {
     @EJB
     private DbTryingExecutor dbTryingExecutor;
 
-    public String syncPostings() throws Exception {
+    /**
+     * синхронизация проводок и оборотов с буфером
+     * @param targetMode в какой режим обработки остатков переходить после сброса буфера,
+     *                   В случае NULL значения режим остается как до сброса буфера
+     * @return
+     * @throws Exception
+     */
+    public String syncPostings(Optional<Operday.BalanceMode> targetMode) throws Exception {
         final DataRecord bufferStat = glPdRepository.selectFirst(
                 "select case when mx is null then 0 else mx end mx, cnt \n" +
                 "  from ( \n" +
@@ -118,14 +131,14 @@ public class OperdaySynchronizationController {
         }
 
         if (maxGlPdId == 0 && balanceStat.getLong("cnt") == 0) {
-//            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
+            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
             return "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется";
         }
 
         try {
             try {
                 dbTryingExecutor.tryExecuteTransactionally((conn, attempt) -> {
-                    switchOffTriggers();
+                    setOndemandBalanceCalc();
                     return "";
                 }, 3, TimeUnit.SECONDS, 10);
             } catch (Throwable e) {
@@ -777,23 +790,51 @@ public class OperdaySynchronizationController {
     }
 
     public void setOnlineBalanceCalc() throws Exception {
-        final String tableName = "PST";
-        removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONLINE_MODE; end;");
+        try {
+            dbTryingExecutor.tryExecuteTransactionally((conn,att)->{
+                removeLock(PST_TABLE_NAME);
+                pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONLINE_MODE; end;");
+                return null;
+            }, 3, TimeUnit.SECONDS, 5);
+        } catch (Throwable e) {
+            auditController.error(BufferModeSync, "Не удалось переключить обработку в режим " + ONLINE, null, e);
+            throw e;
+        }
     }
 
     public void setGibridBalanceCalc() throws Exception {
-        final String tableName = "PST";
-        removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_GIBRID_MODE; end;");
+        try {
+            dbTryingExecutor.tryExecuteTransactionally((conn, att) -> {
+                removeLock(PST_TABLE_NAME);
+                pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_GIBRID_MODE; end;");
+                return null;
+            }, 3, TimeUnit.SECONDS, 5);
+        } catch (Throwable e) {
+            auditController.error(BufferModeSync, "Не удалось переключить обработку в режим " + GIBRID, null, e);
+            throw e;
+        }
     }
 
     public void setOndemandBalanceCalc() throws Exception {
-        final String tableName = "PST";
-        removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONDEMAND_MODE; end;");
+        try {
+            dbTryingExecutor.tryExecuteTransactionally((conn, att) -> {
+                removeLock(PST_TABLE_NAME);
+                pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONDEMAND_MODE; end;");
+                return null;
+            }, 3, TimeUnit.SECONDS, 5);
+        } catch (Throwable e) {
+            auditController.error(BufferModeSync, "Не удалось переключить обработку в режим " + ONDEMAND, null, e);
+            throw e;
+        }
     }
 
+    private void switchToTargetMode(Optional<Operday.BalanceMode> targetMode) {
+        if (targetMode.isPresent()) {
+            switch targetMode.get()
+        }
+    }
+
+    /*
     private void switchOffTriggers() {
         trySwitchTriggers(true);
     }
@@ -805,8 +846,8 @@ public class OperdaySynchronizationController {
     private void trySwitchTriggers(boolean off) {
         try {
             pdRepository.executeInNewTransaction(persistence1 -> {
-                removeLock("PST");
-                lockTable("PST");
+                removeLock(PST_TABLE_NAME);
+                lockTable(PST_TABLE_NAME);
                 auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PST установлена");
                 swithTriggersPD(off);
                 auditController.info(BufferModeSync, String.format("%s триггеров прошло успешно", off ? "Отключение" : "Включение"));
@@ -828,6 +869,7 @@ public class OperdaySynchronizationController {
             return null;
         });
     }
+    */
 }
 
 
