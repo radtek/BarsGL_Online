@@ -786,6 +786,7 @@ public class OperdaySynchronizationController {
             dbTryingExecutor.tryExecuteTransactionally((conn,att)->{
                 removeLock(PST_TABLE_NAME);
                 pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONLINE_MODE; end;");
+                auditController.info(Operday, format("Установлен режим %s пересчета остатков", ONLINE));
                 return null;
             }, 3, TimeUnit.SECONDS, 5);
         } catch (Throwable e) {
@@ -799,6 +800,7 @@ public class OperdaySynchronizationController {
             dbTryingExecutor.tryExecuteTransactionally((conn, att) -> {
                 removeLock(PST_TABLE_NAME);
                 pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_GIBRID_MODE; end;");
+                auditController.info(Operday, format("Установлен режим %s пересчета остатков", GIBRID));
                 return null;
             }, 3, TimeUnit.SECONDS, 5);
         } catch (Throwable e) {
@@ -812,6 +814,7 @@ public class OperdaySynchronizationController {
             dbTryingExecutor.tryExecuteTransactionally((conn, att) -> {
                 removeLock(PST_TABLE_NAME);
                 pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONDEMAND_MODE; end;");
+                auditController.info(Operday, format("Установлен режим %s пересчета остатков", ONDEMAND));
                 return null;
             }, 3, TimeUnit.SECONDS, 5);
         } catch (Throwable e) {
@@ -835,13 +838,13 @@ public class OperdaySynchronizationController {
 
     private void switchToTargetMode(Optional<ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode > targetMode) throws Exception {
         if (targetMode.isPresent()) {
-            if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID == targetMode.get()) {
+            if (GIBRID == targetMode.get()) {
                 setGibridBalanceCalc();
             } else
-            if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONLINE == targetMode.get()) {
+            if (ONLINE == targetMode.get()) {
                 setOnlineBalanceCalc();
             } else
-            if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND == targetMode.get()) {
+            if (ONDEMAND == targetMode.get()) {
                 setOndemandBalanceCalc();
             } else {
                 throw new DefaultApplicationException("Unexpacted target balance recalc state " + targetMode.get());
