@@ -34,6 +34,7 @@ public class QueueProperties {
     public String unspents;
     public String writeOut;
     public String writeSleepThreadTime;
+    public String remoteQueueOut;
 
     @Override
     public String toString() {
@@ -47,6 +48,7 @@ public class QueueProperties {
                    ", unspents='" + unspents + '\'' +
                    ", writeOut='" + writeOut + '\'' +
                    ", writeSleepThreadTime='" + writeSleepThreadTime + '\'' +
+                   ", remoteQueueOut='" + remoteQueueOut + '\'' +
                    '}';
     }
 
@@ -63,6 +65,7 @@ public class QueueProperties {
             this.mqTopics = ifEmpty(properties.getProperty("mq.topics", noParam).trim(), noParam);;
             this.unspents = properties.getProperty("unspents", "hide").trim();
             this.writeOut = properties.getProperty("writeOut", "false").trim();
+            this.remoteQueueOut = properties.getProperty("remoteQueueOut", "false").trim();
             this.writeSleepThreadTime = properties.getProperty("writeSleepThreadTime", "false").trim();
             this.mqUser = ifEmpty(properties.getProperty("mq.user", noParam).trim(), noParam);;
             this.mqPassword = ifEmpty(properties.getProperty("mq.password", noParam).trim(), noParam);

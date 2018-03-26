@@ -64,7 +64,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     
     private ThreadLocal<Boolean> isAccRst = new ThreadLocal<>();
     
-    public String process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
+    public ProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
         isAccRst.set(false);
         if (!fullTopic.startsWith("<?xml")) {
             fullTopic = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + fullTopic;
@@ -73,13 +73,13 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         if (fullTopic == null || !fullTopic.contains("AccountListQuery")) {
             journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка в содержании сообщения");
             // Меняем содержание на ошибку
-            return getEmptyBodyMessage();
+            return new ProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountListQuery(fullTopic, jId, currencyMap, workdayRepository.getWorkday(), currencyNBDPMap, showUnspents);
 
 //        log.info("Обработка одного сообщения завершена.");
-        return answerBody;
+        return new ProcessResult(answerBody, false);
     }
 
     private Map<AccountMap, Object> readFromXML(String bodyXML, Long jId) throws Exception {
