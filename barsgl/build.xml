@@ -15,6 +15,7 @@
             <arg line="/A /C ${DOMAIN_HOME}/startWebLogic"/>
         </exec>
     </target>
+
 -->
 
     <target name="build-ejb-ear">
