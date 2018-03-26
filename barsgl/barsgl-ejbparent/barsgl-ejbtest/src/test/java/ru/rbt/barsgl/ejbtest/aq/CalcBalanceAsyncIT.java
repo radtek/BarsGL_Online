@@ -250,6 +250,17 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(4, params2.getParams().get(0).getValue());
     }
 
+    @Test public void testRestoreTriggersState() throws SQLException {
+        setGibridMode();
+        checkCurrentMode(Operday.BalanceMode.GIBRID);
+
+        setOndemanMode();
+        checkCurrentMode(Operday.BalanceMode.ONDEMAND);
+
+        restorePreviousTriggersState();
+        checkCurrentMode(Operday.BalanceMode.GIBRID);
+    }
+
 
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
         String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy, invisible) values (?,?,?,?,?,?,?,?,?,?,?)";
@@ -291,6 +302,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         remoteAccess.invoke(OperdaySynchronizationController.class, "setOndemandBalanceCalc");
     }
 
+    private void restorePreviousTriggersState() {
+        remoteAccess.invoke(OperdaySynchronizationController.class, "restorePreviousTriggersState");
+    }
+
     private void stopListeningQueue() {
         baseEntityRepository.executeNativeUpdate(
                 "begin\n" +
@@ -307,5 +322,11 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private void cleanBvjrnlRecord(GLAccount account) {
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+    }
+
+    private void checkCurrentMode(Operday.BalanceMode mode) throws SQLException {
+        Assert.assertEquals(mode, Operday.BalanceMode.valueOf(baseEntityRepository
+                .selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
+
     }
 }

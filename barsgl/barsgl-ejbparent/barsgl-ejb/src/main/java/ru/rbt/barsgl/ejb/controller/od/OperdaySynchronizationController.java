@@ -820,6 +820,19 @@ public class OperdaySynchronizationController {
         }
     }
 
+    public void restorePreviousTriggersState() throws Exception {
+        try {
+            dbTryingExecutor.tryExecuteTransactionally((conn, att) -> {
+                removeLock(PST_TABLE_NAME);
+                pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.RESTORE_PST_TRIGGERS; end;");
+                return null;
+            }, 3, TimeUnit.SECONDS, 5);
+        } catch (Throwable e) {
+            auditController.error(BufferModeSync, "Не удалось восстановить предыдущее состояние триггеров на PST", null, e);
+            throw e;
+        }
+    }
+
     private void switchToTargetMode(Optional<ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode > targetMode) throws Exception {
         if (targetMode.isPresent()) {
             if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID == targetMode.get()) {
@@ -834,7 +847,7 @@ public class OperdaySynchronizationController {
                 throw new DefaultApplicationException("Unexpacted target balance recalc state " + targetMode.get());
             }
         } else {
-            setOndemandBalanceCalc();
+            restorePreviousTriggersState();
         }
     }
 
