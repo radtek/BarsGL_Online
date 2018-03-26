@@ -52,6 +52,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         setGibridMode();
 
+        List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
+        Assert.assertTrue(triggers.stream().anyMatch(r -> "ENABLED".equals(r.getString("status"))));
+        Assert.assertEquals(Operday.BalanceMode.GIBRID, Operday.BalanceMode.valueOf(baseEntityRepository.selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
+
         // удаление baltur по счету
         GLAccount account = findAccount("40702810%");
         log.info("Account " + account.getBsaAcid());
@@ -149,12 +153,12 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testOndemand() throws SQLException {
+        setGibridMode();
         setOndemanMode();
 
         List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
         List<DataRecord> enabled = triggers.stream().filter(r -> "ENABLED".equals(r.getString("status"))).collect(Collectors.toList());
         Assert.assertEquals(0, enabled.size());
-
     }
 
     @Test public void testGibridOnSpecificPBR() throws SQLException {

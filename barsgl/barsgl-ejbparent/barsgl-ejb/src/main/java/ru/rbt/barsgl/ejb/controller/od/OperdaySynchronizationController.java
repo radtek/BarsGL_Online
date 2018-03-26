@@ -167,15 +167,7 @@ public class OperdaySynchronizationController {
                 throw new DefaultApplicationException(message, e);
             }
         } finally {
-            try {
-                dbTryingExecutor.tryExecuteTransactionally((conn, attempt) ->{
-                    switchOnTriggers(); return null;
-                }, 3, TimeUnit.SECONDS, 10);
-            } catch (Throwable e) {
-                String message = "Не удалось включить триггера после сброса буфера";
-                auditController.error(BufferModeSync, message, null, e);
-                throw new DefaultApplicationException(message, e);
-            }
+            switchToTargetMode(targetMode);
         }
     }
 
@@ -286,7 +278,7 @@ public class OperdaySynchronizationController {
      * отключаем/включаем триггера на PD (за исключением журналирующих)
      * @return false если не было отключено ни одного триггера
      */
-    private void swithTriggersPD(boolean off) throws Exception {
+    /*private void swithTriggersPD(boolean off) throws Exception {
         Assert.isTrue(pdRepository.executeTransactionally(connection -> {
             int cnt = 0;
             try (PreparedStatement selectStatement = connection.prepareStatement(
@@ -314,7 +306,7 @@ public class OperdaySynchronizationController {
 
     private void lockTable(String tableName) throws Exception {
         pdRepository.executeNativeUpdate(format("LOCK TABLE %s IN EXCLUSIVE MODE", tableName));
-    }
+    }*/
 
     private void restartSequence(String sequenceName, long startWith) throws Exception {
         glPdRepository.executeTransactionally(connection -> {
@@ -443,7 +435,7 @@ public class OperdaySynchronizationController {
     private void syncOneGLPd (Long glpdId, Long currentPdSeq, Long currentGLPdSeq) {
         GLPd glPd = glPdRepository.findById(GLPd.class, glpdId);
         Pd pd = createPd(currentPdSeq, glPd);
-        if (Objects.equals(pd.getPcId(), pd.getId())) {
+        if (java.util.Objects.equals(pd.getPcId(), pd.getId())) {
             GLOperation operation = glOperationRepository.findById(GLOperation.class, pd.getGlOperationId());
             // gl_posting
             GLPosting posting = new GLPosting(pd.getPcId(), operation, GLPosting.PostingType.parseType(glPd.getPostType()));
@@ -828,9 +820,21 @@ public class OperdaySynchronizationController {
         }
     }
 
-    private void switchToTargetMode(Optional<Operday.BalanceMode> targetMode) {
+    private void switchToTargetMode(Optional<ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode > targetMode) throws Exception {
         if (targetMode.isPresent()) {
-            switch targetMode.get()
+            if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID == targetMode.get()) {
+                setGibridBalanceCalc();
+            } else
+            if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONLINE == targetMode.get()) {
+                setOnlineBalanceCalc();
+            } else
+            if (ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND == targetMode.get()) {
+                setOndemandBalanceCalc();
+            } else {
+                throw new DefaultApplicationException("Unexpacted target balance recalc state " + targetMode.get());
+            }
+        } else {
+            setOndemandBalanceCalc();
         }
     }
 

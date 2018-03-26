@@ -221,7 +221,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             try {
                 if (beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                     beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence1, connection1) -> {
-                        String res = synchronizationController.syncPostings();
+                        String res = synchronizationController.syncPostings(Optional.empty());
                         statInfo(idCob, phase, res);
                         DataRecord stats = synchronizationController.getBifferStatistic();
                         Assert.isTrue(stats.getLong("pd_cnt") == 0, () -> new DefaultApplicationException("Остались полупроводки в буфере после синхронизации"));

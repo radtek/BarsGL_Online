@@ -178,7 +178,7 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
     private boolean proceedSyncronization() {
         try {
             return (boolean) coreRepository.executeInNewTransaction(persistence -> {
-                synchronizationController.syncPostings();
+                synchronizationController.syncPostings(Optional.empty());
                 DataRecord stats = synchronizationController.getBifferStatistic();
                 Assert.isTrue(stats.getLong("pd_cnt") == 0, () -> new DefaultApplicationException("Остались полупроводки в буфере после синхронизации"));
                 Assert.isTrue(stats.getLong("bal_cnt") == 0, () -> new DefaultApplicationException("Остались обороты в буфере после синхронизации"));
