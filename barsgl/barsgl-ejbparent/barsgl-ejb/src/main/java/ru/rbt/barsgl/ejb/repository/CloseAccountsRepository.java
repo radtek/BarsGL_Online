@@ -20,8 +20,8 @@ import java.util.Optional;
 @LocalBean
 public class CloseAccountsRepository <E extends BaseEntity<String>> extends AbstractBaseEntityRepository<E, String> {
 
-    public long countDeals() throws SQLException {
-       return selectOne("select count(*) FROM GL_DEALCLOSE", null).getLong(0);
+    public boolean isExistsDeals() throws SQLException {
+       return null != selectFirst("select 1 FROM GL_DEALCLOSE", null);
     }
 
     public int delOldDeals(){

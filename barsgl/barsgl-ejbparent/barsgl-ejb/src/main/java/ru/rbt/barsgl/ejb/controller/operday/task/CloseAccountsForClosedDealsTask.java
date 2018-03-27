@@ -62,12 +62,9 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
     }
 
     public boolean checkRun() throws Exception {
-        long cnt = closeAccountsRepository.countDeals();
-        if (cnt == 0) {
+        if (!closeAccountsRepository.isExistsDeals()) {
             auditController.info(AccDealCloseTask, "Нет сделок для закрытия счетов (таблица GL_DEALCLOSE пустая)");
             return false;
-        }else{
-            auditController.info(AccDealCloseTask, "Начало обработки закрытых сделок в количестве "+cnt);
         }
         return true;
     }
