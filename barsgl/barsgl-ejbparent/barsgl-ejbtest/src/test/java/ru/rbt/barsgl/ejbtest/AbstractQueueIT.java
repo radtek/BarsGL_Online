@@ -117,6 +117,8 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
 
     public  String[] readFromJMS(MQMessageConsumer receiver) throws JMSException {
         JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
+        if (null == receivedMessage)
+            return null;
         receivedMessage.acknowledge();
         String textMessage = null;
         if (receivedMessage instanceof JMSTextMessage) {

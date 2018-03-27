@@ -79,7 +79,7 @@ public class AccountQueryQueueController extends CommonQueueController {
     }
 
     @Override
-    protected ProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
+    protected QueueProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
         try {
             switch (queueType) {
                 case "LIRQ":
@@ -89,14 +89,14 @@ public class AccountQueryQueueController extends CommonQueueController {
                 case "MAPBRQ":
                     return queryProcessorMAPB.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
                 default:
-                    return new ProcessResult("Неверный тип очереди: " + queueType, true);
+                    return new QueueProcessResult("Неверный тип очереди: " + queueType, true);
         }
         } catch (Exception e) {
             log.error("Ошибка при подготовке ответа. ", e);
             auditController.warning(AccountQuery, "Ошибка при подготовке ответа / Таблица GL_ACLIRQ / id=" + jId, null, e);
             return journalRepository.executeInNewTransaction(persistence2 -> {
                 AclirqJournal aclirqJournal = journalRepository.findById(AclirqJournal.class, jId);
-                return new ProcessResult(getErrorMessage(aclirqJournal.getComment()), true);
+                return new QueueProcessResult(getErrorMessage(aclirqJournal.getComment()), true);
             });
         }
     }
@@ -118,7 +118,7 @@ public class AccountQueryQueueController extends CommonQueueController {
     }
 
     @Override
-    protected void updateStatusSuccessOut(Long journalId, String comment, ProcessResult processResult) throws Exception {
+    protected void updateStatusSuccessOut(Long journalId, String comment, QueueProcessResult processResult) throws Exception {
         journalRepository.updateLogStatus(journalId, AclirqJournal.Status.PROCESSED, comment,
                 processResult.isWriteOut() ? processResult.getOutMessage() : null);
     }

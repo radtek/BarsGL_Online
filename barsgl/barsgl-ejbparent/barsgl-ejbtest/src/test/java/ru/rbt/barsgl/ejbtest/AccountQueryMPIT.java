@@ -84,7 +84,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 //        sendToQueue(cf, acdenoF, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acdenoM, login, passw);
         sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw);
 
-        Thread.sleep(1000L);
+        Thread.sleep(5000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
@@ -95,6 +95,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         Thread.sleep(4000L);
         String[] answer = receiveFromQueue(cf, acliquOut, login, passw);
+        Assert.assertNotNull(answer);
         Assert.assertFalse(StringUtils.isEmpty(answer[0]));
         Assert.assertFalse(answer[0].contains("Error"));
         System.out.println("\nReceived message from " + acliquOut + ":\n" + answer[0]);

@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
@@ -83,7 +84,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
     }
 
     // выполняется в своей транзакции
-    public ProcessResult process(String fullTopic, final Long journalId) throws Exception {
+    public QueueProcessResult process(String fullTopic, final Long journalId) throws Exception {
         // разбор сообщения и обработка сетов
         Map<String, String> xmlData = processMessage(fullTopic, journalId);
 
@@ -93,9 +94,9 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
         if (isEmpty(xmlData.get("ERROR"))) {
             journalRepository.updateComment(journalId, String.format("Счет с bsaacid = '%s' %s",
                     xmlData.get("BSAACID"), (!isEmpty(xmlData.get("DTC")) ? "закрыт" : "поставлен в очередь на закрытие")));
-            return new ProcessResult(answerBody, false);
+            return new QueueProcessResult(answerBody, false);
         } else
-            return new ProcessResult(answerBody, true);
+            return new QueueProcessResult(answerBody, true);
 
     }
 

@@ -4,6 +4,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
@@ -64,7 +65,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     
     private ThreadLocal<Boolean> isAccRst = new ThreadLocal<>();
     
-    public ProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
+    public QueueProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
         isAccRst.set(false);
         if (!fullTopic.startsWith("<?xml")) {
             fullTopic = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + fullTopic;
@@ -73,13 +74,13 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         if (fullTopic == null || !fullTopic.contains("AccountListQuery")) {
             journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка в содержании сообщения");
             // Меняем содержание на ошибку
-            return new ProcessResult(getEmptyBodyMessage(), true);
+            return new QueueProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountListQuery(fullTopic, jId, currencyMap, workdayRepository.getWorkday(), currencyNBDPMap, showUnspents);
 
 //        log.info("Обработка одного сообщения завершена.");
-        return new ProcessResult(answerBody, false);
+        return new QueueProcessResult(answerBody, false);
     }
 
     private Map<AccountMap, Object> readFromXML(String bodyXML, Long jId) throws Exception {

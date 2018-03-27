@@ -4,6 +4,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.audit.controller.AuditController;
@@ -60,7 +61,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     private WorkdayRepository workdayRepository;
 
 
-    public ProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
+    public QueueProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
         String XRef;
         // Преобразуем данные из сообщения
         if (!fullTopic.startsWith("<?xml")) {
@@ -70,11 +71,11 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         if (fullTopic == null || !fullTopic.contains("AccountBalanceListQuery")) {
             journalRepository.updateLogStatus(jId, ERROR, "Ошибка при распозновании сообщения");
             // Меняем содержание на ошибку
-            return new ProcessResult(getEmptyBodyMessage(), true);
+            return new QueueProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountBalanceListQuery(fullTopic, jId, currencyMap, workdayRepository.getWorkday(), currencyNBDPMap);
-        return new ProcessResult(answerBody, false);
+        return new QueueProcessResult(answerBody, false);
     }
 
     private String processAccountBalanceListQuery(String fullTopic, Long jId, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
