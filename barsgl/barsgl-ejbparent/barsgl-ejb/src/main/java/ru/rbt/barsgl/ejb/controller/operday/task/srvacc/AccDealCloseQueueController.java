@@ -44,7 +44,7 @@ public class AccDealCloseQueueController extends CommonQueueController {
     }
 
     @Override
-    protected ProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
+    protected QueueProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
         return messageProcessor.process(textMessage, jId);
     }
 
@@ -59,7 +59,7 @@ public class AccDealCloseQueueController extends CommonQueueController {
     }
 
     @Override
-    protected void updateStatusSuccessOut(Long journalId, String comment, ProcessResult processResult) throws Exception {
+    protected void updateStatusSuccessOut(Long journalId, String comment, QueueProcessResult processResult) throws Exception {
         if (!processResult.isError())
             journalRepository.updateLogStatus(journalId, PROCESSED);
         else

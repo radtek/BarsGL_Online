@@ -5,42 +5,31 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccDealCloseNotifyTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
-import ru.rbt.barsgl.ejb.entity.acc.Acc;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
 import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.AbstractQueue;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.math.BigDecimal.ZERO;
-import static org.apache.poi.ss.util.CellReference.NameType.ROW;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
-import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.PROCESSED;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.RAW;
-import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.*;
 
 /**
  * Created by er18837 on 16.03.2018.
@@ -92,7 +81,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         String message = createRequestXml("AccountCloseRequest.xml", "12345678901234567890", "123456", GLAccount.CloseType.Cancel);
 
         Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-        ProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+        QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
         Assert.assertTrue(processResult.isError());
         System.out.println("" + processResult.getOutMessage());
 
@@ -118,18 +107,22 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         String message = createRequestXml("AccountCloseRequest.xml", account, GLAccount.CloseType.Cancel);
 
         Date closeWas = updateDateClose(account, getOperday().getCurrentDate());
-        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-        ProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
-        updateDateClose(account, closeWas);
+        try {
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+            updateDateClose(account, closeWas);
 
-        System.out.println(processResult.getOutMessage());
-        Assert.assertTrue(processResult.isError());
+            System.out.println(processResult.getOutMessage());
+            Assert.assertTrue(processResult.isError());
 
-        AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
-        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
-        Assert.assertEquals(ERROR, journal.getStatus());
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(ERROR, journal.getStatus());
 
-        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            updateDateClose(account, closeWas);
+        }
     }
 
     /**
@@ -151,30 +144,32 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         if (isZero(bal))
             insertIntoGlBaltur(account, curDate, 1000, 0);
         Date closeWas = updateDateClose(account, null);
-        deleteFromWaitClose(account.getBsaAcid());
+        try {
+            deleteFromWaitClose(account);
 
-        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-        ProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
 //        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 //        sendToQueue(cf, ktpIn, message.getBytes(), ktpOut, login, passw);
 //        Thread.sleep(2000L);
 //        executeJobAccDealClose();
 
-        updateDateClose(account, closeWas);
-        if (isZero(bal))
-            deleteFromGlBaltur(account, curDate);
+            Assert.assertNotNull(processResult);
+            System.out.println(processResult.getOutMessage());
+            Assert.assertFalse(processResult.isError());
 
-        Assert.assertNotNull(processResult);
-        System.out.println(processResult.getOutMessage());
-        Assert.assertFalse(processResult.isError());
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(RAW, journal.getStatus());
 
-        AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
-        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
-        Assert.assertEquals(RAW, journal.getStatus());
+            checkWaitClose(account);
 
-        checkWaitClose(account.getBsaAcid());
-
-        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            updateDateClose(account, closeWas);
+            if (isZero(bal))
+                deleteFromGlBaltur(account, curDate);
+        }
     }
 
     /**
@@ -191,23 +186,28 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         String message = createRequestXml("AccountCloseRequest.xml", account, GLAccount.CloseType.Change);
 
         Date closeWas = updateDateClose(account, null);
-        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-        ProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
-        updateDateClose(account, closeWas);
+        try {
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+            updateDateClose(account, closeWas);
 
-        System.out.println(processResult.getOutMessage());
-        Assert.assertTrue(!processResult.isError());
+            System.out.println(processResult.getOutMessage());
+            Assert.assertTrue(!processResult.isError());
 
 
-        AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
-        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
-        Assert.assertEquals(RAW, journal.getStatus());
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(RAW, journal.getStatus());
 
-        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
-    }
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            updateDateClose(account, closeWas);
+        }
+
+}
 
     /**
-     * Тест обработки сообщения по отмене сделки
+     * Тест обработки сообщения по отмене сделки (один счет)
      * @throws Exception
      */
     @Test
@@ -220,40 +220,113 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         String message = createRequestXml("AccountCloseRequest.xml", account, GLAccount.CloseType.Cancel);
 
         Date closeWas = updateDateClose(account, null);
-        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-        ProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
-        updateDateClose(account, closeWas);
+        try {
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
 
-        System.out.println(processResult.getOutMessage());
-        Assert.assertTrue(!processResult.isError());
+            System.out.println(processResult.getOutMessage());
+            Assert.assertTrue(!processResult.isError());
 
-        AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
-        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
-        Assert.assertEquals(RAW, journal.getStatus());
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(RAW, journal.getStatus());
 
-        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            updateDateClose(account, closeWas);
+        }
     }
 
-    // TODO не закончен
+    /**
+     * Тест обработки сообщения по отмене сделки (несколько счетов счет)
+     * @throws Exception
+     */
     @Test
     public void testProcessDealCanceled() throws Exception {
         long idAudit = getAuditMaxId();
         long idAcdeno = getAcdenoMaxId();
+        Date curDate = getOperday().getCurrentDate();
 
         List<GLAccount> accounts = findGlAccountsWithDeal();
         Assert.assertFalse(accounts.isEmpty());
+        GLAccount mainAccount = accounts.get(0);
 
-        String message = createRequestXml("AccountCloseRequest.xml", accounts.get(0), GLAccount.CloseType.Cancel);
+        String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Cancel);
 
-        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-        String outmsg = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
-        System.out.println("" + outmsg);
+        BigDecimal bal = getBalance(mainAccount, curDate);
+        if (isZero(bal))
+            insertIntoGlBaltur(mainAccount, curDate, 1000, 0);
+        try {
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+            System.out.println(processResult.getOutMessage());
+            Assert.assertTrue(!processResult.isError());
 
-        AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
-        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
-        Assert.assertEquals(RAW, journal.getStatus());
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(RAW, journal.getStatus());
 
-        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+            checkWaitClose(mainAccount);
+            for (int i = 1; i < accounts.size(); i++) {
+                GLAccount account = (GLAccount) baseEntityRepository.refresh(accounts.get(i), true);
+                Assert.assertEquals(curDate, account.getDateClose());
+            }
+
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            for (GLAccount account : accounts)
+                updateDateClose(account, account.getDateClose());
+            if (isZero(bal))
+                deleteFromGlBaltur(mainAccount, curDate);
+        }
+    }
+
+    /**
+     * Тест обработки сообщения по отмене сделки (несколько счетов счет)
+     * @throws Exception
+     */
+    @Test
+    public void testProcessDealChanged() throws Exception {
+        long idAudit = getAuditMaxId();
+        long idAcdeno = getAcdenoMaxId();
+        Date curDate = getOperday().getCurrentDate();
+
+        List<GLAccount> accounts = findGlAccountsWithDeal();
+        Assert.assertFalse(accounts.isEmpty());
+        GLAccount mainAccount = accounts.get(0);
+
+        String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Change);
+
+        BigDecimal bal = getBalance(mainAccount, curDate);
+        int sign = bal.compareTo(ZERO);
+        if (sign > 0)
+            insertIntoGlBaltur(mainAccount, curDate, bal.longValue(), 0);
+        else if (sign < 0)
+            insertIntoGlBaltur(mainAccount, curDate, 0, bal.longValue());
+        try {
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+            System.out.println(processResult.getOutMessage());
+            Assert.assertTrue(!processResult.isError());
+
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(RAW, journal.getStatus());
+
+            GLAccount account = (GLAccount) baseEntityRepository.refresh(mainAccount, true);
+            Assert.assertEquals(curDate, account.getDateClose());
+            for (int i = 1; i < accounts.size(); i++) {
+                account = (GLAccount) baseEntityRepository.refresh(accounts.get(i), true);
+                Assert.assertNull(account.getDateClose());
+            }
+
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            for (GLAccount account : accounts)
+                updateDateClose(account, account.getDateClose());
+            if (isZero(bal))
+                deleteFromGlBaltur(mainAccount, curDate);
+        }
 
     }
 
@@ -307,7 +380,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
     }
 
-    @Test
+//    @Test
     public void testProcessFromQueue() throws Exception {
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 
@@ -322,12 +395,12 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         Assert.assertNotNull(requestArr[2]);
 
         Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, request);
-        String responce = remoteAccess.invoke(AccDealCloseProcessor.class, "process", request, jId);
+        QueueProcessResult responce = remoteAccess.invoke(AccDealCloseProcessor.class, "process", request, jId);
         System.out.println("response:");
         System.out.println(responce);
-        Assert.assertFalse(StringUtils.isEmpty(responce));
+        Assert.assertFalse(StringUtils.isEmpty(responce.getOutMessage()));
 
-        answerToQueue(cf, ktpOut, responce.getBytes(), requestArr[1], login, passw);
+        answerToQueue(cf, ktpOut, responce.getOutMessage().getBytes(), requestArr[1], login, passw);
     }
 
     private String createRequestXml(String fileName, GLAccount account, GLAccount.CloseType closeType) throws Exception {
@@ -387,7 +460,8 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         return accounts;
     }
 
-    private Date updateDateClose(GLAccount account, Date dateClose) {
+    private Date updateDateClose(GLAccount acc, Date dateClose) {
+        GLAccount account = (GLAccount) baseEntityRepository.refresh(acc, true);
         baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = ? where BSAACID = ?", dateClose, account.getBsaAcid());
         baseEntityRepository.executeNativeUpdate("update ACCRLN set DRLNC = ? where BSAACID = ? and ACID = ?", dateClose, account.getBsaAcid(), account.getAcid());
         baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", dateClose, account.getBsaAcid());
@@ -402,12 +476,12 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         return ZERO.equals(bal);
     }
 
-    private void deleteFromWaitClose(String bsaAcid) {
-        baseEntityRepository.executeNativeUpdate("delete from gl_acwaitclose where bsaacid = ?", bsaAcid);
+    private void deleteFromWaitClose(GLAccount account) {
+        baseEntityRepository.executeNativeUpdate("delete from gl_acwaitclose where bsaacid = ?", account.getBsaAcid());
     }
 
-    private void checkWaitClose(String bsaAcid) throws SQLException {
-        DataRecord res = baseEntityRepository.selectFirst("select * from gl_acwaitclose where bsaacid = ?", bsaAcid);
+    private void checkWaitClose(GLAccount account) throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select * from gl_acwaitclose where bsaacid = ?", account.getBsaAcid());
         Assert.assertNotNull(res);
     }
 

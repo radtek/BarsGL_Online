@@ -4,6 +4,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
@@ -18,12 +19,10 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -62,11 +61,11 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
     private WorkdayRepository workdayRepository;
 
 
-    public ProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
+    public QueueProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
         return process(fullTopic, jId);
     }
 
-    public ProcessResult process(String fullTopic, long jId) throws Exception {
+    public QueueProcessResult process(String fullTopic, long jId) throws Exception {
         if (!fullTopic.startsWith("<?xml")) {
             fullTopic = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + fullTopic;
         }
@@ -74,11 +73,11 @@ public class MasterAccountProcessor extends CommonAccountQueryProcessor implemen
         if (fullTopic == null || !fullTopic.contains("MasterAccountPositioningBatchQuery")) {
             journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка при распозновании сообщения");
             // Меняем содержание на ошибку
-            return new ProcessResult(getEmptyBodyMessage(), true);
+            return new QueueProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountListQuery(fullTopic, jId);
-        return new ProcessResult(answerBody, false);
+        return new QueueProcessResult(answerBody, false);
     }
 
     private Set<String> readFromXML(String bodyXML, Long jId) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {

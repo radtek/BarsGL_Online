@@ -51,7 +51,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
     }
 
     public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType) throws SQLException {
-        if (0 < selectOne("select count(*) from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()).getInteger(0))
+        if (null != selectFirst("select 1 from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()))
             return false;
         executeNativeUpdate("insert into gl_acwaitclose(BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?)",
                             glAccount.getBsaAcid(),

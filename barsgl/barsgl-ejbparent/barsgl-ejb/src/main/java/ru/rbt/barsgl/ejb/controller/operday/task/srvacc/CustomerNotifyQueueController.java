@@ -14,10 +14,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.persistence.PersistenceException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
 
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
@@ -45,12 +43,12 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected InputMessage readJMS(Message receivedMessage) throws JMSException {
+    protected QueueInputMessage readJMS(Message receivedMessage) throws JMSException {
         return super.readJMS(receivedMessage, Charset.forName(messageProcessor.charsetName));
     }
 
     @Override
-    protected ProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
+    protected QueueProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception {
         messageProcessor.process(textMessage, jId);
         return null;
     }
@@ -66,7 +64,7 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected void updateStatusSuccessOut(Long journalId, String comment, ProcessResult processResult) throws Exception {
+    protected void updateStatusSuccessOut(Long journalId, String comment, QueueProcessResult processResult) throws Exception {
         journalRepository.updateLogStatus(journalId, CustDNJournal.Status.PROCESSED, comment);
     }
 
