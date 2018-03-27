@@ -37,6 +37,8 @@ import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.CREDIT;
 import static ru.rbt.barsgl.gwt.client.operation.OperationDlgBase.Side.DEBIT;
@@ -64,23 +66,30 @@ public class AccountForm extends EditableDictionary<ManualAccountWrapper> {
 
     AccountQuickFilterParams quickFilterParams;
     GridAction quickFilterAction;
-    
+	final static Logger rootLogger = Logger.getLogger("");
+
     public AccountForm() {
         super(FORM_NAME, true);
+    	rootLogger.log(Level.INFO, "super");
         reconfigure();
     }
 
     private void reconfigure() {
+        rootLogger.log(Level.INFO, "reconfigure()");
 
     	quickFilterParams = createQuickFilterParams();
+        rootLogger.log(Level.INFO, "createQuickFilterParams()");
         abw.addAction(quickFilterAction = new AccountQuickFilterAction(grid, quickFilterParams) );
+        rootLogger.log(Level.INFO, "new AccountQuickFilterAction(");
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addSecureAction(editAccount(), SecurityActionCode.AccChng);
         abw.addSecureAction(createAccount(), SecurityActionCode.AccInp);
         abw.addSecureAction(closeAccount(), SecurityActionCode.AccClose);
         abw.addSecureAction(createNewOperation(), SecurityActionCode.AccOperInp);
         abw.addAction(waitCloseAccountReport());
+        rootLogger.log(Level.INFO, "befor quickFilterAction.execute()");
         quickFilterAction.execute();
+        rootLogger.log(Level.INFO, "after quickFilterAction.execute()");
     }
 
     @Override

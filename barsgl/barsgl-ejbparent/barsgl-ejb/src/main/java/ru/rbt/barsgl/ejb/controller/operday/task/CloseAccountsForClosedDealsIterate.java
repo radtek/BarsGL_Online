@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * Created by er22317 on 19.03.2018.
  */
-public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
+public class CloseAccountsForClosedDealsIterate {
     PreparedStatement query;
     ResultSet rec;
     private String cnum, dealid, source;
@@ -51,7 +51,6 @@ public class CloseAccountsForClosedDealsIterate implements AutoCloseable {
         return true;
     }
 
-    @Override
     public void close() throws Exception {
         if (query != null){ query.close();}
         if (rec != null) { rec.close();}
