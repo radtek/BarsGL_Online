@@ -1,43 +1,23 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.ibm.jms.JMSBytesMessage;
-import com.ibm.jms.JMSMessage;
-import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.InputMessage;
-import ru.rbt.barsgl.ejbcore.AsyncProcessor;
-import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
-import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
-import ru.rbt.barsgl.shared.enums.JobSchedulingType;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
-import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
 import java.io.*;
-import java.sql.Array;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
-import static ru.rbt.audit.entity.AuditRecord.LogLevel.SysError;
-import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
-import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
-import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
-import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
 /**
  * Created by ER22228
@@ -95,7 +75,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         jobService.executeJob(job);
 
         Thread.sleep(4000L);
-        InputMessage answer = receiveFromQueue(cf, acliquOut, login, passw);
+        QueueInputMessage answer = receiveFromQueue(cf, acliquOut, login, passw);
         Assert.assertFalse(StringUtils.isEmpty(answer.getTextMessage()));
         Assert.assertFalse(answer.getTextMessage().contains("Error"));
         System.out.println("\nReceived message from " + acliquOut + ":\n" + answer.getTextMessage());

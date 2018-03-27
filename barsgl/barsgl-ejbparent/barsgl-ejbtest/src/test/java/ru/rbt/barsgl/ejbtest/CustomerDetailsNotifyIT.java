@@ -7,9 +7,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueController;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.InputMessage;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNInput;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNMapped;
@@ -34,9 +34,6 @@ import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
  * Created by er18837 on 14.12.2017.
  */
 public class CustomerDetailsNotifyIT extends AbstractQueueIT {
-
-//    private final String host = "vs569";
-//    private final String broker = "QM_MBROKER4_T4";
 
 //    private final static String host = "vs338";
 //    private final static String broker = "QM_MBROKER10_TEST";
@@ -245,7 +242,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         // 00488888
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -268,7 +265,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
         // 00694379 A35	12 : 064 18
 
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -298,7 +295,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         // 00694379 A35	12 : 064 18
 
         updateCustomer("00694379", "001", "11", N);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -330,7 +327,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         // 00000010 A35	12 : 064 18
 
         deleteCustomer(fakeCustomer);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -360,7 +357,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_insert.xml").getFile())); //, "UTF-8");
         deleteCustomer(fakeCustomer);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -393,7 +390,8 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
         updateCustomer("00694379", "001", "11", N);
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
 
@@ -427,7 +425,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errval.xml").getFile())); //, "UTF-8");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Thread.sleep(2000L);
         Assert.assertNotNull("Нет записи об ошибке в аудит", getAuditError(idAudit));
@@ -451,7 +449,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errmap.xml").getFile())); //, "UTF-8");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new InputMessage(textMessage), null, -1, -1);
+        remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Thread.sleep(2000L);
         AuditRecord auditRecord = getAuditError(idAudit);
