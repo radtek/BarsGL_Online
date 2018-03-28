@@ -47,7 +47,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
         executeWork();
     }
 
-    private void executeWork() throws Exception {
+    private int executeWork() throws Exception {
         dateLoad = operdayController.getOperday().getCurrentDate();
         try {
             auditController.info(AccDealCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
@@ -63,6 +63,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
             auditController.error(AccDealCloseTask,"Завершение с ошибкой задачи закрытия счетов по закрытым сделкам", null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
+        return cntClosedAcc;
     }
 
     public boolean checkRun() throws Exception {
