@@ -8,6 +8,7 @@ import org.w3c.dom.Document;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccDealCloseNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -384,23 +385,23 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     public void testProcessFromQueue() throws Exception {
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 
-        String[] requestArr = receiveFromQueue(cf, ktpIn, login, passw);
-        String request = requestArr[0];
-        System.out.println("messageId:    " + requestArr[1]);
-        System.out.println("replyToQueue: " + requestArr[2]);
+        QueueInputMessage answer = receiveFromQueue(cf, ktpIn, login, passw);
+        String message = answer.getTextMessage();
+        System.out.println("messageId:    " + answer.getRequestId());
+        System.out.println("replyToQueue: " + answer.getReplyTo());
         System.out.println("request: ");
-        System.out.println(request);
-        Assert.assertFalse(StringUtils.isEmpty(request));
-        Assert.assertNotNull(requestArr[1]);
-        Assert.assertNotNull(requestArr[2]);
+        System.out.println();
+        Assert.assertFalse(StringUtils.isEmpty(message));
+        Assert.assertNotNull(answer.getRequestId());
+        Assert.assertNotNull(answer.getReplyTo());
 
-        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, request);
-        QueueProcessResult responce = remoteAccess.invoke(AccDealCloseProcessor.class, "process", request, jId);
+        Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+        QueueProcessResult responce = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
         System.out.println("response:");
         System.out.println(responce);
         Assert.assertFalse(StringUtils.isEmpty(responce.getOutMessage()));
 
-        answerToQueue(cf, ktpOut, responce.getOutMessage().getBytes(), requestArr[1], login, passw);
+        answerToQueue(cf, ktpOut, responce.getOutMessage().getBytes(), answer.getRequestId(), login, passw);
     }
 
     private String createRequestXml(String fileName, GLAccount account, GLAccount.CloseType closeType) throws Exception {

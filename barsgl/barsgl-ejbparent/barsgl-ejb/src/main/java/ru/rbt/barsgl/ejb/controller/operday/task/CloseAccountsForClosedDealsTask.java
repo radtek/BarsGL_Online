@@ -47,7 +47,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
         executeWork();
     }
 
-    private int executeWork() throws Exception {
+    public int executeWork() throws Exception {
         dateLoad = operdayController.getOperday().getCurrentDate();
         try {
             auditController.info(AccDealCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
@@ -85,7 +85,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
                                 closeAccount(item);
                             }
                         }
-                        closeAccountsRepository.moveToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
+                        closeAccountsRepository.moveDealsToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
                         cntProcessedDeals++;
                         return 1;
                     }), 60 * 60);

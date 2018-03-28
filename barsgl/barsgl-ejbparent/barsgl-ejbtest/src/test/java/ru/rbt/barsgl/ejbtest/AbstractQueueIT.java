@@ -7,6 +7,8 @@ import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.ejbcore.util.StringUtils;
 
@@ -98,7 +100,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         return i;
     }
 
-    public  String[] receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
+    public QueueInputMessage receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -106,7 +108,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
 
         connection.start();
-        String[] answer = readFromJMS(receiver);
+        QueueInputMessage answer = readFromJMS(receiver);
 
 //        sender.close();
         receiver.close();
@@ -115,10 +117,10 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         return answer;
     }
 
-    public  String[] readFromJMS(MQMessageConsumer receiver) throws JMSException {
+    public QueueInputMessage readFromJMS(MQMessageConsumer receiver) throws JMSException {
         JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
         if (null == receivedMessage)
-            return null;
+            return new QueueInputMessage(null);
         receivedMessage.acknowledge();
         String textMessage = null;
         if (receivedMessage instanceof JMSTextMessage) {
@@ -144,8 +146,8 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
                 System.out.println("Error during read message from QUEUE");
             }
         }
-        return new String[]{textMessage, receivedMessage.getJMSMessageID(),
-                receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString()};
+        return new QueueInputMessage(textMessage, receivedMessage.getJMSMessageID(),
+                (receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString()));
     }
 
     public  void answerToQueue(MQQueueConnectionFactory cf, String queueName, File file, String correlationId, String username, String password) throws JMSException {

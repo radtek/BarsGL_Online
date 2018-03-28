@@ -66,7 +66,10 @@ public class CobStatRecalculator {
                 Long idCob = statRepository.createCobStepGroup(curdate);
                 for (CobPhase phase : CobPhase.values()) {
                     Long parameter = statRepository.getStepParameter(phase, curdate, operday.getLastWorkingDay());
-                    statRepository.setStepEstimate(idCob, phase.getPhaseNo(), parameter);
+                    int cnt = statRepository.setStepEstimate(idCob, phase.getPhaseNo(), parameter);
+                    if (cnt != 1)
+                        auditController.warning(PreCob, "Ошибка при расчете длительности COB", "GL_COB_STAT", idCob.toString(),
+                                String.format("Ошибка при расчета шага %s (%d) - нет записи в таблице GL_COB_STAT", phase.name(), phase.getPhaseNo()));
                 }
                 return idCob;
             });

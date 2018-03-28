@@ -45,7 +45,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         return select(GLAccount.class,"from GLAccount a where a.customerNumber=?1 and a.dealId=?2 and coalesce(a.subDealId,'null')=?3 and a.dateClose is null", cnum, dealid, subdealid.orElse("null"));
     }
 
-    public void moveToHistory(String cnum, String dealid, Optional<String> subdealid, String source){
+    public void moveDealsToHistory(String cnum, String dealid, Optional<String> subdealid, String source){
         executeNativeUpdate("insert into GL_DEALCLOSE_H (DEALID,SUBDEALID,CNUM,CLOSE_DT,MATURITY_DT,STATUS,SOURCE,STREAM_ID,VALID_FROM,DEAL_TYPE,DWH_TABLE,LOADDATE) select * from GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
         executeNativeUpdate("DELETE FROM GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
     }
@@ -70,19 +70,20 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         return true;
     }
 
-/*
-    public List<GLAccount> getAccountsWaitClose() throws SQLException {
+    public List<Long> getAccountsWaitClose() throws SQLException {
         List<DataRecord> data = select("select GLACID from V_GL_ACWAITCLOSE_BAL where EXCLDATE is null and (BAL is null or BAL = 0)");
         if (null == data || data.isEmpty())
             return Collections.emptyList();
-        String ids = StringUtils.listToString(data.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");
-        return select(GLAccount.class, "from GLAccount a where a.id in (" + ids + ")");
+        return data.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
     }
 
-    public int moveWaitCloseToHist(GLAccount account) {
-        executeNativeUpdate("insert into GL_ACWAITCLOSE_H "
-
-        );
+    public void moveWaitCloseToHistory(GLAccount account, Date dateClose) throws SQLException {
+        DataRecord data = selectFirst("select 1 from GL_ACWAITCLOSE_H where GLACID = ?", account.getId());
+        if (null == data) {
+            executeNativeUpdate("insert into GL_ACWAITCLOSE_H (GLACID, BSAACID, ACID, CCY, DEALID, SUBDEALID, DEALSRC, DTO, DTR, OPENTYPE, IS_ERRACC, EXCLDATE, OPERDAY, STARTDATE, DTC)" +
+                            " select GLACID, BSAACID, ACID, CCY, DEALID, SUBDEALID, DEALSRC, DTO, DTR, OPENTYPE, IS_ERRACC, EXCLDATE, OPERDAY, STARTDATE, ? from GL_ACWAITCLOSE where GLACID = ?",
+                    dateClose, account.getId());
+        }
+        executeNativeUpdate("delete from GL_ACWAITCLOSE where GLACID = ?", account.getId());
     }
-*/
 }

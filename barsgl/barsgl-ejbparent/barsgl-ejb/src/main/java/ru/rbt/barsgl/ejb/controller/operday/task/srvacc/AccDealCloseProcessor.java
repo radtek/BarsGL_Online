@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -140,13 +141,13 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
         } catch (ValidationError ex) {
             String msg = ValidationError.getErrorText(ex.getMessage());
             updateLogStatus(journalId, ERROR, msg);
-            auditController.warning(AccDealCloseTask, msg, journalName, journalId.toString(), ex);
+            auditController.warning(AccDealCloseTask, "Ошибка закрытия счета по нотификации от K+TP", journalName, journalId.toString(), ex);
             xmlData.put("ERROR", msg);
             return xmlData;
         } catch (Exception ex) {
             String msg = StringUtils.substr(getErrorMessage(ex), 255);
             updateLogStatus(journalId, ERROR, getErrorMessage(ex));
-            auditController.error(AccDealCloseTask, msg, journalName, journalId.toString(), ex);
+            auditController.error(AccDealCloseTask, "Ошибка закрытия счета по нотификации от K+TP", journalName, journalId.toString(), ex);
             xmlData.put("ERROR", msg);
             return xmlData;
         }
@@ -164,7 +165,8 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             // нулевой, закрыть счет
             dateClose = account.getDateRegister().equals(curDate) ? account.getDateOpen() : curDate;
             glAccountController.closeGLAccountDeals(account, dateClose, closeType);
-            auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт по нотификации от %s", account.getBsaAcid(), KondorPlus.name()));
+            auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт с датой '%s' по нотификации от K+TP",
+                    account.getBsaAcid(), dateUtils.onlyDateString(dateClose)));
         } else { // не нулевой
             // добавить запись в очередь на закрытие
 //            journalRepository.executeInNewTransaction(persistence ->
@@ -260,10 +262,23 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             journalRepository.updateLogStatus(journalId, ERROR, errorMessage); return null;});
     }
 
+    public int processAccWaitClose(Operday operday) throws Exception {
+        Date curDate = operday.getCurrentDate();
+        List<Long> idList = closeAccountsRepository.getAccountsWaitClose();
+        for (Long glacid: idList) {
+            GLAccount account = glAccountRepository.findById(GLAccount.class, glacid);
+            Date dateClose = account.getDateRegister().equals(curDate) ? account.getDateOpen() : curDate;
+            glAccountController.closeGLAccountDeals(account, dateClose, Normal);
+            closeAccountsRepository.moveWaitCloseToHistory(account, dateClose);
+            auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт с датой '%s' по списку ожидания",
+                    account.getBsaAcid(), dateUtils.onlyDateString(dateClose)));
+        }
+        return idList.size();
+    }
+
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class);
     }
-
 
 }
