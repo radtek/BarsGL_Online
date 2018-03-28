@@ -28,7 +28,6 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
 
     public int delOldDeals(){
         int cnt = executeNativeUpdate("DELETE FROM GL_DEALCLOSE d where exists(select 1 from GL_DEALCLOSE_H h where d.cnum=h.cnum and d.source=h.source and d.dealid=h.dealid and coalesce(d.subdealid,' ')=coalesce(h.subdealid,' '))",null);
-        flush();
         return cnt;
     }
 
@@ -49,7 +48,6 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
     public void moveToHistory(String cnum, String dealid, Optional<String> subdealid, String source){
         executeNativeUpdate("insert into GL_DEALCLOSE_H (DEALID,SUBDEALID,CNUM,CLOSE_DT,MATURITY_DT,STATUS,SOURCE,STREAM_ID,VALID_FROM,DEAL_TYPE,DWH_TABLE,LOADDATE) select * from GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
         executeNativeUpdate("DELETE FROM GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
-        flush();
     }
 
     public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType) throws SQLException {

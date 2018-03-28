@@ -44,6 +44,10 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
+        executeWork();
+    }
+
+    private void executeWork() throws Exception {
         dateLoad = operdayController.getOperday().getCurrentDate();
         try {
             auditController.info(AccDealCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
@@ -51,12 +55,12 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
                 return 1;
             }), 60 * 60);
             if (checkRun()) {
-                executeWork();
+                workExecute();
                 auditController.info(AccDealCloseTask, "Обработано закрытых сделок в количестве "+cntProcessedDeals+
-                                                                ", закрыто счетов "+cntClosedAcc+", в листе ожидания счетов " + cntWaitAcc);
+                        ", закрыто счетов "+cntClosedAcc+", в листе ожидания счетов " + cntWaitAcc);
             }
         }catch (Throwable e){
-            auditController.error(AccDealCloseTask,"Завершение с ошибкой", null, e);
+            auditController.error(AccDealCloseTask,"Завершение с ошибкой задачи закрытия счетов по закрытым сделкам", null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
@@ -69,18 +73,21 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
         return true;
     }
 
-    private void executeWork() throws Exception {
+    private void workExecute() throws Exception {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
             try{
                 init(connection);
                 while(next()){
-                    if (!getAccounts().isEmpty()) {
-                        for(GLAccount item: getAccounts()) {
-                            closeAccount(item);
+                    beanManagedProcessor.executeInNewTxWithTimeout(((pers, conn) -> {
+                        if (!getAccounts().isEmpty()) {
+                            for(GLAccount item: getAccounts()) {
+                                closeAccount(item);
+                            }
                         }
-                    }
-                    closeAccountsRepository.moveToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
-                    cntProcessedDeals++;
+                        closeAccountsRepository.moveToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
+                        cntProcessedDeals++;
+                        return 1;
+                    }), 60 * 60);
                 }
             }finally {
                 close();
@@ -94,10 +101,14 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
             glAccountController.closeGLAccountDeals(glAccount,
                                                     dateLoad.compareTo(glAccount.getDateRegister())==0?glAccount.getDateOpen():dateLoad,
                                                     GLAccount.CloseType.Normal);
+            auditController.info(AccDealCloseTask, "Закрыт счет "+glAccount.getBsaAcid()+
+                                                            " с датой закрытия " + dbDateString(glAccount.getDateClose()) +
+                                                            " по закрытой сделке dealId = " + getDealid());
             cntClosedAcc++;
         }else{
             closeAccountsRepository.moveToWaitClose( glAccount, dateLoad, GLAccount.CloseType.Normal);
             cntWaitAcc++;
         }
     }
+
 }
