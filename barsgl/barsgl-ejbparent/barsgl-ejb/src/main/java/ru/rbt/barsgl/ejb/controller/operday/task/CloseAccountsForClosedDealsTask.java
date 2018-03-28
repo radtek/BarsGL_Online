@@ -47,7 +47,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
         executeWork();
     }
 
-    private int executeWork() throws Exception {
+    public int executeWork() throws Exception {
         dateLoad = operdayController.getOperday().getCurrentDate();
         try {
             auditController.info(AccDealCloseTask, this.getClass().getSimpleName() + " стартовала за дату " + dbDateString(dateLoad));
@@ -66,7 +66,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
         return cntClosedAcc;
     }
 
-    public boolean checkRun() throws Exception {
+    private boolean checkRun() throws Exception {
         if (!closeAccountsRepository.isExistsDeals()) {
             auditController.info(AccDealCloseTask, "Нет сделок для закрытия счетов (таблица GL_DEALCLOSE пустая)");
             return false;
@@ -97,7 +97,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
         }), 60 * 60);
     }
 
-    void closeAccount(GLAccount glAccount) throws Exception {
+    private void closeAccount(GLAccount glAccount) throws Exception {
         if (glAccountRepository.isAccountBalanceZero(glAccount.getBsaAcid(), glAccount.getAcid(), getFinalDate())){
             glAccountController.closeGLAccountDeals(glAccount,
                                                     dateLoad.compareTo(glAccount.getDateRegister())==0?glAccount.getDateOpen():dateLoad,
