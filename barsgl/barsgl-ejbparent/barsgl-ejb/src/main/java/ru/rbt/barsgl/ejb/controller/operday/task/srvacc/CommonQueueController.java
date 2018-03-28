@@ -53,6 +53,18 @@ public abstract class CommonQueueController implements MessageListener {
         public QueueInputMessage(String textMessage) {
             this(textMessage, null, null);
         }
+
+        public String getTextMessage() {
+            return textMessage;
+        }
+
+        public String getRequestId() {
+            return requestId;
+        }
+
+        public String getReplyTo() {
+            return replyTo;
+        }
     }
 
     public static class QueueProcessResult implements Serializable {
@@ -70,12 +82,12 @@ public abstract class CommonQueueController implements MessageListener {
             this(outMessage, isError, false);
         }
 
-        public boolean isError() {
-            return isError;
-        }
-
         public String getOutMessage() {
             return outMessage;
+        }
+
+        public boolean isError() {
+            return isError;
         }
 
         public boolean isWriteOut() {
