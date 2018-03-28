@@ -46,9 +46,6 @@ public class WaitCloseAccountDlg extends DlgFrame implements IAfterShowEvent {
         }else{
             mDateBegin.setValue(addDays(new Date(), -10));
             mDateEnd.setValue(new Date());
-//            mDateBegin.clear();
-//            mDateEnd.clear();
-//            editday = addDays(operday, -DAYS_EDIT);
         }
     }
     @Override
@@ -90,13 +87,13 @@ public class WaitCloseAccountDlg extends DlgFrame implements IAfterShowEvent {
         HorizontalPanel panel = new HorizontalPanel();
         panel.setSpacing(10);
         chkAllAccounts = new CheckBox("Все счета");
-        chkAllAccounts.addValueChangeHandler(new ValueChangeHandler<Boolean>(){
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
-                mDateBegin.setReadOnly(valueChangeEvent.getValue());
-                mDateEnd.setReadOnly(valueChangeEvent.getValue());
-            }
-        });
+//        chkAllAccounts.addValueChangeHandler(new ValueChangeHandler<Boolean>(){
+//            @Override
+//            public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
+//                mDateBegin.setReadOnly(valueChangeEvent.getValue());
+//                mDateEnd.setReadOnly(valueChangeEvent.getValue());
+//            }
+//        });
         panel.add(chkAllAccounts);
         return panel;
     }

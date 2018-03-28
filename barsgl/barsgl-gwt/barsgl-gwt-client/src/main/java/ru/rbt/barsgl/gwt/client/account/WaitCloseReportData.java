@@ -16,7 +16,7 @@ import java.util.List;
 public class WaitCloseReportData implements IExportData {
     String _begin, _end;
     Boolean _isAll;
-    private final String sql ="select /*+ first_rows(100000) */ BSAACID, CCY, PKG_ACC.GET_BALANCE(ACID, BSAACID, CCY) BAL, DEALID, SUBDEALID, DEALSRC, "+
+    private final String sql ="select BSAACID, CCY, PKG_ACC.GET_BALANCE(ACID, BSAACID, CCY) BAL, DEALID, SUBDEALID, DEALSRC, "+
             "case when IS_ERRACC='0' then 'закрытие сделки' "+
             " when IS_ERRACC='1' then 'отмена сделки' "+
             " when IS_ERRACC='1' then 'изменение сделки' "+
