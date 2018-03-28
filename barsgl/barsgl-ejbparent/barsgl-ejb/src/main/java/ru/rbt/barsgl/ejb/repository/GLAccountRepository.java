@@ -690,6 +690,21 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    /**
+     * Находит счет GLпо номеру счета ЦБ
+     *
+     * @param bsaAcid
+     * @return
+     */
+    public GLAccount findGLAccount(String bsaAcid, String acid) {
+        try {
+            DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and ACID = ?", bsaAcid, acid);
+            return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
     public GLAccount findGLAccountByDeal(String bsaAcid, String dealid) {
         try {
             DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and DEALID = ?", bsaAcid, dealid);

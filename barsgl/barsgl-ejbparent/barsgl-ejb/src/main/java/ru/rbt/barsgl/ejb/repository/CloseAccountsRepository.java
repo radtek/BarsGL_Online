@@ -9,9 +9,11 @@ import ru.rbt.ejbcore.util.StringUtils;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by er22317 on 19.03.2018.
@@ -35,7 +37,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
     }
 
     public List<GLAccount> getDealCustAccounts(GLAccount mainAccount) throws SQLException {
-        return selectMaxRows(GLAccount.class,"from GLAccount a where a.customerNumber=?1 and a.dealId=?2 and a.bsaAcid != ?3 and a.dateClose is null", 100,
+        return select(GLAccount.class,"from GLAccount a where a.customerNumber=?1 and a.dealId=?2 and a.bsaAcid != ?3 and a.dateClose is null",
                 mainAccount.getCustomerNumber(), mainAccount.getDealId(), mainAccount.getBsaAcid());
     }
 
@@ -53,7 +55,8 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
     public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType) throws SQLException {
         if (null != selectFirst("select 1 from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()))
             return false;
-        executeNativeUpdate("insert into gl_acwaitclose(BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?)",
+        executeNativeUpdate("insert into gl_acwaitclose(GLACID,BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?,?)",
+                            glAccount.getId(),
                             glAccount.getBsaAcid(),
                             glAccount.getAcid(),
                             glAccount.getCurrency().getCurrencyCode(),
@@ -68,4 +71,20 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         flush();
         return true;
     }
+
+/*
+    public List<GLAccount> getAccountsWaitClose() throws SQLException {
+        List<DataRecord> data = select("select GLACID from V_GL_ACWAITCLOSE_BAL where EXCLDATE is null and (BAL is null or BAL = 0)");
+        if (null == data || data.isEmpty())
+            return Collections.emptyList();
+        String ids = StringUtils.listToString(data.stream().map(r -> r.getLong(0)).collect(Collectors.toList()), ",");
+        return select(GLAccount.class, "from GLAccount a where a.id in (" + ids + ")");
+    }
+
+    public int moveWaitCloseToHist(GLAccount account) {
+        executeNativeUpdate("insert into GL_ACWAITCLOSE_H "
+
+        );
+    }
+*/
 }
