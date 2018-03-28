@@ -85,7 +85,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
                                 closeAccount(item);
                             }
                         }
-                        closeAccountsRepository.moveToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
+                        closeAccountsRepository.moveDealsToHistory( getCnum(), getDealid(), getSubdealid(), getSource());
                         cntProcessedDeals++;
                         return 1;
                     }), 60 * 60);
