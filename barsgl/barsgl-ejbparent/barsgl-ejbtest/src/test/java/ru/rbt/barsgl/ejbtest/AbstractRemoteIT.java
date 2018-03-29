@@ -1,7 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.ImmutableMap;
-import jdk.internal.org.xml.sax.SAXException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
