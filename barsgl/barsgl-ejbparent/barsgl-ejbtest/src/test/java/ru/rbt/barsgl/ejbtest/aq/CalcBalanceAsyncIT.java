@@ -261,6 +261,13 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         checkCurrentMode(Operday.BalanceMode.GIBRID);
     }
 
+    @Test public void testSwitchBalanceModeOnFlushBuffer() {
+        Assert.fail("Переключение режима обработки отстатков после сброса буфера");
+    }
+
+    @Test public void testSwitchBalanceModeOnOpenOperday() {
+        Assert.fail("Переключение режима обработки отстатков при открытии ОД");
+    }
 
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
         String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy, invisible) values (?,?,?,?,?,?,?,?,?,?,?)";
