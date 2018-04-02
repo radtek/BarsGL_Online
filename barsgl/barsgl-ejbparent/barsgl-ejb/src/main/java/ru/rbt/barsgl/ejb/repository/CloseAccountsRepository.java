@@ -1,10 +1,10 @@
 package ru.rbt.barsgl.ejb.repository;
 
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccDealCloseProcessor;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
-import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -70,11 +70,11 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         return true;
     }
 
-    public List<Long> getAccountsWaitClose() throws SQLException {
-        List<DataRecord> data = select("select GLACID from V_GL_ACWAITCLOSE_BAL where EXCLDATE is null and (BAL is null or BAL = 0)");
+    public List<AccDealCloseProcessor.AccWaitParams> getAccountsWaitClose() throws SQLException {
+        List<DataRecord> data = select("select GLACID, IS_ERRACC from V_GL_ACWAITCLOSE_BAL where EXCLDATE is null and (BAL is null or BAL = 0)");
         if (null == data || data.isEmpty())
             return Collections.emptyList();
-        return data.stream().map(r -> r.getLong(0)).collect(Collectors.toList());
+        return data.stream().map(r -> new AccDealCloseProcessor.AccWaitParams(r.getLong(0), r.getString(1))).collect(Collectors.toList());
     }
 
     public void moveWaitCloseToHistory(GLAccount account, Date dateClose) throws SQLException {

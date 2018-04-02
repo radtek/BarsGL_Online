@@ -3,9 +3,11 @@ package ru.rbt.barsgl.ejbtest;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccDealCloseNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
@@ -16,6 +18,7 @@ import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -31,6 +34,10 @@ import java.util.stream.Collectors;
 import static java.math.BigDecimal.ZERO;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.RAW;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Cancel;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Change;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Normal;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.OpenType.ERR;
 
 /**
  * Created by er18837 on 16.03.2018.
@@ -143,60 +150,13 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
      * @throws Exception
      */
     @Test
-    public void testProcessDealCancelWait() throws Exception {
-
-        long idAudit = getAuditMaxId();
-        long idAcdeno = getAcdenoMaxId();
-        Date curDate = getOperday().getCurrentDate();
-
-//        String message = getRecourceText("AccountCloseRequest_bal.xml");
-        GLAccount account = findGlAccountWithDeal("421__810%", getOperday().getCurrentDate());
-        String message = createRequestXml("AccountCloseRequest.xml", account, GLAccount.CloseType.Change);
-
-        BigDecimal bal = getBalance(account, curDate);
-        if (isZero(bal))
-            insertIntoGlBaltur(account, curDate, 1000, 0);
-        Date closeWas = updateDateClose(account, null);
-        try {
-            deleteFromWaitClose(account);
-
-            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
-            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
-//        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
-//        sendToQueue(cf, ktpIn, message.getBytes(), ktpOut, login, passw);
-//        Thread.sleep(2000L);
-//        executeJobAccDealClose();
-
-            Assert.assertNotNull(processResult);
-            System.out.println(processResult.getOutMessage());
-            Assert.assertFalse(processResult.isError());
-
-            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
-            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
-            Assert.assertEquals(RAW, journal.getStatus());
-
-            checkWaitClose(account);
-
-            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
-        } finally {
-            updateDateClose(account, closeWas);
-            if (isZero(bal))
-                deleteFromGlBaltur(account, curDate);
-        }
-    }
-
-    /**
-     * Тест обработки сообщения по отмене сделки
-     * @throws Exception
-     */
-    @Test
     public void testProcessDealChange() throws Exception {
 
         long idAudit = getAuditMaxId();
         long idAcdeno = getAcdenoMaxId();
 
         GLAccount account = findGlAccountWithDeal("421%", getOperday().getCurrentDate());
-        String message = createRequestXml("AccountCloseRequest.xml", account, GLAccount.CloseType.Change);
+        String message = createRequestXml("AccountCloseRequest.xml", account, Change);
 
         Date closeWas = updateDateClose(account, null);
         try {
@@ -216,8 +176,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         } finally {
             updateDateClose(account, closeWas);
         }
-
-}
+    }
 
     /**
      * Тест обработки сообщения по отмене сделки (один счет)
@@ -267,9 +226,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Cancel);
 
         updateDateClose(mainAccount, null);
-        BigDecimal bal = getBalance(mainAccount, curDate);
-        if (isZero(bal))
-            insertIntoGlBaltur(mainAccount, curDate, 1000, 0);
+        boolean changeBal = balanceNonZero(mainAccount, curDate);
         try {
             Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
             QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
@@ -290,7 +247,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         } finally {
             for (GLAccount account : accounts)
                 updateDateClose(account, account.getDateClose());
-            if (isZero(bal))
+            if (changeBal)
                 deleteFromGlBaltur(mainAccount, curDate);
         }
     }
@@ -309,15 +266,10 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         Assert.assertFalse(accounts.isEmpty());
         GLAccount mainAccount = accounts.get(0);
 
-        String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Change);
+        String message = createRequestXml("AccountCloseRequest.xml", mainAccount, Change);
 
         updateDateClose(mainAccount, null);
-        BigDecimal bal = getBalance(mainAccount, curDate);
-        int sign = bal.compareTo(ZERO);
-        if (sign > 0)
-            insertIntoGlBaltur(mainAccount, curDate, bal.longValue(), 0);
-        else if (sign < 0)
-            insertIntoGlBaltur(mainAccount, curDate, 0, bal.longValue());
+        boolean changeBal = balanceToZero(mainAccount, curDate);
         try {
             Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
             QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
@@ -339,10 +291,105 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         } finally {
             for (GLAccount account : accounts)
                 updateDateClose(account, account.getDateClose());
-            if (isZero(bal))
+            if (changeBal)
                 deleteFromGlBaltur(mainAccount, curDate);
         }
+    }
 
+    /**
+     * Тест постановки счета в очередь на закрытие
+     * @throws Exception
+     */
+    @Test
+    public void testAccountDealWait() throws Exception {
+        processDealCancelWait("421__810%", Change);
+    }
+
+    /**
+     * Тест постановки счета в очередь на закрытие
+     * @throws Exception
+     */
+    @Test
+    public void testProcessAccountsWait() throws Exception {
+        Operday operday = getOperday();
+        Date curDate = operday.getCurrentDate();
+
+        GLAccount[] accounts = new GLAccount[3];
+        accounts[0] = processDealCancelWait("421__810%1", Change);
+        accounts[1] = processDealCancelWait("421__810%2", Cancel);
+        accounts[2] = processDealCancelWait("421__810%3", Cancel);
+        boolean[] chgBal = new boolean[3];
+
+        try {
+            for (int i = 0; i < accounts.length; i++) {
+                GLAccount account = accounts[i];
+                updateDateClose(account, null);
+                if (!account.getDateRegister().equals(curDate))
+                    baseEntityRepository.executeNativeUpdate("update GL_ACC set DTR = ? where ID = ?", curDate, account.getId());
+                if (account.getDateOpen().equals(curDate))
+                    baseEntityRepository.executeNativeUpdate("update GL_ACC set DTO = ? where ID = ?", DateUtils.addDay(curDate, -1), account.getId());
+                chgBal[i] = balanceToZero(account, curDate);
+            }
+
+            baseEntityRepository.executeNativeUpdate("update GL_ACWAITCLOSE set OPENTYPE = 'AENEW', IS_ERRACC = 0 where GLACID = ?", accounts[2].getId());
+            baseEntityRepository.executeNativeUpdate("update GL_ACC set OPENTYPE = 'AENEW' where ID = ?", accounts[2].getId());
+
+            int cnt = remoteAccess.invoke(AccDealCloseProcessor.class, "processAccWaitClose", operday);
+            Assert.assertTrue(cnt >= 3);
+
+            for (int i = 0; i < accounts.length; i++) {
+                GLAccount account = (GLAccount) baseEntityRepository.refresh(accounts[i], true);
+                Date dateClose = ERR.name().equals(account.getOpenType()) ? account.getDateOpen() : curDate;
+                Assert.assertEquals(dateClose, account.getDateClose());
+            }
+        } finally {
+            for (int i = 0; i < accounts.length; i++) {
+                updateDateClose(accounts[i], accounts[i].getDateClose());
+                if (chgBal[i])
+                    deleteFromGlBaltur(accounts[i], curDate);
+            }
+        }
+    }
+
+    public GLAccount processDealCancelWait(String mask, GLAccount.CloseType closeType) throws Exception {
+
+        long idAudit = getAuditMaxId();
+        long idAcdeno = getAcdenoMaxId();
+        Date curDate = getOperday().getCurrentDate();
+
+//        String message = getRecourceText("AccountCloseRequest_bal.xml");
+        GLAccount account = findGlAccountWithDeal(mask, getOperday().getCurrentDate());
+        String message = createRequestXml("AccountCloseRequest.xml", account, closeType);
+
+        boolean changeBal = balanceNonZero(account, curDate);
+        Date closeWas = updateDateClose(account, null);
+        try {
+            deleteFromWaitClose(account);
+
+            Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
+            QueueProcessResult processResult = remoteAccess.invoke(AccDealCloseProcessor.class, "process", message, jId);
+//        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+//        sendToQueue(cf, ktpIn, message.getBytes(), ktpOut, login, passw);
+//        Thread.sleep(2000L);
+//        executeJobAccDealClose();
+
+            Assert.assertNotNull(processResult);
+            System.out.println(processResult.getOutMessage());
+            Assert.assertFalse(processResult.isError());
+
+            AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
+            Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+            Assert.assertEquals(RAW, journal.getStatus());
+
+            checkWaitClose(account);
+
+            Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+        } finally {
+            updateDateClose(account, closeWas);
+            if (changeBal)
+                deleteFromGlBaltur(account, curDate);
+        }
+        return account;
     }
 
     /**
@@ -378,7 +425,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     }
 
     @Test
-    public void testReceiveFromQueue() throws Exception {
+    public void testJobAccDealClose() throws Exception {
         long idAudit = getAuditMaxId();
         long idAcdeno = getAcdenoMaxId();
 
@@ -403,6 +450,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
      * Тест подключения
      * @throws Exception
      */
+    @Ignore
     @Test
     public void testReceiveSend() throws Exception {
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
@@ -412,7 +460,8 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
     }
 
-//    @Test
+    @Ignore
+    @Test
     public void testProcessFromQueue() throws Exception {
         MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 
@@ -511,6 +560,25 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
     private boolean isZero(BigDecimal bal) {
         return ZERO.equals(bal);
+    }
+
+    private boolean balanceNonZero(GLAccount account, Date curDate) {
+        BigDecimal bal = getBalance(account, curDate);
+        if (isZero(bal)) {
+            insertIntoGlBaltur(account, curDate, 1000, 0);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean balanceToZero(GLAccount account, Date curDate) {
+        BigDecimal bal = getBalance(account, curDate);
+        int sign = bal.compareTo(ZERO);
+        if (sign > 0)
+            insertIntoGlBaltur(account, curDate, bal.longValue(), 0);
+        else if (sign < 0)
+            insertIntoGlBaltur(account, curDate, 0, bal.longValue());
+        return sign != 0;
     }
 
     private void deleteFromWaitClose(GLAccount account) {

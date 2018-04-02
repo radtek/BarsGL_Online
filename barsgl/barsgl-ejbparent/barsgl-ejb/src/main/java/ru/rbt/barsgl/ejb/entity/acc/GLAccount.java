@@ -18,7 +18,6 @@ import java.util.Date;
 public class GLAccount extends BaseEntity<Long> {
 
     public enum OpenType {AENEW, AEMID, MNL, SRV, ERR};
-//    public enum CloseType{ERR, NoChange}
     public enum CloseType {
         Normal("0"), Cancel("1"), Change("2");
         private String flag;
@@ -29,6 +28,14 @@ public class GLAccount extends BaseEntity<Long> {
 
         public String getFlag() {
             return flag;
+        }
+
+        public static CloseType getByFlag(String flag) {
+            for ( CloseType closeType : values()) {
+                if (closeType.flag.equals(flag))
+                    return closeType;
+            }
+            return null;
         }
     };
 

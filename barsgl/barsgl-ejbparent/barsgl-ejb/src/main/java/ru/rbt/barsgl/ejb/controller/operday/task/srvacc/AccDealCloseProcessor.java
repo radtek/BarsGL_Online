@@ -54,6 +54,16 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             ,new XmlParam("DEALID",    "DealID",     false, 20)
     };
 
+    public static class AccWaitParams {
+        Long glacid;
+        String isErrAcc;
+
+        public AccWaitParams(Long glacid, String isErrAcc) {
+            this.glacid = glacid;
+            this.isErrAcc = isErrAcc;
+        }
+    }
+
     @EJB
     AcDNJournalRepository journalRepository;
 
@@ -265,16 +275,20 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
 
     public int processAccWaitClose(Operday operday) throws Exception {
         Date curDate = operday.getCurrentDate();
-        List<Long> idList = closeAccountsRepository.getAccountsWaitClose();
-        for (Long glacid: idList) {
-            GLAccount account = glAccountRepository.findById(GLAccount.class, glacid);
-            Date dateClose = account.getDateRegister().equals(curDate) ? account.getDateOpen() : curDate;
-            glAccountController.closeGLAccountDeals(account, dateClose, Normal);
+        List<AccWaitParams> waitList = closeAccountsRepository.getAccountsWaitClose();
+        for (AccWaitParams accWait: waitList) {
+            GLAccount account = glAccountRepository.findById(GLAccount.class, accWait.glacid);
+            GLAccount.CloseType closeType = GLAccount.CloseType.getByFlag(accWait.isErrAcc);
+            Date dateClose = !GLAccount.CloseType.Normal.equals(closeType) && account.getDateRegister().equals(curDate)
+                    ? account.getDateOpen()
+                    : curDate;
+
+            glAccountController.closeGLAccountDeals(account, dateClose, closeType);
             closeAccountsRepository.moveWaitCloseToHistory(account, dateClose);
             auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт с датой '%s' по списку ожидания",
                     account.getBsaAcid(), dateUtils.onlyDateString(dateClose)));
         }
-        return idList.size();
+        return waitList.size();
     }
 
     public String getErrorMessage(Throwable throwable) {
