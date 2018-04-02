@@ -108,7 +108,7 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
                                                             " по закрытой сделке dealId = " + getDealid());
             cntClosedAcc++;
         }else{
-            closeAccountsRepository.moveToWaitClose( glAccount, dateLoad, GLAccount.CloseType.Normal);
+            closeAccountsRepository.moveToWaitClose( glAccount, dateLoad, GLAccount.CloseType.Normal, glAccount.getOpenType());
             cntWaitAcc++;
         }
     }

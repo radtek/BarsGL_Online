@@ -132,7 +132,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             mainAccount = findAccountByDealWithCheck(bsaAcid, dealId);
 
             dateClose = mainAccount.getDateRegister().equals(curDate) ? mainAccount.getDateOpen() : curDate;
-            processOneAccount(mainAccount, curDate, dateClose, errorFlag);
+            dateClose = processOneAccount(mainAccount, curDate, dateClose, errorFlag);
             if (Cancel == errorFlag) {
                 List<GLAccount> accounts = closeAccountsRepository.getDealCustAccounts(mainAccount);
                 for (GLAccount account: accounts) {
@@ -166,15 +166,17 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             glAccountController.closeGLAccountDeals(account, dateClose, closeType);
             auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт с датой '%s' по нотификации от K+TP",
                     account.getBsaAcid(), dateUtils.onlyDateString(dateClose)));
+            return dateClose;
         } else { // не нулевой
-            // обновить OpenType
+            // добавить запись в очередь на закрытие
+            String openTypeWas = account.getOpenType();
             if (Normal != closeType) {
                 glAccountController.updateGLAccountOpenType(account, GLAccount.OpenType.ERR);
             }
-            // добавить запись в очередь на закрытие
-            closeAccountsRepository.moveToWaitClose(account, curDate, closeType); //);
+            closeAccountsRepository.moveToWaitClose(account, curDate, closeType, openTypeWas); //);
+            // обновить OpenType
+            return null;
         }
-        return dateClose;
     }
 
     private GLAccount findAccountByDealWithCheck(String bsaAcid, String dealId) {
@@ -201,12 +203,13 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
     private String createOutMessage(Map<String, String> xmlData) throws Exception {
         final String head = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n" +
-                "    <SOAP-ENV:Header>\n" +
-                "    </SOAP-ENV:Header>\n" +
-                "    <SOAP-ENV:Body>\n" +
-                "        <gbo:SGLAccountTBOCloseResponse xmlns:gbo=\"urn:ucbru:gbo:v4\">\n";
-        final String foot = "        </gbo:SGLAccountTBOCloseResponse>\n" +
-                "    </SOAP-ENV:Body>\n" +
+                "\t<SOAP-ENV:Header>\n" +
+                "\t</SOAP-ENV:Header>\n" +
+                "\t<SOAP-ENV:Body>\n" +
+                "\t\t<gbo:SGLAccountTBOCloseResponse xmlns:gbo=\"urn:ucbru:gbo:v4\">\n";
+        final String foot =
+                "\t\t</gbo:SGLAccountTBOCloseResponse>\n" +
+                "\t</SOAP-ENV:Body>\n" +
                 "</SOAP-ENV:Envelope>\n";
 /*
 <?xml version="1.0" encoding="UTF-8"?>
@@ -235,8 +238,8 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
 
         result = appendXmlParameter(result, "OpenClose", openClose, true);
         result = appendXmlParameter(result, "ErrorMsg", errorMsg, false);
-        result = appendXmlParameter(result, "OpenDate", xmlData.get("DTO"), false);
-        result = appendXmlParameter(result, "CloseDate", dateClose, false);
+        result = appendXmlParameter(result, "OpenDate", xmlData.get("DTO"), true);
+        result = appendXmlParameter(result, "CloseDate", dateClose, true);
         result = appendXmlParameter(result, "DealId", xmlData.get("DEALID"), true);
 
         result.append(foot);
@@ -246,7 +249,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
 
     private StringBuilder appendXmlParameter(StringBuilder sb, String tag, String value, boolean force) {
         if (!isEmpty(value) || force)
-            return sb.append("            <gbo:").append(tag).append(">").append(value).append("</gbo:").append(tag).append(">\r\n");
+            return sb.append("\t\t\t<gbo:").append(tag).append(">").append(value).append("</gbo:").append(tag).append(">\r\n");
         else
             return sb;
     }

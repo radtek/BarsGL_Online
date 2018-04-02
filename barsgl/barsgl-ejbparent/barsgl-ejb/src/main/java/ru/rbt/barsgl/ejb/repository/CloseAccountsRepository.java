@@ -50,7 +50,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
         executeNativeUpdate("DELETE FROM GL_DEALCLOSE where cnum=? and source=? and dealid=? and coalesce(subdealid,'null')=?", cnum, source, dealid, subdealid.orElse("null"));
     }
 
-    public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType) throws SQLException {
+    public boolean moveToWaitClose(GLAccount glAccount, Date loadDate, GLAccount.CloseType closeType, String openTypeWas) throws SQLException {
         if (null != selectFirst("select 1 from gl_acwaitclose where BSAACID=? and ACID=?", glAccount.getBsaAcid(), glAccount.getAcid()))
             return false;
         executeNativeUpdate("insert into gl_acwaitclose(GLACID,BSAACID,ACID,CCY,DEALID,SUBDEALID,DEALSRC,DTO,DTR,OPENTYPE,IS_ERRACC,OPERDAY) values(?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -63,7 +63,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
                             glAccount.getDealSource(),
                             glAccount.getDateOpen(),
                             glAccount.getDateRegister(),
-                            glAccount.getOpenType(),
+                            openTypeWas, //glAccount.getOpenType(),
                             closeType.getFlag(),//= 0, 1, 2
                             loadDate);
         flush();
