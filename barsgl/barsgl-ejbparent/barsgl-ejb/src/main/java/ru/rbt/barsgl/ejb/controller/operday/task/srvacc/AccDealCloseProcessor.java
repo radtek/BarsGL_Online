@@ -131,11 +131,12 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
             errorFlag = getCloseFlagWithCheck(bsaAcid, xmlData.get("IS_ERRACC"));
             mainAccount = findAccountByDealWithCheck(bsaAcid, dealId);
 
-            dateClose = processOneAccount(mainAccount, curDate, errorFlag);
+            dateClose = mainAccount.getDateRegister().equals(curDate) ? mainAccount.getDateOpen() : curDate;
+            processOneAccount(mainAccount, curDate, dateClose, errorFlag);
             if (Cancel == errorFlag) {
                 List<GLAccount> accounts = closeAccountsRepository.getDealCustAccounts(mainAccount);
                 for (GLAccount account: accounts) {
-                    processOneAccount(account, curDate, Normal);
+                    processOneAccount(account, curDate, curDate, Normal);
                 }
             }
         } catch (ValidationError ex) {
@@ -158,23 +159,20 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
         return xmlData;
     }
 
-    private Date processOneAccount(GLAccount account, Date curDate, GLAccount.CloseType closeType) throws Exception {
-        Date dateClose = null;
+    private Date processOneAccount(GLAccount account, Date curDate, Date dateClose, GLAccount.CloseType closeType) throws Exception {
         // проверить остаток
         if (glAccountRepository.isAccountBalanceZero(account.getBsaAcid(), account.getAcid(), curDate)) {
             // нулевой, закрыть счет
-            dateClose = account.getDateRegister().equals(curDate) ? account.getDateOpen() : curDate;
             glAccountController.closeGLAccountDeals(account, dateClose, closeType);
             auditController.info(AccDealCloseTask, String.format("Счет с bsaacid = '%s' закрыт с датой '%s' по нотификации от K+TP",
                     account.getBsaAcid(), dateUtils.onlyDateString(dateClose)));
         } else { // не нулевой
-            // добавить запись в очередь на закрытие
-//            journalRepository.executeInNewTransaction(persistence ->
-            closeAccountsRepository.moveToWaitClose(account, curDate, closeType); //);
             // обновить OpenType
             if (Normal != closeType) {
                 glAccountController.updateGLAccountOpenType(account, GLAccount.OpenType.ERR);
             }
+            // добавить запись в очередь на закрытие
+            closeAccountsRepository.moveToWaitClose(account, curDate, closeType); //);
         }
         return dateClose;
     }

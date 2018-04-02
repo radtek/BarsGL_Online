@@ -37,6 +37,18 @@ import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.RAW;
  */
 public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
+    class TestParams {
+        private String bsaAcid;
+        private String dealId;
+        private String flag;
+
+        public TestParams(String bsaAcid, String dealId, String flag) {
+            this.bsaAcid = bsaAcid;
+            this.dealId = dealId;
+            this.flag = flag;
+        }
+    }
+
     private final static String qType = "KTP_CLOSE";
     private static final String parentNode = "Body/SGLAccountTBOCloseRequest";
     private static final String accNode = "AccNum";
@@ -248,12 +260,13 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         long idAcdeno = getAcdenoMaxId();
         Date curDate = getOperday().getCurrentDate();
 
-        List<GLAccount> accounts = findGlAccountsWithDeal();
+        List<GLAccount> accounts = findGlAccountsWithDeal(false);
         Assert.assertFalse(accounts.isEmpty());
         GLAccount mainAccount = accounts.get(0);
 
         String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Cancel);
 
+        updateDateClose(mainAccount, null);
         BigDecimal bal = getBalance(mainAccount, curDate);
         if (isZero(bal))
             insertIntoGlBaltur(mainAccount, curDate, 1000, 0);
@@ -292,12 +305,13 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         long idAcdeno = getAcdenoMaxId();
         Date curDate = getOperday().getCurrentDate();
 
-        List<GLAccount> accounts = findGlAccountsWithDeal();
+        List<GLAccount> accounts = findGlAccountsWithDeal(true);
         Assert.assertFalse(accounts.isEmpty());
         GLAccount mainAccount = accounts.get(0);
 
         String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Change);
 
+        updateDateClose(mainAccount, null);
         BigDecimal bal = getBalance(mainAccount, curDate);
         int sign = bal.compareTo(ZERO);
         if (sign > 0)
@@ -344,6 +358,23 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         Thread.sleep(2000L);
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+    }
+
+    @Test
+    public void testSendToQeue() throws Exception {
+        TestParams[] testParams = {
+                new TestParams("42102810820010007260", "A01DEP1173550013", "1"),
+                new TestParams("42102810120930000065", "O01DEP1173610002", "2"),
+                new TestParams("42102810820930000064", "O01DEP1173610003", "1"),
+                new TestParams("42102810720930000067", "O01DEP1173630001", "2")
+        };
+
+        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+
+        for (TestParams params : testParams) {
+            String message = createRequestXml("AccountCloseRequest.xml", params.bsaAcid, params.dealId, params.flag);
+            sendToQueue(cf, ktpIn, message.getBytes(), ktpOut, login, passw);
+        }
     }
 
     @Test
@@ -409,6 +440,10 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     }
 
     private String createRequestXml(String fileName, String bsaAcid, String dealId, GLAccount.CloseType closeType) throws Exception {
+        return createRequestXml(fileName, bsaAcid, dealId, closeType.getFlag()) ;
+    }
+
+    private String createRequestXml(String fileName, String bsaAcid, String dealId, String closeType) throws Exception {
         String message = getRecourceText(fileName);
         Document doc = getDocument(docBuilder, message);
         String cb = getXmlParam(xPath, doc, parentNode, accNode);
@@ -417,7 +452,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         message = changeXmlParam(message, accNode, cb, bsaAcid);
         message = changeXmlParam(message, dealNode, deal, dealId);
-        message = changeXmlParam(message, flagNode, flag, closeType.getFlag());
+        message = changeXmlParam(message, flagNode, flag, closeType);
         return message;
     }
 
@@ -443,11 +478,12 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         return account;
     }
 
-    private List<GLAccount> findGlAccountsWithDeal() throws SQLException {
+    private List<GLAccount> findGlAccountsWithDeal(boolean onlyOpen) throws SQLException {
+        String opened = onlyOpen ? "and dtc is null" : "";
         List<DataRecord> res = baseEntityRepository.select(
                 "  select  id from gl_acc a where (dealid, custno) in\n" +
                 "  (select dealid, custno from \n" +
-                "    (select dealid, custno from gl_acc where dealsrs = 'K+TP' and dealid is not null and dealid <> '0' and dtc is null\n" +
+                "    (select dealid, custno from gl_acc where dealsrs = 'K+TP' and dealid is not null and dealid <> '0' " + opened + "\n" +
                 "      group by dealid, custno having count(1) > 2)\n" +
                 "    where rownum = 1 )\n" +
                 "  and dealsrs = 'K+TP'\n");
