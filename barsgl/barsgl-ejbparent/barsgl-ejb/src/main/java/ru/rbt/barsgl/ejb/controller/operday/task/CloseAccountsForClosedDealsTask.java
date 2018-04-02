@@ -100,7 +100,8 @@ public class CloseAccountsForClosedDealsTask extends CloseAccountsForClosedDeals
     private void closeAccount(GLAccount glAccount) throws Exception {
         if (glAccountRepository.isAccountBalanceZero(glAccount.getBsaAcid(), glAccount.getAcid(), getFinalDate())){
             glAccountController.closeGLAccountDeals(glAccount,
-                                                    dateLoad.compareTo(glAccount.getDateRegister())==0?glAccount.getDateOpen():dateLoad,
+//                                                    dateLoad.compareTo(glAccount.getDateRegister())==0?glAccount.getDateOpen():dateLoad,
+                                                    dateLoad,
                                                     GLAccount.CloseType.Normal);
             auditController.info(AccDealCloseTask, "Закрыт счет "+glAccount.getBsaAcid()+
                                                             " с датой закрытия " + dbDateString(glAccount.getDateClose()) +
