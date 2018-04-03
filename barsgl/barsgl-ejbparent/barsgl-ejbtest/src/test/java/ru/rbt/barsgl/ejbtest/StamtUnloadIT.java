@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -719,10 +720,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // осталась одна в прошлой дате
         Assert.assertEquals(1, unloads.size());
 
-//TODO        unloads = baseEntityRepository.select("select * from GL_BALSTMD");
-//TODO        Assert.assertTrue(unloads.size()+"", 2 <= unloads.size());
-//TODO        Assert.assertTrue(rlnId1.getBsaAcid(), unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(rlnId1.getBsaAcid())
-//TODO                || r.getString("CBACCOUNT").equals(rlnId2.getBsaAcid()))));
+        unloads = baseEntityRepository.select("select * from GL_BALSTMD");
+        Assert.assertTrue(unloads.size()+"", 2 <= unloads.size());
+        Assert.assertTrue(rlnId1.getBsaAcid(), unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(rlnId1.getBsaAcid())
+                || r.getString("CBACCOUNT").equals(rlnId2.getBsaAcid()))));
 
         // заголовок по остаткам
         DataRecord balheader2 = getLastUnloadHeader(BALANCE_DELTA2);
