@@ -53,7 +53,7 @@ public class CurrencyExchangeSupport {
             }else{
                 //convert to RUR
                 rate = rateRepository.getRate(ccy_source, date);
-                sum = rateRepository.getEquivalent(ccy_target, rate, wrapper.getSourceSum());
+                sum = rateRepository.getEquivalent(rate, wrapper.getSourceSum());
             }
             wrapper.setTargetSum(sum);
             String info = format("На дату %s \n%s %s сконвертированы в %s %s \nпо курсу ЦБ %s", wrapper.getDate(), wrapper.getSourceSum().toPlainString(),
