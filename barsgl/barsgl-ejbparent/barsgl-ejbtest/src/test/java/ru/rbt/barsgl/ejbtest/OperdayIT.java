@@ -11,7 +11,6 @@ import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
-import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
@@ -616,6 +615,32 @@ public class OperdayIT extends AbstractTimerJobIT {
             isexc = true;
         }
         Assert.assertTrue(isexc);
+    }
+
+    @Test public void testOperOperdayBalanceMode() throws Exception {
+        Date previousWorkday = getOperDayToOpen(getOperday().getLastWorkingDay());
+        Date previouseLwd = getWorkdayBefore(previousWorkday);
+        checkCreateBankCurrency(getWorkdayAfter(previousWorkday), USD, new BigDecimal("61.111"));
+        setOperday(previousWorkday, previouseLwd, COB, CLOSED);
+        Assert.assertEquals(COB, getOperday().getPhase());
+        setOndemanBalanceMode();
+
+        SingleActionJob openOperdayJob = SingleActionJobBuilder.create().withClass(OpenOperdayTask.class)
+                .withProps(BALANCE_MODE_KEY+"="+Operday.BalanceMode.GIBRID).build();
+        jobService.executeJob(openOperdayJob);
+        Assert.assertEquals(ONLINE, getOperday().getPhase());
+        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+
+        setOperday(previousWorkday, previouseLwd, COB, CLOSED);
+        Assert.assertEquals(COB, getOperday().getPhase());
+        setGibridBalanceMode();
+
+        SingleActionJob openOperdayJob2 = SingleActionJobBuilder.create().withClass(OpenOperdayTask.class)
+                .withProps(BALANCE_MODE_KEY+"="+Operday.BalanceMode.ONDEMAND).build();
+        jobService.executeJob(openOperdayJob2);
+        Assert.assertEquals(ONLINE, getOperday().getPhase());
+        checkCurrentBalanceMode(Operday.BalanceMode.ONDEMAND);
+
     }
 
     private void setLwdCut() {

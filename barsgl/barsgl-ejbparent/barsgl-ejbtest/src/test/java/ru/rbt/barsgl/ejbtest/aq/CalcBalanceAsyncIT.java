@@ -17,7 +17,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         // отключены все триггера, кроме AQ
 
-        setGibridMode();
+        setGibridBalanceMode();
 
         List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
         Assert.assertTrue(triggers.stream().anyMatch(r -> "ENABLED".equals(r.getString("status"))));
@@ -118,7 +117,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     @Test
     public void testOnline() throws SQLException {
-        setOnlineMode();
+        setOnlineBalanceMode();
         stopListeningQueue();
         purgeQueueTable();
 
@@ -153,8 +152,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testOndemand() throws SQLException {
-        setGibridMode();
-        setOndemanMode();
+        setGibridBalanceMode();
+        setOndemanBalanceMode();
 
         List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
         List<DataRecord> enabled = triggers.stream().filter(r -> "ENABLED".equals(r.getString("status"))).collect(Collectors.toList());
@@ -162,7 +161,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testGibridOnSpecificPBR() throws SQLException {
-        setGibridMode();
+        setGibridBalanceMode();
         stopListeningQueue();
         purgeQueueTable();
 
@@ -251,22 +250,14 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testRestoreTriggersState() throws SQLException {
-        setGibridMode();
-        checkCurrentMode(Operday.BalanceMode.GIBRID);
+        setGibridBalanceMode();
+        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
 
-        setOndemanMode();
-        checkCurrentMode(Operday.BalanceMode.ONDEMAND);
+        setOndemanBalanceMode();
+        checkCurrentBalanceMode(Operday.BalanceMode.ONDEMAND);
 
         restorePreviousTriggersState();
-        checkCurrentMode(Operday.BalanceMode.GIBRID);
-    }
-
-    @Test public void testSwitchBalanceModeOnFlushBuffer() {
-        Assert.fail("Переключение режима обработки отстатков после сброса буфера");
-    }
-
-    @Test public void testSwitchBalanceModeOnOpenOperday() {
-        Assert.fail("Переключение режима обработки отстатков при открытии ОД");
+        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
     }
 
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
@@ -297,18 +288,6 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(expect, records.size());
     }
 
-    private void setGibridMode() {
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setGibridBalanceCalc");
-    }
-
-    private void setOnlineMode() {
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setOnlineBalanceCalc");
-    }
-
-    private void setOndemanMode() {
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setOndemandBalanceCalc");
-    }
-
     private void restorePreviousTriggersState() {
         remoteAccess.invoke(OperdaySynchronizationController.class, "restorePreviousTriggersState");
     }
@@ -331,9 +310,4 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
     }
 
-    private void checkCurrentMode(Operday.BalanceMode mode) throws SQLException {
-        Assert.assertEquals(mode, Operday.BalanceMode.valueOf(baseEntityRepository
-                .selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
-
-    }
 }

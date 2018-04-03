@@ -33,6 +33,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 
 import static java.lang.String.format;
+import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
@@ -58,29 +59,17 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
     public static final String PD_MODE_KEY = "pdMode";
     public static final String PD_MODE_DEFAULT = Operday.PdMode.BUFFER.name();
 
+    public static final String BALANCE_MODE_KEY = "balanceMode";
+    public static final Operday.BalanceMode BALANCE_MODE_DEFAULT = Operday.BalanceMode.GIBRID;
+
     @Inject
     private RateRepository rateRepository;
-
-//    @Inject
-//    private OperdayController operdayController;
-//
-//    @Inject
-//    private DateUtils dateUtils;
 
     @Inject
     private BankCalendarDayRepository calendarDayRepository;
 
     @Inject
     private OperdayRepository operdayRepository;
-
-//    @EJB
-//    private EtlPostingController etlPostingController;
-//
-//    @EJB
-//    private PreCobStepController preCobStepController;
-//
-//    @EJB
-//    private AuditController auditController;
 
     @EJB
     private BackgroundJobService backgroundJobService;
@@ -95,6 +84,7 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
         CURRENT_OD
         , OPERDAY_TO_OPEN
         , TARGET_PD_MODE
+        , TARGET_BALANCE_MODE
     }
 
     @Override
@@ -102,8 +92,7 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
         Operday currentOperday = (Operday) properties.get(OpenOperdayContextKey.CURRENT_OD);
         Date operDayToOpen = (Date) properties.get(OpenOperdayContextKey.OPERDAY_TO_OPEN);
 
-        // желаемый режим обработки проводок
-        Operday.PdMode targetPdMode = (Operday.PdMode) properties.get(OpenOperdayContextKey.TARGET_PD_MODE);
+
 
         auditController.info(OpenOperday, format("Открытие операционного дня '%s'", dateUtils.onlyDateString(operDayToOpen)));
         auditController.info(OpenOperday, format(
@@ -112,7 +101,14 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
                 , dateUtils.onlyDateString(currentOperday.getCurrentDate()), currentOperday.getPhase()
                 , dateUtils.onlyDateString(currentOperday.getLastWorkingDay()), currentOperday.getLastWorkdayStatus()));
 
+        // желаемый режим обработки проводок
+        Operday.PdMode targetPdMode = (Operday.PdMode) properties.get(OpenOperdayContextKey.TARGET_PD_MODE);
         setPdMode(targetPdMode);
+
+        // режим пересчета остатков
+        Operday.BalanceMode targetBalanceMode = (Operday.BalanceMode) properties.get(OpenOperdayContextKey.TARGET_BALANCE_MODE);
+        setBalanceCalcMode(targetBalanceMode);
+
         restartGlPdSequence();
 
         // открыть следующий опердень
@@ -126,12 +122,22 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
         return true;
     }
 
+    private void setBalanceCalcMode(Operday.BalanceMode targetBalanceMode) throws Exception {
+        Operday.BalanceMode currentBalanceMode = operdayController.getBalanceCalculationMode();
+        if (currentBalanceMode != targetBalanceMode) {
+            auditController.warning(OpenOperday, format("Текущий режим пересчета остатков '%s' не соответствует целевому '%s'. Переключаем..."
+                , operdayController.getBalanceCalculationMode(), targetBalanceMode));
+            operdayController.switchBalanceMode(targetBalanceMode);
+        }
+    }
+
     @Override
     protected void initExec(String jobName, Properties properties) {
         properties.put(OpenOperdayContextKey.CURRENT_OD, operdayController.getOperday());
         properties.put(OpenOperdayContextKey.OPERDAY_TO_OPEN, calendarDayRepository
                 .getWorkdayAfter(operdayController.getOperday().getCurrentDate()).getId().getCalendarDate());
         properties.put(OpenOperdayContextKey.TARGET_PD_MODE, calculatePdMode(properties));
+        properties.put(OpenOperdayContextKey.TARGET_BALANCE_MODE, calculateBalanceModeForOpenOperday(properties));
     }
 
     @Override
@@ -233,6 +239,11 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
                 return Operday.PdMode.BUFFER;
             }
         }
+    }
+
+    public Operday.BalanceMode calculateBalanceModeForOpenOperday(Properties properties) {
+        return Optional.ofNullable(properties.getProperty(BALANCE_MODE_KEY)).map(Operday.BalanceMode::valueOf)
+                .orElse(BALANCE_MODE_DEFAULT);
     }
 
     /**

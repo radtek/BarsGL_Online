@@ -53,18 +53,42 @@ public class Operday extends BaseEntity<Date> {
      * режим обновления остатков BALTUR
      */
     public enum BalanceMode {
+
         /**
          * В зависимости от PST.PBR остатки обновляются асинхронно или онлайн
          */
-        GIBRID,
+        GIBRID("BEGIN GLAQ_PKG_UTL.START_GIBRID_MODE; END;")
+        ,
         /**
          * остатки обновляются онлайн
          */
-        ONLINE,
+        ONLINE("BEGIN GLAQ_PKG_UTL.START_ONLINE_MODE; END;")
+        ,
         /**
          * все триггера на PST отключены, пересчет остатков осуществл. внешней программой
          */
-        ONDEMAND
+        ONDEMAND("BEGIN GLAQ_PKG_UTL.START_ONDEMAND_MODE; END;")
+        ,
+        /**
+         * режим пересчета остатков не изменяеся
+         */
+        NOCHANGE(
+                "DECLARE\n" +
+                "    L_MODE VARCHAR2(128);\n" +
+                "BEGIN \n" +
+                "    SELECT GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE INTO L_MODE FROM DUAL;\n" +
+                "    PKG_SYS_UTL.LOG_AUDIT_INFO('Operday', 'Текущий режим пересчета остатков \"'||L_MODE||'\" не изменен.'); \n" +
+                "END;");
+
+        private String procedureName;
+
+        BalanceMode(String procedureName) {
+            this.procedureName = procedureName;
+        }
+
+        public String getSwithPlsqlBlock() {
+            return procedureName;
+        }
     }
 
     /**

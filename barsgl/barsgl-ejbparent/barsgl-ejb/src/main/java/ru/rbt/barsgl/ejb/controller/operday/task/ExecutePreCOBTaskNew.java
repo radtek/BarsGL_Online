@@ -125,6 +125,9 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     @EJB
     private DatLCorrector balturCorrector;
 
+    @Inject
+    private PdSyncTask syncTask;
+
     /**
      * проверка нужно ли запускать задачу взависимости от того запускалась ли она в ОД  AbstractJobHistoryAwareTask#getOperday(java.util.Properties)
      * @param jobName
@@ -162,7 +165,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }));
 
         works.add(new CobRunningStepWork(CobResetBuffer, (Long idCob, CobPhase phase) -> {
-            return synchronizePostings(idCob, phase);
+            return synchronizePostings(idCob, phase, properties);
         }));
 
         works.add(new CobRunningStepWork(CobManualProc, (Long idCob, CobPhase phase) -> {
@@ -215,13 +218,13 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
      * step 2
      * @return
      */
-    public CobStepResult synchronizePostings(Long idCob, CobPhase phase) {
+    public CobStepResult synchronizePostings(Long idCob, CobPhase phase, Properties properties) {
         if (BUFFER == operdayController.getOperday().getPdMode()) {
             statInfo(idCob, phase, format("Режим ввода проводок '%s'. Начало синхронизации проводок", BUFFER));
             try {
                 if (beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                     beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence1, connection1) -> {
-                        String res = synchronizationController.syncPostings(Optional.empty());
+                        String res = synchronizationController.syncPostings(syncTask.getTargetBalanceMode(properties));
                         statInfo(idCob, phase, res);
                         DataRecord stats = synchronizationController.getBifferStatistic();
                         Assert.isTrue(stats.getLong("pd_cnt") == 0, () -> new DefaultApplicationException("Остались полупроводки в буфере после синхронизации"));
