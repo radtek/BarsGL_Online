@@ -471,10 +471,12 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     @Test
     public void testSendToQeue() throws Exception {
         TestParams[] testParams = {
-                new TestParams("42102810320450000245", "M01DEP1180750001", "1"),
-                new TestParams("42102810020450000244", "M01DEP1180750002", "2"),
-                new TestParams("42102810120010008600", "A01DEP1180780006", "1"),
-                new TestParams("42102810520010008598", "A01DEP1180780005", "2"),
+                new TestParams("42102810020010008276", "A01DEP1180570017", "1"),
+                new TestParams("42102810020010008467", "A01DEP1180710011", "2"),
+//                new TestParams("42102810320450000245", "M01DEP1180750001", "1"),
+//                new TestParams("42102810020450000244", "M01DEP1180750002", "2"),
+//                new TestParams("42102810120010008600", "A01DEP1180780006", "1"),
+//                new TestParams("42102810520010008598", "A01DEP1180780005", "2"),
 /*                new TestParams("42102810820010007260", "A01DEP1173550013", "1"),
                 new TestParams("42102810120930000065", "O01DEP1173610002", "2"),
                 new TestParams("42102810820930000064", "O01DEP1173610003", "1"), */
