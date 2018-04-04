@@ -35,9 +35,6 @@ import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
  */
 public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
-//    private final String host = "vs569";
-//    private final String broker = "QM_MBROKER4_T4";
-
 //    private final static String host = "vs338";
 //    private final static String broker = "QM_MBROKER10_TEST";
     private final static String host = "vs569";
@@ -393,6 +390,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
         String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
         updateCustomer("00694379", "001", "11", N);
+
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));

@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -719,10 +720,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // осталась одна в прошлой дате
         Assert.assertEquals(1, unloads.size());
 
-//TODO        unloads = baseEntityRepository.select("select * from GL_BALSTMD");
-//TODO        Assert.assertTrue(unloads.size()+"", 2 <= unloads.size());
-//TODO        Assert.assertTrue(rlnId1.getBsaAcid(), unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(rlnId1.getBsaAcid())
-//TODO                || r.getString("CBACCOUNT").equals(rlnId2.getBsaAcid()))));
+        unloads = baseEntityRepository.select("select * from GL_BALSTMD");
+        Assert.assertTrue(unloads.size()+"", 2 <= unloads.size());
+        Assert.assertTrue(rlnId1.getBsaAcid(), unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(rlnId1.getBsaAcid())
+                || r.getString("CBACCOUNT").equals(rlnId2.getBsaAcid()))));
 
         // заголовок по остаткам
         DataRecord balheader2 = getLastUnloadHeader(BALANCE_DELTA2);
@@ -768,8 +769,13 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date operday = DateUtils.parseDate("2010-01-01", "yyyy-MM-dd");
         Date lwdate = ru.rbt.ejbcore.util.DateUtils.addDay(operday, -1);
         setOperday(operday, lwdate, ONLINE, OPEN);
-        DataRecord account = baseEntityRepository
-                .selectFirst("select /*+ parallel 4 */ * from gl_acc a where rownum < 2 and GL_STMFILTER_BAL(A.BSAACID) = '1'");
+
+        DataRecord account = baseEntityRepository.selectFirst("select * from gl_acc where bsaacid like '47407%'");
+        baseEntityRepository.executeNativeUpdate("delete from gl_stmparm");
+        registerForStamtUnload(account.getString("bsaacid"));
+        log.info("account: " + account.getString("bsaacid"));
+        account = baseEntityRepository
+                .selectFirst("select /*+ parallel 4 */ * from gl_acc a where GL_STMFILTER_BAL(A.BSAACID) = '1'");
         Assert.assertNotNull(account);
         baseEntityRepository.executeNativeUpdate("update gl_acc set dtr = ? where dtr = ?", lwdate, operday);
         baseEntityRepository.executeNativeUpdate("update gl_acc set dtr = ? where id = ?", operday, account.getLong("id"));

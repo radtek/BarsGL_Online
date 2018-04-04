@@ -1,4 +1,57 @@
-insert into GL_TMP_STMTBAL (
+insert into TMP_GL_BALSTMD
+(
+ STATDATE
+, STATTYPE
+, HOSTSYSTEM
+, FCCCUSTNUM
+, FCCACCOUNT
+, FCCBRANCH
+, EXT_CUSTID
+, ACCBRN
+, CBACCOUNT
+, ACCTYPE
+, CURRCODE
+, SQNUMBER
+, CREATEDATE
+, TIMECREATE
+, OPENBLNCA
+, CLOSEBLNCA
+, DBDOCNT
+, DBTURNOVRA
+, CRDOCNT
+, CRTURNOVRA
+, OPENBLNCN
+, CLOSEBLNCN
+, DBTURNOVRN
+, CRTURNOVRN
+, RATE
+, INBDATE
+, OUTBDATE
+, RCUSTNAME
+, CUSTINN
+, ECUSTNAME
+, CSTADDRSW1
+, CSTADDRSW2
+, CSTADDRSW3
+, CSTADDRSW4
+, CSTADDRKL
+, CSTADDRKF
+, BCUSTBIC
+, RBANKNAME
+, EBANKNAME
+, BCSTCORRAC
+, BCUSTSWIFT
+, BCUSTINN
+, ED
+, BRANCH_ID
+, ALT_AC_NO
+, ACCNAME
+, ACODNAME
+, CURRNAME
+, DATEUNLOAD
+, LSTOPERDAT
+)
+(
 select statdate
        , stattype
        , hostsystem
@@ -150,7 +203,6 @@ select statdate
        and s.bbcust = rln.cnum
        and i.ccbbr = rln.ccode and rp.a8brcd = substr(acmx.acid,-3)
        and c.dat <= (case when o.phase = 'COB' then o.curdate else o.lwdate end) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
-       and not exists (select 1 from gl_balstmd d where d.cbaccount = b.bsaacid and c.dat = d.statdate)
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount
 )

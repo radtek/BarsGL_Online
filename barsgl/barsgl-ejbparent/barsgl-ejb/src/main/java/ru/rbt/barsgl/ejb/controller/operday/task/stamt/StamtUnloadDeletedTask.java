@@ -146,6 +146,8 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
         try {
             return (int) repository.executeInNewTransaction(persistence -> {
                 repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/del/stamt_deleted_balance.sql"));
+                auditController.info(StamtPstDeleted, format("Удалено счетов из GL_BALSTMD записей для обновления '%s'"
+                        , repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/stamt_delete_exists.sql"))));
                 return repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ins_res.sql"));
             });
         } catch (Throwable e) {

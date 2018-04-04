@@ -6,7 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -834,7 +833,7 @@ public abstract class AbstractRemoteIT  {
         return IOUtils.toString(this.getClass().getResourceAsStream("/" + resourceName), "UTF-8");
     }
 
-    protected Document getDocument(DocumentBuilder docBuilder, String message) throws IOException, SAXException {
+    protected Document getDocument(DocumentBuilder docBuilder, String message) throws IOException, org.xml.sax.SAXException {
         return docBuilder.parse(new ByteArrayInputStream(message.getBytes("UTF-8")));
     }
 
@@ -850,6 +849,5 @@ public abstract class AbstractRemoteIT  {
         DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
         return null == res ? 0 : res.getLong(0);
     }
-
 
 }

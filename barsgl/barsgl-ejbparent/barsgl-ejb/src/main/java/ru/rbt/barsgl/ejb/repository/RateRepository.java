@@ -3,12 +3,15 @@ package ru.rbt.barsgl.ejb.repository;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRateId;
+import ru.rbt.barsgl.ejb.repository.dict.CurrencyCacheRepository;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -22,6 +25,9 @@ public class RateRepository extends AbstractBaseEntityRepository<CurrencyRate, C
 
     @Inject
     private DateUtils dateUtils;
+
+    @EJB
+    private CurrencyCacheRepository currencyCacheRepository;
 
     public BigDecimal getRate(String ccy, Date valDate) {
         Assert.isTrue(!isEmpty(ccy), "Не указан код валюты");
@@ -54,8 +60,10 @@ public class RateRepository extends AbstractBaseEntityRepository<CurrencyRate, C
         }
     }
 
-    public BigDecimal getEquivalent(BankCurrency currency, BigDecimal rate, BigDecimal majorAmount) {
-        return majorAmount.multiply(rate).setScale(currency.getScale().intValue(), BigDecimal.ROUND_HALF_UP);
+    public BigDecimal getEquivalent(BigDecimal rate, BigDecimal majorAmount) {
+        BankCurrency RUR = currencyCacheRepository.findCached(BankCurrency.RUB.getCurrencyCode());
+        Assert.isTrue(null != RUR, () -> new DefaultApplicationException("Не найдена валюта RUR"));
+        return majorAmount.multiply(rate).setScale(RUR.getScale().intValue(), BigDecimal.ROUND_HALF_UP);
     }
 
     public BigDecimal getValEquivalent(BankCurrency currency, BigDecimal rate, BigDecimal majorAmount) {
