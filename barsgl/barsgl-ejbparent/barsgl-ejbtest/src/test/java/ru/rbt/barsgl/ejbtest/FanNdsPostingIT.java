@@ -80,7 +80,7 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
             Assert.assertTrue(opers.stream().allMatch(r -> r.getState() == OperState.POST));
         }finally{
             // удаляем все - не должно падать
-            log.info("deleted: " + baseEntityRepository.executeNativeUpdate("delete from pd where pbr like '@@IF%' and pod = ?", workday));
+            log.info("deleted: " + baseEntityRepository.executeNativeUpdate("delete from pst where pbr like '@@IF%' and pod = ?", workday));
             jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessFlexFanTask.class).build());
         }
     }

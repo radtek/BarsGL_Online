@@ -1,5 +1,5 @@
 select min(d.pod) min_pod, od.curdate max_pod, a.id acid
-  from gl_oper o, (select value(?, date('2029-01-01')) curdate from DUAL) od, gl_posting ps, pd d,  gl_shacod s, acc a
+  from gl_oper o, (select value(?, date('2029-01-01')) curdate from DUAL) od, gl_posting ps, pst d,  gl_shacod s, acc a
  where ps.pcid = d.pcid
    and ps.glo_ref = o.gloid
    and o.procdate = od.curdate

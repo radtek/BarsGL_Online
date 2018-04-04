@@ -138,6 +138,6 @@ select *
    join imbcbcmp i on i.ccbbr = ac.cbccn
    join imbcbbrp rp on rp.a8brcd = ac.branch
    where not exists (select 1 from GL_BALSTMD mdm where mdm.statdate = p.pdt and mdm.cbaccount = ac.bsaacid)
-     and exists (select 1 from pd d where d.pod = p.pdt and d.pbr not like '@@%' and d.bsaacid = ac.bsaacid and d.acid = ac.acid)
+     and exists (select 1 from pst d where d.pod = p.pdt and d.pbr not like '@@%' and d.bsaacid = ac.bsaacid and d.acid = ac.acid)
   ) ac0
  where GL_STMFILTER(ac0.cbaccount) = '1'

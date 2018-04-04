@@ -40,7 +40,7 @@ public class AsyncTestService {
                         logger.info("");
 //                        Thread.sleep(500000);
                         logger.info("EXECUTING SELECT " + finalI);
-                        long cnt = postingRepository.selectFirst("select count(1) from pd p1, pd p2 where p1.pbr = '1'").getLong("cnt");
+                        long cnt = postingRepository.selectFirst("select count(1) from pst p1, pst p2 where p1.pbr = '1'").getLong("cnt");
                         logger.info("COMPLETED SELECT " + finalI + " " + cnt);
                         return null;
                     } catch (Throwable e) {

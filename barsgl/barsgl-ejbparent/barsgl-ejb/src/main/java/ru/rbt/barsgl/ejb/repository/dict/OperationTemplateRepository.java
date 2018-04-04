@@ -29,10 +29,19 @@ public class OperationTemplateRepository extends AbstractBaseEntityRepository<Op
         }
     }
 
+//    public DataRecord getAccountParams(String bsaAcid) {
+//        try {
+//            String sql = "select B.ID, I.CCPCD as CBCC, C.GLCCY as CCY, B.BSAACO, B.BSAACC " +
+//                    "from BSAACC B join IMBCBCMP I on I.CCBBR = B.BRCA join CURRENCY C on B.CCY = C.CBCCY where B.ID = ?";
+//            DataRecord res = selectFirst(sql, bsaAcid);
+//            return res;
+//        } catch (SQLException e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
     public DataRecord getAccountParams(String bsaAcid) {
         try {
-            String sql = "select B.ID, I.CCPCD as CBCC, C.GLCCY as CCY, B.BSAACO, B.BSAACC " +
-                    "from BSAACC B join IMBCBCMP I on I.CCBBR = B.BRCA join CURRENCY C on B.CCY = C.CBCCY where B.ID = ?";
+            String sql = "select CBCC, CCY from gl_acc where bsaacid=?";
             DataRecord res = selectFirst(sql, bsaAcid);
             return res;
         } catch (SQLException e) {

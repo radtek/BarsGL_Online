@@ -40,7 +40,7 @@ FROM (
             case when (select 1 from imbcbbrp i where i.a8bicn=SUBSTRING(D.ACID, 3, 6)) is null then SUBSTRING(D.ACID, 3, 6)
                  else  (select case when d2.acid=''or d2.acid is null then SUBSTRING(D.ACID, 3, 6)
                                     else SUBSTRING(D2.ACID, 3, 6) end
-                        from pd d2 where d2.pcid=d.pcid and d2.id!=d.id)
+                        from pst d2 where d2.pcid=d.pcid and d2.id!=d.id)
                  end CNUM_asoc,
             D.BSAACID BSAACID,
             D.CCY CCY,          			-- валюта
@@ -57,26 +57,34 @@ FROM (
                     WHEN D.AMNTBC < 0 THEN 0
                 END
             ) DRCR,                         -- 0 - дебет, 1 - кредит
-            E.DPMT DPMT,        			-- код департамента
-            e5.pmt_ref PREF,     			-- ID платежа
-            e5.subdealid DLREF,   			-- ID сделки
-            E.PREF OTRF,        			-- ID источника
+--            E.DPMT DPMT,        			-- код департамента
+            d.DPMT DPMT,        			-- код департамента
+            d.pmt_ref PREF,     			-- ID платежа
+            d.subdealid DLREF,   			-- ID сделки
+--            e5.pmt_ref PREF,     			-- ID платежа
+--            e5.subdealid DLREF,   			-- ID сделки
+--            E.PREF OTRF,        			-- ID источника
+            d.PREF OTRF,        			-- ID источника
 --            O.PROCDATE PROCDATE,
 --            O.GLOID GLOID,
             ABS(D.AMNTBC) PSTARUR,
             d.PCID PCID,
-            e5.EVT_ID,
-            e5.FCHNG,
-            e5.PRFCNTR,
+--            e5.EVT_ID,
+--            e5.FCHNG,
+--            e5.PRFCNTR,
+            d.EVT_ID,
+            d.FCHNG,
+            d.PRFCNTR,
 --            o.EVTP,
             d.PNAR,
             d.PBR SPOS,
             d.pod pdpod,
-            e2.RNARLNG
-        FROM PD D
-            left JOIN PDEXT E ON D.ID = E.ID
-            left JOIN PDEXT5 E5 ON D.ID = E5.ID
-            left JOIN PDEXT2 E2 ON D.ID = E2.ID
+            d.RNARLNG
+--            e2.RNARLNG
+        FROM PST D
+--            left JOIN PDEXT E ON D.ID = E.ID
+--            left JOIN PDEXT5 E5 ON D.ID = E5.ID
+--            left JOIN PDEXT2 E2 ON D.ID = E2.ID
             left join gl_acc a2 on a2.bsaacid = d.bsaacid
             left join GL_SHACOD s on  S.ACOD = SUBSTRING(d.ACID, 12, 4) AND S.ACSQ = SUBSTRING(d.ACID, 16, 2)
         WHERE D.INVISIBLE <> '1'  -- Проводки актуальны

@@ -240,12 +240,15 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public Set<String> getCountsByAB(String condition) throws Exception {
         try {
+//            List<DataRecord> dataRecords = selectMaxRows(
+//                "SELECT BSAACID FROM ACCRLN A WHERE NVL(A.BSAACID,'')<>'' AND " + condition + " "+
+//                    "AND EXISTS(SELECT * FROM GL_ACC G WHERE A.BSAACID=G.BSAACID) " +
+//                    //"AND (CURRENT DATE - A.DRLNC) <= 1131"
+//                    "AND MONTHS_BETWEEN(sysdate, A.DRLNC) < 12 "
+//                , Integer.MAX_VALUE,null);
             List<DataRecord> dataRecords = selectMaxRows(
-                "SELECT BSAACID FROM ACCRLN A WHERE NVL(A.BSAACID,'')<>'' AND " + condition + " "+
-                    "AND EXISTS(SELECT * FROM GL_ACC G WHERE A.BSAACID=G.BSAACID) " +
-                    //"AND (CURRENT DATE - A.DRLNC) <= 1131" 
-                    "AND MONTHS_BETWEEN(sysdate, A.DRLNC) < 12 "
-                , Integer.MAX_VALUE,null);
+                    "SELECT BSAACID FROM GL_ACC A WHERE MONTHS_BETWEEN(sysdate, A.DTC) < 12 AND " + condition
+                    , Integer.MAX_VALUE,null);
 
             Set<String> result = dataRecords.stream().map(item -> item.getString(0)).collect(Collectors.toSet());
             return result;

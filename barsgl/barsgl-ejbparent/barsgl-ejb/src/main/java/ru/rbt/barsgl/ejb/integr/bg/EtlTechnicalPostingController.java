@@ -122,9 +122,7 @@ public class EtlTechnicalPostingController implements EtlMessageController<EtlPo
     private DataRecord getBsaacidData(String bsaacid) {
         try {
             return Optional.ofNullable(rlnRepository.selectFirst(
-                    "select c.glccy, r.ccode from accrln r, currency c\n" +
-                    " where bsaacid = ?\n" +
-                    "    and r.cbccy = c.cbccy", bsaacid))
+                    "select r.ccy, r.CBCCN from gl_acc r where bsaacid = ?", bsaacid))
                     .orElseThrow(() -> new DefaultApplicationException(format("Не удалось определить код валюты по счету '%s'", bsaacid)));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);

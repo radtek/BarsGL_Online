@@ -83,14 +83,14 @@ public class AcDNJournalDataRepository extends AbstractBaseEntityRepository<AcDN
         return "";
     }
 
-    public String existsAcid(String acid) throws SQLException {
-        try {
-            DataRecord dataRecord = selectOne("SELECT ID FROM ACC WHERE ID = ?", acid);
-            return dataRecord.getString(0);
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
+//    public String existsAcid(String acid) throws SQLException {
+//        try {
+//            DataRecord dataRecord = selectOne("SELECT ID FROM ACC WHERE ID = ?", acid);
+//            return dataRecord.getString(0);
+//        } catch (NoResultException e) {
+//            return null;
+//        }
+//    }
 
     public boolean validateBranch(AcDNJournal.Sources source, String branch) throws SQLException {
         DataRecord dataRecord;

@@ -40,17 +40,16 @@ FROM (
             ) DRCR,
             D.ASOC ASOC,
             D.PBR SPOS,
-            E.DPMT DPMT,
-            e.PREF PREF,
+            d.DPMT DPMT,
+            d.PREF PREF,
             '' DLREF,
-            E.PREF OTRF,
+            d.PREF OTRF,
             D.POD PSTB,
             D.POD PROCDATE,
             ABS(D.AMNTBC) PSTARUR,
             d.PCID PCID,
             d.POD
-        FROM PD D
-        LEFT JOIN PDEXT E on D.ID = E.ID
+        FROM PST D
        WHERE d.PCID = ?
             and d.id != ?
     ) T

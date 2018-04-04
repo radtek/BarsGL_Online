@@ -184,7 +184,7 @@ public class AccountBalanceUnloadTask implements ParamsAwareRunnable {
                     "             case when p.amnt > 0 and p.pod < od.curdate then p.amnt else 0 end\n" +
                     "           ) trnv_crbd,\n" +
                     "           p.acid, -2, od.curdate\n" +
-                    "      from pd p, gl_shacpar s, acc a, gl_oper o, gl_posting ps, gl_od od\n" +
+                    "      from pst p, gl_shacpar s, acc a, gl_oper o, gl_posting ps, gl_od od\n" +
                     "     where o.gloid = ps.glo_ref\n" +
                     "       and ps.pcid = p.pcid\n" +
                     "       and p.invisible <> '1'\n" +
@@ -333,9 +333,9 @@ public class AccountBalanceUnloadTask implements ParamsAwareRunnable {
                         "                else 0 \n" +
                         "           end fl,\n" +
                         "           r.bsaacid, r.rlntype \n" +
-                        "      from ACCRLN r, GL_BSTYPE b, gl_od od\n" +
+                        "      from GL_ACC r, GL_BSTYPE b, gl_od od\n" +
                         "     where substr(r.acid, 12, 4) = b.acod\n" +
-                        "       and od.curdate between r.drlno and r.drlnc\n" +
+                        "       and od.curdate between r.dto and r.dtc\n" +
                         "       and r.acid = ? \n" +
                         ") v where v.fl = 1", acid);
     }

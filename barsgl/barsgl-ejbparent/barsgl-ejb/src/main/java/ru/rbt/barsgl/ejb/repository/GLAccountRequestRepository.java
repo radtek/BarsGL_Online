@@ -34,23 +34,22 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
      * в accrlnext уникальность по bsaacid
      * в accrln уникальность по bsaacid, acid
      */
-    public Long getGlAccId(String Acid, String Bsaacid){
-        Long id;
-        try{
-            //max - чтобы получить null, если нет записи
-            DataRecord res = selectFirst("select max(x.glacid) from accrlnext x where x.acid = ? and x.bsaacid = ?" , Acid, Bsaacid);
-            id = res.getLong(0);
-            if (id == null) {
-                id = nextId("GL_SEQ_ACC");
-                executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?,?,?,'1')"
-                        , id, ifEmpty(Acid, " "), Bsaacid);
-            }
-//            if (id == null) throw new SQLException("not found glacid for " + Acid + "; " + Bsaacid);
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-        return id;
-    }
+//    public Long getGlAccId(String Acid, String Bsaacid){
+//        Long id;
+//        try{
+//            //max - чтобы получить null, если нет записи
+//            DataRecord res = selectFirst("select max(x.glacid) from accrlnext x where x.acid = ? and x.bsaacid = ?" , Acid, Bsaacid);
+//            id = res.getLong(0);
+//            if (id == null) {
+//                id = nextId("GL_SEQ_ACC");
+//                executeNativeUpdate("insert into accrlnext (GLACID, ACID, BSAACID, INP_MTHD) values(?,?,?,'1')"
+//                        , id, ifEmpty(Acid, " "), Bsaacid);
+//            }
+//        } catch (SQLException e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//        return id;
+//    }
 
     /**
      * Загрузка запросов на открытие счета

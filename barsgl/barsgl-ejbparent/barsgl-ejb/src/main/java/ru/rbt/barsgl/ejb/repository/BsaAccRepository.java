@@ -83,7 +83,7 @@ public class BsaAccRepository extends AbstractBaseEntityRepository<BsaAcc, Strin
     }
 */
 
-    public Optional<BsaAcc> findBsaAcc (String bsaacid) {
-        return Optional.ofNullable(selectFirst(BsaAcc.class, "from BsaAcc a where a.id = ?1", bsaacid));
-    }
+//    public Optional<BsaAcc> findBsaAcc (String bsaacid) {
+//        return Optional.ofNullable(selectFirst(BsaAcc.class, "from BsaAcc a where a.id = ?1", bsaacid));
+//    }
 }

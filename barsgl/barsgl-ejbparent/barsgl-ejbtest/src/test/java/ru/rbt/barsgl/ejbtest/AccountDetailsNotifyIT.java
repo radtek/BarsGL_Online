@@ -321,8 +321,8 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
 
     private void reopenAccount(String bsaacid) {
         baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = null where BSAACID = ?", bsaacid);
-        baseEntityRepository.executeNativeUpdate("update ACCRLN set DRLNC = ? where BSAACID = ?", getFinalDateStr(),  bsaacid);
-        baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", getFinalDateStr(), bsaacid);
+//        baseEntityRepository.executeNativeUpdate("update ACCRLN set DRLNC = ? where BSAACID = ?", getFinalDateStr(),  bsaacid);
+//        baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", getFinalDateStr(), bsaacid);
     }
 
     private void checkCloseDate(String bsaacid, Date closeDate, boolean withGL) throws SQLException {

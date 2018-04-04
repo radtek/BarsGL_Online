@@ -80,15 +80,15 @@ public class AccRln
             acc2 = parBsaacid.substring(0, 5);
     }
 
-    public static PreparedStatement PrepareInsertStatement(Connection connection, String schemaDWH)
-        throws SQLException
-    {
-        PreparedStatement stmt = null;
-        String strStmtSQL = "insert into accrln (acid, bsaacid, rlntype, drlno, drlnc, ctype, cnum,  ccode, acc2, psav, glacod, cbccy," +
-                " plcode, incl, pairbsa,transactsrc) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )";
-        stmt = connection.prepareStatement(strStmtSQL);
-        return stmt;
-    }
+//    public static PreparedStatement PrepareInsertStatement(Connection connection, String schemaDWH)
+//        throws SQLException
+//    {
+//        PreparedStatement stmt = null;
+//        String strStmtSQL = "insert into accrln (acid, bsaacid, rlntype, drlno, drlnc, ctype, cnum,  ccode, acc2, psav, glacod, cbccy," +
+//                " plcode, incl, pairbsa,transactsrc) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )";
+//        stmt = connection.prepareStatement(strStmtSQL);
+//        return stmt;
+//    }
 
     public int Insert(PreparedStatement stmt)
         throws SQLException

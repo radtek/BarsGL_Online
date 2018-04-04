@@ -1769,14 +1769,14 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
     }
 
     private void delAccount(String acid, String bsaacid){
-        int count = baseEntityRepository.executeNativeUpdate("delete from accrlnext where bsaacid=? and acid=?", bsaacid, acid);
-        logger.info(count + ": delete from accrlnext");
-        count = baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid=? and acid=?", bsaacid, acid);
-        logger.info(count + ": delete from accrln");
-        count = baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid=? and acid=?", bsaacid, acid);
+//        int count = baseEntityRepository.executeNativeUpdate("delete from accrlnext where bsaacid=? and acid=?", bsaacid, acid);
+//        logger.info(count + ": delete from accrlnext");
+//        count = baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid=? and acid=?", bsaacid, acid);
+//        logger.info(count + ": delete from accrln");
+        int count = baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid=? and acid=?", bsaacid, acid);
         logger.info(count + ": delete from gl_acc");
-        count = baseEntityRepository.executeNativeUpdate("delete from bsaacc where id=?", bsaacid);
-        logger.info(count + ": delete from bsaacc");
+//        count = baseEntityRepository.executeNativeUpdate("delete from bsaacc where id=?", bsaacid);
+//        logger.info(count + ": delete from bsaacc");
 
     }
     private boolean isCodeInGlAudit(long id, String code) throws Exception {

@@ -457,7 +457,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         Assert.assertTrue("Все записи baltur DAT = DATL перед удаление проводок", balturs.stream().allMatch(r -> r.getDate("DATL").equals(r.getDate("DAT"))));
 
         // удалить среднюю проводку DATL будет равна из предыдущей записи
-        baseEntityRepository.executeNativeUpdate("delete from pd where id = ?", id2);
+        baseEntityRepository.executeNativeUpdate("delete from pst where id = ?", id2);
 
         List<DataRecord> pdjrns = baseEntityRepository.select("select * from GL_PDJCHG where bsaacid = ? and acid = ? "
                 , rlnId.getBsaAcid(), rlnId.getAcid());

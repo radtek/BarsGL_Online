@@ -88,9 +88,9 @@ public class ReconcilationTask implements ParamsAwareRunnable {
     private int fillMd(Connection connection, Date operday, JdbcAdapter adapter) throws SQLException {
         int count = 0;
         try (PreparedStatement statement = connection.prepareStatement(
-                "select p.*, e.pref," +
+                "select p.*," +
                 "       case when p.amnt > 0 then 'C' else 'D' end  fin" +
-                " from pd p, pdext e where p.id = e.id and pod = ? and pbr = 'PH' and invisible = '1'")) {
+                " from pst p where pod = ? and pbr = 'PH' and invisible = '1'")) {
             statement.setDate(1, new java.sql.Date(operday.getTime()));
             try (ResultSet rs = statement.executeQuery();
                  PreparedStatement insert = connection.prepareStatement(

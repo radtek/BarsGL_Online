@@ -44,11 +44,11 @@ public class AccRepository extends AbstractBaseEntityRepository<Acc, String> {
      * Обновляет дату закрытия счета
      * @param glAccount
      */
-    public void setDateClose(GLAccount glAccount) {
-        int cnt = executeNativeUpdate("update ACC set DACC = ? where ID = ?", glAccount.getDateClose(), glAccount.getAcid());
-        Assert.isTrue(1 == cnt, format("Update count = %d: table '%s', ID = '%s'",
-                cnt, "ACC", glAccount.getAcid()));
-    }
+//    public void setDateClose(GLAccount glAccount) {
+//        int cnt = executeNativeUpdate("update ACC set DACC = ? where ID = ?", glAccount.getDateClose(), glAccount.getAcid());
+//        Assert.isTrue(1 == cnt, format("Update count = %d: table '%s', ID = '%s'",
+//                cnt, "ACC", glAccount.getAcid()));
+//    }
 
     /**
      * Поиск по счету ЦБ
@@ -56,12 +56,12 @@ public class AccRepository extends AbstractBaseEntityRepository<Acc, String> {
      * @param bsaacid счет ЦБ
      * @return
      */
-    public DataRecord findByAcid(String bsaacid) throws SQLException {
-        try {
-            return selectFirst("SELECT * FROM ACC WHERE ID = ? ORDER BY DACC DESC", bsaacid);
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
+//    public DataRecord findByAcid(String bsaacid) throws SQLException {
+//        try {
+//            return selectFirst("SELECT * FROM ACC WHERE ID = ? ORDER BY DACC DESC", bsaacid);
+//        } catch (NoResultException e) {
+//            return null;
+//        }
+//    }
 
 }

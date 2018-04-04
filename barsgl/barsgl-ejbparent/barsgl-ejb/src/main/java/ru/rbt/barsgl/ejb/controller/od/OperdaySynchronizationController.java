@@ -553,7 +553,7 @@ public class OperdaySynchronizationController {
     }
 
     public Long getMaxPdId(Long plus) throws SQLException {
-        return pdRepository.selectFirst("select max(id)+1 mx from pd").getLong("mx") + plus;
+        return pdRepository.selectFirst("select max(id)+1 mx from pst").getLong("mx") + plus;
     }
 
     /**

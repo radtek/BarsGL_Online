@@ -11,7 +11,7 @@ SELECT D.ACID, D.BSAACID, D.POD
        , SUM(CASE
             WHEN D.AMNT < 0 THEN D.AMNT ELSE 0
        END) dtac
-  FROM PD D
+  FROM PST D
  WHERE D.POD in (SELECT DAT FROM CAL C
                   WHERE C.DAT BETWEEN ? AND (SELECT CURDATE FROM GL_OD)
                     AND C.HOL <> 'X' AND C.CCY = 'RUR')

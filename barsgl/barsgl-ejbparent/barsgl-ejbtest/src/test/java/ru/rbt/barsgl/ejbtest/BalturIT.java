@@ -72,8 +72,8 @@ public class BalturIT extends AbstractRemoteIT {
         Assert.assertTrue(balturs.stream().anyMatch(r -> r.getDate("datto").equals(DateUtils.addDay(operday.getCurrentDate(), -1))
             && r.getDate("dat").equals(beforePod)));
 
-        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("delete from pd where id = ?", pd.getId()));
-        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("delete from pd where id = ?", beforePd.getId()));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("delete from pst where id = ?", pd.getId()));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("delete from pst where id = ?", beforePd.getId()));
 
         balturs = baseEntityRepository.select("select obac + dtac + ctac sa, obbc + dtbc + ctbc sr from baltur b where b.bsaacid = ? order by datto desc", bsaacid);
         Assert.assertEquals(2L, balturs.size());

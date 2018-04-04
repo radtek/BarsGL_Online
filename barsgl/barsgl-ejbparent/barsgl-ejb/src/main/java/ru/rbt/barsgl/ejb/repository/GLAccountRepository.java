@@ -88,15 +88,15 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public boolean checkBsaAccountOpen(String bsaAcid, Date dateCurrent) {
-        try {
-            DataRecord res = selectFirst("select count(1) from BSAACC B where B.ID = ?" +
-                    " and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?)", bsaAcid, dateCurrent, dateCurrent);
-            return res.getInteger(0) > 0;
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
+//    public boolean checkBsaAccountOpen(String bsaAcid, Date dateCurrent) {
+//        try {
+//            DataRecord res = selectFirst("select count(1) from BSAACC B where B.ID = ?" +
+//                    " and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?)", bsaAcid, dateCurrent, dateCurrent);
+//            return res.getInteger(0) > 0;
+//        } catch (SQLException e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
 
     public ResultCode checkBsaAccountAnal(String bsaAcid, Date vDate, Date operDate, Date lastOperDate) {
         try {
@@ -306,16 +306,16 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         return substr(bsaAcid, 5, 8);
     }
 
-    public String getAccountCustNo(String bsaAcid) {
-        try {
-            String sql = "select BSAACNNUM from BSAACC where ID = ?";
-            DataRecord res = selectFirst(sql, bsaAcid);
-            return null != res ? res.getString(0) : "";
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-
-    }
+//    public String getAccountCustNo(String bsaAcid) {
+//        try {
+//            String sql = "select BSAACNNUM from BSAACC where ID = ?";
+//            DataRecord res = selectFirst(sql, bsaAcid);
+//            return null != res ? res.getString(0) : "";
+//        } catch (SQLException e) {
+//            throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//
+//    }
     /**
      * Определяет имя клиента по номеру клиента
      *

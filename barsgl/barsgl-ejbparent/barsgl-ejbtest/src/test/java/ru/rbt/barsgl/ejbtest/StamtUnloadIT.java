@@ -411,9 +411,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // изменяем операцию чтоб она попала в GL_BALSTMD
         baseEntityRepository.executeNativeUpdate("delete from GL_ETLSTMS");
         baseEntityRepository.executeNativeUpdate(
-                "update pd d set d.pod = ? " +
-                        "where d.pcid in (select d0.pcid from pd d0 where d0.pcid in (\n" +
-                        "select p.pcid from gl_oper o, gl_posting p, pd d \n" +
+                "update pst d set d.pod = ? " +
+                        "where d.pcid in (select d0.pcid from pst d0 where d0.pcid in (\n" +
+                        "select p.pcid from gl_oper o, gl_posting p, pst d \n" +
                         "where o.gloid = p.glo_ref and o.gloid = ? and d.pcid = p.pcid))"
                 , backdate, operationCurdate.getId());
         setOperday(operdate, backdate, COB, CLOSED);
@@ -492,7 +492,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date lwdate = DateUtils.addDays(operdate, -1);
         setOperday(operdate, lwdate, ONLINE, OPEN);
 
-        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4");
+        List<DataRecord> pds = baseEntityRepository.select("select d.* from pst d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4");
         Assert.assertEquals(4, pds.size());
 
         String bsaacid1 = pds.get(0).getString("bsaacid");
@@ -601,9 +601,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // проводки GL
         // подавление/удаление в БД
-        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id1));
-        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id2));
-        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("delete from pd where pcid = ?", pcid1_1));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pst set invisible = '1' where id = ?", id1));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pstd set invisible = '1' where id = ?", id2));
+        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("delete from pst where pcid = ?", pcid1_1));
 
         List<DataRecord> glpds = baseEntityRepository.select("select * from GL_PDJCHG where id in (?, ?, ?, ?)", id1, id2, id1_1, id2_1);
         Assert.assertEquals(4, glpds.size());
@@ -619,12 +619,12 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         long id1_2 = createPd(operday, rlnId1.getAcid(), rlnId1.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", -100, -200);
         long id2_2 = createPd(operday, rlnId2.getAcid(), rlnId2.getBsaAcid(), BankCurrency.EUR.getCurrencyCode(), "@@IBR", 100, 200);
         long pcid2_1 = baseEntityRepository.nextId("PD_SEQ");
-        baseEntityRepository.executeNativeUpdate("update pd set pcid = ? where id in (?, ?)", pcid2_1, id1_2, id2_2);
+        baseEntityRepository.executeNativeUpdate("update pst set pcid = ? where id in (?, ?)", pcid2_1, id1_2, id2_2);
 
         log.info("count gl_pdjover deleted " + baseEntityRepository.executeNativeUpdate("delete from gl_pdjover"));
-        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id3));
-        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pd set invisible = '1' where id = ?", id4));
-        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("delete from pd where pcid = ?", pcid2_1));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pst set invisible = '1' where id = ?", id3));
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update pst set invisible = '1' where id = ?", id4));
+        Assert.assertEquals(2, baseEntityRepository.executeNativeUpdate("delete from pst where pcid = ?", pcid2_1));
 
         List<DataRecord> pdOver = baseEntityRepository.select("select * from gl_pdjover where idpd in (?, ?, ?, ?)", id3, id4, id1_2, id2_2);
         Assert.assertEquals(4, pdOver.size());
@@ -747,7 +747,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         AccRlnId rlnId2 = rlnIds.get(1);
         Long pcid = createPostingUpdate(operday, rlnId1, rlnId2);
 
-        List<Pd> pds = (List<Pd>) baseEntityRepository.select(Pd.class, "from Pd d where d.pcId = ?1", pcid);
+        List<Pd> pds = (List<Pd>) baseEntityRepository.select(Pd.class, "from Pst d where d.pcId = ?1", pcid);
 
 //        List<Pd> pds = (List<Pd>) baseEntityRepository.findNative(Pd.class, "select * from Pd d where d.pcId = ?1", 2, pcid);
         Assert.assertEquals(2, pds.size());
@@ -957,8 +957,8 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         GLAccount acc0 = remoteAccess.invoke(ServerTestingFacade.class, "findGLAccountAEnoLock", acCt);
         if (null != acc0) {
             Date dtc = DateUtils.addDays(valueDate, 1);
-            baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACO = ?, BSAACC = ? where id = ?"
-                    , valueDate, dtc, acc0.getBsaAcid());
+//            baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACO = ?, BSAACC = ? where id = ?"
+//                    , valueDate, dtc, acc0.getBsaAcid());
             baseEntityRepository.executeNativeUpdate("update gl_acc set dto = ?, dtc = ? where bsaacid = ?"
                     , valueDate, dtc, acc0.getBsaAcid());
         }
