@@ -203,7 +203,6 @@ select statdate
        and s.bbcust = rln.cnum
        and i.ccbbr = rln.ccode and rp.a8brcd = substr(acmx.acid,-3)
        and c.dat <= (case when o.phase = 'COB' then o.curdate else o.lwdate end) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
-       and not exists (select 1 from gl_balstmd d where d.cbaccount = b.bsaacid and c.dat = d.statdate)
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount
 )
