@@ -14,9 +14,11 @@ import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.Qu
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -306,7 +308,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     }
 
     /**
-     * Тест постановки счета в очередь на закрытие
+     * Тест закрытия счетов из очереди на закрытие
      * @throws Exception
      */
     @Test
@@ -314,6 +316,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         Operday operday = getOperday();
         Date curDate = operday.getCurrentDate();
 
+        // поставить счета в очередь на закрытие
         GLAccount[] accounts = new GLAccount[3];
         accounts[0] = processDealCancelWait("421__810%1", Change);
         accounts[1] = processDealCancelWait("421__810%2", Cancel);
@@ -322,18 +325,22 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         try {
             for (int i = 0; i < accounts.length; i++) {
+                // счет должен быть открыт, дата регистр = текущая дата, дата открытия != текущая дата
                 GLAccount account = accounts[i];
                 updateDateClose(account, null);
                 if (!account.getDateRegister().equals(curDate))
                     baseEntityRepository.executeNativeUpdate("update GL_ACC set DTR = ? where ID = ?", curDate, account.getId());
                 if (account.getDateOpen().equals(curDate))
                     baseEntityRepository.executeNativeUpdate("update GL_ACC set DTO = ? where ID = ?", DateUtils.addDay(curDate, -1), account.getId());
+                // обнулить баланс
                 chgBal[i] = balanceToZero(account, curDate);
             }
 
+            // эмулируем 3-й счет закрытием сделки
             baseEntityRepository.executeNativeUpdate("update GL_ACWAITCLOSE set OPENTYPE = 'AENEW', IS_ERRACC = 0 where GLACID = ?", accounts[2].getId());
             baseEntityRepository.executeNativeUpdate("update GL_ACC set OPENTYPE = 'AENEW' where ID = ?", accounts[2].getId());
 
+            // закрытие по очереди
             int cnt = remoteAccess.invoke(AccDealCloseProcessor.class, "processAccWaitClose", operday);
             Assert.assertTrue(cnt >= 3);
 
@@ -351,14 +358,68 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         }
     }
 
+    /**
+     * Тест исключения счетов из очереди на закрытие
+     * @throws Exception
+     */
+    @Test
+    public void testExcludeAccountsWait() throws Exception {
+        Operday operday = getOperday();
+        Date curDate = operday.getCurrentDate();
+
+        GLAccount[] accounts = new GLAccount[2];
+        // поставить счета в очередь на закрытие
+        accounts[0] = processDealCancelWait("421__810%4", Change, true);
+        accounts[1] = processDealCancelWait("421__810%5", Cancel, true);
+
+        try {
+            for (int i = 0; i < accounts.length; i++) {
+                // счет должен быть открыт
+                GLAccount account = accounts[i];
+                updateDateClose(account, null);
+                // не нулевой обнулить баланс
+            }
+
+            Long maxDays = remoteAccess.invoke(PropertiesRepository.class, "getNumberDef", PropertyName.ACC_WAIT_CLOSE.getName(), 30L);
+            baseEntityRepository.executeNativeUpdate("update GL_ACWAITCLOSE set OPERDAY = ? - ? where GLACID = ?", curDate, maxDays, accounts[0].getId());
+            baseEntityRepository.executeNativeUpdate("update GL_ACWAITCLOSE set OPERDAY = ? - ? - 1 where GLACID = ?", curDate, maxDays, accounts[1].getId());
+
+            // обработка закрытия - не должна пройти
+            int cntClose = remoteAccess.invoke(AccDealCloseProcessor.class, "processAccWaitClose", operday);
+            // исключить только 2-й счет
+            int cntExclude = remoteAccess.invoke(AccDealCloseProcessor.class, "excludeAccWaitClose", operday);
+            Assert.assertTrue(cntExclude == 1);
+
+            for (int i = 0; i < accounts.length; i++) {
+                GLAccount account = (GLAccount) baseEntityRepository.refresh(accounts[i], true);
+                Assert.assertNull(account.getDateClose());
+            }
+            DataRecord wait0 = baseEntityRepository.selectFirst("select EXCLDATE from GL_ACWAITCLOSE where GLACID = ?", accounts[0].getId());
+            Assert.assertNull(wait0.getDate(0));
+            DataRecord wait1 = baseEntityRepository.selectFirst("select EXCLDATE from GL_ACWAITCLOSE where GLACID = ?", accounts[1].getId());
+            Assert.assertEquals(curDate, wait1.getDate(0));
+        } finally {
+            for (int i = 0; i < accounts.length; i++) {
+                updateDateClose(accounts[i], accounts[i].getDateClose());
+            }
+        }
+    }
+
     public GLAccount processDealCancelWait(String mask, GLAccount.CloseType closeType) throws Exception {
+        return processDealCancelWait(mask, closeType, false);
+    }
+
+    public GLAccount processDealCancelWait(String mask, GLAccount.CloseType closeType, boolean withBal) throws Exception {
 
         long idAudit = getAuditMaxId();
         long idAcdeno = getAcdenoMaxId();
         Date curDate = getOperday().getCurrentDate();
 
 //        String message = getRecourceText("AccountCloseRequest_bal.xml");
-        GLAccount account = findGlAccountWithDeal(mask, getOperday().getCurrentDate());
+        GLAccount account = withBal
+                ? findGlAccountWithDealBal(mask, getOperday().getCurrentDate())
+                : findGlAccountWithDeal(mask, getOperday().getCurrentDate());
+
         String message = createRequestXml("AccountCloseRequest.xml", account, closeType);
 
         boolean changeBal = balanceNonZero(account, curDate);
@@ -410,9 +471,13 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     @Test
     public void testSendToQeue() throws Exception {
         TestParams[] testParams = {
-                new TestParams("42102810820010007260", "A01DEP1173550013", "1"),
+                new TestParams("42102810320450000245", "M01DEP1180750001", "1"),
+                new TestParams("42102810020450000244", "M01DEP1180750002", "2"),
+                new TestParams("42102810120010008600", "A01DEP1180780006", "1"),
+                new TestParams("42102810520010008598", "A01DEP1180780005", "2"),
+/*                new TestParams("42102810820010007260", "A01DEP1173550013", "1"),
                 new TestParams("42102810120930000065", "O01DEP1173610002", "2"),
-                new TestParams("42102810820930000064", "O01DEP1173610003", "1"),
+                new TestParams("42102810820930000064", "O01DEP1173610003", "1"), */
                 new TestParams("42102810720930000067", "O01DEP1173630001", "2")
         };
 
@@ -527,6 +592,15 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         return account;
     }
 
+    // select * from GL_ACC a join BALTUR b on a.bsaacid = b.bsaacid and a.acid = b.acid and b.DATTO = '2029-01-01' where a.bsaAcid like '421__810%4' and not a.dealId is null and b.OBBC + b.DTBC + b.CTBC != 0;
+    private GLAccount findGlAccountWithDealBal(final String like, Date operdate) throws SQLException {
+        DataRecord data = baseEntityRepository.selectFirst("select ID from GL_ACC a join BALTUR b on a.bsaacid = b.bsaacid and a.acid = b.acid and b.DATTO = '2029-01-01'" +
+                " where a.bsaAcid like ? and not a.dealId is null and b.OBBC + b.DTBC + b.CTBC != 0", like);
+        Assert.assertNotNull(data);
+        GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, data.getLong(0));
+        return account;
+    }
+
     private List<GLAccount> findGlAccountsWithDeal(boolean onlyOpen) throws SQLException {
         String opened = onlyOpen ? "and dtc is null" : "";
         List<DataRecord> res = baseEntityRepository.select(
@@ -583,6 +657,10 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
     private void deleteFromWaitClose(GLAccount account) {
         baseEntityRepository.executeNativeUpdate("delete from gl_acwaitclose where bsaacid = ?", account.getBsaAcid());
+    }
+
+    private void deleteFromWaitCloseH(GLAccount account) {
+        baseEntityRepository.executeNativeUpdate("delete from gl_acwaitclose_h where bsaacid = ?", account.getBsaAcid());
     }
 
     private void checkWaitClose(GLAccount account) throws SQLException {

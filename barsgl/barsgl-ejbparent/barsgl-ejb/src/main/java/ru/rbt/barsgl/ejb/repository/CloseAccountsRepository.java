@@ -5,6 +5,7 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.DateUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -71,7 +72,7 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
     }
 
     public List<AccDealCloseProcessor.AccWaitParams> getAccountsWaitClose() throws SQLException {
-        List<DataRecord> data = select("select GLACID, IS_ERRACC from V_GL_ACWAITCLOSE_BAL where EXCLDATE is null and (BAL is null or BAL = 0)");
+        List<DataRecord> data = select("select GLACID, IS_ERRACC from V_GL_ACWAITCLOSE_BAL where EXCLDATE is null and coalesce(BAL, 0) = 0");
         if (null == data || data.isEmpty())
             return Collections.emptyList();
         return data.stream().map(r -> new AccDealCloseProcessor.AccWaitParams(r.getLong(0), r.getString(1))).collect(Collectors.toList());
@@ -85,5 +86,9 @@ public class CloseAccountsRepository <E extends BaseEntity<String>> extends Abst
                     dateClose, account.getId());
         }
         executeNativeUpdate("delete from GL_ACWAITCLOSE where GLACID = ?", account.getId());
+    }
+
+    public int excludeWaitClose(Date curDate, Date exclDate) throws SQLException {
+        return executeNativeUpdate("update V_GL_ACWAITCLOSE_BAL set EXCLDATE = ? where EXCLDATE is null and OPERDAY < ? and coalesce(BAL, 0) != 0", curDate, exclDate);
     }
 }

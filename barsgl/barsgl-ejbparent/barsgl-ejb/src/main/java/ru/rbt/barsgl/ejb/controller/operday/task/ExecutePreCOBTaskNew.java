@@ -423,9 +423,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
      */
     public CobStepResult closeAccWaitClose(Operday operday, Long idCob, CobPhase phase) {
         boolean isError = false;
-        int cnt = 0;
+        int cntClose = 0;
+        int cntExclude = 0;
         try {
-            cnt += beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
+            cntClose += beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                 int cntDeals = closedDealsTask.executeWork();
                 statInfo(idCob, phase, format("Закрыто счетов по закрытым сделкам: %d", cntDeals));
                 return cntDeals;
@@ -436,7 +437,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             statError(idCob, phase, msg, e);
         }
         try {
-            cnt += beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
+            cntClose += beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                 int cntWait = accDealCloseProcessor.processAccWaitClose(operday);
                 statInfo(idCob, phase, format("Закрыто счетов по списку ожидания: %d", cntWait));
                 return cntWait;
@@ -446,9 +447,20 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             String msg = "Ошибка при выполнении задачи закрытия счетов по списку ожидания";
             statError(idCob, phase, msg, e);
         }
+        try {
+            cntExclude = beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
+                int cntExcl = accDealCloseProcessor.excludeAccWaitClose(operday);
+                statInfo(idCob, phase, format("Исключено счетов из списка ожидания: %d", cntExcl));
+                return cntExcl;
+            });
+        } catch (Exception e) {
+            isError = true;
+            String msg = "Ошибка при выполнении задачи исключения счетов из списка ожидания";
+            statError(idCob, phase, msg, e);
+        }
         if (isError)
             return new CobStepResult(Error, "Ошибка при выполнении задачи закрытия счетов");
-        else if (cnt == 0)
+        else if (cntClose + cntExclude == 0)
             return new CobStepResult(Skipped, "Нет счетов для закрытия");
         else
             return new CobStepResult(Success, "Успешное завершение закрытия счетов");

@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.Qu
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.CloseAccountsRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
@@ -82,7 +83,7 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
     @Inject
     DateUtils dateUtils;
 
-    @Inject
+    @EJB
     private PropertiesRepository propertiesRepository;
 
     @EJB
@@ -289,6 +290,12 @@ public class AccDealCloseProcessor extends CommonNotifyProcessor implements Seri
                     account.getBsaAcid(), dateUtils.onlyDateString(dateClose)));
         }
         return waitList.size();
+    }
+
+    public int excludeAccWaitClose(Operday operday) throws Exception {
+        int maxDays = propertiesRepository.getNumberDef(PropertyName.ACC_WAIT_CLOSE.getName(), 30L).intValue();
+        Date exclDate = DateUtils.addDays(operday.getCurrentDate(), -maxDays);
+        return closeAccountsRepository.excludeWaitClose(operday.getCurrentDate(), exclDate);
     }
 
     public String getErrorMessage(Throwable throwable) {
