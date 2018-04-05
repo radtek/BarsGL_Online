@@ -235,7 +235,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
 
     @Test
     public void testAccountOpenServiceTask() throws SQLException {
-        baseEntityRepository.executeNativeUpdate("delete from GL_ACOPENRQ where STATUS = 'NEW'");
+        int cnt = baseEntityRepository.executeNativeUpdate("delete from GL_ACOPENRQ where STATUS = 'NEW'");
         GLAccountRequest[] requests = new GLAccountRequest[12];
         requests[0] = createAccountRequest("A01", "RUR", "00118067", "161020100", "6", "9");
         requests[1] = createAccountRequest("A01", "USD", "00650143", "161020100", "6", "9");

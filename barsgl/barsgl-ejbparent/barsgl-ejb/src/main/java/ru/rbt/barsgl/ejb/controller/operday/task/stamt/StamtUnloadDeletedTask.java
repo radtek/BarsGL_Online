@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
@@ -34,9 +33,6 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
 
     @Inject
     private TextResourceController resourceController;
-
-    @EJB
-    private AuditController auditController;
 
     @Inject
     private StamtUnloadController unloadController;
@@ -146,6 +142,8 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
         try {
             return (int) repository.executeInNewTransaction(persistence -> {
                 repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/del/stamt_deleted_balance.sql"));
+                auditController.info(StamtPstDeleted, format("Удалено счетов из GL_BALSTMD записей для обновления '%s'"
+                        , repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/stamt_delete_exists.sql"))));
                 return repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ins_res.sql"));
             });
         } catch (Throwable e) {

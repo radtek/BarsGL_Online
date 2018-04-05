@@ -45,6 +45,7 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 /**
  * Created by ER22228 on 04.08.2016.
  */
+@Deprecated
 @SuppressWarnings("ALL")
 @Stateless
 @LocalBean

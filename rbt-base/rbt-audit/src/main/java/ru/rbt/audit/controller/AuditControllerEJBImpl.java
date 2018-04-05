@@ -95,6 +95,11 @@ public class AuditControllerEJBImpl implements AuditController {
     }
 
     @Override
+    public void warning(AuditRecord.LogCode operCode, String message, String entity_type, String entity_id, String errorMessage) {
+        logAuditRecord(AuditRecord.LogLevel.Warning, operCode, message, errorMessage, entity_type, entity_id, null);
+    }
+
+    @Override
     public void error(AuditRecord.LogCode operCode, String message, BaseEntity entity, String errorMessage) {
         logAuditRecord(AuditRecord.LogLevel.Error, operCode, message, errorMessage, entity, null);
     }

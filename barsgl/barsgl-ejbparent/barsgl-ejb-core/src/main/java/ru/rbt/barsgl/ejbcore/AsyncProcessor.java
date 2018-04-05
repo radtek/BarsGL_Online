@@ -39,7 +39,7 @@ public class AsyncProcessor {
     private static int DEFAULT_MAX_POOL_SIZE = 5000;
 
     public enum ExecutorType {SE, EE};
-    
+
     @EJB
     private CoreRepository repository;
 
@@ -53,7 +53,7 @@ public class AsyncProcessor {
 
     // Bug in weblogic 12.2.1.3 in massive threads!!!
     @Resource
-    private ManagedThreadFactory managedThreadFactory;    
+    private ManagedThreadFactory managedThreadFactory;
     
     private ThreadPoolExecutor defaultThreadPoolExecutor;
     
@@ -140,8 +140,8 @@ public class AsyncProcessor {
             if (executorService.awaitTermination(timeout, unit)) {
                 logger.log(Level.INFO, "All threads are terminated");
             } else {
-                throw new TimeoutException(format("Async operation is timed out. Current time '%s' greater than '%s'",
-                         dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));
+                throw new TimeoutException(format("Async operation is timed out (%d %s) . Current time '%s' greater than '%s'",
+                         timeout, unit.name(), dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));
             }
         } catch (InterruptedException ex) {
             throw new Exception("Execution tasks is interrupted", ex);

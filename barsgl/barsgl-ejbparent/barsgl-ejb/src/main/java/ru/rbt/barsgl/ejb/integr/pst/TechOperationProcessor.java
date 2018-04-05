@@ -79,7 +79,7 @@ public class TechOperationProcessor extends GLOperationProcessor
         pdthList.add(this.getPdTh(operation, GLOperation.OperSide.C));
         long pcid = pdthList.get(0).getId();
         pdthList.forEach(item->item.setPcId(pcid));
-//        Collections.sort(pdthList);
+        Collections.sort(pdthList);                     // нужна для предотвращения dedlock при обработке операций
 
         return pdthList;
     }

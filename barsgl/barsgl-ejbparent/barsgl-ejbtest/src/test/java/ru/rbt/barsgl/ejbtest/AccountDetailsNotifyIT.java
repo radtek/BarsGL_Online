@@ -31,7 +31,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     public static final Logger logger = Logger.getLogger(AccountDetailsNotifyIT.class.getName());
 
     public static final String MBROKER = "QM_MBROKER10_TEST";
-    
+
     public static final String HOST_NAME = "vs338";
     public static final String USERNAME = "srvwbl4mqtest";   //"er22228";
     public static final String PASSWORD = "UsATi8hU";   //"Vugluskr4";
