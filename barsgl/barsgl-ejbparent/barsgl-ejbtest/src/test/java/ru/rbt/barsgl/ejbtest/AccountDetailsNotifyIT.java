@@ -47,9 +47,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
         // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
 
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACC where bsaacid='40702810400154748352'");
 
 
         putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", notifyFC12Close);
