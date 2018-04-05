@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -493,7 +492,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date lwdate = DateUtils.addDays(operdate, -1);
         setOperday(operdate, lwdate, ONLINE, OPEN);
 
-        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4");
+        setWorkday(lwdate);
+
+        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4 and trim(d.acid) is not null");
         Assert.assertEquals(4, pds.size());
 
         String bsaacid1 = pds.get(0).getString("bsaacid");
@@ -509,10 +510,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // два раза чтоб отработал триггер по старому значению PCID
         // проводки с мемордерами
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
 
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo where rownum < 2");
         Assert.assertNotNull(pcidMo);
@@ -520,10 +521,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update pcid_mo set pcid = ? where pcid = ?", pcid1, pcidMo.getLong("pcid"));
 
         // проводки без мемордеров
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
 
         long ts = System.currentTimeMillis();
 
@@ -545,12 +546,17 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertNotNull(header);
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
 
-        List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd");
+        List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd order by pcid");
         Assert.assertEquals(2, records.size());
         Assert.assertEquals(bsaacid1, records.get(0).getString("dcbaccount"));
         Assert.assertEquals(bsaacid2, records.get(0).getString("ccbaccount"));
         Assert.assertEquals(pcid1 + "", records.get(0).getString("pcid"));
         Assert.assertEquals(pcid2 + "", records.get(1).getString("pcid"));
+
+        List<DataRecord> unloads = baseEntityRepository.select("select * from GL_BALSTMD");
+        Assert.assertTrue(unloads.size()+"", 2 <= unloads.size());
+        Assert.assertTrue(bsaacid2, unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(bsaacid2)
+                || r.getString("CBACCOUNT").equals(bsaacid1))));
 
         // повторный запуск в текущем ОД не производится
         jobService.executeJob(job);
@@ -1088,4 +1094,12 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         return pcid;
     }
 
+    private void setWorkday(Date date) {
+        int cnt = baseEntityRepository.executeNativeUpdate("update cal set hol = ' ' where dat = ? and ccy = 'RUR'"
+                , date);
+        if (cnt == 0) {
+            baseEntityRepository.executeNativeUpdate("insert into cal (dat, hol, ccy, thol) values (?, ' ', 'RUR', ' ')"
+                    , date);
+        }
+    }
 }
