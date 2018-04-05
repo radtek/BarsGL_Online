@@ -115,27 +115,21 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
 
     @Test
     public void testFCCnoCustomer() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817810250300081806'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817810250300081806'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='02263713RUR000099030'");
+        baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817810250300081806'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessor.messageFCCNoCustomer, null);
 
-        assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40817810250300081806"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40817810250300081806"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from acc where id=?", "02263713RUR000099030"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40817810250300081806"));
     }
 
     @Test
     public void testFCCShadow() throws Exception {
 
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817840250010046747'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817840250010046747'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='02263713RUR000099030'");
+        baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817840250010046747'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessor.messageFCCShadow, null);
 
-        assertTrue(null == baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40817840250010046747"));
+        assertTrue(null == baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40817840250010046747"));
 
     }
 
@@ -198,36 +192,29 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
 
     @Test
     public void testFccOpen() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40817810000010696538'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40817810000010696538'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='00516770RUR000088001'");
+        baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817810000010696538'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessor.messageFCC, null);
 
-        assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40817810000010696538"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40817810000010696538"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from acc where id=?", "00516770RUR000088001"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40817810000010696538"));
     }
 
     @Test
+    @Ignore
     public void testErrorfromProd() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40802810500014908835'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40802810500014908835'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='00800458RUR400902065'");
+        baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40802810500014908835'");
 
         remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, error1, null);
 
-        assertTrue(null != baseEntityRepository.selectFirst("select * from accrln where bsaacid=?", "40802810500014908835"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from bsaacc where id=?", "40802810500014908835"));
-        assertTrue(null != baseEntityRepository.selectFirst("select * from acc where id=?", "00800458RUR400902065"));
+        assertTrue(null != baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40802810500014908835"));
     }
 
     @Test
     public void testFC12Close() throws Exception {
         String bsaacid = "40702810400094449118";
         String closeDateStr = "2016-09-14";
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from ACCRLN where bsaacid = ?", bsaacid);
-        Date dtc = rec.getDate("DRLNC");
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from gl_acc where bsaacid = ?", bsaacid);
+        Date dtc = rec.getDate("DTC");
         if (null == dtc || !getFinalDateStr().equals(dtc)) {
             reopenAccount(bsaacid);
         }
@@ -241,8 +228,8 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
     public void testFccClose() throws Exception {
         String bsaacid = "40817810050450101811";
         String closeDateStr = "2017-11-22";
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from ACCRLN where bsaacid = ?", bsaacid);
-        Date dtc = rec.getDate("DRLNC");
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from gl_acc where bsaacid = ?", bsaacid);
+        Date dtc = rec.getDate("DTC");
         if (null == dtc || !getFinalDateStr().equals(dtc)) {
             reopenAccount(bsaacid);
         }
@@ -321,15 +308,10 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
 
     private void reopenAccount(String bsaacid) {
         baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = null where BSAACID = ?", bsaacid);
-//        baseEntityRepository.executeNativeUpdate("update ACCRLN set DRLNC = ? where BSAACID = ?", getFinalDateStr(),  bsaacid);
-//        baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", getFinalDateStr(), bsaacid);
     }
 
     private void checkCloseDate(String bsaacid, Date closeDate, boolean withGL) throws SQLException {
-        if (withGL)
-            Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from GL_ACC where BSAACID=? and DTC = ?", bsaacid, closeDate));
-        Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from ACCRLN where BSAACID=? and DRLNC = ?", bsaacid, closeDate));
-        Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from BSAACC where ID=? and BSAACC = ?", bsaacid, closeDate));
+        Assert.assertNotNull(baseEntityRepository.selectFirst("SELECT * from GL_ACC where BSAACID=? and DTC = ?", bsaacid, closeDate));
 
     }
 
