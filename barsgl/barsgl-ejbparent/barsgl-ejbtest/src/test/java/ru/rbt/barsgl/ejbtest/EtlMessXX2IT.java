@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -866,6 +867,8 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
     с RLNTYPE = 0, другой – с RLNTYPE = 4.
     Ожидается, что счета в GL_ACC счета не будут найдены, а в ACCRLN будет найден счет
     30424810500014588436 c RLNTYPE=0. (Шаг 5 e.i).
+
+    После рефакторинга(нет ACCRLN): если в GL_ACC счета нет, то открыть счет в GL_ACC
     */
     @Test
     //если нет счетов с RLNTYPE='4', то запустить test00
@@ -913,7 +916,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
-        Assert.assertTrue(operation.getAccountDebit().equals(BSAACID0));
+//        Assert.assertTrue(operation.getAccountDebit().equals(BSAACID0));
     }
 
     /*
@@ -929,17 +932,20 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
      и один – с RLNTYPE = 4.
     Ожидается, что будет диагностирована ошибка, т.к. счет в GL_ACC счета не будут найден,
     а в ACCRLN будет найдено 2 счета с одинаковым ACID и RLNTYPE = 0. (Шаг 5 e.ii).
+
+    После рефакторинга(нет ACCRLN): если в GL_ACC счета нет, то открыть счет в GL_ACC
     */
     @Test
     //если нет счетов с RLNTYPE='4', то запустить test00
     public void test16() throws Exception {
         long stamp = System.currentTimeMillis();
+        int count = 0;
 
-        DataRecord accrln_rltype4 = baseEntityRepository.selectFirst("select * from accrln where acid='" + ACID + "' and rlntype='4'");
-        Assert.assertNotNull(accrln_rltype4);
-        int count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '0' where acid = '" + ACID + "' and bsaacid=?", accrln_rltype4.getString("bsaacid"));
-        logger.info(count + ": accrln set rlntype = '0'");
-        Assert.assertTrue(count == 1);
+//        DataRecord accrln_rltype4 = baseEntityRepository.selectFirst("select * from accrln where acid='" + ACID + "' and rlntype='4'");
+//        Assert.assertNotNull(accrln_rltype4);
+//        int count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '0' where acid = '" + ACID + "' and bsaacid=?", accrln_rltype4.getString("bsaacid"));
+//        logger.info(count + ": accrln set rlntype = '0'");
+//        Assert.assertTrue(count == 1);
 
         count = baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = TO_DATE('2015-12-29','YYYY-MM-DD') where acid = '" + ACID + "'");
         logger.info(count + ": update gl_acc set dtc = TO_DATE('2015-12-29','YYYY-MM-DD') where acid = '" + ACID + "'");
@@ -976,16 +982,16 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
 
         glAccBeginState();
 
-        count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '4' where acid = '" + ACID + "' and bsaacid=?",accrln_rltype4.getString("bsaacid"));
-        logger.info(count + ": update accrln set rlntype = '4'");
-        Assert.assertTrue(count == 1);
+//        count = baseEntityRepository.executeNativeUpdate("update accrln set rlntype = '4' where acid = '" + ACID + "' and bsaacid=?",accrln_rltype4.getString("bsaacid"));
+//        logger.info(count + ": update accrln set rlntype = '4'");
+//        Assert.assertTrue(count == 1);
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
-        Assert.assertEquals(OperState.ERCHK, operation.getState());
+        Assert.assertEquals(OperState.POST, operation.getState());
         //"2049"
-        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_ACCRLN_NOT_FOUND.getStrErrorCode()));
+//        Assert.assertTrue(isCodeInGlAudit(operation.getId(), ErrorCode.GL_SEQ_XX_ACCRLN_NOT_FOUND.getStrErrorCode()));
     }
 
     /*
@@ -1016,9 +1022,9 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         logger.info(count + ": update gl_acc set dtc = TO_DATE('2015-12-29','YYYY-MM-DD')");
         Assert.assertTrue(count > 0);
 
-        count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc = TO_DATE('2015-12-29','YYYY-MM-DD') where acid = '" + ACID + "'");
-        logger.info(count + ": update accrln set drlnc = TO_DATE('2015-12-29','YYYY-MM-DD') where acid = '" + ACID + "'");
-        Assert.assertTrue(count > 0);
+//        count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc = TO_DATE('2015-12-29','YYYY-MM-DD') where acid = '" + ACID + "'");
+//        logger.info(count + ": update accrln set drlnc = TO_DATE('2015-12-29','YYYY-MM-DD') where acid = '" + ACID + "'");
+//        Assert.assertTrue(count > 0);
 
         count = baseEntityRepository.executeNativeUpdate("update gl_acc set dealid = '123' where acid = '" + ACID + "'");
         logger.info(count + ": update gl_acc set dealid = '123' where acid = '" + ACID + "'");
@@ -1055,8 +1061,8 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
 
         glAccBeginState();
 
-        count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc=TO_DATE('2029-01-01','YYYY-MM-DD') where acid = '" + ACID + "'");
-        logger.info(count + ": update accrln set drlnc=TO_DATE('2029-01-01','YYYY-MM-DD') where acid = '" + ACID + "'");
+//        count = baseEntityRepository.executeNativeUpdate("update accrln set drlnc=TO_DATE('2029-01-01','YYYY-MM-DD') where acid = '" + ACID + "'");
+//        logger.info(count + ": update accrln set drlnc=TO_DATE('2029-01-01','YYYY-MM-DD') where acid = '" + ACID + "'");
 
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
