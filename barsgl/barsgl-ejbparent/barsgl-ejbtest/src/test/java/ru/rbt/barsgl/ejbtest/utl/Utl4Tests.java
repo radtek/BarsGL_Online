@@ -181,7 +181,7 @@ public class Utl4Tests {
                 "select a.BSAACID, a.ACID from GL_ACC a, BALTUR t " +
                         "where a.BSAACID like ? and (a.DTC is null or a.DTC >= ?) " +
                         "  and t.BSAACID = a.BSAACID and t.ACID = a.ACID and t.DATTO = '2029-01-01' and OBAC + DTAC + CTAC >= ?"
-                , like, operday.getCurrentDate(), sum))
+                , like, operday.getCurrentDate(), sum.movePointRight(2)))
                 .map(r -> new GLAccParam(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
 
