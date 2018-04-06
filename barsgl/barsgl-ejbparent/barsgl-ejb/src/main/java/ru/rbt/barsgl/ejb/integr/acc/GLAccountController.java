@@ -1236,6 +1236,8 @@ public class GLAccountController {
                             .withAcc2(actParm.getId().getAcc2())
                             .withDealSource("BARSGL")
                             .withAccountMidas("")
+                            .withAccountCode("0")
+                            .withAccSequence("0")
                             .build();
                     List<ValidationError> errors = glAccountProcessor.validate(keys, new ValidationContext());
                     if (!errors.isEmpty()) {
@@ -1244,7 +1246,6 @@ public class GLAccountController {
                     // сгенерировать номер счета ЦБ
                     String bsaacid = getPureAccountNumber(GLOperation.OperSide.N, dateOpen, keys);
                     GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, E, GLAccount.OpenType.AENEW);
-                    accRlnRepository.updateRelationType(new AccRlnId("", account.getBsaAcid()), E);
                     return glAccountRepository.update(account);
                 } catch (SQLException e) {
                     throw new DefaultApplicationException(e.getMessage(), e);

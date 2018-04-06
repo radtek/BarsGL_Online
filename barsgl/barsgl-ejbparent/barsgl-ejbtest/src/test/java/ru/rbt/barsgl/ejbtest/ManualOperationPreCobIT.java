@@ -13,12 +13,16 @@ import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
+import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
+import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -30,6 +34,7 @@ import java.util.Date;
 import java.util.List;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
+import static ru.rbt.barsgl.ejbtest.BatchMessageIT.exampleBatchDateStr;
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.loadPackage;
 import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
 
@@ -176,35 +181,45 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testProcessPackage() {
-        // TODO WAITDATE - пакет
-        // создать пакет
-        BatchMessageIT.PackageParam param = loadPackage(USER_ID);
+    public void testProcessPackage() throws ParseException {
+        Operday od = getOperday();
+        Date testdate = DateUtils.dbDateParse(exampleBatchDateStr);
+        try {
+            setOperday(testdate, DateUtils.addDays(testdate, -1), od.getPhase(), od.getLastWorkdayStatus(), od.getPdMode());
+            // WAITDATE - пакет
+            // создать пакет
+            BatchMessageIT.PackageParam param = loadPackage(USER_ID);
 
-        // передать на подпись
-        ManualOperationWrapper wrapper = new ManualOperationWrapper();
-        wrapper.setPkgId(param.getId());
-        wrapper.setAction(BatchPostAction.SIGN);
-        wrapper.setUserId(USER_ID);
+            // передать на подпись
+            ManualOperationWrapper wrapper = new ManualOperationWrapper();
+            wrapper.setPkgId(param.getId());
+            wrapper.setAction(BatchPostAction.SIGN);
+            wrapper.setUserId(USER_ID);
 
-        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(BatchPackageController.class, "forSignPackageRq", wrapper);
-        if (res.isError())
-            System.out.println(res.getMessage());
-        Assert.assertFalse(res.isError());
+            RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(BatchPackageController.class, "forSignPackageRq", wrapper);
+            if (res.isError())
+                System.out.println(res.getMessage());
+            Assert.assertFalse(res.isError());
 
-        Date curdate = getOperday().getCurrentDate();
-        baseEntityRepository.executeNativeUpdate("update GL_BATPST set POSTDATE = ?, VDATE = ?, STATE = 'WAITDATE'" +
-                " where ID_PKG = ?", curdate, curdate, param.getId());
+//            baseEntityRepository.executeNativeUpdate("update GL_BATPST set POSTDATE = ?, VDATE = ?, STATE = 'WAITDATE'" +
+//                    " where ID_PKG = ?", curdate, curdate, param.getId());
 
-        // запустить обработку PreCob
-        remoteAccess.invoke(PreCobBatchPostingTask.class, "executeWork");
+            baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = 'WAITDATE' where ID_PKG = ?", param.getId());
 
-        List<BatchPosting> postings = (List<BatchPosting>) baseEntityRepository.select(BatchPosting.class, "from BatchPosting p where p.packageId = ?1",
-                param.getId());
 
-        for (BatchPosting posting: postings) {
-            Assert.assertEquals(BatchPostStatus.COMPLETED, posting.getStatus());
+            // запустить обработку PreCob
+            remoteAccess.invoke(PreCobBatchPostingTask.class, "executeWork");
+
+            List<BatchPosting> postings = (List<BatchPosting>) baseEntityRepository.select(BatchPosting.class, "from BatchPosting p where p.packageId = ?1",
+                    param.getId());
+
+            for (BatchPosting posting : postings) {
+                Assert.assertEquals(BatchPostStatus.COMPLETED, posting.getStatus());
+            }
+        } finally {
+            setOperday(od.getCurrentDate(), od.getLastWorkingDay(), od.getPhase(), od.getLastWorkdayStatus(), od.getPdMode());
         }
+
     }
 
     @Test
@@ -246,111 +261,119 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
 
     @Test
     public void testBalturRecalcFull() throws SQLException, ParseException {
-
+        Operday od = getOperday();
         String[] dateStr = {"2015-02-02", "2015-02-04", "2015-02-10", "2015-02-12"};
-        String[] acc2s = {"20208", "20202"};
+        String[] acc2s = {"47425", "20208"}; // "20202"};
         Date[] dates = new Date[dateStr.length];
         String[] acids = new String[2];
         String[] bsaAcids = new String[2];
-        for (int i = 0; i < dateStr.length; i++) {
-            dates[i] = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr[i]);
-        }
-        for (int i = 0; i < acc2s.length; i++) {
-            String acc2 = acc2s[i];
-            DataRecord rec = getAccountNotBaltur(acc2, dates[0]);
-            Assert.assertNotNull("Не найден счет для тестирования c ACC2 = " + acc2, rec);
-            acids[i] = rec.getString("ACID");
-            bsaAcids[i] = rec.getString("BSAACID");
-        }
+        try {
+            Date testdate = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr[3]);
+            setOperday(testdate, DateUtils.addDays(testdate, -1), od.getPhase(), od.getLastWorkdayStatus(), od.getPdMode());
 
-        String acid = acids[0];
-        String bsaAcid = bsaAcids[0];
-        Date dateFrom = dates[1];
-
-        Long[] operationIds = new Long[dateStr.length];
-
-        updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STARTED);
-
-        GLOperation operation = createMosRurOperation(dates[0], bsaAcids[1], bsaAcids[0], new BigDecimal("100"));   // 1 - 4    0 0 100
-        operationIds[0] = operation.getId();
-        operation = createMosRurOperation(dates[1], bsaAcids[0], bsaAcids[1], new BigDecimal("10"));                // 5 - 6    100 -10 0
-        operationIds[1] = operation.getId();
-        operation = createMosRurOperation(dates[2], bsaAcids[1], bsaAcids[0], new BigDecimal("50"));                // 7 - 8    90 0 50
-        operationIds[2] = operation.getId();
-        operation = createMosRurOperation(dates[3], bsaAcids[0], bsaAcids[1], new BigDecimal("20"));                // 9 - 2029 140 -20 0
-        operationIds[3] = operation.getId();
-
-        String sqlSelect = "select DAT, ACID, BSAACID, OBAC, OBBC, DTAC, DTBC, CTAC, CTBC from BALTUR";
-        String sqlWhere = " where acid = ? and bsaacid = ?";
-
-        List<DataRecord> list0 = baseEntityRepository.select(sqlSelect + sqlWhere + " and dat >= ? order by dat", acid, bsaAcid, dates[0]);
-        Assert.assertEquals(dateStr.length, list0.size());
-
-        baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where ACID = ? and BSAACID = ? and DAT = ?", acid, bsaAcid, dateFrom);
-        baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where RECTED = '0'");
-        int cnt = baseEntityRepository.executeNativeUpdate("insert into GL_BSARC (ACID, BSAACID, DAT, RECTED) values (?, ?, ?, '0')"
-                , acid, bsaAcid, dateFrom);
-        Assert.assertEquals(1, cnt);
-
-//        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DTAC=0, DTBC=0, CTAC=0, CTBC=0" + sqlWhere + " and dat >= ?", acid, bsaAcid, dateFrom);
-//        Assert.assertEquals(3, cnt);
-        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DATTO = DATTO + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[0]);
-        Assert.assertEquals(1, cnt);
-        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1, DATTO = DATTO + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[1]);
-        Assert.assertEquals(1, cnt);
-        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[2]);
-        Assert.assertEquals(1, cnt);
-
-        updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STOPPED);
-
-        cnt = remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur");
-        Assert.assertEquals(1, cnt);
-        List<DataRecord> list1 = baseEntityRepository.select(sqlSelect + sqlWhere+ " and dat >= ? order by dat", acid, bsaAcid, dates[0]);
-//        Assert.assertEquals(list0.size() + 2, list1.size());
-
-        // 2 - 3    0 0 10000
-        // 4 - 4    10000 -1000 0
-        // 5 - 9    10000 0 0
-        // 10 - 10  9000 0 5000
-        // 11 - 11  9000 0 0
-        // 12 -     14000 -2000 0
-
-        Long bal0 = list1.get(0).getLong("OBAC");
-        for (int r=0; r < list1.size(); r++) {
-            DataRecord data1 = list1.get(r);
-            for (int i=0; i< data1.getColumnCount(); i++) {
-                System.out.print(data1.getObject(i) + " ");
+            for (int i = 0; i < dateStr.length; i++) {
+                dates[i] = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr[i]);
             }
-            System.out.println();
-        }
-        for (int r0 = 0, r1=0; r1 < list0.size(); r1++) {
-            DataRecord data0 = list0.get(r0);
-            DataRecord data1 = list1.get(r1);
-            if (data0.getDate("DAT").equals(data1.getDate("DAT"))) {
-                for (int i = 3; i < data0.getColumnCount(); i++) {
-                    Assert.assertEquals(data0.getLong(i), data1.getLong(i));
+            for (int i = 0; i < acc2s.length; i++) {
+                String acc2 = acc2s[i];
+                DataRecord rec = getAccountNotBaltur(acc2, dates[0]);
+                Assert.assertNotNull("Не найден счет для тестирования c ACC2 = " + acc2, rec);
+                acids[i] = rec.getString("ACID");
+                bsaAcids[i] = rec.getString("BSAACID");
+            }
+
+            String acid = acids[0];
+            String bsaAcid = bsaAcids[0];
+            Date dateFrom = dates[1];
+
+            Long[] operationIds = new Long[dateStr.length];
+
+            updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STARTED);
+
+            GLOperation operation = createMosRurOperation(dates[0], bsaAcids[1], bsaAcids[0], new BigDecimal("100"));   // 1 - 4    0 0 100
+            operationIds[0] = operation.getId();
+            operation = createMosRurOperation(dates[1], bsaAcids[0], bsaAcids[1], new BigDecimal("10"));                // 5 - 6    100 -10 0
+            operationIds[1] = operation.getId();
+            operation = createMosRurOperation(dates[2], bsaAcids[1], bsaAcids[0], new BigDecimal("50"));                // 7 - 8    90 0 50
+            operationIds[2] = operation.getId();
+            operation = createMosRurOperation(dates[3], bsaAcids[0], bsaAcids[1], new BigDecimal("20"));                // 9 - 2029 140 -20 0
+            operationIds[3] = operation.getId();
+
+            String sqlSelect = "select DAT, ACID, BSAACID, OBAC, OBBC, DTAC, DTBC, CTAC, CTBC from BALTUR";
+            String sqlWhere = " where acid = ? and bsaacid = ?";
+
+            // TODO пока не проходит, т.к. не работает триггер на PST
+            List<DataRecord> list0 = baseEntityRepository.select(sqlSelect + sqlWhere + " and dat >= ? order by dat", acid, bsaAcid, dates[0]);
+            Assert.assertEquals(dateStr.length, list0.size());
+
+            baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where ACID = ? and BSAACID = ? and DAT = ?", acid, bsaAcid, dateFrom);
+            baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where RECTED = '0'");
+            int cnt = baseEntityRepository.executeNativeUpdate("insert into GL_BSARC (ACID, BSAACID, DAT, RECTED) values (?, ?, ?, '0')"
+                    , acid, bsaAcid, dateFrom);
+            Assert.assertEquals(1, cnt);
+
+    //        cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DTAC=0, DTBC=0, CTAC=0, CTBC=0" + sqlWhere + " and dat >= ?", acid, bsaAcid, dateFrom);
+    //        Assert.assertEquals(3, cnt);
+            cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DATTO = DATTO + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[0]);
+            Assert.assertEquals(1, cnt);
+            cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1, DATTO = DATTO + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[1]);
+            Assert.assertEquals(1, cnt);
+            cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DAT = DAT + 1" + sqlWhere + " and dat = ?", acid, bsaAcid, dates[2]);
+            Assert.assertEquals(1, cnt);
+
+            updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STOPPED);
+
+            cnt = remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur");
+            Assert.assertEquals(1, cnt);
+            List<DataRecord> list1 = baseEntityRepository.select(sqlSelect + sqlWhere+ " and dat >= ? order by dat", acid, bsaAcid, dates[0]);
+    //        Assert.assertEquals(list0.size() + 2, list1.size());
+
+            // 2 - 3    0 0 10000
+            // 4 - 4    10000 -1000 0
+            // 5 - 9    10000 0 0
+            // 10 - 10  9000 0 5000
+            // 11 - 11  9000 0 0
+            // 12 -     14000 -2000 0
+
+            Long bal0 = list1.get(0).getLong("OBAC");
+            for (int r=0; r < list1.size(); r++) {
+                DataRecord data1 = list1.get(r);
+                for (int i=0; i< data1.getColumnCount(); i++) {
+                    System.out.print(data1.getObject(i) + " ");
                 }
-                r0++;
-            } else {
-                for (int i = 3; i < 5; i++) {
-                    Assert.assertEquals(data0.getLong(i), data1.getLong(i));
-                }
-                for (int i = 5; i < data0.getColumnCount(); i++) {
-                    Assert.assertEquals(0L, (long)data1.getLong(i));
+                System.out.println();
+            }
+            for (int r0 = 0, r1=0; r1 < list0.size(); r1++) {
+                DataRecord data0 = list0.get(r0);
+                DataRecord data1 = list1.get(r1);
+                if (data0.getDate("DAT").equals(data1.getDate("DAT"))) {
+                    for (int i = 3; i < data0.getColumnCount(); i++) {
+                        Assert.assertEquals(data0.getLong(i), data1.getLong(i));
+                    }
+                    r0++;
+                } else {
+                    for (int i = 3; i < 5; i++) {
+                        Assert.assertEquals(data0.getLong(i), data1.getLong(i));
+                    }
+                    for (int i = 5; i < data0.getColumnCount(); i++) {
+                        Assert.assertEquals(0L, (long)data1.getLong(i));
+                    }
                 }
             }
+
+            String operIds = StringUtils.listToString(Arrays.asList(operationIds), ",");
+            cnt = baseEntityRepository.executeNativeUpdate("update PD set INVISIBLE = '1' where PCID in (select PCID from GL_POSTING where GLO_REF in (" + operIds + "))");
+            cnt = baseEntityRepository.executeNativeUpdate("delete from BALTUR" + sqlWhere + " and dat >= ?", acids[0], bsaAcids[0], dates[0]);
+            cnt = baseEntityRepository.executeNativeUpdate("delete from BALTUR" + sqlWhere + " and dat >= ?", acids[1], bsaAcids[1], dates[0]);
+
+            updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STARTED);
+
+            DataRecord record = baseEntityRepository.selectFirst("select * from GL_BSARC r where r.bsaacid = ?", bsaAcid);
+            Assert.assertEquals(BalturRecalculator.BalturRecalcState.PROCESSED.getValue(), record.getString("rected"));
+
+        } finally {
+            setOperday(od.getCurrentDate(), od.getLastWorkingDay(), od.getPhase(), od.getLastWorkdayStatus(), od.getPdMode());
         }
-
-        String operIds = StringUtils.listToString(Arrays.asList(operationIds), ",");
-        cnt = baseEntityRepository.executeNativeUpdate("update PD set INVISIBLE = '1' where PCID in (select PCID from GL_POSTING where GLO_REF in (" + operIds + "))");
-        cnt = baseEntityRepository.executeNativeUpdate("delete from BALTUR" + sqlWhere + " and dat >= ?", acids[0], bsaAcids[0], dates[0]);
-        cnt = baseEntityRepository.executeNativeUpdate("delete from BALTUR" + sqlWhere + " and dat >= ?", acids[1], bsaAcids[1], dates[0]);
-
-        updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STARTED);
-
-        DataRecord record = baseEntityRepository.selectFirst("select * from GL_BSARC r where r.bsaacid = ?", bsaAcid);
-        Assert.assertEquals(BalturRecalculator.BalturRecalcState.PROCESSED.getValue(), record.getString("rected"));
-
     };
 
     private DataRecord getAccountInBaltur(String acc2, Date dateFrom) throws SQLException {
@@ -377,7 +400,7 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
                 filialCredit, accountCredit, currencyCredit, amountCredit
         );
 
-        BatchPosting posting0 = ManualOperationIT.createAuthorizedPosting(wrapper, USER_ID, BatchPostStatus.CONTROL);
+        BatchPosting posting0 = createAuthorizedPosting(wrapper, USER_ID, BatchPostStatus.CONTROL);
         Assert.assertNotNull(posting0);
         wrapper.setId(posting0.getId());
         wrapper.setStatus(posting0.getStatus());
@@ -388,6 +411,32 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
         Assert.assertNotNull(posting);  // запрос
         Assert.assertEquals(BatchPostStatus.COMPLETED, posting.getStatus());
         return posting.getOperation();
+    }
+
+    private BatchPosting createAuthorizedPosting(ManualOperationWrapper wrapper, Long userId, BatchPostStatus status) throws SQLException {
+        wrapper.setAction(BatchPostAction.SAVE);
+        // создать запрос
+        BatchPostStatus inputStatus = BatchPostStatus.CONTROL;
+        BatchPosting posting = remoteAccess.invoke(BatchPostingProcessor.class, "createPosting", wrapper);       // создать операцию
+        posting.setStatus(status);
+        posting.setIsTech(YesNo.N); // TODO устанавливаем признак операции не по техсчетам
+        posting = (BatchPosting) baseEntityRepository.save(posting);     // сохранить входящую операцию
+
+//        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper, inputStatus);
+//        if (res.isError())
+//            System.out.println(res.getMessage());
+//        Assert.assertFalse(res.isError());
+//        wrapper = res.getResult();
+//        Assert.assertTrue(0 < wrapper.getId());
+
+        if (status != inputStatus) {
+            baseEntityRepository.executeNativeUpdate("update GL_BATPST set STATE = ?, " +
+                    "USER_NAME = (select USER_NAME from GL_USER where ID_USER = ?) where ID = ?", status.name(), userId, wrapper.getId());
+        }
+        BatchPosting posting1 = (BatchPosting)baseEntityRepository.findById(BatchPosting.class, posting.getId());
+        baseEntityRepository.refresh(posting1, true);
+        return posting1;
+
     }
 
 }

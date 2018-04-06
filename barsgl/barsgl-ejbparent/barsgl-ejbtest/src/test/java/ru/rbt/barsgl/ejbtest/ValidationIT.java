@@ -517,8 +517,7 @@ public class ValidationIT extends AbstractTimerJobIT {
             }
             sb.setCharAt(sb.length() - 1, ')');
             String inStr = sb.toString();
-            baseEntityRepository.executeNativeUpdate("delete from ACCRLN where RLNTYPE = 'T' and BSAACID " + inStr);
-            baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID " + inStr);
+            baseEntityRepository.executeNativeUpdate("delete from GL_ACC where RLNTYPE = 'T' and BSAACID " + inStr);
             baseEntityRepository.executeNativeUpdate("delete " + fromIBCB);
         }
 

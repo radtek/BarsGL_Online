@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType;
 import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -21,6 +22,7 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -515,7 +517,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      * @fsd 7.5.2.2, 10.2.2
      * @throws ParseException
      */
-    @Test public void testMfoDealNull() throws ParseException {
+    @Test public void testMfoDealNull() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -531,8 +533,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         pst.setPaymentRefernce("00001");
         pst.setDeptId(null);
 
-        pst.setAccountCredit("40817810900020709007");   // SPB
-        pst.setAccountDebit("40702810300011001792");    // MOS
+        String acCt = Utl4Tests.findBsaacid(baseEntityRepository, operday, "40817810_0002%");      // SPB
+        String acDt = Utl4Tests.findBsaacid(baseEntityRepository, operday, "40702810_0001%");       // MOS
+        pst.setAccountCredit(acCt);
+        pst.setAccountDebit(acDt);
 
         pst.setAmountCredit(new BigDecimal("155.000"));
         pst.setAmountDebit(pst.getAmountCredit());
@@ -1009,10 +1013,12 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(transitPosting.getAccountDebit(), transitPosting.getAccountDebit().matches("47423\\d{15}"));
         Assert.assertEquals(clientAccount, transitPosting.getAccountCredit());
 
-        GlAccRln rln = (GlAccRln) baseEntityRepository.findById(GlAccRln.class, new AccRlnId("", transitPosting.getAccountDebit()));
-        Assert.assertNotNull(transitPosting.getAccountDebit(), rln);
 
-        Assert.assertEquals(RelationType.E, RelationType.parse(rln.getRelationType()));
+        GLAccount acc = findAccount(transitPosting.getAccountDebit());
+                //baseEntityRepository.findById(GLAccount.class, new AccRlnId("", transitPosting.getAccountDebit()));
+        Assert.assertNotNull(transitPosting.getAccountDebit(), acc);
+
+        Assert.assertEquals(RelationType.E, RelationType.parse(acc.getRelationType()));
         Assert.assertEquals(new Integer("0"), transitPosting.getErrorCode());
         Assert.assertEquals("SUCCESS", transitPosting.getErrorMessage());
 
