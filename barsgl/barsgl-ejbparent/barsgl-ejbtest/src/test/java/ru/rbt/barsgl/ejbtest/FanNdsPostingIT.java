@@ -47,7 +47,7 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
             TransitNdsReference reference = createTransitAccount();
             Assert.assertNotNull(reference);
 
-            String transAcid = baseEntityRepository.selectFirst("select acid from accrln where bsaacid = ?"
+            String transAcid = baseEntityRepository.selectFirst("select acid from gl_acc where bsaacid = ?"
                     , reference.getTransitAccount()).getString(0);
             Assert.assertTrue(!StringUtils.isEmpty(transAcid));
 
@@ -101,15 +101,14 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
 
     private Pd createPd(Date operday, String transBsaacid, String transAcid) throws SQLException {
         long id = baseEntityRepository.selectFirst("select PD_SEQ.nextval id from DUAL").getLong(0);
-        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", 100,100, "@@IF123", "1234");
+        baseEntityRepository.executeNativeUpdate("insert into pst (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar, rnarlng,docn, pref) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", 100,100, "@@IF123", "1234", "12345", "", id+"ref");
 
-        baseEntityRepository.executeNativeUpdate("insert into pdext2 (id, rnarlng, docn) " +
-                "values (?, ?, ?)", id, "12345", "");
+//        baseEntityRepository.executeNativeUpdate("insert into pdext2 (id, rnarlng, docn) values (?, ?, ?)", id, "12345", "");
 //                "values (?, ?, ?)", id, "12345", ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis()+"", 5));
-        baseEntityRepository.executeNativeUpdate("insert into pdext (id,pref) values (?,?)", id, id+"ref");
-        baseEntityRepository.executeNativeUpdate("insert into pdext3 (id) values (?)", id);
-        baseEntityRepository.executeNativeUpdate("insert into pdext5 (id) values (?)", id);
+//        baseEntityRepository.executeNativeUpdate("insert into pdext (id,pref) values (?,?)", id, id+"ref");
+//        baseEntityRepository.executeNativeUpdate("insert into pdext3 (id) values (?)", id);
+//        baseEntityRepository.executeNativeUpdate("insert into pdext5 (id) values (?)", id);
 
         return (Pd) baseEntityRepository.selectFirst(Pd.class, "from Pd d where d.id = ?1", id);
     }

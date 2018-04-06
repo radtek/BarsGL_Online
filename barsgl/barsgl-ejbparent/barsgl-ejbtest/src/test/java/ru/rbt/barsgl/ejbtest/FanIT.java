@@ -431,7 +431,7 @@ public class FanIT extends AbstractTimerJobIT {
         // по основной проводке три записи в PD
         long pcidMain = baseEntityRepository.selectOne(
                 "select count(1) cnt, p.pcid\n" +
-                        " from gl_posting p, pd d\n" +
+                        " from gl_posting p, pst d\n" +
                         "where p.pcid = d.pcid\n" +
                         "  and p.glo_ref = ?\n" +
                         "group by p.pcid\n" +
@@ -622,7 +622,7 @@ public class FanIT extends AbstractTimerJobIT {
 
         long pcidMain = baseEntityRepository.selectOne(
                 "select count(1) cnt, p.pcid\n" +
-                " from gl_posting p, pd d\n" +
+                " from gl_posting p, pst d\n" +
                 "where p.pcid = d.pcid\n" +
                 "  and p.glo_ref = ?\n" +
                 "group by p.pcid\n" +
@@ -853,10 +853,6 @@ public class FanIT extends AbstractTimerJobIT {
     public void testFanAsPreCobStep() {
 
         baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = null where bsaacid = ?","40702810100013995679");
-        baseEntityRepository.executeNativeUpdate("update accrln set drlnc = null where bsaacid = ?", "40702810100013995679");
-        baseEntityRepository.executeNativeUpdate("update bsaacc set bsaacc = ? where id = ?",
-                Utl4Tests.parseDate("2029-01-01", "yyyy-MM-dd"), "40702810100013995679");
-
 
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackageNotSaved(st, "Checking fan posting logic with MFO");
