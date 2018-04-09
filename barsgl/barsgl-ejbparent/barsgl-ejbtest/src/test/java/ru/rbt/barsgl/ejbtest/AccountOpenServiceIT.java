@@ -310,7 +310,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
     }
 
     private GLAccountRequest createAccountRequest(String branch, String ccy, String customerNumber,
-                                                  String accountType, String custType, String term ) {
+                                                  String accountType, String custType, String term ) throws SQLException {
         return createAccountRequest(branch, ccy, customerNumber, accountType, custType, term,
                 getOperday().getCurrentDate());
 
@@ -318,7 +318,7 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
 
     private GLAccountRequest createAccountRequest(String branch, String ccy, String customerNumber,
                                                   String accountType, String custType, String term,
-                                                  Date dateOpen) {
+                                                  Date dateOpen) throws SQLException {
         long stamp = System.currentTimeMillis();
         return createAccountRequest(branch, ccy, customerNumber, accountType, custType, term,
                 "K+TP", substring("" + stamp, 1, 10), substring("" + stamp, 6, 10),
@@ -328,11 +328,10 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
     private GLAccountRequest createAccountRequest(String branch, String ccy, String customerNumber,
                                                   String accountType, String custType, String term,
                                                   String dealSource, String dealId, String subdealId,
-                                                  Date dateOpen) {
+                                                  Date dateOpen) throws SQLException {
         GLAccountRequest request = new GLAccountRequest();
-        long stamp = System.currentTimeMillis();
 
-        request.setId("" + stamp);
+        request.setId(getRequestId());
         request.setBranchFlex(branch);
 //        BankCurrency currency = remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", "RUR");
         request.setCurrency(ccy);
@@ -349,6 +348,19 @@ public class AccountOpenServiceIT extends AbstractRemoteIT {
 
 //        baseEntityRepository.executeNativeUpdate("update GL_ACOPENRQ set CCY = ? where REQUEST_ID = ?", ccy, request.getId());
         return (GLAccountRequest) baseEntityRepository.findById(GLAccountRequest.class, request.getId());
+    }
+
+    private String getRequestId() throws SQLException {
+        long stamp = System.currentTimeMillis();
+        String id = "" + stamp;
+        int i = 0;
+        while (id.length() < 48) {
+            DataRecord res = baseEntityRepository.selectFirst("select 1 from GL_ACOPENRQ where REQUEST_ID = ?", id);
+            if (null == res)
+                return id;
+            id = id + i++;
+        }
+        return id;
     }
 
     /* Тест поиска бранча Флекс по Bsaacid, Acid

@@ -692,7 +692,7 @@ public class ManualPostingController {
      * @return
      * @throws Exception
      */
-    private BatchPosting createPosting(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
+    public BatchPosting createPosting(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
         validateOperationRq(wrapper);
 
         if (status==CONTROL) {

@@ -58,7 +58,7 @@ public class SuppressStornoTboController {
                         } else {
                             grandParentOper = findGrandParentOperation(parentOper.get(), rsSetStorno.getLong("strn_glo"));
                             if (grandParentOper.isPresent()) {
-                                repository.executeNativeUpdate("update pd p set p.invisible = '1' where p.pcid in (?,?)"
+                                repository.executeNativeUpdate("update pst p set p.invisible = '1' where p.pcid in (?,?)"
                                         , rsSetStorno.getLong("pcid"), grandParentOper.get().getLong("pcid"));
                                 repository.executeNativeUpdate("update gl_oper o set o.state = ? where o.gloid in (?,?)"
                                         , OperState.INVISIBLE.name(), rsSetStorno.getLong("gloid"), grandParentOper.get().getLong("gloid"));

@@ -1,4 +1,4 @@
-select d.id idpd, d.bsaacid, d.amnt, d2.docn, d.pnar, d.rnarlng
+select d.id idpd, d.bsaacid, d.amnt, d.docn, d.pnar, d.rnarlng
   from pst d
  where d.pod = ?
    and d.pbr like '@@IF%'

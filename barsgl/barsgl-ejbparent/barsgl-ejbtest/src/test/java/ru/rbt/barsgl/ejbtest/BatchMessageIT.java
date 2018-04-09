@@ -15,6 +15,7 @@ import ru.rbt.ejbcore.util.DateUtils;
 
 import java.io.File;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 public class BatchMessageIT extends AbstractTimerJobIT {
 
     public static final String exampleBatchName = "example_batch.xlsx";
+    public static final String exampleBatchDateStr = "2015-02-26";
 //    private static final String ETL_SINGLE_ACTION_MONITOR = "ETL_SINGLE_ACTION_MONITOR";
     private final Long USER_ID = 1L;
 

@@ -140,8 +140,8 @@ public class EtlTechnicalPostingController implements EtlMessageController<EtlPo
         technicalPosting.setErrorMessage(null);
 
         DataRecord record = getBsaacidData(clientSide == OperSide.C ? posting.getAccountCredit() : posting.getAccountDebit());
-        final String glccy = record.getString("glccy");
-        final String ccode = record.getString("ccode");
+        final String glccy = record.getString("CCY");
+        final String ccode = record.getString("CBCCN");
         final String acctype = clientSide == OperSide.C
                 ? propertiesRepository.getString(ConfigProperty.TransitAccTypeCredit.getValue())
                 : propertiesRepository.getString(ConfigProperty.TransitAccTypeDebit.getValue());

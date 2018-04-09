@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
+import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.ErrorCorrectType;
@@ -81,6 +82,7 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
     @Test
     public void testAll() throws Exception {
         updateOperday(ONLINE,OPEN);
+        Operday od = getOperday();
 
         baseEntityRepository.executeNativeUpdate("update GL_ETLPKG set STATE = 'ERROR' where STATE = 'LOADED'");
 
@@ -97,7 +99,7 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         pst1.setAmountDebit(pst1.getAmountCredit());
         pst1.setCurrencyCredit(BankCurrency.AUD);
         pst1.setCurrencyDebit(pst1.getCurrencyCredit());
-        pst1.setValueDate(getOperday().getCurrentDate());
+        pst1.setValueDate(od.getCurrentDate());
         pst1 = (EtlPosting) baseEntityRepository.save(pst1);
 
         jobService.executeJob(SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build());
@@ -111,11 +113,16 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         Assert.assertEquals("4", err.getErrorCode());
 
         oper1.setAccountCredit("40817036200012959997");
-        oper1.setValueDate(getOperday().getLastWorkingDay());
-        oper1.setCurrentDate(getOperday().getLastWorkingDay());
+        oper1.setValueDate(od.getLastWorkingDay());
+        oper1.setCurrentDate(od.getLastWorkingDay());
         baseEntityRepository.update(oper1);
 
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", ReprocessWtacOparationsTask.JOB_NAME);
+        if (!(boolean)remoteAccess.invoke(WorkprocRepository.class, "isStepOK", ReprocessWtacOparationsTask.DEFAULT_STEP_NAME, od.getLastWorkingDay())) {
+            baseEntityRepository.executeNativeUpdate("insert into workproc (DAT, ID, RESULT, COUNT, STARTTIME, ENDTIME) values (?, ?, ?, ?, sysdate, sysdate)",
+                    od.getLastWorkingDay(), ReprocessWtacOparationsTask.DEFAULT_STEP_NAME, "O", 1);
+        };
+
         // обработка WTAC
         jobService.executeJob(SingleActionJobBuilder.create().withClass(ReprocessWtacOparationsTask.class).build());
         Thread.sleep(2000L);
