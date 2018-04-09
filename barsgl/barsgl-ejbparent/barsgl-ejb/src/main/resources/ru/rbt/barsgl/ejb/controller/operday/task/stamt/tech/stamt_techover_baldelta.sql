@@ -105,9 +105,9 @@ insert into TMP_GL_BALSTMD
      select c.dat statdate
            , 'F' stattype
            , 'BARS' hostsystem
-           , rln.cnum fcccustnum
+           , rln.CUSTNO fcccustnum
            , get_fcc_br(acmx.bsaacid) fccbranch
-           , substr(rln.cnum,-6) ext_custid
+           , substr(rln.CUSTNO,-6) ext_custid
            , substr(acmx.acid,-3) accbrn
            , acmx.bsaacid cbaccount
            , cc.glccy currcode
@@ -169,14 +169,14 @@ insert into TMP_GL_BALSTMD
            , cast(null as varchar2(12)) bcustswift
            , cast(null as varchar2(14)) bcustinn
            , c.dat ed
-           , substr(rln.ccode,-3) branch_id
+           , substr(rln.CBCCN,-3) branch_id
            , b.acid alt_ac_no
            , s.bbcrnm accname
            , cast('' as varchar2(255)) acodname
            , cc.glccy||' '||cc.cynm currname
            , cast('execdate' as date) dateunload
            , b.dat bdat
-    from cal c, accrln rln, baltur b, currency cc, imbcbcmp i, imbcbbrp rp
+    from cal c, gl_acc rln, baltur b, currency cc, imbcbcmp i, imbcbbrp rp
          , currates r, sdcustpd s,
       (
         select bsaacid, acid, baldate pd_min, cast('execdate' as date) pd_max
@@ -188,8 +188,8 @@ insert into TMP_GL_BALSTMD
        and c.dat between b.dat and b.datto and b.acid = acmx.acid and b.bsaacid = acmx.bsaacid
        and cc.glccy = substr(acmx.acid,9,3)
        and cc.glccy = r.ccy and r.dat = c.dat
-       and s.bbcust = rln.cnum
-       and i.ccbbr = rln.ccode and rp.a8brcd = substr(acmx.acid,-3)
+       and s.bbcust = rln.CUSTNO
+       and i.ccbbr = rln.CBCCN and rp.a8brcd = substr(acmx.acid,-3)
        and c.dat <= (select case when phase = 'COB' then curdate else lwdate end caldate from gl_od) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount

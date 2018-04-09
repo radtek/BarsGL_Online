@@ -19,7 +19,7 @@ insert into GL_ETLSTMD (
         else o.deal_id
     end  dealid,
     nvl(o.pmt_ref, o.evt_id) psid,                                                             -- источник, ид в системе
-    trim(da.bsaacnnum) dclient_id, trim(ca.bsaacnnum) cclient_id,                                            -- бранч майдас дебет
+    trim(da.CUSTNO) dclient_id, trim(ca.CUSTNO) cclient_id,                                            -- бранч майдас дебет
     GET_FCC_BR(d.bsaacid) dbranch_id, get_fcc_br(c.bsaacid) cbranch_id,                            -- бранч майдас кредит
     d.id did, c.id cid, d.bsaacid dcbaccount, c.bsaacid ccbaccount,                              -- ид и счета полупроводок
     d.ccy dcur, c.ccy ccur,                                                                      -- валюта
@@ -35,13 +35,13 @@ insert into GL_ETLSTMD (
     o.nrt
  from gl_posting p
      join gl_oper o on p.glo_ref = o.gloid
-     join pd d on p.pcid = d.pcid and d.amntbc < 0
-     join pd c on p.pcid = c.pcid and c.amntbc > 0
+     join pst d on p.pcid = d.pcid and d.amntbc < 0
+     join pst c on p.pcid = c.pcid and c.amntbc > 0
      join pcid_mo m on p.pcid = m.pcid
      join currency dc on dc.glccy = d.ccy
      join currency cc on cc.glccy = c.ccy
-     join bsaacc da on d.bsaacid = da.id
-     join bsaacc ca on c.bsaacid = ca.id
+     join gl_acc da on d.bsaacid = da.bsaacid
+     join gl_acc ca on c.bsaacid = ca.bsaacid
  where o.procdate = ? and o.postdate < o.procdate
   and d.invisible <> '1' and c.invisible <> '1' -- проводки актуальны
   and

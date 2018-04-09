@@ -166,8 +166,10 @@ public class Utl4Tests {
 */
     public static List<AccRlnId> findBsaacidRlns(BaseEntityRepository baseEntityRepository, Operday operday, final String like, int count) throws SQLException {
         return (List<AccRlnId>) baseEntityRepository.select(
-                "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
-                        "where B.ID like ? and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID and rownum <= "+ count, like, operday.getCurrentDate(), operday.getCurrentDate())
+//                "select b.id bsaacid, r.acid from BSAACC B, ACCRLN r " +
+//                        "where B.ID like ? and B.BSAACO <= ? and (B.BSAACC is null or B.BSAACC >= ?) and R.BSAACID = B.ID and rownum <= "+ count, like, operday.getCurrentDate(), operday.getCurrentDate())
+                "select a.bsaacid, a.acid from GL_ACC a " +
+                         "where a.bsaacid like ? and a.DTO <= ? and (a.DTC is null or a.DTC >= ?) and rownum <= "+ count, like, operday.getCurrentDate(), operday.getCurrentDate())
                 .stream().map(new Function<DataRecord, AccRlnId>() {
                     @Override
                     public AccRlnId apply(DataRecord r) {
