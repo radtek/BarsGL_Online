@@ -245,7 +245,6 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
      * @throws Exception
      */
     @Test
-    @Ignore
     public void testStamtUnloadBalanceFull() throws Exception {
         log.info(TimeZone.getDefault().getDisplayName());
         Date operdate = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
