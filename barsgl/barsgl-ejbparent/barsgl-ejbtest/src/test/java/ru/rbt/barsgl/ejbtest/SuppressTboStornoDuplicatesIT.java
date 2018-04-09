@@ -41,7 +41,7 @@ public class SuppressTboStornoDuplicatesIT extends AbstractRemoteIT {
     public void testSuppress() {
 
         Date firstOperday = getOperday().getCurrentDate();
-        baseEntityRepository.executeNativeUpdate("update gl_oper set vdate = vdate - 10, procdate = procdate - 10");
+//        baseEntityRepository.executeNativeUpdate("update gl_oper set vdate = vdate - 10, procdate = procdate - 10");
 
         long stamp = System.currentTimeMillis();
 

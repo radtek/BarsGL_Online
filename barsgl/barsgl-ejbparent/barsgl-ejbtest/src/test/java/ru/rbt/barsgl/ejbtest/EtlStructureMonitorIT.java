@@ -438,7 +438,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
         remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.ALLOWED);
         jobService.executeJob(etlProcess);
         pkg = (EtlPackage) baseEntityRepository.findById(EtlPackage.class, pkg.getId());
-        Assert.assertEquals(pkg.getPackageState(), PROCESSED);
+        Assert.assertEquals(PROCESSED, pkg.getPackageState());
         Assert.assertEquals(ProcessingStatus.STARTED, getOperday().getProcessingStatus());
     }
 }
