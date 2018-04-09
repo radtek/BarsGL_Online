@@ -37,7 +37,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
 //    private final static String host = "vs338";
 //    private final static String broker = "QM_MBROKER10_TEST";
-    private final static String host = "vs569";
+    private final static String host = "vs11205";
     private final static String broker = "QM_MBROKER4_T4";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
 //    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";

@@ -41,4 +41,9 @@ public class CriteriaBuilder implements Builder<Criteria> {
         return this;
     }
 
+    public CriteriaBuilder appendNOT(String columnName, Object value) {
+        criterions.add(CriterionColumn.NOT_EQUALS(columnName, value));
+        return this;
+    }
+
 }
