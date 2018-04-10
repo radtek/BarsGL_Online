@@ -46,6 +46,8 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadControl
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.PROCESSED;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.*;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamType.B;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamTypeCheck.INCLUDE;
@@ -792,6 +794,40 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertTrue(Objects.equals(accheader2.getLong("id"), accheader1.getLong("id")));
     }
 
+    @Test public void testLocalizationSession() throws Exception {
+        setGibridBalanceMode();
+        Date curday = DateUtils.parseDate("2017-11-07", "yyyy-MM-dd");
+        Date lwday = DateUtils.parseDate("2017-11-03", "yyyy-MM-dd");
+        setOperday(curday, lwday, ONLINE, OPEN, Operday.PdMode.DIRECT);
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where sched_name = ?", StamtLocalizationSessionTask.class.getSimpleName());
+
+        baseEntityRepository.executeNativeUpdate("update gl_bvjrnl set state = ? where state <> ?"
+            , PROCESSED.name(), PROCESSED.name());
+
+        // проводка бэквалуе
+        GLOperation operation1 = createOperation(lwday);
+
+        // проверяем наличие счетов в журнале
+        DataRecord bvstat = baseEntityRepository.selectFirst("select count(1) cnt from gl_bvjrnl where state  = ?", NEW.name());
+        Assert.assertTrue(bvstat.getLong("cnt") >= 2);
+
+        SingleActionJob job = SingleActionJobBuilder.create().withClass(StamtLocalizationSessionTask.class)
+//                .withProps("checkRun=false")
+                .withName(StamtLocalizationSessionTask.class.getSimpleName()).build();
+        // запускаем пересчет локализации
+        jobService.executeJob(job);
+
+        JobHistory history = getLastHistory(StamtLocalizationSessionTask.class.getSimpleName());
+        Assert.assertNotNull(history);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history.getResult());
+
+        //      - проверки - режим GIBRID
+        //      - не пустой GL_BVJRNL
+        //      - выровнен BALTUR c глубиной рабочих дней равный минимальной дате изменения остатка в GL_BVJRNL
+        // проверяем выставление флагов обработки ОК
+    }
+
     private void registerForStamtUnload(String bsaacid) {
         try {
             baseEntityRepository.executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype,INCLUDEBLN) values (?, '1', 'B','1')"
@@ -1006,6 +1042,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
     }
 
     private EtlPosting createSimple(long stamp, EtlPackage pkg, String accCredit, String accDebit) throws SQLException {
+        return createSimple(stamp, pkg, accCredit, accDebit, getOperday().getCurrentDate());
+    }
+
+    private EtlPosting createSimple(long stamp, EtlPackage pkg, String accCredit, String accDebit, Date vdate) throws SQLException {
         EtlPosting pst = newPosting(stamp + 1, pkg);
         pst.setAccountCredit(accCredit);
         pst.setAccountDebit(accDebit);
@@ -1013,12 +1053,16 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", getCurrencyCodeByDigital(accCredit.substring(5, 8))));
         pst.setCurrencyDebit(remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", getCurrencyCodeByDigital(accDebit.substring(5, 8))));
-        pst.setValueDate(getOperday().getCurrentDate());
+        pst.setValueDate(vdate);
         pst.setSourcePosting("K+TP");
         return (EtlPosting) baseEntityRepository.save(pst);
     }
 
-    public GLOperation createOperation() throws SQLException {
+    private GLOperation createOperation() throws SQLException {
+        return createOperation(getOperday().getCurrentDate());
+    }
+
+    private GLOperation createOperation(Date vdate) throws SQLException {
         Long stamp = System.currentTimeMillis();
         EtlPackage pkg = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
         pkg.setDateLoad(getSystemDateTime());
@@ -1027,11 +1071,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         pkg.setPostingCnt(4);
         pkg = (EtlPackage) baseEntityRepository.save(pkg);
 
-/*
-        final String accCredit = "40817036200012959997";
-        final String accDebit = "40817036250010000018";
-*/
-        List<DataRecord> bsaacids = baseEntityRepository.selectMaxRows("select * from accrln where bsaacid like '40817%' and length(acid) > 0 and ? between drlno and drlnc", 2, new Object[]{getOperday().getCurrentDate()});
+        List<DataRecord> bsaacids = baseEntityRepository.select("select * from gl_acc " +
+                        "where bsaacid like '40817%' and length(acid) > 0 " +
+                        "and ? between dto and nvl(dtc, to_date('2029-01-01','yyyy-mm-dd')) and rownum <= 2", getOperday().getCurrentDate());
         final String accCredit = bsaacids.get(0).getString("bsaacid");
         final String accDebit = bsaacids.get(1).getString("bsaacid");
 
@@ -1040,7 +1082,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         cnt = baseEntityRepository.executeNativeUpdate("delete from GL_BSACCLK where BSAACID = ?", accDebit);
         log.info("cnt deleted dt: " + cnt);
 
-        EtlPosting pst1 = createSimple(stamp, pkg, accCredit, accDebit);
+        EtlPosting pst1 = createSimple(stamp, pkg, accCredit, accDebit, vdate);
         GLOperation operation = (GLOperation) postingController.processMessage(pst1);
         Assert.assertNotNull(operation);
         Assert.assertTrue(0 < operation.getId());
