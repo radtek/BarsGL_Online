@@ -195,6 +195,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testBvjrnl() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl");
+        baseEntityRepository.executeNativeUpdate("delete from gl_locacc");
 
         GLAccount account1 = findAccount("40702810%");
         Date pod0 = DateUtils.parseDate("2018-09-01", "yyyy-MM-dd");
