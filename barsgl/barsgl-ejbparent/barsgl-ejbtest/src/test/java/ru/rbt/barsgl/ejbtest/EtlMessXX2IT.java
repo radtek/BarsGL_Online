@@ -18,6 +18,8 @@ import ru.rbt.ejbcore.validation.ErrorCode;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
@@ -1786,8 +1788,14 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
 
     }
     private boolean isCodeInGlAudit(long id, String code) throws Exception {
-        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  systimestamp - 1", id);
-        logger.info(glAudit.getString("ERRORMSG"));
-        return glAudit.getString("ERRORMSG").indexOf(code) > -1;
+        String mess = Optional.ofNullable(baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  systimestamp - 1", id))
+                              .map(rec->rec.getString("ERRORMSG")).orElse("record not found");
+        logger.info(mess);
+        TimeUnit.SECONDS.sleep(3);
+        return mess.indexOf(code) > -1;
+
+//        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  systimestamp - 1", id);
+//        logger.info(glAudit.getString("ERRORMSG"));
+//        return glAudit.getString("ERRORMSG").indexOf(code) > -1;
     }
 }

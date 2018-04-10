@@ -106,19 +106,20 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
 
     @Test
     public void bulkOpeningAccountWithErrorData() {
+        long accountType = 851030300;
         baseEntityRepository.executeNativeUpdate(
                 "insert into gl_openacc (ID, BRANCH,CNUM,CCY,ACOD,SQ,DEALID,SUBDEALID,ACC2,ACCTYPE,DESCRIPTION,DTO) values "
                 //Cnum+CCY+Acod+SQ+Branch
-                + "(GL_OPENACC_SEQ.NEXTVAL, '001','00000018','RUR','3213','01','3213','01','90702','851030300','Бланки собственных векселей Банка','2015-02-26')");
+                + "(GL_OPENACC_SEQ.NEXTVAL, '001','00000018','RUR','3213','01','3213','01','90702',"+accountType+",'Бланки собственных векселей Банка','2015-02-26')");
         try {
             String acId = createAcId("00000018", "RUR", "3213", "01", "001");
             remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
             GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
-                    "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
-            org.junit.Assert.assertNull(account);
+                    "from GLAccount a where a.acid=?1 and a.dateClose is null and accountType=?2", acId, accountType);
+            org.junit.Assert.assertNull("не найден " + acId, account);
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
-                    + "where BRANCH = '001' and CNUM = '00000018' and CCY = 'RUR' and ACOD = '3213' and SQ = '01'");
+                    + "where BRANCH = '001' and CNUM = '00000018' and CCY = 'RUR' and ACOD = '3213' and SQ = '01' and ACCTYPE = "+accountType);
         }
     }
 

@@ -261,8 +261,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         updateOperday(COB,CLOSED);
         unloadStamtBalanceFull(operdate);
         checkAllBalanceSucceded();
-        Assert.assertTrue("счет не найден в GL_BALSTM", baseEntityRepository.select("select * from GL_BALSTM").stream()
-                .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(operationCurdate.getAccountCredit())));
+        Assert.assertNotNull("счет не найден в GL_BALSTM", baseEntityRepository.selectFirst("select 1 from GL_BALSTM where cbaccount='"+operationCurdate.getAccountCredit()+"'") );
+
+//        Assert.assertTrue("счет не найден в GL_BALSTM", baseEntityRepository.select("select * from GL_BALSTM").stream()
+//                .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(operationCurdate.getAccountCredit())));
 
         DataRecord record = getLastUnloadHeader(UnloadStamtParams.BALANCE_FULL);
         unloadStamtBalanceFull(operdate);

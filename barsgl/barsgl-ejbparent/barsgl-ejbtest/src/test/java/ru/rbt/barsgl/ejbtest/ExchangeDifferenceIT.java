@@ -94,13 +94,14 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
     }
 
 
-    private void deleteAccountCB22(String acid, String bsaacid, boolean wasAcid) {
-//        remoteAccess.invoke(AccRlnRepository.class,"" +
-        baseEntityRepository.executeNativeUpdate("delete from ACCRLN where BSAACID = ? and RLNTYPE='2'", bsaacid);
-        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
-        if (!wasAcid)
-            baseEntityRepository.executeNativeUpdate("delete from ACC where ID = ? ", acid);
-    }
+//    private void deleteAccountCB22(String acid, String bsaacid, boolean wasAcid) {
+//        baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
+////        remoteAccess.invoke(AccRlnRepository.class,"" +
+////        baseEntityRepository.executeNativeUpdate("delete from ACCRLN where BSAACID = ? and RLNTYPE='2'", bsaacid);
+////        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
+////        if (!wasAcid)
+////            baseEntityRepository.executeNativeUpdate("delete from ACC where ID = ? ", acid);
+//    }
 
     @Test
     public void testPostingCreateAccountOfr() throws ParseException, SQLException {
@@ -117,7 +118,9 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
 
 
         pst.setAccountCredit("");
-        final String keyStringCredit = "001;RUR;00000018;643010201;0;0;PL00000003;0001;70613;16101;7904;01;K+TP;;";
+//        final String keyStringCredit = "001;RUR;00000018;643010201;0;0;PL00000003;0001;70613;16101;7904;01;K+TP;;";
+//        Морозов С. поправил:
+        final String keyStringCredit = "001;RUR;00000018;671020201;;;PL00000001;0001;70601;12201;7904;01;K+TP;;";
         deleteGlAccountWithLinks(baseEntityRepository, keyStringCredit);
         pst.setAccountKeyCredit(keyStringCredit);//keysCredit.toString());
 
@@ -149,39 +152,41 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
             acidDr = checkDefinedAccount(GLOperation.OperSide.D, operation.getAccountDebit(), operation.getAccountKeyDebit(), operation.getValueDate());
 
         Assert.assertNotNull(acidDr);
-//        deleteAccountExDiff(operation.getAccountCredit());
-
+        deleteAccountExDiff(operation.getAccountCredit());
     }
 
     private void deleteAccountExDiff(String bsaacid) throws SQLException {
-        DataRecord data = baseEntityRepository.selectFirst("select ACID from ACCRLN where BSAACID = ? and RLNTYPE = ?", bsaacid, "2");
+        DataRecord data = baseEntityRepository.selectFirst("select ACID from GL_ACC where BSAACID = ? and RLNTYPE = ?", bsaacid, "2");
         String acid = "";
         if (data != null) {
             acid =  data.getString(0);
         }
         baseEntityRepository.executeNativeUpdate("delete from excacrln where ACID = ? and BSAACID = ?", acid, bsaacid);
-        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
-        baseEntityRepository.executeNativeUpdate("delete from ACCrln where ACID = ? and BSAACID = ?", acid, bsaacid);
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
+//        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
+//        baseEntityRepository.executeNativeUpdate("delete from ACCrln where ACID = ? and BSAACID = ?", acid, bsaacid);
     }
 
-    private void deleteAccountCB2(String bsaacid, boolean deleteAcid) throws SQLException {
-        DataRecord data = baseEntityRepository.selectFirst("select ACID from ACCRLN where BSAACID = ? and RLNTYPE = ?", bsaacid, "2");
-        String acid = "";
-        if (data != null) {
-            acid =  data.getString(0);
-        }
-        baseEntityRepository.executeNativeUpdate("delete from ACCRLN where ACID = ? and BSAACID = ?", acid, bsaacid);
-        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
-        if (!isEmpty(acid) && deleteAcid)
-            baseEntityRepository.executeNativeUpdate("delete from ACC where ID = ?", acid);
-    }
+//    private void deleteAccountCB2(String bsaacid, boolean deleteAcid) throws SQLException {
+//        DataRecord data = baseEntityRepository.selectFirst("select ACID from GL_ACC where BSAACID = ? and RLNTYPE = ?", bsaacid, "2");
+//        String acid = "";
+//        if (data != null) {
+//            acid =  data.getString(0);
+//        }
+//        baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
+////        baseEntityRepository.executeNativeUpdate("delete from ACCRLN where ACID = ? and BSAACID = ?", acid, bsaacid);
+////        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
+////        if (!isEmpty(acid) && deleteAcid)
+////            baseEntityRepository.executeNativeUpdate("delete from ACC where ID = ?", acid);
+//    }
 
-    private void deleteAccountCB(String acid, String bsaacid, boolean deleteAcid) {
-        baseEntityRepository.executeNativeUpdate("delete from ACCRLN where ACID = ? and BSAACID = ?", acid, bsaacid);
-        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
-        if (deleteAcid)
-            baseEntityRepository.executeNativeUpdate("delete from ACC where ID = ?", acid);
-    }
+//    private void deleteAccountCB(String acid, String bsaacid, boolean deleteAcid) {
+//        baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
+////        baseEntityRepository.executeNativeUpdate("delete from ACCRLN where ACID = ? and BSAACID = ?", acid, bsaacid);
+////        baseEntityRepository.executeNativeUpdate("delete from BSAACC where ID = ?", bsaacid);
+////        if (deleteAcid)
+////            baseEntityRepository.executeNativeUpdate("delete from ACC where ID = ?", acid);
+//    }
 
 
 
@@ -196,7 +201,7 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
     public String checkDefinedAccount(GLOperation.OperSide operSide, String bsaAcid, String keyString, Date dateOpen) throws SQLException {
         AccountKeys keys = new AccountKeys(keyString);
         Assert.assertFalse(StringUtils.isEmpty(bsaAcid));
-        DataRecord data = baseEntityRepository.selectOne("select 1 from BSAACC where ID = ?", bsaAcid);
+        DataRecord data = baseEntityRepository.selectOne("select 1 from GL_ACC where BSAACID = ?", bsaAcid);
         Assert.assertNotNull(data);                     // bsaAcid есть в таблице BSAACC
         String acid, rlnType;
         String glSequence = keys.getGlSequence();
@@ -223,9 +228,11 @@ public class ExchangeDifferenceIT extends AbstractRemoteIT {
             Assert.assertFalse(StringUtils.isEmpty(acid));
             rlnType = StringUtils.isEmpty(account.getPlCode()) ? "4" : "2";
         }
-        data = baseEntityRepository.selectOne("select 1 from ACC where ID = ?", acid);
-        Assert.assertNotNull(data);                 // acid есть в таблице ACC
-        data = baseEntityRepository.selectOne("select 1 from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?",
+//        data = baseEntityRepository.selectOne("select 1 from ACC where ID = ?", acid);
+//        Assert.assertNotNull(data);                 // acid есть в таблице ACC
+//        data = baseEntityRepository.selectOne("select 1 from ACCRLN where BSAACID = ? and ACID = ? and RLNTYPE = ?",
+//                bsaAcid, acid, rlnType);
+        data = baseEntityRepository.selectOne("select 1 from GL_ACC where BSAACID = ? and ACID = ? and RLNTYPE = ?",
                 bsaAcid, acid, rlnType);
         Assert.assertNotNull(data);                 // bsaAcid + acid есть в таблице ACCRLN
         return acid;

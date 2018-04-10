@@ -34,7 +34,7 @@ public class BalturRecalculateIT extends AbstractRemoteIT {
         List<DataRecord> allpds = new ArrayList<>();
         allpds.addAll(pdsCt); allpds.addAll(pdsDt);
         allpds.forEach(r -> {
-            baseEntityRepository.executeNativeUpdate("update pd set amntbc = 0, amnt = 0 where id = ?", r.getLong("id"));
+            baseEntityRepository.executeNativeUpdate("update pst set amntbc = 0, amnt = 0 where id = ?", r.getLong("id"));
         });
 
 

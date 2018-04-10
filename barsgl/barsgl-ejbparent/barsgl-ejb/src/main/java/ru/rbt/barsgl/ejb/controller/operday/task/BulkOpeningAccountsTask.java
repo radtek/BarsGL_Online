@@ -82,13 +82,14 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
                 Long id = item.getLong("ID");
                 String cNum = item.getString("CNUM");
                 String branch = item.getString("BRANCH");
+                long accountType = item.getLong("ACCTYPE");
 
                 try {
                     accountRepository.executeInNewTransaction(jac -> {
                         if (cNum != null && !cNum.isEmpty()) {
                             String cCode = getCCode(branch);
                             //accounts.add(loadAccount(item, cNum, branch, cCode));
-                            loadAccount(item, cNum, branch, cCode);
+                            loadAccount(item, cNum, branch, cCode, accountType);
                         } else {
                             List<DataRecord> listImbcbbrp = getImbcbbrpList(branch);
 
@@ -99,7 +100,7 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
                                     String cCode = imbcbbrp.getString("BCBBR");
                                     try {
                                         //accounts.add(loadAccount(item, imbCNum, imbBranch, cCode));
-                                        loadAccount(item, imbCNum, imbBranch, cCode);
+                                        loadAccount(item, imbCNum, imbBranch, cCode, accountType);
                                     } catch (Exception ex) {
                                         throw new BreakException(ex);
                                     }
@@ -177,11 +178,11 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
         return acId;
     }
 
-    private String loadAccount(DataRecord item, String cNum, String branch, String cCode) throws Exception {
+    private String loadAccount(DataRecord item, String cNum, String branch, String cCode, long accountType) throws Exception {
         String acId = createAcId(cNum, branch, item);
         //@@@ ??? createTmp(item, vAcid, cCode); 
 
-        GLAccount account = getGLAccount(acId);
+        GLAccount account = getGLAccount(acId, accountType);
         if (account != null) {
             try {
                 updateAccount(account, item);
@@ -196,8 +197,8 @@ public class BulkOpeningAccountsTask implements ParamsAwareRunnable {
         return acId;
     }
 
-    private GLAccount getGLAccount(String acId) {
-        List<GLAccount> list = accountRepository.select(GLAccount.class, "from GLAccount a where a.acid=?1 and a.dateClose is null", acId);
+    private GLAccount getGLAccount(String acId, long accountType) {
+        List<GLAccount> list = accountRepository.select(GLAccount.class, "from GLAccount a where a.acid=?1 and a.dateClose is null and a.accountType=?2", acId, accountType);
         if (1 < list.size()) {
             throw new NonUniqueResultException("Found more than one entity on query for acid " + acId);
         } else if (list.isEmpty()) {
