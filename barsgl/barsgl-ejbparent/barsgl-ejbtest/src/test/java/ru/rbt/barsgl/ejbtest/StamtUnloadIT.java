@@ -825,6 +825,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         //      - проверки - режим GIBRID
         //      - не пустой GL_BVJRNL
         //      - выровнен BALTUR c глубиной рабочих дней равный минимальной дате изменения остатка в GL_BVJRNL
+        //      - размер очереди
         // проверяем выставление флагов обработки ОК
     }
 
