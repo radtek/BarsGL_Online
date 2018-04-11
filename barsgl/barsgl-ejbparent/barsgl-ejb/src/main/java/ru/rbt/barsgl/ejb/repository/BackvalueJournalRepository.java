@@ -59,8 +59,8 @@ public class BackvalueJournalRepository extends AbstractBaseEntityRepository<Bac
      */
     public void registerChanged(AbstractPd pd) throws Exception {
         coreRepository.executeInNewTransaction(persistence1 -> {
-            return executeNativeUpdate("insert into gl_pdjchg (id, pcid, chfl, pod, vald, acid, bsaacid, amnt, amntbc, pbr, invisible, operday, unf) " +
-                            "values (?, ?, 'U', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'N')"
+            return executeNativeUpdate("insert into gl_pdjchg (id, chseq, pcid, chfl, pod, vald, acid, bsaacid, amnt, amntbc, pbr, invisible, operday, unf) " +
+                            "values (?, SEQ_GL_PDJOVER.NEXTVAL, ?, 'U', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'N')"
                     , pd.getId(), pd.getPcId(), pd.getPod(), pd.getVald(), pd.getAcid(), pd.getBsaAcid(), pd.getAmount()
                     , pd.getAmountBC(), pd.getPbr(), pd.getInvisible(), operdayController.getOperday().getCurrentDate());
         });

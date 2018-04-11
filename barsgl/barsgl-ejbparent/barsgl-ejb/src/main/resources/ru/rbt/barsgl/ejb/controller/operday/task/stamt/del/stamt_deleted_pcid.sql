@@ -10,7 +10,7 @@ insert into TMP_PCID_DEL (
            join gl_posting p on p.pcid = t.pcid
            join gl_oper o on  o.gloid = p.glo_ref
            join currency c on c.cbccy = substr(t.bsaacid, 6,3)
-          left join pd r on r.id = t.id
+          left join pst r on r.id = t.id
          where t.operday in (?1, ?2)
            and (r.invisible ='1' or r.invisible is null)
     ) v1 where rn = 1
@@ -21,7 +21,7 @@ insert into TMP_PCID_DEL (
            , c.glccy ccy
       from gl_pdjover t
            join currency c on c.cbccy = substr(t.bsaacid, 6,3)
-          left join pd r on r.id = t.idpd
+          left join pst r on r.id = t.idpd
          where t.operday in (?1, ?2)
            and (r.invisible ='1' or r.invisible is null)
 )

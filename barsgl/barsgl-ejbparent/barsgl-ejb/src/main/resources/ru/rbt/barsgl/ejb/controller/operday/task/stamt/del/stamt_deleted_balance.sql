@@ -106,9 +106,9 @@ select /*+ PARALLEL */ statdate
      select c.dat statdate
            , 'F' stattype
            , 'BARS' hostsystem
-           , rln.cnum fcccustnum
+           , rln.CUSTNO fcccustnum
            , get_fcc_br(acmx.bsaacid) fccbranch
-           , substr(rln.cnum,-6) ext_custid
+           , substr(rln.CUSTNO,-6) ext_custid
            , substr(acmx.acid,-3) accbrn
            , acmx.bsaacid cbaccount
            , cc.glccy currcode
@@ -170,26 +170,26 @@ select /*+ PARALLEL */ statdate
            , cast(null as varchar(12)) bcustswift
            , cast(null as varchar(14)) bcustinn
            , c.dat ed
-           , substr(rln.ccode,-3) branch_id
+           , substr(rln.CBCCN,-3) branch_id
            , b.acid alt_ac_no
            , s.bbcrnm accname
            , cast('' as varchar(255)) acodname
            , cc.glccy||' '||cc.cynm currname
            , o.curdate dateunload
            , b.dat bdat
-    from cal c, accrln rln, baltur b, currency cc, imbcbcmp i, imbcbbrp rp
+    from cal c, gl_acc rln, baltur b, currency cc, imbcbcmp i, imbcbbrp rp
          , currates r, sdcustpd s, gl_od o
       , (
         select min(v1.postingdate) pd_min, v1.bsaacid, v1.curdate pd_max, acid
          from (
-            select r.bsaacid, acid, r.drlnc, row_number() over (partition by r.bsaacid order by r.drlnc desc) rn, o.curdate, postingdate
+            select r.bsaacid, acid, r.dtc, row_number() over (partition by r.bsaacid order by r.dtc desc) rn, o.curdate, postingdate
               from (
                 select dcbaccount bsaacid, postingdate
                  from gl_stmdel
                 union all
                 select ccbaccount bsaacid, postingdate
                  from gl_stmdel
-            ) v, gl_od o, accrln r
+            ) v, gl_od o, gl_acc r
            where v.bsaacid = r.bsaacid
         ) v1
         where rn = 1
@@ -200,8 +200,8 @@ select /*+ PARALLEL */ statdate
        and c.dat between b.dat and b.datto and b.acid = acmx.acid and b.bsaacid = acmx.bsaacid
        and cc.glccy = substr(acmx.acid,9,3)
        and cc.glccy = r.ccy and r.dat = c.dat
-       and s.bbcust = rln.cnum
-       and i.ccbbr = rln.ccode and rp.a8brcd = substr(acmx.acid,-3)
+       and s.bbcust = rln.CUSTNO
+       and i.ccbbr = rln.CBCCN and rp.a8brcd = substr(acmx.acid,-3)
        and c.dat <= (case when o.phase = 'COB' then o.curdate else o.lwdate end) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount
