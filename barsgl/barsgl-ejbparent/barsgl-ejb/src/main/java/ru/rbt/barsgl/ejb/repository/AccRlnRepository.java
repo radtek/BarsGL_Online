@@ -1,11 +1,9 @@
 package ru.rbt.barsgl.ejb.repository;
 
-import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
-import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
+import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
@@ -24,49 +22,9 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 /**
  * Created by ER18837 on 05.05.15.
  */
-public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, AccRlnId> {
+public class AccRlnRepository <E extends BaseEntity<String>> extends AbstractBaseEntityRepository<E, String> {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-    public GlAccRln createAccRln(GLAccount glAccount) {
-        GlAccRln accRln = new GlAccRln();
-        AccRlnId id = new AccRlnId();
-        id.setAcid(ifEmpty(glAccount.getAcid(), " "));
-        id.setBsaAcid(glAccount.getBsaAcid());
-        accRln.setId(id);
-
-        accRln.setRelationType(glAccount.getRelationType());
-        accRln.setDateOpen(glAccount.getDateOpen());
-        accRln.setDateClose(glAccount.getDateCloseNotNull());
-        accRln.setCustomerType((null != glAccount.getCbCustomerType()) ? glAccount.getCbCustomerType() : 0);
-        accRln.setCustomerNumber(glAccount.getCustomerNumber());
-        accRln.setCompanyCode(glAccount.getCompanyCode());
-        accRln.setBssAccount(glAccount.getBsaAcid().substring(0, 5));
-        accRln.setPassiveActive(glAccount.getPassiveActive());
-        accRln.setAccountCode(glAccount.getAccountCode() != null ? glAccount.getAccountCode().toString() : "");
-        accRln.setCurrencyD(glAccount.getCurrency().getDigitalCode());
-        accRln.setPlCode(glAccount.getPlCode());
-        accRln.setIncludeExclude("0");
-        accRln.setTransactSrc("000");
-        accRln.setPairBsa("");
-
-        return save(accRln);
-    }
-
-    public Optional<GlAccRln> findAccRln(GLAccount glAccount) {
-        return Optional.ofNullable(selectFirst(GlAccRln.class, "from GlAccRln r where r.id.acid = ?1 and r.id.bsaAcid = ?2"
-                , glAccount.getAcid(), glAccount.getBsaAcid()));
-    }
-
-    /**
-     * Поиск по счету ЦБ
-     *
-     * @param bsaacid счет ЦБ
-     * @return
-     */
-    public DataRecord findByBsaacid(String bsaacid) throws SQLException {
-        return selectFirst("SELECT * FROM GL_ACC R WHERE R.BSAACID = ? ORDER BY R.DTC DESC", bsaacid);
-    }
 
     /**
      * Поиск счета MIDAS по ключам
@@ -100,28 +58,6 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
         return null;
     }
 
-    public GlAccRln updateRelationType(AccRlnId id, GLAccount.RelationType relationType) {
-        executeUpdate("update GlAccRln r set r.relationType = ?1 where r.id = ?2", relationType.getValue(), id);
-        return findById(GlAccRln.class, id);
-    }
-
-    /**
-     * Находит счет GLпо номеру счета ЦБ
-     *
-     * @return
-     */
-/*
-    public GlAccRln findAccRlnAccount(String bsaAcid) {
-        try {
-            DataRecord data = selectFirst("SELECT * FROM ACCRLN R WHERE R.BSAACID = ? ORDER BY R.DRLNC DESC", bsaAcid);
-
-            return (null == data) ? null : findById(GlAccRln.class, new AccRlnId(data.getString("ACID"), bsaAcid));
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-*/
-
     public DataRecord checkAccountBalance(GLAccount account, Date operDate, BigDecimal amount)
     {
         try{
@@ -144,7 +80,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
         }
     }
 
-    public DataRecord checkAccountBalance(GLAccount account, Date operDate, BigDecimal amount,GlAccRln tehover)
+    public DataRecord checkAccountBalance(GLAccount account, Date operDate, BigDecimal amount, GLAccParam tehover)
     {
         try {
             String where = "П".equalsIgnoreCase(account.getPassiveActive())?"outrest<0":"outrest>0";
@@ -168,7 +104,7 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
                     "select dat,(select sum(bac) from acc_tover a where a.dat <= o.dat) as bac,(select sum(bac) from acc_tover a where a.dat <= o.dat) + ? as outrest " +
                     "from ACC_TOVER o)t " +
                     " where %s ",where);
-            DataRecord res = selectFirst(sql, operDate, account.getBsaAcid(), account.getAcid(), operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, account.getBsaAcid(), account.getAcid(), operDate,operDate, tehover.getId().getBsaAcid(), tehover.getId().getAcid(), operDate, amount);
+            DataRecord res = selectFirst(sql, operDate, account.getBsaAcid(), account.getAcid(), operDate, tehover.getBsaAcid(), tehover.getAcid(), operDate, account.getBsaAcid(), account.getAcid(), operDate,operDate, tehover.getBsaAcid(), tehover.getAcid(), operDate, amount);
             return res;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -185,12 +121,12 @@ public class AccRlnRepository extends AbstractBaseEntityRepository<GlAccRln, Acc
         }
     }
 
-    public GlAccRln findAccountTehover(String bsaAcid, String acid)
+    public GLAccParam findAccountTehover(String bsaAcid, String acid)
     {
         try {
             DataRecord data = selectFirst("select * from ACCPAIR where bsaacid = ? and acid = ? and datto='2029-01-01'", bsaAcid,acid);
 
-            return (null == data) ? null : findById(GlAccRln.class, new AccRlnId(data.getString("PAIRACID"), data.getString("PAIRBSAACID")));
+            return (null == data) ? null : new GLAccParam(data.getString("PAIRACID"), data.getString("PAIRBSAACID"));
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
