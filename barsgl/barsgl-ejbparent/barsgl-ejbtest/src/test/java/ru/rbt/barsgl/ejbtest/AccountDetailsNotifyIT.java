@@ -30,11 +30,14 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
 
     public static final Logger logger = Logger.getLogger(AccountDetailsNotifyIT.class.getName());
 
-    public static final String MBROKER = "QM_MBROKER10_TEST";
+    public static final String MBROKER = "QM_MBROKER4";
+    private final static String CHANNEL= "SYSTEM.DEF.SVRCONN";
 
-    public static final String HOST_NAME = "vs338";
+    public static final String HOST_NAME = "vs11205";
     public static final String USERNAME = "srvwbl4mqtest";   //"er22228";
     public static final String PASSWORD = "UsATi8hU";   //"Vugluskr4";
+    private final static String ACDENOF = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
+    private final static String ACDENOM = "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF";
 
 //    public static final String HOST_NAME = "localhost";
 //    public static final String USERNAME = "";
@@ -50,7 +53,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where bsaacid='40702810400154748352'");
 
 
-        putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", notifyFC12Close);
+        putMessageInQueue(ACDENOF, notifyFC12Close);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
@@ -62,9 +65,9 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
                                         "mq.host = " + HOST_NAME + "\n" +
                                         "mq.port = 1414\n" +
                                         "mq.queueManager = " + MBROKER + "\n" +
-                                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
+                                        "mq.channel = " + CHANNEL + "\n" +
                                         "mq.batchSize = 7\n" +
-                                        "mq.topics = FC12:UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF\n" +
+                                        "mq.topics = FC12:" + ACDENOF + "\n" +
                                         "mq.user=" + USERNAME + "\n" +
                                         "mq.password=" + PASSWORD + ""
                         )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -280,7 +283,7 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
         cf.setPort(1414);
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         cf.setQueueManager(MBROKER);
-        cf.setChannel("SYSTEM.ADMIN.SVRCONN");
+        cf.setChannel(CHANNEL);
 
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);

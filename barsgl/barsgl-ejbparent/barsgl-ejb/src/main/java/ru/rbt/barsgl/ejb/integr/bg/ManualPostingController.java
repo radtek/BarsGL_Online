@@ -5,8 +5,8 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccParam;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
-import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
@@ -201,7 +201,7 @@ public class ManualPostingController {
         Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
         if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
-            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getBsaAcid(),accountDr.getAcid());
+            GLAccParam tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getBsaAcid(),accountDr.getAcid());
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
             DataRecord resDr = null;
@@ -221,7 +221,7 @@ public class ManualPostingController {
         }
 
         if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
-            GlAccRln tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getBsaAcid(),accountCr.getAcid());
+            GLAccParam tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getBsaAcid(),accountCr.getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
             DataRecord resCr = null;

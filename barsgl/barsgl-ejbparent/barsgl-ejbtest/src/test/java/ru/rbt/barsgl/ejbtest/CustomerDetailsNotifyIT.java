@@ -37,13 +37,10 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
 //    private final static String host = "vs338";
 //    private final static String broker = "QM_MBROKER10_TEST";
-    private final static String host = "vs11205";
-    private final static String broker = "QM_MBROKER4_T4";
+    private final static String host = "vs529";
+    private final static String broker = "QM_MBROKER4_T5";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
-//    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
-    private final static String cudenoIn = "UCBRU.P2P.KTP2GL.CLOSEACC.REQUEST";
-//    private final static String inQueue = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
-//    private final static String outQueue = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
+    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private static final String login = "srvwbl4mqtest";    // srvwb14mqtest    l != 1 !!!
     private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
