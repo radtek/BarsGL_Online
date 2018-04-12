@@ -33,6 +33,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.NOCHANGE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
@@ -109,6 +110,9 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
     @Inject
     private TimerJobRepository jobRepository;
 
+    @Inject
+    private PdSyncTask syncTask;
+
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
         return !(!checkChronology(operdayController.getOperday().getCurrentDate()
@@ -134,7 +138,7 @@ public class ExecutePreCOBTask extends AbstractJobHistoryAwareTask {
             if (beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) -> {
                 try {
                     beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence1, connection1) -> {
-                        synchronizationController.syncPostings();
+                        synchronizationController.syncPostings(syncTask.getTargetBalanceMode(properties));
                         DataRecord stats = synchronizationController.getBifferStatistic();
                         Assert.isTrue(stats.getLong("pd_cnt") == 0, () -> new DefaultApplicationException("Остались полупроводки в буфере после синхронизации"));
                         Assert.isTrue(stats.getLong("bal_cnt") == 0, () -> new DefaultApplicationException("Остались обороты в буфере после синхронизации"));

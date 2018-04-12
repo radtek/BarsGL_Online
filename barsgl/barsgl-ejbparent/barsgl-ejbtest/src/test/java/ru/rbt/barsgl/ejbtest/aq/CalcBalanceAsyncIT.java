@@ -17,7 +17,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,11 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         // отключены все триггера, кроме AQ
 
-        setGibridMode();
+        setGibridBalanceMode();
+
+        List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
+        Assert.assertTrue(triggers.stream().anyMatch(r -> "ENABLED".equals(r.getString("status"))));
+        Assert.assertEquals(Operday.BalanceMode.GIBRID, Operday.BalanceMode.valueOf(baseEntityRepository.selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
 
         // удаление baltur по счету
         GLAccount account = findAccount("40702810%");
@@ -114,7 +117,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     @Test
     public void testOnline() throws SQLException {
-        setOnlineMode();
+        setOnlineBalanceMode();
         stopListeningQueue();
         purgeQueueTable();
 
@@ -149,20 +152,16 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testOndemand() throws SQLException {
-        setOndemanMode();
+        setGibridBalanceMode();
+        setOndemanBalanceMode();
 
         List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
         List<DataRecord> enabled = triggers.stream().filter(r -> "ENABLED".equals(r.getString("status"))).collect(Collectors.toList());
-        Assert.assertEquals(3, enabled.size());
-        Assert.assertTrue(enabled.stream().anyMatch(r ->
-                   Objects.equals(r.getString("trigger_name"), "PST_AD_JRN")
-                || Objects.equals(r.getString("trigger_name"), "PST_AI_JRN")
-                || Objects.equals(r.getString("trigger_name"), "PST_AU_JRN")));
-
+        Assert.assertEquals(0, enabled.size());
     }
 
     @Test public void testGibridOnSpecificPBR() throws SQLException {
-        setGibridMode();
+        setGibridBalanceMode();
         stopListeningQueue();
         purgeQueueTable();
 
@@ -196,6 +195,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testBvjrnl() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl");
+        baseEntityRepository.executeNativeUpdate("delete from gl_locacc");
 
         GLAccount account1 = findAccount("40702810%");
         Date pod0 = DateUtils.parseDate("2018-09-01", "yyyy-MM-dd");
@@ -250,6 +251,16 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(4, params2.getParams().get(0).getValue());
     }
 
+    @Test public void testRestoreTriggersState() throws SQLException {
+        setGibridBalanceMode();
+        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+
+        setOndemanBalanceMode();
+        checkCurrentBalanceMode(Operday.BalanceMode.ONDEMAND);
+
+        restorePreviousTriggersState();
+        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+    }
 
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
         String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy, invisible) values (?,?,?,?,?,?,?,?,?,?,?)";
@@ -279,16 +290,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(expect, records.size());
     }
 
-    private void setGibridMode() {
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setGibridBalanceCalc");
-    }
-
-    private void setOnlineMode() {
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setOnlineBalanceCalc");
-    }
-
-    private void setOndemanMode() {
-        remoteAccess.invoke(OperdaySynchronizationController.class, "setOndemandBalanceCalc");
+    private void restorePreviousTriggersState() {
+        remoteAccess.invoke(OperdaySynchronizationController.class, "restorePreviousTriggersState");
     }
 
     private void stopListeningQueue() {
@@ -308,4 +311,5 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private void cleanBvjrnlRecord(GLAccount account) {
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
     }
+
 }

@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.audit.controller.AuditController;
@@ -8,10 +9,13 @@ import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
+import javax.inject.Inject;
+import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND;
 
 /**
  * Created by Ivan Sevastyanov on 03.11.2016.
@@ -32,11 +36,14 @@ public class PdSyncTaskOld implements ParamsAwareRunnable {
     @EJB
     private OperdayController operdayController;
 
+    @Inject
+    private PdSyncTask newSyncTask;
+
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         auditController.info(BufferModeSyncTask, "Запуск задачи синхронизации проводок/оборотов");
         try {
-            coreRepository.executeInNewTransaction(persistence -> {synchronizationController.syncPostings(); return null;});
+            coreRepository.executeInNewTransaction(persistence -> {synchronizationController.syncPostings(newSyncTask.getTargetBalanceMode(properties)); return null;});
             auditController.info(BufferModeSyncTask, "Cинхронизация проводок/оборотов выполнена");
             auditController.info(BufferModeSyncTask, format("Перенесено проводок из буфера в архив: %s"
                     , synchronizationController.moveGLPdsToHistory(operdayController.getOperday().getCurrentDate())));
