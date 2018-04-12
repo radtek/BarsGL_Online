@@ -26,6 +26,7 @@ import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 /**
  * Created by Ivan Sevastyanov
  */
+@Deprecated //("задача не выполняется на проде")
 public class AccoutPaintTask implements ParamsAwareRunnable {
 
     private enum PaintLogLevel {

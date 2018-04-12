@@ -43,10 +43,8 @@
         <class>ru.rbt.barsgl.ejb.entity.acc.AcbalirqJournal</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.Acc</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.AclirqJournal</class>
-        <class>ru.rbt.barsgl.ejb.entity.acc.BsaAcc</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.GLAccount</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest</class>
-        <class>ru.rbt.barsgl.ejb.entity.acc.GlAccRln</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.GlExcacRln</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.GLAccCard</class>
 

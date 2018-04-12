@@ -75,9 +75,6 @@ public class GLAccountService {
     private GLAccountRepository glAccountRepository;
 
     @Inject
-    private AccRlnRepository accRlnRepository;
-
-    @Inject
     private ExcacRlnRepository excacRlnRepository;
 
     @EJB
@@ -88,9 +85,6 @@ public class GLAccountService {
 
     @Inject
     private BankCurrencyRepository bankCurrencyRepository;
-
-    @Inject
-    private BsaAccRepository bsaAccRepository;
 
     @EJB
     private GLAccountRequestRepository glAccountRequestRepository;

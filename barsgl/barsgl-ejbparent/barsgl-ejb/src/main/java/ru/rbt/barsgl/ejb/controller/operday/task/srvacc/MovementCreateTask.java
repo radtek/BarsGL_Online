@@ -43,10 +43,8 @@ public class MovementCreateTask implements ParamsAwareRunnable {
 //        processor.receiveResponses(datas);
         auditController.info(AuditRecord.LogCode.MovementCreate,"Status cb account: "+data.getState());
         /*List<DataRecord> records = coreRepository.select("SELECT bsaacid " +
-                                                             "FROM dwh.baltur " +
-                                                             "WHERE bsaacid IN (SELECT bsaacid " +
-                                                             "                  FROM dwh.accrln " +
-                                                             "                  WHERE bsaacid LIKE '40817%') " +
+                                                             "FROM baltur " +
+                                                             "WHERE bsaacid LIKE '40817%' " +
                                                              "      AND dat >= '2016-02-17' " +
                                                              "      AND obac > 0");*/
 //        auditController.info(AuditRecord.LogCode.MovementCreate,"Records: "+records.size());

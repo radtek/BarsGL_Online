@@ -26,17 +26,21 @@ import static ru.rbt.ejbcore.util.DateUtils.getFinalDateStr;
 /**
  * Created by ER22228
  */
-public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
+public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     public static final Logger logger = Logger.getLogger(AccountDetailsNotifyIT.class.getName());
 
-    public static final String MBROKER = "QM_MBROKER4";
-    private final static String CHANNEL= "SYSTEM.DEF.SVRCONN";
+//    private final static String HOST_NAME = "vs529";
+//    private final static String MBROKER = "QM_MBROKER4_T5";
 
     public static final String HOST_NAME = "vs11205";
+    public static final String MBROKER = "QM_MBROKER4";
+
+    private final static String CHANNEL= "SYSTEM.DEF.SVRCONN";
     public static final String USERNAME = "srvwbl4mqtest";   //"er22228";
     public static final String PASSWORD = "UsATi8hU";   //"Vugluskr4";
-    private final static String ACDENOF = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
+    private final static String ACDENO6  = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
+    private final static String ACDENO12 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF";
     private final static String ACDENOM = "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF";
 
 //    public static final String HOST_NAME = "localhost";
@@ -45,15 +49,11 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
 
     @Test
     @Ignore
-    public void testNotifyClose() throws Exception {
-        // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
-        // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
-        // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+    public void testNotifyClose12() throws Exception {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where bsaacid='40702810400154748352'");
 
-
-        putMessageInQueue(ACDENOF, notifyFC12Close);
+        putMessageInQueue(ACDENO12, notifyFC12Close);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
@@ -67,14 +67,12 @@ public class AccountDetailsNotifyIT extends AbstractTimerJobIT {
                                         "mq.queueManager = " + MBROKER + "\n" +
                                         "mq.channel = " + CHANNEL + "\n" +
                                         "mq.batchSize = 7\n" +
-                                        "mq.topics = FC12:" + ACDENOF + "\n" +
+                                        "mq.topics = FC12:" + ACDENO12 + "\n" +
                                         "mq.user=" + USERNAME + "\n" +
                                         "mq.password=" + PASSWORD + ""
-                        )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+                        )
                         .build();
         jobService.executeJob(job);
-
-
     }
 
     @Test

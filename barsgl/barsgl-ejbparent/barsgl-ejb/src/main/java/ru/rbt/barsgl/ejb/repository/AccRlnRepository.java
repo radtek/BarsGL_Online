@@ -22,6 +22,7 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 /**
  * Created by ER18837 on 05.05.15.
  */
+@Deprecated
 public class AccRlnRepository <E extends BaseEntity<String>> extends AbstractBaseEntityRepository<E, String> {
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

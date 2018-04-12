@@ -107,9 +107,6 @@ public class ManualPostingController {
     private DateUtils dateUtils;
 
     @Inject
-    private AccRlnRepository accRlnRepository;
-
-    @Inject
     private BankCurrencyRepository bankCurrencyRepository;
 
 
@@ -195,21 +192,21 @@ public class ManualPostingController {
             wrapper.setBalanceError(false);
             return;
         }
-        GLAccount accountDr = accRlnRepository.checkAccointIsPair(wrapper.getAccountDebit()) ? null : glAccountRepository.findGLAccount(wrapper.getAccountDebit());
-        GLAccount accountCr = accRlnRepository.checkAccointIsPair(wrapper.getAccountCredit())? null : glAccountRepository.findGLAccount(wrapper.getAccountCredit());
+        GLAccount accountDr = glAccountRepository.checkAccointIsPair(wrapper.getAccountDebit()) ? null : glAccountRepository.findGLAccount(wrapper.getAccountDebit());
+        GLAccount accountCr = glAccountRepository.checkAccointIsPair(wrapper.getAccountCredit())? null : glAccountRepository.findGLAccount(wrapper.getAccountCredit());
 
         Date postDate = BatchPostAction.CONFIRM_NOW.equals(wrapper.getAction())? operdayController.getOperday().getCurrentDate() : dateUtils.onlyDateParse(wrapper.getPostDateStr());
 
         if (accountDr != null && "П".equalsIgnoreCase(accountDr.getPassiveActive().trim())) {
-            GLAccParam tehoverAcc = accRlnRepository.findAccountTehover(accountDr.getBsaAcid(),accountDr.getAcid());
+            GLAccParam tehoverAcc = glAccountRepository.findAccountTehover(accountDr.getBsaAcid(),accountDr.getAcid());
             BankCurrency currencyDr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyDebit());
             BigDecimal amountDr = convertToScale(wrapper.getAmountDebit(),currencyDr.getScale().intValue());
             DataRecord resDr = null;
             if (tehoverAcc!=null) {
-                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)),tehoverAcc);
+                resDr = glAccountRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)),tehoverAcc);
             }
             else {
-                resDr = accRlnRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)));
+                resDr = glAccountRepository.checkAccountBalance(accountDr, postDate, amountDr.multiply(BigDecimal.valueOf(-1)));
             }
             if (resDr != null && (resDr.getBigDecimal(2).compareTo(BigDecimal.ZERO) < 0)) {
                 wrapper.setBalanceError(true);
@@ -221,15 +218,15 @@ public class ManualPostingController {
         }
 
         if (accountCr != null && "А".equalsIgnoreCase(accountCr.getPassiveActive().trim())) {
-            GLAccParam tehoverAcc = accRlnRepository.findAccountTehover(accountCr.getBsaAcid(),accountCr.getAcid());
+            GLAccParam tehoverAcc = glAccountRepository.findAccountTehover(accountCr.getBsaAcid(),accountCr.getAcid());
             BankCurrency currencyCr = bankCurrencyRepository.getCurrency(wrapper.getCurrencyCredit());
             BigDecimal amountCr = convertToScale(wrapper.getAmountCredit(),currencyCr.getScale().intValue());
             DataRecord resCr = null;
             if (tehoverAcc!=null) {
-                resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr,tehoverAcc);
+                resCr = glAccountRepository.checkAccountBalance(accountCr, postDate, amountCr,tehoverAcc);
             }
             else {
-                resCr = accRlnRepository.checkAccountBalance(accountCr, postDate, amountCr);
+                resCr = glAccountRepository.checkAccountBalance(accountCr, postDate, amountCr);
             }
             if (resCr != null && resCr.getBigDecimal(2).compareTo(BigDecimal.ZERO) > 0) {
                 wrapper.setBalanceError(true);

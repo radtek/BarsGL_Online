@@ -50,9 +50,6 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     private AccRepository accRepository;
 
     @Inject
-    private BsaAccRepository bsaAccRepository;
-
-    @Inject
     private BankCurrencyRepository bankCurrencyRepository;
 
     @Inject

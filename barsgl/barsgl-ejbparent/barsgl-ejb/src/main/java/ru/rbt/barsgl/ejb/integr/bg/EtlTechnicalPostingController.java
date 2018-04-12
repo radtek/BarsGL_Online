@@ -10,7 +10,6 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide;
 import ru.rbt.audit.entity.AuditRecord.LogCode;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
-import ru.rbt.barsgl.ejb.repository.AccRlnRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
@@ -44,9 +43,6 @@ public class EtlTechnicalPostingController implements EtlMessageController<EtlPo
 
     @EJB
     private EtlPostingRepository etlPostingRepository;
-
-    @Inject
-    private AccRlnRepository rlnRepository;
 
     @EJB
     private PropertiesRepository propertiesRepository;
@@ -121,7 +117,7 @@ public class EtlTechnicalPostingController implements EtlMessageController<EtlPo
 
     private DataRecord getBsaacidData(String bsaacid) {
         try {
-            return Optional.ofNullable(rlnRepository.selectFirst(
+            return Optional.ofNullable(accountRepository.selectFirst(
                     "select r.ccy, r.CBCCN from gl_acc r where bsaacid = ?", bsaacid))
                     .orElseThrow(() -> new DefaultApplicationException(format("Не удалось определить код валюты по счету '%s'", bsaacid)));
         } catch (SQLException e) {

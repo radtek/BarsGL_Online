@@ -46,6 +46,7 @@ import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_STATE_INVALID;
 /**
  * Created by Ivan Sevastyanov
  */
+@Deprecated //("задача не выполняется на проде")
 public class AccountBalanceSharedUnloadTask implements ParamsAwareRunnable {
 
 

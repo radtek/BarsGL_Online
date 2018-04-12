@@ -93,13 +93,7 @@ public class GLAccountController {
     private AuditController auditController;
 
     @Inject
-    private AccRlnRepository accRlnRepository;
-
-    @Inject
     private ExcacRlnRepository excacRlnRepository;
-
-    @Inject
-    private BsaAccRepository bsaAccRepository;
 
     @Inject
     private GLRelationAccountingTypeRepository relationAccountingTypeRepository;
@@ -1303,7 +1297,7 @@ public class GLAccountController {
 
     @Lock(LockType.READ)
     public String findForPlcodeNo7903(AccountKeys keys, Date dateOpen, Date dateStart446P) {
-        return accRlnRepository.findForPlcodeNo7903(keys, dateOpen, dateStart446P);
+        return glAccountRepository.findForPlcodeNo7903(keys, dateOpen, dateStart446P);
     }
 
     /**

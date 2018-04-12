@@ -30,6 +30,8 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 /**
  * Created by ER22228 on 14.03.2016.
  */
+
+@Deprecated //("задача не выполняется на проде")
 public class UnloadUnspentsToDWHServiceTask implements ParamsAwareRunnable {
 
     private static final Logger log = Logger.getLogger(UnloadUnspentsToDWHServiceTask.class);
