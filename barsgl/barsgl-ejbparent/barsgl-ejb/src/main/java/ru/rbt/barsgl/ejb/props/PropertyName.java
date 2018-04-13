@@ -47,7 +47,10 @@ public enum PropertyName {
     , BARSREP_REPL_SSH_PORT("barsrep.repl.ssh.port")
     , BARSREP_REPL_SSH_USER("barsrep.repl.ssh.user")
     , BARSREP_REPL_SSH_PSWD("barsrep.repl.ssh.pswd")
-    , BARSREP_REPL_SSH_RUN_CMD("barsrep.repl.ssh.run.cmd");
+    , BARSREP_REPL_SSH_RUN_CMD("barsrep.repl.ssh.run.cmd")
+
+    , AQBALANCE_CHECK_MSG_CNT("aqbalance.queue.check.msgcnt")
+    , AQBALANCE_CHECK_EMSG_CNT("aqbalance.queue.check.emsgcnt");
 
     private String name;
 

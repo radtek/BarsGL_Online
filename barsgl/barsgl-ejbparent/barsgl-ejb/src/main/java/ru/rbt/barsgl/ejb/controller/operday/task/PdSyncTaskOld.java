@@ -1,21 +1,17 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND;
 
 /**
  * Created by Ivan Sevastyanov on 03.11.2016.

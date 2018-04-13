@@ -1,25 +1,19 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
-import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
-//import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
-//import ru.rbt.barsgl.ejb.entity.task.JobHistory;
-import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-//import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -29,20 +23,19 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
-import ru.rbt.barsgl.ejb.controller.operday.task.ReprocessWtacOparationsTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 
 import static java.lang.String.format;
-import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.OpenOperday;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.OpenOperday;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPEN_OPERDAY_ERROR;
-import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
+
+//import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+//import ru.rbt.barsgl.ejb.entity.task.JobHistory;
+//import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 
 /**
  * Created by Ivan Sevastyanov

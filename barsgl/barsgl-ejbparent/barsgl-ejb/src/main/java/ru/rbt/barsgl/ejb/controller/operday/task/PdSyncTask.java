@@ -31,7 +31,6 @@ import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSync;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.NOCHANGE;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 

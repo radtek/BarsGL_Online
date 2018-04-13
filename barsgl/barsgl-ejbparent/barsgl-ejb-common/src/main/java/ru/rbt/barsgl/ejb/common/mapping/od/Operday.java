@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.ejb.common.mapping.od;
 
-import ru.rbt.barsgl.shared.enums.AccessMode;
-import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.barsgl.shared.HasLabel;
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
 import java.util.Date;

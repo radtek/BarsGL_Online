@@ -200,6 +200,8 @@ public enum ErrorCode {
     , REPROCESS_ERROR(4025, "%s")
     , BV_MANUAL_ERROR(4026, "%s")
 
+    , AQ_COMMON_CODE(5000, "%s")
+
 //    , VALIDATION_ERROR(10000, "%s %s %s")
     ;
 
