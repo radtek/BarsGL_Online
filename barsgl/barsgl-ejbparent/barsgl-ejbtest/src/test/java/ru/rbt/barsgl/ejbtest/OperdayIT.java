@@ -424,6 +424,7 @@ public class OperdayIT extends AbstractTimerJobIT {
     @Test public void correctBalturDATL() throws Exception {
 
         updateOperday(ONLINE, OPEN);
+        setOnlineBalanceMode();
 
         GLAccount account = Optional.ofNullable(findAccount("40702%")).orElseThrow(() -> new RuntimeException("account is not found"));
 
