@@ -16,6 +16,7 @@ import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -432,7 +433,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.1
      * @throws ParseException
      */
-    @Test public void testStornoExch() throws ParseException {
+    @Test public void testStornoExch() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -443,11 +444,13 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountDebit("30302840700010000033");    // "MOS"
+        String acDt = findBsaAccount("30302840_0001%");
+        String acCt = findBsaAccount("40702810_0001%");
+        pst.setAccountDebit(acDt);    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
 
-        pst.setAccountCredit("40702810100013995679");   // "MOS" клиент
+        pst.setAccountCredit(acCt);   // "MOS" клиент
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
 

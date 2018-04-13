@@ -31,7 +31,9 @@ import static ru.rbt.ejbcore.validation.ErrorCode.*;
 /**
  * Created by ER18837 on 19.11.15.
  */
+
 public class OfrAccountProcessor extends ValidationAwareHandler<AccountKeys> {
+
     @Inject
     private GLOperationRepository operationRepository;
 

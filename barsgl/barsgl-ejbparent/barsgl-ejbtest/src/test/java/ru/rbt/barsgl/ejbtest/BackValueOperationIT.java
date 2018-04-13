@@ -84,6 +84,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
 //        saveTable("GL_CRPRD");
 
         setBVparams();
+
+        clearMfoNotExists();
     }
 
 /*
@@ -130,6 +132,12 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("insert into GL_CRPRD (PRD_LDATE, PRD_CUTDATE) values ('2014-12-31', '2015-01-15')");
         baseEntityRepository.executeNativeUpdate("insert into GL_CRPRD (PRD_LDATE, PRD_CUTDATE) values ('2015-01-31', '2015-02-03')");
         baseEntityRepository.executeNativeUpdate("insert into GL_CRPRD (PRD_LDATE, PRD_CUTDATE) values ('2015-02-28', '2015-03-04')");
+    }
+
+    public static void clearMfoNotExists() {
+        baseEntityRepository.executeNativeUpdate("delete from IBCB i where \n" +
+                "not exists (select 1 from gl_acc a1 where a1.bsaacid = i.IBACOU) \n" +
+                "or not exists (select 1 from gl_acc a1 where a1.bsaacid = i.IBACIN)");
     }
 
     @Test
@@ -550,6 +558,7 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     @Test
     public void testProcessOperation() throws SQLException {
 
+        // Счет  не найден: '30306036700400000030' (поле '')', источник ru.rbt.barsgl.ejb.repository.GLOperationRepository:68
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%5");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209036%6");
         BigDecimal amt = new BigDecimal("65.43");

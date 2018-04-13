@@ -78,9 +78,6 @@ public class GLAccountController {
     private PLAccountProcessor plAccountProcessor;
 
     @Inject
-    private OfrAccountProcessor ofrAccountProcessor;
-
-    @Inject
     GLAccountFrontPartController glAccountFrontPartController;
 
     @Inject

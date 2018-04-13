@@ -33,11 +33,11 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 //    private final static String HOST_NAME = "vs529";
 //    private final static String MBROKER = "QM_MBROKER4_T5";
 
-    public static final String HOST_NAME = "vs11205";
+    public static final String HOST_NAME = "mbrk4-inta.testhpcsa.imb.ru"; // "vs11205";
     public static final String MBROKER = "QM_MBROKER4";
 
     private final static String CHANNEL= "SYSTEM.DEF.SVRCONN";
-    public static final String USERNAME = "srvwbl4mqtest";   //"er22228";
+    public static final String USERNAME = "srvwbl4mqtest";   //"er22228";   "@ntd1";//
     public static final String PASSWORD = "UsATi8hU";   //"Vugluskr4";
     private final static String ACDENO6  = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
     private final static String ACDENO12 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF";
@@ -53,7 +53,9 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where bsaacid='40702810400154748352'");
 
-        putMessageInQueue(ACDENO12, notifyFC12Close);
+        MQQueueConnectionFactory cf = getConnectionFactory(HOST_NAME, MBROKER, CHANNEL);
+        sendToQueue(cf, ACDENO12, notifyFC12Close.getBytes(), null, USERNAME, PASSWORD);
+//        putMessageInQueue(ACDENO6, notifyFC12Close);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
@@ -283,7 +285,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         cf.setQueueManager(MBROKER);
         cf.setChannel(CHANNEL);
 
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();
+        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(USERNAME, PASSWORD);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
         queue.setTargetClient(JMSC.MQJMS_MESSAGE_BODY_MQ);
