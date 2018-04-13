@@ -423,7 +423,7 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         updateOperday(ONLINE, OPEN);
 
-        AccRlnId rlnId = findAccRln("47422810%");
+        AccRlnId rlnId = findGlAcc("47422810%");
 
         logger.info("deleted BALTUR entries: " + baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ? and acid = ?"
                 , rlnId.getBsaAcid(), rlnId.getAcid()));

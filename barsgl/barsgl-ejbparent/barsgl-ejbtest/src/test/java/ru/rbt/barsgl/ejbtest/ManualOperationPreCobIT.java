@@ -362,7 +362,7 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
             }
 
             String operIds = StringUtils.listToString(Arrays.asList(operationIds), ",");
-            cnt = baseEntityRepository.executeNativeUpdate("update PD set INVISIBLE = '1' where PCID in (select PCID from GL_POSTING where GLO_REF in (" + operIds + "))");
+            cnt = baseEntityRepository.executeNativeUpdate("update PST set INVISIBLE = '1' where PCID in (select PCID from GL_POSTING where GLO_REF in (" + operIds + "))");
             cnt = baseEntityRepository.executeNativeUpdate("delete from BALTUR" + sqlWhere + " and dat >= ?", acids[0], bsaAcids[0], dates[0]);
             cnt = baseEntityRepository.executeNativeUpdate("delete from BALTUR" + sqlWhere + " and dat >= ?", acids[1], bsaAcids[1], dates[0]);
 

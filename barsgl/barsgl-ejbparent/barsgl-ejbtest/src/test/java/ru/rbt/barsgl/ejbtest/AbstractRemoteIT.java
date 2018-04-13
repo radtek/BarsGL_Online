@@ -748,8 +748,14 @@ public abstract class AbstractRemoteIT  {
         return findBsaAccount(bsaacidLike, operday, null);
     }
 
-    public static AccRlnId findAccRln(String bsaacidLike) throws SQLException {
-        return Optional.ofNullable(baseEntityRepository.selectFirst("select acid, bsaacid from accrln r, BSAACC a where r.bsaacid like ? and r.bsaacid = a.id and a.BSAACC > ?"
+//    public static AccRlnId findAccRln(String bsaacidLike) throws SQLException {
+//        return Optional.ofNullable(baseEntityRepository.selectFirst("select acid, bsaacid from accrln r, BSAACC a where r.bsaacid like ? and r.bsaacid = a.id and a.BSAACC > ?"
+//                , bsaacidLike, new Date()))
+//                .map(r -> new AccRlnId(r.getString(0), r.getString(1))).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike));
+//    }
+
+    public static AccRlnId findGlAcc(String bsaacidLike) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository.selectFirst("select acid, bsaacid from gl_acc r where r.bsaacid like ? "
                 , bsaacidLike, new Date()))
                 .map(r -> new AccRlnId(r.getString(0), r.getString(1))).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike));
     }

@@ -1791,7 +1791,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         String mess = Optional.ofNullable(baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  systimestamp - 1", id))
                               .map(rec->rec.getString("ERRORMSG")).orElse("record not found");
         logger.info(mess);
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(30);
         return mess.indexOf(code) > -1;
 
 //        DataRecord glAudit = baseEntityRepository.selectFirst("select * from gl_audit where entity_id=? and entitytype='GL_OPER' and sys_time >  systimestamp - 1", id);
