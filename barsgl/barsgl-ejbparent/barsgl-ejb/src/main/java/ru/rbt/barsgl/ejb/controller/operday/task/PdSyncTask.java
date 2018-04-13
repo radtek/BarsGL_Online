@@ -28,7 +28,10 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSync;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.NOCHANGE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 
@@ -97,7 +100,7 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
             return true;
         }));
 
-        works.add(new LongRunningStepWork(LongRunningPatternStepEnum.SYNC_GLPD, this::proceedSyncronization));
+        works.add(new LongRunningStepWork(LongRunningPatternStepEnum.SYNC_GLPD, () -> proceedSyncronization(properties)));
 
         works.add(new LongRunningStepWork(LongRunningPatternStepEnum.SYNC_MOVE_GLPDARCH, () -> {
             try {
@@ -175,10 +178,10 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
         return true;
     }
 
-    private boolean proceedSyncronization() {
+    private boolean proceedSyncronization(Properties properties) {
         try {
             return (boolean) coreRepository.executeInNewTransaction(persistence -> {
-                synchronizationController.syncPostings();
+                synchronizationController.syncPostings(getTargetBalanceMode(properties));
                 DataRecord stats = synchronizationController.getBifferStatistic();
                 Assert.isTrue(stats.getLong("pd_cnt") == 0, () -> new DefaultApplicationException("Остались полупроводки в буфере после синхронизации"));
                 Assert.isTrue(stats.getLong("bal_cnt") == 0, () -> new DefaultApplicationException("Остались обороты в буфере после синхронизации"));
@@ -208,6 +211,13 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
                 return BUFFER;
             }
         }
+    }
+
+    public Operday.BalanceMode getTargetBalanceMode(Properties properties) {
+        Operday.BalanceMode balanceMode = Optional.ofNullable(properties.getProperty(OpenOperdayTask.BALANCE_MODE_KEY))
+                .map(Operday.BalanceMode::valueOf).orElse(NOCHANGE);
+        auditController.info(BufferModeSync, String.format("Целевой режим обработки проводок: %s", balanceMode.name()));
+        return balanceMode;
     }
 
     @Override

@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
+import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -67,6 +68,9 @@ import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONDEMAND;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.rightPad;
@@ -859,6 +863,25 @@ public abstract class AbstractRemoteIT  {
     public long getAuditMaxId() throws SQLException {
         DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
         return null == res ? 0 : res.getLong(0);
+    }
+
+
+    protected void checkCurrentBalanceMode(Operday.BalanceMode mode) throws SQLException {
+        Assert.assertEquals(mode, Operday.BalanceMode.valueOf(baseEntityRepository
+                .selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
+
+    }
+
+    protected void setGibridBalanceMode() {
+        remoteAccess.invoke(OperdayController.class, "switchBalanceMode", GIBRID);
+    }
+
+    protected void setOnlineBalanceMode() {
+        remoteAccess.invoke(OperdayController.class, "switchBalanceMode", ONLINE);
+    }
+
+    protected void setOndemanBalanceMode() {
+        remoteAccess.invoke(OperdayController.class, "switchBalanceMode", ONDEMAND);
     }
 
 }

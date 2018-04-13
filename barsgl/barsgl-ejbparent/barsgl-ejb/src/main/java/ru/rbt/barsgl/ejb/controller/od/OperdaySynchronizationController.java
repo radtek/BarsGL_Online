@@ -2,8 +2,9 @@ package ru.rbt.barsgl.ejb.controller.od;
 
 import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.controller.od.OperdaySupportBean;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
@@ -12,6 +13,7 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
+import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
@@ -31,13 +33,14 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.*;
 import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
 
 /**
@@ -99,7 +102,17 @@ public class OperdaySynchronizationController {
     @EJB
     private DbTryingExecutor dbTryingExecutor;
 
-    public String syncPostings() throws Exception {
+    @EJB
+    private OperdaySupportBean operdaySupport;
+
+    /**
+     * синхронизация проводок и оборотов с буфером
+     * @param targetMode в какой режим обработки остатков переходить после сброса буфера,
+     *                   или восстановить предыдущее состаяние
+     * @return
+     * @throws Exception
+     */
+    public String syncPostings(BalanceMode targetMode) throws Exception {
         final DataRecord bufferStat = glPdRepository.selectFirst(
                 "select case when mx is null then 0 else mx end mx, cnt \n" +
                 "  from ( \n" +
@@ -118,16 +131,13 @@ public class OperdaySynchronizationController {
         }
 
         if (maxGlPdId == 0 && balanceStat.getLong("cnt") == 0) {
-//            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
+            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
             return "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется";
         }
 
         try {
             try {
-                dbTryingExecutor.tryExecuteTransactionally((conn, attempt) -> {
-                    switchOffTriggers();
-                    return "";
-                }, 3, TimeUnit.SECONDS, 10);
+                operdayController.switchBalanceMode(ONDEMAND);
             } catch (Throwable e) {
                 String message = "Не удалось отключить триггера перед сбросом буфера";
                 auditController.error(BufferModeSync, message, null, e);
@@ -154,15 +164,7 @@ public class OperdaySynchronizationController {
                 throw new DefaultApplicationException(message, e);
             }
         } finally {
-            try {
-                dbTryingExecutor.tryExecuteTransactionally((conn, attempt) ->{
-                    switchOnTriggers(); return null;
-                }, 3, TimeUnit.SECONDS, 10);
-            } catch (Throwable e) {
-                String message = "Не удалось включить триггера после сброса буфера";
-                auditController.error(BufferModeSync, message, null, e);
-                throw new DefaultApplicationException(message, e);
-            }
+            switchToTargetMode(targetMode);
         }
     }
 
@@ -273,7 +275,7 @@ public class OperdaySynchronizationController {
      * отключаем/включаем триггера на PD (за исключением журналирующих)
      * @return false если не было отключено ни одного триггера
      */
-    private void swithTriggersPD(boolean off) throws Exception {
+    /*private void swithTriggersPD(boolean off) throws Exception {
         Assert.isTrue(pdRepository.executeTransactionally(connection -> {
             int cnt = 0;
             try (PreparedStatement selectStatement = connection.prepareStatement(
@@ -301,7 +303,7 @@ public class OperdaySynchronizationController {
 
     private void lockTable(String tableName) throws Exception {
         pdRepository.executeNativeUpdate(format("LOCK TABLE %s IN EXCLUSIVE MODE", tableName));
-    }
+    }*/
 
     private void restartSequence(String sequenceName, long startWith) throws Exception {
         glPdRepository.executeTransactionally(connection -> {
@@ -430,7 +432,7 @@ public class OperdaySynchronizationController {
     private void syncOneGLPd (Long glpdId, Long currentPdSeq, Long currentGLPdSeq) {
         GLPd glPd = glPdRepository.findById(GLPd.class, glpdId);
         Pd pd = createPd(currentPdSeq, glPd);
-        if (Objects.equals(pd.getPcId(), pd.getId())) {
+        if (java.util.Objects.equals(pd.getPcId(), pd.getId())) {
             GLOperation operation = glOperationRepository.findById(GLOperation.class, pd.getGlOperationId());
             // gl_posting
             GLPosting posting = new GLPosting(pd.getPcId(), operation, GLPosting.PostingType.parseType(glPd.getPostType()));
@@ -452,26 +454,6 @@ public class OperdaySynchronizationController {
         glPdRepository.executeUpdate("update GLPd d set d.pdId = ?1 where d.id = ?2", pd.getId(), glPd.getId());
         glPdRepository.update(glPd, false);
         glPdRepository.flush();
-    }
-
-    /**
-     * завершаем задачи которые блокируют PD
-     * @param table таблица
-     * @throws Exception
-     */
-    private void removeLock(String table) throws Exception {
-        log.info("Try remove lock from " + table);
-        String killSessionBlock = resourceController.getContent("ru/rbt/barsgl/ejb/controller/od/kill_sessions.sql");
-        pdRepository.executeTransactionally(connection -> {
-            try (CallableStatement st = connection.prepareCall(killSessionBlock)) {
-                st.setString(1, table.toUpperCase());
-                st.registerOutParameter(2, Types.INTEGER);
-                st.executeUpdate();
-                int killed = st.getInt(2);
-                auditController.warning(KillSession, format("Удалено сеансов '%s' блокирующих таблицу '%s'", killed, table));
-            }
-            return null;
-        });
     }
 
     private int copyBalance() throws Exception {
@@ -764,7 +746,6 @@ public class OperdaySynchronizationController {
             int tryCount = 0;
             while (tryCount < timeout) {
                 tryCount++;
-//                TimeUnit.MINUTES.sleep(1);
                 TimeUnit.SECONDS.sleep(10);
                 if (ProcessingStatus.STOPPED == operdayController.getProcessingStatus()) {
                     return true;
@@ -776,58 +757,28 @@ public class OperdaySynchronizationController {
         }
     }
 
-    public void setOnlineBalanceCalc() throws Exception {
-        final String tableName = "PST";
-        removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONLINE_MODE; end;");
-    }
 
-    public void setGibridBalanceCalc() throws Exception {
-        final String tableName = "PST";
-        removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_GIBRID_MODE; end;");
-    }
-
-    public void setOndemandBalanceCalc() throws Exception {
-        final String tableName = "PST";
-        removeLock(tableName);
-        pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.START_ONDEMAND_MODE; end;");
-    }
-
-    private void switchOffTriggers() {
-        trySwitchTriggers(true);
-    }
-
-    private void switchOnTriggers() {
-        trySwitchTriggers(false);
-    }
-
-    private void trySwitchTriggers(boolean off) {
+    public void restorePreviousTriggersState() throws Exception {
         try {
-            pdRepository.executeInNewTransaction(persistence1 -> {
-                removeLock("PST");
-                lockTable("PST");
-                auditController.info(BufferModeSync, "Эксклюзивная блокировка таблицы PST установлена");
-                swithTriggersPD(off);
-                auditController.info(BufferModeSync, String.format("%s триггеров прошло успешно", off ? "Отключение" : "Включение"));
+            dbTryingExecutor.tryExecuteTransactionally((conn, att) -> {
+                operdaySupport.removeLock(OperdaySupportBean.PST_TABLE_NAME);
+                pdRepository.executeNativeUpdate("begin GLAQ_PKG_UTL.RESTORE_PST_TRIGGERS; end;");
                 return null;
-            });
-        } catch (Exception e) {
-            throw new DefaultApplicationException("Ошибка при установке блокировки на таблицу PST", e);
+            }, 3, TimeUnit.SECONDS, 5);
+        } catch (Throwable e) {
+            auditController.error(BufferModeSync, "Не удалось восстановить предыдущее состояние триггеров на PST", null, e);
+            throw e;
         }
     }
 
-    private void switchOneTrigger(String triggerName, boolean off) throws Exception {
-        final String switchTrigger = resourceController.getContent("ru/rbt/barsgl/ejb/controller/od/switch_trigger.sql");
-        pdRepository.executeTransactionally(connection -> {
-            try (PreparedStatement statement = connection.prepareCall(switchTrigger)){
-                statement.setString(1, triggerName);
-                statement.setString(2, off ? "0" : "1");
-                statement.executeUpdate();
-            }
-            return null;
-        });
+    private void switchToTargetMode(BalanceMode  targetMode) throws Exception {
+        if (EnumUtils.contains(new BalanceMode[]{GIBRID,ONLINE,ONDEMAND}, targetMode)) {
+            operdayController.switchBalanceMode(targetMode);
+        } else if (NOCHANGE == targetMode) {
+            restorePreviousTriggersState();
+        }
     }
+
 }
 
 

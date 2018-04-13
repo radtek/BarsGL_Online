@@ -1,9 +1,9 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.cmn;
 
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -20,8 +20,7 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
 import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.*;
-import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY;
-import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID;
+import static ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask.JobHistoryContext.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
 
@@ -43,7 +42,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
     protected DateUtils dateUtils;
 
     public enum JobHistoryContext {
-        HISTORY_ID, HISTORY
+        HISTORY_ID, HISTORY, JOB_NAME
     }
 
     @Override
@@ -53,7 +52,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
                 initExecPrivate(jobName, properties);
                 initExec(jobName, properties);
                 JobHistory history = (JobHistory) properties.get(HISTORY);
-                if (checkJobStatus(jobName, properties) && checkRun(jobName, properties)) {
+                if (checkAll(jobName, properties)) {
                     if (null == history) {
                         history = jobHistoryRepository.executeInNewTransaction(pers
                                 -> jobHistoryRepository.createHeader(jobName, getOperday(properties)));
@@ -68,7 +67,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
                             updateJobStatus(history, ERROR);
                         }
                     } catch (Throwable e) {
-                        auditController.error(AuditRecord.LogCode.Task, format("Необработанная ошибка при выполнении задачи '%s'", jobName), null, e);
+                        auditController.error(Task, format("Необработанная ошибка при выполнении задачи '%s'", jobName), null, e);
                         if (null != history) {
                             updateJobStatus(history, ERROR);
                         }
@@ -83,7 +82,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
                 return null;
             });
         } catch (Exception e) {
-            auditController.error(AuditRecord.LogCode.Task, format("Необработанная ошибка верхнего уровня при выполнении задачи '%s'", jobName), null, e);
+            auditController.error(Task, format("Необработанная ошибка верхнего уровня при выполнении задачи '%s'", jobName), null, e);
         }
     }
 
@@ -159,6 +158,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
     protected abstract void initExec(String jobName, Properties properties);
 
     private void initExecPrivate(String jobName, Properties properties) {
+        properties.put(JobHistoryContext.JOB_NAME, jobName);
         JobHistory history = getPreinstlledJobHistory(properties);
         if (null != history) {
             properties.put(JobHistoryContext.HISTORY, history);
@@ -183,5 +183,20 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
                     , format("Не найдена запись истории запуска с ИД: '%s'", historyId));
         }
         return null;
+    }
+
+    private boolean checkAll(String jobName, Properties properties) throws Exception {
+        if (isNeedCheckRun(properties)) {
+            return checkJobStatus(jobName, properties) && checkRun(jobName, properties);
+        }
+        return true;
+    }
+
+    private boolean isNeedCheckRun(Properties properties) {
+        if (!TaskUtils.getCheckRun(properties, true)) {
+            auditController.warning(Task, String.format("Отключена проверка предварительных условий по задаче %s. Задача будет выполнена принудительно.", properties.get(JOB_NAME)));
+            return false;
+        }
+        return true;
     }
 }
