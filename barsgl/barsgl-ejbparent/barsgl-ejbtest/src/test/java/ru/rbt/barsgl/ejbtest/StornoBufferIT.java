@@ -66,7 +66,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.2.3
      */
     @Test
-    public void testStornoNoRef() {
+    public void testStornoNoRef() throws SQLException {
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackage(st, "Checking storno");
         EtlPosting pst = newPosting(st, etlPackage);
@@ -75,8 +75,8 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         pst.setValueDate(getOperday().getCurrentDate());
         pst.setStorno(Y);
         pst.setStornoReference("storno_" + st);
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036_0001%"));
+        pst.setAccountDebit(findBsaAccount("40817036_5001%"));
         pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -99,7 +99,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.7.2.1
      * @throws java.text.ParseException
      */
-    @Test public void testStornoOneday() throws ParseException {
+    @Test public void testStornoOneday() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -108,10 +108,10 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Assert.assertTrue(pkg.getId() > 0);
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
-        pst.setAccountDebit("30302840700010000033");    // "MOS"
+        pst.setAccountDebit(findBsaAccount("30302840_0001%"));    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.006"));
-        pst.setAccountCredit("47427810550160009330");     // "CHL"
+        pst.setAccountCredit(findBsaAccount("47427810_5016%"));     // "CHL"
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -168,10 +168,10 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Assert.assertTrue(pkg.getId() > 0);
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
-        pst.setAccountDebit("30302840700010000033");    // "MOS"
+        pst.setAccountDebit(findBsaAccount("30302840_0001%"));    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
-        pst.setAccountCredit("47427810550160009330");     // "CHL"
+        pst.setAccountCredit(findBsaAccount("47427810_5016%"));     // "CHL"
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -222,7 +222,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.7.2
      * @throws java.text.ParseException
      */
-    @Test public void testStornoOnedayWtac() throws ParseException {
+    @Test public void testStornoOnedayWtac() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -231,10 +231,10 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Assert.assertTrue(pkg.getId() > 0);
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
-        pst.setAccountDebit("30302840700010000034");    // "MOS" такого счета нет
+        pst.setAccountDebit(findBsaAccount("30302840_0001%"));    // "MOS" такого счета нет
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
-        pst.setAccountCredit("47427810550160009330");     // "CHL"
+        pst.setAccountCredit(findBsaAccount("47427810_5016%"));     // "CHL"
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -275,7 +275,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.1
      * @throws ParseException
      */
-    @Test public void testStornoSimple() throws ParseException {
+    @Test public void testStornoSimple() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -286,8 +286,8 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036_0001%"));
+        pst.setAccountDebit(findBsaAccount("40817036_5001%"));
         pst.setAmountCredit(new BigDecimal("12.005"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -350,7 +350,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.2
      * @throws ParseException
      */
-    @Test public void testStornoMfo() throws ParseException {
+    @Test public void testStornoMfo() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -361,8 +361,8 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountCredit("47427978000164566575");     // "CHL"
-        pst.setAccountDebit("47427978400404502369");        // "EKB"
+        pst.setAccountCredit(findBsaAccount("47427978_0016%"));     // "CHL"
+        pst.setAccountDebit(findBsaAccount("47427978_0040%"));        // "EKB"
 
         pst.setAmountCredit(new BigDecimal("321.56"));
         pst.setAmountDebit(pst.getAmountCredit());
@@ -444,13 +444,11 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        String acDt = findBsaAccount("30302840_0001%");
-        String acCt = findBsaAccount("40702810_0001%");
-        pst.setAccountDebit(acDt);    // "MOS"
+        pst.setAccountDebit(findBsaAccount("30302840_0001%"));    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
 
-        pst.setAccountCredit(acCt);   // "MOS" клиент
+        pst.setAccountCredit(findBsaAccount("40702810_0001%"));   // "MOS" клиент
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
 
@@ -536,7 +534,7 @@ public class StornoBufferIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.2
      * @throws ParseException
      */
-    @Test public void testStornoMfoExch() throws ParseException {
+    @Test public void testStornoMfoExch() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -547,11 +545,11 @@ public class StornoBufferIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountDebit("30302840700010000033");    // "MOS"
+        pst.setAccountDebit(findBsaAccount("30302840_0001%"));    // "MOS"
         pst.setCurrencyDebit(BankCurrency.USD);
         pst.setAmountDebit(new BigDecimal("100.00"));
 
-        pst.setAccountCredit("47427810550160009330");     // "CHL"
+        pst.setAccountCredit(findBsaAccount("47427810_5016%"));     // "CHL"
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setAmountCredit(new BigDecimal("3500.00"));
 
