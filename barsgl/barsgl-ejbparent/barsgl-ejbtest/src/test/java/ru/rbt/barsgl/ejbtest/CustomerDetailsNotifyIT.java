@@ -462,7 +462,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
     private long getCudenoMaxId() throws SQLException {
         DataRecord res = baseEntityRepository.selectFirst("select max(MESSAGE_ID) from GL_CUDENO1");
-        return null == res ? 0 : res.getLong(0);
+        return null == res.getLong(0) ? 0 : res.getLong(0);
     }
 
     private CustDNJournal getCudenoNewRecord(long idFrom) throws SQLException {

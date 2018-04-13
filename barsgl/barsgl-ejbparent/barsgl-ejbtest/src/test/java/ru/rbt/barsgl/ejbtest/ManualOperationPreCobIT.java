@@ -261,6 +261,9 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
 
     @Test
     public void testBalturRecalcFull() throws SQLException, ParseException {
+
+        setOnlineBalanceMode();
+
         Operday od = getOperday();
         String[] dateStr = {"2015-02-02", "2015-02-04", "2015-02-10", "2015-02-12"};
         String[] acc2s = {"47425", "20208"}; // "20202"};
@@ -322,6 +325,8 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
             Assert.assertEquals(1, cnt);
 
             updateOperdayMode(Operday.PdMode.DIRECT, ProcessingStatus.STOPPED);
+
+            setOndemanBalanceMode();
 
             cnt = remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur");
             Assert.assertEquals(1, cnt);
