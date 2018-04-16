@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -105,28 +106,23 @@ public class StamtLocalizationSessionTask extends AbstractJobHistoryAwareTask {
     @SuppressWarnings("ConstantConditions")
     private boolean checkQueues() throws Exception {
         try {
-            final String normalQueue = aqRepository.getNormalQueueName();
-            long maxCntmsg = propertiesRepository.getNumber(PropertyName.AQBALANCE_CHECK_MSG_CNT.getName());
-
             List<DataRecord> sqlQueueStats = aqRepository.getQueuesStats();
-            DataRecord normal = sqlQueueStats.stream().filter(r -> normalQueue.equals(r.getString("QUEUE_NAME"))).findAny()
-                    .orElseThrow(() -> new DefaultApplicationException("Normal queue statistics is not found"));
-            Assert.isTrue(maxCntmsg >= normal.getLong("WAITING") + normal.getLong("READY") + normal.getLong("EXPIRED")
-                , () -> new ValidationError(ErrorCode.AQ_COMMON_CODE, format("В нормальной очереди количество сообщений '%s' больше максимального '%s' для выполнения задачи"
-                        , normal.getLong("WAITING") + normal.getLong("READY") + normal.getLong("EXPIRED"), maxCntmsg)));
-
-            long maxCntEmsg = propertiesRepository.getNumber(PropertyName.AQBALANCE_CHECK_EMSG_CNT.getName());
-            final String exceptionQueue = aqRepository.getExceptionQueueName();
-            DataRecord exception = sqlQueueStats.stream().filter(r -> exceptionQueue.equals(r.getString("QUEUE_NAME"))).findAny()
-                    .orElseThrow(() -> new DefaultApplicationException("Exception queue statistics is not found"));
-            Assert.isTrue(maxCntEmsg >= exception.getLong("WAITING") + exception.getLong("READY") + exception.getLong("EXPIRED")
-                , () -> new ValidationError(ErrorCode.AQ_COMMON_CODE, format("В очереди ошибок количество сообщений '%s' больше максимального '%s' для выполнения задачи"
-                        , exception.getLong("WAITING") + exception.getLong("READY") + exception.getLong("EXPIRED"), maxCntEmsg)));
+            checkOneQueue(PropertyName.AQBALANCE_CHECK_MSG_CNT, aqRepository.getNormalQueueName(), sqlQueueStats, "Normal queue");
+            checkOneQueue(PropertyName.AQBALANCE_CHECK_EMSG_CNT, aqRepository.getExceptionQueueName(), sqlQueueStats, "Exception queue");
         } catch (ValidationError e) {
             auditController.error(BackgroundLocalization, "Не прошла проверка возможности выполнения задачи фоновой локализации (состояние очередей)", null, e);
             return false;
         }
         return true;
+    }
+
+    private void checkOneQueue(PropertyName propertyName, String queueName, List<DataRecord> queueStatistics, String queueType) throws ExecutionException {
+        long maxCnt = propertiesRepository.getNumber(propertyName.getName());
+        DataRecord statistic = queueStatistics.stream().filter(r -> queueName.equals(r.getString("QUEUE_NAME"))).findAny()
+                .orElseThrow(() -> new DefaultApplicationException(format("%s statistics is not found", queueType)));
+        Assert.isTrue(maxCnt >= statistic.getLong("WAITING") + statistic.getLong("READY") + statistic.getLong("EXPIRED")
+                , () -> new ValidationError(ErrorCode.AQ_COMMON_CODE, format("В очереди %s количество сообщений '%s' больше максимального '%s' для выполнения задачи"
+                        , queueType, statistic.getLong("WAITING") + statistic.getLong("READY") + statistic.getLong("EXPIRED"), maxCnt)));
     }
 
 }
