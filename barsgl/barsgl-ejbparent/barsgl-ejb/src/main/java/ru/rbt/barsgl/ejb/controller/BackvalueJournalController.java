@@ -77,6 +77,7 @@ public class BackvalueJournalController {
     /**
      * пересчет/локализация
      * @return кол-во пересчитанных счетов
+     * todo refactoring не будет работать в сеансах локализации
      */
     public int recalculateLocal() throws Exception {
         return processRecalcException(connection -> {

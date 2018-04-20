@@ -803,9 +803,22 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
     }
 
     @Test public void testLocalizationSession() throws Exception {
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstma");
+        baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_locacc");
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl");
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstms where pardesc in (?, ?)"
+                , SESS_DELTA_POSTING.getParamDesc(), SESS_BALANCE_DELTA.getParamDesc());
+
+        purgeQueueTable();
+
         setGibridBalanceMode();
         Date curday = DateUtils.parseDate("2017-11-07", "yyyy-MM-dd");
         Date lwday = DateUtils.parseDate("2017-11-03", "yyyy-MM-dd");
+        baseEntityRepository.executeNativeUpdate("update gl_oper set procdate = ? where procdate = ?", DateUtils.addDays(curday,-10), curday);
+
         setOperday(curday, lwday, ONLINE, OPEN, Operday.PdMode.DIRECT);
 
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where sched_name = ?", StamtLocalizationSessionTask.class.getSimpleName());
@@ -815,6 +828,16 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // проводка бэквалуе
         GLOperation operation1 = createOperation(lwday);
+        List<Pd> pds = getPds(baseEntityRepository, operation1);
+        Assert.assertEquals(2, pds.size());
+        log.info("pcid1 = " + pds.get(0).getPcId());
+
+        dequeueProcessOne();
+        dequeueProcessOne();
+
+        for (Pd pd : pds) {
+            registerForStamtUnload(pd.getBsaAcid());
+        }
 
         // проверяем наличие счетов в журнале
         DataRecord bvstat = baseEntityRepository.selectFirst("select count(1) cnt from gl_bvjrnl where state  = ?", NEW.name());
@@ -830,11 +853,57 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertNotNull(history);
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history.getResult());
 
-        //      - проверки - режим GIBRID
-        //      - не пустой GL_BVJRNL
-        //      - выровнен BALTUR c глубиной рабочих дней равный минимальной дате изменения остатка в GL_BVJRNL
-        //      - размер очереди
-        // проверяем выставление флагов обработки ОК
+        List<DataRecord> unloads = baseEntityRepository.select("select * from gl_etlstmd");
+        Assert.assertTrue("cnt = " + unloads.size(), 1 <= unloads.size());
+        List<Pd> finalPds = pds;
+        Assert.assertTrue(unloads.stream().anyMatch(r -> Objects.equals(r.getLong("pcid"), finalPds.get(0).getPcId())));
+
+        List<DataRecord> balances = baseEntityRepository.select("select * from gl_balstmd");
+        Assert.assertEquals(2, balances.size());
+        Assert.assertTrue(balances.stream().anyMatch(b -> Objects.equals(b.getString("cbaccount"), finalPds.get(0).getBsaAcid())));
+        Assert.assertTrue(balances.stream().anyMatch(b -> Objects.equals(b.getString("cbaccount"), finalPds.get(1).getBsaAcid())));
+
+        DataRecord recpost = getLastUnloadHeader(SESS_DELTA_POSTING);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), recpost.getString("parvalue"));
+
+        DataRecord recbal = getLastUnloadHeader(SESS_BALANCE_DELTA);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), recbal.getString("parvalue"));
+
+        // еще операция
+        GLOperation operation2 = createOperation(lwday);
+
+        // выгрузка не пройдет
+        jobService.executeJob(job);
+        DataRecord recbalAfter = getLastUnloadHeader(SESS_BALANCE_DELTA);
+        Assert.assertEquals(recbal.getLong("id"), recbalAfter.getLong("id"));
+
+        // обновляем заголовки - выгрузка новой проводки все равно не пройдет потому
+        // что есть необработанные обороты в очереди хотя новый заголовок появится
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        jobService.executeJob(job);
+
+        recbalAfter = getLastUnloadHeader(SESS_BALANCE_DELTA);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), recbalAfter.getString("parvalue"));
+        Assert.assertNotEquals(recbal.getLong("id"), recbalAfter.getLong("id"));
+
+        pds = getPds(baseEntityRepository, operation2);
+        Assert.assertEquals(2, pds.size());
+        log.info("pcid2 = " + pds.get(0).getPcId());
+        List<Pd> finalPds2 = pds;
+        unloads = baseEntityRepository.select("select * from gl_etlstmd");
+        Assert.assertFalse(unloads.stream().anyMatch(r -> Objects.equals(r.getLong("pcid"), finalPds2.get(0).getPcId())));
+
+        // обновляем заголовки
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        jobService.executeJob(job);
+
+        dequeueProcessOne();
+        dequeueProcessOne();
+
+        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        jobService.executeJob(job);
+        unloads = baseEntityRepository.select("select * from gl_etlstmd");
+        Assert.assertTrue(unloads.stream().anyMatch(r -> Objects.equals(r.getLong("pcid"), finalPds2.get(0).getPcId())));
     }
 
     private void registerForStamtUnload(String bsaacid) {
@@ -1083,6 +1152,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         List<DataRecord> bsaacids = baseEntityRepository.select("select * from gl_acc " +
                         "where bsaacid like '40817%' and length(acid) > 0 " +
                         "and ? between dto and nvl(dtc, to_date('2029-01-01','yyyy-mm-dd')) and rownum <= 2", getOperday().getCurrentDate());
+        Assert.assertEquals(2, bsaacids.size());
         final String accCredit = bsaacids.get(0).getString("bsaacid");
         final String accDebit = bsaacids.get(1).getString("bsaacid");
 

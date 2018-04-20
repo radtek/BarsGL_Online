@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
+
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(CalcBalanceAsyncIT.class.getName());
@@ -203,16 +205,16 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Date pod1 = DateUtils.addDays(pod0, 1);
         Date pod2 = DateUtils.addDays(pod0, 2);
         cleanBvjrnlRecord(account1);
-        insertBvJrnl(account1, BackvalueJournal.BackvalueJournalState.NEW, pod0);
-        insertBvJrnl(account1, BackvalueJournal.BackvalueJournalState.NEW, pod1);
-        insertBvJrnl(account1, BackvalueJournal.BackvalueJournalState.NEW, pod2);
+        insertBvJrnl(account1, NEW, pod0);
+        insertBvJrnl(account1, NEW, pod1);
+        insertBvJrnl(account1, NEW, pod2);
 
         List<DataRecord> bvs = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid = ?", account1.getBsaAcid());
         Assert.assertTrue(bvs.stream().anyMatch(r -> r.getLong("seq") != null));
 
         GLAccount account2 = findAccount("40701810%");
         cleanBvjrnlRecord(account2);
-        insertBvJrnl(account2, BackvalueJournal.BackvalueJournalState.NEW, pod0);
+        insertBvJrnl(account2, NEW, pod0);
 
         DBParams params = DBParams.createParams(new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT)
                 ,new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT));
@@ -235,12 +237,14 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
                 "declare\n" +
                 "    l_cnt number;\n" +
                 "begin\n" +
-                "    PKG_LOCAL.UPDATE_BVJRNL(l_cnt, '1');\n" +
+                "    PKG_LOCAL.UPDATE_BVJRNL(A_COUNT=>l_cnt, A_CHECK_PROCESSED=>'1');\n" +
                 "    ? := l_cnt;\n" +
                 "end;", params2);
         // проверка статусов обработки процессом локализации
         // не проверяем
         Assert.assertEquals(0, params2.getParams().get(0).getValue());
+        List<DataRecord> bvRecs =  baseEntityRepository.select("select * from gl_bvjrnl");
+        Assert.assertTrue(bvRecs.stream().allMatch(r -> NEW.name().equals(r.getString("STATE"))));
         params2 = baseEntityRepository.executeCallable(
                 "declare\n" +
                 "    l_cnt number;\n" +
@@ -249,6 +253,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
                 "    ? := l_cnt;\n" +
                 "end;", params2);
         Assert.assertEquals(4, params2.getParams().get(0).getValue());
+
+
     }
 
     @Test public void testRestoreTriggersState() throws SQLException {
@@ -267,23 +273,6 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         baseEntityRepository.executeNativeUpdate(insert, id, pcid, acid, bsaacid, amount, amountbc, pbr, pod, vald, ccy, invisible);
     }
 
-    private void purgeQueueTable() {
-        baseEntityRepository.executeNativeUpdate(
-                "DECLARE\n" +
-                "    PRAGMA AUTONOMOUS_TRANSACTION;\n" +
-                "\n" +
-                "    PURGE_OPTIONS DBMS_AQADM.AQ$_PURGE_OPTIONS_T;\n" +
-                "    \n" +
-                "BEGIN\n" +
-                "\n" +
-                "    DBMS_AQADM.PURGE_QUEUE_TABLE(GLAQ_PKG_CONST.C_NORMAL_QUEUE_TAB_NAME, NULL, PURGE_OPTIONS);\n" +
-                "    COMMIT;\n" +
-                "END;");
-    }
-
-    private void dequeueProcessOne() {
-        baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_NORMAL_QUEUE_NAME); end;");
-    }
 
     private void checkMessageCount(QUEUE queue, long expect) throws SQLException {
         List<DataRecord> records = baseEntityRepository.select("select queue from AQ$BAL_QUEUE_TAB where queue = ?", queue.name());

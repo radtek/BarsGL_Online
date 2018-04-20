@@ -881,4 +881,21 @@ public abstract class AbstractRemoteIT  {
         remoteAccess.invoke(OperdayController.class, "switchBalanceMode", ONDEMAND);
     }
 
+    protected void dequeueProcessOne() {
+        baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_NORMAL_QUEUE_NAME); end;");
+    }
+
+    protected void purgeQueueTable() {
+        baseEntityRepository.executeNativeUpdate(
+                "DECLARE\n" +
+                        "    PRAGMA AUTONOMOUS_TRANSACTION;\n" +
+                        "\n" +
+                        "    PURGE_OPTIONS DBMS_AQADM.AQ$_PURGE_OPTIONS_T;\n" +
+                        "    \n" +
+                        "BEGIN\n" +
+                        "\n" +
+                        "    DBMS_AQADM.PURGE_QUEUE_TABLE(GLAQ_PKG_CONST.C_NORMAL_QUEUE_TAB_NAME, NULL, PURGE_OPTIONS);\n" +
+                        "    COMMIT;\n" +
+                        "END;");
+    }
 }

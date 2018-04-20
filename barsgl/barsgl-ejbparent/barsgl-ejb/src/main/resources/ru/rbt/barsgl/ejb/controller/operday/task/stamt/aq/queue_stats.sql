@@ -1,4 +1,4 @@
--- получаем статистику по очередям
+-- get statistics by all queues
 SELECT U.NAME QUEUE_NAME, A.*
   FROM V$AQ A,
        (SELECT QID, NAME FROM USER_QUEUES WHERE NAME IN

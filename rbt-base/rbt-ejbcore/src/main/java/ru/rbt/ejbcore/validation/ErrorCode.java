@@ -167,6 +167,7 @@ public enum ErrorCode {
     , COB_IS_RUNNING(3016, "Задача COB за дату '%s' выполняется. Нельзя выполнить расчет")
     , STAMT_UNLOAD_DELETED(3017, "%s")
     , QUEUE_ERROR(3018, "%s")
+    , STAMT_UNLOAD_LOCAL_SESSION(3019, "%s")
 
     , OPERDAY_NOT_ONLINE(3020, "%s. Операционный день в статусе: '%s'")
     , OPERDAY_IN_SYNCHRO(3021, "%s. Выполняется синхронизация проводок,\n повторите попытку через несколько минут")
