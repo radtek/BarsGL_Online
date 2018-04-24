@@ -353,6 +353,13 @@ public class GLOperation extends BaseEntity<Long> {
     @Column(name = "USER_NAME")
     private String userName;              // 64
 
+    // Коды субвалюты -----------------------
+    @Column(name="SUBCCY_DR")
+    private String subCcyDebit;
+
+    @Column(name="SUBCCY_CR")
+    private String subCcyCredit;
+
     public Long getId() {
         return id;
     }
@@ -1002,6 +1009,21 @@ public class GLOperation extends BaseEntity<Long> {
 
     public OperSide getCcyMfoSide() {
         return ccyMfoSide;
+    }
+    public String getSubCcyDebit() {
+        return subCcyDebit;
+    }
+
+    public void setSubCcyDebit(String subCcyDebit) {
+        this.subCcyDebit = subCcyDebit;
+    }
+
+    public String getSubCcyCredit() {
+        return subCcyCredit;
+    }
+
+    public void setSubCcyCredit(String subCcyCredit) {
+        this.subCcyCredit = subCcyCredit;
     }
 
     public void setCcyMfoSide(OperSide ccyMfoSide) {

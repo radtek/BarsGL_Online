@@ -19,6 +19,7 @@ public class BankCurrency extends BaseEntity<String> {
     public static final BankCurrency EUR = new BankCurrency("EUR");
     public static final BankCurrency AUD = new BankCurrency("AUD");
     public static final BankCurrency BGN = new BankCurrency("BGN");
+    public static final BankCurrency XAG = new BankCurrency("XAG");
 
     /**
      * default constructor is required
