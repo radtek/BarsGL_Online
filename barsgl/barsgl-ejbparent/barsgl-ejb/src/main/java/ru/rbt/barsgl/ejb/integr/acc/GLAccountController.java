@@ -717,7 +717,8 @@ public class GLAccountController {
 
     private GLAccParam calculateExDiffAccount(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
             String nccy = bankCurrency.getDigitalCode();
-            String c1 = String.valueOf(nccy.charAt(0));
+//            String c1 = String.valueOf(nccy.charAt(0));
+            String c1 = currencyFirstCharToNum(nccy.substring(0,1));
             String c2 = nccy.substring(1, 3);
 
             String accountMask = new StringBuilder().append(keys.getAccount2()).append("810_").append(c1).append(keys.getCompanyCode().substring(1)).append(keys.getPlCode()).append(c2).toString();
