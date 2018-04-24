@@ -1,46 +1,25 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
-import ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType;
-import ru.rbt.barsgl.ejb.entity.acc.GlAccRln;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
-import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
-import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
-import ru.rbt.barsgl.shared.enums.DealSource;
-import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
-import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
-import static ru.rbt.barsgl.shared.enums.DealSource.*;
-import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov
@@ -75,6 +54,8 @@ public class EtlMessageMetalIT extends AbstractTimerJobIT {
      * @throws ParseException
      */
     @Test public void test() throws ParseException, SQLException {
+
+        updateOperday(ONLINE, OPEN, DIRECT);
 
         long stamp = System.currentTimeMillis();
 
