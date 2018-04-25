@@ -8,13 +8,15 @@ import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
+import ru.rbt.barsgl.ejbtesting.test.QueueTesting;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Properties;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
@@ -24,13 +26,27 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
  */
 public class AbstractQueueIT extends AbstractTimerJobIT {
 
-    public  String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw,
-                                           String batchSize, boolean writeOut) {
-        return getQueueProperty (topic, inQueue, outQueue, ahost, aport, abroker, achannel, alogin, apassw, batchSize, writeOut, false);
+    public  QueueProperties getQueueProperties (String topic, String inQueue, String outQueue, String ahost, int aport, String abroker, String achannel,
+                                                String alogin, String apassw, int batchSize, boolean writeOut, boolean remoteQueueOut) {
+        return new QueueProperties(ahost, aport, abroker, achannel, batchSize,
+                topic + ":" + inQueue + (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue),
+                alogin, apassw, "show", writeOut, true, remoteQueueOut);
     }
 
-    public  String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw,
-                                           String batchSize, boolean writeOut, boolean remoteQueueOut) {
+    public String getJobProperty(QueueProperties queueProperties) {
+        return  queueProperties.toString()
+                + "mq.user=" + queueProperties.mqUser + "\n"
+                + "mq.password=" + queueProperties.mqPassword +"\n"
+                ;
+    }
+
+    public  String getJobProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel,
+                                   String alogin, String apassw, String batchSize, boolean writeOut) {
+        return getJobProperty (topic, inQueue, outQueue, ahost, aport, abroker, achannel, alogin, apassw, batchSize, writeOut, false);
+    }
+
+    public  String getJobProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel,
+                                   String alogin, String apassw, String batchSize, boolean writeOut, boolean remoteQueueOut) {
         return  "mq.type = queue\n"
                 + "mq.host = " + ahost + "\n"
                 + "mq.port = " + aport + "\n"
@@ -231,6 +247,30 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         receiver.close();
         session.close();
         connection.close();
+    }
+
+    // ========================================================
+
+    public static void startConnection(QueueProperties queueProperties) throws JMSException {
+        remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties);
+    }
+
+    public static void closeConnection() throws JMSException {
+        remoteAccess.invoke(QueueTesting.class, "closeConnection");
+    }
+
+    public static void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
+        remoteAccess.invoke(QueueTesting.class, "sendToQueue", outMessage, queueProperties, corrId, replyTo, queue);
+    }
+
+    public static void sendToQueue(File file, Charset charset, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
+        String message = null;
+        try {
+            message = FileUtils.readFileToString(file, charset);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        sendToQueue(message, queueProperties, corrId, replyTo, queue);
     }
 
 }

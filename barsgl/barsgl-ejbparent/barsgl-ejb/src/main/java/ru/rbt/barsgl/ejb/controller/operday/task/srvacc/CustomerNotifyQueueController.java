@@ -43,8 +43,8 @@ public class CustomerNotifyQueueController extends CommonQueueController {
     }
 
     @Override
-    protected QueueInputMessage readJMS(Message receivedMessage) throws JMSException {
-        return super.readJMS(receivedMessage, Charset.forName(messageProcessor.charsetName));
+    protected Charset getCharset() {
+        return Charset.forName(messageProcessor.charsetName);
     }
 
     @Override
