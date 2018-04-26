@@ -35,10 +35,6 @@ public class JMSQueueCommunicator implements QueueCommunicator {
     @EJB
     protected AuditController auditController;
 
-    private void setJmsContext(JMSContext jmsContext) {
-        this.jmsContext = jmsContext;
-    }
-
     @Override
     public void startConnection(QueueProperties queueProperties) throws JMSException {
         if (jmsContext == null) {
@@ -48,7 +44,7 @@ public class JMSQueueCommunicator implements QueueCommunicator {
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
             cf.setQueueManager(queueProperties.mqQueueManager);
             cf.setChannel(queueProperties.mqChannel);
-            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword, JMSContext.CLIENT_ACKNOWLEDGE));
+            this.jmsContext = cf.createContext(queueProperties.mqUser, queueProperties.mqPassword, JMSContext.CLIENT_ACKNOWLEDGE);
             jmsContext.setExceptionListener((JMSException e) -> {
                 log.info("\n\nonException calling");
                 reConnect();
@@ -84,12 +80,6 @@ public class JMSQueueCommunicator implements QueueCommunicator {
     }
 
     @Override
-    public void acknowledge(Message receivedMessage) throws JMSException {
-        if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
-            receivedMessage.acknowledge();
-    }
-
-    @Override
     public void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
         TextMessage message = jmsContext.createTextMessage(outMessage);
         message.setJMSCorrelationID(corrId);
@@ -99,4 +89,53 @@ public class JMSQueueCommunicator implements QueueCommunicator {
         producer.send(jmsContext.createQueue(queueName), message);
     }
 
+    @Override
+    public QueueInputMessage receiveFromQueue(String inQueue, Charset cs) throws JMSException {
+        JMSConsumer jmsConsumer = createConsumer(inQueue);
+        Message receivedMessage = jmsConsumer.receiveNoWait();
+        if (receivedMessage != null) {
+            return readJMS(receivedMessage, cs);
+        }
+        return null;
+    }
+
+    @Override
+    public QueueInputMessage readJMS(Message receivedMessage, Charset cs) throws JMSException {
+        if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
+            receivedMessage.acknowledge();
+        String textMessage = null;
+        if (receivedMessage instanceof TextMessage) {
+            textMessage = ((TextMessage) receivedMessage).getText();
+        } else if (receivedMessage instanceof BytesMessage) {
+            BytesMessage bytesMessage = (BytesMessage) receivedMessage;
+
+            int length = (int) bytesMessage.getBodyLength();
+            byte[] incomingBytes = new byte[length];
+            bytesMessage.readBytes(incomingBytes);
+
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
+            try (Reader r = new InputStreamReader(byteArrayInputStream, cs)) { //} StandardCharsets.UTF_8)) {
+                StringBuilder sb = new StringBuilder();
+                char cb[] = new char[1024];
+                int s = r.read(cb);
+                while (s > -1) {
+                    sb.append(cb, 0, s);
+                    s = r.read(cb);
+                }
+                textMessage = sb.toString();
+            } catch (IOException e) {
+                log.error("Error during read message from QUEUE", e);
+            }
+        }
+        if (textMessage == null) {
+            return null;
+        }
+        return new QueueInputMessage(textMessage, receivedMessage.getJMSMessageID(),
+                receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString());
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getName();
+    }
 }

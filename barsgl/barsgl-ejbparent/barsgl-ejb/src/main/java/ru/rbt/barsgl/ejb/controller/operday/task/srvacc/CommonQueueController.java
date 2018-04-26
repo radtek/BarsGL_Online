@@ -283,7 +283,7 @@ public abstract class CommonQueueController {
         long waitingTime = System.currentTimeMillis() - startThreadTime;
         Long journalId = null;
         try {
-            QueueInputMessage incMessage = readJMS(receivedMessage, getCharset());
+            QueueInputMessage incMessage = queueCommunicator.readJMS(receivedMessage, getCharset());
 
             if (incMessage == null || incMessage.textMessage == null) {
                 return;
@@ -354,9 +354,10 @@ public abstract class CommonQueueController {
         if (receivedMessage == null) {
             return null;
         }
-        return readJMS(receivedMessage, getCharset());
+        return queueCommunicator.readJMS(receivedMessage, getCharset());
     }
 
+/*
     protected QueueInputMessage readJMS(Message receivedMessage, Charset cs) throws JMSException {
         queueCommunicator.acknowledge(receivedMessage);
         String textMessage = null;
@@ -389,6 +390,7 @@ public abstract class CommonQueueController {
         return new QueueInputMessage(textMessage, receivedMessage.getJMSMessageID(),
                 receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString());
     }
+*/
 
 /*
     public void sendToQueue(String outMessage, QueueProperties queueProperties, QueueInputMessage incMessage, String queue) throws JMSException {

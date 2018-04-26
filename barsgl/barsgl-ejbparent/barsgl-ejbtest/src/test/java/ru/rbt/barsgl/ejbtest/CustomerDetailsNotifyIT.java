@@ -49,14 +49,12 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
     private static final String unspents = "show";
 
     private static final String qType = "CUST";
-    private static Charset charset;
 
     private static final String fakeCustomer = "00000010";
 
 //    @BeforeClass
     public static void before() {
         deletePropertyOnline();
-        charset = remoteAccess.invoke(CustomerNotifyQueueController.class, "getCharset");
     }
 
     private String getJobProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
@@ -65,6 +63,11 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
     private QueueProperties getQueueProperties(String topic, String ahost, String abroker, String alogin, String apassw) {
         return getQueueProperties(topic, cudenoIn, null, ahost, 1414, abroker, channel, alogin, apassw, 30, writeOut, false);
+    }
+
+    public String getResourceText(String resource) throws IOException {
+        File inFile = new File(this.getClass().getResource(resource).getFile());
+        return FileUtils.readFileToString(inFile, CustomerNotifyProcessor.charsetName);
     }
 
     /**
@@ -144,7 +147,6 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idCudeno = getCudenoMaxId();
 
         String message = getResourceText("/CustomerDetailsTest_B.xml");
-        //IOUtils.toString(this.getClass().getResourceAsStream("/CustomerDetailsTest_B.xml"), charset);
 
         Long jId = remoteAccess.invoke(CustomerNotifyQueueController.class, "createJournalEntry", qType, message);
         remoteAccess.invoke(CustomerNotifyProcessor.class, "process", message, jId);
@@ -523,11 +525,6 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
     private static void deletePropertyOnline() {
         baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP = ?", CUST_LOAD_ONLINE.getName());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
-    }
-
-    public String getResourceText(String resource) throws IOException {
-        File inFile = new File(this.getClass().getResource(resource).getFile());
-        return FileUtils.readFileToString(inFile, charset);
     }
 
 }

@@ -1,5 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.srvacc.altqueue;
 
+import ru.rbt.ejbcore.util.StringUtils;
+
 import javax.ejb.AccessTimeout;
 import javax.ejb.Singleton;
 import javax.jms.Destination;
@@ -22,6 +24,8 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 public class QueueStorageAlt extends ConcurrentHashMap<String, ConcurrentLinkedDeque<Message>> {
 
     public void sendToQueue(String queueName, String incomingMessage) {
+        if (StringUtils.isEmpty(queueName))
+            return;
         ConcurrentLinkedDeque queue = get(queueName);
         if (null == queue) {
             put(queueName, queue = new ConcurrentLinkedDeque<>());
@@ -30,6 +34,8 @@ public class QueueStorageAlt extends ConcurrentHashMap<String, ConcurrentLinkedD
     }
 
     public Message readFromQueue(String queueName) {
+        if (StringUtils.isEmpty(queueName))
+            return null;
         ConcurrentLinkedDeque<Message> queue = get(queueName);
         if (null == queue) {
             return null;

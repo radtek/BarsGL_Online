@@ -10,9 +10,7 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSException;
-import javax.jms.Message;
+import javax.jms.*;
 import java.nio.charset.Charset;
 import java.util.PriorityQueue;
 
@@ -46,18 +44,35 @@ public class QueueCommunicatorAlt implements QueueCommunicator {
     }
 
     @Override
+    public void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
+        storageAlt.sendToQueue(queue, outMessage);
+    }
+
+    @Override
+    public QueueInputMessage receiveFromQueue(String inQueue, Charset cs) throws JMSException {
+        JMSConsumer jmsConsumer = createConsumer(inQueue);
+        Message receivedMessage = jmsConsumer.receiveNoWait();
+        if (receivedMessage != null) {
+            return readJMS(receivedMessage, cs);
+        }
+        return new QueueInputMessage(null, null, null);
+    }
+
+    @Override
     public JMSConsumer createConsumer(String inQueue) {
         consumerAlt.setQueueName(inQueue);
         return consumerAlt;
     }
 
     @Override
-    public void acknowledge(Message receivedMessage) throws JMSException {
-
+    public QueueInputMessage readJMS(Message receivedMessage, Charset cs) throws JMSException {
+        return new QueueInputMessage(((TextMessage) receivedMessage).getText(), receivedMessage.getJMSMessageID(),
+                receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString());
     }
 
     @Override
-    public void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
-        storageAlt.sendToQueue(queue, outMessage);
+    public String toString() {
+        return this.getClass().getName();
     }
+
 }

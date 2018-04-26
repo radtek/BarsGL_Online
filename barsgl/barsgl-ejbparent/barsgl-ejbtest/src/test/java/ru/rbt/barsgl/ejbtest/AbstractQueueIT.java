@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.barsgl.ejbtesting.test.QueueTesting;
 import ru.rbt.ejbcore.util.StringUtils;
 
+import javax.jms.JMSConsumer;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.*;
@@ -250,6 +251,9 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
     }
 
     // ========================================================
+    public static void printCommunicatorName() {
+        System.out.println((String) remoteAccess.invoke(QueueTesting.class, "getCommunicatorName"));
+    }
 
     public static void startConnection(QueueProperties queueProperties) throws JMSException {
         remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties);
@@ -263,14 +267,22 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         remoteAccess.invoke(QueueTesting.class, "sendToQueue", outMessage, queueProperties, corrId, replyTo, queue);
     }
 
-    public static void sendToQueue(File file, Charset charset, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
-        String message = null;
-        try {
-            message = FileUtils.readFileToString(file, charset);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        sendToQueue(message, queueProperties, corrId, replyTo, queue);
+    public static void sendToQueue(File file, Charset charset, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException, IOException {
+        sendToQueue(FileUtils.readFileToString(file, charset), queueProperties, corrId, replyTo, queue);
     }
 
+    public static void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queueName, int cnt) throws JMSException {
+        remoteAccess.invoke(QueueTesting.class, "sendToQueue", outMessage, queueProperties, corrId, replyTo, queueName, cnt);
+        System.out.println("Sent to " + queueName + ": " + cnt);
+    }
+
+    public static QueueInputMessage receiveFromQueue(String queueName, Charset cs) throws JMSException {
+        return remoteAccess.invoke(QueueTesting.class, "receiveFromQueue", queueName, cs.name());
+    }
+
+    public static int clearQueue(QueueProperties queueProperties, String queueName, int count) throws JMSException {
+        int n =  remoteAccess.invoke(QueueTesting.class, "clearQueue", queueProperties, queueName, count);
+        System.out.println("Deleted from " + queueName + ": " + n);
+        return n;
+    }
 }

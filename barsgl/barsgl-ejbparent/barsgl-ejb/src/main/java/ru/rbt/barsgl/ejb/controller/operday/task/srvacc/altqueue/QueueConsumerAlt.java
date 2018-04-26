@@ -8,6 +8,7 @@ import javax.jms.JMSConsumer;
 import javax.jms.JMSRuntimeException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import java.io.Serializable;
 
 /**
  * Created by er18837 on 24.04.2018.

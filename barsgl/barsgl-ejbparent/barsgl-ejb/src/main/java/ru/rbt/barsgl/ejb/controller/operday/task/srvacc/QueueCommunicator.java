@@ -24,10 +24,12 @@ public interface QueueCommunicator {
 
     void closeConnection();
 
+    void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException;
+
+    QueueInputMessage receiveFromQueue(String inQueue, Charset cs) throws JMSException;
+
     JMSConsumer createConsumer(String inQueue);
 
-    void acknowledge(Message receivedMessage) throws JMSException;
-
-    void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException;
+    QueueInputMessage readJMS(Message receivedMessage, Charset cs) throws JMSException;
 
 }
