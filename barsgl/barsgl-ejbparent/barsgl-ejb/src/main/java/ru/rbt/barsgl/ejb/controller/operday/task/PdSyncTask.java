@@ -212,6 +212,11 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode#NOCHANGE by default
+     * @param properties set ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_KEY for target mode
+     * @return balance mode
+     */
     public Operday.BalanceMode getTargetBalanceMode(Properties properties) {
         Operday.BalanceMode balanceMode = Optional.ofNullable(properties.getProperty(OpenOperdayTask.BALANCE_MODE_KEY))
                 .map(Operday.BalanceMode::valueOf).orElse(NOCHANGE);

@@ -9,8 +9,10 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
+import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.PdSyncTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.gibrid.PdSyncAutoTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.SyncStamtBackvalueTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
@@ -43,6 +45,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask.BALANCE_MODE_KEY;
+import static ru.rbt.barsgl.ejb.controller.operday.task.gibrid.PdSyncAutoTask.DEFAULT_STEP_NAME;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.BALANCE_DELTA_INCR;
 import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 
@@ -528,6 +531,103 @@ public class BufferModeIT extends AbstractRemoteIT {
         checkCurrentBalanceMode(Operday.BalanceMode.ONLINE);
     }
 
+    @Test public void testPdSyncAuto() throws Exception {
+
+        String pdSyncAutoJobName = PdSyncAutoTask.class.getSimpleName();
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where sched_name = ?", pdSyncAutoJobName);
+        updateOperday(ONLINE, OPEN, BUFFER);
+        setOnlineBalanceMode();
+
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountDebit("40817036250010000018");
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setDealId("123");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
+        Assert.assertEquals(getOperday().getLastWorkdayStatus(), operation.getLastWorkdayStatus());
+
+        List<GLPosting> postList = getPostings(operation);
+        Assert.assertTrue(postList.isEmpty());                 //  нет проводок, только буфер
+
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = 'STOPPED'");
+
+        checkCreateStep(DEFAULT_STEP_NAME, getOperday().getLastWorkingDay(), "O");
+
+        SingleActionJob syncJob = SingleActionJobBuilder.create()
+                .withProps(PdSyncAutoTask.STEP_KEY_NAME + "=" + DEFAULT_STEP_NAME + "\n"
+                        + OpenOperdayTask.BALANCE_MODE_KEY + "=" + Operday.BalanceMode.ONLINE.name()+ "\n"
+                        + OpenOperdayTask.PD_MODE_KEY + "=" + BUFFER)
+                .withClass(PdSyncAutoTask.class)
+                .withName(pdSyncAutoJobName).build();
+        jobService.executeJob(syncJob);
+
+        DataRecord history1 = getLastHistRecord(pdSyncAutoJobName);
+        Assert.assertEquals("1", history1.getString("SCHRSLT"));
+
+        List<GLPosting> postList1 = getPostings(operation);
+        Assert.assertEquals(1, postList1.size());
+
+        checkCurrentBalanceMode(Operday.BalanceMode.ONLINE);
+        Assert.assertEquals(BUFFER, getOperday().getPdMode());
+
+        // не выполняется повторно в том же ОД
+        jobService.executeJob(syncJob);
+        DataRecord history2 = getLastHistRecord(pdSyncAutoJobName);
+        Assert.assertEquals(history1.getLong("id_hist"), history2.getLong("id_hist"));
+
+        // провекри
+        baseEntityRepository.executeNativeUpdate("update gl_sched_h set SCHRSLT = 2");
+        // 1 step in error
+        checkCreateStep(DEFAULT_STEP_NAME, getOperday().getLastWorkingDay(), "E");
+
+        jobService.executeJob(syncJob);
+        history2 = getLastHistRecord(pdSyncAutoJobName);
+        Assert.assertEquals(history1.getLong("id_hist"), history2.getLong("id_hist"));
+
+        // шаг загрузки ОК - переход в GIBRID
+        checkCreateStep(DEFAULT_STEP_NAME, getOperday().getLastWorkingDay(), "O");
+        syncJob.setProperties(PdSyncAutoTask.STEP_KEY_NAME + "=" + DEFAULT_STEP_NAME + "\n"
+                + OpenOperdayTask.BALANCE_MODE_KEY + "=" + Operday.BalanceMode.GIBRID.name() + "\n"
+                + OpenOperdayTask.PD_MODE_KEY + "=" + DIRECT);
+
+        updateOperday(ONLINE, OPEN, DIRECT);
+        // режим DIRECT задача упадет с ошибкой
+        jobService.executeJob(syncJob);
+        history2 = getLastHistRecord(pdSyncAutoJobName);
+        Assert.assertEquals("2", history2.getString("SCHRSLT"));
+        Assert.assertNotEquals(history1.getLong("id_hist"), history2.getLong("id_hist"));
+
+        checkCurrentBalanceMode(Operday.BalanceMode.ONLINE);
+
+        updateOperday(ONLINE, OPEN, BUFFER);
+
+        jobService.executeJob(syncJob);
+        DataRecord history3 = getLastHistRecord(pdSyncAutoJobName);
+        Assert.assertEquals("1", history3.getString("SCHRSLT"));
+        Assert.assertNotEquals(history2.getLong("id_hist"), history3.getLong("id_hist"));
+        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+        Assert.assertEquals(DIRECT, getOperday().getPdMode());
+    }
+
     private void incldeBs2ByBufferOperation(GLOperation operation) throws SQLException {
         baseEntityRepository.executeNativeUpdate("delete from GL_STMPARM");
         List<GLPd> pds = Utl4Tests.getGLPds(baseEntityRepository, operation);
@@ -564,7 +664,7 @@ public class BufferModeIT extends AbstractRemoteIT {
      */
     private void createForPcidMo() throws SQLException {
 
-        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd where rownum < 2");
+        DataRecord glPd = baseEntityRepository.selectFirst("select * from gl_pd where rownum < 2 and mo_no is not null");
         Assert.assertNotNull(glPd);
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo m where pod = ? and mo_no = ?", glPd.getDate("pod"), glPd.getString("mo_no"));
         if (null == pcidMo) {

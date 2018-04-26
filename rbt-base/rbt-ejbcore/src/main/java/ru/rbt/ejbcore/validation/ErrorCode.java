@@ -202,6 +202,7 @@ public enum ErrorCode {
     , BV_MANUAL_ERROR(4026, "%s")
 
     , AQ_COMMON_CODE(5000, "%s")
+    , PD_SYNC_GIBRID(5100, "%s")
 
 //    , VALIDATION_ERROR(10000, "%s %s %s")
     ;

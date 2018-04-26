@@ -234,6 +234,11 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
         }
     }
 
+    /**
+     * ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_DEFAULT by default (Initially ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_DEFAULT)
+     * @param properties set ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_KEY for target mode
+     * @return balance mode
+     */
     public Operday.BalanceMode calculateBalanceModeForOpenOperday(Properties properties) {
         return Optional.ofNullable(properties.getProperty(BALANCE_MODE_KEY)).map(Operday.BalanceMode::valueOf)
                 .orElse(BALANCE_MODE_DEFAULT);

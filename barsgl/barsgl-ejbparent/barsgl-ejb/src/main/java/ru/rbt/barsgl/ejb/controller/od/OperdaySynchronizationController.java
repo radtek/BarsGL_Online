@@ -131,12 +131,11 @@ public class OperdaySynchronizationController {
             auditController.info(BufferModeSync, "Таблица с остатками (GL_BALTUR) пустая, синхронизация оборотов не требуется");
         }
 
-        if (maxGlPdId == 0 && balanceStat.getLong("cnt") == 0) {
-            auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
-            return "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется";
-        }
-
         try {
+            if (maxGlPdId == 0 && balanceStat.getLong("cnt") == 0) {
+                auditController.info(BufferModeSync, "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется");
+                return "Таблицы с остатками GL_BALTUR и GL_PD пустые, синхронизация не требуется";
+            }
             try {
                 operdayController.switchBalanceMode(ONDEMAND);
             } catch (Throwable e) {

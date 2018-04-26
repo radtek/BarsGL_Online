@@ -95,6 +95,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , AuditRecord
         , LoadBranchDict
         , BackgroundLocalization
+        , BufferModeSyncAuto
     }
 
     public enum LogLevel {
