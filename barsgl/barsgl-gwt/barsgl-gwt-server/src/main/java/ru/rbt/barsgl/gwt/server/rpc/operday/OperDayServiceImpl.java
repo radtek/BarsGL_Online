@@ -84,7 +84,13 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
             }
         }.process();
     }
-    
+
+    @Override
+    public RpcRes_Base<String> setProcessingStatus(ProcessingStatus processingStatus) throws Exception {
+        localInvoker.invoke(OperdayController.class, "setProcessingStatus", processingStatus);
+        return new RpcRes_Base<>("", false, "");
+    }
+
     @Override
     public RpcRes_Base<ProcessingStatus> getProcessingStatus() throws Exception {
         return new RpcResProcessor<ProcessingStatus>() {
