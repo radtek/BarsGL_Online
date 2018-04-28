@@ -50,69 +50,6 @@ public abstract class CommonQueueController {
         return queueProperties;
     }
 
-
-/*
-    public static class QueueInputMessage implements Serializable {
-        private String textMessage;
-        private String requestId;
-        private String replyTo;
-
-        public QueueInputMessage(String textMessage, String requestId, String replyTo) {
-            this.textMessage = StringUtils.trim(textMessage);
-            this.requestId = requestId;
-            this.replyTo = replyTo;
-        }
-
-        public QueueInputMessage(String textMessage) {
-            this(textMessage, null, null);
-        }
-
-        public String getTextMessage() {
-            return textMessage;
-        }
-
-        public String getRequestId() {
-            return requestId;
-        }
-
-        public String getReplyTo() {
-            return replyTo;
-        }
-    }
-
-    public static class QueueProcessResult implements Serializable {
-        private String outMessage;
-        private boolean isError;
-        private boolean writeOut;
-
-        public QueueProcessResult(String outMessage, boolean isError, boolean writeOut) {
-            this.outMessage = outMessage;
-            this.isError = isError;
-            this.writeOut = writeOut;
-        }
-
-        public QueueProcessResult(String outMessage, boolean isError) {
-            this(outMessage, isError, false);
-        }
-
-        public String getOutMessage() {
-            return outMessage;
-        }
-
-        public boolean isError() {
-            return isError;
-        }
-
-        public boolean isWriteOut() {
-            return writeOut;
-        }
-
-        public void setWriteOut(boolean writeOut) {
-            this.writeOut = writeOut;
-        }
-    }
-*/
-
     @Resource
     protected EJBContext context;
 
@@ -131,9 +68,6 @@ public abstract class CommonQueueController {
     @Inject @Any
     protected QueueCommunicator queueCommunicator;
 
-//    protected JMSContext jmsContext = null;
-//    protected QueueProperties queueProperties;
-
     protected abstract void afterConnect() throws Exception;
     protected abstract QueueProcessResult processQuery(String queueType, String textMessage, Long jId) throws Exception;
 
@@ -148,57 +82,6 @@ public abstract class CommonQueueController {
     protected long getTimeout() { return 10L; }
     protected TimeUnit getTimeoutUnit() { return TimeUnit.MINUTES; };
 
-/*
-    public void setQueueProperties(Properties properties) throws Exception {
-        this.queueProperties = new QueueProperties(properties);
-    }
-
-    public QueueProperties getQueueProperties() {
-        return queueProperties;
-    }
-
-    public void setJmsContext(JMSContext jmsContext) {
-        this.jmsContext = jmsContext;
-    }
-*/
-
-/*
-    public void startConnection() throws JMSException {
-        if (jmsContext == null) {
-            MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
-            cf.setHostName(queueProperties.mqHost);
-            cf.setPort(queueProperties.mqPort);
-            cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-            cf.setQueueManager(queueProperties.mqQueueManager);
-            cf.setChannel(queueProperties.mqChannel);
-            setJmsContext(cf.createContext(queueProperties.mqUser, queueProperties.mqPassword, JMSContext.CLIENT_ACKNOWLEDGE));
-            jmsContext.setExceptionListener((JMSException e) -> {
-                log.info("\n\nonException calling");
-                reConnect();
-            });
-        }
-    }
-
-    protected void reConnect() {
-        log.info("\n\nreConnect calling");
-        closeConnection();
-        // На следующем старте задачи сработает startConnection()
-    }
-
-    @PreDestroy
-    public void closeConnection() {
-        log.info("\n\ncloseConnection calling");
-        try {
-            if (jmsContext != null) {
-                jmsContext.close();
-            }
-        } catch (Exception e) {
-            auditController.warning(QueueProcessor, "Ошибка при закрытии соединения", null, e);
-        }finally{
-            jmsContext = null;
-        }
-    }
-*/
 
     public Long createJournalEntry(String queueType, String textMessage) throws Exception{
         return (Long) coreRepository.executeInNewTransaction((persistence) -> {
@@ -356,52 +239,6 @@ public abstract class CommonQueueController {
         }
         return queueCommunicator.readJMS(receivedMessage, getCharset());
     }
-
-/*
-    protected QueueInputMessage readJMS(Message receivedMessage, Charset cs) throws JMSException {
-        queueCommunicator.acknowledge(receivedMessage);
-        String textMessage = null;
-        if (receivedMessage instanceof TextMessage) {
-            textMessage = ((TextMessage) receivedMessage).getText();
-        } else if (receivedMessage instanceof BytesMessage) {
-            BytesMessage bytesMessage = (BytesMessage) receivedMessage;
-
-            int length = (int) bytesMessage.getBodyLength();
-            byte[] incomingBytes = new byte[length];
-            bytesMessage.readBytes(incomingBytes);
-
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(incomingBytes);
-            try (Reader r = new InputStreamReader(byteArrayInputStream, cs)) { //} StandardCharsets.UTF_8)) {
-                StringBuilder sb = new StringBuilder();
-                char cb[] = new char[1024];
-                int s = r.read(cb);
-                while (s > -1) {
-                    sb.append(cb, 0, s);
-                    s = r.read(cb);
-                }
-                textMessage = sb.toString();
-            } catch (IOException e) {
-                log.error("Error during read message from QUEUE", e);
-            }
-        }
-        if (textMessage == null) {
-            return null;
-        }
-        return new QueueInputMessage(textMessage, receivedMessage.getJMSMessageID(),
-                receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString());
-    }
-*/
-
-/*
-    public void sendToQueue(String outMessage, QueueProperties queueProperties, QueueInputMessage incMessage, String queue) throws JMSException {
-        TextMessage message = jmsContext.createTextMessage(outMessage);
-        message.setJMSCorrelationID(incMessage.requestId);
-        JMSProducer producer = jmsContext.createProducer();
-        String queueName = (!isEmpty(incMessage.replyTo) && !"true".equals(queueProperties.remoteQueueOut))
-                                ? incMessage.replyTo : "queue:///" + queue;
-        producer.send(jmsContext.createQueue(queueName), message);
-    }
-*/
 
     protected String getAuditMessage(String msg, String fromQueue, Long jId) {
         return String.format("Ошибка %s из %s / Таблица %s / id=%d", msg, fromQueue, getJournalName(), jId);

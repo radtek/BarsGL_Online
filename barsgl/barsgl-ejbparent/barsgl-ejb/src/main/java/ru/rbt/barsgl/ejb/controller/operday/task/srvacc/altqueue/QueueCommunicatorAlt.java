@@ -49,13 +49,22 @@ public class QueueCommunicatorAlt implements QueueCommunicator {
     }
 
     @Override
+    public void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue, int cnt) throws JMSException {
+        storageAlt.sendToQueue(queue, outMessage, cnt);
+    }
+
+    @Override
     public QueueInputMessage receiveFromQueue(String inQueue, Charset cs) throws JMSException {
-        JMSConsumer jmsConsumer = createConsumer(inQueue);
-        Message receivedMessage = jmsConsumer.receiveNoWait();
+        Message receivedMessage = storageAlt.readFromQueue(inQueue);
         if (receivedMessage != null) {
             return readJMS(receivedMessage, cs);
         }
         return new QueueInputMessage(null, null, null);
+    }
+
+    @Override
+    public Long clearQueue(String inQueue, Long cntmax) throws JMSException {
+        return storageAlt.clearQueue(inQueue);
     }
 
     @Override

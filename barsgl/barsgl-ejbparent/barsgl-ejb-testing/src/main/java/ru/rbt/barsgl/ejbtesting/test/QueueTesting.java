@@ -52,24 +52,25 @@ public class QueueTesting {
     }
 
     public void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queueName, int cnt) throws JMSException {
-        for (int i=0; i<cnt; i++) {
-            queueCommunicator.sendToQueue(outMessage, queueProperties, corrId, replyTo, queueName);
-        }
+        queueCommunicator.sendToQueue(outMessage, queueProperties, corrId, replyTo, queueName, cnt);
     }
 
-    public int clearQueue(QueueProperties queueProperties, String queueName, int count) throws JMSException {
+    public long clearQueue(QueueProperties queueProperties, String queueName, long count) throws JMSException {
         startConnection(queueProperties);
+        long n = queueCommunicator.clearQueue(queueName, count);
 
+/*
         int i=0;
         for (; i<count; i++) {
             QueueInputMessage message = queueCommunicator.receiveFromQueue(queueName, Charset.forName("UTF-8"));
             if (null == message || StringUtils.isEmpty(message.getTextMessage()))
                 break;
         }
-        System.out.println("Deleted from " + queueName + ": " + i);
+*/
+        System.out.println("Deleted from " + queueName + ": " + n);
 
         closeConnection();
-        return i;
+        return n;
     }
 
 /*

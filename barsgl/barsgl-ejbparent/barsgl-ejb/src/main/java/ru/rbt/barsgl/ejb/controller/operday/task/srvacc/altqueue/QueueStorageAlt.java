@@ -12,6 +12,7 @@ import javax.jms.TextMessage;
 import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -21,22 +22,44 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  */
 @Singleton
 @AccessTimeout(value = 15, unit = MINUTES)
-public class QueueStorageAlt extends ConcurrentHashMap<String, ConcurrentLinkedDeque<Message>> {
+public class QueueStorageAlt extends ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> {
+
+    public long clearQueue(String queueName) {
+        if (StringUtils.isEmpty(queueName))
+            return 0;
+        ConcurrentLinkedQueue queue = get(queueName);
+        if (null == queue)
+            return 0;
+        long size = queue.size();
+        queue.clear();
+        return size;
+    }
 
     public void sendToQueue(String queueName, String incomingMessage) {
         if (StringUtils.isEmpty(queueName))
             return;
-        ConcurrentLinkedDeque queue = get(queueName);
+        ConcurrentLinkedQueue queue = get(queueName);
         if (null == queue) {
-            put(queueName, queue = new ConcurrentLinkedDeque<>());
+            put(queueName, queue = new ConcurrentLinkedQueue<>());
         }
         queue.offer(new TextMessageAlt(incomingMessage));
+    }
+
+    public void sendToQueue(String queueName, String incomingMessage, int cnt) {
+        if (StringUtils.isEmpty(queueName))
+            return;
+        ConcurrentLinkedQueue queue = get(queueName);
+        if (null == queue) {
+            put(queueName, queue = new ConcurrentLinkedQueue<>());
+        }
+        for (int i=0; i<cnt; i++)
+            queue.offer(new TextMessageAlt(incomingMessage));
     }
 
     public Message readFromQueue(String queueName) {
         if (StringUtils.isEmpty(queueName))
             return null;
-        ConcurrentLinkedDeque<Message> queue = get(queueName);
+        ConcurrentLinkedQueue<Message> queue = get(queueName);
         if (null == queue) {
             return null;
         }

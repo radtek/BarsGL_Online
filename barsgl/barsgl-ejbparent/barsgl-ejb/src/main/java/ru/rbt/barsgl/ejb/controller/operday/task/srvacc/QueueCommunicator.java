@@ -26,7 +26,11 @@ public interface QueueCommunicator {
 
     void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException;
 
+    void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue, int cnt) throws JMSException;
+
     QueueInputMessage receiveFromQueue(String inQueue, Charset cs) throws JMSException;
+
+    Long clearQueue(String inQueue, Long cntmax) throws JMSException;
 
     JMSConsumer createConsumer(String inQueue);
 

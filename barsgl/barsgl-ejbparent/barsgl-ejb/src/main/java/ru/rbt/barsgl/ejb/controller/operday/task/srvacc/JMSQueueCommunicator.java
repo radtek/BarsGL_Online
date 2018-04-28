@@ -90,6 +90,17 @@ public class JMSQueueCommunicator implements QueueCommunicator {
     }
 
     @Override
+    public void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue, int cnt) throws JMSException {
+        TextMessage message = jmsContext.createTextMessage(outMessage);
+        message.setJMSCorrelationID(corrId);
+        JMSProducer producer = jmsContext.createProducer();
+        String queueName = (!isEmpty(replyTo) && !"true".equals(queueProperties.remoteQueueOut))
+                ? replyTo : "queue:///" + queue;
+        for (int i=0; i<cnt; i++)
+            producer.send(jmsContext.createQueue(queueName), message);
+    }
+
+    @Override
     public QueueInputMessage receiveFromQueue(String inQueue, Charset cs) throws JMSException {
         JMSConsumer jmsConsumer = createConsumer(inQueue);
         Message receivedMessage = jmsConsumer.receiveNoWait();
@@ -97,6 +108,20 @@ public class JMSQueueCommunicator implements QueueCommunicator {
             return readJMS(receivedMessage, cs);
         }
         return null;
+    }
+
+    @Override
+    public Long clearQueue(String inQueue, Long cntmax) throws JMSException {
+        JMSConsumer consumer = createConsumer(inQueue);
+        long i=0;
+        for (; i<cntmax; i++) {
+            Message message = consumer.receiveNoWait();
+            if (null == message)
+                break;
+            if(jmsContext != null && jmsContext.getSessionMode() == JMSContext.CLIENT_ACKNOWLEDGE)
+                message.acknowledge();
+        }
+        return i;
     }
 
     @Override
