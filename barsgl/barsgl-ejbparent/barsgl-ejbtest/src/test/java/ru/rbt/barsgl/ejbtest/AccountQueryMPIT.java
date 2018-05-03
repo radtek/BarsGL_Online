@@ -83,6 +83,11 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         return FileUtils.readFileToString(inFile, CustomerNotifyProcessor.charsetName);
     }
 
+    /**
+     * Тест посылки одного запроса и получения ответа
+     * (все кейзы по бизнесу: клиент, клиент + ACOD, клиент + AccountType, счет)
+     * @throws Exception
+     */
     @Test
     public void testA() throws Exception {
         printCommunicatorName();
@@ -116,6 +121,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
     }
 
+    /**
+     * тест генерации системной ошибки по таймауту в режиме JavaEE
+     * @throws Exception
+     */
     @Test
     public void testStressErrorEE() throws Exception {
 
@@ -156,6 +165,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 //        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));    // это был вариент с Error
     }
 
+    /**
+     * тест генерации системной ошибки по таймауту в режиме JavaSE
+     * @throws Exception
+     */
     @Test
     public void testStressErrorSE() throws Exception {
 
@@ -196,6 +209,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 //        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
     }
 
+    /**
+     * Стресс-тест посылки и получения 500 сообщений
+     * @throws Exception
+     */
     @Test
     public void testStress500() throws Exception {
 
@@ -232,6 +249,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         Assert.assertTrue(getStatistics(idJ) >= cnt);
     }
 
+    /**
+     * Посылка 5000 сообщений для стресс-теста
+     * @throws Exception
+     */
     @Test
     @Ignore
     public void testSend5000() throws Exception {
@@ -243,13 +264,17 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         shutdownJob(ACLIRQ_TASK);
 
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
-        clearQueue(cf, acliquIn, login, passw, cntmax);
-        clearQueue(cf, acliquOut, login, passw, cntmax);
+        MQQueueConnectionFactory cf = MqUtil.getConnectionFactory(host, broker, channel);
+        MqUtil.clearQueue(cf, acliquIn, login, passw, cntmax);
+        MqUtil.clearQueue(cf, acliquOut, login, passw, cntmax);
 
-        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, login, passw, cnt);
+        MqUtil.sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, login, passw, cnt);
     }
 
+    /**
+     * Стресс-тест посылки и получения 5000 сообщений
+     * @throws Exception
+     */
     @Test
     @Ignore
     public void testStress5000() throws Exception {

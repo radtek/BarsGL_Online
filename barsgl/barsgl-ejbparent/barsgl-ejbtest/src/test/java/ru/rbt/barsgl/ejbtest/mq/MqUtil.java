@@ -8,6 +8,7 @@ import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.jms.JMSException;
@@ -21,13 +22,22 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
  */
 public class MqUtil {
 
-    public  static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw,
-                                            String batchSize, boolean writeOut) {
-        return getQueueProperty (topic, inQueue, outQueue, ahost, aport, abroker, achannel, alogin, apassw, batchSize, writeOut, false);
+    public static QueueProperties getQueueProperties (String topic, String inQueue, String outQueue, String ahost, int aport, String abroker, String achannel,
+                                               String alogin, String apassw, int batchSize, boolean writeOut, boolean remoteQueueOut) {
+        return new QueueProperties(ahost, aport, abroker, achannel, batchSize,
+                topic + ":" + inQueue + (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue),
+                alogin, apassw, "show", writeOut, true, remoteQueueOut);
     }
 
-    public  static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw,
-                                            String batchSize, boolean writeOut, boolean remoteQueueOut) {
+    public static String getJobProperty(QueueProperties queueProperties) {
+        return  queueProperties.toString()
+                + "mq.user=" + queueProperties.mqUser + "\n"
+                + "mq.password=" + queueProperties.mqPassword +"\n"
+                ;
+    }
+
+    public static String getJobProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel,
+                                   String alogin, String apassw, String batchSize, boolean writeOut, boolean remoteQueueOut) {
         return  "mq.type = queue\n"
                 + "mq.host = " + ahost + "\n"
                 + "mq.port = " + aport + "\n"

@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountDetailsNotifyProcessor;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbtest.mq.MqUtil;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
@@ -52,8 +53,8 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where bsaacid='40702810400154748352'");
 
-        MQQueueConnectionFactory cf = getConnectionFactory(HOST_NAME, MBROKER, CHANNEL);
-        sendToQueue(cf, ACDENO12, notifyFC12Close.getBytes(), null, USERNAME, PASSWORD);
+        MQQueueConnectionFactory cf = MqUtil.getConnectionFactory(HOST_NAME, MBROKER, CHANNEL);
+        MqUtil.sendToQueue(cf, ACDENO12, notifyFC12Close.getBytes(), null, USERNAME, PASSWORD);
 //        putMessageInQueue(ACDENO6, notifyFC12Close);
 
         SingleActionJob job =
@@ -81,8 +82,8 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40702810400154748352'");
 
-        MQQueueConnectionFactory cf = getConnectionFactory(HOST_NAME, MBROKER, CHANNEL);
-        sendToQueue(cf, ACDENO6, fullTopicTest.getBytes(), null, USERNAME, PASSWORD);
+        MQQueueConnectionFactory cf = MqUtil.getConnectionFactory(HOST_NAME, MBROKER, CHANNEL);
+        MqUtil.sendToQueue(cf, ACDENO6, fullTopicTest.getBytes(), null, USERNAME, PASSWORD);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
