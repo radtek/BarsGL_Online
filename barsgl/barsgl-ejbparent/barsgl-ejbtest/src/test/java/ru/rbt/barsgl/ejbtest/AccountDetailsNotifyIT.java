@@ -48,7 +48,6 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 //    public static final String PASSWORD = "";
 
     @Test
-    @Ignore
     public void testNotifyClose12() throws Exception {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where bsaacid='40702810400154748352'");
@@ -78,24 +77,17 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     }
 
     @Test
-    @Ignore
-    public void testMidasDev() throws Exception {
-        // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
-        // SYSTEM.ADMIN.SVRCONN/TCP/vs338(1414)
-        // UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+    public void testNotifyOpen6() throws Exception {
 
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
+        baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40702810400154748352'");
 
-
-        putMessageInQueue("UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", fullTopicTestMidasOld);
+        MQQueueConnectionFactory cf = getConnectionFactory(HOST_NAME, MBROKER, CHANNEL);
+        sendToQueue(cf, ACDENO6, fullTopicTest.getBytes(), null, USERNAME, PASSWORD);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountDetailsNotifyTask.class)
                         .withProps(
-//                     queue|topic
                                 "mq.type = queue\n" +
                                         "mq.algo = simple\n" +
                                         "mq.host = " + HOST_NAME + "\n" +
@@ -103,10 +95,10 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
                                         "mq.queueManager = " + MBROKER + "\n" +
                                         "mq.channel = SYSTEM.DEF.SVRCONN\n" +
                                         "mq.batchSize = 7\n" +
-                                        "mq.topics = FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF;MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
+                                        "mq.topics = FCC:" + ACDENO6 + "\n" +
                                         "mq.user=" + USERNAME + "\n" +
                                         "mq.password=" + PASSWORD + ""
-                        )// MIDAS_OPEN:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF;FCC:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+                        )
                         .build();
         jobService.executeJob(job);
 
@@ -201,16 +193,6 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     }
 
     @Test
-    @Ignore
-    public void testErrorfromProd() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40802810500014908835'");
-
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, error1, null);
-
-        assertTrue(null != baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40802810500014908835"));
-    }
-
-    @Test
     public void testFC12Close() throws Exception {
         String bsaacid = "40702810400094449118";
         String closeDateStr = "2016-09-14";
@@ -274,6 +256,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     }
 
 
+/*
     private void putMessageInQueue(String queueName, String envelope) throws JMSException {
         MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
 
@@ -306,6 +289,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         session.close();
         connection.close();
     }
+*/
 
     private void reopenAccount(String bsaacid) {
         baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = null where BSAACID = ?", bsaacid);

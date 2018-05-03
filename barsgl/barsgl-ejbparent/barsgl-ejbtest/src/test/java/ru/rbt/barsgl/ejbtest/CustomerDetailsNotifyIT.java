@@ -7,9 +7,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.CustomerDetailsNotifyTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyQueueController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNInput;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNMapped;
@@ -19,7 +20,10 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
+import javax.jms.JMSException;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 
 import static ru.rbt.barsgl.ejb.entity.cust.CustDNJournal.Status.*;
@@ -35,15 +39,14 @@ import static ru.rbt.barsgl.ejb.props.PropertyName.CUST_LOAD_ONLINE;
  */
 public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
-//    private final static String host = "vs338";
-//    private final static String broker = "QM_MBROKER10_TEST";
     private final static String host = "vs529";
     private final static String broker = "QM_MBROKER4_T5";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
     private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private static final String login = "srvwbl4mqtest";    // srvwb14mqtest    l != 1 !!!
     private static final String passw = "UsATi8hU";
-    private static final boolean writeOut = true;
+    private static final Boolean writeOut = true;
+    private static final String unspents = "show";
 
     private static final String qType = "CUST";
 
@@ -54,8 +57,17 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         deletePropertyOnline();
     }
 
-    private String getQProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
-        return getQueueProperty (topic, cudenoIn, null, ahost, "1414", abroker, channel, alogin, apassw, "30", writeOut);
+    private String getJobProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
+        return getJobProperty (topic, cudenoIn, null, ahost, "1414", abroker, channel, alogin, apassw, "30", writeOut);
+    }
+
+    private QueueProperties getQueueProperties(String topic, String ahost, String abroker, String alogin, String apassw) {
+        return getQueueProperties(topic, cudenoIn, null, ahost, 1414, abroker, channel, alogin, apassw, 30, writeOut, false);
+    }
+
+    public String getResourceText(String resource) throws IOException {
+        File inFile = new File(this.getClass().getResource(resource).getFile());
+        return FileUtils.readFileToString(inFile, CustomerNotifyProcessor.charsetName);
     }
 
     /**
@@ -81,7 +93,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
     }
 
     private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch, boolean isError) throws Exception {
-        testProperties(getQueueProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch, writeOut), isError);
+        testProperties(getJobProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch, writeOut), isError);
     }
 
     /**
@@ -91,13 +103,13 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
     @Test
     public void testConnectToQueue() throws Exception {
         long idAudit = getAuditMaxId();
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "closeConnection");
+        closeConnection();
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(CustomerDetailsNotifyTask.class)
                         .withName("CustomerNotify1")
-                        .withProps(getQProperty(qType, host, broker, login, passw))
+                        .withProps(getJobProperty(qType, host, broker, login, passw))
                         .build();
         jobService.executeJob(job);
 
@@ -112,15 +124,12 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
     @Test
     public void testSendQueue() throws Exception {
         long idAudit = getAuditMaxId();
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "closeConnection");
+        closeConnection();
 
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
-        sendToQueue(cf, cudenoIn,
-                new File(this.getClass().getResource("/CustomerDetailsTest_B.xml").getFile()),
-                null, login, passw);
-        sendToQueue(cf, cudenoIn,
-                new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()),
-                null, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        startConnection(properties);
+        sendToQueue(getResourceText("/CustomerDetailsTest_B.xml"), properties, null, null, cudenoIn);
+        sendToQueue(getResourceText("/CustomerDetailsTest_C.xml"), properties, null, null, cudenoIn);
 
         Thread.sleep(2000L);
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
@@ -137,7 +146,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String message = IOUtils.toString(this.getClass().getResourceAsStream("/CustomerDetailsTest_B.xml"), "UTF-8");
+        String message = getResourceText("/CustomerDetailsTest_B.xml");
 
         Long jId = remoteAccess.invoke(CustomerNotifyQueueController.class, "createJournalEntry", qType, message);
         remoteAccess.invoke(CustomerNotifyProcessor.class, "process", message, jId);
@@ -161,19 +170,17 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "closeConnection");
+        closeConnection();
 
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
-
-        sendToQueue(cf, cudenoIn,
-                new File(this.getClass().getResource("/CustomerDetailsTest_B.xml").getFile()),
-                null, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        startConnection(properties);
+        sendToQueue(getResourceText("/CustomerDetailsTest_B.xml"), properties, null, null, cudenoIn);
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(CustomerDetailsNotifyTask.class)
                         .withName("CustomerNotify2")
-                        .withProps(getQProperty(qType, host, broker, login, passw))
+                        .withProps(getJobProperty(properties))
                         .build();
         jobService.executeJob(job);
 
@@ -198,19 +205,23 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
 
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
-        remoteAccess.invoke(CustomerNotifyQueueController.class, "closeConnection");
+        closeConnection();
 
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        startConnection(properties);
+        sendToQueue(getResourceText("/CustomerDetailsTest_Xs.xml"), properties, null, null, cudenoIn);
 
+/*
         sendToQueue(cf, cudenoIn,
                 new File(this.getClass().getResource("/CustomerDetailsTest_Xs.xml").getFile()),
                 null, login, passw);
+*/
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(CustomerDetailsNotifyTask.class)
                         .withName("CustomerNotify2")
-                        .withProps(getQProperty(qType, host, broker, login, passw))
+                        .withProps(getJobProperty(properties))
                         .build();
         jobService.executeJob(job);
 
@@ -235,10 +246,9 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_I.xml").getFile())) ; //, "UTF-8");
+        String textMessage = getResourceText("/CustomerDetailsTest_I.xml");
         // 00488888
 
-        // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
@@ -259,7 +269,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
+        String textMessage = getResourceText("/CustomerDetailsTest_C.xml");
         // 00694379 A35	12 : 064 18
 
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
@@ -288,7 +298,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
+        String textMessage = getResourceText("/CustomerDetailsTest_C.xml");
         // 00694379 A35	12 : 064 18
 
         updateCustomer("00694379", "001", "11", N);
@@ -320,7 +330,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_insert.xml").getFile())) ;//, "UTF-8");
+        String textMessage = getResourceText("/CustomerDetailsTest_insert.xml");
         // 00000010 A35	12 : 064 18
 
         deleteCustomer(fakeCustomer);
@@ -352,7 +362,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_insert.xml").getFile())); //, "UTF-8");
+        String textMessage = getResourceText("/CustomerDetailsTest_insert.xml");
         deleteCustomer(fakeCustomer);
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
 
@@ -385,7 +395,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idCudeno = getCudenoMaxId();
         deleteCustomer(fakeCustomer);
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_C.xml").getFile()), CustomerNotifyProcessor.charsetName);
+        String textMessage = getResourceText("/CustomerDetailsTest_C.xml");
         updateCustomer("00694379", "001", "11", N);
 
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
@@ -419,7 +429,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errval.xml").getFile())); //, "UTF-8");
+        String textMessage = getResourceText("/CustomerDetailsTest_errval.xml");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
@@ -443,7 +453,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idCudeno = getCudenoMaxId();
 
-        String textMessage = FileUtils.readFileToString(new File(this.getClass().getResource("/CustomerDetailsTest_errmap.xml").getFile())); //, "UTF-8");
+        String textMessage = getResourceText("/CustomerDetailsTest_errmap.xml");
 
         // Long processing(String queueType, String[] incMessage, String toQueue, long receiveTime, long waitingTime) throws Exception {
         remoteAccess.invoke(CustomerNotifyQueueController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
@@ -516,4 +526,5 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP = ?", CUST_LOAD_ONLINE.getName());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
+
 }

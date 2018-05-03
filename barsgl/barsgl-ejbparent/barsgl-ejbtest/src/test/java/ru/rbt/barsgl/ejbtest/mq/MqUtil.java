@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.ejbtest;
+package ru.rbt.barsgl.ejbtest.mq;
 
 import com.ibm.jms.JMSBytesMessage;
 import com.ibm.jms.JMSMessage;
@@ -6,48 +6,28 @@ import com.ibm.jms.JMSTextMessage;
 import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
-import ru.rbt.barsgl.ejbtesting.test.QueueTesting;
 import ru.rbt.ejbcore.util.StringUtils;
 
-import javax.jms.JMSConsumer;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import java.io.*;
-import java.nio.charset.Charset;
-import java.util.Properties;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 
 /**
- * Created by er18837 on 23.03.2018.
+ * Created by er18837 on 27.04.2018.
  */
-public class AbstractQueueIT extends AbstractTimerJobIT {
+public class MqUtil {
 
-    public  QueueProperties getQueueProperties (String topic, String inQueue, String outQueue, String ahost, int aport, String abroker, String achannel,
-                                                String alogin, String apassw, int batchSize, boolean writeOut, boolean remoteQueueOut) {
-        return new QueueProperties(ahost, aport, abroker, achannel, batchSize,
-                topic + ":" + inQueue + (StringUtils.isEmpty(outQueue) ? "" : ":" + outQueue),
-                alogin, apassw, "show", writeOut, true, remoteQueueOut);
+    public  static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw,
+                                            String batchSize, boolean writeOut) {
+        return getQueueProperty (topic, inQueue, outQueue, ahost, aport, abroker, achannel, alogin, apassw, batchSize, writeOut, false);
     }
 
-    public String getJobProperty(QueueProperties queueProperties) {
-        return  queueProperties.toString()
-                + "mq.user=" + queueProperties.mqUser + "\n"
-                + "mq.password=" + queueProperties.mqPassword +"\n"
-                ;
-    }
-
-    public  String getJobProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel,
-                                   String alogin, String apassw, String batchSize, boolean writeOut) {
-        return getJobProperty (topic, inQueue, outQueue, ahost, aport, abroker, achannel, alogin, apassw, batchSize, writeOut, false);
-    }
-
-    public  String getJobProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel,
-                                   String alogin, String apassw, String batchSize, boolean writeOut, boolean remoteQueueOut) {
+    public  static String getQueueProperty (String topic, String inQueue, String outQueue, String ahost, String aport, String abroker, String achannel, String alogin, String apassw,
+                                            String batchSize, boolean writeOut, boolean remoteQueueOut) {
         return  "mq.type = queue\n"
                 + "mq.host = " + ahost + "\n"
                 + "mq.port = " + aport + "\n"
@@ -65,22 +45,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
                 ;
     }
 
-    public void testProperties(String propStr, boolean isError) throws Exception {
-        System.out.print(propStr);
-        Properties properties = new Properties();
-        properties.load(new StringReader(propStr));
-        try {
-            QueueProperties queueProperties = new QueueProperties(properties);
-            System.out.println(queueProperties.toString());
-            Assert.assertFalse(isError);
-        } catch (Throwable e) {
-            System.out.println("Error!");
-            Assert.assertTrue(isError);
-        }
-        System.out.println();
-    }
-
-    public  MQQueueConnectionFactory getConnectionFactory(String ahost, String abroker, String achannel) throws JMSException {
+    public  static MQQueueConnectionFactory getConnectionFactory(String ahost, String abroker, String achannel) throws JMSException {
         MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
 
         cf.setHostName(ahost);
@@ -91,7 +56,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         return cf;
     }
 
-    public  int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
+    public static int clearQueue(MQQueueConnectionFactory cf, String queueName, String username, String password, int count) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -117,7 +82,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         return i;
     }
 
-    public QueueInputMessage receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
+    public static QueueInputMessage receiveFromQueue(MQQueueConnectionFactory cf, String queueName, String username, String password) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(username, password);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -134,7 +99,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         return answer;
     }
 
-    public QueueInputMessage readFromJMS(MQMessageConsumer receiver) throws JMSException {
+    public static QueueInputMessage readFromJMS(MQMessageConsumer receiver) throws JMSException {
         JMSMessage receivedMessage = (JMSMessage) receiver.receive(100);
         if (null == receivedMessage)
             return new QueueInputMessage(null);
@@ -167,7 +132,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
                 (receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString()));
     }
 
-    public  void answerToQueue(MQQueueConnectionFactory cf, String queueName, File file, String correlationId, String username, String password) throws JMSException {
+    public static void answerToQueue(MQQueueConnectionFactory cf, String queueName, File file, String correlationId, String username, String password) throws JMSException {
         byte[] incomingMessage = null;
         try {
             incomingMessage = FileUtils.readFileToByteArray(file);
@@ -177,15 +142,15 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         answerToQueue(cf, queueName, incomingMessage, correlationId, username, password);
     }
 
-    public  void answerToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String correlationId, String username, String password) throws JMSException {
+    public static void answerToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String correlationId, String username, String password) throws JMSException {
         sendToQueue(cf, queueName, incomingMessage, null, correlationId, username, password, 1);
     }
 
-    public  void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password) throws JMSException {
+    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password) throws JMSException {
         sendToQueue (cf, queueName, file, replyToQ, username, password, 1);
     }
 
-    public  void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password, int cnt) throws JMSException {
+    public static  void sendToQueue(MQQueueConnectionFactory cf, String queueName, File file, String replyToQ, String username, String password, int cnt) throws JMSException {
         byte[] incomingMessage = null;
         try {
             incomingMessage = FileUtils.readFileToByteArray(file);
@@ -195,11 +160,11 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         sendToQueue(cf, queueName, incomingMessage, replyToQ, null, username, password, cnt);
     }
 
-    public  void sendToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String correlationId, String username, String password) throws JMSException {
+    public static void sendToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String correlationId, String username, String password) throws JMSException {
         sendToQueue(cf, queueName, incomingMessage, null, correlationId, username, password, 1);
     }
 
-    public  void sendToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String replyToQ, String correlationId, String username, String password, int cnt) throws JMSException {
+    public static  void sendToQueue(MQQueueConnectionFactory cf, String queueName, byte[] incomingMessage, String replyToQ, String correlationId, String username, String password, int cnt) throws JMSException {
         if (isEmpty(incomingMessage)) {
             System.exit(1);
         }
@@ -231,7 +196,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         connection.close();
     }
 
-    private void sendToQueue(MQQueueConnectionFactory cf, String queueName, String fullTopicTest) throws JMSException {
+    private static void sendToQueue(MQQueueConnectionFactory cf, String queueName, String fullTopicTest) throws JMSException {
         MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
@@ -250,39 +215,4 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         connection.close();
     }
 
-    // ========================================================
-    public static void printCommunicatorName() {
-        System.out.println((String) remoteAccess.invoke(QueueTesting.class, "getCommunicatorName"));
-    }
-
-    public static void startConnection(QueueProperties queueProperties) throws JMSException {
-        remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties);
-    }
-
-    public static void closeConnection() throws JMSException {
-        remoteAccess.invoke(QueueTesting.class, "closeConnection");
-    }
-
-    public static void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException {
-        remoteAccess.invoke(QueueTesting.class, "sendToQueue", outMessage, queueProperties, corrId, replyTo, queue);
-    }
-
-    public static void sendToQueue(File file, Charset charset, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException, IOException {
-        sendToQueue(FileUtils.readFileToString(file, charset), queueProperties, corrId, replyTo, queue);
-    }
-
-    public static void sendToQueue(String outMessage, QueueProperties queueProperties, String corrId, String replyTo, String queueName, int cnt) throws JMSException {
-        remoteAccess.invoke(QueueTesting.class, "sendToQueue", outMessage, queueProperties, corrId, replyTo, queueName, cnt);
-        System.out.println("Sent to " + queueName + ": " + cnt);
-    }
-
-    public static QueueInputMessage receiveFromQueue(String queueName, Charset cs) throws JMSException {
-        return remoteAccess.invoke(QueueTesting.class, "receiveFromQueue", queueName, cs.name());
-    }
-
-    public static long clearQueue(QueueProperties queueProperties, String queueName, long count) throws JMSException {
-        long n =  remoteAccess.invoke(QueueTesting.class, "clearQueue", queueProperties, queueName, count);
-        System.out.println("Deleted from " + queueName + ": " + n);
-        return n;
-    }
 }

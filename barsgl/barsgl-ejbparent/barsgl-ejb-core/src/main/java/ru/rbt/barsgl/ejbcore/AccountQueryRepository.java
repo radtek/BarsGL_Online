@@ -184,6 +184,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             log.error("",e);
         }
 
+/*
         try {
             DataRecord record = selectFirst("SELECT ANAM FROM ACC WHERE ID=?", acid);
             if (record != null && !isEmpty(record.getString("ANAM"))) {
@@ -192,6 +193,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         } catch (SQLException e) {
             log.error("",e);
         }
+*/
         return "";
     }
 
