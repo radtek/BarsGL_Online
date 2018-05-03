@@ -5,19 +5,18 @@ import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.tasks.ejb.entity.task.JobHistory;
-import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.shared.ExceptionUtils;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -28,10 +27,10 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.E;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.O;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
@@ -56,9 +55,6 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
     @Inject
     private StamtUnloadPstIncrementTask incrementTask;
 
-//    @Inject
-//    private DateUtils dateUtils;
-
     @EJB
     private BackvalueJournalController backvalueJournalController;
 
@@ -78,14 +74,14 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
             if (operday.getPhase() == ONLINE) {
                 jobHistoryRepository.executeInNewTransaction(persistence1 -> workprocRepository
                         .updateWorkprocMessage(getStepName(jobName, properties), getWorkprocDate(operday), "STARTED"));
-                if (checkExecSync(operday)) {
+                if (checkExecSync(TASK_ERROR, operday)) {
                     Assert.isTrue(synchronizationController.waitStopProcessing(), () -> new ValidationError(ErrorCode.TERM_TIMEOUT, jobName));
                     jobHistoryRepository.executeInNewTransaction(persistence -> {
                         synchronizationController.syncBackvaluePostings(operday.getCurrentDate());
                         synchronizationController.restartSequencePD(synchronizationController.getMaxPdId(100L));
                         return null;
                     });
-                    auditController.info(BufferModeSyncBackvalue, format("Пересчитана локализация по счетам ''%s"
+                    auditController.info(BufferModeSyncBackvalue, format("Пересчитана локализация по счетам '%s'"
                             , backvalueJournalController.recalculateLocalIncrementBuffer()));
                     auditController.info(BufferModeSyncBackvalue, format("Переренсено в историю полупроводок: '%s'"
                             , (int)jobHistoryRepository.executeInNewTransaction(pers
@@ -95,7 +91,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
                         , coreRepository.executeInNewTransaction( pers -> workprocRepository.updateWorkproc(getStepName(jobName, properties), getWorkprocDate(operday)
                                 , O, format("Синхронизация по задаче %s выполнена", jobName)))));
 
-                auditController.info(BufferModeSyncBackvalue, format("Разрешеие обработки '%s'", allowAccess()));
+                auditController.info(BufferModeSyncBackvalue, format("Разрешение обработки '%s'", allowAccess()));
 
                 Assert.isTrue(incrementTask.checkRun(operday.getCurrentDate(), new Properties())
                         , () -> new ValidationError(TASK_ERROR, format("Не прошла проверка возм-ти выполнен инкр. выгрузки ОД %s"
@@ -161,17 +157,17 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
      * нужно ли провдоить синхронизацию или только провести выгрузку
      * @return
      */
-    private boolean checkExecSync(Operday operday) {
+    public boolean checkExecSync(ErrorCode errorCode, Operday operday) {
         try {
             Assert.isTrue(BUFFER == operdayController.getOperday().getPdMode()
-                    , () -> new ValidationError(TASK_ERROR
+                    , () -> new ValidationError(errorCode
                             , format("Режим сохранения проводок %s ожидалось %s", operdayController.getOperday().getPdMode(), BUFFER)));
             DataRecord statBackvalue = workprocRepository.selectFirst(textResourceController
                     .getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/buffer_backvalue_stat.sql"), operday.getCurrentDate());
             Assert.isTrue(statBackvalue.getLong("cnt") > 0
-                    , () -> new ValidationError(TASK_ERROR, "Нет проводок backvalue для синхронизации"));
+                    , () -> new ValidationError(errorCode, "Нет проводок backvalue для синхронизации"));
             Assert.isTrue(ONLINE == operday.getPhase()
-                    , () -> new ValidationError(TASK_ERROR, format("Операционный день в фазе %s ожидалось %s", operday.getPhase(), ONLINE)));
+                    , () -> new ValidationError(errorCode, format("Операционный день в фазе %s ожидалось %s", operday.getPhase(), ONLINE)));
             return true;
         } catch (ValidationError e) {
             auditController.warning(BufferModeSyncBackvalue, "Синхронизация не будет произведена", null, e);
@@ -205,7 +201,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
     @Override
     protected void initExec(String jobName, Properties properties) {}
 
-    private boolean allowAccess() {
+    public boolean allowAccess() {
         try {
             jobHistoryRepository.executeInNewTransaction(p -> {operdayController.setProcessingStatus(ProcessingStatus.ALLOWED); return null;});
             return true;

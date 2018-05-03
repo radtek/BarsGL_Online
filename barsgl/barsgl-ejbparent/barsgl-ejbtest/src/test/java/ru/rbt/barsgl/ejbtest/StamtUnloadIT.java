@@ -15,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
@@ -24,6 +25,7 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -42,11 +44,13 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.*;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamType.B;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamTypeCheck.INCLUDE;
 
@@ -804,6 +808,35 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertTrue(Objects.equals(accheader2.getLong("id"), accheader1.getLong("id")));
     }
 
+    @Test public void testSyncStamtIncrementWithoutStep () throws Exception {
+
+        updateOperday(ONLINE, OPEN, BUFFER);
+        GLOperation operation = createOper(getOperday().getLastWorkingDay());
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+
+        final String jobName = SyncStamtBackvalueTaskP2.class.getSimpleName();
+        final String finalStepName = "SOD_P4";
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where sched_name = ? ", jobName);
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4' where parvalue <> '4'");
+
+        SingleActionJob incrJob = SingleActionJobBuilder.create().withClass(SyncStamtBackvalueTaskP2.class)
+                .withProps(SyncStamtBackvalueTaskP2.FINAL_WORKPROC_STEP_NAME_KEY + "=" + "SOD_P4")
+                .withName(jobName).build();
+
+        checkCreateStep(finalStepName, getOperday().getLastWorkingDay(), "O");
+
+        jobService.executeJob(incrJob);
+
+        JobHistory history1 = getLastHistRecordObject(jobName);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history1.getResult());
+
+        GLPosting postings = getPostingByOper(operation);
+
+        Assert.assertTrue(baseEntityRepository.select("select * from gl_etlstmd").stream().anyMatch(r -> postings.getId().equals(((DataRecord)r).getLong("pcid"))));
+
+    }
+
     private void registerForStamtUnload(String bsaacid) {
         try {
             baseEntityRepository.executeNativeUpdate("insert into gl_stmparm (account, INCLUDE,acctype,INCLUDEBLN) values (?, '1', 'B','1')"
@@ -1101,5 +1134,27 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
             baseEntityRepository.executeNativeUpdate("insert into cal (dat, hol, ccy, thol) values (?, ' ', 'RUR', ' ')"
                     , date);
         }
+    }
+
+    private GLOperation createOper(Date vdate) {
+        final long stamp = System.currentTimeMillis();
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(vdate);
+
+        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountDebit("40817036250010000018");
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setDealId("123");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        return (GLOperation) postingController.processMessage(pst);
     }
 }

@@ -46,6 +46,7 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -746,6 +747,12 @@ public abstract class AbstractRemoteIT  {
         return baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
     }
 
+    public JobHistory getLastHistRecordObject(String jobName) throws SQLException {
+        DataRecord record = baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
+        Assert.assertNotNull("JobHistory record is not found", record);
+        return  (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.id = ?1", record.getLong("id_hist"));
+    }
+
     public static GLOperation getLastOperation(Long idpst) {
         return (GLOperation) baseEntityRepository.selectFirst(GLOperation.class, "from GLOperation o where o.etlPostingRef = ?1 order by 1 desc", idpst);
     }
@@ -755,7 +762,7 @@ public abstract class AbstractRemoteIT  {
     }
 
     public static GLPosting getPostingByOper(GLOperation oper) {
-        return (GLPosting) baseEntityRepository.selectFirst(GLOperation.class, "from GLPosting p where p.operation = ?1 order by 1 desc", oper);
+        return (GLPosting) baseEntityRepository.selectFirst(GLPosting.class, "from GLPosting p where p.operation = ?1 order by 1 desc", oper);
     }
 
     public static String findBsaAccount(String bsaacidLike) throws SQLException {
