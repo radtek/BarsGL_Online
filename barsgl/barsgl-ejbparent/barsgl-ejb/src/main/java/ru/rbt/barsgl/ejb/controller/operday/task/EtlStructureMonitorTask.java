@@ -202,7 +202,7 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
         } finally {
             // pseudo online localization in DIRECT mode only
             try {
-                if (DIRECT == operdayController.getOperday().getPdMode() && GIBRID == operdayController.getBalanceCalculationMode()) {
+                if (DIRECT == operdayController.getOperday().getPdMode() && GIBRID != operdayController.getBalanceCalculationMode()) {
                     recalculateBackvalue(loadedPackage);
                 }
             } catch (Throwable e) {
