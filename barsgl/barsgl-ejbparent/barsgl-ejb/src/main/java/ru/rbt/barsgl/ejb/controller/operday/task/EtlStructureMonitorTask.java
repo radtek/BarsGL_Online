@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
@@ -10,10 +11,8 @@ import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
-import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
@@ -31,21 +30,23 @@ import javax.inject.Inject;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import java.util.concurrent.ExecutorService;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 import static org.apache.commons.lang3.time.DateUtils.truncate;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.*;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 
 
 /**
@@ -200,8 +201,12 @@ public class EtlStructureMonitorTask implements ParamsAwareRunnable {
             }
         } finally {
             // pseudo online localization in DIRECT mode only
-            if (DIRECT == operdayController.getOperday().getPdMode()) {
-                recalculateBackvalue(loadedPackage);
+            try {
+                if (DIRECT == operdayController.getOperday().getPdMode() && GIBRID == operdayController.getBalanceCalculationMode()) {
+                    recalculateBackvalue(loadedPackage);
+                }
+            } catch (Throwable e) {
+                auditController.error(Package, "Ошибка на принятии решения о проведении локализации по проводкам бэквалуе после окончания обработки пакета АЕ", null, e);
             }
         }
     }
