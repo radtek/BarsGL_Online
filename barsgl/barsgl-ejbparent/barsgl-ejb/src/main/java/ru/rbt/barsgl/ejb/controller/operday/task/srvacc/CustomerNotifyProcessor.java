@@ -231,7 +231,7 @@ public class CustomerNotifyProcessor extends CommonNotifyProcessor implements Se
     }
 
     @Override
-    protected void updateLogStatusError(Long jourbnalId, String message) {
-        journalRepository.updateLogStatus(jourbnalId, ERR_VAL, message);
+    protected void updateLogStatusError(Long journalId, String message) {
+        journalRepository.updateLogStatus(journalId, ERR_VAL, message);
     }
 }

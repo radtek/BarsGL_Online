@@ -1,26 +1,19 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.microsoft.schemas.office.visio.x2012.main.RelType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.rbt.barsgl.common.xml.DomBuilder;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTaskOld;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.XmlUtilityLocator;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.util.StringUtils;
 
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -28,12 +21,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Sources.FC12;
@@ -80,7 +69,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
 
         Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
+        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage",
                 FCC, message, null);
 
         GLAccount account = getAccount(bsaacid);
@@ -111,7 +100,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         message = changeAccountParam(message, cbNode, cb, bsaacid);
 
         Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
+        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage",
                 FCC, message, null);
 
         GLAccount account = getAccount(bsaacid);
@@ -137,7 +126,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         message = changeAccountParam(message, cbNode, cb, bsaacid);
 
         Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
+        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage",
                 FC12, message, null);
 
         GLAccount account = getAccount(bsaacid);
@@ -166,7 +155,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         message = changeAccountParam(message, cbNode, cb, bsaacid);
 
         Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
+        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage",
                 FC12, message, null);
 
         GLAccount account = getAccount(bsaacid);

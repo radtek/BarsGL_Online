@@ -225,4 +225,39 @@ public class MqUtil {
         connection.close();
     }
 
+    /*
+    private void putMessageInQueue(String queueName, String envelope) throws JMSException {
+        MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
+
+
+        // Config
+        cf.setHostName(HOST_NAME);
+        cf.setPort(1414);
+        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+        cf.setQueueManager(MBROKER);
+        cf.setChannel(CHANNEL);
+
+        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(USERNAME, PASSWORD);
+        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
+        queue.setTargetClient(JMSC.MQJMS_MESSAGE_BODY_MQ);
+        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
+        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
+
+        connection.start();
+
+        JMSTextMessage message = (JMSTextMessage) session.createTextMessage(envelope);
+        sender.send(message);
+        System.out.println("Sent message:\\n" + message);
+
+//            JMSMessage receivedMessage = (JMSMessage) receiver.receive(10000);
+//            System.out.println("\\nReceived message:\\n" + receivedMessage);
+
+        sender.close();
+        receiver.close();
+        session.close();
+        connection.close();
+    }
+*/
+
 }

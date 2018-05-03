@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:gbo="urn:ucbru:gbo:v5"
+                  xmlns:acc="urn:ucbru:gbo:v5:acc">
+    <soapenv:Header>
+        <gbo:UCBRUHeaders>
+            <gbo:Audit>
+                <gbo:MessagePath>
+                    <gbo:Step>
+                        <gbo:Application.Module>ATSFC12AC.AccountDetailsNotify.NotificationHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.055+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>ROUTE</gbo:RoutingRole>
+                        <gbo:Comment>Routing in SACC.v5.AcDeNo</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.v5.AcDeNo.NotificationHandler</gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.059+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>START</gbo:RoutingRole>
+                        <gbo:Comment>Start of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.AccountListQuery.RequestHandler</gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.063+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>START</gbo:RoutingRole>
+                        <gbo:Comment>Start of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.RequestHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.069+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>START</gbo:RoutingRole>
+                        <gbo:Comment>Start of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.RequestHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.075+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>ROUTE</gbo:RoutingRole>
+                        <gbo:Comment>In the cache of the accounts not detected, will be requested ABS</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSRequestHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.078+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>START</gbo:RoutingRole>
+                        <gbo:Comment>Start of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSRequestHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.080+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>ROUTE</gbo:RoutingRole>
+                        <gbo:Comment>Routing by cache settings</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSResponseHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.316+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>ROUTE SUCCESS</gbo:RoutingRole>
+                        <gbo:Comment>The responses received from ECHO,FC12</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.ABSResponseHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.318+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>SUCCESS</gbo:RoutingRole>
+                        <gbo:Comment>Finish of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.MasterAccountPositioningBatchQuery.ResponseHandler
+                        </gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.321+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>SUCCESS</gbo:RoutingRole>
+                        <gbo:Comment>Finish of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.AccountListQuery.ABSRouter</gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.325+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>ROUTE</gbo:RoutingRole>
+                        <gbo:Comment>Routing by cache settings</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.AccountListQuery.ResponseHandler</gbo:Application.Module>
+                        <gbo:VersionId>5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.496+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>ROUTE SUCCESS</gbo:RoutingRole>
+                        <gbo:Comment>The responses received from ECHO,FC12</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.AccountListQuery.ResponseHandler</gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.498+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>SUCCESS</gbo:RoutingRole>
+                        <gbo:Comment>Finish of message processing</gbo:Comment>
+                    </gbo:Step>
+                    <gbo:Step>
+                        <gbo:Application.Module>SACC.v5.AcDeNo.PublishHandler</gbo:Application.Module>
+                        <gbo:VersionId>v5</gbo:VersionId>
+                        <gbo:TimeStamp>2016-11-24T12:43:11.504+03:00</gbo:TimeStamp>
+                        <gbo:RoutingRole>SUCCESS</gbo:RoutingRole>
+                        <gbo:Comment>Finish of message processing</gbo:Comment>
+                    </gbo:Step>
+                </gbo:MessagePath>
+            </gbo:Audit>
+        </gbo:UCBRUHeaders>
+    </soapenv:Header>
+    <soapenv:Body>
+        <acc:AccountList>
+            <acc:AccountDetails>
+                <acc:AccountNo>00145005RURCOSA101</acc:AccountNo>
+                <acc:Branch>E01</acc:Branch>
+                <acc:CBAccountNo>40702810400094449118</acc:CBAccountNo>
+                <acc:Ccy>RUR</acc:Ccy>
+                <acc:Description>OOO GruzAvtoImport</acc:Description>
+                <acc:Status>C</acc:Status>
+                <acc:CustomerNo>00145005</acc:CustomerNo>
+                <acc:Special>COSA1</acc:Special>
+                <acc:OpenDate>2011-07-22</acc:OpenDate>
+                <acc:AltAccountNo>145005RUR401102009</acc:AltAccountNo>
+                <acc:ATMAvailable>N</acc:ATMAvailable>
+                <acc:CreditTransAllowed>Y</acc:CreditTransAllowed>
+                <acc:DebitTransAllowed>Y</acc:DebitTransAllowed>
+                <acc:BackPeriodEntryAllowed>Y</acc:BackPeriodEntryAllowed>
+                <acc:AutoProvisionRequired>N</acc:AutoProvisionRequired>
+                <acc:ClearingAccountNo>00145005RURCOSA101</acc:ClearingAccountNo>
+                <acc:DormantParameter>B</acc:DormantParameter>
+                <acc:ExcludeReversalTrans>N</acc:ExcludeReversalTrans>
+                <acc:MT210Required>N</acc:MT210Required>
+                <acc:SweepType>1</acc:SweepType>
+                <acc:CorBank>045773873</acc:CorBank>
+                <acc:CorINN>7710030411</acc:CorINN>
+                <acc:Positioning>
+                    <acc:CBAccount>40702810400094449118</acc:CBAccount>
+                    <acc:IMBAccountNo>00145005RURCOSA101</acc:IMBAccountNo>
+                    <acc:IMBBranch>E01</acc:IMBBranch>
+                    <acc:HostABSAccountNo>00145005RURCOSA101</acc:HostABSAccountNo>
+                    <acc:HostABSBranch>E01</acc:HostABSBranch>
+                    <acc:HostABS>FC12</acc:HostABS>
+                </acc:Positioning>
+                <acc:GLCredit>
+                    <acc:CBLine>LI400</acc:CBLine>
+                    <acc:GLValue>202019102</acc:GLValue>
+                    <acc:HOLine>202000</acc:HOLine>
+                </acc:GLCredit>
+                <acc:GLDebit>
+                    <acc:CBLine>AS400</acc:CBLine>
+                    <acc:GLValue>105049022</acc:GLValue>
+                    <acc:HOLine>105000</acc:HOLine>
+                </acc:GLDebit>
+                <acc:StmtSettings>
+                    <acc:Cycle>D</acc:Cycle>
+                    <acc:Type>D</acc:Type>
+                    <acc:GenOnMovement>Y</acc:GenOnMovement>
+                </acc:StmtSettings>
+                <acc:Stmt2Settings>
+                    <acc:Type>N</acc:Type>
+                </acc:Stmt2Settings>
+                <acc:Stmt3Settings>
+                    <acc:Type>N</acc:Type>
+                </acc:Stmt3Settings>
+                <acc:PrevStmt>
+                    <acc:Date>2016-09-14</acc:Date>
+                </acc:PrevStmt>
+                <acc:PrevStmt2/>
+                <acc:PrevStmt3/>
+                <acc:MIS>
+                    <acc:Pool>POOL2</acc:Pool>
+                </acc:MIS>
+                <acc:ControlledAccount>Y</acc:ControlledAccount>
+                <acc:CloseDate>2016-09-14</acc:CloseDate>
+                <acc:OpenBalance>0</acc:OpenBalance>
+                <acc:CurrentBalance>0</acc:CurrentBalance>
+                <acc:AvailableBalance>0</acc:AvailableBalance>
+                <acc:UncollectedBalance>0</acc:UncollectedBalance>
+                <acc:CreditTurnoverToday>0</acc:CreditTurnoverToday>
+                <acc:DebitTurnoverToday>0</acc:DebitTurnoverToday>
+                <acc:BlockedAmount>0</acc:BlockedAmount>
+                <acc:DebitAccrued>0</acc:DebitAccrued>
+                <acc:CreditAccrued>0</acc:CreditAccrued>
+                <acc:GWSAccType>CURR</acc:GWSAccType>
+                <acc:OperationTypeCodes>
+                    VIEW=1,DOMPAY=1,DOMTAX=1,DOMCUS=1,CUPADE=1,CUPACO=1,CUSEOD=1,CUSEOC=1,CURBUY=1,CUOPCE=1,
+                </acc:OperationTypeCodes>
+            </acc:AccountDetails>
+        </acc:AccountList>
+    </soapenv:Body>
+</soapenv:Envelope>

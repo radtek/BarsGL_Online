@@ -35,6 +35,13 @@ public class AcDNJournalRepository extends AbstractBaseEntityRepository<AcDNJour
         update(journal);
     }
 
+    public void updateLogStatus(Long jId, AcDNJournal.Status status) {
+        AcDNJournal journal = findById(AcDNJournal.class, jId);
+        journal.setStatusDate(new Date());
+        journal.setStatus(status);
+        update(journal);
+    }
+
     public boolean finalizeOnException(Long jId) {
         if(jId==0L) {
             return false;

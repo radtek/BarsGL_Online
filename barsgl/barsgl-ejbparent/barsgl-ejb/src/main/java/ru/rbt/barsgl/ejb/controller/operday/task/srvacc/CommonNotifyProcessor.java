@@ -25,9 +25,14 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
  */
 abstract public class CommonNotifyProcessor implements Serializable {
 
-    protected abstract void updateLogStatusError(Long jourbnalId, String message);
+    protected abstract void updateLogStatusError(Long journalId, String message);
 
     protected Map<String, String> readFromXML(String bodyXML, String charsetName, String parentName, XmlParam[] paramNames, Long journalId)
+            throws SAXException, ParserConfigurationException, XPathExpressionException, IOException {
+        return readFromXML(bodyXML, charsetName, parentName, "/" + parentName, paramNames, journalId);
+    }
+
+    protected Map<String, String> readFromXML(String bodyXML, String charsetName, String parentName, String parentPath, XmlParam[] paramNames, Long journalId)
             throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
         if (bodyXML == null || !bodyXML.contains(parentName)) {
             updateLogStatusError(journalId, "Не найден родительский узел " + parentName);
@@ -56,7 +61,7 @@ abstract public class CommonNotifyProcessor implements Serializable {
         XPath xPath = XmlUtilityLocator.getInstance().newXPath();
         try {
             Element element = doc.getDocumentElement();
-            nodes = (NodeList) xPath.evaluate("/" + parentName, element, XPathConstants.NODESET);
+            nodes = (NodeList) xPath.evaluate(parentPath, element, XPathConstants.NODESET);
             if (nodes == null || nodes.getLength() != 1) {
                 nodes = (NodeList) xPath.evaluate("Body/" + parentName, element, XPathConstants.NODESET);
                 if (nodes == null || nodes.getLength() != 1) {
@@ -88,7 +93,7 @@ abstract public class CommonNotifyProcessor implements Serializable {
             if (isEmpty(value)) {
                 if (!item.nullable)
                     builder.append(String.format("Не задано поле '%s'; ", item.xmlName));
-            } else if (value.length() > item.length)
+            } else if ((item.length > 0) && (value.length() > item.length))
                 builder.append(String.format("Длина поля '%s' > %d; ", item.xmlName, item.length));
         }
         return builder.toString();
@@ -102,6 +107,13 @@ abstract public class CommonNotifyProcessor implements Serializable {
 
         public XmlParam(String fieldName, String xmlName, boolean nullable, int length) {
             this.fieldName = fieldName;
+            this.xmlName = xmlName;
+            this.length = length;
+            this.nullable = nullable;
+        }
+
+        public XmlParam(String xmlName, boolean nullable, int length) {
+            this.fieldName = xmlName;
             this.xmlName = xmlName;
             this.length = length;
             this.nullable = nullable;
