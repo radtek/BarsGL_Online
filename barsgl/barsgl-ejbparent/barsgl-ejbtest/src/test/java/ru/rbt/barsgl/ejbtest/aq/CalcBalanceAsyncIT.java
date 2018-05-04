@@ -268,6 +268,17 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
     }
 
+    @Test public void testErrors() {
+        // берем счет и делаем для него битый baltur
+        // делаем проводку в режиме gibrid
+        // делаем кол-во попыток равное MAX_RETRIES
+        // проверяем что сообщение в очереди ошибок
+        // обрабатываем сообщение из ошибок (?)
+        // останавливаем обработку (?)
+
+
+    }
+
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
         String insert = "insert into pst (id,pcid,acid,bsaacid,amnt,amntbc,pbr,pod,vald,ccy, invisible) values (?,?,?,?,?,?,?,?,?,?,?)";
         baseEntityRepository.executeNativeUpdate(insert, id, pcid, acid, bsaacid, amount, amountbc, pbr, pod, vald, ccy, invisible);
