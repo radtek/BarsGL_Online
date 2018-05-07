@@ -8,16 +8,31 @@ import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
+import ru.rbt.barsgl.ejbcore.AsyncProcessor;
+import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
+import ru.rbt.barsgl.ejbtest.mq.MqUtil;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.JobSchedulingType;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
 import java.io.*;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
+import static ru.rbt.audit.entity.AuditRecord.LogLevel.SysError;
+import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
+import static ru.rbt.barsgl.ejb.common.CommonConstants.ACLIRQ_TASK;
+import static ru.rbt.barsgl.ejb.props.PropertyName.MQ_TIMEOUT;
+import static ru.rbt.barsgl.ejb.props.PropertyName.MQ_TIME_UNIT;
+import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
+import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
+import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
 
 /**
  * Created by ER22228
@@ -27,10 +42,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     public static final Logger logger = Logger.getLogger(AccountQueryMPIT.class.getName());
 
     private static final String qType = "LIRQ";
-//    private final static String host = "vs338";
-//    private final static String broker = "QM_MBROKER10_TEST";
-    private final static String host = "vs569";
-    private final static String broker = "QM_MBROKER4_T4";
+    public static final String host = "vs11205";    //"mbrk4-inta.testhpcsa.imb.ru";
+    private final static String broker = "QM_MBROKER4";
+//    private final static String host = "vs569";
+//    private final static String broker = "QM_MBROKER4_T4";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
     //    private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private final static String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
@@ -40,7 +55,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
-    private static final boolean writeOut = true;
+    private static final boolean writeOut = false;
 
 /*
     @After
@@ -59,10 +74,6 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(cf, acliquIn, login, passw, 1000);
         clearQueue(cf, acliquOut, login, passw, 1000);
 
-//        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
-//        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryBAProcessor.fullTopicTestB);
-
-//        sendToQueue(cf, acdenoF, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acdenoM, login, passw);
         sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw);
 
         Thread.sleep(1000L);
@@ -93,13 +104,13 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(cf, acliquIn, login, passw, cntmax);
         clearQueue(cf, acliquOut, login, passw, cntmax);
 
-        sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw, cnt);
+        MqUtil.sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest.xml").getFile()), acliquOut, login, passw, cnt);
 
         long idAudit = getAuditMaxId();
 
-//        setPropertyTimeout("SECONDS", 5);
+        setPropertyTimeout("SECONDS", 5);
 //        setPropertyTimeout("MINUTES", 1);
-//        setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
+        setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
 
         Thread.sleep(5000L);
         SingleActionJob job =
@@ -112,11 +123,12 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         Thread.sleep(6000L);
         int n = clearQueue(cf, acliquOut, login, passw, cntmax);
-        Assert.assertTrue(n < cnt);
+        Assert.assertTrue("Нет сообщений в выходной очереди", n > 0);
+        Assert.assertTrue("Все сообщения обработаны", n < cnt);
 
-        AuditRecord record = getAuditError(idAudit, Error);
+        AuditRecord record = getAuditError(idAudit, SysError);
         Assert.assertNotNull("Нет записи об ошибке в аудит", record);
-        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
+//        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
     }
 
     @Test
@@ -133,9 +145,9 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         long idAudit = getAuditMaxId();
 
-//        setPropertyTimeout("SECONDS", 5);
+        setPropertyTimeout("SECONDS", 5);
 //        setPropertyTimeout("MINUTES", 1);
-//        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
+        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
 
         Thread.sleep(5000L);
         SingleActionJob job =
@@ -148,14 +160,14 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         Thread.sleep(6000L);
         int n = clearQueue(cf, acliquOut, login, passw, cntmax);
-        Assert.assertTrue(n < cnt);
+        Assert.assertTrue("Нет сообщений в выходной очереди", n > 0);
+        Assert.assertTrue("Все сообщения обработаны", n < cnt);
 
-        AuditRecord record = getAuditError(idAudit, Error);
+        AuditRecord record = getAuditError(idAudit, SysError);
         Assert.assertNotNull("Нет записи об ошибке в аудит", record);
-        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
+//        Assert.assertTrue("Нет записи об ошибке в аудит", record.getErrorMessage().contains("Код ошибки '3018'"));
     }
 
-/*
     @Test
     public void testStress500() throws Exception {
 
@@ -175,6 +187,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         long idAudit = getAuditMaxId();
 
+        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
         setPropertyTimeout("MINUTES", 10);
         runAclirqJob(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
         Thread.sleep(60 * 3000L);
@@ -190,6 +203,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     }
 
     @Test
+    @Ignore
     public void testStress5000() throws Exception {
 
         int cnt = 5000;
@@ -204,6 +218,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, login, passw, cnt);
 
+        setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
         setPropertyTimeout("MINUTES", 10);
         runAclirqJob(getQueueProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
 
@@ -219,7 +234,6 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         // new   6:12.409   7:34.93
         // old   6:47.807   7:6.07
     }
-*/
 
     @Test
     @Ignore
@@ -372,7 +386,6 @@ mq.password=UsATi8hU
 
     }
 
-/*
     private static void setPropertyTimeout(String unit, int interval) {
         deletePropertyTimeout();
         baseEntityRepository.executeNativeUpdate("insert into gl_prprp values " +
@@ -391,9 +404,7 @@ mq.password=UsATi8hU
                 AsyncProcessor.MQ_EXECUTOR, etype.name());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
-*/
 
-/*
     private static void deletePropertyTimeout() {
         baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?, ?)", MQ_TIMEOUT.getName(), MQ_TIME_UNIT.getName());
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
@@ -403,7 +414,6 @@ mq.password=UsATi8hU
         baseEntityRepository.executeNativeUpdate("delete from gl_prprp where ID_PRP in (?)", AsyncProcessor.MQ_EXECUTOR);
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
-*/
 
     private AuditRecord getAuditError(long idFrom, AuditRecord.LogLevel ... levels ) throws SQLException {
         String level = "";
@@ -427,15 +437,17 @@ mq.password=UsATi8hU
         return cnt;
     }
 
-/*
-    public static void runAclirqJob(String props) {
+
+    public static void runAclirqJob(String props) throws SQLException {
+        DataRecord tsk = baseEntityRepository.selectFirst("select * from GL_SCHED_S where TSKNM = ?", ACLIRQ_TASK);
         TimerJob aclirqTaskJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
                 , "from TimerJob j where j.name = ?1", ACLIRQ_TASK);
         if(null != aclirqTaskJob &&
-                (!aclirqTaskJob.getSchedulingType().equals(JobSchedulingType.INTERVAL)
+                    (!aclirqTaskJob.getSchedulingType().equals(JobSchedulingType.INTERVAL)
                         || aclirqTaskJob.getInterval() != 50L
                         || !props.equals(aclirqTaskJob.getProperties())
-                )) {
+                    )
+                || null != tsk) {
             baseEntityRepository.executeUpdate("delete from TimerJob j where j.name = ?1", ACLIRQ_TASK);
             aclirqTaskJob = null;
         }
@@ -456,7 +468,6 @@ mq.password=UsATi8hU
 //            jobService.startupJob(aclirqJob);
 //            registerJob(aclirqJob);
     }
-*/
 
     static String fullTopicTest =
             "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
