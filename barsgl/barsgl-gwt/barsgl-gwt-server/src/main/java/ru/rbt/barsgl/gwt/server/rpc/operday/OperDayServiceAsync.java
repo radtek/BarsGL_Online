@@ -21,6 +21,7 @@ public interface OperDayServiceAsync {
      void runOpenOperdayTask(AsyncCallback<RpcRes_Base<Boolean>> callback);
      void swithPdMode(AsyncCallback<RpcRes_Base<OperDayWrapper>> callback);
      void getProcessingStatus(AsyncCallback<RpcRes_Base<ProcessingStatus>> callback);
+     void setProcessingStatus(ProcessingStatus processingStatus, AsyncCallback<RpcRes_Base<String>> callback);
 
      void getCobInfo(Long idCob, AsyncCallback<RpcRes_Base<CobWrapper>> callback);
      void calculateCob(AsyncCallback<RpcRes_Base<CobWrapper>> callback);

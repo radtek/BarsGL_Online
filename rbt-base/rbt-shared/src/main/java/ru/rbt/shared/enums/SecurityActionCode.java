@@ -49,6 +49,7 @@ public enum SecurityActionCode {
     , TskOdPreCobRun("Запуск задания 'Перевод фазы в PRE_COB'")
     , TskOdSwitchModeRun("Запуск задания 'Переключение режима загрузки'")
     , TskOdAccessModeSwitch("Переключение режима доступа к системе")
+    , TskStopStart("Остановки обработки проводок (перед установкой поставок на BarsGL Oracle)")
     , SessionLook("Просмотр сессий пользователей")
     , SessionKill("Закрытие сессии пользователя")
     , SessionsKill("Закрытие всех сессий")
