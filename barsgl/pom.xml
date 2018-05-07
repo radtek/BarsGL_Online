@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.rbt</groupId>
     <artifactId>barsgl</artifactId>
-    <version>4.0.9</version>
+    <version>4.0.10-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.artifactId}:${project.packaging}:${project.version}</name>
 
@@ -104,7 +104,7 @@
         <connection>scm:git:https://github.com/RBTechnologies/BarsGL_Online</connection>
         <developerConnection>scm:git:https://github.com/RBTechnologies/BarsGL_Online</developerConnection>
         <url>scm:git:https://github.com/RBTechnologies/BarsGL_Online</url>
-        <tag>barsgl-4.0.9</tag>
+        <tag>${project.artifactId}-${project.version}</tag>
     </scm>
 
     <dependencyManagement>
