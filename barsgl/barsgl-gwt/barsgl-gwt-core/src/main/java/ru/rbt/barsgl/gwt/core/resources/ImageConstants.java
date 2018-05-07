@@ -11,6 +11,12 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"refresh24.png"})
     public abstract ImageResource refresh24();
 
+    @ClientBundle.Source({"refresh16.gif"})
+    public abstract ImageResource refresh16();
+
+    @ClientBundle.Source({"reload16.png"})
+    public abstract ImageResource reload16();
+
     @ClientBundle.Source({"edit24.png"})
     public abstract ImageResource edit24();
 
