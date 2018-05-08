@@ -1141,7 +1141,7 @@ public class GLAccountController {
      */
     public AccountKeys createRequestAccountKeys(GLAccountRequest request, Date dateOpen) {
         ManualAccountWrapper wrapper = new ManualAccountWrapper();
-        String branch = glAccountRepository.getBranchByFlex(request.getBranchFlex());
+        String branch = glAccountRepository.getMidasBranchByFlex(request.getBranchFlex());
         if (isEmpty(branch)) {
             throw new ValidationError(BRANCH_FLEX_NOT_FOUND, "", request.getBranchFlex(), request.getColumnName("branchFlex"));
         }

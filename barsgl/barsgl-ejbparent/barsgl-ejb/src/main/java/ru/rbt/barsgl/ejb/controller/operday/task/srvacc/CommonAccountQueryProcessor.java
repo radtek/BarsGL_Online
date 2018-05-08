@@ -34,6 +34,9 @@ public class CommonAccountQueryProcessor {
     private static final Logger log = Logger.getLogger(CommonAccountQueryProcessor.class);
     public static final int descriptionLength=35;
 
+    public static final String journalName = "GL_ACLIRQ";
+    public static final String charsetName = "UTF-8";
+
     // многопоточный форматтер
     protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 //    protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

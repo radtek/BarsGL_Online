@@ -109,7 +109,7 @@ public class AccountQueryQueueController extends CommonQueueController {
 
     @Override
     protected String getJournalName() {
-        return "GL_ACLIRQ";
+        return CommonAccountQueryProcessor.journalName;
     }
 
     @Override

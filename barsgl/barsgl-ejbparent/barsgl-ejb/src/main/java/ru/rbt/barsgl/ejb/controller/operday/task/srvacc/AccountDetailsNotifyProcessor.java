@@ -21,9 +21,6 @@ import javax.inject.Inject;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 
@@ -284,7 +281,7 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
         keys.setCustomerNumber(cnum);
         keys.setCurrency(xmlData.get("Ccy"));
 
-        String midasBranch = glAccountRepository.getBranchByFlex(xmlData.get("Branch"));
+        String midasBranch = glAccountRepository.getMidasBranchByFlex(xmlData.get("Branch"));
         if (isEmpty(midasBranch)) {
             journalRepository.updateLogStatus(jId, ERROR, "Параметр Midas Branch не вычислен. SELECT MIDAS_BRANCH FROM DH_BR_MAP WHERE FCC_BRANCH=? :" + xmlData.get("Branch"));
             return null;

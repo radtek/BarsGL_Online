@@ -177,10 +177,10 @@ public abstract class CommonQueueController {
 
         } catch (JMSException e) {
             queueCommunicator.reConnect();
-            auditController.warning(QueueProcessor, getAuditMessage("при получении сообщения", fromQueue, journalId), getJournalName(), journalId.toString(), e);
+            auditController.warning(QueueProcessor, getAuditMessage("при получении сообщения", fromQueue, journalId), getJournalName(), String.valueOf(journalId), e);
         } catch (Throwable e) {
             log.error("Ошибка при обработке сообщения из " + fromQueue, e);
-            auditController.warning(QueueProcessor, getAuditMessage("при обработке сообщения", fromQueue, journalId), getJournalName(), journalId.toString(), e);
+            auditController.warning(QueueProcessor, getAuditMessage("при обработке сообщения", fromQueue, journalId), getJournalName(), String.valueOf(journalId), e);
 
             try {
                 if(journalId != null) {

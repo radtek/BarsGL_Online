@@ -320,7 +320,7 @@ public class AccountDetailsNotifyProcessorOld implements Serializable {
         keys.setCustomerNumber(cnum);
         keys.setCurrency(xmlData.get("Ccy"));
 
-        String midasBranch = glAccountRepository.getBranchByFlex(xmlData.get("Branch"));
+        String midasBranch = glAccountRepository.getMidasBranchByFlex(xmlData.get("Branch"));
         if (isEmpty(midasBranch)) {
             journalRepository.updateLogStatus(jId, ERROR, "Параметр Midas Branch не вычислен. SELECT MIDAS_BRANCH FROM DH_BR_MAP WHERE FCC_BRANCH=? :" + xmlData.get("Branch"));
             return null;
