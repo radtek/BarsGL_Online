@@ -4,9 +4,12 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTaskOld;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
+import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -44,7 +47,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     private static final int batchSize = 7;
     @Test
     public void testNotifyCloseFcc12() throws Exception {
-        String qType = "FC12";
+        String qType = AcDNJournal.Sources.FC12.name();
         String qName = acdeno12;
 
         printCommunicatorName();
@@ -55,7 +58,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         startConnection(properties);
         sendToQueue(getResourceText("/AccountDetailsNotifyFcc12Close.xml"), properties, null, null, qName);
 
-        long idJournal = getAcdenoMaxId();
+        long idJournal = getJournalMaxId();
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountDetailsNotifyTask.class)
@@ -71,7 +74,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     @Test
     public void testNotifyOpenFcc6() throws Exception {
-        String qType = "FCC";
+        String qType = AcDNJournal.Sources.FCC.name();
         String qName = acdeno6;
 
         baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817810000010696538'");
@@ -84,7 +87,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         startConnection(properties);
         sendToQueue(getResourceText("/AccountDetailsNotifyFcc6Open.xml"), properties, null, null, qName);
 
-        long idJournal = getAcdenoMaxId();
+        long idJournal = getJournalMaxId();
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountDetailsNotifyTask.class)
@@ -101,7 +104,18 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     public void testFCCnoCustomer() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817810250300081806'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, getResourceText("/AccountDetailsNotifyFcc6NoCust.xml"), null);
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
+
+        String qType = AcDNJournal.Sources.FCC.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc6NoCust.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.PROCESSED, journal.getStatus());
 
         assertTrue(null != baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40817810250300081806"));
     }
@@ -111,92 +125,40 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817840250010046747'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessorOld.messageFCCShadow, null);
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
+
+        String qType = AcDNJournal.Sources.FCC.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc6Shadow.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.ERROR, journal.getStatus());
 
         assertTrue(null == baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40817840250010046747"));
-
-    }
-
-    @Test
-    @Ignore
-    public void testMidas() throws Exception {
-
-        baseEntityRepository.executeNativeUpdate("delete from accrln where bsaacid='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from bsaacc where id='40702810400154748352'");
-        baseEntityRepository.executeNativeUpdate("delete from acc where id='00695430RUR401102097'");
-
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.MIDAS_OPEN, AccountDetailsNotifyProcessorOld.messageMidas, null);
-
-        // С проверкой заполнения ключевых полей
-        assertTrue(null != baseEntityRepository.selectFirst(
-                "select * from accrln where " +
-                        "ACID='00695430RUR401102097' AND " +
-                        "BSAACID='40702810400154748352' AND " +
-                        "RLNTYPE='0' AND " +
-                        "DRLNO=date '2014-12-22' AND " +
-                        "DRLNC=date '2029-01-01' AND " +
-                        "CTYPE=18 AND " +
-                        "CNUM='00695430' AND " +
-                        "CCODE='0015' AND " +
-                        "ACC2='40702' AND " +
-                        "PSAV='П' AND " +
-                        "GLACOD='4011' AND " +
-                        "CBCCY='810'"
-        ));
-
-        assertTrue(null != baseEntityRepository.selectFirst(
-                "select * from bsaacc where " +
-                        "ID='40702810400154748352' AND " +
-                        "BSSAC= '40702' AND " +
-                        "CCY='810' AND " +
-                        "BSAKEY='4' AND " +
-                        "BRCA='0015' AND " +
-                        "BSACODE='4748352' AND " +
-                        "BSAACO=date '2014-12-22' AND " +
-                        "BSAACC=date '2029-01-01' AND " +
-                        "BSATYPE='П' AND " +
-                        "BSAGRP='0' AND " +
-                        "BSAACNDAT=date '2014-12-22' AND " +
-                        "BSAACNNUM='00695430    ' AND " +
-                        "BSAACTAX=date '2014-12-25'"
-        ));
-
-        assertTrue(null != baseEntityRepository.selectFirst(
-                "select * from acc where " +
-                        "ID='00695430RUR401102097' AND " +
-                        "BRCA='097' AND " +
-                        "CNUM=695430 AND " +
-                        "CCY='RUR' AND " +
-                        "ACOD=4011 AND " +
-                        "ACSQ=2 AND " +
-                        "DACO=date '2014-12-22' AND " +
-                        "DACC=date '2029-01-01' AND " +
-                        "ANAM='ROSTENERGORESURS'"));
     }
 
     @Test
     public void testFccOpen() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817810000010696538'");
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, AccountDetailsNotifyProcessorOld.messageFCC, null);
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
+
+        String qType = AcDNJournal.Sources.FCC.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc6Open.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.PROCESSED, journal.getStatus());
 
         assertTrue(null != baseEntityRepository.selectFirst("select * from gl_acc where bsaacid=?", "40817810000010696538"));
-    }
-
-    @Test
-    public void testFC12Close() throws Exception {
-        String bsaacid = "40702810400094449118";
-        String closeDateStr = "2016-09-14";
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from gl_acc where bsaacid = ?", bsaacid);
-        Date dtc = rec.getDate("DTC");
-        if (null == dtc || !getFinalDateStr().equals(dtc)) {
-            reopenAccount(bsaacid);
-        }
-
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC_CLOSE,
-                getResourceText("/AccountDetailsNotifyFcc12Close.xml"), null);
-
-        checkCloseDate(bsaacid, getDatabaseDate().parse(closeDateStr), true);
     }
 
     @Test
@@ -209,79 +171,105 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
             reopenAccount(bsaacid);
         }
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FCC, notifyFccClose, null);
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
+
+        String qType = AcDNJournal.Sources.FCC.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc6Close.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.PROCESSED, journal.getStatus());
 
         checkCloseDate(bsaacid, getDatabaseDate().parse(closeDateStr), false);
     }
 
     @Test
-    public void testFC12EqualBranch() throws Exception {
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
-        String oldBranch = rec.getString(0);
-
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, closeEqualBranch, null);
-
-        if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908' and branch=?", new Object[]{oldBranch}))
-            assertTrue(true);
-        else{
-            baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID='40802810900014820908'", new Object[]{oldBranch });
-            assertTrue(false);
+    public void testFC12Close() throws Exception {
+        String bsaacid = "40702810400094449118";
+        String closeDateStr = "2016-09-14";
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT * from gl_acc where bsaacid = ?", bsaacid);
+        Date dtc = rec.getDate("DTC");
+        if (null == dtc || !getFinalDateStr().equals(dtc)) {
+            reopenAccount(bsaacid);
         }
 
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
+
+        String qType = AcDNJournal.Sources.FCC_CLOSE.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc12Close.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.PROCESSED, journal.getStatus());
+
+        checkCloseDate(bsaacid, getDatabaseDate().parse(closeDateStr), true);
+    }
+
+    @Test
+    public void testFC12EqualBranch() throws Exception {
+        String bsaacid = "40802810900014820908";
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid=?", bsaacid);
+        String oldBranch = rec.getString(0);
+        String newBranch = "053";
+        baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", newBranch, bsaacid);
+
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
+
+        String qType = AcDNJournal.Sources.FC12.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc12Branch.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.ERROR, journal.getStatus());
+
+        if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid=? and branch=?", bsaacid, oldBranch))
+            assertTrue(true);
+        else{
+            baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", bsaacid, oldBranch);
+            assertTrue(false);
+        }
     }
 
     @Test
     public void testFC12NoEqualBranch() throws Exception {
-        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908'", new Object[]{});
+        String bsaacid = "40802810900014820908";
+        DataRecord rec = baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid=?", bsaacid);
         String oldBranch = rec.getString(0);
         String errBranch = "054";
-        baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID='40802810900014820908'", new Object[]{errBranch});
+        baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", errBranch, bsaacid);
 
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage", AcDNJournal.Sources.FC12, closeEqualBranch, null);
+        long idAudit = getAuditMaxId();
+        long idJournal = getJournalMaxId();
 
-        if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid='40802810900014820908' and branch=?", new Object[]{oldBranch})) {
+        String qType = AcDNJournal.Sources.FC12.name();
+        String textMessage = getResourceText("/AccountDetailsNotifyFcc12Branch.xml");
+
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", qType, new QueueInputMessage(textMessage), null, -1, -1);
+        Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
+
+        AcDNJournal journal = getJournalNewRecord(idJournal);
+        Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
+        Assert.assertEquals(AcDNJournal.Status.PROCESSED, journal.getStatus());
+
+        if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid=? and branch=?", bsaacid, oldBranch)) {
             assertTrue(true);
         }else{
-            baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID='40802810900014820908'", new Object[]{oldBranch });
+            baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", bsaacid, oldBranch );
             assertTrue(false);
         }
     }
-
-
-/*
-    private void putMessageInQueue(String queueName, String envelope) throws JMSException {
-        MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
-
-
-        // Config
-        cf.setHostName(host);
-        cf.setPort(1414);
-        cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-        cf.setQueueManager(broker);
-        cf.setChannel(channel);
-
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(login, passw);
-        MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.acdeno.FCC.NOTIF
-        queue.setTargetClient(JMSC.MQJMS_MESSAGE_BODY_MQ);
-        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
-        MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);
-
-        connection.start();
-
-        JMSTextMessage message = (JMSTextMessage) session.createTextMessage(envelope);
-        sender.send(message);
-        System.out.println("Sent message:\\n" + message);
-
-//            JMSMessage receivedMessage = (JMSMessage) receiver.receive(10000);
-//            System.out.println("\\nReceived message:\\n" + receivedMessage);
-
-        sender.close();
-        receiver.close();
-        session.close();
-        connection.close();
-    }
-*/
 
     private void reopenAccount(String bsaacid) {
         baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = null where BSAACID = ?", bsaacid);
@@ -292,6 +280,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     }
 
+/*
     private static String closeEqualBranch=
             "<NS1:Envelope xmlns:NS1=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
                     "    <NS1:Header>\n" +
@@ -1240,6 +1229,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
             "        </acc:AccountList>\n" +
             "    </soapenv:Body>\n" +
             "</soapenv:Envelope>";
+*/
 
     private String getJobProperty(String topic, String queueIn) {
         return getJobProperty (topic, queueIn, null, host, "1414", broker, channel, login, passw, Integer.toString(batchSize), writeOut)
@@ -1255,13 +1245,18 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         return FileUtils.readFileToString(inFile, AccountDetailsNotifyProcessor.charsetName);
     }
 
-    private long getAcdenoMaxId() throws SQLException {
+    private long getJournalMaxId() throws SQLException {
         DataRecord res = baseEntityRepository.selectFirst("select max(MESSAGE_ID) from GL_ACDENO");
         return null == res.getLong(0) ? 0 : res.getLong(0);
     }
 
     private AcDNJournal getJournalNewRecord(long idFrom) throws SQLException {
         return (AcDNJournal) baseEntityRepository.selectFirst(AcDNJournal.class, "from AcDNJournal j where j.id > ?1", idFrom);
+    }
+
+    private AuditRecord getAuditError(long idFrom ) throws SQLException {
+        return (AuditRecord) baseEntityRepository.selectFirst(AuditRecord.class,
+                "from AuditRecord a where a.logCode in ('AccountDetailsNotify', 'QueueProcessor') and a.logLevel <> 'Info' and a.id > ?1 ", idFrom);
     }
 
 }

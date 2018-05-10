@@ -58,7 +58,7 @@
                     <gbo:IMBBranch>024</gbo:IMBBranch>
                     <gbo:HostABSAccountNo>770078RUR400902024</gbo:HostABSAccountNo>
                     <gbo:HostABSBranch>024</gbo:HostABSBranch>
-                    <gbo:HostABS>MIDAS</gbo:HostABS>
+                    <gbo:HostABS>FCC</gbo:HostABS>
                 </gbo:Positioning>
                 <gbo:UDF>
                     <gbo:Name>GWSAccType</gbo:Name>
