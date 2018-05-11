@@ -67,7 +67,7 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
                 !item.getCcpri().equals(f.getCcpri()) ||
                 !item.getCcbbr().equals(f.getCcbbr()) ||
                 !item.getAltCode().equals(f.getALT_CODE())) {
-            Filials filialsUpd = (Filials) branchDictRepository.findById(Filials.class, item.getId());
+            Filials filialsUpd = (Filials) branchDictRepository.findByIdNoXa(Filials.class, item.getId());
             filialsUpd.setCcpne(item.getCcpne());
             filialsUpd.setCcpnr(item.getCcpnr());
             filialsUpd.setCcpri(item.getCcpri());

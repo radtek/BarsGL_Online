@@ -19,8 +19,8 @@ import static ru.rbt.barsgl.shared.Repository.BARSGLNOXA;
  * Created by er22317 on 14.02.2018.
  */
 public abstract class LoadDict<E, F> {
-    public static final String streamId = "DWH_BRANCH_LOAD";
-    public static final String propOperDay = "operday";
+//    public static final String streamId = "DWH_BRANCH_LOAD";
+//    public static final String propOperDay = "operday";
     private Class<E> clazzE;
     private Class<F> clazzF;
 

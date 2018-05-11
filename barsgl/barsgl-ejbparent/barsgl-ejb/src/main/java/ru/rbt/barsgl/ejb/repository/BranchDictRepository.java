@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask;
+import ru.rbt.barsgl.ejb.entity.dict.dwh.Branchs;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
@@ -51,6 +52,7 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
         return (List<E>) getPersistence(BARSGLNOXA).createNativeQuery( nativeSql, clazz).getResultList();
    }
 
+   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
    public void listToTable(List<E> list) throws Exception{
 //        list.forEach((item) -> save(getPersistence(BARSGLNOXA), item));
         for(E item: list){
@@ -69,10 +71,15 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
             auditController.error(LoadBranchDict, sql + " vs " + Arrays.stream(params).map(x->x.toString()).collect( Collectors.joining(",")), null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
         }
-    }
+   }
+
    public void jpaUpdateNoFlash(E entity) throws Exception {
         update(getPersistence(BARSGLNOXA), entity, false);
-    }
+   }
+
+   public E findByIdNoXa(Class<E> clazz, String primaryKey) throws Exception {
+        return findById(clazz, primaryKey, getPersistence(BARSGLNOXA));
+   }
 
    public <E> List<E> getAll(Class<E> clazz) throws Exception {
         return select( BARSGLNOXA, clazz, "select t from " + clazz.getName() + " t", new Object[]{});

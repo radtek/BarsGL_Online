@@ -71,7 +71,7 @@ public class LoadDictBr  extends LoadDict<BranchsInf, Branchs> {
             if (item.getFCC_CODE().equals(f.getFCC_CODE()) && (!item.getId().equals(f.getId()) || !item.getBCBBR().equals(f.getBCBBR()))) {
                 insMap(item);
             }
-            Branchs branchsUpd = (Branchs) branchDictRepository.findById(Branchs.class, item.getId());
+            Branchs branchsUpd = (Branchs) branchDictRepository.findByIdNoXa(Branchs.class, item.getId());
             branchsUpd.setA8CMCD(item.getA8LCCD());
             branchsUpd.setA8LCCD(item.getA8LCCD());
             branchsUpd.setA8BICN(item.getA8BICN());
