@@ -81,10 +81,7 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
                 taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
             }
         }
-//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
             auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
-//            }else {
-//                auditController.info(LoadBranchDict, "LoadBranchDictTask отложена");
         }catch (Throwable e){
             auditController.error(LoadBranchDict,"Завершение с ошибкой", null, e);
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -93,7 +90,6 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
 
     private boolean executeWork(Date dateLoad) throws Exception {
         clearInfTables();
-//        auditController.info(LoadBranchDict, "LoadBranchDictTask тавлицы очищены", "", String.valueOf(_loadStatId));
         ExecutorService pool = Executors.newFixedThreadPool(2);
 
         try{
@@ -155,73 +151,6 @@ public class LoadBranchDictTask implements ParamsAwareRunnable {
             return true;
         }, 60 * 60);
     }
-
-//    private void fillTargetTables(Date dateLoad) throws Exception {
-//        StringBuilder s = new StringBuilder("000").append(String.valueOf(getFixBranchCode()));
-//        String fixBranchCode = s.substring(s.length() - 3);
-//        StringBuilder insFils = new StringBuilder();
-//        StringBuilder updFils = new StringBuilder();
-//
-//        List<FilialsInf> filialsInf = branchDictRepository.tableToList(FilialsInf.class, "select CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM from V_GL_DWH_IMBCBCMP");
-//        branchDictRepository.listToTable(filialsInf);
-//        auditController.info(LoadBranchDict, "LoadBranchDictTask промежуточные тавлицы заполнены", "", String.valueOf(_loadStatId));
-//
-//        List<FilialsInf> filialsInfFix = new ArrayList<FilialsInf>();
-//        filialsInf.stream().filter(item -> item.getAltCode().compareTo(fixBranchCode) > 0 && item.getValidFrom().compareTo(dateLoad) >= 0 )
-//                           .forEach(item -> filialsInfFix.add(item) );
-//
-//        List<Filials> filials = branchDictRepository.getAll(Filials.class);
-//        Collections.sort(filials);
-//        for(FilialsInf item: filialsInfFix){
-//            Optional<Filials> f = filials.stream().filter(x->item.getId().equals(x.getId())).findFirst();
-//            if (!f.isPresent()){
-//                //добавить в целевые
-//                branchDictRepository.saveEntityNoFlash(new Filials(item.getId(), item.getCcpne(), item.getCcpnr(), item.getCcpri(), item.getCcbbr()));
-//                branchDictRepository.nativeUpdate("insert into DH_BR_MAP(FCC_BRANCH, MIDAS_BRANCH, CBR_BRANCH) values (?,?,?)",
-//                                                        new Object[]{item.getId(), item.getAltCode(), item.getCcbbr()});
-//                insFils.append(item.getId()).append(" ");
-//            }
-//            //обновить целевые
-//            else {
-//                if (!item.getCcpne().equals(f.get().getCcpne()) ||
-//                    !item.getCcpnr().equals(f.get().getCcpnr()) ||
-//                    !item.getCcpri().equals(f.get().getCcpri()) ||
-//                    !item.getCcbbr().equals(f.get().getCcbbr())){
-//                    Filials filialsUpd = (Filials)branchDictRepository.findById(Filials.class, item.getId());
-//                    filialsUpd.setCcpne(item.getCcpne());
-//                    filialsUpd.setCcpnr(item.getCcpnr());
-//                    filialsUpd.setCcpri(item.getCcpri());
-//                    filialsUpd.setCcbbr(item.getCcbbr());
-//                    branchDictRepository.jpaUpdateNoFlash(filialsUpd);
-//                    branchDictRepository.nativeUpdate("update DH_BR_MAP set MIDAS_BRANCH=?, CBR_BRANCH=? where FCC_BRANCH =?",
-//                                                            new Object[]{item.getAltCode(), item.getCcbbr(), item.getId()});
-//                    updFils.append(item.getId()).append(" ");
-//                }
-//            }
-//        }
-//        branchDictRepository.flush();
-//        auditController.info(LoadBranchDict, "LoadBranchDictTask "+(insFils.length()>0?"добавлены филиалы "+insFils:"")+ (updFils.length()>0?"обновлены филиалы "+updFils:""), "", String.valueOf(_loadStatId));
-//    }
-
-//    private void fillInfTables() throws Exception {
-//        beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
-//            String ablok = "DECLARE PRAGMA AUTONOMOUS_TRANSACTION;"+
-//                           " BEGIN"+
-//                           " INSERT INTO DWH_IMBCBCMP_INF (CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM) select CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM from V_GL_DWH_IMBCBCMP; "+
-//                           " COMMIT;"+
-//                           " END;";
-//
-//            try(CallableStatement cs = connection.prepareCall(ablok)){
-//                cs.execute();
-//            }
-//            try (PreparedStatement query = connection.prepareStatement("INSERT INTO DWH_IMBCBBRP_INF (A8BRCD, A8LCCD, A8BICN, A8BRNM, BBRRI, BCORI, BCBBR, BR_HEAD, BR_OPER, FCC_CODE, VALID_FROM) select A8BRCD, A8LCCD, A8BICN, A8BRNM, BBRRI, BCORI, BCBBR, BR_HEAD, BR_OPER, FCC_CODE, VALID_FROM from V_GL_DWH_IMBCBBRP");
-//                 PreparedStatement query2 = connection.prepareStatement("INSERT INTO DWH_IMBCBCMP_INF (CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM) select CCPCD, CCPNE, CCPNR, CCPRI, CCBBR, ALT_CODE, VALID_FROM from V_GL_DWH_IMBCBCMP")) {
-//                query.execute();
-//                query2.execute();
-//            }
-//            return 1;
-//        }), 60 * 60);
-//    }
 
     private void clearInfTables() throws Exception {
         beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {

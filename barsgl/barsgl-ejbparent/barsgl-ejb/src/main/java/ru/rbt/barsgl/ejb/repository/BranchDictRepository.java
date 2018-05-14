@@ -54,7 +54,6 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
 
    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
    public void listToTable(List<E> list) throws Exception{
-//        list.forEach((item) -> save(getPersistence(BARSGLNOXA), item));
         for(E item: list){
             save(getPersistence(BARSGLNOXA), item);
         }

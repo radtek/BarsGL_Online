@@ -82,8 +82,6 @@ public class LoadDictBr  extends LoadDict<BranchsInf, Branchs> {
             branchsUpd.setBR_HEAD(item.getBR_HEAD());
             branchsUpd.setBR_OPER(item.getBR_OPER());
             branchDictRepository.jpaUpdateNoFlash(branchsUpd);
-//            branchDictRepository.nativeUpdate("update DH_BR_MAP set MIDAS_BRANCH=?, CBR_BRANCH=? where FCC_BRANCH =?",
-//                    new Object[]{item.getId(), item.getBCBBR(), item.getFCC_CODE()});
             return item.getId()+ " ";
         }
         return "";

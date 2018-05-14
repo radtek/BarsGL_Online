@@ -74,8 +74,6 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
             filialsUpd.setCcbbr(item.getCcbbr());
             branchDictRepository.jpaUpdateNoFlash(filialsUpd);
             insMap(item);
-//            branchDictRepository.nativeUpdate("update DH_BR_MAP set MIDAS_BRANCH=?, CBR_BRANCH=? where FCC_BRANCH =?",
-//                    new Object[]{item.getAltCode(), item.getCcbbr(), item.getId()});
             return item.getId() + " ";
         }
         return "";
@@ -93,8 +91,4 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
         }
     }
 
-//    void updateMap(FilialsInf item) {
-//        branchDictRepository.nativeUpdate("update DH_BR_MAP set MIDAS_BRANCH=?, CBR_BRANCH=? where FCC_BRANCH =?",
-//                new Object[]{item.getAltCode(), item.getCcbbr(), item.getId()});
-//    }
 }
