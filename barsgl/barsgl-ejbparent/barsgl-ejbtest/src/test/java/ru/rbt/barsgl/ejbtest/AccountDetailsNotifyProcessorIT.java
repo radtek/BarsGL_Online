@@ -1,26 +1,20 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.microsoft.schemas.office.visio.x2012.main.RelType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.rbt.barsgl.common.xml.DomBuilder;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountDetailsNotifyController;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.XmlUtilityLocator;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.util.StringUtils;
 
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -28,12 +22,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Sources.FC12;
@@ -79,9 +69,9 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
 
-        Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
-                FCC, message, null);
+        Long journalId = getAcdenoMaxId() + 1;
+//        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage", FCC, message, null);
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", FCC.name(), new QueueInputMessage(message), null, -1, -1);
 
         GLAccount account = getAccount(bsaacid);
         Assert.assertNotNull(account);
@@ -110,9 +100,9 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         correctCurrency(bsaacid, cb.substring(5, 8));
         message = changeAccountParam(message, cbNode, cb, bsaacid);
 
-        Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
-                FCC, message, null);
+        Long journalId = getAcdenoMaxId() + 1;
+//        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage", FCC, message, null);
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", FCC.name(), new QueueInputMessage(message), null, -1, -1);
 
         GLAccount account = getAccount(bsaacid);
         Assert.assertNotNull(account);
@@ -136,9 +126,9 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         correctCurrency(bsaacid, cb.substring(5, 8));
         message = changeAccountParam(message, cbNode, cb, bsaacid);
 
-        Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
-                FC12, message, null);
+        Long journalId = getAcdenoMaxId() + 1;
+//        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage", FC12, message, null);
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", FC12.name(), new QueueInputMessage(message), null, -1, -1);
 
         GLAccount account = getAccount(bsaacid);
         Assert.assertNotNull(account);
@@ -165,9 +155,9 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         correctCurrency(bsaacid, cb.substring(5, 8));
         message = changeAccountParam(message, cbNode, cb, bsaacid);
 
-        Long journalId = getJournalId() + 1;
-        remoteAccess.invoke(AccountDetailsNotifyTask.class, "processOneMessage",
-                FC12, message, null);
+        Long journalId = getAcdenoMaxId() + 1;
+//        remoteAccess.invoke(AccountDetailsNotifyTaskOld.class, "processOneMessage", FC12, message, null);
+        remoteAccess.invoke(AccountDetailsNotifyController.class, "processingWithLog", FC12.name(), new QueueInputMessage(message), null, -1, -1);
 
         GLAccount account = getAccount(bsaacid);
         Assert.assertNotNull(account);
@@ -207,9 +197,9 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         return res.getString(0);
     }
 
-    private Long getJournalId() throws SQLException {
-        DataRecord res = baseEntityRepository.selectFirst("select max(MESSAGE_ID) from GL_ACDENO a");
-        return res.getLong(0);
+    public static Long getAcdenoMaxId() throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select max(MESSAGE_ID) from GL_ACDENO");
+        return null == res.getLong(0) ? 0 : res.getLong(0);
     }
 
     private void checkJournal(Long journalId, AcDNJournal.Sources src, String like) {
@@ -220,24 +210,4 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         Assert.assertTrue(journal.getComment().contains(like));
 
     }
-
-/*
-    private NamespaceContext getContext() {
-        return new NamespaceContext() {
-            public String getNamespaceURI(String prefix) {
-                return "acc".equals(prefix) ? "urn:ucbru:gbo:v5:acc" : "http://schemas.xmlsoap.org/soap/envelope/";
-            }
-
-            public String getPrefix(String namespaceURI) {
-                return "acc";
-            }
-
-            public Iterator getPrefixes(String namespaceURI) {
-                List list = new ArrayList(1);
-                list.add("acc");
-                return list.iterator();
-            }
-        };
-    }
-*/
 }

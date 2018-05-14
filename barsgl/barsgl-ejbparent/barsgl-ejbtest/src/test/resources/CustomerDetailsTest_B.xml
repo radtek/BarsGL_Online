@@ -1,1 +1,137 @@
-<gbo:Customer xmlns:gbo="urn:ucbru:gbo:v3"><gbo:CustomerNum>00488888</gbo:CustomerNum><gbo:ShortName>GRKC KRASNODAR</gbo:ShortName><gbo:BranchCode>KRS</gbo:BranchCode><gbo:OriginalBranchCode>KRS</gbo:OriginalBranchCode><gbo:Type>B</gbo:Type><gbo:CbType>36</gbo:CbType><gbo:Category>BANK</gbo:Category><gbo:Status>O</gbo:Status><gbo:Segment>BANKS</gbo:Segment><gbo:PublicIndicator>PUBS</gbo:PublicIndicator><gbo:BacaSegment>401730</gbo:BacaSegment><gbo:BacaDescription>Corp-Finance-Bank-Domestic</gbo:BacaDescription><gbo:Resident>Y</gbo:Resident><gbo:Offshore>N</gbo:Offshore><gbo:ActivityType>2</gbo:ActivityType><gbo:AccountOfficerCode>0086</gbo:AccountOfficerCode><gbo:AccountOfficerName>Управление корр. отношений</gbo:AccountOfficerName><gbo:ChargeGroup>BANK</gbo:ChargeGroup><gbo:PcChargeGroup>BANK</gbo:PcChargeGroup><gbo:RiskLevel>0</gbo:RiskLevel><gbo:LiabilityCustomerNum>00488888</gbo:LiabilityCustomerNum><gbo:CountryCode>RU</gbo:CountryCode><gbo:ExposureCountryCode>RU</gbo:ExposureCountryCode><gbo:NationalityCountryCode>RU</gbo:NationalityCountryCode><gbo:LanguageCode>RUS</gbo:LanguageCode><gbo:FirstContactDate>2009-04-30</gbo:FirstContactDate><gbo:OpenDate>2005-12-05</gbo:OpenDate><gbo:FirstAccountOpenDate>2009-02-13</gbo:FirstAccountOpenDate><gbo:OkatoCode>03401369000</gbo:OkatoCode><gbo:KppCode>231001001</gbo:KppCode><gbo:Inn>7702235133</gbo:Inn><gbo:DefaultMedia>SWIFT</gbo:DefaultMedia><gbo:DepartmentCode>FIL</gbo:DepartmentCode><gbo:CorporateDetails><gbo:ShortNameRus>Головной Расчетно-кассовый центрг.К</gbo:ShortNameRus><gbo:FullNameRus>ГРКЦ ГУ БАНКА РОССИИ ПО КРАСНОДАРСКОМУ КР.</gbo:FullNameRus><gbo:ShortNameEng>GRKC GU Banka Rossii po Krasnodarskomu krayu</gbo:ShortNameEng><gbo:FullNameEng>GRKC GU Banka Rossii po Krasnodarskomu krayu</gbo:FullNameEng><gbo:LegalFormId>16</gbo:LegalFormId><gbo:ShortLegalFormRus>ГП</gbo:ShortLegalFormRus><gbo:FullLegalFormRus>Государственная корпорация</gbo:FullLegalFormRus><gbo:ShortLegalFormEng>SC</gbo:ShortLegalFormEng><gbo:FullLegalFormEng>State Corporation</gbo:FullLegalFormEng><gbo:CapitalCountryCode>RU</gbo:CapitalCountryCode><gbo:Entrepreneur>N</gbo:Entrepreneur><gbo:CreditRating>0</gbo:CreditRating><gbo:DataTransferAgreement>N</gbo:DataTransferAgreement><gbo:RegistrationNum>1037700013020</gbo:RegistrationNum><gbo:OkvedCode>64.11</gbo:OkvedCode><gbo:OkvedName>Деятельность Центрального банка Российской Федерации (Банка России)</gbo:OkvedName><gbo:OkpoCode>53418774</gbo:OkpoCode><gbo:Bik>040349001</gbo:Bik><gbo:StateRegistration><gbo:Registrator>Управление Министерства Российской Федерации по налогам и сборам по г.Москве</gbo:Registrator><gbo:RegDate>2003-01-10</gbo:RegDate></gbo:StateRegistration><gbo:TaxpayerRegistration/></gbo:CorporateDetails><gbo:AML><gbo:Required>Y</gbo:Required><gbo:TerrorStatus>N</gbo:TerrorStatus><gbo:TerrorResult>NFND</gbo:TerrorResult></gbo:AML><gbo:Address><gbo:Type>DOMICILE</gbo:Type><gbo:CountryCbrCode>643</gbo:CountryCbrCode><gbo:CountryCode>RU</gbo:CountryCode><gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng><gbo:CountryName>Россия</gbo:CountryName><gbo:RegionCode>23</gbo:RegionCode><gbo:PopCenterType>Г</gbo:PopCenterType><gbo:PopCenterName>KRASNODAR</gbo:PopCenterName><gbo:StreetType>УЛ</gbo:StreetType><gbo:StreetName>ОРДЖОНИКИДЗЕ</gbo:StreetName><gbo:House>39</gbo:House><gbo:ZipCode>356016</gbo:ZipCode><gbo:AddressFull>356016, Г. KRASNODAR, ОРДЖОНИКИДЗЕ УЛ, д. 39</gbo:AddressFull></gbo:Address><gbo:Address><gbo:Type>PERMANENT</gbo:Type><gbo:CountryCbrCode>643</gbo:CountryCbrCode><gbo:CountryCode>RU</gbo:CountryCode><gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng><gbo:CountryName>Россия</gbo:CountryName><gbo:RegionCode>23</gbo:RegionCode><gbo:PopCenterType>Г</gbo:PopCenterType><gbo:PopCenterName>KRASNODAR</gbo:PopCenterName><gbo:StreetType>УЛ</gbo:StreetType><gbo:StreetName>ОРДЖОНИКИДЗЕ</gbo:StreetName><gbo:House>39</gbo:House><gbo:ZipCode>356016</gbo:ZipCode><gbo:AddressFull>356016, Г. KRASNODAR, ОРДЖОНИКИДЗЕ УЛ, д. 39</gbo:AddressFull></gbo:Address><gbo:Address><gbo:Type>BIRTH</gbo:Type><gbo:CountryCode>RU</gbo:CountryCode></gbo:Address><gbo:Address><gbo:Type>CORRESPONDENCE</gbo:Type><gbo:CountryCode>RU</gbo:CountryCode><gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng><gbo:CountryName>Россия</gbo:CountryName><gbo:AddressFull>ul. Ordzhonikidze, d. 39Krasnodar, 350016</gbo:AddressFull><gbo:AddressLine1>ul. Ordzhonikidze, d. 39</gbo:AddressLine1><gbo:AddressLine2>Krasnodar, 350016</gbo:AddressLine2><gbo:NameLine1>GRKC GU Banka Rossii po</gbo:NameLine1><gbo:NameLine2>Krasnodarskomu kr</gbo:NameLine2></gbo:Address><gbo:Identifiers><gbo:ObjectType>Customer</gbo:ObjectType><gbo:Identifier><gbo:Value>00488888</gbo:Value><gbo:System><gbo:Name>FCC</gbo:Name></gbo:System></gbo:Identifier><gbo:Identifier><gbo:Value>488888</gbo:Value><gbo:System><gbo:Name>MIDAS</gbo:Name></gbo:System></gbo:Identifier></gbo:Identifiers><gbo:AccessHistory><gbo:Record><gbo:User>SYSTEM</gbo:User><gbo:DateTime>2016-10-24T00:00:00</gbo:DateTime><gbo:AccessType>Modification</gbo:AccessType></gbo:Record><gbo:Record><gbo:User>SYSTEM</gbo:User><gbo:DateTime>2016-10-24T00:00:00</gbo:DateTime><gbo:AccessType>Authorization</gbo:AccessType></gbo:Record></gbo:AccessHistory></gbo:Customer>
+<gbo:Customer xmlns:gbo="urn:ucbru:gbo:v3">
+    <gbo:CustomerNum>00488888</gbo:CustomerNum>
+    <gbo:ShortName>GRKC KRASNODAR</gbo:ShortName>
+    <gbo:BranchCode>KRS</gbo:BranchCode>
+    <gbo:OriginalBranchCode>KRS</gbo:OriginalBranchCode>
+    <gbo:Type>B</gbo:Type>
+    <gbo:CbType>36</gbo:CbType>
+    <gbo:Category>BANK</gbo:Category>
+    <gbo:Status>O</gbo:Status>
+    <gbo:Segment>BANKS</gbo:Segment>
+    <gbo:PublicIndicator>PUBS</gbo:PublicIndicator>
+    <gbo:BacaSegment>401730</gbo:BacaSegment>
+    <gbo:BacaDescription>Corp-Finance-Bank-Domestic</gbo:BacaDescription>
+    <gbo:Resident>Y</gbo:Resident>
+    <gbo:Offshore>N</gbo:Offshore>
+    <gbo:ActivityType>2</gbo:ActivityType>
+    <gbo:AccountOfficerCode>0086</gbo:AccountOfficerCode>
+    <gbo:AccountOfficerName>я┐╜я┐╜равя┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜. я┐╜тношеня┐╜я┐╜</gbo:AccountOfficerName>
+    <gbo:ChargeGroup>BANK</gbo:ChargeGroup>
+    <gbo:PcChargeGroup>BANK</gbo:PcChargeGroup>
+    <gbo:RiskLevel>0</gbo:RiskLevel>
+    <gbo:LiabilityCustomerNum>00488888</gbo:LiabilityCustomerNum>
+    <gbo:CountryCode>RU</gbo:CountryCode>
+    <gbo:ExposureCountryCode>RU</gbo:ExposureCountryCode>
+    <gbo:NationalityCountryCode>RU</gbo:NationalityCountryCode>
+    <gbo:LanguageCode>RUS</gbo:LanguageCode>
+    <gbo:FirstContactDate>2009-04-30</gbo:FirstContactDate>
+    <gbo:OpenDate>2005-12-05</gbo:OpenDate>
+    <gbo:FirstAccountOpenDate>2009-02-13</gbo:FirstAccountOpenDate>
+    <gbo:OkatoCode>03401369000</gbo:OkatoCode>
+    <gbo:KppCode>231001001</gbo:KppCode>
+    <gbo:Inn>7702235133</gbo:Inn>
+    <gbo:DefaultMedia>SWIFT</gbo:DefaultMedia>
+    <gbo:DepartmentCode>FIL</gbo:DepartmentCode>
+    <gbo:CorporateDetails>
+        <gbo:ShortNameRus>я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜тно-я┐╜я┐╜я┐╜совя┐╜ ценя┐╜я┐╜.я┐╜</gbo:ShortNameRus>
+        <gbo:FullNameRus>я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜.</gbo:FullNameRus>
+        <gbo:ShortNameEng>GRKC GU Banka Rossii po Krasnodarskomu krayu</gbo:ShortNameEng>
+        <gbo:FullNameEng>GRKC GU Banka Rossii po Krasnodarskomu krayu</gbo:FullNameEng>
+        <gbo:LegalFormId>16</gbo:LegalFormId>
+        <gbo:ShortLegalFormRus>я┐╜я┐╜</gbo:ShortLegalFormRus>
+        <gbo:FullLegalFormRus>я┐╜я┐╜я┐╜удая┐╜я┐╜твея┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜рпоя┐╜я┐╜я┐╜</gbo:FullLegalFormRus>
+        <gbo:ShortLegalFormEng>SC</gbo:ShortLegalFormEng>
+        <gbo:FullLegalFormEng>State Corporation</gbo:FullLegalFormEng>
+        <gbo:CapitalCountryCode>RU</gbo:CapitalCountryCode>
+        <gbo:Entrepreneur>N</gbo:Entrepreneur>
+        <gbo:CreditRating>0</gbo:CreditRating>
+        <gbo:DataTransferAgreement>N</gbo:DataTransferAgreement>
+        <gbo:RegistrationNum>1037700013020</gbo:RegistrationNum>
+        <gbo:OkvedCode>64.11</gbo:OkvedCode>
+        <gbo:OkvedName>я┐╜я┐╜я┐╜тельноя┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜ральноя┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜сийскоя┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ции (я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜сии)</gbo:OkvedName>
+        <gbo:OkpoCode>53418774</gbo:OkpoCode>
+        <gbo:Bik>040349001</gbo:Bik>
+        <gbo:StateRegistration>
+            <gbo:Registrator>я┐╜я┐╜равя┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜тва я┐╜я┐╜я┐╜сийскоя┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ции я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜ сборам я┐╜я┐╜ я┐╜.я┐╜я┐╜сквя┐╜</gbo:Registrator>
+            <gbo:RegDate>2003-01-10</gbo:RegDate>
+        </gbo:StateRegistration>
+        <gbo:TaxpayerRegistration/>
+    </gbo:CorporateDetails>
+    <gbo:AML>
+        <gbo:Required>Y</gbo:Required>
+        <gbo:TerrorStatus>N</gbo:TerrorStatus>
+        <gbo:TerrorResult>NFND</gbo:TerrorResult>
+    </gbo:AML>
+    <gbo:Address>
+        <gbo:Type>DOMICILE</gbo:Type>
+        <gbo:CountryCbrCode>643</gbo:CountryCbrCode>
+        <gbo:CountryCode>RU</gbo:CountryCode>
+        <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+        <gbo:CountryName>я┐╜я┐╜я┐╜я┐╜я┐╜</gbo:CountryName>
+        <gbo:RegionCode>23</gbo:RegionCode>
+        <gbo:PopCenterType>я┐╜</gbo:PopCenterType>
+        <gbo:PopCenterName>KRASNODAR</gbo:PopCenterName>
+        <gbo:StreetType>я┐╜я┐╜</gbo:StreetType>
+        <gbo:StreetName>я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜</gbo:StreetName>
+        <gbo:House>39</gbo:House>
+        <gbo:ZipCode>356016</gbo:ZipCode>
+        <gbo:AddressFull>356016, я┐╜. KRASNODAR, я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜, я┐╜. 39</gbo:AddressFull>
+    </gbo:Address>
+    <gbo:Address>
+        <gbo:Type>PERMANENT</gbo:Type>
+        <gbo:CountryCbrCode>643</gbo:CountryCbrCode>
+        <gbo:CountryCode>RU</gbo:CountryCode>
+        <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+        <gbo:CountryName>я┐╜я┐╜я┐╜я┐╜я┐╜</gbo:CountryName>
+        <gbo:RegionCode>23</gbo:RegionCode>
+        <gbo:PopCenterType>я┐╜</gbo:PopCenterType>
+        <gbo:PopCenterName>KRASNODAR</gbo:PopCenterName>
+        <gbo:StreetType>я┐╜я┐╜</gbo:StreetType>
+        <gbo:StreetName>я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜</gbo:StreetName>
+        <gbo:House>39</gbo:House>
+        <gbo:ZipCode>356016</gbo:ZipCode>
+        <gbo:AddressFull>356016, я┐╜. KRASNODAR, я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜, я┐╜. 39</gbo:AddressFull>
+    </gbo:Address>
+    <gbo:Address>
+        <gbo:Type>BIRTH</gbo:Type>
+        <gbo:CountryCode>RU</gbo:CountryCode>
+    </gbo:Address>
+    <gbo:Address>
+        <gbo:Type>CORRESPONDENCE</gbo:Type>
+        <gbo:CountryCode>RU</gbo:CountryCode>
+        <gbo:CountryNameEng>Russian Federation</gbo:CountryNameEng>
+        <gbo:CountryName>я┐╜я┐╜я┐╜я┐╜я┐╜</gbo:CountryName>
+        <gbo:AddressFull>ul. Ordzhonikidze, d. 39Krasnodar, 350016</gbo:AddressFull>
+        <gbo:AddressLine1>ul. Ordzhonikidze, d. 39</gbo:AddressLine1>
+        <gbo:AddressLine2>Krasnodar, 350016</gbo:AddressLine2>
+        <gbo:NameLine1>GRKC GU Banka Rossii po</gbo:NameLine1>
+        <gbo:NameLine2>Krasnodarskomu kr</gbo:NameLine2>
+    </gbo:Address>
+    <gbo:Identifiers>
+        <gbo:ObjectType>Customer</gbo:ObjectType>
+        <gbo:Identifier>
+            <gbo:Value>00488888</gbo:Value>
+            <gbo:System>
+                <gbo:Name>FCC</gbo:Name>
+            </gbo:System>
+        </gbo:Identifier>
+        <gbo:Identifier>
+            <gbo:Value>488888</gbo:Value>
+            <gbo:System>
+                <gbo:Name>MIDAS</gbo:Name>
+            </gbo:System>
+        </gbo:Identifier>
+    </gbo:Identifiers>
+    <gbo:AccessHistory>
+        <gbo:Record>
+            <gbo:User>SYSTEM</gbo:User>
+            <gbo:DateTime>2016-10-24T00:00:00</gbo:DateTime>
+            <gbo:AccessType>Modification</gbo:AccessType>
+        </gbo:Record>
+        <gbo:Record>
+            <gbo:User>SYSTEM</gbo:User>
+            <gbo:DateTime>2016-10-24T00:00:00</gbo:DateTime>
+            <gbo:AccessType>Authorization</gbo:AccessType>
+        </gbo:Record>
+    </gbo:AccessHistory>
+</gbo:Customer>

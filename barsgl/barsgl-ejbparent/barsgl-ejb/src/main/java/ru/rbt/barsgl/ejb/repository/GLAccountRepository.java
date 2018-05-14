@@ -443,7 +443,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      * @param branchFlex - бранч FLEX (3 буквы)
      * @return - бранч Midas (3 цифры)
      */
-    public String getBranchByFlex(String branchFlex) {
+    public String getMidasBranchByFlex(String branchFlex) {
         try {
             String sql = "SELECT MIDAS_BRANCH BRANCH from DH_BR_MAP where FCC_BRANCH = ?";
             DataRecord res = selectFirst(sql, branchFlex);

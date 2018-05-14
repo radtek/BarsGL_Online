@@ -10,6 +10,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "GL_ACDENOLI")
+@Deprecated
 public class AcDNJournalData extends BaseEntity<Long> {
 
     public AcDNJournalData(){}

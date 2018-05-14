@@ -9,6 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountQueryProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
@@ -80,7 +81,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
     public String getResourceText(String resource) throws IOException {
         File inFile = new File(this.getClass().getResource(resource).getFile());
-        return FileUtils.readFileToString(inFile, CustomerNotifyProcessor.charsetName);
+        return FileUtils.readFileToString(inFile, AccountQueryProcessor.charsetName);
     }
 
     /**

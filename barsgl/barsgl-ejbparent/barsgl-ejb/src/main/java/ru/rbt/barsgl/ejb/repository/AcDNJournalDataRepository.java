@@ -26,6 +26,7 @@ public class AcDNJournalDataRepository extends AbstractBaseEntityRepository<AcDN
     @EJB
     private CurrencyCacheRepository bankCurrencyRepository;
 
+/*
     public String selectMidasBranchByBranch(String branch) throws SQLException {
         //dataRecord = selectFirst("SELECT * FROM DWH.IMBCBBRP WHERE A8BRCD = (SELECT MIDAS_BRANCH FROM DWH.DH_BR_MAP WHERE FCC_BRANCH=?)", accountList.getAccountDetails().get(0).getBranch());
         try {
@@ -35,6 +36,7 @@ public class AcDNJournalDataRepository extends AbstractBaseEntityRepository<AcDN
             return null;
         }
     }
+*/
 
     public void updateJournalData(Long jId, String midasBranch, String pseudoAcid) {
         AcDNJournalData data = findById(AcDNJournalData.class, jId);

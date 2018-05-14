@@ -1,40 +1,24 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 
 import org.apache.log4j.Logger;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNInput;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNJournal;
 import ru.rbt.barsgl.ejb.entity.cust.CustDNMapped;
 import ru.rbt.barsgl.ejb.entity.cust.Customer;
 import ru.rbt.barsgl.ejb.props.PropertyName;
-import ru.rbt.barsgl.ejb.repository.AcDNJournalDataRepository;
+import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.customer.CustDNInputRepository;
 import ru.rbt.barsgl.ejb.repository.customer.CustDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.customer.CustDNMappedRepository;
 import ru.rbt.barsgl.ejb.repository.customer.CustomerRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
-import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.CustomerDetailsNotify;
@@ -80,7 +64,7 @@ public class CustomerNotifyProcessor extends CommonNotifyProcessor implements Se
     CustomerRepository customerRepository;
 
     @Inject
-    AcDNJournalDataRepository acdnRepository;
+    GLAccountRepository accountRepository;
 
     @EJB
     private PropertiesRepository propertiesRepository;
@@ -151,7 +135,7 @@ public class CustomerNotifyProcessor extends CommonNotifyProcessor implements Se
         }
 
         // TODO
-        String branch = acdnRepository.selectMidasBranchByBranch(inputData.getBranch());
+        String branch = accountRepository.getMidasBranchByFlex(inputData.getBranch());
         if (isEmpty(branch)) {
             err.append(String.format("Не найден бранч Midas для 'BRANCHCODE' = '%s'; ", inputData.getBranch()));
         } else {
@@ -231,7 +215,7 @@ public class CustomerNotifyProcessor extends CommonNotifyProcessor implements Se
     }
 
     @Override
-    protected void updateLogStatusError(Long jourbnalId, String message) {
-        journalRepository.updateLogStatus(jourbnalId, ERR_VAL, message);
+    protected void updateLogStatusError(Long journalId, String message) {
+        journalRepository.updateLogStatus(journalId, ERR_VAL, message);
     }
 }
