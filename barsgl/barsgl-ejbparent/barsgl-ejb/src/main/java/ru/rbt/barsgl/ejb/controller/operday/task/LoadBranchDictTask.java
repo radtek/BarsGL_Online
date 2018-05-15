@@ -99,7 +99,8 @@ public class LoadBranchDictTask extends AbstractJobHistoryAwareTask {
         }
     }
 
-    private boolean processDic(LoadDict loadDict, Date dateLoad, long loadStatId){
+
+    private boolean processDic(LoadDict loadDict, Date dateLoad, long loadStatId) {
         try {
             beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
                 loadDict.fillTargetTables(dateLoad, loadStatId);
@@ -111,6 +112,26 @@ public class LoadBranchDictTask extends AbstractJobHistoryAwareTask {
             return false;
         }
     }
+
+//    private boolean executeWork(Date dateLoad) throws Exception {
+//        clearInfTables();
+//        ExecutorService pool = Executors.newFixedThreadPool(2);
+//
+//        try{
+//            Future<Boolean> fuFils = pool.submit(task(loadDictFil, dateLoad, _loadStatId));
+//            Future<Boolean> fuBrchs = pool.submit(task(loadDictBr, dateLoad, _loadStatId));
+//            if (fuFils.get() & fuBrchs.get()){
+//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
+//                return true;
+//            }else{
+//                branchDictRepository.updGlLoadStat(_loadStatId, "E");
+//                return false;
+//            }
+//        }finally {
+//            pool.shutdown();
+//
+//        }
+//    }
 
     private Date getDateLoad(Properties properties, Date maxDate) {
         try {

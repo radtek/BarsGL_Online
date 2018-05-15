@@ -67,15 +67,13 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
                 !item.getCcpri().equals(f.getCcpri()) ||
                 !item.getCcbbr().equals(f.getCcbbr()) ||
                 !item.getAltCode().equals(f.getALT_CODE())) {
-            Filials filialsUpd = (Filials) branchDictRepository.findById(Filials.class, item.getId());
+            Filials filialsUpd = (Filials) branchDictRepository.findByIdNoXa(Filials.class, item.getId());
             filialsUpd.setCcpne(item.getCcpne());
             filialsUpd.setCcpnr(item.getCcpnr());
             filialsUpd.setCcpri(item.getCcpri());
             filialsUpd.setCcbbr(item.getCcbbr());
             branchDictRepository.jpaUpdateNoFlash(filialsUpd);
             insMap(item);
-//            branchDictRepository.nativeUpdate("update DH_BR_MAP set MIDAS_BRANCH=?, CBR_BRANCH=? where FCC_BRANCH =?",
-//                    new Object[]{item.getAltCode(), item.getCcbbr(), item.getId()});
             return item.getId() + " ";
         }
         return "";
@@ -93,8 +91,4 @@ public class LoadDictFil extends LoadDict<FilialsInf, Filials> {
         }
     }
 
-//    void updateMap(FilialsInf item) {
-//        branchDictRepository.nativeUpdate("update DH_BR_MAP set MIDAS_BRANCH=?, CBR_BRANCH=? where FCC_BRANCH =?",
-//                new Object[]{item.getAltCode(), item.getCcbbr(), item.getId()});
-//    }
 }

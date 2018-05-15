@@ -211,6 +211,10 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return this.findById(getPersistence(), clazz, primaryKey);
     }
 
+    public T findById(Class<T> clazz, K primaryKey, EntityManager persistence) {
+        return this.findById(persistence, clazz, primaryKey);
+    }
+
     @Override
     public Long nextId(String sequenceName) {
         return this.nextId(getPersistence(), sequenceName);
