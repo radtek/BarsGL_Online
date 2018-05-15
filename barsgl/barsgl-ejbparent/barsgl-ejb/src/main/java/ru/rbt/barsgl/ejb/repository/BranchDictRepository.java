@@ -2,11 +2,7 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask;
-<<<<<<< HEAD
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-=======
-import ru.rbt.barsgl.ejb.entity.dict.dwh.Branchs;
->>>>>>> bb6c6e293deea09004089f66f29f8bee8b830018
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.BaseEntity;
