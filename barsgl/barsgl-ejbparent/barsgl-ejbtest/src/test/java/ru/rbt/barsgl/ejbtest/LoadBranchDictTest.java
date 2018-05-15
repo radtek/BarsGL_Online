@@ -30,7 +30,7 @@ public class LoadBranchDictTest extends AbstractRemoteIT {
             setFix(FIX);
 
             Properties props = new Properties();
-            props.put(LoadBranchDictTask.propOperDay, PARAM);
+            props.put(LoadBranchDictTask.PROP_OPERDAY, PARAM);
             jobService.executeJob(SingleActionJobBuilder.create().withClass(LoadBranchDictTask.class).withProps(props).build());
 
             DataRecord rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'TTT'", new Object[]{});

@@ -13,7 +13,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
  */
 @Singleton
 @AccessTimeout(value = 5, unit = MINUTES)
-public class TaskUniqueController {
+public class TaskUniqueController_del {
     private volatile boolean[] tasks = new boolean[]{false};
 
     @Lock(LockType.WRITE)
