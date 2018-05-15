@@ -62,7 +62,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     private final static String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
-    private static final boolean writeOut = false;
+    private static final boolean writeOut = true;
     private static final Charset charset = StandardCharsets.UTF_8;
 
 /*

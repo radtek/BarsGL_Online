@@ -29,7 +29,7 @@
             </gbo:AccountQuery>
             <gbo:AccountQuery>
                 <gbo:CustomerNo>00500633</gbo:CustomerNo>
-            </gbo:AccountQuery>		
+            </gbo:AccountQuery>
             <gbo:AccountQuery>
                 <gbo:CustomerNo>00000018</gbo:CustomerNo>
                 <gbo:AccountingType>702010300</gbo:AccountingType>
@@ -45,7 +45,7 @@
             </gbo:AccountQuery>
             <gbo:AccountQuery>
                 <gbo:AccountNumber>45208810200014817870</gbo:AccountNumber>			
-                <gbo:AccountNumber>00000000800504735550</gbo:AccountNumber>			
+                <gbo:AccountNumber>70601810380012620140</gbo:AccountNumber>
                 <gbo:AccountNumber>40502810100011131826</gbo:AccountNumber>			
             </gbo:AccountQuery>            
             <gbo:AccountQuery>

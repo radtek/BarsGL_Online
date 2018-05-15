@@ -32,7 +32,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             List<DataRecord> dataRecords = selectMaxRows(
                 "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.BSAACID IN (" + acidsStr + ") "
-                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
                         //+ "AND A.DTC IS NULL "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
@@ -59,7 +59,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACOD IN (" + glacods + ") "
-                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
@@ -85,7 +85,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE IN (" + acctypes + ") "
-                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
@@ -102,7 +102,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
             dataRecords = selectMaxRows(
                 "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
-                        + "AND A.ACCTYPE NOT IN ('999999999','361070100') "
+                        + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
                         //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
@@ -125,9 +125,9 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
 
     public List<DataRecord> getGlAccRecords(String inCondition, String customerNo) throws Exception {
         try {
-            String selectExpression = "SELECT * FROM GL_ACC WHERE BSAACID IN (" + inCondition + ")";
+            String selectExpression = "SELECT * FROM GL_ACC WHERE BSAACID IN (" + inCondition + ") and ACCTYPE <> 0";
             if(customerNo != null)
-              selectExpression+=" AND CUSTNO = '"+customerNo+"'";
+              selectExpression+=" AND CUSTNO = '" + customerNo + "'";
             return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
         } catch (SQLException e) {
             throw new Exception(e);
@@ -205,34 +205,15 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
     public BigDecimal[] getAccountBalance(String bsaacid) throws Exception {
         try {
             DataRecord record = selectFirst(
-                    "SELECT INCO + NVL(INCTURN, 0) INCO, INCORUB + NVL(INCTURNRUB, 0) INCORUB\n" +
-                    "       , OUTCO + NVL (OUTTURN, 0) OUTCO, OUTRUB + NVL (OUTTURNRUB,0) OUTRUB FROM (\n" +
-                    "    select case\n" +
-                    "               when b.dat < o.curdate then  OBAC+CTAC+DTAC\n" +
-                    "               else OBAC\n" +
-                    "           end INCO\n" +
-                    "           , case\n" +
-                    "               when b.dat < o.curdate then  OBBC+CTBC+DTBC\n" +
-                    "               else OBBC\n" +
-                    "           end INCORUB\n" +
-                    "           , OBAC+CTAC+DTAC OUTCO, OBBC+CTBC+DTBC OUTRUB, b.bsaacid\n" +
-                    "     from baltur b, gl_od o\n" +                            
-//                    "    where b.DATTO='2029-01-01' and b.bsaacid = ? \n" +
-                    "    where b.DATTO=TO_DATE('2029-01-01','YYYY-MM-DD') and b.bsaacid = ? \n" +
-                    ") b \n" +
-                    "left join   (select sum(case\n" +
-                    "                    when b.dat < o.curdate then CTAC+DTAC\n" +
-                    "                    else 0\n" +
-                    "               end) incturn\n" +
-                    "               , sum(case\n" +
-                    "                    when b.dat < o.curdate then CTBC+DTBC\n" +
-                    "                    else 0\n" +
-                    "               end) incturnrub\n" +
-                    "               , sum(CTAC+DTAC) outturn, sum(CTBC+DTBC) outturnrub, b.bsaacid\n" +
-                    "            from gl_baltur b, gl_od o \n" +
-                    "            where b.bsaacid = ? and b.dat <= o.curdate and moved = 'N' \n" +
-                    "            group by b.bsaacid) j on b.bsaacid = j.bsaacid"
-                , bsaacid, bsaacid);
+                            "select   coalesce(sum(case when b.dat < o.curdate then OBAC+CTAC+DTAC " +
+                            "                                                  else OBAC end), 0) INCO\n" +
+                            "       , coalesce(sum(case when b.dat < o.curdate then OBBC+CTBC+DTBC " +
+                            "                                                  else OBBC end), 0) INCORUB\n" +
+                            "       , coalesce(sum(OBAC+CTAC+DTAC), 0) OUTCO\n" +
+                            "       , coalesce(sum(OBBC+CTBC+DTBC), 0) OUTRUB\n" +
+                            "from v_gl_baltur b, gl_od o\n" +
+                            "    where b.bsaacid = ?"
+                , bsaacid);
             if (record != null) {
                 return new BigDecimal[]{record.getBigDecimal("INCO"), record.getBigDecimal("INCORUB"), record.getBigDecimal("OUTCO"), record.getBigDecimal("OUTRUB")};
             }
