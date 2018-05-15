@@ -50,6 +50,11 @@
         <class>ru.rbt.barsgl.ejb.entity.acc.GlExcacRln</class>
         <class>ru.rbt.barsgl.ejb.entity.acc.GLAccCard</class>
 
+        <class>ru.rbt.barsgl.ejb.entity.cust.CustDNJournal</class>
+        <class>ru.rbt.barsgl.ejb.entity.cust.CustDNInput</class>
+        <class>ru.rbt.barsgl.ejb.entity.cust.CustDNMapped</class>
+        <class>ru.rbt.barsgl.ejb.entity.cust.Customer</class>
+
         <class>ru.rbt.barsgl.ejb.entity.card.CardPst</class>
         <class>ru.rbt.barsgl.ejb.entity.card.CardXls</class>
 

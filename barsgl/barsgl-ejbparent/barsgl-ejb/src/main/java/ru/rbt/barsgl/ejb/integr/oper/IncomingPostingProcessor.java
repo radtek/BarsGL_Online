@@ -536,13 +536,13 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
 
         // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
         BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
-        BigDecimal eqvDebit = rateRepository.getEquivalent(operation.getCurrencyDebit(), rateDebit, operation.getAmountDebit());
+        BigDecimal eqvDebit = rateRepository.getEquivalent(rateDebit, operation.getAmountDebit());
         operation.setRateDebit(rateDebit);
         operation.setEquivalentDebit(eqvDebit);
 
         // параметры КРЕДИТА: курс валюты, рублевый эквивалент
         BigDecimal rateCredit = rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
-        BigDecimal eqvCredit = rateRepository.getEquivalent(operation.getCurrencyCredit(), rateCredit, operation.getAmountCredit());
+        BigDecimal eqvCredit = rateRepository.getEquivalent(rateCredit, operation.getAmountCredit());
         operation.setRateCredit(rateCredit);
         operation.setEquivalentCredit(eqvCredit);
 

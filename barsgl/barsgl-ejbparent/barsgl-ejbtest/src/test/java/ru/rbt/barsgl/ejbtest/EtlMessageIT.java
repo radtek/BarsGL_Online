@@ -168,8 +168,8 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(pdDr.getCcy().equals(operation.getCurrencyDebit()));  // валюта дебет
         Assert.assertTrue(pdCr.getCcy().equals(operation.getCurrencyCredit())); // валюта кредит
         Assert.assertTrue(pdCr.getCcy().equals(pdDr.getCcy()));                 // валюта одинаковый
-        Assert.assertNull(null, pdDr.getPref());
-        Assert.assertNull(null, pdCr.getPref());
+        Assert.assertEquals(ru.rbt.ejbcore.util.StringUtils.leftSpace(" ", 20), pdDr.getPref());
+        Assert.assertEquals(ru.rbt.ejbcore.util.StringUtils.leftSpace(" ", 20), pdCr.getPref());
 
         Assert.assertTrue(pdCr.getAmount() == operation.getAmountDebit().movePointRight(2).longValue());  // сумма в валюте
         Assert.assertTrue(pdCr.getAmount() == -pdDr.getAmount());       // сумма в валюте дебет - кредит
@@ -746,6 +746,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         long stamp = System.currentTimeMillis();
         final BankCurrency JPY = new BankCurrency("JPY");
 
+        baseEntityRepository.executeNativeUpdate("delete from currates where dat = ? and ccy = ?"
+            , getOperday().getCurrentDate(), JPY.getCurrencyCode());
+        checkCreateBankCurrency(getOperday().getCurrentDate(), JPY, new BigDecimal("0.555"));
+
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
 
@@ -762,7 +766,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
                 .orElseThrow(() -> new RuntimeException("Account debit not initialized")).getString(0);
 
         pst.setAccountDebit(accdt);
-        pst.setAmountDebit(new BigDecimal("600000000.000"));
+        pst.setAmountDebit(new BigDecimal("60.000"));
         pst.setCurrencyDebit(JPY);
 
         String creditAccount = findBsaAccount("40702392%", getOperday().getCurrentDate());
@@ -798,6 +802,9 @@ public class EtlMessageIT extends AbstractTimerJobIT {
                 , pdCr.getAmount().longValue());  // сумма в валюте
         Assert.assertEquals(operation.getAmountDebit().longValue()
                 , -pdDr.getAmount().longValue());  // сумма в валюте
+
+        Assert.assertEquals(new BigDecimal("33.3"), operation.getEquivalentCredit());
+        Assert.assertEquals(new BigDecimal("33.3"), operation.getEquivalentDebit());
 
     }
 

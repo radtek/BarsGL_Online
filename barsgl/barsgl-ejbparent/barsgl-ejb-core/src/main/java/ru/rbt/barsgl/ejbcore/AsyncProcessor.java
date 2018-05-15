@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static ru.rbt.barsgl.ejbcore.AsyncProcessor.ExecutorType.EE;
+import static ru.rbt.barsgl.ejbcore.AsyncProcessor.ExecutorType.SE;
 
 /**
  * Created by Ivan Sevastyanov
@@ -32,9 +34,12 @@ public class AsyncProcessor {
 
     private static long OFFER_DEFAULT_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(15);
     private static long INIT_DEFAULT_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(15);
+    public static final String MQ_EXECUTOR = "mq.process.executor";
 
     private static int DEFAULT_MAX_POOL_SIZE = 5000;
-    
+
+    public enum ExecutorType {SE, EE};
+
     @EJB
     private CoreRepository repository;
 
@@ -46,9 +51,9 @@ public class AsyncProcessor {
 
     private BlockingQueue<InternalAsyncTask> internalQueue;
 
-    
+    // Bug in weblogic 12.2.1.3 in massive threads!!!
     @Resource
-    private ManagedThreadFactory managedThreadFactory;    
+    private ManagedThreadFactory managedThreadFactory;
     
     private ThreadPoolExecutor defaultThreadPoolExecutor;
     
@@ -135,8 +140,8 @@ public class AsyncProcessor {
             if (executorService.awaitTermination(timeout, unit)) {
                 logger.log(Level.INFO, "All threads are terminated");
             } else {
-                throw new TimeoutException(format("Async operation is timed out. Current time '%s' greater than '%s'",
-                         dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));
+                throw new TimeoutException(format("Async operation is timed out (%d %s) . Current time '%s' greater than '%s'",
+                         timeout, unit.name(), dateUtils.fullDateString(new Date()), dateUtils.fullDateString(new Date(tillTo))));
             }
         } catch (InterruptedException ex) {
             throw new Exception("Execution tasks is interrupted", ex);
@@ -152,17 +157,29 @@ public class AsyncProcessor {
             }).get();
         });
     }
-    
+
+    public boolean isExecutorEE() {
+        return (propertiesRepository.getStringDef(MQ_EXECUTOR, SE.name()).toUpperCase().equals(EE.name()));
+    }
+
     public ExecutorService getDefaultThreadPoolExecutor(int corePoolSize){
       //create with fixed thread pool size
       if(defaultThreadPoolExecutor == null){
-        defaultThreadPoolExecutor = new ThreadPoolExecutor(
-              corePoolSize,
-              corePoolSize,
-              0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS, 
-              MILLISECONDS,
-              new LinkedBlockingQueue<>(), 
-              managedThreadFactory);
+        defaultThreadPoolExecutor = isExecutorEE() ?
+                new ThreadPoolExecutor(
+                        corePoolSize, corePoolSize,
+                        0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
+                        MILLISECONDS,
+                        new LinkedBlockingQueue<>(),
+                        managedThreadFactory)
+                :
+                new ThreadPoolExecutor(
+                        corePoolSize, corePoolSize,
+                        0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
+                        MILLISECONDS,
+                        new LinkedBlockingQueue<>()
+                        )
+        ;
         
       }
       defaultThreadPoolExecutor.setCorePoolSize(corePoolSize);
@@ -172,13 +189,21 @@ public class AsyncProcessor {
     
     public ExecutorService getBlockingQueueThreadPoolExecutor(int corePoolSize, int maximumPoolSize, int queueSize) {
         //create with fixed thread pool size
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-                corePoolSize,
-                maximumPoolSize,
-                0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
-                MILLISECONDS,
-                new ArrayBlockingQueue<>(queueSize),
-                managedThreadFactory);
+        ThreadPoolExecutor threadPoolExecutor = isExecutorEE() ?
+                new ThreadPoolExecutor(
+                        corePoolSize, maximumPoolSize,
+                        0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
+                        MILLISECONDS,
+                        new ArrayBlockingQueue<>(queueSize),
+                        managedThreadFactory)
+                :
+                new ThreadPoolExecutor(
+                        corePoolSize, maximumPoolSize,
+                        0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
+                        MILLISECONDS,
+                        new ArrayBlockingQueue<>(queueSize)
+                        )
+                ;
         return threadPoolExecutor;
     }
     

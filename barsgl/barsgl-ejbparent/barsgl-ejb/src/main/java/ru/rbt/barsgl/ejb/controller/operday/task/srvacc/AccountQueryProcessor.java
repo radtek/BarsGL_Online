@@ -4,6 +4,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AclirqJournal;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
@@ -16,12 +17,10 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -66,7 +65,7 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
     
     private ThreadLocal<Boolean> isAccRst = new ThreadLocal<>();
     
-    public String process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
+    public QueueProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId, boolean showUnspents) throws Exception {
         isAccRst.set(false);
         if (!fullTopic.startsWith("<?xml")) {
             fullTopic = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + fullTopic;
@@ -75,13 +74,13 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
         if (fullTopic == null || !fullTopic.contains("AccountListQuery")) {
             journalRepository.updateLogStatus(jId, AclirqJournal.Status.ERROR, "Ошибка в содержании сообщения");
             // Меняем содержание на ошибку
-            return getEmptyBodyMessage();
+            return new QueueProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountListQuery(fullTopic, jId, currencyMap, workdayRepository.getWorkday(), currencyNBDPMap, showUnspents);
 
 //        log.info("Обработка одного сообщения завершена.");
-        return answerBody;
+        return new QueueProcessResult(answerBody, false);
     }
 
     private Map<AccountMap, Object> readFromXML(String bodyXML, Long jId) throws Exception {
@@ -273,10 +272,10 @@ public class AccountQueryProcessor extends CommonAccountQueryProcessor implement
                 sb.append("</asbo:CurrentBalance>\n");
             }
 
-            sb.append("<asbo:OpenDate>").append(sdf.format(record.getDate("DTO"))).append("</asbo:OpenDate>\n");
+            sb.append("<asbo:OpenDate>").append(sdf.format(record.getDate("DTO").toInstant())).append("</asbo:OpenDate>\n");
 
             if (record.getDate("DTC") != null) {
-                sb.append("<asbo:CloseDate>").append(sdf.format(record.getDate("DTC"))).append("</asbo:CloseDate>\n");
+                sb.append("<asbo:CloseDate>").append(sdf.format(record.getDate("DTC").toInstant())).append("</asbo:CloseDate>\n");
             }
 
             sb.append("<asbo:Status>").append(record.getDate("DTC") == null ? AccountStatus.O : AccountStatus.C).append("</asbo:Status>\n");

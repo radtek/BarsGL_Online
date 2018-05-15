@@ -4,6 +4,7 @@ package ru.rbt.barsgl.ejb.controller.operday.task.srvacc;
 import org.apache.log4j.Logger;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.repository.AclirqJournalRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.audit.controller.AuditController;
@@ -18,11 +19,9 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -62,7 +61,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     private WorkdayRepository workdayRepository;
 
 
-    public String process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
+    public QueueProcessResult process(String fullTopic, Map<String, String> currencyMap, Map<String, Integer> currencyNBDPMap, long jId) throws Exception {
         String XRef;
         // Преобразуем данные из сообщения
         if (!fullTopic.startsWith("<?xml")) {
@@ -72,11 +71,11 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         if (fullTopic == null || !fullTopic.contains("AccountBalanceListQuery")) {
             journalRepository.updateLogStatus(jId, ERROR, "Ошибка при распозновании сообщения");
             // Меняем содержание на ошибку
-            return getEmptyBodyMessage();
+            return new QueueProcessResult(getEmptyBodyMessage(), true);
         }
 
         String answerBody = processAccountBalanceListQuery(fullTopic, jId, currencyMap, workdayRepository.getWorkday(), currencyNBDPMap);
-        return answerBody;
+        return new QueueProcessResult(answerBody, false);
     }
 
     private String processAccountBalanceListQuery(String fullTopic, Long jId, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
@@ -149,6 +148,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
         List<String> stringList = countsToProcess==null || countsToProcess.size() == 0 ? new ArrayList<>() : new ArrayList<>(countsToProcess);
         StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                                      "<asbo:AccountBalanceList xmlns:asbo=\"urn:asbo:barsgl\">\n");
+
         for (int i = 0; i < stringList.size(); i += batchSize) {
             result.append(batchCreateOutMessage(stringList.subList(i, Math.min(i + batchSize, stringList.size())), currencyMap, workday, currencyNBDPMap));
         }
@@ -157,6 +157,7 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
     }
 
     private StringBuilder batchCreateOutMessage(List<String> counts, Map<String, String> currencyMap, Date workday, Map<String, Integer> currencyNBDPMap) throws Exception {
+
         StringBuilder sb = new StringBuilder();
         String inCondition = "'" + StringUtils.listToString(counts, "','") + "'";
 
@@ -218,10 +219,10 @@ public class AccountQueryBAProcessor extends CommonAccountQueryProcessor impleme
             sb.append("<asbo:Time>").append(xmlGregorianCalendar.toString().substring(11, 19)).append("</asbo:Time>\n");
             sb.append("</asbo:CurrentBalance>\n");
 
-            sb.append("<asbo:AccountOpenDate>").append(sdf.format(record.getDate("DRLNO"))).append("</asbo:AccountOpenDate>\n");
+            sb.append("<asbo:AccountOpenDate>").append(sdf.format(record.getDate("DRLNO").toInstant())).append("</asbo:AccountOpenDate>\n");
 
             if (!lastDate.equals(record.getDate("DRLNC"))) {
-                sb.append("<asbo:AccountCloseDate>").append(sdf.format(record.getDate("DRLNC"))).append("</asbo:AccountCloseDate>\n");
+                sb.append("<asbo:AccountCloseDate>").append(sdf.format(record.getDate("DRLNC").toInstant())).append("</asbo:AccountCloseDate>\n");
             }
 
             String sq = acid.length() == 20 ? acid.substring(15, 17) : "0";

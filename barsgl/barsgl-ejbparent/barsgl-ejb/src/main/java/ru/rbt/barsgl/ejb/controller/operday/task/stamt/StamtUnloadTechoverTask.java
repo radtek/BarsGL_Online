@@ -145,7 +145,6 @@ public class StamtUnloadTechoverTask implements ParamsAwareRunnable {
     private int fillBalanceDelta(Date lwdate) throws Exception {
         repository.executeTransactionally(connection -> {
             try (PreparedStatement st = connection.prepareStatement(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/tech/stamt_techover_insacc.sql"))) {
-                st.setDate(1, new java.sql.Date(lwdate.getTime()));
                 st.executeUpdate();
             }
             try (PreparedStatement st = connection.prepareStatement(resourceController

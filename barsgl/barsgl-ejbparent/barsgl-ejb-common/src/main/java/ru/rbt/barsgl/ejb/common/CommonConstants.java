@@ -7,4 +7,5 @@ public interface CommonConstants {
 
     public final static String ETL_MONITOR_TASK = "EtlStructureMonitorTask";
     public final static String BV_MANUAL_TASK = "ProcessBackValueOperationsTask";
+    public final static String ACLIRQ_TASK = "AccountQueryTaskLIRQ1";
 }

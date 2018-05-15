@@ -1,9 +1,11 @@
 package ru.rbt.barsgl.ejbtest;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.w3c.dom.Document;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -48,6 +50,11 @@ import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -821,6 +828,27 @@ public abstract class AbstractRemoteIT  {
                 " where CUSTYPE = ? and TERM = ? and ACC2 like ? and TECH_ACT <> 'Y' and DTB <= ? and DTE is null",
                 StringUtils.rightPad(custType,3), term, acc2, getOperday().getCurrentDate());
         return data.getString(0);
+    }
+
+    protected String getRecourceText(String resourceName) throws IOException {
+        return IOUtils.toString(this.getClass().getResourceAsStream("/" + resourceName), "UTF-8");
+    }
+
+    protected Document getDocument(DocumentBuilder docBuilder, String message) throws IOException, org.xml.sax.SAXException {
+        return docBuilder.parse(new ByteArrayInputStream(message.getBytes("UTF-8")));
+    }
+
+    protected String getXmlParam(XPath xPath, Document doc, String parentNode, String paramName) throws XPathExpressionException {
+        return (String) xPath.evaluate(parentNode + "/" + paramName, doc.getDocumentElement(), XPathConstants.STRING);
+    }
+
+    protected String changeXmlParam(String message, String paramName, String oldValue, String newValue) {
+        return message.replace(paramName + ">" + oldValue, paramName + ">" + newValue);
+    }
+
+    public long getAuditMaxId() throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select max(ID_RECORD) from GL_AUDIT");
+        return null == res ? 0 : res.getLong(0);
     }
 
 }
