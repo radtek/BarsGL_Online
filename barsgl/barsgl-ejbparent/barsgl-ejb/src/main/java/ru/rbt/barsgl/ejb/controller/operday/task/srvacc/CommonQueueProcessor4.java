@@ -68,8 +68,8 @@ public class CommonQueueProcessor4 implements MessageListener {
     @EJB
     private AccountQueryProcessor queryProcessor;
 
-    @EJB
-    private AccountQueryBAProcessor queryProcessorBA;
+//    @EJB
+//    private AccountQueryBAProcessor queryProcessorBA;
 
     @EJB
     private MasterAccountProcessor queryProcessorMAPB;
@@ -345,8 +345,8 @@ public class CommonQueueProcessor4 implements MessageListener {
                 switch (queueType) {
                     case "LIRQ":
                         return queryProcessor.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId, "show".equals(queueProperties.unspents));
-                    case "BALIRQ":
-                        return queryProcessorBA.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
+//                    case "BALIRQ":
+//                        return queryProcessorBA.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
                     case "MAPBRQ":
                         return queryProcessorMAPB.process(textMessage, CURRENCY_MAP, CURRENCY_NBDP_MAP, jId);
                 }

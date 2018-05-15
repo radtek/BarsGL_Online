@@ -26,34 +26,10 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 /**
  * Created by ER22228
  */
+@Ignore ("Бессмысленный тест")
 public class AccountQueryIT extends AbstractTimerJobIT {
 
     public static final Logger logger = Logger.getLogger(AccountQueryIT.class.getName());
-
-
-    @Test
-    public void testTaskMT() throws Exception {
-        SingleActionJob job =
-                SingleActionJobBuilder.create()
-                        .withClass(AccountQueryTaskMT.class)
-                        .withName("AccountQuery5")
-                        .withProps(
-                                "mq.batchSize = 30\n" + //todo
-                                        "mq.host = vs338\n" +
-                                        "mq.port = 1414\n" +
-                                        "mq.queueManager = QM_MBROKER10_TEST\n" +
-                                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
-                                        "mq.topics = " +
-                                        "LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-                                        "mq.user=user\n" +
-                                        "mq.password=passw\n"+
-                                        "unspents=show\n"+
-                                        "writeOut=true"
-                        )
-                        .build();
-        jobService.executeJob(job);
-
-    }
 
     @Test
     @Ignore
