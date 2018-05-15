@@ -8,6 +8,8 @@ import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.shared.Assert;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.annotation.Resource;
@@ -28,6 +30,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
 import static ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask.MODE.Auto;
 import static ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask.MODE.Manual;
 import static ru.rbt.ejbcore.util.DateUtils.dbDateString;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_EXC;
 
 /**
  * Created by er22317 on 08.02.2018.
@@ -231,6 +234,13 @@ public class LoadBranchDictTask extends AbstractJobHistoryAwareTask {
         properties.put(PROP_LOADDATE, getDateLoad(properties, maxLoadDate));
     }
 
+    @Override
+    protected boolean checkOk(String jobName, Properties properties) {
+        if (getMode(properties).equals(MODE.Auto)){
+           return super.checkOk(jobName, properties);
+        }
+        return true;
+    }
 //    @Override
 //    public void run(String jobName, Properties properties) throws Exception {
 //    try {
