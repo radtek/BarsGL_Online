@@ -48,7 +48,7 @@ public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
         return  "select ID, BSAACID, CBCC, CBCCN, BRANCH, CCY, CUSTNO, ACCTYPE, CBCUSTTYPE, TERM, GL_SEQ, " +
                 "ACC2, PLCODE, ACOD, SQ, ACID, PSAV, DEALSRS, RLNTYPE, DESCRIPTION, " +
                 "DTO, DTC, DTR, DTM, OPENTYPE, GLOID, GLO_DC " +
-                "from GL_ACC where TRIM(PLCODE) is not null "
+                "from GL_ACC where TRIM(PLCODE) is not null and ACCTYPE <> 0 "
                 + getSourceAndFilialPart("and", "", "CBCC");
     }
 

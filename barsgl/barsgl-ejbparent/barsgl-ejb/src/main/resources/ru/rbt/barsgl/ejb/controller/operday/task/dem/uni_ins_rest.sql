@@ -10,6 +10,7 @@ SELECT od.curdate, b.acid, a.acc2, b.bsaacid
           gl_acc a, currency c, (SELECT curdate FROM GL_TMP_CURDATE) od
  WHERE b.acid = a.acid
    AND b.bsaacid = a.bsaacid
+   AND a.acctype != 0
    AND a.dto <= od.curdate
    AND nvl(a.dtc, od.curdate) >= od.curdate
    AND b.dat <= od.curdate
