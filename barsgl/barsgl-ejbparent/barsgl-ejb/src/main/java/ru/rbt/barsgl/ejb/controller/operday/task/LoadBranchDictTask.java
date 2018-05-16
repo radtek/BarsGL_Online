@@ -72,107 +72,20 @@ public class LoadBranchDictTask extends AbstractJobHistoryAwareTask {
     @EJB
     private BranchDictRepository branchDictRepository;
 
-//    @EJB
-//    private TaskUniqueController taskUniqueController;
+    @Override
+    protected void initExec(String jobName, Properties properties) throws Exception{
+        Date maxLoadDate = branchDictRepository.getMaxLoadDate();
+        properties.put(PROP_MAXLOADDATE, maxLoadDate);
+        properties.put(PROP_LOADDATE, getDateLoad(properties, maxLoadDate));
+    }
 
     @Override
-    protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
-        clearInfTables();
-        long loadStatId = -1;
-        try {
-            Date dateLoad = (Date)properties.get(PROP_LOADDATE);
-            auditController.info(LoadBranchDict, format("LoadBranchDictTask стартовала в '%s' режиме за дату '%s'", getMode(properties).getValue(), dateUtils.onlyDateString(dateLoad)));
-
-            loadStatId = branchDictRepository.insGlLoadStat((Date)properties.get(PROP_MAXLOADDATE), dateLoad);
-
-            processDic(loadDictFil, dateLoad, loadStatId);
-//            auditController.info(LoadBranchDict, "Загрузка филиалов завершена успешно");
-            processDic(loadDictBr, dateLoad, loadStatId);
-
-            branchDictRepository.updGlLoadStat(loadStatId, LoadState.P.name());
-            auditController.info(LoadBranchDict, format("LoadBranchDictTask окончилась. Идентификатор загрузки '%s'", loadStatId));
-
-            return true;
-        } catch (Exception e) {
-            auditController.error(LoadBranchDict, "Завершение с ошибкой", null, e);
-            if (loadStatId > 0) {
-                branchDictRepository.updGlLoadStat(loadStatId, LoadState.E.name());
-            }
-            throw new DefaultApplicationException(e.getMessage(), e);
+    protected boolean checkOk(String jobName, Properties properties) {
+        if (getMode(properties).equals(MODE.Auto)){
+            return super.checkOk(jobName, properties);
         }
+        return true;
     }
-
-
-    private boolean processDic(LoadDict loadDict, Date dateLoad, long loadStatId) {
-        try {
-            beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-                loadDict.fillTargetTables(dateLoad, loadStatId);
-                return null;
-            }, 60 * 60);
-            return true;
-        } catch (Throwable e) {
-            auditController.error(LoadBranchDict, String.format("LoadBranchDictTask(%s) завершилась с ошибкой", loadDict.getClass().getSimpleName()), "", String.valueOf(loadStatId), e);
-            return false;
-        }
-    }
-
-//    private boolean executeWork(Date dateLoad) throws Exception {
-//        clearInfTables();
-//        ExecutorService pool = Executors.newFixedThreadPool(2);
-//
-//        try{
-//            Future<Boolean> fuFils = pool.submit(task(loadDictFil, dateLoad, _loadStatId));
-//            Future<Boolean> fuBrchs = pool.submit(task(loadDictBr, dateLoad, _loadStatId));
-//            if (fuFils.get() & fuBrchs.get()){
-//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
-//                return true;
-//            }else{
-//                branchDictRepository.updGlLoadStat(_loadStatId, "E");
-//                return false;
-//            }
-//        }finally {
-//            pool.shutdown();
-//
-//        }
-//    }
-
-    private Date getDateLoad(Properties properties, Date maxDate) {
-        try {
-            return Optional.ofNullable(properties.getProperty(PROP_OPERDAY)).map(p -> {
-                try {
-                    return dateUtils.dbDateParse(p);
-                } catch (ParseException e) {
-                    throw new DefaultApplicationException(e);
-                }
-            }).orElse(maxDate);
-        } catch (Exception e) {
-            throw new DefaultApplicationException(e);
-        }
-    }
-
-    private MODE getMode(Properties properties) {
-        return Optional.ofNullable(properties.getProperty(PROP_OPERDAY)).map(p -> MODE.Manual).orElse(MODE.Auto);
-    }
-
-//    private boolean executeWork(Date dateLoad) throws Exception {
-//        clearInfTables();
-//        ExecutorService pool = Executors.newFixedThreadPool(2);
-//
-//        try{
-//            Future<Boolean> fuFils = pool.submit(task(loadDictFil, dateLoad, _loadStatId));
-//            Future<Boolean> fuBrchs = pool.submit(task(loadDictBr, dateLoad, _loadStatId));
-//            if (fuFils.get() & fuBrchs.get()){
-//                branchDictRepository.updGlLoadStat(_loadStatId, "P");
-//                return true;
-//            }else{
-//                branchDictRepository.updGlLoadStat(_loadStatId, "E");
-//                return false;
-//            }
-//        }finally {
-//            pool.shutdown();
-//        }
-//    }
-
 
     @Override
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
@@ -197,101 +110,62 @@ public class LoadBranchDictTask extends AbstractJobHistoryAwareTask {
         return true;
     }
 
-//    public boolean checkRun(Date dateLoad, MODE mode, boolean forceStart) throws Exception {
-//        return beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-//            Date maxLoadDate = null;
-//
-//            if (mode.equals(Auto)){
-//                //dateLoad = lwdate
-//                if (branchDictRepository.isTaskProcessed(dateLoad)){
-//                    auditController.info(LoadBranchDict, "LoadBranchDictTask за "+yyyyMMdd.format(dateLoad)+" уже успешно отработала");
-//                    return false;
-//                }
-//                maxLoadDate = branchDictRepository.getMaxLoadDate();
-//                if (branchDictRepository.isTaskProcessed(maxLoadDate)){
-//                    auditController.info(LoadBranchDict, "LoadBranchDictTask за MAX_LOAD_DATE = "+yyyyMMdd.format(maxLoadDate)+" уже успешно отработала");
-//                    return false;
-//                }
-//                loadStatId = branchDictRepository.insGlLoadStat( maxLoadDate, maxLoadDate);
-//                dateLoad.setTime(maxLoadDate.getTime());
-//            }else{
-//                maxLoadDate = branchDictRepository.getMaxLoadDate();
-//                //dateLoad = параметер
-//                if (dateLoad.compareTo(maxLoadDate) > 0){
-//                    auditController.info(LoadBranchDict, "LoadBranchDictTask MAX_LOAD_DATE("+yyyyMMdd.format(maxLoadDate)+") меньше параметра(" +yyyyMMdd.format(dateLoad)+")");
-//                    return false;
-//                }
-//                loadStatId = branchDictRepository.insGlLoadStat( maxLoadDate, dateLoad);
-//            }
-//            return true;
-//        }, 60 * 60);
-//    }
-
     @Override
-    protected void initExec(String jobName, Properties properties) throws Exception{
-        Date maxLoadDate = branchDictRepository.getMaxLoadDate();
-        properties.put(PROP_MAXLOADDATE, maxLoadDate);
-        properties.put(PROP_LOADDATE, getDateLoad(properties, maxLoadDate));
-    }
+    protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
+        clearInfTables();
+        long loadStatId = -1;
+        try {
+            Date dateLoad = (Date)properties.get(PROP_LOADDATE);
+            auditController.info(LoadBranchDict, format("LoadBranchDictTask стартовала в '%s' режиме за дату '%s'", getMode(properties).getValue(), dateUtils.onlyDateString(dateLoad)));
 
-    @Override
-    protected boolean checkOk(String jobName, Properties properties) {
-        if (getMode(properties).equals(MODE.Auto)){
-           return super.checkOk(jobName, properties);
+            loadStatId = branchDictRepository.insGlLoadStat((Date)properties.get(PROP_MAXLOADDATE), dateLoad);
+
+            processDic(loadDictFil, dateLoad, loadStatId);
+            processDic(loadDictBr, dateLoad, loadStatId);
+
+            branchDictRepository.updGlLoadStat(loadStatId, LoadState.P.name());
+            auditController.info(LoadBranchDict, format("LoadBranchDictTask окончилась. Идентификатор загрузки '%s'", loadStatId));
+
+            return true;
+        } catch (Exception e) {
+            auditController.error(LoadBranchDict, "Завершение с ошибкой", null, e);
+            if (loadStatId > 0) {
+                branchDictRepository.updGlLoadStat(loadStatId, LoadState.E.name());
+            }
+            throw new DefaultApplicationException(e.getMessage(), e);
         }
-        return true;
     }
-//    @Override
-//    public void run(String jobName, Properties properties) throws Exception {
-//    try {
-//        Date dateLoad = new Date();
-//        MODE mode;
-//
-//        String dl = properties.getProperty(PROP_OPERDAY);
-//
-//        if (dl == null){
-//            dateLoad.setTime(operdayController.getOperday().getLastWorkingDay().getTime());
-//            mode = Auto;
-//        }else{
-//            dateLoad.setTime(yyyyMMdd.parse(dl).getTime());
-//            mode = Manual;
-//        }
-//        auditController.info(LoadBranchDict, "LoadBranchDictTask стартовала в "+mode.getValue()+" режиме за дату "+dbDateString(dateLoad));
-//
-//        if (!taskUniqueController.Start(TaskUniqueController.TaskId.LoadBranchDictTask, isForceStart)){
-//            auditController.info(LoadBranchDict, "LoadBranchDictTask за "+dbDateString(dateLoad)+" уже запущена");
-//        }else {
-//            try{
-//                if (checkRun(dateLoad, mode, isForceStart)) {
-//                    if (!executeWork(dateLoad)) {
-//                        throw new DefaultApplicationException("Ошибка задачи");
-//                    }
-//                }
-//            } finally {
-//                taskUniqueController.setFree(TaskUniqueController.TaskId.LoadBranchDictTask);
-//            }
-//        }
-//            auditController.info(LoadBranchDict, "LoadBranchDictTask окончилась", "", String.valueOf(_loadStatId));
-//        }catch (Throwable e){
-//            auditController.error(LoadBranchDict,"Завершение с ошибкой", null, e);
-//            throw new DefaultApplicationException(e.getMessage(), e);
-//        }
-//    }
 
-//    private Callable<Boolean> task(LoadDict loadDict, Date dateLoad, long loadStatId){
-//        return ()->{
-//                    try {
-//                        beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-//                            loadDict.fillTargetTables(dateLoad, loadStatId);
-//                            return null;
-//                        }, 60 * 60);
-//                        return true;
-//                    }catch (Throwable e){
-//                        auditController.error(LoadBranchDict, "LoadBranchDictTask("+loadDict.getClass().getSimpleName()+") завершилась с ошибкой","", String.valueOf(_loadStatId), e);
-//                        return false;
-//                    }
-//                };
-//    }
+    private boolean processDic(LoadDict loadDict, Date dateLoad, long loadStatId) {
+        try {
+            beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+                loadDict.fillTargetTables(dateLoad, loadStatId);
+                return null;
+            }, 60 * 60);
+            return true;
+        } catch (Throwable e) {
+            auditController.error(LoadBranchDict, String.format("LoadBranchDictTask(%s) завершилась с ошибкой", loadDict.getClass().getSimpleName()), "", String.valueOf(loadStatId), e);
+            return false;
+        }
+    }
+
+    private Date getDateLoad(Properties properties, Date maxDate) {
+        try {
+            return Optional.ofNullable(properties.getProperty(PROP_OPERDAY)).map(p -> {
+                try {
+                    return dateUtils.dbDateParse(p);
+                } catch (ParseException e) {
+                    throw new DefaultApplicationException(e);
+                }
+            }).orElse(maxDate);
+        } catch (Exception e) {
+            throw new DefaultApplicationException(e);
+        }
+    }
+
+    private MODE getMode(Properties properties) {
+        return Optional.ofNullable(properties.getProperty(PROP_OPERDAY)).map(p -> MODE.Manual).orElse(MODE.Auto);
+    }
 
     private void clearInfTables() throws Exception {
         jobHistoryRepository.executeInNewTransaction(persistence -> {

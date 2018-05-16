@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.LoadBranchDict;
@@ -43,7 +44,9 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
     }
 
     public Date getMaxLoadDate() throws Exception {
-        return selectOne(BARSGLNOXA, "select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS", null).getDate(0);
+        String sql = "select MAX_LOAD_DATE from V_GL_DWH_LOAD_STATUS";
+        return Optional.ofNullable(selectOne(BARSGLNOXA, sql, null))
+                .orElseThrow(()->new DefaultApplicationException(sql + " is null")).getDate(0);
     }
 
     public long insGlLoadStat(Date dtl, Date operday) throws Exception {

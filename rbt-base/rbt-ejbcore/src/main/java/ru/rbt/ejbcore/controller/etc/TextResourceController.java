@@ -5,7 +5,7 @@ import java.io.*;
 /**
  * Created by ER21006 on 03.02.2016.
  */
-public class TextResourceController {
+public class TextResourceController implements ITextResourceController{
 
     /**
      * Находим в основном SQL скрипты как ресурсы

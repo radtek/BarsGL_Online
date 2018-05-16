@@ -43,6 +43,8 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.controller.etc.ITextResourceController;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
@@ -87,6 +89,7 @@ public abstract class AbstractRemoteIT  {
     protected static SqlPageSupport pagingSupport;
     protected static AcDNJournalRepository journalRepository;
     protected static ILoadManagementController loadManagementController;
+    protected static ITextResourceController textResourceController;
 
     @BeforeClass
     public static void beforeClassRoot() {
@@ -144,6 +147,7 @@ public abstract class AbstractRemoteIT  {
         jobService = ProxyFactory.createProxy(BackgroundJobService.class.getName(), BackgroundJobService.class, remoteAccessInternal);
         pagingSupport = ProxyFactory.createProxy(SqlPageSupport.class.getName(), SqlPageSupport.class, remoteAccessInternal);
         loadManagementController = ProxyFactory.createProxy(LoadManagementController.class.getName(), ILoadManagementController.class, remoteAccessInternal);
+        textResourceController = ProxyFactory.createProxy(TextResourceController.class.getName(), ITextResourceController.class, remoteAccessInternal);
     }
 
 
