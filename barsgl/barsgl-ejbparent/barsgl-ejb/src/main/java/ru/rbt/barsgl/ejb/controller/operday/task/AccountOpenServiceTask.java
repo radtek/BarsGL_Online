@@ -25,7 +25,7 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
 
     private static final Logger log = Logger.getLogger(AccountOpenServiceTask.class);
 
-    private static int maxRequestCount = 10;
+    private static int maxRequestCount = 30;
 
     @EJB
     private BeanManagedProcessor beanManagedProcessor;
