@@ -103,6 +103,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return this.selectOne(getDataSource(), sqlString, params);
     }
 
+    @Override
+    public <T extends Enum> DataRecord selectOne( T enumRepository, String sqlString, Object... params) throws Exception {
+        return this.selectOne(getDataSource(enumRepository), sqlString, params);
+    }
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public <E> E executeInNonTransaction(DataAccessCallback<E> callback) throws Exception {
         return this.executeInNonTransaction(getDataSource(), callback);
@@ -144,6 +149,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     }
 
     @Override
+    public <E, T extends Enum> List<E> select(T enumRepository, Class<E> clazz, String jpaQuery, Object ... params) throws Exception {
+        return this.select(getPersistence(enumRepository), clazz, jpaQuery, 0, params);
+    }
+
+    @Override
     public <E> List<E> selectHinted(Class<E> clazz, String jpaQuery
             , Object[] params, Map<String,String> hints) {
         return this.selectHinted(getPersistence(), clazz, jpaQuery, 0, params, hints);
@@ -178,6 +188,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     }
 
     @Override
+    public <T extends Enum> int executeNativeUpdate(T repository, String nativeSQL, Object... params) throws Exception {
+        return this.executeNativeUpdate(getDataSource(repository), nativeSQL, params);
+    }
+
+    @Override
     public int executeNativeUpdate(String nativeSQL, Object... params) {
         return this.executeNativeUpdate(getDataSource(), nativeSQL, params);
     }
@@ -195,6 +210,10 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     @Override
     public T findById(Class<T> clazz, K primaryKey) {
         return this.findById(getPersistence(), clazz, primaryKey);
+    }
+
+    public T findById(Class<T> clazz, K primaryKey, EntityManager persistence) {
+        return this.findById(persistence, clazz, primaryKey);
     }
 
     @Override
@@ -223,6 +242,9 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
 
     public void flush() {
         this.flush(getPersistence());
+    }
+    public <T extends Enum> void flush(T enumRepository) throws Exception {
+        this.flush(getPersistence(enumRepository));
     }
 
     @Override

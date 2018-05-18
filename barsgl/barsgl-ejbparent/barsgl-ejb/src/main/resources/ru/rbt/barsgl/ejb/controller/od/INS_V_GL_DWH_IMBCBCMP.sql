@@ -1,0 +1,17 @@
+insert all
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('MOS','UCB, Moscow','АО ЮНИКРЕДИТ БАНК Г МОСКВА','Y','0001','001',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('SPB','UCB, Petersburg Branch','Петербургский филиал','Y','0002','002',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('PRM','UCB, Perm Branch','Пермский филиал','Y','0009','009',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('RND','UCB, Rostov Branch','Ростовский филиал','Y','0015','015',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('CHL','UCB, Chelyabinsk Branch','Челябинский филиал','Y','0016','016',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('KRS','UCB, Krasnodar Branch','Краснодарский филиал','Y','0023','023',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('VRN','UCB, Voronezh Branch','Воронежский филиал','Y','0030','030',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('SAM','UCB, Samara Branch','Самарский филиал','Y','0033','033',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('EKB','UCB, Ekaterinburg Branch','Екатеринбургский филиал','Y','0040','040',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('NNV','UCB, Nizhny Novgorod Branch','Нижегородский филиал','Y','0045','045',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('NVS','UCB, Novosibirsk Branch','Новосибирский филиал','Y','0050','050',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('UFA','UCB, Ufa Branch','Башкирский филиал','Y','0093','093',to_date('13.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('VLG','UCB, Volgograd Branch','Волгоградский филиал','Y','0066','066',to_date('13.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('STV','UCB, Stavropol Branch','Ставропольский филиал','Y','0013','101',to_date('11.01.18','DD.MM.RR'))
+        into V_GL_DWH_IMBCBCMP (CCPCD,CCPNE,CCPNR,CCPRI,CCBBR,ALT_CODE,VALID_FROM) values ('TTT','UCB, Test new filial','Тест нового филиала','Y','0095','118',to_date('13.01.18','DD.MM.RR'))
+select 1 from dual

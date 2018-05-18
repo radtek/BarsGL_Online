@@ -3,11 +3,14 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.shared.enums.AccessMode;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
@@ -25,13 +28,18 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
+import ru.rbt.security.gwt.client.monitoring.HPanel;
 import ru.rbt.shared.enums.SecurityActionCode;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
+
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
+
+import java.util.logging.Logger;
 
 /**
  * Created by akichigi on 20.03.15.
@@ -53,6 +61,14 @@ public class OperDayForm extends BaseForm {
     private Label pdMode;
     private Label acm;
 
+    private Timer timer;
+    private Label lbProcessStatus;
+    private Button btChangeProcessStatus;
+    private ProcessingStatus currentChangeProcessStatus = ProcessingStatus.STARTED;
+    private final int tick = 2000;
+    private boolean isStatusSet = false;
+    private HPanel panelProcessStatus;
+
     private Label reason;
     private Grid vip_errors;
     private Label vip;
@@ -63,6 +79,8 @@ public class OperDayForm extends BaseForm {
     private Label timeClose;
     private LwdBalanceCutWrapper lwdBalanceCutWrapper;
     private AccessMode accessMode;
+
+    static Logger log = Logger.getLogger("OperDayForm");
 
     public OperDayForm(){
         super();
@@ -125,15 +143,181 @@ public class OperDayForm extends BaseForm {
         DockLayoutPanel panel = new DockLayoutPanel(Style.Unit.MM);
 
         panel.addNorth(abw, 10);
+        HorizontalPanel hp = new HorizontalPanel();
+        hp.setSpacing(10);
         VerticalPanel vp = new VerticalPanel();
-
+//        vp.setBorderWidth(1);
+        vp.getElement().getStyle().setProperty("border", "1px solid #003366");
         vp.add(grid);
         vp.add(createCOB_OKInfo());
         vp.add(vip_errors = createVipErrorInfo());
         vp.add(createAutoClosePreviousODInfo());
-        panel.add(vp);
+        hp.add(vp);
+        hp.add(createPanelProcessStatus());
+        panel.add(hp);
 
         return panel;
+    }
+
+    private Widget createPanelProcessStatus(){
+        panelProcessStatus = new HPanel(350, 70){
+            public void handlerBody(ClickEvent event){
+                panelProcessStatus.setButVisible(false);
+                isStatusSet = false;
+                startWatching();
+            }
+        };
+        panelProcessStatus.setButTitle("Обновить");
+        panelProcessStatus.addHeader("Статус обработки");
+        HorizontalPanel hp = new HorizontalPanel();
+        hp.setSpacing(10);
+
+        lbProcessStatus = new Label("?");
+        lbProcessStatus.setTitle("Если в течение минуты действие не выполнено, убедитесь, что запущена задачыа 'Мониторинг входящих сообщений АЕ'");
+        lbProcessStatus.getElement().getStyle().setFontWeight(Style.FontWeight.BOLD);
+        hp.add(lbProcessStatus);
+        hp.setCellWidth(lbProcessStatus, "240px");
+        hp.setCellHorizontalAlignment(lbProcessStatus, HasHorizontalAlignment.ALIGN_LEFT);
+
+        btChangeProcessStatus = new Button("?");
+        if (SecurityChecker.checkActions(SecurityActionCode.TskStopStart)) {
+            btChangeProcessStatus.setWidth("90px");
+            btChangeProcessStatus.addClickHandler(new ClickHandler() {
+                @Override
+                public void onClick(ClickEvent event) {
+                    showConfirm("Подтверждение", "Подтвердите " + getStatusText() + " обработки проводок",
+                            new IDlgEvents() {
+                                @Override
+                                public void onDlgOkClick(Object p) throws Exception {
+                                    log.info("onClick(ClickEvent event)");
+                                    if (getNextStatus() != null) {
+                                        setProcessStatus(getNextStatus());
+                                        setBtChangeProcessStatusEnable(false);
+                                    }
+                                }
+                            }
+                            , new IAfterCancelEvent() {
+                                @Override
+                                public void afterCancel() {
+                                    btChangeProcessStatus.setFocus(true);
+                                }
+                            }, null);
+                }
+            });
+            hp.add(btChangeProcessStatus);
+            hp.setCellWidth(btChangeProcessStatus, "90px");
+            hp.setCellHorizontalAlignment(btChangeProcessStatus, HasHorizontalAlignment.ALIGN_RIGHT);
+        }else {
+            btChangeProcessStatus.setVisible(false);
+        }
+
+        panelProcessStatus.setBody(hp);
+        getProcessStatus();
+        return panelProcessStatus;
+    }
+
+    private String getStatusText(){
+       if (currentChangeProcessStatus.equals(ProcessingStatus.STARTED)) return "остановку";
+       if (currentChangeProcessStatus.equals(ProcessingStatus.STOPPED)) return "запуск";
+       return "XXX";
+    }
+// Если в течение минуты действие не выполнено, убедитесь, что запущена задачыа "Мониторинг входящих сообщений АЕ"
+    private void startWatching(){
+        log.info("startWatching()");
+        timer = new Timer(){
+            int MAX_COUNT = 30;
+            int count;
+            @Override
+            public void run() {
+                if (isStatusSet || count++ == MAX_COUNT){
+                    timerCancel();
+                    return;
+                }
+                getProcessStatus();
+            }
+        };
+
+        timer.scheduleRepeating(tick);
+    }
+
+    void timerCancel(){
+        timer.cancel();
+        panelProcessStatus.setButVisible(true);
+        log.info("timer.cancel()");
+
+    }
+
+    ProcessingStatus getNextStatus(){
+        if (currentChangeProcessStatus.equals(ProcessingStatus.STARTED)) return ProcessingStatus.REQUIRED;
+        if (currentChangeProcessStatus.equals(ProcessingStatus.STOPPED)) return ProcessingStatus.ALLOWED;
+        return null;
+    }
+
+    private void setProcessStatus(ProcessingStatus processingStatus){
+        BarsGLEntryPoint.operDayService.setProcessingStatus(processingStatus, new AuthCheckAsyncCallback<RpcRes_Base<String>>() {
+            String errText = "Операция установки статуса не удалась.\nОшибка: ";
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                getProcessStatus();
+                Window.alert(errText + throwable.getLocalizedMessage());
+            }
+
+            @Override
+            public void onSuccess(RpcRes_Base<String> res) {
+                if (res.isError()) {
+                    getProcessStatus();
+                    DialogManager.error("Ошибка", errText + res.getMessage());
+                }
+            }
+        });
+    }
+
+    private void getProcessStatus(){
+        BarsGLEntryPoint.operDayService.getProcessingStatus(new AuthCheckAsyncCallback<RpcRes_Base<ProcessingStatus>>() {
+            String errText = "Операция получения статуса не удалась.\nОшибка: ";
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                Window.alert(errText + throwable.getLocalizedMessage());
+                isStatusSet = true;
+                showProcessingStatus();
+            }
+
+            @Override
+            public void onSuccess(RpcRes_Base<ProcessingStatus> res) {
+                if (res.isError()) {
+                    DialogManager.error("Ошибка", errText + res.getMessage());
+                } else {
+                    currentChangeProcessStatus = res.getResult();
+                    log.info("getProcessStatus() = "+currentChangeProcessStatus.toString());
+                    isStatusSet = currentChangeProcessStatus.equals(ProcessingStatus.STARTED) || currentChangeProcessStatus.equals(ProcessingStatus.STOPPED);
+                    if (isStatusSet && timer != null) timerCancel();;
+                }
+                showProcessingStatus();
+            }
+        });
+    }
+
+    private void showProcessingStatus(){
+        lbProcessStatus.setText(currentChangeProcessStatus.getLabel()+" ("+currentChangeProcessStatus.toString()+")");
+        if (currentChangeProcessStatus.equals(ProcessingStatus.STARTED)){
+            btChangeProcessStatus.setText("Остановить");
+            setBtChangeProcessStatusEnable(true);
+        }else if (currentChangeProcessStatus.equals(ProcessingStatus.STOPPED)){
+            btChangeProcessStatus.setText("Запустить");
+            setBtChangeProcessStatusEnable(true);
+        }else{
+            btChangeProcessStatus.setText(currentChangeProcessStatus.toString());
+            setBtChangeProcessStatusEnable(false);
+        }
+    }
+
+    private void setBtChangeProcessStatusEnable(boolean isEnable){
+        btChangeProcessStatus.setEnabled(isEnable);
+        if (isEnable){
+            btChangeProcessStatus.getElement().getStyle().setColor("black");
+        }else{
+            btChangeProcessStatus.getElement().getStyle().setColor("white");
+        }
     }
 
     private Widget createAutoClosePreviousODInfo(){
@@ -238,6 +422,7 @@ public class OperDayForm extends BaseForm {
 
     private Action createRefreshAction(){
         return refreshAction = new Action(null, "Обновить", new Image(ImageConstants.INSTANCE.refresh24()), 5) {
+            String errText = "Операция createRefreshAction() не удалась.\nОшибка: ";
             @Override
             public void execute() {
                 WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
@@ -248,13 +433,13 @@ public class OperDayForm extends BaseForm {
                     public void onFailureOthers(Throwable throwable) {
                         WaitingManager.hide();
 
-                        Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
+                        Window.alert(errText + throwable.getLocalizedMessage());
                     }
 
                     @Override
                     public void onSuccess(RpcRes_Base<OperDayWrapper> res) {
                         if (res.isError()) {
-                            DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                            DialogManager.error("Ошибка", errText + res.getMessage());
                         } else {
                             operDateRefresh(res.getResult());
                         }

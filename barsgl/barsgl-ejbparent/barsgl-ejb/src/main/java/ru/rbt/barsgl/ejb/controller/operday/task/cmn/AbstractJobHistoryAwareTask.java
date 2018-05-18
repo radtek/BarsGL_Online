@@ -155,7 +155,7 @@ public abstract class AbstractJobHistoryAwareTask implements ParamsAwareRunnable
      * @param properties используется для настроек выполнения и хранения контекста
      *
      */
-    protected abstract void initExec(String jobName, Properties properties);
+    protected abstract void initExec(String jobName, Properties properties) throws Exception;
 
     private void initExecPrivate(String jobName, Properties properties) {
         properties.put(JobHistoryContext.JOB_NAME, jobName);

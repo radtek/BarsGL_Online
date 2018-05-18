@@ -5,6 +5,7 @@ package ru.rbt.barsgl.shared;
  */
 public enum Repository {
     BARSGL("BARSGL"),
+    BARSGLNOXA("BARSGLNOXA"),
     BARSREP("BARSREP");
 
     private String type;
