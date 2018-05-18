@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 /**
  * Created by er22317 on 09.02.2018.
  */
-public class LoadBranchDictTest extends AbstractRemoteIT {
+public class LoadBranchDictIT extends AbstractRemoteIT {
     private static final Logger log = Logger.getLogger(FanNdsPostingIT.class.getName());
     Map<String, String> tableScript = new HashMap<String, String>();
 
