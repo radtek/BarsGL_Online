@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -33,6 +34,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.E;
 import static ru.rbt.barsgl.ejb.repository.WorkprocRepository.WorkprocState.O;
+import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.OPERDAY_TASK_ALREADY_RUN;
 import static ru.rbt.ejbcore.validation.ErrorCode.TASK_ERROR;
@@ -63,6 +65,9 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
 
     @Inject
     private StamtUnloadController unloadController;
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
 
     @Override
     protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
@@ -168,6 +173,13 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
                     , () -> new ValidationError(errorCode, "Нет проводок backvalue для синхронизации"));
             Assert.isTrue(ONLINE == operday.getPhase()
                     , () -> new ValidationError(errorCode, format("Операционный день в фазе %s ожидалось %s", operday.getPhase(), ONLINE)));
+
+            DataRecord countPd = coreRepository.selectOne("select count(1) cnt from gl_pd where pod < ?", operday);
+            Long maxThreshold = propertiesRepository.getNumber(SyncIcrementMaxGLPdCount.getValue());
+            Assert.isTrue(maxThreshold >= countPd.getLong(0)
+                    , () -> new ValidationError(ErrorCode.TASK_ERROR
+                            , format("Синхр-ция backvalue невозможна. Кол-во проводок backvalue в буфере '%s' больше максим допуст. '%s'"
+                            , countPd.getLong(0), maxThreshold)));
             return true;
         } catch (ValidationError e) {
             auditController.warning(BufferModeSyncBackvalue, "Синхронизация не будет произведена", null, e);
