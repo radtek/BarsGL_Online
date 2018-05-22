@@ -52,28 +52,28 @@ public class Operday extends BaseEntity<Date> {
     /**
      * режим обновления остатков BALTUR
      */
-    public enum BalanceMode {
+    public enum BalanceMode implements HasLabel {
 
         /**
          * В зависимости от PST.PBR остатки обновляются асинхронно или онлайн
          */
-        GIBRID("BEGIN GLAQ_PKG_UTL.START_GIBRID_MODE; END;")
+        GIBRID("Асинхронный", "BEGIN GLAQ_PKG_UTL.START_GIBRID_MODE; END;")
         ,
         /**
          * остатки обновляются онлайн
          */
-        ONLINE("BEGIN GLAQ_PKG_UTL.START_ONLINE_MODE; END;")
+        ONLINE("Онлайн", "BEGIN GLAQ_PKG_UTL.START_ONLINE_MODE; END;")
         ,
         /**
          * все триггера на PST отключены, пересчет остатков осуществл. внешней программой
          */
-        ONDEMAND("BEGIN GLAQ_PKG_UTL.START_ONDEMAND_MODE; END;")
+        ONDEMAND("По требованию","BEGIN GLAQ_PKG_UTL.START_ONDEMAND_MODE; END;")
         ,
         /**
          * режим пересчета остатков не изменяеся
          */
-        NOCHANGE(
-                "DECLARE\n" +
+        NOCHANGE(""
+                ,"DECLARE\n" +
                 "    L_MODE VARCHAR2(128);\n" +
                 "BEGIN \n" +
                 "    SELECT GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE INTO L_MODE FROM DUAL;\n" +
@@ -82,12 +82,21 @@ public class Operday extends BaseEntity<Date> {
 
         private String procedureName;
 
-        BalanceMode(String procedureName) {
+        private String label;
+
+        BalanceMode(String label, String procedureName) {
+            this.label = label;
             this.procedureName = procedureName;
         }
 
         public String getSwithPlsqlBlock() {
             return procedureName;
+        }
+
+
+        @Override
+        public String getLabel() {
+            return label;
         }
     }
 
