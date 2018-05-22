@@ -11,10 +11,6 @@ import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.JMSQueueCommunicator;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueCommunicator;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.altqueue.QueueCommunicatorAlt;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams;
 import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
@@ -35,7 +31,6 @@ import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
-import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.page.SQL;
 import ru.rbt.barsgl.ejbcore.page.SqlPageSupport;
 import ru.rbt.barsgl.ejbcore.page.WhereInterpreter;
@@ -55,7 +50,6 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.controller.etc.ITextResourceController;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -63,7 +57,6 @@ import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.persistence.SequenceGenerator;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -743,8 +736,13 @@ public abstract class AbstractRemoteIT  {
 
     public JobHistory getLastHistRecordObject(String jobName) throws SQLException {
         DataRecord record = baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
-        Assert.assertNotNull("JobHistory record is not found", record);
-        return  (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.id = ?1", record.getLong("id_hist"));
+        if (null != record)
+        {
+            return  (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.id = ?1", record.getLong("id_hist"));
+        }
+        else {
+            return null;
+        }
     }
 
     public static GLOperation getLastOperation(Long idpst) {
