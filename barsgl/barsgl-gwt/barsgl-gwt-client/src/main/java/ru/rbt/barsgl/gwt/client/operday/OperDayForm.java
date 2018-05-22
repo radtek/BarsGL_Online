@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 
 public class OperDayForm extends BaseForm {
     public final static String FORM_NAME = "Операционный день";
+    public final static String REST_RADIO = "restGroup";
 
     private Action refreshAction;
     private Action open_OD;
@@ -67,7 +68,7 @@ public class OperDayForm extends BaseForm {
     private ProcessingStatus currentChangeProcessStatus = ProcessingStatus.STARTED;
     private final int tick = 2000;
     private boolean isStatusSet = false;
-    private HPanel panelProcessStatus;
+    private HPanel panelProcessStatus, panelRefreshRest;
 
     private Label reason;
     private Grid vip_errors;
@@ -145,18 +146,47 @@ public class OperDayForm extends BaseForm {
         panel.addNorth(abw, 10);
         HorizontalPanel hp = new HorizontalPanel();
         hp.setSpacing(10);
-        VerticalPanel vp = new VerticalPanel();
+        VerticalPanel column1 = new VerticalPanel();
 //        vp.setBorderWidth(1);
-        vp.getElement().getStyle().setProperty("border", "1px solid #003366");
-        vp.add(grid);
-        vp.add(createCOB_OKInfo());
-        vp.add(vip_errors = createVipErrorInfo());
-        vp.add(createAutoClosePreviousODInfo());
-        hp.add(vp);
-        hp.add(createPanelProcessStatus());
+        column1.getElement().getStyle().setProperty("border", "1px solid #003366");
+        column1.add(grid);
+        column1.add(createCOB_OKInfo());
+        column1.add(vip_errors = createVipErrorInfo());
+        column1.add(createAutoClosePreviousODInfo());
+        VerticalPanel column2 = new VerticalPanel();
+        column2.setSpacing(5);
+        column2.add(createPanelProcessStatus());
+        column2.add(createPanelRefreshRest());
+        hp.add(column1);
+        hp.add(column2);
         panel.add(hp);
 
         return panel;
+    }
+
+    private Widget createPanelRefreshRest(){
+        panelRefreshRest = new HPanel(350, 70){
+            public void handlerBody(ClickEvent event){
+                panelRefreshRest.setButVisible(false);
+                isStatusSet = false;
+                startWatching();
+            }
+        };
+        panelRefreshRest.setButTitle("Обновить");
+        panelRefreshRest.addHeader("Управления режимом обновления остатков");
+        HorizontalPanel panelContent = new HorizontalPanel();
+        panelContent.setSpacing(10);
+        HorizontalPanel panelRadio = new HorizontalPanel();
+        RadioButton radioButton1 = new RadioButton(REST_RADIO, "color1");
+        RadioButton radioButton2 = new RadioButton(REST_RADIO, "color2");
+        RadioButton radioButton3 = new RadioButton(REST_RADIO, "color3");
+        panelRadio.add(radioButton1);
+        panelRadio.add(radioButton2);
+        panelRadio.add(radioButton3);
+        panelContent.add(panelRadio);
+        panelRefreshRest.setBody(panelContent);
+//        getRefreshRestStatus();
+        return panelRefreshRest;
     }
 
     private Widget createPanelProcessStatus(){
