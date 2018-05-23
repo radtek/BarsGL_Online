@@ -86,7 +86,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // настройка для включения проводки по балансовику
         GLOperation operation = getOneOper(DateUtils.parseDate(operday, "dd.MM.yyyy"));
-        incldeBs2ByOperation(operation);
+        includeBs2ByOperation(operation);
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ETLSTMS");
         long id0 = Optional.ofNullable(baseEntityRepository
@@ -113,7 +113,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
     }
 
-    private void incldeBs2ByOperation(GLOperation operation) throws SQLException {
+    private void includeBs2ByOperation(GLOperation operation) throws SQLException {
         baseEntityRepository.executeNativeUpdate("delete from GL_STMPARM");
         List<Pd> pds = Utl4Tests.getPds(baseEntityRepository, operation);
         Assert.assertEquals(2, pds.size());
@@ -208,7 +208,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date backdate = DateUtils.addDays(unloadDate, -2);
         setOperday(unloadDate, backdate, ONLINE, OPEN);
         GLOperation operation = getOneOperBackdate(getOperday());
-        incldeBs2ByOperation(operation);
+       includeBs2ByOperation(operation);
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ETLSTMS where PARNAME = ? and PARDESC = ?",
                 UNLOAD_STAMTD_PARAM_NAME, UNLOAD_STAMTD_PARAM_DESC);
@@ -259,7 +259,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // операции в текущем дне
         GLOperation operationCurdate = createOperWithGLAccCredit(operdate);
-        incldeBs2ByOperation(operationCurdate);
+        includeBs2ByOperation(operationCurdate);
         fixOperAccDates(operationCurdate);
 
         baseEntityRepository.executeNativeUpdate("delete from GL_ETLSTMS");
@@ -306,7 +306,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         GLOperation operation = getOneOperBackdate(getOperday());
         long pcid = getPcid(operation);
         log.info("pcid=" + pcid);
-        incldeBs2ByOperation(operation);
+        includeBs2ByOperation(operation);
 
         // выгрузка в текущем открытом дне - одна проводка
 
@@ -414,7 +414,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // операции в текущем дне
         GLOperation operationCurdate = createOperWithGLAccCredit(operdate);
-        incldeBs2ByOperation(operationCurdate);
+        includeBs2ByOperation(operationCurdate);
         fixOperAccDates(operationCurdate);
 
         // изменяем операцию чтоб она попала в GL_BALSTMD
@@ -519,34 +519,34 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // два раза чтоб отработал триггер по старому значению PCID
         // проводки с мемордерами
-/*
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
-*/
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
 
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
+/*
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
+*/
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo where rownum < 2");
         Assert.assertNotNull(pcidMo);
 
         baseEntityRepository.executeNativeUpdate("update pcid_mo set pcid = ? where pcid = ?", pcid1, pcidMo.getLong("pcid"));
 
         // проводки без мемордеров
-/*
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
-*/
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
 
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
+/*
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pst set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
+*/
         long ts = System.currentTimeMillis();
 
         baseEntityRepository.executeNativeUpdate(String.format("update pcid_mo set mo_no = '@T%s' where pcid in (?)"
@@ -1066,7 +1066,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
                 , operation.getId());
         baseEntityRepository.executeNativeUpdate(
                 "update pst d set d.pod = ?, d.vald = ? " +
-                        "where d.pcid = (select pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and o.gloid = ?)"
+                        "where d.pcid in (select pcid from gl_oper o, gl_posting p where o.gloid = p.glo_ref and o.gloid = ?)"
                 , operday.getLastWorkingDay(), operday.getCurrentDate(), operation.getId());
         return (GLOperation) baseEntityRepository.findById(GLOperation.class, operation.getId());
     }
@@ -1202,7 +1202,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.save(pkg);
 
         List<DataRecord> bsaacids = baseEntityRepository.select("select * from gl_acc " +
-                        "where bsaacid like '40817%' and length(acid) > 0 " +
+                        "where bsaacid like '40817810__001%' and trim(acid) is not null " +
                         "and ? between dto and nvl(dtc, to_date('2029-01-01','yyyy-mm-dd')) and rownum <= 2", getOperday().getCurrentDate());
         Assert.assertEquals(2, bsaacids.size());
         final String accCredit = bsaacids.get(0).getString("bsaacid");
