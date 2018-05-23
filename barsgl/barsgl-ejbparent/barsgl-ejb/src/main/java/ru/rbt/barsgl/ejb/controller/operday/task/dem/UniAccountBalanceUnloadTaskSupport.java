@@ -49,17 +49,17 @@ public class UniAccountBalanceUnloadTaskSupport {
     @Inject
     private TextResourceController textResourceController;
 
-    public void execute(Properties properties) throws Exception {
+    public boolean execute(Properties properties) throws Exception {
         final Date executeDate = getExecuteDate(properties);
         try {
             auditController.info(AcccountBalanceOndemandUnload
                 , format("Начало выгрузки остатков по требованию за '%s'", dateUtils.onlyDateString(executeDate)));
-            auditController.info(AcccountBalanceOndemandUnload, format("Удалено старых записей: '%s'", cleanOld()));
-            auditController.info(AcccountBalanceOndemandUnload, format("Выгружено счетов с остатками по требованию за '%s': '%s'"
-                , dateUtils.onlyDateString(executeDate), fillData(executeDate)));
+            fillData(executeDate);
+            return true;
         } catch (Throwable e) {
             auditController.error(AcccountBalanceOndemandUnload, format("Ошибка при выгрузке остатков по требованию за '%s'"
                 , dateUtils.onlyDateString(executeDate)), null, e);
+            return false;
         }
     }
 
@@ -72,39 +72,14 @@ public class UniAccountBalanceUnloadTaskSupport {
         }
     }
 
-    private int fillData(Date executeDate) throws Exception {
-        return (int) repository.executeInNewTransaction((persistence) -> {
-            return repository.executeTransactionally(connection -> {
-                int updateResult = 0;
-                try (
-                        PreparedStatement updateCurdate = connection.prepareStatement("INSERT INTO GL_TMP_CURDATE VALUES(?)");
-                ) {
-                    updateCurdate.setDate(1, new java.sql.Date(executeDate.getTime()));
-                    updateCurdate.executeUpdate();
-                    try (
-                            PreparedStatement fillTableStmt = connection.prepareStatement(textResourceController
-                                    .getContent("ru/rbt/barsgl/ejb/controller/operday/task/dem/uni_ins_sums.sql"));
-
-                            PreparedStatement restStatement = connection.prepareStatement(textResourceController
-                                    .getContent("ru/rbt/barsgl/ejb/controller/operday/task/dem/uni_ins_rest.sql"));
-
-                    ) {
-                        fillTableStmt.setDate(1, new java.sql.Date(executeDate.getTime()));
-                        fillTableStmt.execute();
-                        updateResult = restStatement.executeUpdate();
-                    }
-                }
-                return updateResult;
-
-            });
-        });
-    }
-
-    private int cleanOld() throws Exception {
-        return (int) repository.executeInNewTransaction(persistence -> {
-            return repository.executeNativeUpdate("delete from gl_accrest");
-        });
-
+    private void fillData(Date executeDate) throws Exception {
+        repository.executeInNewTransaction((persistence) -> repository.executeTransactionally(connection -> {
+            try (PreparedStatement updateCurdate = connection.prepareStatement("begin PKG_ACC_ONDEMAND.INS_ACCOUNTS(?); end;")) {
+                updateCurdate.setDate(1, new java.sql.Date(executeDate.getTime()));
+                updateCurdate.executeUpdate();
+            }
+            return null;
+        }));
     }
 
 }
