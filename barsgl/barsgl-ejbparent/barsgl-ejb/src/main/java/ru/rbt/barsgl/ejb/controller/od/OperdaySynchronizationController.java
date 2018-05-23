@@ -4,7 +4,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdaySupportBean;
-import ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
@@ -13,6 +12,7 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
@@ -41,8 +41,9 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.*;
+import ru.rbt.barsgl.shared.enums.BalanceMode.*;
 import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.*;
 
 /**
  * Created by Ivan Sevastyanov on 12.02.2016.

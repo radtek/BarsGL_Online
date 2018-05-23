@@ -41,11 +41,11 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 import static org.apache.commons.lang3.time.DateUtils.truncate;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.*;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
 import static ru.rbt.barsgl.shared.enums.ProcessingStatus.*;
 
 

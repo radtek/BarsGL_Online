@@ -69,7 +69,7 @@ public class HPanel extends HeaderPanel{
         setContentWidget(w);
     }
 
-    protected void handlerBody(ClickEvent event){
+    public void handlerBody(ClickEvent event){
     }
 
 }

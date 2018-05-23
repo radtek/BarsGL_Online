@@ -9,6 +9,7 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.ejbcore.datarec.DBParam;
 import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -55,7 +56,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         List<DataRecord> triggers = baseEntityRepository.select("select * from user_triggers where table_name = ? ", "PST");
         Assert.assertTrue(triggers.stream().anyMatch(r -> "ENABLED".equals(r.getString("status"))));
-        Assert.assertEquals(Operday.BalanceMode.GIBRID, Operday.BalanceMode.valueOf(baseEntityRepository.selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
+        Assert.assertEquals(BalanceMode.GIBRID, BalanceMode.valueOf(baseEntityRepository.selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
 
         // удаление baltur по счету
         GLAccount account = findAccount("40702810%");
@@ -259,13 +260,13 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     @Test public void testRestoreTriggersState() throws SQLException {
         setGibridBalanceMode();
-        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+        checkCurrentBalanceMode(BalanceMode.GIBRID);
 
         setOndemanBalanceMode();
-        checkCurrentBalanceMode(Operday.BalanceMode.ONDEMAND);
+        checkCurrentBalanceMode(BalanceMode.ONDEMAND);
 
         restorePreviousTriggersState();
-        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+        checkCurrentBalanceMode(BalanceMode.GIBRID);
     }
 
     @Test public void testErrors() {

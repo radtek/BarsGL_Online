@@ -3,6 +3,8 @@ package ru.rbt.barsgl.gwt.client.operday;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
@@ -10,6 +12,7 @@ import ru.rbt.barsgl.gwt.core.SecurityChecker;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.shared.enums.AccessMode;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
@@ -69,6 +72,13 @@ public class OperDayForm extends BaseForm {
     private final int tick = 2000;
     private boolean isStatusSet = false;
     private HPanel panelProcessStatus, panelRefreshRest;
+
+    private Timer timerRefreshRest;
+    private final int tickRefreshRest = 1000;
+    RadioButton radioButtonGroup[];
+    private BalanceMode nextBalanceMode;
+    private int lastRadioI;
+    private boolean isRefreshRestSet = false;
 
     private Label reason;
     private Grid vip_errors;
@@ -148,13 +158,15 @@ public class OperDayForm extends BaseForm {
         hp.setSpacing(10);
         VerticalPanel column1 = new VerticalPanel();
 //        vp.setBorderWidth(1);
+//        column1.setSpacing(5);
         column1.getElement().getStyle().setProperty("border", "1px solid #003366");
         column1.add(grid);
         column1.add(createCOB_OKInfo());
         column1.add(vip_errors = createVipErrorInfo());
         column1.add(createAutoClosePreviousODInfo());
         VerticalPanel column2 = new VerticalPanel();
-        column2.setSpacing(5);
+//        column2.setSpacing(5);
+//        column2.setVerticalAlignment(VerticalAlignmentConstant);
         column2.add(createPanelProcessStatus());
         column2.add(createPanelRefreshRest());
         hp.add(column1);
@@ -165,11 +177,12 @@ public class OperDayForm extends BaseForm {
     }
 
     private Widget createPanelRefreshRest(){
+//        log.info("panelRefreshRest");
         panelRefreshRest = new HPanel(350, 70){
             public void handlerBody(ClickEvent event){
                 panelRefreshRest.setButVisible(false);
-                isStatusSet = false;
-                startWatching();
+                isRefreshRestSet = false;
+                startRefreshRestWatching();
             }
         };
         panelRefreshRest.setButTitle("Обновить");
@@ -177,16 +190,57 @@ public class OperDayForm extends BaseForm {
         HorizontalPanel panelContent = new HorizontalPanel();
         panelContent.setSpacing(10);
         HorizontalPanel panelRadio = new HorizontalPanel();
-        RadioButton radioButton1 = new RadioButton(REST_RADIO, "color1");
-        RadioButton radioButton2 = new RadioButton(REST_RADIO, "color2");
-        RadioButton radioButton3 = new RadioButton(REST_RADIO, "color3");
-        panelRadio.add(radioButton1);
-        panelRadio.add(radioButton2);
-        panelRadio.add(radioButton3);
+        radioButtonGroup = new RadioButton[3];
+        for(int i = 0; i < 3; i++){
+            radioButtonGroup[i] = new RadioButton(REST_RADIO, BalanceMode.values()[i].getLabel());
+            radioButtonGroup[i].addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+                @Override
+                public void onValueChange(ValueChangeEvent<Boolean> valueChangeEvent) {
+                    final int i = getRadioIndexByLabel(((RadioButton)valueChangeEvent.getSource()).getText());
+                    if (valueChangeEvent.getValue()){
+                        showConfirm("Подтверждение", "Подтвердите перевод режима обновления остатков в " + ((RadioButton)valueChangeEvent.getSource()).getText(),
+                                new IDlgEvents() {
+                                    @Override
+                                    public void onDlgOkClick(Object p) throws Exception {
+                                        setEnableRadioGroup(false);
+                                        log.info("(Integer)propxy.get(\"i\") = " + i);
+                                        nextBalanceMode = BalanceMode.values()[i];
+                                        lastRadioI = i;
+                                        setRefreshRestStatus(nextBalanceMode);
+                                        isRefreshRestSet = false;
+                                        panelRefreshRest.handlerBody(null);
+                                    }
+                                }
+                                , new IAfterCancelEvent() {
+                                    @Override
+                                    public void afterCancel() {
+                                        log.info("radioButtonGroup[lastRadioI] = " + lastRadioI);
+                                        radioButtonGroup[lastRadioI].setValue(true);
+                                    }
+                                }
+                                , null);
+                    }
+                }
+            });
+            panelRadio.add(radioButtonGroup[i]);
+        }
+        setEnableRadioGroup(false);
         panelContent.add(panelRadio);
         panelRefreshRest.setBody(panelContent);
-//        getRefreshRestStatus();
+        getRefreshRestStatus();
+        panelRefreshRest.getElement().getStyle().setProperty("margin-top", "5px");
         return panelRefreshRest;
+    }
+
+//    private boolean isHasRole(){
+//        return SecurityChecker.checkActions(SecurityActionCode.TskRefreshRest);
+//    }
+
+    private int getRadioIndexByLabel(String label){
+        for(int i = 0; i < radioButtonGroup.length; i++) {
+            if (label.equals(radioButtonGroup[i].getText())) return i;
+        }
+        return -1;
     }
 
     private Widget createPanelProcessStatus(){
@@ -223,6 +277,7 @@ public class OperDayForm extends BaseForm {
                                     if (getNextStatus() != null) {
                                         setProcessStatus(getNextStatus());
                                         setBtChangeProcessStatusEnable(false);
+                                        panelProcessStatus.handlerBody(null);
                                     }
                                 }
                             }
@@ -277,6 +332,32 @@ public class OperDayForm extends BaseForm {
 
     }
 
+    private void startRefreshRestWatching(){
+        log.info("startWatching()");
+        timerRefreshRest = new Timer(){
+            int MAX_COUNT = 30;
+            int count;
+            @Override
+            public void run() {
+                if (isRefreshRestSet || count++ == MAX_COUNT){
+                    timerCancelRefreshRest();
+                    return;
+                }
+                getRefreshRestStatus();
+            }
+        };
+
+        timerRefreshRest.scheduleRepeating(tickRefreshRest);
+    }
+
+    void timerCancelRefreshRest(){
+        timerRefreshRest.cancel();
+        panelRefreshRest.setButVisible(true);
+        log.info("timerpanelRefreshRest.cancel()");
+
+    }
+
+
     ProcessingStatus getNextStatus(){
         if (currentChangeProcessStatus.equals(ProcessingStatus.STARTED)) return ProcessingStatus.REQUIRED;
         if (currentChangeProcessStatus.equals(ProcessingStatus.STOPPED)) return ProcessingStatus.ALLOWED;
@@ -318,9 +399,9 @@ public class OperDayForm extends BaseForm {
                     DialogManager.error("Ошибка", errText + res.getMessage());
                 } else {
                     currentChangeProcessStatus = res.getResult();
-                    log.info("getProcessStatus() = "+currentChangeProcessStatus.toString());
+//                    log.info("getProcessStatus() = "+currentChangeProcessStatus.toString());
                     isStatusSet = currentChangeProcessStatus.equals(ProcessingStatus.STARTED) || currentChangeProcessStatus.equals(ProcessingStatus.STOPPED);
-                    if (isStatusSet && timer != null) timerCancel();;
+                    if (isStatusSet && timer != null) timerCancel();
                 }
                 showProcessingStatus();
             }
@@ -338,6 +419,79 @@ public class OperDayForm extends BaseForm {
         }else{
             btChangeProcessStatus.setText(currentChangeProcessStatus.toString());
             setBtChangeProcessStatusEnable(false);
+        }
+    }
+
+    private void setRefreshRestStatus(BalanceMode balanceMode){
+        BarsGLEntryPoint.operDayService.setRefreshRestStatus(balanceMode, new AuthCheckAsyncCallback<RpcRes_Base<String>>() {
+            String errText = "Операция установки режима обновления остатков не удалась.\nОшибка: ";
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                getRefreshRestStatus();
+                Window.alert(errText + throwable.getLocalizedMessage());
+            }
+
+            @Override
+            public void onSuccess(RpcRes_Base<String> res) {
+                if (res.isError()) {
+                    getRefreshRestStatus();
+                    DialogManager.error("Ошибка", errText + res.getMessage());
+                }
+            }
+        });
+    }
+
+    private void getRefreshRestStatus(){
+        BarsGLEntryPoint.operDayService.getRefreshRestStatus(new AuthCheckAsyncCallback<RpcRes_Base<BalanceMode>>() {
+            String errText = "Операция получения режима обновления остатков не удалась.\nОшибка: ";
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                Window.alert(errText + throwable.getLocalizedMessage());
+//                isStatusSet = true;
+//                showProcessingStatus();
+            }
+
+            @Override
+            public void onSuccess(RpcRes_Base<BalanceMode> res) {
+                if (res.isError()) {
+                    DialogManager.error("Ошибка", errText + res.getMessage());
+                    return;
+                }
+                BalanceMode resultBalanceMode = res.getResult();
+                if (resultBalanceMode.ordinal() > radioButtonGroup.length - 1) {
+                    Window.alert("Порядковый номер статуса = " + resultBalanceMode.ordinal() + " больше количества radioButton");
+                    return;
+                }
+                log.info("resultBalanceMode = " + resultBalanceMode);
+                log.info("nextBalanceMode = " + nextBalanceMode);
+                //инициализация
+                if (nextBalanceMode == null){
+                    nextBalanceMode = resultBalanceMode;
+                    isRefreshRestSet = true;
+                    lastRadioI = resultBalanceMode.ordinal();
+                    log.info("lastRadioI = " + lastRadioI);
+                    showRefreshRestStatus(resultBalanceMode);
+                }//произошло переключение
+                else if (nextBalanceMode.equals(resultBalanceMode)){
+                    isRefreshRestSet = true;
+                    showRefreshRestStatus(resultBalanceMode);
+                    if (timerRefreshRest != null) timerCancelRefreshRest();
+                }
+            }
+        });
+    }
+
+    private void showRefreshRestStatus(BalanceMode resultBalanceMode){
+//        log.info("resultBalanceMode.ordinal() = " + resultBalanceMode.ordinal());
+        radioButtonGroup[resultBalanceMode.ordinal()].setValue(true);
+        if (SecurityChecker.checkActions(SecurityActionCode.TskRefreshRest)) {
+            setEnableRadioGroup(true);
+        }
+    }
+
+    private void setEnableRadioGroup(boolean flag){
+        for(RadioButton r: radioButtonGroup) {
+            r.setEnabled(flag);
         }
     }
 

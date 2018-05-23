@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -30,9 +31,9 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSync;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSyncTask;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.NOCHANGE;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.NOCHANGE;
 
 /**
  * Created by Ivan Sevastyanov on 25.03.2016.
@@ -217,9 +218,9 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
      * @param properties set ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_KEY for target mode
      * @return balance mode
      */
-    public Operday.BalanceMode getTargetBalanceMode(Properties properties) {
-        Operday.BalanceMode balanceMode = Optional.ofNullable(properties.getProperty(OpenOperdayTask.BALANCE_MODE_KEY))
-                .map(Operday.BalanceMode::valueOf).orElse(NOCHANGE);
+    public BalanceMode getTargetBalanceMode(Properties properties) {
+        BalanceMode balanceMode = Optional.ofNullable(properties.getProperty(OpenOperdayTask.BALANCE_MODE_KEY))
+                .map(BalanceMode::valueOf).orElse(NOCHANGE);
         auditController.info(BufferModeSync, String.format("Целевой режим обработки проводок: %s", balanceMode.name()));
         return balanceMode;
     }

@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BackgroundLocalization;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.GIBRID;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
 import static ru.rbt.ejbcore.validation.ErrorCode.STAMT_UNLOAD_LOCAL_SESSION;
 import static ru.rbt.ejbcore.validation.ErrorCode.TASK_ERROR;
 

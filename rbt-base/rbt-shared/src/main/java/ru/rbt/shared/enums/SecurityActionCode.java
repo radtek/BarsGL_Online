@@ -50,6 +50,7 @@ public enum SecurityActionCode {
     , TskOdSwitchModeRun("Запуск задания 'Переключение режима загрузки'")
     , TskOdAccessModeSwitch("Переключение режима доступа к системе")
     , TskStopStart("Остановки обработки проводок (перед установкой поставок на BarsGL Oracle)")
+    , TskRefreshRest("Управления режимом обновления остатков")
     , SessionLook("Просмотр сессий пользователей")
     , SessionKill("Закрытие сессии пользователя")
     , SessionsKill("Закрытие всех сессий")

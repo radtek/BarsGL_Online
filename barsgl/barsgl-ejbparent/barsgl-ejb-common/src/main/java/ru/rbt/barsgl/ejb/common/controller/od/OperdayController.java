@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejbcore.DbTryingExecutor;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.shared.enums.AccessMode;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.DateUtils;
@@ -206,21 +207,21 @@ public class OperdayController {
     }
 
     @Lock(READ)
-    public Operday.BalanceMode getBalanceCalculationMode() throws SQLException {
-        return Operday.BalanceMode.valueOf(repository
+    public BalanceMode getBalanceCalculationMode() throws SQLException {
+        return BalanceMode.valueOf(repository
                 .selectOne("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE balance_mode from dual").getString("balance_mode"));
     }
 
     @Lock(WRITE)
-    public void switchBalanceMode(Operday.BalanceMode mode) throws Exception {
+    public void switchBalanceMode(BalanceMode mode) throws Exception {
         Assert.isTrue(null != mode, ()-> new DefaultApplicationException("Не установлено значение целевого режима пересчета остатков"));
         try {
             dbTryingExecutor.tryExecuteTransactionally((conn,att) -> {
-                if (Operday.BalanceMode.NOCHANGE != mode) {
+                if (BalanceMode.NOCHANGE != mode) {
                     operdaySupport.removeLock(OperdaySupportBean.PST_TABLE_NAME);
                 }
                 repository.executeNativeUpdate(mode.getSwithPlsqlBlock());
-                if (Operday.BalanceMode.NOCHANGE != mode){
+                if (BalanceMode.NOCHANGE != mode){
                     auditController.info(AuditRecord.LogCode.Operday, format("Установлен режим %s пересчета остатков", mode.name()));
                 }
                 return null;

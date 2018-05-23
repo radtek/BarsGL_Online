@@ -23,10 +23,7 @@ import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
-import ru.rbt.barsgl.shared.enums.AccessMode;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
-import ru.rbt.barsgl.shared.enums.OperState;
-import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
@@ -627,20 +624,20 @@ public class OperdayIT extends AbstractTimerJobIT {
         setOndemanBalanceMode();
 
         SingleActionJob openOperdayJob = SingleActionJobBuilder.create().withClass(OpenOperdayTask.class)
-                .withProps(BALANCE_MODE_KEY+"="+Operday.BalanceMode.GIBRID).build();
+                .withProps(BALANCE_MODE_KEY+"="+ BalanceMode.GIBRID).build();
         jobService.executeJob(openOperdayJob);
         Assert.assertEquals(ONLINE, getOperday().getPhase());
-        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+        checkCurrentBalanceMode(BalanceMode.GIBRID);
 
         setOperday(previousWorkday, previouseLwd, COB, CLOSED);
         Assert.assertEquals(COB, getOperday().getPhase());
         setGibridBalanceMode();
 
         SingleActionJob openOperdayJob2 = SingleActionJobBuilder.create().withClass(OpenOperdayTask.class)
-                .withProps(BALANCE_MODE_KEY+"="+Operday.BalanceMode.ONDEMAND).build();
+                .withProps(BALANCE_MODE_KEY+"="+BalanceMode.ONDEMAND).build();
         jobService.executeJob(openOperdayJob2);
         Assert.assertEquals(ONLINE, getOperday().getPhase());
-        checkCurrentBalanceMode(Operday.BalanceMode.ONDEMAND);
+        checkCurrentBalanceMode(BalanceMode.ONDEMAND);
 
     }
 

@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.integr.dict.LwdBalanceCutController;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
@@ -98,6 +99,26 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
             protected RpcRes_Base<ProcessingStatus> buildResponse() throws Throwable {
                 // получаем
                 ProcessingStatus prc = localInvoker.invoke(OperdayController.class, "getProcessingStatus");
+                if (prc == null) throw new Throwable("Не найдена информация по операционному дню'.");
+
+                return new RpcRes_Base<>(prc, false, "");
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<String> setRefreshRestStatus(BalanceMode balanceMode) throws Exception {
+        localInvoker.invoke(OperdayController.class, "switchBalanceMode", balanceMode);
+        return new RpcRes_Base<>("", false, "");
+    }
+
+    @Override
+    public RpcRes_Base<BalanceMode> getRefreshRestStatus() throws Exception {
+        return new RpcResProcessor<BalanceMode>() {
+            @Override
+            protected RpcRes_Base<BalanceMode> buildResponse() throws Throwable {
+                // получаем
+                BalanceMode prc = localInvoker.invoke(OperdayController.class, "getBalanceCalculationMode");
                 if (prc == null) throw new Throwable("Не найдена информация по операционному дню'.");
 
                 return new RpcRes_Base<>(prc, false, "");

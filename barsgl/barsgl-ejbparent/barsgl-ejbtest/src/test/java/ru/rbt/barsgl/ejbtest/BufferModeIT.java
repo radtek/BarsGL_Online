@@ -23,6 +23,7 @@ import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -125,7 +126,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         // тестируем устойчивость к пересечению MO_NO
         createForPcidMo();
 
-        remoteAccess.invoke(OperdaySynchronizationController.class, "syncPostings", Operday.BalanceMode.NOCHANGE);
+        remoteAccess.invoke(OperdaySynchronizationController.class, "syncPostings", BalanceMode.NOCHANGE);
 
         List<GLPosting> postList1 = getPostings(operation);
         Assert.assertEquals(1, postList1.size());
@@ -519,16 +520,16 @@ public class BufferModeIT extends AbstractRemoteIT {
 
         processOneOperation();
         SingleActionJob pdSyncTask = SingleActionJobBuilder.create().withClass(PdSyncTask.class)
-                .withProps(BALANCE_MODE_KEY+"="+Operday.BalanceMode.GIBRID).build();
+                .withProps(BALANCE_MODE_KEY+"="+BalanceMode.GIBRID).build();
         jobService.executeJob(pdSyncTask);
-        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+        checkCurrentBalanceMode(BalanceMode.GIBRID);
 
         updateOperday(ONLINE, OPEN, BUFFER);
         processOneOperation();
         SingleActionJob pdSyncTask2 = SingleActionJobBuilder.create().withClass(PdSyncTask.class)
-                .withProps(BALANCE_MODE_KEY+"="+Operday.BalanceMode.ONLINE).build();
+                .withProps(BALANCE_MODE_KEY+"="+ BalanceMode.ONLINE).build();
         jobService.executeJob(pdSyncTask2);
-        checkCurrentBalanceMode(Operday.BalanceMode.ONLINE);
+        checkCurrentBalanceMode(BalanceMode.ONLINE);
     }
 
     @Test public void testPdSyncAuto() throws Exception {
@@ -574,7 +575,7 @@ public class BufferModeIT extends AbstractRemoteIT {
 
         SingleActionJob syncJob = SingleActionJobBuilder.create()
                 .withProps(PdSyncAutoTask.STEP_KEY_NAME + "=" + DEFAULT_STEP_NAME + "\n"
-                        + OpenOperdayTask.BALANCE_MODE_KEY + "=" + Operday.BalanceMode.ONLINE.name()+ "\n"
+                        + OpenOperdayTask.BALANCE_MODE_KEY + "=" + BalanceMode.ONLINE.name()+ "\n"
                         + OpenOperdayTask.PD_MODE_KEY + "=" + BUFFER)
                 .withClass(PdSyncAutoTask.class)
                 .withName(pdSyncAutoJobName).build();
@@ -586,7 +587,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         List<GLPosting> postList1 = getPostings(operation);
         Assert.assertEquals(1, postList1.size());
 
-        checkCurrentBalanceMode(Operday.BalanceMode.ONLINE);
+        checkCurrentBalanceMode(BalanceMode.ONLINE);
         Assert.assertEquals(BUFFER, getOperday().getPdMode());
 
         // не выполняется повторно в том же ОД
@@ -606,7 +607,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         // шаг загрузки ОК - переход в GIBRID
         checkCreateStep(DEFAULT_STEP_NAME, getOperday().getLastWorkingDay(), "O");
         syncJob.setProperties(PdSyncAutoTask.STEP_KEY_NAME + "=" + DEFAULT_STEP_NAME + "\n"
-                + OpenOperdayTask.BALANCE_MODE_KEY + "=" + Operday.BalanceMode.GIBRID.name() + "\n"
+                + OpenOperdayTask.BALANCE_MODE_KEY + "=" + BalanceMode.GIBRID.name() + "\n"
                 + OpenOperdayTask.PD_MODE_KEY + "=" + DIRECT);
 
         updateOperday(ONLINE, OPEN, DIRECT);
@@ -616,7 +617,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         Assert.assertEquals("2", history2.getString("SCHRSLT"));
         Assert.assertNotEquals(history1.getLong("id_hist"), history2.getLong("id_hist"));
 
-        checkCurrentBalanceMode(Operday.BalanceMode.ONLINE);
+        checkCurrentBalanceMode(BalanceMode.ONLINE);
 
         updateOperday(ONLINE, OPEN, BUFFER);
 
@@ -624,7 +625,7 @@ public class BufferModeIT extends AbstractRemoteIT {
         DataRecord history3 = getLastHistRecord(pdSyncAutoJobName);
         Assert.assertEquals("1", history3.getString("SCHRSLT"));
         Assert.assertNotEquals(history2.getLong("id_hist"), history3.getLong("id_hist"));
-        checkCurrentBalanceMode(Operday.BalanceMode.GIBRID);
+        checkCurrentBalanceMode(BalanceMode.GIBRID);
         Assert.assertEquals(DIRECT, getOperday().getPdMode());
     }
 

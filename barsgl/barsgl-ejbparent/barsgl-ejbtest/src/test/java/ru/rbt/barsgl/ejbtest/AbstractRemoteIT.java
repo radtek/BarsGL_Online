@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +49,7 @@ import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
 import ru.rbt.barsgl.shared.criteria.Criteria;
 import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
 import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -77,8 +79,10 @@ import java.util.*;
 
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode.*;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.ONDEMAND;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.ONLINE;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.rightPad;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -881,8 +885,8 @@ public abstract class AbstractRemoteIT  {
     }
 
 
-    protected void checkCurrentBalanceMode(Operday.BalanceMode mode) throws SQLException {
-        Assert.assertEquals(mode, Operday.BalanceMode.valueOf(baseEntityRepository
+    protected void checkCurrentBalanceMode(BalanceMode mode) throws SQLException {
+        Assert.assertEquals(mode, BalanceMode.valueOf(baseEntityRepository
                 .selectFirst("select GLAQ_PKG_UTL.GET_CURRENT_BAL_STATE st from dual").getString("st")));
 
     }

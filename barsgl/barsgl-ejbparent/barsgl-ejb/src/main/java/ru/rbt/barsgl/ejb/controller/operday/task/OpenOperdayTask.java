@@ -9,6 +9,7 @@ import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -53,7 +54,7 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
     public static final String PD_MODE_DEFAULT = Operday.PdMode.BUFFER.name();
 
     public static final String BALANCE_MODE_KEY = "balanceMode";
-    public static final Operday.BalanceMode BALANCE_MODE_DEFAULT = Operday.BalanceMode.GIBRID;
+    public static final BalanceMode BALANCE_MODE_DEFAULT = BalanceMode.GIBRID;
 
     @Inject
     private RateRepository rateRepository;
@@ -99,7 +100,7 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
         setPdMode(targetPdMode);
 
         // режим пересчета остатков
-        Operday.BalanceMode targetBalanceMode = (Operday.BalanceMode) properties.get(OpenOperdayContextKey.TARGET_BALANCE_MODE);
+        BalanceMode targetBalanceMode = (BalanceMode) properties.get(OpenOperdayContextKey.TARGET_BALANCE_MODE);
         setBalanceCalcMode(targetBalanceMode);
 
         restartGlPdSequence();
@@ -115,8 +116,8 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
         return true;
     }
 
-    private void setBalanceCalcMode(Operday.BalanceMode targetBalanceMode) throws Exception {
-        Operday.BalanceMode currentBalanceMode = operdayController.getBalanceCalculationMode();
+    private void setBalanceCalcMode(BalanceMode targetBalanceMode) throws Exception {
+        BalanceMode currentBalanceMode = operdayController.getBalanceCalculationMode();
         if (currentBalanceMode != targetBalanceMode) {
             auditController.warning(OpenOperday, format("Текущий режим пересчета остатков '%s' не соответствует целевому '%s'. Переключаем..."
                 , operdayController.getBalanceCalculationMode(), targetBalanceMode));
@@ -239,8 +240,8 @@ public class OpenOperdayTask extends AbstractJobHistoryAwareTask {
      * @param properties set ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_KEY for target mode
      * @return balance mode
      */
-    public Operday.BalanceMode calculateBalanceModeForOpenOperday(Properties properties) {
-        return Optional.ofNullable(properties.getProperty(BALANCE_MODE_KEY)).map(Operday.BalanceMode::valueOf)
+    public BalanceMode calculateBalanceModeForOpenOperday(Properties properties) {
+        return Optional.ofNullable(properties.getProperty(BALANCE_MODE_KEY)).map(BalanceMode::valueOf)
                 .orElse(BALANCE_MODE_DEFAULT);
     }
 
