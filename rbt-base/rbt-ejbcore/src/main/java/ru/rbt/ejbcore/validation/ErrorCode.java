@@ -125,7 +125,7 @@ public enum ErrorCode {
     , ACCOUNT_IN_USE_BEFORE(2036, "По счету '%s' есть операции: %s (до даты '%s') ")
     , ACCOUNTING_TYPE_NOT_FOUND(2037, "Не найдена запись GL_ACTNAME по ACCTYPE: '%s'")
     , ACCOUNT_IS_CONTROLABLE(2038, "AccountingType '%s' недопустим: соответствует счетам, контролируемым АБС")
-    , ACCOUNT_PL_ALREADY_EXISTS(2039, "По заданным параметрам найден счет в таблице ACCRLN:\n" +
+    , ACCOUNT_PL_ALREADY_EXISTS(2039, "Счет с таким набором ключей уже существует в таблице GL_ACC, Accounting Type = '%s'\n" +
             "<pre>Счет ЦБ:      %s</pre><pre>Счет Midas:   %s</pre>\n" +
             "Счет не мигрирован.\nДля миграции счета: предоставьте данные – счет и Accounting Type\n" +
             "Для открытия нового счета: измените настройки Accounting Type '%s'")
@@ -166,12 +166,13 @@ public enum ErrorCode {
     , COB_STEP_ERROR(3015, "%s")
     , COB_IS_RUNNING(3016, "Задача COB за дату '%s' выполняется. Нельзя выполнить расчет")
     , STAMT_UNLOAD_DELETED(3017, "%s")
-    , QUEUE_ERROR(3018, "%s")
-    , STAMT_UNLOAD_LOCAL_SESSION(3019, "%s")
+    , STAMT_UNLOAD_LOCAL_SESSION(3018, "%s")
     , STAMT_UNLOAD_AFTER_FINAL_STEP(3019, "%s")
 
     , OPERDAY_NOT_ONLINE(3020, "%s. Операционный день в статусе: '%s'")
     , OPERDAY_IN_SYNCHRO(3021, "%s. Выполняется синхронизация проводок,\n повторите попытку через несколько минут")
+
+    , QUEUE_ERROR(3030, "%s")
 
     // Авторизация и ручная обработка
     , BAD_DATE_FORMAT(4000, "Неверный формат поля '%s': %s")

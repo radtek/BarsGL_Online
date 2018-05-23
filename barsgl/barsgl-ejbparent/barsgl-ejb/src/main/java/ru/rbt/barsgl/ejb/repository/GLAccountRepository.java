@@ -714,6 +714,25 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
+    /*
+* -	счет Midas: ACID = Код клиента + ‘RUR’ + ACOD + SQ + «Отделение»
+-	«Тип собственности» (CTYPE),
+-	«Символ доходов/расходов» (PLCODE)
+-	RLNTYPE = ‘2’
+-	«Б/счет 2-го порядка» (из формы)
+*/
+    public DataRecord getAccountForPl(String acid, Short ctype, String plcode, String acc2, Date dateOpen) {
+        try {
+            DataRecord res = selectFirst("select BSAACID, ACID, CBCUSTTYPE, PLCODE, ACC2, ACCTYPE from GL_ACC" +
+                            " where ACID = ? and CBCUSTTYPE = ? and PLCODE = ? and ACC2 = ?" +
+                            "   and RLNTYPE = '2' and (DTC is null or DTC > ?)",    // с датой закрытия > даты открытия нового счета
+                    acid, ctype, plcode, acc2, dateOpen);
+            return res;
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
     /**
      * Находит счет GLпо номеру счета ЦБ
      *
