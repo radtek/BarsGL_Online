@@ -52,7 +52,7 @@ insert into TMP_GL_BALSTMD
 , LSTOPERDAT
 )
 (
-select statdate
+select /*+ PARALLEL */ statdate
        , stattype
        , hostsystem
        , fcccustnum

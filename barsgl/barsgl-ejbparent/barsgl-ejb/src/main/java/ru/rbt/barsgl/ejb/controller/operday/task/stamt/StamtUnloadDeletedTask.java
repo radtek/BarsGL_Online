@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.stamt;
 
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.TaskUtils;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
@@ -34,9 +33,6 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
 
     @Inject
     private TextResourceController resourceController;
-
-    @EJB
-    private AuditController auditController;
 
     @Inject
     private StamtUnloadController unloadController;

@@ -91,7 +91,7 @@ public class Monitor extends BaseForm {
                 getRepls();
             }
         };
-        hRepl.addHeader();
+        hRepl.addHeader("");
         hRepl.setButVisible(false);
         setReplHeader("?", "?");
         dg = new DataGrid<ReplTableItem2>();
@@ -197,9 +197,9 @@ public class Monitor extends BaseForm {
                 getOpers();
             }
         };
-        hOper.addHeader();
+        hOper.addHeader("Операции");
         hOper.setButVisible(false);
-        hOper.setHeader("Операции");
+//        hOper.setHeader("Операции");
 
         VerticalPanel vp = new VerticalPanel();
         vp.setWidth("250px");
@@ -305,7 +305,7 @@ public class Monitor extends BaseForm {
                 getBuffs();
             }
         };
-        hBuffer.addHeader();
+        hBuffer.addHeader("");
         hBuffer.setButVisible(false);
         setBuffHeader( "?","?");
 

@@ -32,6 +32,8 @@ public interface OperDayService extends RemoteService {
 
         RpcRes_Base<ProcessingStatus> getProcessingStatus() throws Exception;
 
+        RpcRes_Base<String> setProcessingStatus(ProcessingStatus processingStatus) throws Exception;
+
         RpcRes_Base<CobWrapper> getCobInfo(Long idCob) throws Exception;
 
         RpcRes_Base<CobWrapper> calculateCob() throws Exception;

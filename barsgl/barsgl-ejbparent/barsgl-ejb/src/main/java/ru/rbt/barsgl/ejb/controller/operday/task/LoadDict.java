@@ -19,8 +19,6 @@ import static ru.rbt.barsgl.shared.Repository.BARSGLNOXA;
  * Created by er22317 on 14.02.2018.
  */
 public abstract class LoadDict<E, F> {
-    public static final String streamId = "DWH_BRANCH_LOAD";
-    public static final String propOperDay = "operday";
     private Class<E> clazzE;
     private Class<F> clazzF;
 
@@ -42,14 +40,12 @@ public abstract class LoadDict<E, F> {
 
         List<E> listInf = branchDictRepository.tableToList(clazzE, sqlVitrina());
         branchDictRepository.listToTable(listInf);
-//        auditController.info(LoadBranchDict, "LoadBranchDictTask витрина "+clazzF.getSimpleName()+" загружена из dwh", "", String.valueOf(_loadStatId));
 
         List<E> fixList = new ArrayList<E>();
         listInf.stream().filter(item->getFixFilter(item, dateLoad)).forEach(item -> fixList.add(item));
 
         List<F> target = branchDictRepository.getAll(clazzF);
-//        List<DataRecord> map  = branchDictRepository.select("select * from dh_br_map", null);
-        fillTransient(branchDictRepository.select("select * from dh_br_map", null), target);
+        fillTransient(branchDictRepository.getMapAll(), target);
 
         auditController.info(LoadBranchDict, "LoadBranchDictTask витрина "+clazzF.getSimpleName()+" загружена из dwh (" + listInf.size()+" записей)", "", String.valueOf(_loadStatId));
         Collections.sort((ArrayList)target);

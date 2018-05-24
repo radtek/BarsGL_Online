@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -16,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
@@ -25,6 +25,7 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -43,11 +44,13 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.*;
+import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamType.B;
 import static ru.rbt.barsgl.shared.enums.StamtUnloadParamTypeCheck.INCLUDE;
 
@@ -493,7 +496,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date lwdate = DateUtils.addDays(operdate, -1);
         setOperday(operdate, lwdate, ONLINE, OPEN);
 
-        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4");
+        setWorkday(lwdate);
+
+        List<DataRecord> pds = baseEntityRepository.select("select d.* from pd d, pcid_mo m, bsaacc b where d.bsaacid = b.id and d.pcid = m.pcid and rownum <= 4 and trim(d.acid) is not null");
         Assert.assertEquals(4, pds.size());
 
         String bsaacid1 = pds.get(0).getString("bsaacid");
@@ -509,10 +514,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // два раза чтоб отработал триггер по старому значению PCID
         // проводки с мемордерами
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR' where id = ?", bsaacid1, pcid1, pds.get(0).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR' where id = ?", bsaacid2, pcid1, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -10, amnt = -10, pbr = '@@IBR', pod = ? where id = ?", bsaacid1, pcid1, lwdate, pds.get(0).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 10, amnt = 10, pbr = '@@IBR', pod = ? where id = ?", bsaacid2, pcid1, lwdate, pds.get(1).getLong("id"));
 
         DataRecord pcidMo = baseEntityRepository.selectFirst("select * from pcid_mo where rownum < 2");
         Assert.assertNotNull(pcidMo);
@@ -520,10 +525,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update pcid_mo set pcid = ? where pcid = ?", pcid1, pcidMo.getLong("pcid"));
 
         // проводки без мемордеров
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR' where id = ?", bsaacid3, pcid2, pds.get(2).getLong("id"));
-        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR' where id = ?", bsaacid4, pcid2, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = -20, amnt = -20, pbr = '@@IBR', pod = ? where id = ?", bsaacid3, pcid2, lwdate, pds.get(2).getLong("id"));
+        baseEntityRepository.executeNativeUpdate("update pd set bsaacid = ?, pcid = ?, amntbc = 20, amnt = 20, pbr = '@@IBR', pod = ? where id = ?", bsaacid4, pcid2, lwdate, pds.get(3).getLong("id"));
 
         long ts = System.currentTimeMillis();
 
@@ -545,12 +550,17 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertNotNull(header);
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
 
-        List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd");
+        List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd order by pcid");
         Assert.assertEquals(2, records.size());
         Assert.assertEquals(bsaacid1, records.get(0).getString("dcbaccount"));
         Assert.assertEquals(bsaacid2, records.get(0).getString("ccbaccount"));
         Assert.assertEquals(pcid1 + "", records.get(0).getString("pcid"));
         Assert.assertEquals(pcid2 + "", records.get(1).getString("pcid"));
+
+        List<DataRecord> unloads = baseEntityRepository.select("select * from GL_BALSTMD");
+        Assert.assertTrue(unloads.size()+"", 2 <= unloads.size());
+        Assert.assertTrue(bsaacid2, unloads.stream().anyMatch(r -> (r.getString("CBACCOUNT").equals(bsaacid2)
+                || r.getString("CBACCOUNT").equals(bsaacid1))));
 
         // повторный запуск в текущем ОД не производится
         jobService.executeJob(job);
@@ -796,6 +806,35 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         DataRecord accheader2 = getLastUnloadHeader(NEW_ACCOUNTS);
         Assert.assertNotNull(accheader2);
         Assert.assertTrue(Objects.equals(accheader2.getLong("id"), accheader1.getLong("id")));
+    }
+
+    @Test public void testSyncStamtIncrementWithoutStep () throws Exception {
+
+        updateOperday(ONLINE, OPEN, BUFFER);
+        GLOperation operation = createOper(getOperday().getLastWorkingDay());
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+
+        final String jobName = SyncStamtBackvalueTaskP2.class.getSimpleName();
+        final String finalStepName = "SOD_P4";
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where sched_name = ? ", jobName);
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4' where parvalue <> '4'");
+
+        SingleActionJob incrJob = SingleActionJobBuilder.create().withClass(SyncStamtBackvalueTaskP2.class)
+                .withProps(SyncStamtBackvalueTaskP2.FINAL_WORKPROC_STEP_NAME_KEY + "=" + "SOD_P4")
+                .withName(jobName).build();
+
+        checkCreateStep(finalStepName, getOperday().getLastWorkingDay(), "O");
+
+        jobService.executeJob(incrJob);
+
+        JobHistory history1 = getLastHistRecordObject(jobName);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history1.getResult());
+
+        GLPosting postings = getPostingByOper(operation);
+
+        Assert.assertTrue(baseEntityRepository.select("select * from gl_etlstmd").stream().anyMatch(r -> postings.getId().equals(((DataRecord)r).getLong("pcid"))));
+
     }
 
     private void registerForStamtUnload(String bsaacid) {
@@ -1088,4 +1127,34 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         return pcid;
     }
 
+    private void setWorkday(Date date) {
+        int cnt = baseEntityRepository.executeNativeUpdate("update cal set hol = ' ' where dat = ? and ccy = 'RUR'"
+                , date);
+        if (cnt == 0) {
+            baseEntityRepository.executeNativeUpdate("insert into cal (dat, hol, ccy, thol) values (?, ' ', 'RUR', ' ')"
+                    , date);
+        }
+    }
+
+    private GLOperation createOper(Date vdate) {
+        final long stamp = System.currentTimeMillis();
+        EtlPackage pkg = newPackage(stamp, "SIMPLE");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(vdate);
+
+        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountDebit("40817036250010000018");
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setSourcePosting(KondorPlus.getLabel());
+        pst.setDealId("123");
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        return (GLOperation) postingController.processMessage(pst);
+    }
 }
