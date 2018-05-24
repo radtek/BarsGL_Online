@@ -19,29 +19,8 @@ import java.util.List;
 public class PostingBackValueReportData implements IExportData {
     private final String sql =
             "SELECT  BSAACID, CCY, AMNT, AMNTBC, SRC_PST, USER_NAME, PROCDATE, POD, CASE WHEN INVISIBLE = 0 then '' ELSE 'Y' END DELETED, PCID " +
-                    "FROM (" +
-
-                    "SELECT P.PCID, P.BSAACID, CAST(P.AMNT/POWER(10,C.NBDP) AS DECIMAL(22,2)) AMNT, " +
-                    "CAST(P.AMNTBC * 0.01 AS DECIMAL(22,2)) AMNTBC, P.CCY," +
-                    "O.SRC_PST, O.PROCDATE, P.POD, P.INVISIBLE, B.USER_NAME " +
-                    "FROM GL_OPER O " +
-                    "JOIN GL_POSTING PP ON PP.GLO_REF=O.GLOID " +
-                    "JOIN PD P ON P.PCID=PP.PCID " +
-                    "JOIN PDEXT5 P5 ON P5.ID=P.ID " +
-                    "LEFT JOIN GL_BATPST B ON B.ID=O.PST_REF " +
-                    "JOIN CURRENCY C ON C.GLCCY = P.CCY " +
-                    "WHERE (O.PROCDATE BETWEEN TO_DATE('{0}', 'YYYY-MM-DD') AND TO_DATE('{0}', 'YYYY-MM-DD') + '{1}') AND P.POD < TO_DATE('{0}', 'YYYY-MM-DD') " +
-                    "UNION ALL " +
-                    "SELECT P.PCID, P.BSAACID, CAST(P.AMNT/POWER(10,C.NBDP) AS DECIMAL(22,2)) AMNT, " +
-                    "CAST(P.AMNTBC * 0.01 AS DECIMAL(22,2)) AMNTBC, P.CCY," +
-                    "O.SRC_PST, O.PROCDATE, P.POD, P.INVISIBLE, B.USER_NAME " +
-                    "FROM GL_OPER O " +
-                    "JOIN GL_PD P ON P.GLO_REF=O.GLOID " +
-                    "LEFT JOIN GL_BATPST B ON B.ID=O.PST_REF " +
-                    "JOIN CURRENCY C ON C.GLCCY=P.CCY " +
-                    "WHERE (O.PROCDATE BETWEEN TO_DATE('{0}', 'YYYY-MM-DD') AND TO_DATE('{0}', 'YYYY-MM-DD') + '{1}') AND P.POD < TO_DATE('{0}', 'YYYY-MM-DD')" +
-                    ") v ";
-
+                    "FROM V_GL_BVREPORT " +
+                    "WHERE (PROCDATE BETWEEN TO_DATE('{0}', 'YYYY-MM-DD') AND TO_DATE('{0}', 'YYYY-MM-DD') + '{1}') AND POD < TO_DATE('{0}', 'YYYY-MM-DD')";
 
     private String date;
     private String limit;

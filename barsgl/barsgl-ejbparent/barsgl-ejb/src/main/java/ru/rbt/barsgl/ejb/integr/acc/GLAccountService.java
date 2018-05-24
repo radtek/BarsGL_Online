@@ -422,6 +422,12 @@ public class GLAccountService {
                     if (data.getString("PL_ACT").equals("Y")) {
                         rlnType = FIVE;
                     } else {
+                        data = glAccountRepository.getAccountForPl(keys.getAccountMidas(), accountWrapper.getCbCustomerType(),
+                                accountWrapper.getPlCode(), accountWrapper.getBalanceAccount2(), dateOpen);
+                        if (null != data ) {
+                            throw new ValidationError(ACCOUNT_PL_ALREADY_EXISTS,
+                                    data.getString("ACCTYPE"), data.getString("BSAACID"), data.getString("ACID"), keys.getAccountType());
+                        }
                         rlnType = TWO;
                     }
                 }
