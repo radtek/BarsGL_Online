@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.operday.task.LoadBranchDictTask;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -16,59 +18,64 @@ import java.util.stream.Stream;
  * Created by er22317 on 09.02.2018.
  */
 public class LoadBranchDictIT extends AbstractRemoteIT {
-    private static final Logger log = Logger.getLogger(FanNdsPostingIT.class.getName());
-    Map<String, String> tableScript = new HashMap<String, String>();
+    private static final Logger log = Logger.getLogger(LoadBranchDictIT.class.getName());
+    static Map<String, String> tableScript = new HashMap<String, String>();
+    static String VITRINA_DATE = "13.01.18";
+    static String FIX_BRANCH_CODE = "065";
+    static String savedFix;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        savedFix = saveFix();
+        setFix(FIX_BRANCH_CODE);
+        initTables();
+    }
+
+    @AfterClass
+    public static void afterClass() throws SQLException {
+        restoreTables();
+        setFix(savedFix);
+    }
 
     @Test
     public void test() throws Exception {
-        String PARAM = "2018-01-12";
-        String FIX = "065";
-        String VITRINA = "13.01.18";
+        String OPERDAY = "2018-01-12";
 
-        String fix = saveFix();
-        try {
-            initTables(VITRINA);
-            setFix(FIX);
+        Properties props = new Properties();
+        props.put(LoadBranchDictTask.PROP_OPERDAY, OPERDAY);
+        jobService.executeJob(SingleActionJobBuilder.create().withClass(LoadBranchDictTask.class).withProps(props).build());
 
-            Properties props = new Properties();
-            props.put(LoadBranchDictTask.PROP_OPERDAY, PARAM);
-            jobService.executeJob(SingleActionJobBuilder.create().withClass(LoadBranchDictTask.class).withProps(props).build());
+        DataRecord rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'TTT'", new Object[]{});
+        Assert.assertFalse("В IMBCBCMP не добавлена CCPCD = 'TTT'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'UFA' and CCBBR = '0093'", new Object[]{});
+        Assert.assertFalse("В IMBCBCMP не обновлена CCPCD = 'UFA' and CCBBR = '0093'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'VLG' and CCBBR = '0066'", new Object[]{});
+        Assert.assertFalse("В IMBCBCMP не обновлена CCPCD = 'VLG' and CCBBR = '0066'", rec.getLong("cnt") == 0l);
 
-            DataRecord rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'TTT'", new Object[]{});
-            Assert.assertFalse("В IMBCBCMP не добавлена CCPCD = 'TTT'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'UFA' and CCBBR = '0093'", new Object[]{});
-            Assert.assertFalse("В IMBCBCMP не обновлена CCPCD = 'UFA' and CCBBR = '0093'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBCMP where CCPCD = 'VLG' and CCBBR = '0066'", new Object[]{});
-            Assert.assertFalse("В IMBCBCMP не обновлена CCPCD = 'VLG' and CCBBR = '0066'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'TTT' and MIDAS_BRANCH = '118'", new Object[]{});
+        Assert.assertFalse("В DH_BR_MAP не добавлена FCC_BRANCH = 'TTT'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'UFA' and CBR_BRANCH = '0093' and MIDAS_BRANCH = '093'", new Object[]{});
+        Assert.assertFalse("В DH_BR_MAP не обновлена CCPCD = 'UFA' and CBR_BRANCH = '0093'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'VLG' and CBR_BRANCH = '0066' and MIDAS_BRANCH = '066'", new Object[]{});
+        Assert.assertFalse("В DH_BR_MAP не обновлена FCC_BRANCH = 'VLG' and CBR_BRANCH = '0066'", rec.getLong("cnt") == 0l);
 
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'TTT' and MIDAS_BRANCH = '118'", new Object[]{});
-            Assert.assertFalse("В DH_BR_MAP не добавлена FCC_BRANCH = 'TTT'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'UFA' and CBR_BRANCH = '0093' and MIDAS_BRANCH = '093'", new Object[]{});
-            Assert.assertFalse("В DH_BR_MAP не обновлена CCPCD = 'UFA' and CBR_BRANCH = '0093'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'VLG' and CBR_BRANCH = '0066' and MIDAS_BRANCH = '066'", new Object[]{});
-            Assert.assertFalse("В DH_BR_MAP не обновлена FCC_BRANCH = 'VLG' and CBR_BRANCH = '0066'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBBRP where A8BRCD = '119'", new Object[]{});
+        Assert.assertFalse("В IMBCBBRP не добавлена A8BRCD = '119'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBBRP where A8BRCD = '118'", new Object[]{});
+        Assert.assertFalse("В IMBCBBRP не добавлена A8BRCD = '118'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBBRP where A8BRCD = '115' and BCBBR = '0095' and A8LCCD = 'TTT'", new Object[]{});
+        Assert.assertFalse("В IMBCBBRP не обновлена A8BRCD = '115' and BCBBR = '0095' and A8LCCD = 'TTT'", rec.getLong("cnt") == 0l);
 
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBBRP where A8BRCD = '119'", new Object[]{});
-            Assert.assertFalse("В IMBCBBRP не добавлена A8BRCD = '119'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBBRP where A8BRCD = '118'", new Object[]{});
-            Assert.assertFalse("В IMBCBBRP не добавлена A8BRCD = '118'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from IMBCBBRP where A8BRCD = '115' and BCBBR = '0095' and A8LCCD = 'TTT'", new Object[]{});
-            Assert.assertFalse("В IMBCBBRP не обновлена A8BRCD = '115' and BCBBR = '0095' and A8LCCD = 'TTT'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'H02'", new Object[]{});
+        Assert.assertFalse("В DH_BR_MAP не добавлена FCC_BRANCH = 'H02'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'H01'", new Object[]{});
+        Assert.assertFalse("В DH_BR_MAP не добавлена FCC_BRANCH = 'H01'", rec.getLong("cnt") == 0l);
+        rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'N03' and CBR_BRANCH = '0095' and MIDAS_BRANCH = '115'", new Object[]{});
+        Assert.assertFalse("В DH_BR_MAP не обновлена FCC_BRANCH = 'N03' and CBR_BRANCH = '0095'", rec.getLong("cnt") == 0l);
 
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'H02'", new Object[]{});
-            Assert.assertFalse("В DH_BR_MAP не добавлена FCC_BRANCH = 'H02'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'H01'", new Object[]{});
-            Assert.assertFalse("В DH_BR_MAP не добавлена FCC_BRANCH = 'H01'", rec.getLong("cnt") == 0l);
-            rec = baseEntityRepository.selectFirst( "select count(*) cnt from DH_BR_MAP where FCC_BRANCH = 'N03' and CBR_BRANCH = '0095' and MIDAS_BRANCH = '115'", new Object[]{});
-            Assert.assertFalse("В DH_BR_MAP не обновлена FCC_BRANCH = 'N03' and CBR_BRANCH = '0095'", rec.getLong("cnt") == 0l);
-
-        }finally{
-            restoreTables();
-            setFix(fix);
-        }
     }
 
-    private void initTables(String VITRINA) throws SQLException, IOException {
+    static private void initTables() throws SQLException, IOException {
 //        String sqlTableExist = "select count(*) cnt from user_tables where table_name = ?";
         Long cnt = 0l;
         Stream.of("V_GL_DWH_IMBCBBRP", "V_GL_DWH_IMBCBCMP", "IMBCBBRP_BKP", "IMBCBCMP_BKP", "DH_BR_MAP_BKP", "V_GL_DWH_LOAD_STATUS")
@@ -83,7 +90,7 @@ public class LoadBranchDictIT extends AbstractRemoteIT {
                 });
 
         if (baseEntityRepository.selectFirst( "select count(*) cnt from V_GL_DWH_LOAD_STATUS", new Object[]{}).getInteger(0) == 0){
-            baseEntityRepository.executeNativeUpdate("insert into V_GL_DWH_LOAD_STATUS values(to_date('"+VITRINA+"','DD.MM.RR'))", new Object[]{});
+            baseEntityRepository.executeNativeUpdate("insert into V_GL_DWH_LOAD_STATUS values(to_date('"+VITRINA_DATE+"','DD.MM.RR'))", new Object[]{});
         }
 
         moveIMBCBBRP("IMBCBBRP", "IMBCBBRP_BKP");
@@ -95,23 +102,23 @@ public class LoadBranchDictIT extends AbstractRemoteIT {
 
     }
 
-    private void createTable(String tableName){
+    static private void createTable(String tableName){
         if (tableScript.isEmpty()) fillScriptMap();
         baseEntityRepository.executeNativeUpdate(tableScript.get(tableName));
     }
 
-    private void testToV_GL_DWH_IMBCBBRP() throws IOException {
+    static private void testToV_GL_DWH_IMBCBBRP() throws IOException {
         clearTable("V_GL_DWH_IMBCBBRP");
         insTable(textResourceController.getContent("ru/rbt/barsgl/ejb/controller/od/INS_V_GL_DWH_IMBCBBRP.sql"));
     }
 
-    private void testToV_GL_DWH_IMBCBCMP() throws IOException {
+    static private void testToV_GL_DWH_IMBCBCMP() throws IOException {
         clearTable("V_GL_DWH_IMBCBCMP");
         insTable(textResourceController.getContent("ru/rbt/barsgl/ejb/controller/od/INS_V_GL_DWH_IMBCBCMP.sql"));
     }
 
 
-    private void moveIMBCBBRP(String from, String to) throws SQLException {
+    static private void moveIMBCBBRP(String from, String to) throws SQLException {
         List<DataRecord> table = baseEntityRepository.selectMaxRows("select A8BRCD, A8CMCD, A8LCCD,A8DFAC,A8DTAC,A8BICN,A8LCD,A8TYLC,A8BRNM,A8BRSN,BBRRI,BCORI,BCBBR,BR_HEAD,BR_OPER from "+from, 1000, null);
         List<Object[]> params = new ArrayList<Object[]>();
 
@@ -123,14 +130,14 @@ public class LoadBranchDictIT extends AbstractRemoteIT {
         params.forEach(item ->baseEntityRepository.executeNativeUpdate("insert into "+to+"(A8BRCD, A8CMCD, A8LCCD,A8DFAC,A8DTAC,A8BICN,A8LCD,A8TYLC,A8BRNM,A8BRSN,BBRRI,BCORI,BCBBR,BR_HEAD,BR_OPER) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", item));
     }
 
-    private void moveIMBCBCMP(String from, String to) throws SQLException {
+    static private void moveIMBCBCMP(String from, String to) throws SQLException {
         List<DataRecord> table = baseEntityRepository.selectMaxRows("select CCPCD,CCPNE,CCPNR,CCPRI,CCBBR from "+from, 1000, null);
         List<Object[]> params = new ArrayList<Object[]>();
         table.forEach(item ->params.add(new Object[]{item.getString("CCPCD"), item.getString("CCPNE"), item.getString("CCPNR"), item.getString("CCPRI"), item.getString("CCBBR") }) );
         clearTable(to);
         params.forEach(item ->baseEntityRepository.executeNativeUpdate("insert into "+to+"(CCPCD,CCPNE,CCPNR,CCPRI,CCBBR) values(?,?,?,?,?)", item));
     }
-    private void moveDH_BR_MAP(String from, String to) throws SQLException {
+    static private void moveDH_BR_MAP(String from, String to) throws SQLException {
         List<DataRecord> table = baseEntityRepository.selectMaxRows("select FCC_BRANCH, MIDAS_BRANCH, CBR_BRANCH from "+from, 1000, null);
         List<Object[]> params = new ArrayList<Object[]>();
         table.forEach(item ->params.add(new Object[]{item.getString("FCC_BRANCH"), item.getString("MIDAS_BRANCH"), item.getString("CBR_BRANCH") }) );
@@ -138,32 +145,32 @@ public class LoadBranchDictIT extends AbstractRemoteIT {
         params.forEach(item ->baseEntityRepository.executeNativeUpdate("insert into "+to+"(FCC_BRANCH, MIDAS_BRANCH, CBR_BRANCH) values(?,?,?)", item));
     }
 
-    private void restoreTables() throws SQLException {
+    static private void restoreTables() throws SQLException {
         moveIMBCBBRP("IMBCBBRP_BKP", "IMBCBBRP");
         moveIMBCBCMP("IMBCBCMP_BKP", "IMBCBCMP");
         moveDH_BR_MAP("DH_BR_MAP_BKP", "DH_BR_MAP");
     }
 
 
-        private void clearTable(String table){
+    private static void clearTable(String table){
         baseEntityRepository.executeNativeUpdate("delete from " + table, new Object[]{});
     }
 
 //    private void insTable(List<String> list){
 //        list.forEach(item -> baseEntityRepository.executeNativeUpdate(item, new Object[]{}));
 //    }
-    private void insTable(String sql){
+    static private void insTable(String sql){
         baseEntityRepository.executeNativeUpdate(sql, new Object[]{});
     }
 
-    private void setFix(String fix) throws SQLException {
+    static private void setFix(String fix) throws SQLException {
         baseEntityRepository.executeNativeUpdate("update gl_prprp set NUMBER_VALUE=? where id_prp = 'dwh.fix.branch.code'", fix);
     }
-    private String saveFix() throws SQLException {
+    static private String saveFix() throws SQLException {
         return(baseEntityRepository.selectFirst("select NUMBER_VALUE from gl_prprp where id_prp = 'dwh.fix.branch.code'",new Object[]{}).getString(0));
     }
 
-    private void fillScriptMap(){
+    private static void fillScriptMap(){
         tableScript.put("V_GL_DWH_IMBCBCMP", "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; "+
                                              " BEGIN " +
                                              "EXECUTE IMMEDIATE 'CREATE TABLE V_GL_DWH_IMBCBCMP " +
