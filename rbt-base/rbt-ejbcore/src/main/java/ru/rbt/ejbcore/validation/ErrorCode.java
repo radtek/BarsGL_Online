@@ -164,12 +164,13 @@ public enum ErrorCode {
     , COB_STEP_ERROR(3015, "%s")
     , COB_IS_RUNNING(3016, "Задача COB за дату '%s' выполняется. Нельзя выполнить расчет")
     , STAMT_UNLOAD_DELETED(3017, "%s")
-    , QUEUE_ERROR(3018, "%s")
-    , ACCCLOSE_ERROR(3019, "%s")
     , STAMT_UNLOAD_AFTER_FINAL_STEP(3019, "%s")
 
     , OPERDAY_NOT_ONLINE(3020, "%s. Операционный день в статусе: '%s'")
     , OPERDAY_IN_SYNCHRO(3021, "%s. Выполняется синхронизация проводок,\n повторите попытку через несколько минут")
+
+    , QUEUE_ERROR(3030, "%s")
+    , ACCCLOSE_ERROR(3031, "%s")
 
     // Авторизация и ручная обработка
     , BAD_DATE_FORMAT(4000, "Неверный формат поля '%s': %s")
