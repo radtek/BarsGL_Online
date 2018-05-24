@@ -20,12 +20,14 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
+import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -810,6 +812,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
     @Test public void testSyncStamtIncrementWithoutStep () throws Exception {
 
+        baseEntityRepository.executeUpdate("update NumberProperty p set p.value = ?1 where p.id = ?2", 100L, ConfigProperty.SyncIcrementMaxGLPdCount.getValue());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+
         updateOperday(ONLINE, OPEN, BUFFER);
         GLOperation operation = createOper(getOperday().getLastWorkingDay());
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
@@ -835,6 +840,20 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         Assert.assertTrue(baseEntityRepository.select("select * from gl_etlstmd").stream().anyMatch(r -> postings.getId().equals(((DataRecord)r).getLong("pcid"))));
 
+        // еще операция чтобы проверить как работает ограничение на максимальное кол-во проводок бэквалу
+        GLOperation operation2 = createOper(getOperday().getLastWorkingDay());
+
+        // устанавливаем граничение - ноль
+        baseEntityRepository.executeUpdate("update NumberProperty p set p.value = ?1 where p.id = ?2", 0L, ConfigProperty.SyncIcrementMaxGLPdCount.getValue());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4' where parvalue <> '4'");
+
+        jobService.executeJob(incrJob);
+
+        JobHistory history2 = getLastHistRecordObject(jobName);
+        // новой выгрузки нет
+        Assert.assertEquals(history1, history2);
     }
 
     private void registerForStamtUnload(String bsaacid) {
