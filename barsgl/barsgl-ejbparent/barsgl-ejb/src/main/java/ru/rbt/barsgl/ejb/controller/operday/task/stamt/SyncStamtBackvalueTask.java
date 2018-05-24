@@ -174,7 +174,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
             Assert.isTrue(ONLINE == operday.getPhase()
                     , () -> new ValidationError(errorCode, format("Операционный день в фазе %s ожидалось %s", operday.getPhase(), ONLINE)));
 
-            DataRecord countPd = coreRepository.selectOne("select count(1) cnt from gl_pd where pod < ?", operday);
+            DataRecord countPd = coreRepository.selectOne("select count(1) cnt from gl_pd where pod < ?", operday.getCurrentDate());
             Long maxThreshold = propertiesRepository.getNumber(SyncIcrementMaxGLPdCount.getValue());
             Assert.isTrue(maxThreshold >= countPd.getLong(0)
                     , () -> new ValidationError(ErrorCode.TASK_ERROR
