@@ -310,7 +310,7 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
         keys.setAccountType("0");
         keys.setAccountCode("0");
         keys.setAccSequence(acid.substring(15,17));
-        keys.setDealSource(DealSource.BarsGL.getLabel());
+        keys.setDealSource(DealSource.FCC.getLabel());
 
 //        keys.setTerm(null);
 //        keys.setGlSequence(null);
