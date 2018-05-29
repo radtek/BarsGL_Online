@@ -16,12 +16,15 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
+import static ru.rbt.ejbcore.util.DateUtils.dbDateParse;
 
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
@@ -269,15 +272,47 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         checkCurrentBalanceMode(BalanceMode.GIBRID);
     }
 
-    @Test public void testErrors() {
+    @Test public void testErrors() throws SQLException, ParseException {
+
+        setGibridBalanceMode();
+        stopListeningQueue();
+        purgeQueueTable();
+
+        GLAccount account = findAccount("40702810%");
+//        Operday operday = getOperday();
+
         // берем счет и делаем для него битый baltur
+        baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
+
+        Date intersectDate = dbDateParse("2018-01-02");
+        insertBaltur(account.getBsaAcid(), account.getAcid(), dbDateParse("2018-01-01"), intersectDate);
+        insertBaltur(account.getBsaAcid(), account.getAcid(), intersectDate, dbDateParse("2029-01-29"));
+
         // делаем проводку в режиме gibrid
+        long id = baseEntityRepository.nextId("PD_SEQ");
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), 1, 1, pbrGibrid, intersectDate
+                , intersectDate, BankCurrency.RUB.getCurrencyCode(), "0");
+        DataRecord queueProperties = baseEntityRepository.selectFirst("select * from USER_QUEUES where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
+        Assert.assertNotNull(queueProperties);
+
         // делаем кол-во попыток равное MAX_RETRIES
+        for (int i = 0; i < queueProperties.getLong("MAX_RETRIES"); i++) {
+            try {
+                dequeueProcessOne();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "error on dequing", e);
+            }
+        }
+
         // проверяем что сообщение в очереди ошибок
+
         // обрабатываем сообщение из ошибок (?)
         // останавливаем обработку (?)
+    }
 
-
+    private void insertBaltur(String bsaacid, String acid, Date dat, Date datto) {
+        baseEntityRepository.executeNativeUpdate("insert into baltur (bsaacid, acid, dat, datto, incl) values (?,?,?,?, '0')"
+                , bsaacid, acid, dat, datto);
     }
 
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
@@ -298,7 +333,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private void stopListeningQueue() {
         baseEntityRepository.executeNativeUpdate(
                 "begin\n" +
-                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%LISTEN%') loop\n" +
+                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%GLAQ_PKG_CONST.GET_BALANCE_QUEUE_LISTNR_PRFX%') loop\n" +
                 "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
                 "    end loop;\n" +
                 "end;");
