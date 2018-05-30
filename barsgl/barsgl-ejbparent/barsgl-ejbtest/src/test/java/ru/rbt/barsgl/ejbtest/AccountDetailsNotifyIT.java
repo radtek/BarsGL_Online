@@ -2,7 +2,10 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
@@ -10,10 +13,16 @@ import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.logging.Logger;
 
@@ -43,6 +52,16 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     private static final String acdeno12 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF";
     private static final Boolean writeOut = false;
     private static final int batchSize = 7;
+
+    private DocumentBuilder docBuilder;
+    private XPath xPath;
+
+    @Before
+    public void before() throws ParserConfigurationException {
+        docBuilder = XmlUtilityLocator.getInstance().newDocumentBuilder();
+        xPath = XmlUtilityLocator.getInstance().newXPath();
+    }
+
     @Test
     public void testNotifyCloseFcc12() throws Exception {
         String qType = AcDNJournal.Sources.FC12.name();
@@ -75,6 +94,9 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         String qType = AcDNJournal.Sources.FCC.name();
         String qName = acdeno6;
 
+        String fileName = "AccountDetailsNotifyFcc6Open.xml";
+//        Date openDate = getOpenDate(fileName);
+
         baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid='40817810000010696538'");
 
         printCommunicatorName();
@@ -83,7 +105,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         clearQueue(properties, qName, 10);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountDetailsNotifyFcc6Open.xml"), properties, null, null, qName);
+        sendToQueue(getResourceText("/" + fileName), properties, null, null, qName);
 
         long idJournal = getAcdenoMaxId();
         SingleActionJob job =
@@ -301,4 +323,12 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
                 "from AuditRecord a where a.logCode in ('AccountDetailsNotify', 'QueueProcessor') and a.logLevel <> 'Info' and a.id > ?1 ", idFrom);
     }
 
+    private Date getOpenDate(String fileName) throws IOException, SAXException, XPathExpressionException, ParseException {
+        String message = getRecourceText(fileName);
+        Document doc = getDocument(docBuilder, message);
+        String dtOpenParam = getXmlParam(xPath, doc, AccountDetailsNotifyProcessor.parentNodePath, "OpenDate");
+        Date dateOpen = DateUtils.dbDateParse(dtOpenParam);
+        return dateOpen;
+
+    }
 }

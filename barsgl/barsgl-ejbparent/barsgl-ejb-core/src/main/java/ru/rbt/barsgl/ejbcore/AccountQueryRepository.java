@@ -112,17 +112,6 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
         }
     }
 
-    public List<DataRecord> getAccrlnRecords(String inCondition, String customerNo) throws Exception {
-        try {
-            String selectExpression = "SELECT * FROM ACCRLN A WHERE A.BSAACID IN (" + inCondition + ")";
-            if(customerNo != null)
-              selectExpression+=" AND CNUM = '"+customerNo+"'";
-            return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
-        } catch (SQLException e) {
-            throw new Exception(e);
-        }
-    }
-
     public List<DataRecord> getGlAccRecords(String inCondition, String customerNo) throws Exception {
         try {
             String selectExpression = "SELECT * FROM GL_ACC WHERE BSAACID IN (" + inCondition + ") and ACCTYPE <> 0";
