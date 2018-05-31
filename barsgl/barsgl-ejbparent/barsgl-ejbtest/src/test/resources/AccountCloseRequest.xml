@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+ <SOAP-ENV:Header>
+ </SOAP-ENV:Header>
+ <SOAP-ENV:Body>
+  <gbo:SGLAccountTBOCloseRequest xmlns:gbo="urn:ucbru:gbo:v4">
+   <gbo:AccNum>12345678901234567890</gbo:AccNum>
+   <gbo:IsErrAcc>1</gbo:IsErrAcc>
+   <gbo:DealID>123456</gbo:DealID>
+  </gbo:SGLAccountTBOCloseRequest>
+ </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

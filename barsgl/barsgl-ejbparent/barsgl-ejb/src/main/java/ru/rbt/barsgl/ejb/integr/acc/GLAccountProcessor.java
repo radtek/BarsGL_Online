@@ -487,7 +487,13 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         glAccount.setDealSource(keys.getDealSource());
         glAccount.setDealId(keys.getDealId());
         glAccount.setSubdealId(keys.getSubDealId());
-
+/*
+        String customerName = glAccountRepository.getCustomerName(keys.getCustomerNumber());
+        if (isEmpty(customerName)) {
+            throw new ValidationError(CUSTOMER_NUMBER_NOT_FOUND,
+                    keys.getCustomerNumber(), Long.toString(AccountKeys.getiCustomerNumber()), "номер клиента");
+        }
+*/
         String accountName = keys.getDescription();
         if (isEmpty(accountName))
             accountName = glAccountRepository.getAccountNameByType(glAccount.getAccountType());

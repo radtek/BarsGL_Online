@@ -54,6 +54,7 @@ import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.BaseEntityRepository;
+import ru.rbt.ejbcore.repository.IBaseEntityMultiRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import javax.naming.Context;
@@ -85,11 +86,9 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
  */
 public abstract class AbstractRemoteIT  {
 
-    private static Map<String,Object> services = Collections.synchronizedMap(new HashMap<>());
-
     private static final ServerAccess remoteAccessInternal;
     protected static final ServiceAccessSupport remoteAccess;
-    protected static BaseEntityRepository baseEntityRepository = null;
+    protected static IBaseEntityMultiRepository baseEntityRepository = null;
     protected static GLOperationController fanPostingController = null;
     protected static GLOperationController fanStornoController = null;
     protected static GLOperationController fanStornoOnedayController = null;
@@ -148,7 +147,7 @@ public abstract class AbstractRemoteIT  {
     }
 
     private static void init() {
-        baseEntityRepository = ProxyFactory.createProxy(ClientSupportRepository.class.getName(), BaseEntityRepository.class, remoteAccessInternal);
+        baseEntityRepository = ProxyFactory.createProxy(ClientSupportRepository.class.getName(), IBaseEntityMultiRepository.class, remoteAccessInternal);
         postingController = ProxyFactory.createProxy(EtlPostingController.class.getName(), EtlMessageController.class, remoteAccessInternal);
         fanPostingController = ProxyFactory.createProxy(FanForwardOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);
         fanStornoController = ProxyFactory.createProxy(FanStornoBackvalueOperationController.class.getName(), GLOperationController.class, remoteAccessInternal);

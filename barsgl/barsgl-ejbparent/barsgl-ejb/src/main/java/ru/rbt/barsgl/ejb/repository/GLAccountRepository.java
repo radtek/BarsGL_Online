@@ -756,6 +756,29 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+    /**
+     * Находит счет GLпо номеру счета ЦБ
+     *
+     * @param bsaAcid
+     * @return
+     */
+    public GLAccount findGLAccount(String bsaAcid, String acid) {
+        try {
+            DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and ACID = ?", bsaAcid, acid);
+            return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public GLAccount findGLAccountByDeal(String bsaAcid, String dealid) {
+        try {
+            DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and DEALID = ?", bsaAcid, dealid);
+            return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 
     public boolean isExistsGLAccountByOpenType(String bsaAcid) {
         try {
@@ -770,10 +793,15 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         try {
             DataRecord data = selectFirst("select PKG_CHK_ACC.GET_BALANCE_TODATE(?, ?, ?) from dual"
                     , bsaAcid, acid, datto);
-            return (null == data) ? BigDecimal.ZERO : data.getBigDecimal(0);
+            return ( null == data || null == data.getBigDecimal(0) ) ? BigDecimal.ZERO : data.getBigDecimal(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
+    }
+
+    public boolean isAccountBalanceZero(String bsaAcid, String acid, Date datto) {
+        BigDecimal bal = getAccountBalance(bsaAcid, acid, datto);
+        return BigDecimal.ZERO.equals(bal);
     }
 
     public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {

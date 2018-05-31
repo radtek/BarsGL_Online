@@ -498,11 +498,32 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount closeGLAccountDeals(GLAccount glAccount, Date dateClose, GLAccount.CloseType closeType) throws Exception {
+        return synchronizer.callSynchronously(monitor, () -> {
+            if (!closeType.equals(GLAccount.CloseType.Normal)){
+                glAccount.setOpenType(GLAccount.OpenType.ERR.name());
+            }
+            glAccount.setDateClose(dateClose);
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount updateGLAccountOpenType(GLAccount glAccount, GLAccount.OpenType openType) throws Exception {
+        return synchronizer.callSynchronously(monitor, () -> {
+            glAccount.setOpenType(openType.name());
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnl(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
-        return glAccountRepository.executeInNewTransaction(persistence -> {
+//        return glAccountRepository.executeInNewTransaction(persistence -> {
+        return synchronizer.callSynchronously(monitor, () -> {
             glAccount.setDateClose(dateClose);
-
             return glAccountRepository.update(glAccount);
         });
     }
@@ -511,9 +532,8 @@ public class GLAccountController {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnlTech(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
-        return glAccountRepository.executeInNewTransaction(persistence -> {
+        return synchronizer.callSynchronously(monitor, () -> {
             glAccount.setDateClose(dateClose);
-
             return glAccountRepository.update(glAccount);
         });
     }
