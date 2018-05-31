@@ -278,6 +278,11 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         stopListeningQueue();
         purgeQueueTable();
 
+        // отключаем задержку переобработки сообщений
+        baseEntityRepository.executeNativeUpdate("" +
+                "declare pragma autonomous_transaction; " +
+                "BEGIN DBMS_AQADM.ALTER_QUEUE('BAL_QUEUE', RETRY_DELAY => 0); END;");
+
         GLAccount account = findAccount("40702810%");
 //        Operday operday = getOperday();
 
@@ -295,8 +300,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         DataRecord queueProperties = baseEntityRepository.selectFirst("select * from USER_QUEUES where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
         Assert.assertNotNull(queueProperties);
 
-        // делаем кол-во попыток равное MAX_RETRIES
-        for (int i = 0; i < queueProperties.getLong("MAX_RETRIES"); i++) {
+        // делаем кол-во попыток равное MAX_RETRIES + 1
+        for (int i = 0; i <= queueProperties.getLong("MAX_RETRIES"); i++) {
             try {
                 dequeueProcessOne();
             } catch (Exception e) {
