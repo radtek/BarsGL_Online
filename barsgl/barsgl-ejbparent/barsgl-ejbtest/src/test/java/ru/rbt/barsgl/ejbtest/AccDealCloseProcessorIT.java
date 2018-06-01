@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -10,8 +11,6 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccDealCloseNotifyTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueInputMessage;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CommonQueueController.QueueProcessResult;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.props.PropertyName;
@@ -27,7 +26,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -40,6 +41,8 @@ import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Cancel;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Change;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Normal;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.OpenType.ERR;
+import static ru.rbt.barsgl.ejbtest.mq.MqUtil.answerToQueue;
+import static ru.rbt.barsgl.ejbtest.mq.MqUtil.getConnectionFactory;
 
 /**
  * Created by er18837 on 16.03.2018.
@@ -64,13 +67,13 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     private static final String flagNode = "IsErrAcc";
     private static final String dealNode = "DealID";
 
-    private final static String host = "vs569";
-    private final static String broker = "QM_MBROKER4_T4";
-    private final static String channel= "SYSTEM.DEF.SVRCONN";
-    private final static String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
-    private final static String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
-    private final static String ktpIn = "UCBRU.P2P.KTP2GL.CLOSEACC.REQUEST";
-    private final static String ktpOut = "UCBRU.P2P.KTP2GL.CLOSEACC.RESPONSE";
+    private static final String host = "vs569";
+    private static final String broker = "QM_MBROKER4_T4";
+    private static final String channel= "SYSTEM.DEF.SVRCONN";
+    private static final String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
+    private static final String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
+    private static final String ktpIn = "UCBRU.P2P.KTP2GL.CLOSEACC.REQUEST";
+    private static final String ktpOut = "UCBRU.P2P.KTP2GL.CLOSEACC.RESPONSE";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
@@ -86,9 +89,23 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         xPath = XmlUtilityLocator.getInstance().newXPath();
     }
 
-    private String getQProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
-        return getQueueProperty (topic, ktpIn, ktpOut, ahost, "1414", abroker, channel, alogin, apassw, "10", writeOut, remoteQueueOut);
+//    private String getQProperty(String topic, String ahost, String abroker, String alogin, String apassw) {
+//        return getQueueProperties (topic, ktpIn, ktpOut, ahost, "1414", abroker, channel, alogin, apassw, "10", writeOut, remoteQueueOut);
+//    }
+
+    private String getJobProperty(String topic, String ahost, String abroker) {
+        return getJobProperty (topic, ktpIn, ktpOut, ahost, "1414", abroker, channel, login, passw, "30", writeOut);
     }
+
+    private QueueProperties getQueueProperties(String topic, String ahost, String abroker) {
+        return getQueueProperties(topic, ktpIn, ktpOut, ahost, 1414, abroker, channel, login, passw, 30, writeOut, false);
+    }
+
+    public String getResourceText(String resource) throws IOException {
+        File inFile = new File(this.getClass().getResource(resource).getFile());
+        return FileUtils.readFileToString(inFile, AccountQueryProcessor.charsetName);
+    }
+
 
     /**
      * Тест обработки сообщения при отсутствии счета
@@ -318,9 +335,9 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         // поставить счета в очередь на закрытие
         GLAccount[] accounts = new GLAccount[3];
-        accounts[0] = processDealCancelWait("421__810%1", Change);
-        accounts[1] = processDealCancelWait("421__810%2", Cancel);
-        accounts[2] = processDealCancelWait("421__810%3", Cancel);
+        accounts[0] = processDealCancelWait("4____810%1", Change);
+        accounts[1] = processDealCancelWait("4____810%2", Cancel);
+        accounts[2] = processDealCancelWait("4____810%3", Cancel);
         boolean[] chgBal = new boolean[3];
 
         try {
@@ -369,8 +386,8 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         GLAccount[] accounts = new GLAccount[2];
         // поставить счета в очередь на закрытие
-        accounts[0] = processDealCancelWait("421__810%4", Change, true);
-        accounts[1] = processDealCancelWait("421__810%5", Cancel, true);
+        accounts[0] = processDealCancelWait("4____810%4", Change, true);
+        accounts[1] = processDealCancelWait("4____810%5", Cancel, true);
 
         try {
             for (int i = 0; i < accounts.length; i++) {
@@ -460,7 +477,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     @Test
     public void testConnectToQueue() throws Exception {
         long idAudit = getAuditMaxId();
-        remoteAccess.invoke(AccDealCloseQueueController.class, "closeConnection");
+        remoteAccess.invoke(QueueCommunicator.class, "closeConnection");
 
         executeJobAccDealClose();
 
@@ -473,21 +490,18 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         TestParams[] testParams = {
                 new TestParams("42102810020010008276", "A01DEP1180570017", "1"),
                 new TestParams("42102810020010008467", "A01DEP1180710011", "2"),
-//                new TestParams("42102810320450000245", "M01DEP1180750001", "1"),
-//                new TestParams("42102810020450000244", "M01DEP1180750002", "2"),
-//                new TestParams("42102810120010008600", "A01DEP1180780006", "1"),
-//                new TestParams("42102810520010008598", "A01DEP1180780005", "2"),
-/*                new TestParams("42102810820010007260", "A01DEP1173550013", "1"),
-                new TestParams("42102810120930000065", "O01DEP1173610002", "2"),
-                new TestParams("42102810820930000064", "O01DEP1173610003", "1"), */
                 new TestParams("42102810720930000067", "O01DEP1173630001", "2")
         };
 
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+//        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+        QueueProperties properties = getQueueProperties(qType, host, broker );
+
+        startConnection(properties);
 
         for (TestParams params : testParams) {
             String message = createRequestXml("AccountCloseRequest.xml", params.bsaAcid, params.dealId, params.flag);
-            sendToQueue(cf, ktpIn, message.getBytes(), ktpOut, login, passw);
+//            sendToQueue(cf, ktpIn, message.getBytes(), ktpOut, login, passw);
+            sendToQueue(message, properties, null, null, ktpIn);
         }
     }
 
@@ -496,15 +510,19 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         long idAcdeno = getAcdenoMaxId();
 
-        remoteAccess.invoke(AccDealCloseQueueController.class, "closeConnection");
+        remoteAccess.invoke(QueueCommunicator.class, "closeConnection");
 
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
-        sendToQueue(cf, ktpIn, new File(this.getClass().getResource("/AccountCloseRequest.xml").getFile()), ktpOut, login, passw);
+//        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+//        sendToQueue(cf, ktpIn, new File(this.getClass().getResource("/AccountCloseRequest.xml").getFile()), ktpOut, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker );
+        startConnection(properties);
+        sendToQueue(getResourceText("/AccountCloseRequest.xml"), properties, null, null, ktpIn);
+
         Thread.sleep(2000L);
 
         executeJobAccDealClose();
 
-        Thread.sleep(2000L);
+        Thread.sleep(3000L);
         Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
         AcDNJournal journal = getAcdenoNewRecord(idAcdeno);
         Assert.assertNotNull("Нет новой записи в таблице GL_ACDENO", journal);
@@ -520,19 +538,23 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     @Ignore
     @Test
     public void testReceiveSend() throws Exception {
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+//        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+//        sendToQueue(cf, ktpIn, new File(this.getClass().getResource("/AccountCloseRequest.xml").getFile()), ktpOut, login, passw);
 
-        sendToQueue(cf, ktpIn, new File(this.getClass().getResource("/AccountCloseRequest.xml").getFile()), ktpOut, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker );
+        startConnection(properties);
+        sendToQueue(getResourceText("/AccountCloseRequest.xml"), properties, null, null, ktpIn);
         testProcessFromQueue();
-
     }
 
     @Ignore
     @Test
     public void testProcessFromQueue() throws Exception {
-        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
+//        MQQueueConnectionFactory cf = getConnectionFactory(host, broker, channel);
 
-        QueueInputMessage answer = receiveFromQueue(cf, ktpIn, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker );
+        startConnection(properties);
+        QueueInputMessage answer = receiveFromQueue(ktpIn, Charset.defaultCharset());
         String message = answer.getTextMessage();
         System.out.println("messageId:    " + answer.getRequestId());
         System.out.println("replyToQueue: " + answer.getReplyTo());
@@ -548,7 +570,8 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
         System.out.println(responce);
         Assert.assertFalse(StringUtils.isEmpty(responce.getOutMessage()));
 
-        answerToQueue(cf, ktpOut, responce.getOutMessage().getBytes(), answer.getRequestId(), login, passw);
+        sendToQueue(responce.getOutMessage(), properties, answer.getRequestId(), null, ktpIn);
+//        answerToQueue(cf, ktpOut, responce.getOutMessage().getBytes(), answer.getRequestId(), login, passw);
     }
 
     private String createRequestXml(String fileName, GLAccount account, GLAccount.CloseType closeType) throws Exception {
@@ -625,8 +648,6 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     private Date updateDateClose(GLAccount acc, Date dateClose) {
         GLAccount account = (GLAccount) baseEntityRepository.refresh(acc, true);
         baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = ? where BSAACID = ?", dateClose, account.getBsaAcid());
-        baseEntityRepository.executeNativeUpdate("update ACCRLN set DRLNC = ? where BSAACID = ? and ACID = ?", dateClose, account.getBsaAcid(), account.getAcid());
-        baseEntityRepository.executeNativeUpdate("update BSAACC set BSAACC = ? where ID = ?", dateClose, account.getBsaAcid());
         return account.getDateClose();
     }
 
@@ -684,7 +705,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
                 SingleActionJobBuilder.create()
                         .withClass(AccDealCloseNotifyTask.class)
                         .withName("AccDealClose1")
-                        .withProps(getQProperty(qType, host, broker, login, passw))
+                        .withProps(getJobProperty(qType, host, broker))
                         .build();
         jobService.executeJob(job);
     }

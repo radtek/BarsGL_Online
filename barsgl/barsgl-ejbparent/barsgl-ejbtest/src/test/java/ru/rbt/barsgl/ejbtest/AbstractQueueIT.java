@@ -79,6 +79,10 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
         remoteAccess.invoke(QueueTesting.class, "sendToQueue", outMessage, queueProperties, corrId, replyTo, queue);
     }
 
+//    public static void answerToQueue(String incomingMessage, QueueProperties queueProperties, String corrId, String username, String password) throws JMSException {
+//        sendToQueue(incomingMessage, null, corrId, username, password, 1);
+//    }
+
     public static void sendToQueue(File file, Charset charset, QueueProperties queueProperties, String corrId, String replyTo, String queue) throws JMSException, IOException {
         sendToQueue(FileUtils.readFileToString(file, charset), queueProperties, corrId, replyTo, queue);
     }

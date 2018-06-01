@@ -249,12 +249,11 @@ public class GLAccountService {
                     .orElseGet(() -> glAccountController.createAccountsExDiff(operation, operSide, keys, bankCurrency, dateOpen, optype))
                     .getBsaAcid();
         } else {
+            GLAccount.RelationType rlnType = accountingTypeRepository.findById(AccountingType.class, keys.getAccountType()).isBarsAllowed() ? FIVE : TWO;
             // Перенесено сюда, так как портит данные для других этапов
-            Date dateStart446P = glAccountRepository.getDateStart446p();
             glAccountController.fillAccountOfrKeysMidas(operSide, dateOpen, keys);
             glAccountController.fillAccountOfrKeys(operSide, dateOpen, keys); // Обогащение
 
-            GLAccount.RelationType rlnType = accountingTypeRepository.findById(AccountingType.class, keys.getAccountType()).isBarsAllowed() ? FIVE : TWO;
                 return Optional.ofNullable(glAccountRepository
                         .findGLPLAccount(keys.getCurrency(), keys.getCustomerNumber(), keys.getAccountType()
                             , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
