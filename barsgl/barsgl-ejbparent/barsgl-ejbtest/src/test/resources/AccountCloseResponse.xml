@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<SOAP-ENV:Header>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+    <gbo:SGLAccountTBOCloseResponse xmlns:gbo="urn:ucbru:gbo:v4">
+        <gbo:CBAccountNo>42105810220130000003</gbo:CBAccountNo>
+        <gbo:OpenClose>Open</gbo:OpenClose >
+        <gbo:ErrorMsg>Сообщение об ошибке</gbo:ErrorMsg>
+        <gbo:OpenDate>2017-12-14</gbo:OpenDate>
+        <gbo:CloseDate>2017-12-14</gbo:CloseDate>
+        <gbo:DealId>1846398</gbo:DealId>
+    </gbo:SGLAccountTBOCloseResponse>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

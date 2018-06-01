@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import ru.rbt.barsgl.shared.enums.CobPhase;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
@@ -32,7 +33,7 @@ import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
  * Created by akichigi on 09.03.17.
  */
 public class COBMonitoringDlg extends DlgFrame {
-    private final int steps = 7;
+    private final int steps = 9;    // must be = CobPhase.values().length;
     private final int barsCount = 20;
     private final String completeMessage = "Завершено {0}%";
     private final String phaseNameTmpl = "Фаза {0} {1}";

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/barsgl" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ear" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-bankjar" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-ejb" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-ejb-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-ejb-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-ejb-testing" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-ejbtest" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-ejbparent/barsgl-jpa" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt/barsgl-gwt-client" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt/barsgl-gwt-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt/barsgl-gwt-server" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt/barsgl-gwt-serverutil" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt/barsgl-gwt-servlet" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-gwt/barsgl-gwt-war" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-shared" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/barsgl-testjavadoc" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/grid" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/grid/grid-gwt-client" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/grid/grid-gwt-server" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/security" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/security/security-gwt-client" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/security/security-gwt-ejb" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/security/security-gwt-server" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/tasks" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/tasks/tasks-ejb" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/tasks/tasks-gwt-client" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/barsgl/tasks/tasks-gwt-server" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base/rbt-audit" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base/rbt-ejbcore" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base/rbt-prop" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base/rbt-shared" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base/security-ejb" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/rbt-base/security-jpa" charset="UTF-8" />
+  </component>
+</project>
