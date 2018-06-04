@@ -197,6 +197,7 @@ public class GLAccountController {
         return synchronizer.callSynchronously(monitor, () -> {
             return Optional.ofNullable(findGLAccount(bsaAcid)).orElseGet(()->{
                 String vCcode = "00" + bsaAcid.substring(11,13);
+                String[] bic_branch = glAccountRepository.getIMBCBBRP_bic_branch(vCcode);
 
                 GLAccount glAccount = new GLAccount();
                 glAccount.setBsaAcid(bsaAcid);
@@ -204,9 +205,9 @@ public class GLAccountController {
                 glAccount.setPassiveActive(psav);
                 glAccount.setFilial(glAccountRepository.getCBCC(vCcode));
                 glAccount.setCompanyCode(vCcode);
-                glAccount.setBranch(vCcode.substring(1,4));
+                glAccount.setBranch(bic_branch[1]);
                 glAccount.setCurrency(bankCurrencyRepository.getCurrency(glccy));
-                glAccount.setCustomerNumber(glAccountRepository.getIMBCBBRP_a8bicn(vCcode));
+                glAccount.setCustomerNumber(bic_branch[0]);
                 glAccount.setAccountType(0);
                 glAccount.setCbCustomerType((short)0);
                 glAccount.setBalanceAccount2(bsaAcid.substring(0, 5));

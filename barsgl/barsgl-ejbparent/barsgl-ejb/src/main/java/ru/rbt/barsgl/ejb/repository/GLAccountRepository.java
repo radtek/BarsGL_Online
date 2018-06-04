@@ -280,10 +280,14 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public String getIMBCBBRP_a8bicn(String bcbbr){
+    public String[] getIMBCBBRP_bic_branch(String bcbbr){
         try{
-            String sql = "select a8bicn from imbcbbrp where bcbbr=? and br_head='Y'";
-            return Optional.ofNullable(selectFirst(sql, bcbbr)).orElseThrow(()->new SQLException(" not found "+sql+" vs "+bcbbr)).getString(0);
+            String sql = "select a8bicn, a8brcd from imbcbbrp where bcbbr=? and br_head='Y'";
+            return Optional.ofNullable(selectFirst(sql, bcbbr))
+                            .map(res-> {
+                                return new String[]{res.getString(0), res.getString(1)};
+                            })
+                            .orElseThrow(()->new SQLException(" not found "+sql+" vs "+bcbbr));
         }catch (SQLException e){
             throw new DefaultApplicationException(e.getMessage(), e);
         }
