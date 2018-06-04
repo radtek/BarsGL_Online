@@ -19,7 +19,7 @@ public class WaitCloseReportData implements IExportData {
     private final String sql ="select BSAACID, CCY, PKG_ACC.GET_BALANCE(ACID, BSAACID, CCY) BAL, DEALID, SUBDEALID, DEALSRC, "+
             "case when IS_ERRACC='0' then 'закрытие сделки' "+
             " when IS_ERRACC='1' then 'отмена сделки' "+
-            " when IS_ERRACC='1' then 'изменение сделки' "+
+            " when IS_ERRACC='2' then 'изменение сделки' "+
             "else 'ХХХ' end IS_ERRACC, "+
             "OPERDAY, EXCLDATE " +
             "from GL_ACWAITCLOSE {0} order by OPERDAY";
