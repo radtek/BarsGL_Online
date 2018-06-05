@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
+import ru.rbt.barsgl.ejb.repository.AqRepository;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
 import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.ejbcore.datarec.DBParam;
@@ -310,9 +311,17 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         }
 
         // проверяем что сообщение в очереди ошибок
+        String exceptionQueueName = remoteAccess.invoke(AqRepository.class, "getExceptionQueueName");
+        String queueTableName = remoteAccess.invoke(AqRepository.class, "getQueueTableName");
+
+        List<DataRecord> errorMessages = baseEntityRepository.select("select Q_NAME from " + queueTableName +" t where t.user_data.id = ?", id);
+        Assert.assertEquals(1, errorMessages.size());
+        Assert.assertEquals(exceptionQueueName, errorMessages.get(0).getString("Q_NAME"));
+
+        // останавливаем обработку (?)
+
 
         // обрабатываем сообщение из ошибок (?)
-        // останавливаем обработку (?)
     }
 
     private void insertBaltur(String bsaacid, String acid, Date dat, Date datto) {
