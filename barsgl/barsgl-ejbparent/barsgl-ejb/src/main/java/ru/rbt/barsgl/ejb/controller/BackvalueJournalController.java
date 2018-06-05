@@ -84,20 +84,6 @@ public class BackvalueJournalController {
     public int recalculateLocal() throws Exception {
         return processRecalcException(connection -> {
             auditController.info(Localization, format("Начало пересчета/локализации по остаткам backvalue buffer"));
-            final int[] count = {0};
-            List<DataRecord> journal = journalRepository
-                    .selectMaxRows("select min(pod) min_pod, bsaacid, acid \n" +
-                    " from gl_bvjrnl j \n" +
-                    "where state = ? \n" +
-                    "  and pkg_localize_filter.check_total(bsaacid,acid,pod) = '1' \n" +
-                    "group by bsaacid, acid \n" +
-                    "order by 1,2,3", 20000, new Object[]{BackvalueJournalState.NEW.name()});
-            if (!journal.isEmpty()) {
-                auditController.info(Task, format("Начало пересчета/локализации. Записей в журнале BACKVALUE: '%s'", journal.size()));
-            } else {
-                auditController.info(Task, format("Пересчет/локализация не требуется. Записей в журнале BACKVALUE: '%s'", journal.size()));
-                return 0;
-            }
             // пересчет производится по таблице GL_LOCACC
             journalRepository.executeInNewTransaction(persistence -> {
                 DBParams result = journalRepository.executeCallable(textController.getContent("ru/rbt/barsgl/ejb/controller/local/InsertLocal.sql")
