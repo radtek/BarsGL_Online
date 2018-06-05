@@ -1,9 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.operday.task.dwh;
 
 import org.apache.commons.lang3.time.DateUtils;
-import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -12,8 +10,6 @@ import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
-import javax.ejb.EJB;
-import javax.validation.ValidationException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
@@ -54,7 +50,7 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
                             "begin\n" +
                                     "    PKG_DWHDEALS.process_deals(?, ?, ?, ?);\n" +
                                     "end;")){
-                        preparedStatement.setDate(1, new java.sql.Date(getLoadDateContext(properties).getTime()));
+                        preparedStatement.setDate(1, null != getLoadDateContext(properties) ? new java.sql.Date(getLoadDateContext(properties).getTime()) : null);
                         preparedStatement.setString(2, getLoadTypeContext(properties).name());
                         preparedStatement.setString(3, getDwhClosedDealsStatusTabname(properties));
                         preparedStatement.setString(4, getDwhClosedDealsTabname(properties));
@@ -92,12 +88,19 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
     @Override
     protected void initExec(String jobName, Properties properties) {
         Map<TaskProcessClosedContext, Object> context = new HashMap<>();
+        properties.put(MAP_KEY, context);
         context.put(TaskProcessClosedContext.LOAD_TYPE
                 , LoadType.valueOf(Optional.ofNullable(properties.getProperty(LOAD_TYPE_KEY)).orElse(LoadType.Discrete.name())));
         context.put(TaskProcessClosedContext.LOAD_DATE
-                , Optional.ofNullable(getLoadDate(properties)).orElse(operdayController.getOperday().getLastWorkingDay()));
+                , Optional.ofNullable(getLoadDate(properties)).orElseGet(
+                        () -> {
+                            if (getLoadTypeContext(properties) == LoadType.Full) {
+                                return null;
+                            } else {
+                                return operdayController.getOperday().getLastWorkingDay();
+                            }
+                        }));
         context.put(TaskProcessClosedContext.IS_LOAD_DATE_PRESET, properties.getProperty(LOAD_DATE_KEY) != null);
-        properties.put(MAP_KEY, context);
     }
 
     private Date getLoadDate(Properties properties) {

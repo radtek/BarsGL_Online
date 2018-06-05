@@ -91,10 +91,11 @@ public class LoadBranchDictTask extends AbstractJobHistoryAwareTask {
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
         Date maxLoadDate = (Date)properties.get(PROP_MAXLOADDATE);
         Date dateLoad = (Date)properties.get(PROP_LOADDATE);
+        Date lwDate = operdayController.getOperday().getLastWorkingDay();
 
         if (getMode(properties).equals(Auto)){
-            if (branchDictRepository.isTaskProcessed(operdayController.getOperday().getLastWorkingDay())) {
-                auditController.info(LoadBranchDict, String.format("LoadBranchDictTask за LWDATE = %s уже успешно отработала", dbDateString(dateLoad)));
+            if (branchDictRepository.isTaskProcessed(lwDate)) {
+                auditController.info(LoadBranchDict, String.format("LoadBranchDictTask за LWDATE = %s уже успешно отработала", dbDateString(lwDate)));
                 return false;
             }
             if (branchDictRepository.isTaskProcessed(maxLoadDate)){
