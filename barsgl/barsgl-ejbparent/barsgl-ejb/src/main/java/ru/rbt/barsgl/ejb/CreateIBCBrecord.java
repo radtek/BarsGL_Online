@@ -108,7 +108,7 @@ public class CreateIBCBrecord {
 
     public String calculateControlNumber(String bic, String account)
     {
-        String sCode = String.valueOf(bic) + String.valueOf(account);
+        String sCode = bic + account;
         int k = 0;
         for(int i = 0; i < sCode.length(); i++)
         {
@@ -128,7 +128,7 @@ public class CreateIBCBrecord {
         }
 
         int controlNumber = ((k % 10) * 3) % 10;
-        return String.valueOf(String.valueOf((new StringBuilder(String.valueOf(String.valueOf(account.substring(0, 8))))).append(String.valueOf(controlNumber)).append(account.substring(9))));
+        return (new StringBuilder(account.substring(0, 8))).append(controlNumber).append(account.substring(9)).toString();
     }
 
 }

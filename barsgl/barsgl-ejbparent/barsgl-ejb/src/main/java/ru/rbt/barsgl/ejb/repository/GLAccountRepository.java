@@ -214,43 +214,42 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) {
-        try {
-            String sql = "select ccbbr code, bxbicc bic from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
-                         "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
-            DataRecord res = selectFirst( sql, branch);
-            if (res != null){
-                code.append(res.getString(0));
-                if (res.getString(1).length() >= 9){
-                    bic.append(res.getString(1).substring(6, 9));
-                }else {
-                    bic.append(res.getString(1));
-                }
-            }else{
-                throw new SQLException("not found " + sql + " vs " + branch);
-            }
-        }catch (SQLException e){
-                throw new DefaultApplicationException(e.getMessage(), e);
-        }
-
-//        String sql = "select ccbbr, bxbicc from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
-//                "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
-//        try (PreparedStatement statement = process.connection().prepareStatement(sql)){
-//            statement.setString(1, branch);
-//            try (ResultSet result = statement.executeQuery()){
-//                String code = null;
-//                String bic = null;
-//                if(result.next())
-//                {
-//                    code = result.getString(1);
-//                    String _bic = result.getString(2);
-//                    if(_bic.length() >= 9)
-//                        bic = _bic.substring(6, 9);
-//                }
-//                return (new String[] {code, bic});
-//            }
-//        }
+    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) throws SQLException {
+        String sql = "select ccbbr code, bxbicc bic from imbcbcmp p "+
+                     "join imbcbbrp r on p.ccbbr=r.bcbbr and r.br_head='Y' "+
+                     "left join sdcustpd c on c.bbcust=r.a8bicn where p.ccpcd=?";
+        Optional.ofNullable(selectFirst( sql, branch))
+                .map(res->{
+                    code.append(res.getString(0));
+                    if (res.getString(1).length() >= 9){
+                        bic.append(res.getString(1).substring(6, 9));
+                    }else {
+                        bic.append(res.getString(1));
+                    }
+                   return 1;
+                })
+                .orElseThrow(()->new SQLException(" not found " + sql+" vs " + branch));
     }
+
+//    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) {
+//        try {
+//            String sql = "select ccbbr code, bxbicc bic from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
+//                         "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
+//            DataRecord res = selectFirst( sql, branch);
+//            if (res != null){
+//                code.append(res.getString(0));
+//                if (res.getString(1).length() >= 9){
+//                    bic.append(res.getString(1).substring(6, 9));
+//                }else {
+//                    bic.append(res.getString(1));
+//                }
+//            }else{
+//                throw new SQLException("not found " + sql + " vs " + branch);
+//            }
+//        }catch (SQLException e){
+//                throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
 
 
 
