@@ -4,7 +4,7 @@
     <parent>
         <artifactId>barsgl-ejbparent</artifactId>
         <groupId>ru.rbt</groupId>
-        <version>4.0.12</version>
+        <version>4.0.13-SNAPSHOT</version>
     </parent>
 
     <artifactId>barsgl-ejbtest</artifactId>
