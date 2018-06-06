@@ -854,6 +854,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // проводка бэквалуе
         GLOperation operation1 = createOperation(lwday);
+        includeBs2ByOperation(operation1);
         List<Pd> pds = getPds(baseEntityRepository, operation1);
         Assert.assertEquals(2, pds.size());
         log.info("pcid1 = " + pds.get(0).getPcId());
