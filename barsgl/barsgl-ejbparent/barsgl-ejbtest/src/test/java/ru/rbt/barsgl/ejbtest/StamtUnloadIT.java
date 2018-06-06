@@ -305,6 +305,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date unloadDate = DateUtils.parseDate(operday, "dd.MM.yyyy");
         Date backdate = DateUtils.addDays(unloadDate, -2);
         setOperday(unloadDate, backdate, ONLINE, OPEN);
+        setOnlineBalanceMode();
 
         GLOperation operation = getOneOperBackdate(getOperday());
         long pcid = getPcid(operation);
@@ -939,6 +940,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         remoteAccess.invoke(PropertiesRepository.class, "flushCache");
 
         updateOperday(ONLINE, OPEN, BUFFER);
+        setOnlineBalanceMode();
         GLOperation operation = createOper(getOperday().getLastWorkingDay());
 
         for (GLPd pd : (List<GLPd>)baseEntityRepository.select(GLPd.class, "from GLPd d where d.glOperationId = ?1", operation.getId())) {
