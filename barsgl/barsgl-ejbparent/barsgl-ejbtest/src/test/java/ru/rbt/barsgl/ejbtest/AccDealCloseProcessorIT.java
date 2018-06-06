@@ -459,7 +459,6 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
      */
     @Test
     public void testConnectToQueue() throws Exception {
-        // Test
         long idAudit = getAuditMaxId();
         remoteAccess.invoke(AccDealCloseQueueController.class, "closeConnection");
 
