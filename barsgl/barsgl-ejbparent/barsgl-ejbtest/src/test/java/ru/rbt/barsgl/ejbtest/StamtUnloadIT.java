@@ -15,6 +15,7 @@ import ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
@@ -817,6 +818,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         updateOperday(ONLINE, OPEN, BUFFER);
         GLOperation operation = createOper(getOperday().getLastWorkingDay());
+
+        for (GLPd pd : (List<GLPd>)baseEntityRepository.select(GLPd.class, "from GLPd d where d.glOperationId = ?1", operation.getId())) {
+            registerForStamtUnload(pd.getBsaAcid());
+        }
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
         final String jobName = SyncStamtBackvalueTaskP2.class.getSimpleName();
