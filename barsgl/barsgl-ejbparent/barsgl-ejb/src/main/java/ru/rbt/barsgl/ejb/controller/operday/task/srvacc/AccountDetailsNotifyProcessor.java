@@ -46,7 +46,7 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
     public static final String parentNodePath = "Body/AccountList/AccountDetails";
 
     // TODO нельзя делать static SimpleDateFormat!!
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     // многопоточный форматтер
 //    protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
