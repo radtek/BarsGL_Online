@@ -84,6 +84,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         Assert.assertEquals(GLAccount.RelationType.ZERO.getValue(), account.getRelationType());
         Assert.assertNull(account.getDescription());
 
+        Thread.sleep(1000L);
         checkJournal(journalId, FCC, bsaacid);
     }
 

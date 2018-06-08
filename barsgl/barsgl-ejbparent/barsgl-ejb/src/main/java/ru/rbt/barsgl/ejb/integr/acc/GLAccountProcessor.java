@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.acc.*;
@@ -12,6 +13,7 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -25,6 +27,8 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -162,7 +166,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
             String dealId = target.getDealId();
             String subDealId = target.getSubDealId();
             if (isEmpty(dealId) && !isEmpty(subDealId))
-                throw new ValidationError(SUBDEAL_ID_NOT_EMPTY, GLOperation.OperSide.N.getMsgName());
+                throw new ValidationError(SUBDEAL_ID_NOT_EMPTY, N.getMsgName());
         });
 
         // TODO дата открытия
@@ -288,7 +292,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     }
 
     public void checkDealId(final Date dateOpen, final String dealSource, final String dealId, final String subDealId, final String paymentRef) {   // AccountKeys keys,
-        GLOperation.OperSide side = GLOperation.OperSide.N;
+        GLOperation.OperSide side = N;
 
         // должен быть задан номер сделки
         if (isEmpty(dealId) && isEmpty(paymentRef)) {
@@ -321,6 +325,22 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         }
 
     }
+
+    public void validateGLAccountMnl(GLAccount glAccount, Date dateOpen, Date dateClose,
+                                     AccountKeys keys, ErrorList descriptors) throws Exception {
+        List<ValidationError> errors = validate(keys, new ValidationContext());
+        if (!errors.isEmpty()) {
+            throw new DefaultApplicationException(validationErrorMessage(N, errors, descriptors));
+        }
+        // Убрала проверку dealId - не надо для клиентских счетов и счетов доходов-расходов
+//        glAccountProcessor.checkDealId(dateOpen, keys.getDealSource(), keys.getDealId(), keys.getSubDealId());
+        checkDateOpenMnl(glAccount, dateOpen);
+        if (null != dateClose) {
+            checkDateCloseMnl(glAccount, dateOpen, dateClose);
+        }
+    }
+
+
 
     /**
      * Заполняет основные параметры счета
@@ -546,5 +566,238 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         result.append(validationErrorsToString(errors, descriptors));
         return result.toString();
     }
+
+    /**
+     * Заполняет недостающие ключи счета Майдас для счетов ОФР (PL)
+     *
+     * @param side
+     * @param dateOpen
+     * @param keys
+     * @return
+     */
+    public AccountKeys fillAccountOfrKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
+        // TODO заполнить ключи счета из справочников
+        DataRecord data = glAccountRepository.getAccountParams(keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), dateOpen);
+        if (null == data) {
+            throw new ValidationError(ACCOUNT_PARAMS_NOT_FOUND, side.getMsgName(),
+                    keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
+                    dateUtils.onlyDateString(dateOpen));
+        }
+
+        // параметры счета ЦБ
+        keys.setAccount2(data.getString("ACC2"));       // ACC2
+        keys.setPlCode(data.getString("PLCODE"));       // PLCODE
+
+        // параметры счета Майдас
+        keys.setAccountCode(data.getString("ACOD"));    // ACOD
+        keys.setAccSequence(data.getString("SQ"));      // SQ
+
+        // тип собственности
+        keys.setCustomerType(data.getString("CUSTYPE"));
+
+        // счет Майдас
+        int cnum = (int) stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
+        short iacod = (short) stringToLong(side, "ACOD Midas", keys.getAccountCode(), AccountKeys.getiAccountCode());
+        short isq = (short) stringToLong(side, "SQ Midas", keys.getAccSequence(), AccountKeys.getiAccSequence());
+        String acid = glAccountRepository.makeMidasAccount(
+                cnum,
+                keys.getCurrency(),
+                keys.getBranch(),
+                iacod,
+                isq
+        );
+        keys.setAccountMidas(acid);
+
+        return keys;
+    }
+
+    /**
+     * Заполняет недостающие параметры ключей счета ЦБ
+     *
+     * @param keys
+     */
+    public AccountKeys fillAccountOfrKeys(GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) {
+        AccountKeys keys1 = fillAccountKeys(operSide, dateOpen, keys);
+
+        keys.setPassiveActive(glAccountRepository.getPassiveActive(keys1.getAccount2()));  // TODO ???
+
+        if (org.apache.commons.lang3.StringUtils.isEmpty(keys.getCustomerType())) {
+            keys.setCustomerType("0");
+        }
+        keys.setRelationType("2");
+
+        return keys;
+    }
+
+    /**
+     * Заполняет недостающие параметры ключей счета ЦБ
+     *
+     * @param keys
+     */
+    public AccountKeys fillAccountKeys(GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) {
+        // валюты ЦБ
+        BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
+        keys.setCurrencyDigital(currency.getDigitalCode());
+
+        // филиал и код компанаа
+        DataRecord data = glAccountRepository.getFilialByBranch(keys.getBranch());
+        if (null == data) {
+            throw new ValidationError(BRANCH_NOT_FOUND, "", keys.getBranch(), Long.toString(AccountKeys.getiBranch()));
+        }
+        keys.setFilial(data.getString(0));
+        String cbccn = data.getString(1);
+        if (org.apache.commons.lang3.StringUtils.isEmpty(keys.getCompanyCode())) {
+            keys.setCompanyCode(data.getString(1));
+        } else {
+            if (!keys.getCompanyCode().equals(cbccn)) {
+                throw new ValidationError(COMPANY_CODE_NOT_VALID, "",
+                        keys.getCompanyCode(), Long.toString(AccountKeys.getiCompanyCodeN()),
+                        keys.getBranch(), Long.toString(AccountKeys.getiBranch()));
+            }
+
+        }
+        return keys;
+    }
+
+    /**
+     * Заполняет недостающие ключи счета Майдас
+     *
+     * @param side
+     * @param keys
+     */
+    public AccountKeys fillAccountKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
+        boolean isGlSeqXX = !org.apache.commons.lang3.StringUtils.isEmpty(keys.getGlSequence()) && keys.getGlSequence().toUpperCase().startsWith("XX");
+        /* не будем подменять пришедшие реальные данные, чтоб потом не думать, что сохранять
+        if (isEmpty(keys.getCustomerType())) {
+            keys.setCustomerType("00");
+        }
+        if (isEmpty(keys.getTerm())) {
+            keys.setTerm("00");
+        }*/
+        DataRecord data = glAccountRepository.getAccountParams(keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), dateOpen);
+        if (null == data) {
+            throw new ValidationError(ACCOUNT_PARAMS_NOT_FOUND, side.getMsgName(),
+                    keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
+                    dateUtils.onlyDateString(dateOpen));
+        }
+        // ACC2, PLCODE
+        String acc2 = data.getString("ACC2");
+        if (org.apache.commons.lang3.StringUtils.isEmpty(keys.getAccount2())) {
+            keys.setAccount2(acc2);
+        } else if (!(keys.getAccount2().equals(acc2))) {
+            final Error error = new ValidationError(ACCOUNT2_NOT_VALID, side.getMsgName(), keys.getAccount2(), acc2,
+                    keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), Long.toString(AccountKeys.getiAccountType()));
+            if (isKPlusTP(keys)) {
+                warnForParameterize(error);
+            } else {
+                throw error;
+            }
+        }
+        if (isGlSeqXX && data.getString("PLCODE") != null){
+            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, side.getMsgName(), defaultString(keys.getAccountType()), defaultString(keys.getCustomerNumber()), defaultString(keys.getAccountCode())
+                    , defaultString(keys.getAccSequence()), defaultString(keys.getDealId()), defaultString(keys.getPlCode()), defaultString(keys.getGlSequence()));
+        }
+
+        if (org.apache.commons.lang3.StringUtils.isEmpty(keys.getPlCode())) {
+            keys.setPlCode(ifEmpty(data.getString("PLCODE"), ""));
+        }
+        // параметры счета Майдас
+        String acod = data.getString("ACOD");
+        String sq = data.getString("SQ");
+        if (org.apache.commons.lang3.StringUtils.isEmpty(keys.getAccountCode())) {       // не задан ACOD:
+            keys.setAccountCode(acod);                  // взять ACOD из параметров
+        } else {    // ACOD задан: ACOD и SQ в ключах должны совпадать с определенными из параметров
+            if ( !(acod.equals(keys.getAccountCode()) && (sq.equals(keys.getAccSequence()) || sq.equals("00"))) ) {
+                final Error error = new ValidationError(MIDAS_PARAMS_NOT_VALID, side.getMsgName(), keys.getAccountCode(), keys.getAccSequence(), acod, sq,
+                        keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
+                        Long.toString(AccountKeys.getiAccountCode()) + "," + Long.toString(AccountKeys.getiAccSequence()));
+                if (isKPlusTP(keys)) {
+                    warnForParameterize(error);
+                } else {
+                    throw error;
+                }
+            }
+        }
+        // подмена сиквенса Майдас для сделок FCC
+        keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
+
+        int cnum = (int) stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
+        short iacod = (short) stringToLong(side, "ACOD Midas", keys.getAccountCode(), AccountKeys.getiAccountCode());
+        short isq = (short) stringToLong(side, "SQ Midas", keys.getAccSequence(), AccountKeys.getiAccSequence());
+        String acid = glAccountRepository.makeMidasAccount(
+                cnum,
+                keys.getCurrency(),
+                keys.getBranch(),
+                iacod,
+                isq
+        );
+        keys.setAccountMidas(acid);
+        return keys;
+    }
+
+    /**
+     * Определяет SQ на замену для формирования счета Midas
+     *
+     * @param keys    - ключи счета
+     * @param paramSQ - SQ, определенный по таблице параметров
+     * @return
+     */
+    private String getMidasSequenceForDeal(GLOperation.OperSide side, Date dateOpen, AccountKeys keys, final String paramSQ) {
+        final String keysSQ = keys.getAccSequence();                  // SQ из ключей
+        final String defaultSQ = org.apache.commons.lang3.StringUtils.isEmpty(keysSQ) ? paramSQ : keysSQ;  // SQ по умолчанию
+        // номер сделки
+        String dealId = keys.getDealId();
+        if (org.apache.commons.lang3.StringUtils.isEmpty(dealId)) {
+            return defaultSQ;              // номер сделки не задан, подмена не нужна
+        }
+        // параметры по источнику сделки
+        DataRecord param = glAccountRepository.getDealSQParams(keys.getDealSource(), dateOpen);
+        if (null == param) {
+            return defaultSQ;              // для этого источника подмена не нужна
+        }
+
+        // найти SQ по номеру клиента, валюте и номеру сделки
+        final String dealIDfrom = param.getString("DEALID");
+        if (!dealIDfrom.equals("Y")) {
+            dealId = keys.getSubDealId();       // номер сделки из субсделки
+            if (org.apache.commons.lang3.StringUtils.isEmpty(dealId)) {              // не задан subDealID
+                throw new ValidationError(SUBDEAL_ID_IS_EMPTY, side.getMsgName());
+            }
+        }
+        final String custNo = keys.getCustomerNumber();
+        final String ccy = keys.getCurrency();
+        final String dealSQ = glAccountRepository.getDealSQ(custNo, ccy, dealId);
+        if (!org.apache.commons.lang3.StringUtils.isEmpty(dealSQ)) {                 // SQ для сделки уже задан
+            if (!org.apache.commons.lang3.StringUtils.isEmpty(keysSQ) && !keysSQ.equals(dealSQ)) { // если SQ в ключах задан, он должен совпадать с SQ сделки
+                throw new ValidationError(MIDAS_SQ_IS_DIFFERENT, side.getMsgName(), keysSQ, dealSQ, dealId);
+            }
+            return dealSQ;
+        }
+
+        // определим, надо ли новый номер SQ
+        final String check = param.getString("CHECK");
+        if (check.equals("Y")) {
+            return paramSQ;             // не надо, возвращаем из параметров
+        }
+
+        // надо
+        if (org.apache.commons.lang3.StringUtils.isEmpty(keysSQ)) {      // SQ в ключах не был задан, возвращаем SQ из параметров
+            return paramSQ;
+        } else {                    // SQ в ключах задан
+            if (!paramSQ.equals(keysSQ)) {      // записать новый SQ для сделки& если не совпадает со стандартным
+                glAccountRepository.addDealSQ(custNo, ccy, dealId, keysSQ);
+            }
+            return keysSQ;          // возвращаем SQ из ключей
+        }
+    }
+
+    private boolean isKPlusTP(AccountKeys keys) {
+        return !org.apache.commons.lang3.StringUtils.isEmpty(keys.getDealSource()) && keys.getDealSource().equalsIgnoreCase("K+TP");
+    }
+
+    private void warnForParameterize(Error error) {
+        auditController.warning(AuditRecord.LogCode.Account, "Предупреждение для параметризации АЕ", null, error);
+    }
+
 
 }

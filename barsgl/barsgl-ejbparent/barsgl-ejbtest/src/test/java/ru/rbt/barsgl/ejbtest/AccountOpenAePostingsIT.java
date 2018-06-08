@@ -15,10 +15,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
-import ru.rbt.barsgl.ejb.integr.acc.GLAccountCounterType;
-import ru.rbt.barsgl.ejb.integr.acc.GLAccountExcludeInterval;
-import ru.rbt.barsgl.ejb.integr.acc.GLAccountFrontPartController;
+import ru.rbt.barsgl.ejb.integr.acc.*;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -34,6 +31,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -837,8 +835,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         deleteGlAccountWithLinks(baseEntityRepository, accountKeyCt);
         deleteGlAccountWithLinks(baseEntityRepository, accountKeyDt);
 
-        final AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, pst.getValueDate(), acCt);
+        final AccountKeys keys1 = fillAccountKeysMidas(C, pst.getValueDate(), acCt);
         if (!isEmpty(keys1.getAccountMidas())) {
             deleteAccountByAcid(baseEntityRepository, keys1.getAccountMidas());
         }
@@ -848,8 +845,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // , источник ru.rbt.barsgl.ejb.integr.acc.GLAccountController:595
         Throwable exception = null;
         try {
-            remoteAccess.invoke(GLAccountController.class
-                    , "fillAccountKeysMidas", D, pst.getValueDate(), acDt);
+            fillAccountKeysMidas(D, pst.getValueDate(), acDt);
         }catch(Throwable e){
             exception = e;
         }
@@ -901,8 +897,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         deleteGlAccountWithLinks(baseEntityRepository, accountKeyCt);
         deleteGlAccountWithLinks(baseEntityRepository, accountKeyDt);
 
-        final AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, pst.getValueDate(), acCt);
+        final AccountKeys keys1 = fillAccountKeysMidas(C, pst.getValueDate(), acCt);
         if (!isEmpty(keys1.getAccountMidas())) {
             deleteAccountByAcid(baseEntityRepository, keys1.getAccountMidas());
         }
@@ -912,8 +907,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // , источник ru.rbt.barsgl.ejb.integr.acc.GLAccountController:595
         Throwable exception = null;
         try {
-            remoteAccess.invoke(GLAccountController.class
-                    , "fillAccountKeysMidas", D, pst.getValueDate(), acDt);
+            fillAccountKeysMidas(D, pst.getValueDate(), acDt);
         }catch(Throwable e){
             exception = e;
         }
@@ -1090,22 +1084,19 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // первая сделка - SQ задан, не должен измениться
         String sq0 = "78";
         keys0.setAccSequence(sq0);
-        final AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys1 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq0, keys1.getAccSequence());
         Assert.assertEquals(sq0, substring(keys1.getAccountMidas(), 15, 17));
 
         // снова первая сделка - SQ не задан, получить предыдущий SQ
         keys0.setAccSequence("");
-        final AccountKeys keys2 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys2 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq0, keys2.getAccSequence());
 
         // и снова первая сделка - SQ другой, ошибка
         keys0.setAccSequence("79");
         try {
-            final AccountKeys keys6 = remoteAccess.invoke(GLAccountController.class
-                    , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+            final AccountKeys keys6 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(true);
@@ -1114,38 +1105,33 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // вторая сделка, SQ не задан - взять из параметров
         keys0.setDealId("FL_" + System.currentTimeMillis());
         keys0.setAccSequence("");
-        final AccountKeys keys5 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys5 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals("00", keys5.getAccSequence());
 
         // пустой номер сделки, SQ задан - не должен измениться
         keys0.setDealId("");
         String sq3 = "72";
         keys0.setAccSequence(sq3);
-        final AccountKeys keys3 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys3 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq3, keys3.getAccSequence());
 
         // пустой номер сделки, SQ не задан - взять из параметров
         keys0.setAccSequence("");
-        final AccountKeys keys4 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys4 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals("00", keys4.getAccSequence());
 
         // новая сделка, ACOD и SQ заданы - не меняются, норма
         keys0.setDealId("FL_" + System.currentTimeMillis());
         keys0.setAccountCode("6603");
         keys0.setAccSequence("00");
-        final AccountKeys keys7 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys7 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals("00", keys7.getAccSequence());
 
         // новая сделка, ACOD и SQ заданы неверно - ошибка
         keys0.setDealId("FL_" + System.currentTimeMillis());
         keys0.setAccountCode("91317");
         try {
-            final AccountKeys keys8 = remoteAccess.invoke(GLAccountController.class
-                    , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+            final AccountKeys keys8 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(true);
@@ -1155,8 +1141,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         keys0.setDealId("FL_" + System.currentTimeMillis());
         keys0.setAccSequence("01");
         try {
-            final AccountKeys keys9 = remoteAccess.invoke(GLAccountController.class
-                    , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+            final AccountKeys keys9 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(true);
@@ -1194,16 +1179,14 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         keys0.setSubDealId("SUB_" + System.currentTimeMillis());
         String sq0 = "81";
         keys0.setAccSequence(sq0);
-        final AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys1 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq0, keys1.getAccSequence());
 
         // первая слелка, источник MZO - SQ не задан, вернуть предыдущий
         keys0.setDealSource("MZO");
         keys0.setDealId("MZO_" + System.currentTimeMillis());
         keys0.setAccSequence("");
-        final AccountKeys keys2 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys2 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq0, keys2.getAccSequence());
 
         // вторая слелка, источник ARMPRO, SQ задан - не меняется
@@ -1211,30 +1194,26 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         keys0.setDealId("ARM_" + System.currentTimeMillis());
         String sq3 = "82";
         keys0.setAccSequence(sq3);
-        final AccountKeys keys3 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys3 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq, keys3.getAccSequence());
 
         // вторая слелка, источник ARMPRO, SQ не задан - вернуть из параметров
         keys0.setDealSource("ARMPRO");
         keys0.setAccSequence("");
-        final AccountKeys keys4 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys4 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq, keys4.getAccSequence());
 
         // вторая слелка, K+TP, SQ задан - остается без изменения
         keys0.setDealSource("K+TP");
         String sq5 = "83";
         keys0.setAccSequence(sq5);
-        final AccountKeys keys5 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys5 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq5, keys5.getAccSequence());
 
         // вторая слелка, K+TP, SQ не задан - вернуть из параметров
         keys0.setDealSource("K+TP");
         keys0.setAccSequence("");
-        final AccountKeys keys6 = remoteAccess.invoke(GLAccountController.class
-                , "fillAccountKeysMidas", C, getOperday().getCurrentDate(), keys0);
+        final AccountKeys keys6 = fillAccountKeysMidas(C, getOperday().getCurrentDate(), keys0);
         Assert.assertEquals(sq, keys6.getAccSequence());
 
     }
@@ -1542,10 +1521,8 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00").withPlCode(record.getString("PLCODE").trim())
                 .withGlSequence("PL").withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim()).withAccSequence(record.getString("ac_sq").trim())
                 .build();
-        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeysMidas"
-                , C, getOperday().getCurrentDate(), acCt);
-        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeys"
-                , C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
 
         Assert.assertFalse(StringUtils.isEmpty(acCt.getAccountMidas()));
         cleanAccountsByMidas(acCt.getAccountMidas());
@@ -1592,10 +1569,8 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
                 .withAccSequence(record.getString("ac_sq").trim())
                 .build();
-        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeysMidas"
-                , C, getOperday().getCurrentDate(), acCt);
-        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeys"
-                , C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
 
         cleanAccountsByMidas(acCt.getAccountMidas());
 
@@ -1650,10 +1625,8 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
                 .withAccSequence(record.getString("ac_sq").trim())
                 .build();
-        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeysMidas"
-                , C, getOperday().getCurrentDate(), acCt);
-        acCt = remoteAccess.invoke(GLAccountController.class, "fillAccountOfrKeys"
-                , C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
 
         cleanAccountsByMidas(acCt.getAccountMidas());
 
@@ -1700,8 +1673,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 && ( keys.getGlSequence().startsWith("XX") || keys.getGlSequence().startsWith("PL"));
         final String rlnType = Optional.ofNullable(relationType).orElseGet(() ->
         {
-            AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class,
-                    "fillAccountKeysMidas",  GLOperation.OperSide.N, account.getDateOpen(), keys);
+            AccountKeys keys1 = fillAccountKeysMidas(GLOperation.OperSide.N, account.getDateOpen(), keys);
             String acidInt = keys1.getAccountMidas();
             Assert.assertFalse(isEmpty(acidInt));
             return GLAccount.RelationType.parse(!accMidas
@@ -1714,7 +1686,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
             acid = account.getAcid();
             Assert.assertFalse(isEmpty(acid));
         } else {                                        // счет существует
-            AccountKeys keys1 = remoteAccess.invoke(GLAccountController.class, "fillAccountKeysMidas", GLOperation.OperSide.N, keys);
+            AccountKeys keys1 = fillAccountKeysMidas(GLOperation.OperSide.N, account.getDateOpen(), keys);
             acid = keys1.getAccountMidas();
             Assert.assertFalse(isEmpty(acid));
         }
@@ -1746,6 +1718,21 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
     private void cleanAccountsByMidas(String acid) {
         logger.info("deleted gl_acc: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where acid = ?", acid));
 
+    }
+
+    private static AccountKeys fillAccountKeysMidas(GLOperation.OperSide operSide, Date vdate, AccountKeys keys) {
+        return remoteAccess.invoke(GLAccountProcessor.class
+                , "fillAccountKeysMidas", operSide, vdate, keys);
+    }
+
+    private AccountKeys fillAccountOfrKeysMidas(GLOperation.OperSide operSide, Date vdate, AccountKeys keys) {
+        return remoteAccess.invoke(GLAccountProcessor.class, "fillAccountOfrKeysMidas"
+                , operSide, vdate, keys);
+    }
+
+    private AccountKeys fillAccountOfrKeys(GLOperation.OperSide operSide, Date vdate, AccountKeys keys) {
+        return remoteAccess.invoke(GLAccountProcessor.class, "fillAccountOfrKeys"
+            , operSide, vdate, keys);
     }
 
 }
