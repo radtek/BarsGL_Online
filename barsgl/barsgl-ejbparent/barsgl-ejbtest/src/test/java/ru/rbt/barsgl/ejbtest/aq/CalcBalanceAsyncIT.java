@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.SELECTED;
 
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
@@ -198,10 +199,12 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     }
 
     @Test public void testBvjrnl() throws Exception {
+
+        setGibridBalanceMode();
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl");
         baseEntityRepository.executeNativeUpdate("delete from gl_locacc");
 
-        GLAccount account1 = findAccount("40702810%");
+        GLAccount account1 = findAccount("40702840%");
         Date pod0 = DateUtils.parseDate("2018-09-01", "yyyy-MM-dd");
         Date pod1 = DateUtils.addDays(pod0, 1);
         Date pod2 = DateUtils.addDays(pod0, 2);
@@ -213,9 +216,13 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         List<DataRecord> bvs = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid = ?", account1.getBsaAcid());
         Assert.assertTrue(bvs.stream().anyMatch(r -> r.getLong("seq") != null));
 
-        GLAccount account2 = findAccount("40701810%");
+        GLAccount account2 = findAccount("40701840%");
         cleanBvjrnlRecord(account2);
         insertBvJrnl(account2, NEW, pod0);
+
+        GLAccount account3 = findAccount("40701810%"); // по этому счету локализации не будет - не пройдет фильтр
+        cleanBvjrnlRecord(account3);
+        insertBvJrnl(account3, NEW, pod0);
 
         DBParams params = DBParams.createParams(new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT)
                 ,new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT));
@@ -245,7 +252,14 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         // не проверяем
         Assert.assertEquals(0, params2.getParams().get(0).getValue());
         List<DataRecord> bvRecs =  baseEntityRepository.select("select * from gl_bvjrnl");
-        Assert.assertTrue(bvRecs.stream().allMatch(r -> NEW.name().equals(r.getString("STATE"))));
+
+
+        // рублевый счет отвалился на фильтре
+        Assert.assertEquals(1L,
+                bvRecs.stream().filter(r -> SELECTED.name().equals(r.getString("STATE")) && account3.getBsaAcid().equals(r.getString("bsaacid"))).count());
+        Assert.assertEquals(4L,
+                bvRecs.stream().filter(r -> NEW.name().equals(r.getString("STATE")) && !account3.getBsaAcid().equals(r.getString("bsaacid"))).count());
+
         params2 = baseEntityRepository.executeCallable(
                 "declare\n" +
                 "    l_cnt number;\n" +
