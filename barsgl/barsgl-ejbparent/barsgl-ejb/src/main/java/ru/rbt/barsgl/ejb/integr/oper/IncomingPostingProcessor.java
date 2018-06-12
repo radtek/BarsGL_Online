@@ -14,15 +14,12 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 
@@ -40,10 +37,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOS
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-
-import ru.rbt.ejbcore.util.DateUtils;
-
-import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.*;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
@@ -534,45 +529,20 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         operation.setCurrencyDebit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit()));
         operation.setCurrencyCredit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit()));
 
-        // код субвалюты
-        operation.setSubCcyDebit(getSubCcy(operation.getAccountDebit(), operation.getCurrencyDebit().getCurrencyCode()));
-        operation.setSubCcyCredit(getSubCcy(operation.getAccountCredit(), operation.getCurrencyCredit().getCurrencyCode()));
-
         // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
-        BigDecimal rateDebit = getRate(operation.getSubCcyDebit(), operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
-//        BigDecimal rateDebit = operation.getSubCcyDebit().trim().isEmpty()?
-//                rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate()):
-//                glOperationRepository.getSubCcyRate(operation.getSubCcyDebit());
-//        BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
+        BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
         BigDecimal eqvDebit = rateRepository.getEquivalent(rateDebit, operation.getAmountDebit());
         operation.setRateDebit(rateDebit);
         operation.setEquivalentDebit(eqvDebit);
 
         // параметры КРЕДИТА: курс валюты, рублевый эквивалент
-        BigDecimal rateCredit = getRate(operation.getSubCcyCredit(), operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
-//        BigDecimal rateCredit = operation.getSubCcyCredit().trim().isEmpty()?
-//                rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate()):
-//                glOperationRepository.getSubCcyRate(operation.getSubCcyCredit());
-//        BigDecimal rateCredit = rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
+        BigDecimal rateCredit = rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
         BigDecimal eqvCredit = rateRepository.getEquivalent(rateCredit, operation.getAmountCredit());
         operation.setRateCredit(rateCredit);
         operation.setEquivalentCredit(eqvCredit);
 
         // параметры обмена валюты
         setExchengeParameters(operation);
-    }
-
-    private BigDecimal getRate(String subCcy, String currencyCode, Date postDate){
-        return subCcy == null || subCcy.trim().isEmpty()?
-               rateRepository.getRate(currencyCode, postDate):
-               glOperationRepository.getSubCcyRate(subCcy);
-    }
-
-    private String getSubCcy(String account, String ccy){
-        if (!ccy.equals(BankCurrency.RUB) && account != null &&!account.trim().isEmpty()){
-            return glOperationRepository.getSubCcy(account);
-        }
-        return "";
     }
 
     /**

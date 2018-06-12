@@ -22,7 +22,6 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -52,39 +51,6 @@ public class GLOperationRepository extends AbstractBaseEntityRepository<GLOperat
 
     @EJB
     private GLAccountRepository glAccountRepository;
-
-    /**
-     *  Получить rate для субвалюты
-     * @param subCcy
-     * @return
-     * @throws SQLException
-     */
-    public BigDecimal getSubCcyRate(String subCcy) {
-        String sql = "select rate from gl_subccy where subccy=?";
-        try {
-            return Optional.ofNullable(selectFirst(sql, subCcy))
-                   .orElseThrow(()->new DefaultApplicationException(sql+" vs "+subCcy))
-                   .getBigDecimal(0);
-        } catch (Exception e) {
-            new DefaultApplicationException(e.getMessage(), e);
-        }
-        return null;
-    }
-
-    /**
-     * Получить код субвалюты для счета
-     * @param bsaacid
-     * @return
-     */
-    public String getSubCcy(String bsaacid){
-        String sql = "select SUBCCY from GL_AC_SUBCCY where bsaacid = ?";
-        try{
-            DataRecord res = selectFirst(sql, bsaacid);
-            return (null != res) ? res.getString(0) : "";
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage()+ " "+sql+" vs "+bsaacid, e);
-        }
-    }
 
     /**
      * Определяет код компании (числовой код филиала) для счета
