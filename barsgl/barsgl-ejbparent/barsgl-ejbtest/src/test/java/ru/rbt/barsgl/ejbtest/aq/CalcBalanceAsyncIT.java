@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
+import ru.rbt.barsgl.ejb.repository.AqRepository;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
 import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.ejbcore.datarec.DBParam;
@@ -18,11 +19,13 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.SELECTED;
+import static ru.rbt.ejbcore.util.DateUtils.dbDateParse;
 
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
@@ -283,9 +286,14 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         checkCurrentBalanceMode(BalanceMode.GIBRID);
     }
 
-    @Test public void testErrors() throws SQLException, ParseException {
+    @Test public void testErrors() throws Exception {
 
         setGibridBalanceMode();
+        // проверка - очередь запущена на прием
+        DataRecord queue = baseEntityRepository.selectFirst("select * from user_queues where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
+        Assert.assertEquals("YES", queue.getString("ENQUEUE_ENABLED").trim());
+        Assert.assertEquals("YES", queue.getString("DEQUEUE_ENABLED").trim());
+
         stopListeningQueue();
         purgeQueueTable();
 
@@ -329,6 +337,13 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(exceptionQueueName, errorMessages.get(0).getString("Q_NAME"));
 
         // останавливаем обработку (?)
+
+        baseEntityRepository.executeNativeUpdate("BEGIN GLAQ_PKG_UTL.CHECK_ERROR_QUEUE; END;");
+
+        // проверка - очередь остановлена на прием
+        queue = baseEntityRepository.selectFirst("select * from user_queues where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
+        Assert.assertEquals("NO", queue.getString("ENQUEUE_ENABLED").trim());
+        Assert.assertEquals("YES", queue.getString("DEQUEUE_ENABLED").trim());
 
 
         // обрабатываем сообщение из ошибок (?)

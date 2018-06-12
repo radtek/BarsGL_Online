@@ -768,9 +768,11 @@ public class OperdaySynchronizationController {
     private void switchToTargetMode(BalanceMode  targetMode) throws Exception {
         if (EnumUtils.contains(new BalanceMode[]{GIBRID,ONLINE,ONDEMAND}, targetMode)) {
             operdayController.switchBalanceMode(targetMode);
-        } else if (NOCHANGE == targetMode) {
-            restorePreviousTriggersState();
         }
+        /*todo пока не будем ничего восстанавливать
+        else if (NOCHANGE == targetMode) {
+            restorePreviousTriggersState();
+        }*/
     }
 
 }
