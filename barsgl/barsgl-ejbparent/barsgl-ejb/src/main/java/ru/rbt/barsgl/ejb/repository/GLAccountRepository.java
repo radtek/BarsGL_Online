@@ -214,43 +214,42 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) {
-        try {
-            String sql = "select ccbbr code, bxbicc bic from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
-                         "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
-            DataRecord res = selectFirst( sql, branch);
-            if (res != null){
-                code.append(res.getString(0));
-                if (res.getString(1).length() >= 9){
-                    bic.append(res.getString(1).substring(6, 9));
-                }else {
-                    bic.append(res.getString(1));
-                }
-            }else{
-                throw new SQLException("not found " + sql + " vs " + branch);
-            }
-        }catch (SQLException e){
-                throw new DefaultApplicationException(e.getMessage(), e);
-        }
-
-//        String sql = "select ccbbr, bxbicc from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
-//                "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
-//        try (PreparedStatement statement = process.connection().prepareStatement(sql)){
-//            statement.setString(1, branch);
-//            try (ResultSet result = statement.executeQuery()){
-//                String code = null;
-//                String bic = null;
-//                if(result.next())
-//                {
-//                    code = result.getString(1);
-//                    String _bic = result.getString(2);
-//                    if(_bic.length() >= 9)
-//                        bic = _bic.substring(6, 9);
-//                }
-//                return (new String[] {code, bic});
-//            }
-//        }
+    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) throws SQLException {
+        String sql = "select ccbbr code, bxbicc bic from imbcbcmp p "+
+                     "join imbcbbrp r on p.ccbbr=r.bcbbr and r.br_head='Y' "+
+                     "left join sdcustpd c on c.bbcust=r.a8bicn where p.ccpcd=?";
+        Optional.ofNullable(selectFirst( sql, branch))
+                .map(res->{
+                    code.append(res.getString(0));
+                    if (res.getString(1).length() >= 9){
+                        bic.append(res.getString(1).substring(6, 9));
+                    }else {
+                        bic.append(res.getString(1));
+                    }
+                   return 1;
+                })
+                .orElseThrow(()->new SQLException(" not found " + sql+" vs " + branch));
     }
+
+//    public void getBicControlCode(String branch, StringBuilder code, StringBuilder bic) {
+//        try {
+//            String sql = "select ccbbr code, bxbicc bic from imbcbcmp p, imbcbbrp r left join sdcustpd c on c.bbcust=r.a8bicn " +
+//                         "where '0'||r.a8brcd=p.ccbbr and p.ccpcd=? ";
+//            DataRecord res = selectFirst( sql, branch);
+//            if (res != null){
+//                code.append(res.getString(0));
+//                if (res.getString(1).length() >= 9){
+//                    bic.append(res.getString(1).substring(6, 9));
+//                }else {
+//                    bic.append(res.getString(1));
+//                }
+//            }else{
+//                throw new SQLException("not found " + sql + " vs " + branch);
+//            }
+//        }catch (SQLException e){
+//                throw new DefaultApplicationException(e.getMessage(), e);
+//        }
+//    }
 
 
 
@@ -280,10 +279,14 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public String getIMBCBBRP_a8bicn(String bcbbr){
+    public String[] getIMBCBBRP_bic_branch(String bcbbr){
         try{
-            String sql = "select a8bicn from imbcbbrp where bcbbr=? and br_head='Y'";
-            return Optional.ofNullable(selectFirst(sql, bcbbr)).orElseThrow(()->new SQLException(" not found "+sql+" vs "+bcbbr)).getString(0);
+            String sql = "select a8bicn, a8brcd from imbcbbrp where bcbbr=? and br_head='Y'";
+            return Optional.ofNullable(selectFirst(sql, bcbbr))
+                            .map(res-> {
+                                return new String[]{res.getString(0), res.getString(1)};
+                            })
+                            .orElseThrow(()->new SQLException(" not found "+sql+" vs "+bcbbr));
         }catch (SQLException e){
             throw new DefaultApplicationException(e.getMessage(), e);
         }
@@ -756,6 +759,29 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
             throw new DefaultApplicationException(e.getMessage(), e);
         }
     }
+    /**
+     * Находит счет GLпо номеру счета ЦБ
+     *
+     * @param bsaAcid
+     * @return
+     */
+    public GLAccount findGLAccount(String bsaAcid, String acid) {
+        try {
+            DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and ACID = ?", bsaAcid, acid);
+            return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public GLAccount findGLAccountByDeal(String bsaAcid, String dealid) {
+        try {
+            DataRecord data = selectFirst("select ID from GL_ACC where BSAACID = ? and DEALID = ?", bsaAcid, dealid);
+            return (null == data) ? null : findById(GLAccount.class, data.getLong(0));
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
 
     public boolean isExistsGLAccountByOpenType(String bsaAcid) {
         try {
@@ -770,10 +796,15 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         try {
             DataRecord data = selectFirst("select PKG_CHK_ACC.GET_BALANCE_TODATE(?, ?, ?) from dual"
                     , bsaAcid, acid, datto);
-            return (null == data) ? BigDecimal.ZERO : data.getBigDecimal(0);
+            return ( null == data || null == data.getBigDecimal(0) ) ? BigDecimal.ZERO : data.getBigDecimal(0);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
+    }
+
+    public boolean isAccountBalanceZero(String bsaAcid, String acid, Date datto) {
+        BigDecimal bal = getAccountBalance(bsaAcid, acid, datto);
+        return BigDecimal.ZERO.equals(bal);
     }
 
     public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {

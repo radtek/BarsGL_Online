@@ -15,17 +15,20 @@ import ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPd;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
+import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -302,6 +305,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date unloadDate = DateUtils.parseDate(operday, "dd.MM.yyyy");
         Date backdate = DateUtils.addDays(unloadDate, -2);
         setOperday(unloadDate, backdate, ONLINE, OPEN);
+        setOnlineBalanceMode();
 
         GLOperation operation = getOneOperBackdate(getOperday());
         long pcid = getPcid(operation);
@@ -851,6 +855,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // проводка бэквалуе
         GLOperation operation1 = createOperation(lwday);
+        includeBs2ByOperation(operation1);
         List<Pd> pds = getPds(baseEntityRepository, operation1);
         Assert.assertEquals(2, pds.size());
         log.info("pcid1 = " + pds.get(0).getPcId());
@@ -931,8 +936,16 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
     @Test public void testSyncStamtIncrementWithoutStep () throws Exception {
 
+        baseEntityRepository.executeUpdate("update NumberProperty p set p.value = ?1 where p.id = ?2", 100L, ConfigProperty.SyncIcrementMaxGLPdCount.getValue());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+
         updateOperday(ONLINE, OPEN, BUFFER);
+        setOnlineBalanceMode();
         GLOperation operation = createOper(getOperday().getLastWorkingDay());
+
+        for (GLPd pd : (List<GLPd>)baseEntityRepository.select(GLPd.class, "from GLPd d where d.glOperationId = ?1", operation.getId())) {
+            registerForStamtUnload(pd.getBsaAcid());
+        }
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
         final String jobName = SyncStamtBackvalueTaskP2.class.getSimpleName();
@@ -956,6 +969,20 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         Assert.assertTrue(baseEntityRepository.select("select * from gl_etlstmd").stream().anyMatch(r -> postings.getId().equals(((DataRecord)r).getLong("pcid"))));
 
+        // еще операция чтобы проверить как работает ограничение на максимальное кол-во проводок бэквалу
+        GLOperation operation2 = createOper(getOperday().getLastWorkingDay());
+
+        // устанавливаем граничение - ноль
+        baseEntityRepository.executeUpdate("update NumberProperty p set p.value = ?1 where p.id = ?2", 0L, ConfigProperty.SyncIcrementMaxGLPdCount.getValue());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlstms set parvalue = '4' where parvalue <> '4'");
+
+        jobService.executeJob(incrJob);
+
+        JobHistory history2 = getLastHistRecordObject(jobName);
+        // новой выгрузки нет
+        Assert.assertEquals(history1, history2);
     }
 
     private void registerForStamtUnload(String bsaacid) {

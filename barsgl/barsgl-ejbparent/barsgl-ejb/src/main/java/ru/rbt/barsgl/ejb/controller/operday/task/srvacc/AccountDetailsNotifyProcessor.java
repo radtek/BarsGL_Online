@@ -42,11 +42,11 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
     public static final String journalName = "GL_ACDENO";
     public static final String charsetName = "UTF-8";
 
-    private static final String parentNodeName = "AccountDetails";
-    private static final String parentNodePath = "Body/AccountList/AccountDetails";
+    public static final String parentNodeName = "AccountDetails";
+    public static final String parentNodePath = "Body/AccountList/AccountDetails";
 
     // TODO нельзя делать static SimpleDateFormat!!
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     // многопоточный форматтер
 //    protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 

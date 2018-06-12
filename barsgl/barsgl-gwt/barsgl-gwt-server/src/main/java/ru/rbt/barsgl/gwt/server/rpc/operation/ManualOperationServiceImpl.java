@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.integr.bg.EditPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.ReprocessPostingService;
 import ru.rbt.barsgl.ejb.rep.PostingBackValueRep;
+import ru.rbt.barsgl.ejb.rep.WaitCloseAccountsRep;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -287,6 +288,19 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
             @Override
             protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
                 RpcRes_Base<Boolean> res = localInvoker.invoke(PostingBackValueRep.class, "operExists", date, limit);
+                if (res == null) throw new Throwable("Не удалось проверить наличие данных для отчета");
+                return res;
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> repWaitAcc(String begDate, String endDate, Boolean isAllAcc) throws Exception {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                RpcRes_Base<Boolean> res = localInvoker.invoke(WaitCloseAccountsRep.class, "repWaitAcc", begDate, endDate, isAllAcc);
                 if (res == null) throw new Throwable("Не удалось проверить наличие данных для отчета");
                 return res;
             }

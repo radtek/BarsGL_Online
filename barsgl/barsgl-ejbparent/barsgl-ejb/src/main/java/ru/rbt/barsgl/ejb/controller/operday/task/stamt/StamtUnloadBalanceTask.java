@@ -10,6 +10,8 @@ import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.ejbcore.datarec.DBParam;
+import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
@@ -18,6 +20,7 @@ import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Properties;
@@ -103,8 +106,9 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
      * @return
      */
     private int fillDataCurrent(Date executeDate) throws Exception {
-        return (int)repository.executeInNewTransaction(persistence -> {
-            return repository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_cur_select.sql"), executeDate);
+        return (int) repository.executeInNewTransaction(persistence -> {
+            return repository.executeCallable(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_cur_select.sql")
+                    , DBParams.createParams(new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT, executeDate)));
         });
     }
 

@@ -14,7 +14,7 @@ import java.util.Date;
 public class BackvalueJournal extends BaseEntity<BackvalueJournalId>{
 
     public enum BackvalueJournalState {
-        NEW, LOCAL, PROCESSED, ERROR_LC, ERROR_BL
+        NEW, LOCAL, PROCESSED, ERROR_LC, ERROR_BL, SELECTED
     }
 
     public BackvalueJournal() {

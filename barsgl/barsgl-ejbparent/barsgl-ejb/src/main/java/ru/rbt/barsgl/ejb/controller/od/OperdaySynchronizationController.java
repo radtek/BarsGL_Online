@@ -20,8 +20,6 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.validation.ErrorCode;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
@@ -338,11 +336,6 @@ public class OperdaySynchronizationController {
             auditController.info(BufferModeSyncBackvalue
                     , format("Начало синхронизации backvalue опердень '%s' кол-во счетов '%s' кол-во проводок '%s'"
                             , dateUtils.onlyDateString(operday), countBaltur.getLong(0), countPd.getLong(0)));
-            Long maxThreshold = propertiesRepository.getNumber(SyncIcrementMaxGLPdCount.getValue());
-            Assert.isTrue(maxThreshold >= countPd.getLong(0)
-                , () -> new ValidationError(ErrorCode.TASK_ERROR
-                            , format("Синхр-ция backvalue невозможна. Кол-во проводок backvalue в буфере '%s' больше максим допуст. '%s'"
-                            , countPd.getLong(0), maxThreshold)));
             // сразу метим gl_baltur как выгруженный по backvalue
             auditController.info(BufferModeSyncBackvalue, format("Помечено оборотов как выгруженных %s"
                     , pdRepository.executeNativeUpdate("update gl_baltur set moved = 'Y' where dat < ?", operday)));

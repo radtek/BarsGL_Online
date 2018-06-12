@@ -122,7 +122,7 @@ public class GLAccountService {
 //          проверки fsd открытие счетов по ключам GL_SEQ=XX
             checkDealPlcode(keys, operSide.getMsgName());
             // ищем счет Майдас
-            glAccountController.fillAccountKeysMidas(operSide, dateOpen, keys);
+            glAccountProcessor.fillAccountKeysMidas(operSide, dateOpen, keys);
             String bsaacidXX = glAccountController.findBsaAcid_for_XX(keys.getAccountMidas(), keys, operSide.getMsgName());
             if (bsaacidXX != null) {
                 return bsaacidXX;
@@ -249,12 +249,11 @@ public class GLAccountService {
                     .orElseGet(() -> glAccountController.createAccountsExDiff(operation, operSide, keys, bankCurrency, dateOpen, optype))
                     .getBsaAcid();
         } else {
-            // Перенесено сюда, так как портит данные для других этапов
-            Date dateStart446P = glAccountRepository.getDateStart446p();
-            glAccountController.fillAccountOfrKeysMidas(operSide, dateOpen, keys);
-            glAccountController.fillAccountOfrKeys(operSide, dateOpen, keys); // Обогащение
-
             GLAccount.RelationType rlnType = accountingTypeRepository.findById(AccountingType.class, keys.getAccountType()).isBarsAllowed() ? FIVE : TWO;
+            // Перенесено сюда, так как портит данные для других этапов
+            glAccountProcessor.fillAccountOfrKeysMidas(operSide, dateOpen, keys);
+            glAccountProcessor.fillAccountOfrKeys(operSide, dateOpen, keys); // Обогащение
+
                 return Optional.ofNullable(glAccountRepository
                         .findGLPLAccount(keys.getCurrency(), keys.getCustomerNumber(), keys.getAccountType()
                             , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
@@ -495,7 +494,7 @@ public class GLAccountService {
             Date dateClose = dateCloseStr == null ? null : new SimpleDateFormat(ManualAccountWrapper.dateFormat).parse(dateCloseStr);
             String act = (null == account.getDateClose() && null != dateClose) ? "Закрыт" : "Изменен";
             AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
-            glAccountController.validateGLAccountMnl(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
+            glAccountProcessor.validateGLAccountMnl(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
             GLAccount glAccount = glAccountController.updateGLAccountMnl(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
             auditController.info(Account, format("%s счет '%s' по ручному вводу",
                     act, glAccount.getBsaAcid()), glAccount);
@@ -556,7 +555,7 @@ public class GLAccountService {
                 throw  new Exception(String.format("Найдены действующие счета в период с %s по %s",dateOpenStr, dateCloseStr == null ? "01.01.2029" : dateCloseStr));
             }
 
-            glAccountController.validateGLAccountMnlTech(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
+            glAccountProcessorTech.validateGLAccountMnlTech(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
             GLAccount glAccount = glAccountController.updateGLAccountMnlTech(account, dateOpen, dateClose, keys, accountWrapper.getErrorList());
             auditController.info(Account, format("%s счет '%s' по ручному вводу",
                     act, glAccount.getBsaAcid()), glAccount);

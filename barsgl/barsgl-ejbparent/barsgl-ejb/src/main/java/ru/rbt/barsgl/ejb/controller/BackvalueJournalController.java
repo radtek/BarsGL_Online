@@ -13,6 +13,7 @@ import ru.rbt.ejbcore.DataAccessCallback;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DBParam;
 import ru.rbt.ejbcore.datarec.DBParams;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.EJB;
@@ -22,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
@@ -112,7 +114,12 @@ public class BackvalueJournalController {
             logger.info(format("deleted from GL_LOCACC: %s", journalRepository.executeNativeUpdate("delete from GL_LOCACC")));
             return journalRepository.executeTransactionally(connection -> {
                 int count[] = {0};
-                try (PreparedStatement statement = connection.prepareStatement("select bsaacid, acid, dat from gl_baltur where moved = 'Y'");
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "select bsaacid, acid, min(dat) dat \n" +
+                        " from gl_baltur \n" +
+                        "where moved = 'Y' \n" +
+                        "  and pkg_localize_filter.check_total(bsaacid,acid, dat) = '1' \n" +
+                        "group by bsaacid, acid ");
                      ResultSet rs = statement.executeQuery()) {
                     while (rs.next()) {
                         journalRepository.executeNativeUpdate("insert into GL_LOCACC (bsaacid,acid,pod) values (?,?,?)"

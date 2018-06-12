@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
@@ -29,7 +30,7 @@ public class AcDNJournalRepository extends AbstractBaseEntityRepository<AcDNJour
 
     public void updateLogStatus(Long jId, AcDNJournal.Status status, String errorMessage) {
         AcDNJournal journal = findById(AcDNJournal.class, jId);
-        journal.setComment(errorMessage);
+        journal.setComment(StringUtils.substr(errorMessage, 255));
         journal.setStatusDate(new Date());
         journal.setStatus(status);
         update(journal);
@@ -39,6 +40,13 @@ public class AcDNJournalRepository extends AbstractBaseEntityRepository<AcDNJour
         AcDNJournal journal = findById(AcDNJournal.class, jId);
         journal.setStatusDate(new Date());
         journal.setStatus(status);
+        update(journal);
+    }
+
+    public void updateComment(Long jId, String errorMessage) {
+        AcDNJournal journal = findById(AcDNJournal.class, jId);
+        journal.setComment(StringUtils.substr(errorMessage, 255));
+        journal.setStatusDate(new Date());
         update(journal);
     }
 

@@ -91,6 +91,13 @@ public class CobStatRepository extends AbstractBaseEntityRepository<CobStepStati
                                 "select count(1) cnt from GL_BVJRNL where STATE = 'NEW') T1",
                         curdate, KondorPlus.getLabel());
                 return res.getLong(0);
+            case CobCloseAccounts:
+                res = selectOne("select sum(cnt) from (" +
+                                "select count(1) cnt from GL_DEALCLOSE union all " +
+                                "select count(1) cnt from GL_ACWAITCLOSE where EXCLDATE is null)");
+                return res.getLong(0);
+            case CobStartEtlProc:
+                return 0L;
             default:
                 return null;
 //                throw new DefaultApplicationException("Неверный шаг COB:" + step);

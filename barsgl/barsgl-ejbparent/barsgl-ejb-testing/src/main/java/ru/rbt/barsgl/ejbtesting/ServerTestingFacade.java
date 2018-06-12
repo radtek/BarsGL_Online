@@ -9,10 +9,14 @@ import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.bg.FanForwardOperationController;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
+import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
+import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -50,6 +54,14 @@ public class ServerTestingFacade {
 
     public void processFanPosting(String parentRef) throws SQLException {
         stepController.processFanOperation(parentRef, fanForwardOperationController, true);
+    }
+
+    public List<DataRecord> selectNonXa(String sqlString, Object ... params) throws Exception {
+        return etlPostingRepository.select(etlPostingRepository.getDataSource(Repository.BARSGLNOXA), sqlString, params);
+    }
+
+    public int executeUpdateNonXa(String sqlString, Object ... params) throws Exception {
+        return etlPostingRepository.executeNativeUpdate(etlPostingRepository.getDataSource(Repository.BARSGLNOXA), sqlString, params);
     }
 
 }

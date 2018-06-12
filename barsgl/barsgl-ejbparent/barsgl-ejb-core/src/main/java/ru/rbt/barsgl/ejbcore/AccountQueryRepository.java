@@ -60,7 +60,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "A.CUSTNO=? "
                         + "AND A.ACOD IN (" + glacods + ") "
                         + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
-                        //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        + "AND NOT (A.OPENTYPE = 'ERR' AND A.DTO = A.DTC) "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
               return dataRecords;
@@ -86,7 +86,7 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE IN (" + acctypes + ") "
                         + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
-                        //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        + "AND NOT (A.OPENTYPE = 'ERR' AND A.DTO = A.DTC) "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                 , Integer.MAX_VALUE, new Object[]{customerNo});
 
@@ -103,21 +103,10 @@ public class AccountQueryRepository extends AbstractBaseEntityRepository {
                 "SELECT A.*, PKG_ACC.GET_BIC(A.BSAACID) BIC FROM GL_ACC A WHERE "
                         + "A.CUSTNO=? "
                         + "AND A.ACCTYPE NOT IN (999999999, 361070100, 0) "
-                        //+ "AND (CURRENT DATE - VALUE(A.DTC,'2029-01-01')) <= 1131 "
+                        + "AND NOT (A.OPENTYPE = 'ERR' AND A.DTO = A.DTC) "
                         + "AND MONTHS_BETWEEN(sysdate, NVL(A.DTC, TO_DATE('2029-01-01','YYYY-DD-MM'))) < 12 "
                     ,Integer.MAX_VALUE, new Object[]{customerNo});
             return dataRecords;
-        } catch (SQLException e) {
-            throw new Exception(e);
-        }
-    }
-
-    public List<DataRecord> getAccrlnRecords(String inCondition, String customerNo) throws Exception {
-        try {
-            String selectExpression = "SELECT * FROM ACCRLN A WHERE A.BSAACID IN (" + inCondition + ")";
-            if(customerNo != null)
-              selectExpression+=" AND CNUM = '"+customerNo+"'";
-            return selectMaxRows(selectExpression, Integer.MAX_VALUE, null);
         } catch (SQLException e) {
             throw new Exception(e);
         }

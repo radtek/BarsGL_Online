@@ -1,1 +1,12 @@
-<gbo:Customer xmlns:gbo="urn:ucbru:gbo:v3"><gbo:CustomerNum>00488888</gbo:CustomerNum><gbo:BranchCode>KRS</gbo:BranchCode><gbo:Type>B</gbo:Type><gbo:CbType>36</gbo:CbType><gbo:Resident>Y</gbo:Resident><gbo:CorporateDetails><gbo:ShortNameRus>Головной Расчетно-кассовый центрг.К</gbo:ShortNameRus><gbo:FullNameRus>ГРКЦ ГУ БАНКА РОССИИ ПО КРАСНОДАРСКОМУ КР.</gbo:FullNameRus><gbo:ShortNameEng>GRKC GU Banka Rossii po Krasnodarskomu krayu</gbo:ShortNameEng></gbo:CorporateDetails></gbo:Customer>
+<gbo:Customer xmlns:gbo="urn:ucbru:gbo:v3">
+    <gbo:CustomerNum>00488888</gbo:CustomerNum>
+    <gbo:BranchCode>KRS</gbo:BranchCode>
+    <gbo:Type>B</gbo:Type>
+    <gbo:CbType>36</gbo:CbType>
+    <gbo:Resident>Y</gbo:Resident>
+    <gbo:CorporateDetails>
+        <gbo:ShortNameRus>я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜тно-я┐╜я┐╜я┐╜совя┐╜ ценя┐╜я┐╜.я┐╜</gbo:ShortNameRus>
+        <gbo:FullNameRus>я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜.</gbo:FullNameRus>
+        <gbo:ShortNameEng>GRKC GU Banka Rossii po Krasnodarskomu krayu</gbo:ShortNameEng>
+    </gbo:CorporateDetails>
+</gbo:Customer>

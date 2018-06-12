@@ -113,13 +113,13 @@ public class GLAccountController {
     @Inject
     private AccountCreateSynchronizer synchronizer;
 
+    @EJB
+    private PropertiesRepository propertiesRepository;
+
     @Lock(LockType.READ)
     public GLAccount findGLAccount(String bsaAcid) {
         return glAccountRepository.findGLAccount(bsaAcid);
     }
-
-    @EJB
-    private PropertiesRepository propertiesRepository;
 
     @Lock(LockType.READ)
     public GLAccount findGLAccountAE(AccountKeys keys, GLOperation.OperSide side) {
@@ -197,6 +197,7 @@ public class GLAccountController {
         return synchronizer.callSynchronously(monitor, () -> {
             return Optional.ofNullable(findGLAccount(bsaAcid)).orElseGet(()->{
                 String vCcode = "00" + bsaAcid.substring(11,13);
+                String[] bic_branch = glAccountRepository.getIMBCBBRP_bic_branch(vCcode);
 
                 GLAccount glAccount = new GLAccount();
                 glAccount.setBsaAcid(bsaAcid);
@@ -204,9 +205,9 @@ public class GLAccountController {
                 glAccount.setPassiveActive(psav);
                 glAccount.setFilial(glAccountRepository.getCBCC(vCcode));
                 glAccount.setCompanyCode(vCcode);
-                glAccount.setBranch(vCcode.substring(1,4));
+                glAccount.setBranch(bic_branch[1]);
                 glAccount.setCurrency(bankCurrencyRepository.getCurrency(glccy));
-                glAccount.setCustomerNumber(glAccountRepository.getIMBCBBRP_a8bicn(vCcode));
+                glAccount.setCustomerNumber(bic_branch[0]);
                 glAccount.setAccountType(0);
                 glAccount.setCbCustomerType((short)0);
                 glAccount.setBalanceAccount2(bsaAcid.substring(0, 5));
@@ -441,6 +442,8 @@ public class GLAccountController {
         });
     }
 
+/*
+    // перенесено в GLAccountProcessor
     @Lock(LockType.READ)
     public void validateGLAccountMnl(GLAccount glAccount, Date dateOpen, Date dateClose,
                                         AccountKeys keys, ErrorList descriptors) throws Exception {
@@ -455,6 +458,7 @@ public class GLAccountController {
             glAccountProcessor.checkDateCloseMnl(glAccount, dateOpen, dateClose);
         }
     }
+*/
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -471,6 +475,8 @@ public class GLAccountController {
         });
     }
 
+/*
+    // перенесено в GLAccountProcessorTech
     @Lock(LockType.READ)
     public void validateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
                                      AccountKeys keys, ErrorList descriptors) throws Exception {
@@ -483,6 +489,7 @@ public class GLAccountController {
             glAccountProcessorTech.checkDateCloseMnl(glAccount, dateOpen, dateClose);
         }
     }
+*/
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -498,11 +505,32 @@ public class GLAccountController {
 
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount closeGLAccountDeals(GLAccount glAccount, Date dateClose, GLAccount.CloseType closeType) throws Exception {
+        return synchronizer.callSynchronously(monitor, () -> {
+            if (!closeType.equals(GLAccount.CloseType.Normal)){
+                glAccount.setOpenType(GLAccount.OpenType.ERR.name());
+            }
+            glAccount.setDateClose(dateClose);
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public GLAccount updateGLAccountOpenType(GLAccount glAccount, GLAccount.OpenType openType) throws Exception {
+        return synchronizer.callSynchronously(monitor, () -> {
+            glAccount.setOpenType(openType.name());
+            return glAccountRepository.update(glAccount);
+        });
+    }
+
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnl(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
-        return glAccountRepository.executeInNewTransaction(persistence -> {
+//        return glAccountRepository.executeInNewTransaction(persistence -> {
+        return synchronizer.callSynchronously(monitor, () -> {
             glAccount.setDateClose(dateClose);
-
             return glAccountRepository.update(glAccount);
         });
     }
@@ -511,9 +539,8 @@ public class GLAccountController {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount closeGLAccountMnlTech(GLAccount glAccount, Date dateClose,
                                        ErrorList descriptors) throws Exception {
-        return glAccountRepository.executeInNewTransaction(persistence -> {
+        return synchronizer.callSynchronously(monitor, () -> {
             glAccount.setDateClose(dateClose);
-
             return glAccountRepository.update(glAccount);
         });
     }
@@ -577,7 +604,7 @@ public class GLAccountController {
         });
     }
 
-    public String getErrorMessage(Throwable throwable) {
+    private String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class);
     }
@@ -606,8 +633,7 @@ public class GLAccountController {
         return glAccountRepository.save(glAccount);
     }
 
-
-
+    @Lock(LockType.WRITE)
     public GLAccount createAccountTH(String bsaAcid, GLOperation operation, GLOperation.OperSide operSide, Date dateOpen,
                                     AccountKeys keys, GLAccount.OpenType openType) {
         // создать счет GL
@@ -691,7 +717,8 @@ public class GLAccountController {
 
     private GLAccParam calculateExDiffAccount(GLOperation.OperSide operSide, AccountKeys keys, BankCurrency bankCurrency, String optype) {
             String nccy = bankCurrency.getDigitalCode();
-            String c1 = String.valueOf(nccy.charAt(0));
+//            String c1 = String.valueOf(nccy.charAt(0));
+            String c1 = currencyFirstCharToNum(nccy.substring(0,1));
             String c2 = nccy.substring(1, 3);
 
             String accountMask = new StringBuilder().append(keys.getAccount2()).append("810_").append(c1).append(keys.getCompanyCode().substring(1)).append(keys.getPlCode()).append(c2).toString();
@@ -703,230 +730,8 @@ public class GLAccountController {
             return new GLAccParam(acid, bsaacid);
     }
 
-
-    /**
-     * Заполняет недостающие ключи счета Майдас для счетов ОФР (PL)
-     *
-     * @param side
-     * @param dateOpen
-     * @param keys
-     * @return
-     */
-    public AccountKeys fillAccountOfrKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
-        // TODO заполнить ключи счета из справочников
-        DataRecord data = glAccountRepository.getAccountParams(keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), dateOpen);
-        if (null == data) {
-            throw new ValidationError(ACCOUNT_PARAMS_NOT_FOUND, side.getMsgName(),
-                    keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
-                    dateUtils.onlyDateString(dateOpen));
-        }
-
-        // параметры счета ЦБ
-        keys.setAccount2(data.getString("ACC2"));       // ACC2
-        keys.setPlCode(data.getString("PLCODE"));       // PLCODE
-
-        // параметры счета Майдас
-        keys.setAccountCode(data.getString("ACOD"));    // ACOD
-        keys.setAccSequence(data.getString("SQ"));      // SQ
-
-        // тип собственности
-        keys.setCustomerType(data.getString("CUSTYPE"));
-
-        // счет Майдас
-        int cnum = (int) glAccountProcessor.stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
-        short iacod = (short) glAccountProcessor.stringToLong(side, "ACOD Midas", keys.getAccountCode(), AccountKeys.getiAccountCode());
-        short isq = (short) glAccountProcessor.stringToLong(side, "SQ Midas", keys.getAccSequence(), AccountKeys.getiAccSequence());
-        String acid = glAccountRepository.makeMidasAccount(
-                cnum,
-                keys.getCurrency(),
-                keys.getBranch(),
-                iacod,
-                isq
-        );
-        keys.setAccountMidas(acid);
-
-        return keys;
-    }
-
-    /**
-     * Заполняет недостающие параметры ключей счета ЦБ
-     *
-     * @param keys
-     */
-    public AccountKeys fillAccountOfrKeys(GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) {
-        AccountKeys keys1 = fillAccountKeys(operSide, dateOpen, keys);
-
-        keys.setPassiveActive(glAccountRepository.getPassiveActive(keys1.getAccount2()));  // TODO ???
-
-        if (isEmpty(keys.getCustomerType())) {
-            keys.setCustomerType("0");
-        }
-        keys.setRelationType("2");
-
-        return keys;
-    }
-
-    /**
-     * Заполняет недостающие ключи счета Майдас
-     *
-     * @param side
-     * @param keys
-     */
-    public AccountKeys fillAccountKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
-        boolean isGlSeqXX = !isEmpty(keys.getGlSequence()) && keys.getGlSequence().toUpperCase().startsWith("XX");
-        /* не будем подменять пришедшие реальные данные, чтоб потом не думать, что сохранять
-        if (isEmpty(keys.getCustomerType())) {
-            keys.setCustomerType("00");
-        }
-        if (isEmpty(keys.getTerm())) {
-            keys.setTerm("00");
-        }*/
-        DataRecord data = glAccountRepository.getAccountParams(keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), dateOpen);
-        if (null == data) {
-            throw new ValidationError(ACCOUNT_PARAMS_NOT_FOUND, side.getMsgName(),
-                    keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
-                    dateUtils.onlyDateString(dateOpen));
-        }
-        // ACC2, PLCODE
-        String acc2 = data.getString("ACC2");
-        if (isEmpty(keys.getAccount2())) {
-            keys.setAccount2(acc2);
-        } else if (!(keys.getAccount2().equals(acc2))) {
-            final Error error = new ValidationError(ACCOUNT2_NOT_VALID, side.getMsgName(), keys.getAccount2(), acc2,
-                    keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), Long.toString(AccountKeys.getiAccountType()));
-            if (isKPlusTP(keys)) {
-                warnForParameterize(error);
-            } else {
-                throw error;
-            }
-        }
-        if (isGlSeqXX && data.getString("PLCODE") != null){
-            throw new ValidationError(GL_SEQ_XX_KEY_WITH_DB_PLCODE, side.getMsgName(), defaultString(keys.getAccountType()), defaultString(keys.getCustomerNumber()), defaultString(keys.getAccountCode())
-                                                  , defaultString(keys.getAccSequence()), defaultString(keys.getDealId()), defaultString(keys.getPlCode()), defaultString(keys.getGlSequence()));
-        }
-
-        if (isEmpty(keys.getPlCode())) {
-            keys.setPlCode(ifEmpty(data.getString("PLCODE"), ""));
-        }
-        // параметры счета Майдас
-        String acod = data.getString("ACOD");
-        String sq = data.getString("SQ");
-        if (isEmpty(keys.getAccountCode())) {       // не задан ACOD:
-            keys.setAccountCode(acod);                  // взять ACOD из параметров
-        } else {    // ACOD задан: ACOD и SQ в ключах должны совпадать с определенными из параметров
-            if ( !(acod.equals(keys.getAccountCode()) && (sq.equals(keys.getAccSequence()) || sq.equals("00"))) ) {
-                final Error error = new ValidationError(MIDAS_PARAMS_NOT_VALID, side.getMsgName(), keys.getAccountCode(), keys.getAccSequence(), acod, sq,
-                        keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
-                        Long.toString(AccountKeys.getiAccountCode()) + "," + Long.toString(AccountKeys.getiAccSequence()));
-                if (isKPlusTP(keys)) {
-                    warnForParameterize(error);
-                } else {
-                    throw error;
-                }
-            }
-        }
-        // подмена сиквенса Майдас для сделок FCC
-        keys.setAccSequence(getMidasSequenceForDeal(side, dateOpen, keys, sq));
-
-        int cnum = (int) glAccountProcessor.stringToLong(side, "Customer number", keys.getCustomerNumber(), AccountKeys.getiCustomerNumber());
-        short iacod = (short) glAccountProcessor.stringToLong(side, "ACOD Midas", keys.getAccountCode(), AccountKeys.getiAccountCode());
-        short isq = (short) glAccountProcessor.stringToLong(side, "SQ Midas", keys.getAccSequence(), AccountKeys.getiAccSequence());
-        String acid = glAccountRepository.makeMidasAccount(
-                cnum,
-                keys.getCurrency(),
-                keys.getBranch(),
-                iacod,
-                isq
-        );
-        keys.setAccountMidas(acid);
-        return keys;
-    }
-
-    /**
-     * Определяет SQ на замену для формирования счета Midas
-     *
-     * @param keys    - ключи счета
-     * @param paramSQ - SQ, определенный по таблице параметров
-     * @return
-     */
-    private String getMidasSequenceForDeal(GLOperation.OperSide side, Date dateOpen, AccountKeys keys, final String paramSQ) {
-        final String keysSQ = keys.getAccSequence();                  // SQ из ключей
-        final String defaultSQ = isEmpty(keysSQ) ? paramSQ : keysSQ;  // SQ по умолчанию
-        // номер сделки
-        String dealId = keys.getDealId();
-        if (isEmpty(dealId)) {
-            return defaultSQ;              // номер сделки не задан, подмена не нужна
-        }
-        // параметры по источнику сделки
-        DataRecord param = glAccountRepository.getDealSQParams(keys.getDealSource(), dateOpen);
-        if (null == param) {
-            return defaultSQ;              // для этого источника подмена не нужна
-        }
-
-        // найти SQ по номеру клиента, валюте и номеру сделки
-        final String dealIDfrom = param.getString("DEALID");
-        if (!dealIDfrom.equals("Y")) {
-            dealId = keys.getSubDealId();       // номер сделки из субсделки
-            if (isEmpty(dealId)) {              // не задан subDealID
-                throw new ValidationError(SUBDEAL_ID_IS_EMPTY, side.getMsgName());
-            }
-        }
-        final String custNo = keys.getCustomerNumber();
-        final String ccy = keys.getCurrency();
-        final String dealSQ = glAccountRepository.getDealSQ(custNo, ccy, dealId);
-        if (!isEmpty(dealSQ)) {                 // SQ для сделки уже задан
-            if (!isEmpty(keysSQ) && !keysSQ.equals(dealSQ)) { // если SQ в ключах задан, он должен совпадать с SQ сделки
-                throw new ValidationError(MIDAS_SQ_IS_DIFFERENT, side.getMsgName(), keysSQ, dealSQ, dealId);
-            }
-            return dealSQ;
-        }
-
-        // определим, надо ли новый номер SQ
-        final String check = param.getString("CHECK");
-        if (check.equals("Y")) {
-            return paramSQ;             // не надо, возвращаем из параметров
-        }
-
-        // надо
-        if (isEmpty(keysSQ)) {      // SQ в ключах не был задан, возвращаем SQ из параметров
-            return paramSQ;
-        } else {                    // SQ в ключах задан
-            if (!paramSQ.equals(keysSQ)) {      // записать новый SQ для сделки& если не совпадает со стандартным
-                glAccountRepository.addDealSQ(custNo, ccy, dealId, keysSQ);
-            }
-            return keysSQ;          // возвращаем SQ из ключей
-        }
-    }
-
-    /**
-     * Заполняет недостающие параметры ключей счета ЦБ
-     *
-     * @param keys
-     */
-    public AccountKeys fillAccountKeys(GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) {
-        // валюты ЦБ
-        BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
-        keys.setCurrencyDigital(currency.getDigitalCode());
-
-        // филиал и код компанаа
-        DataRecord data = glAccountRepository.getFilialByBranch(keys.getBranch());
-        if (null == data) {
-            throw new ValidationError(BRANCH_NOT_FOUND, "", keys.getBranch(), Long.toString(AccountKeys.getiBranch()));
-        }
-        keys.setFilial(data.getString(0));
-        String cbccn = data.getString(1);
-        if (isEmpty(keys.getCompanyCode())) {
-            keys.setCompanyCode(data.getString(1));
-        } else {
-            if (!keys.getCompanyCode().equals(cbccn)) {
-                throw new ValidationError(COMPANY_CODE_NOT_VALID, "",
-                        keys.getCompanyCode(), Long.toString(AccountKeys.getiCompanyCodeN()),
-                        keys.getBranch(), Long.toString(AccountKeys.getiBranch()));
-            }
-
-        }
-        return keys;
-    }
+    // ====================================================================================
+    // методы по заполнению ключей перенесены в GLAccountProcessor
 
     /**
      * Создает уникальный номер счета по ключам счета
@@ -936,7 +741,7 @@ public class GLAccountController {
      */
     public String getAccountNumber(GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) {
         // заполнить недостающие ключи счета Майдас
-        fillAccountKeysMidas(operSide, dateOpen, keys);
+        glAccountProcessor.fillAccountKeysMidas(operSide, dateOpen, keys);
         return getPureAccountNumber(operSide, dateOpen, keys);
     }
 
@@ -946,7 +751,7 @@ public class GLAccountController {
      */
     public String getPureAccountNumber(GLOperation.OperSide operSide, Date dateOpen, AccountKeys keys) {
         // заполнить недостающие ключи счета ЦБ
-        fillAccountKeys(operSide, dateOpen, keys);
+        glAccountProcessor.fillAccountKeys(operSide, dateOpen, keys);
 
         String acc2 = keys.getAccount2();
         String ccyn = keys.getCurrencyDigital();
@@ -1244,14 +1049,6 @@ public class GLAccountController {
 
             });
         });
-    }
-
-    private boolean isKPlusTP(AccountKeys keys) {
-        return !isEmpty(keys.getDealSource()) && keys.getDealSource().equalsIgnoreCase("K+TP");
-    }
-
-    private void warnForParameterize(Error error) {
-        auditController.warning(AuditRecord.LogCode.Account, "Предупреждение для параметризации АЕ", null, error);
     }
 
     public static Date DAY20290101;
