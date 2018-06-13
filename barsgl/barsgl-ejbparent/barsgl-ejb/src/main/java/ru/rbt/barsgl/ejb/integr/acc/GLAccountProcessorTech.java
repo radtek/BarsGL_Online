@@ -7,18 +7,23 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.GLTechAccountRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
+import static java.lang.String.format;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -177,4 +182,23 @@ public class GLAccountProcessorTech extends ValidationAwareHandler<AccountKeys> 
                     Integer.toString(count), dateUtils.onlyDateString(fromDate));
         }
     }
+
+    public void validateGLAccountMnlTech(GLAccount glAccount, Date dateOpen, Date dateClose,
+                                         AccountKeys keys, ErrorList descriptors) throws Exception {
+        List<ValidationError> errors = validate(keys, new ValidationContext());
+        if (!errors.isEmpty()) {
+            throw new DefaultApplicationException(validationErrorMessage(GLOperation.OperSide.N, errors, descriptors));
+        }
+        checkDateOpenMnl(glAccount, dateOpen);
+        if (null != dateClose) {
+            checkDateCloseMnl(glAccount, dateOpen, dateClose);
+        }
+    }
+
+    public String validationErrorMessage(GLOperation.OperSide operSide, List<ValidationError> errors, ErrorList descriptors) {
+        StringBuilder result = new StringBuilder(format("Ошибки валидации ключей счета %s:\n", operSide.getMsgName()));
+        result.append(validationErrorsToString(errors, descriptors));
+        return result.toString();
+    }
+
 }

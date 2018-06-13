@@ -14,15 +14,12 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 
@@ -40,10 +37,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOS
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-
-import ru.rbt.ejbcore.util.DateUtils;
-
-import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.*;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.AUTOMATIC;
+import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperClass.BV_MANUAL;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.ClosedPeriod;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperationExt.BackValueReason.OverDepth;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;

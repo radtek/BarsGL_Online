@@ -24,7 +24,6 @@ public class StringUtils {
                 : target.substring(start, Integer.min(end,  target.length()));
     }
 
-
     public static String trimstr(String target) {
         return (isEmpty(target) ? "" : target.trim());
     }

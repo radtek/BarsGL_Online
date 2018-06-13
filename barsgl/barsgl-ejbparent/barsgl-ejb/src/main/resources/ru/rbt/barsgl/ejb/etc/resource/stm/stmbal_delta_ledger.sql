@@ -1,4 +1,4 @@
-insert into GL_BALSTMD (STATDATE
+insert /*+ append parallel (8) */ into GL_BALSTMD (STATDATE
                         , STATTYPE
                         , HOSTSYSTEM
                         , FCCCUSTNUM
@@ -49,8 +49,6 @@ insert into GL_BALSTMD (STATDATE
                         , CURRNAME
                         , DATEUNLOAD)
 with gl_tmp_curdate as (select cast(? as date) curdate from dual)
-select *
-  from (
   select p.pdt statdate
           , 'F' stattype
           , 'BARS' hostsystem
@@ -139,5 +137,4 @@ select *
    join imbcbbrp rp on rp.a8brcd = ac.branch
    where not exists (select 1 from GL_BALSTMD mdm where mdm.statdate = p.pdt and mdm.cbaccount = ac.bsaacid)
      and exists (select 1 from pst d where d.pod = p.pdt and d.pbr not like '@@%' and d.bsaacid = ac.bsaacid and d.acid = ac.acid)
-  ) ac0
- where GL_STMFILTER(ac0.cbaccount) = '1'
+     and exists (select 1 from GL_STMPARM s where s.ACCOUNT = ac.acc2 and s.ACCTYPE = 'B' and s.INCLUDEBLN = '1')
