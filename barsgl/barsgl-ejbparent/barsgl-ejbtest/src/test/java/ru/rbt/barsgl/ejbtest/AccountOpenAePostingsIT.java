@@ -1654,6 +1654,69 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertEquals(bsaacid, bsaacid2);
     }
 
+    @Test public void testPLAccountOpenByAccountTypeNotOwn() throws SQLException {
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
+                , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
+
+
+        final String acctype= "611020100";
+        final String plcode=  "11112";
+        DataRecord record = Optional.ofNullable(baseEntityRepository
+                .selectFirst("select * from gl_actparm where acctype = ? and plcode = ?", acctype, plcode))
+                .orElseThrow(() -> new RuntimeException("gl_actparm not found"));
+
+        AccountingType accountingType = Optional
+                .ofNullable((AccountingType) baseEntityRepository.findById(AccountingType.class, acctype))
+                .orElseThrow(() -> new RuntimeException("GL_ACTNAME is not found"));
+        if (Y == accountingType.getBarsAllowed()) {
+            baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1 where a.id = ?2"
+                    , N, accountingType.getId());
+        }
+
+        AccountKeys acCt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency("RUR").withCustomerNumber("00000018")
+                .withAccountType(acctype)
+                .withCustomerType(record.getString("CUSTYPE").trim())
+                .withTerm(record.getString("TERM").trim())
+                .withPlCode(plcode).withGlSequence("PL")
+                .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
+                .withAccSequence(record.getString("ac_sq").trim())
+                .build();
+//        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+//        acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
+
+        // 001;RUR;00000018;611020100;18;09;PL00000334;0001;70601;;;;FC12_CL;;
+        //AccountKeys acCt = new AccountKeys("001;RUR;00000018;611020100;18;09;PL00000334;0001;70601;;;;FC12_CL;;");
+
+        cleanAccountsByMidas(acCt.getAccountMidas());
+
+        String bsaacid = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertTrue(bsaacid, !StringUtils.isEmpty(bsaacid));
+        logger.info("Account has created: " + bsaacid);
+
+        GLAccount account = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, "from GLAccount a where a.bsaAcid = ?1", bsaacid);
+        Assert.assertEquals(account.getRelationTypeEnum(), GLAccount.RelationType.TWO);
+
+        // проверяем содержимое GL_RLNACT
+        GLRelationAccountingType relationAccountingType
+                = (GLRelationAccountingType) baseEntityRepository.selectFirst(GLRelationAccountingType.class
+                , "from GLRelationAccountingType r where r.id.bsaacid = ?1", account.getBsaAcid());
+        Assert.assertNotNull(relationAccountingType);
+
+        GLAccount acc = remoteAccess.invoke(GLAccountRepository.class, "findGLAccount", account.getBsaAcid());
+        Assert.assertNotNull(acc);
+        Assert.assertEquals(GLAccount.RelationType.TWO.getValue(), acc.getRelationType());
+
+        // поиск возвращает уже созданный счет
+        String bsaacid2 = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertEquals(bsaacid, bsaacid2);
+    }
+
     /**
      * Проверка правильности создания / определения счета по кдючам счета
      * @param operSide  - сторона операции (D / C)
