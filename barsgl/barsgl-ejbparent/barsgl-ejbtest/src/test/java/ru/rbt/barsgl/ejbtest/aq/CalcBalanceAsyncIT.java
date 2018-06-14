@@ -308,14 +308,17 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         // берем счет и делаем для него битый baltur
         baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
 
-        Date intersectDate = dbDateParse("2018-01-02");
-        insertBaltur(account.getBsaAcid(), account.getAcid(), dbDateParse("2018-01-01"), intersectDate);
-        insertBaltur(account.getBsaAcid(), account.getAcid(), intersectDate, dbDateParse("2029-01-29"));
+        final Date dat1 = dbDateParse("2018-01-01");
+        final Date dat2 = dbDateParse("2018-01-02");
+        final Date incorrectDatto29 = dbDateParse("2029-01-29");
+        final Date correctDatto29 = dbDateParse("2029-01-01");
+        insertBaltur(account.getBsaAcid(), account.getAcid(), dat1, dat1);
+        insertBaltur(account.getBsaAcid(), account.getAcid(), dat2, incorrectDatto29);
 
         // делаем проводку в режиме gibrid
         long id = baseEntityRepository.nextId("PD_SEQ");
-        createPosting(id, id, account.getAcid(), account.getBsaAcid(), 1, 1, pbrGibrid, intersectDate
-                , intersectDate, BankCurrency.RUB.getCurrencyCode(), "0");
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), 1, 1, pbrGibrid, dat2
+                , dat2, BankCurrency.RUB.getCurrencyCode(), "0");
         DataRecord queueProperties = baseEntityRepository.selectFirst("select * from USER_QUEUES where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
         Assert.assertNotNull(queueProperties);
 
@@ -336,6 +339,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(1, errorMessages.size());
         Assert.assertEquals(exceptionQueueName, errorMessages.get(0).getString("Q_NAME"));
 
+        // баланс не изменен
+        DataRecord balance = baseEntityRepository.selectFirst("select sum(OBAC+DTAC+CTAC) SM from baltur where bsaacid = ? and dat = ?", account.getBsaAcid(), dat2);
+        Assert.assertTrue(0 == balance.getInteger("sm"));
+
         // останавливаем обработку (?)
 
         baseEntityRepository.executeNativeUpdate("BEGIN GLAQ_PKG_UTL.CHECK_ERROR_QUEUE; END;");
@@ -346,7 +353,16 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals("YES", queue.getString("DEQUEUE_ENABLED").trim());
 
 
-        // обрабатываем сообщение из ошибок (?)
+        // фиксим ошибки
+        baseEntityRepository.executeNativeUpdate("update baltur set datto = ? where bsaacid = ? and dat = ?"
+            , correctDatto29, account.getBsaAcid(), dat2);
+
+        // обрабатываем сообщение из ошибок
+        dequeueProcessExceptionQueue();
+        errorMessages = baseEntityRepository.select("select Q_NAME from " + queueTableName +" t where t.user_data.id = ?", id);
+        Assert.assertEquals(0, errorMessages.size());
+        balance = baseEntityRepository.selectFirst("select sum(OBAC+DTAC+CTAC) SM from baltur where bsaacid = ? and dat = ?", account.getBsaAcid(), dat2);
+        Assert.assertTrue(balance.getInteger("sm") + "", 1 == balance.getInteger("sm"));
     }
 
     private void insertBaltur(String bsaacid, String acid, Date dat, Date datto) {
@@ -385,6 +401,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private void cleanBvjrnlRecord(GLAccount account) {
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+    }
+
+    private void dequeueProcessExceptionQueue() {
+        baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_EXCEPTION_QUEUE_NAME); end;");
     }
 
 }
