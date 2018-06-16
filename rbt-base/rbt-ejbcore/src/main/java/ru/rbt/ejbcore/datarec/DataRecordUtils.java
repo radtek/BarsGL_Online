@@ -113,4 +113,31 @@ public class DataRecordUtils {
             }
         }
     }
+
+    /**
+     * todo убрать дублирование !!!
+     * @param statement
+     * @param i
+     * @param object
+     * @throws SQLException
+     */
+    public static void bindParameter(PreparedStatement statement, int i, Object object) throws SQLException {
+        if (null != object) {
+            if (null == object) {
+                statement.setObject(i, null);
+            } else if (object instanceof String) {
+                statement.setString(i, (String) object);
+            } else if (object instanceof Date) {
+                statement.setDate(i, new java.sql.Date(((Date) object).getTime()));
+            } else if (object instanceof Long) {
+                statement.setLong(i, ((Long) object).longValue());
+            } else if (object instanceof BigDecimal) {
+                statement.setBigDecimal(i, (BigDecimal) object);
+            } else if (object instanceof Integer) {
+                statement.setInt(i, ((Integer) object).intValue());
+            } else {
+                statement.setObject(i, object);
+            }
+        }
+    }
 }

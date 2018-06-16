@@ -112,7 +112,7 @@ public interface IBaseEntityMultiRepository<T extends BaseEntity, K extends Seri
             for (int i = 1; i <= params.getParams().size(); i++) {
                 DBParam param = params.getParams().get(i-1);
                 if (EjbCoreUtils.containsEnum(param.getDirectionType(), DBParam.DBParamDirectionType.IN, DBParam.DBParamDirectionType.IN_OUT)) {
-                    DataRecordUtils.bindParameters(statement, params.getParams().stream().map(DBParam::getValue).toArray());
+                    DataRecordUtils.bindParameter(statement, i, param.getValue());
                 } else {
                     statement.registerOutParameter(i, param.getParamType());
                 }
