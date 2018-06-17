@@ -13,6 +13,7 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.*;
+import ru.rbt.barsgl.ejb.repository.dict.AccTypeAeplRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.shared.ErrorList;

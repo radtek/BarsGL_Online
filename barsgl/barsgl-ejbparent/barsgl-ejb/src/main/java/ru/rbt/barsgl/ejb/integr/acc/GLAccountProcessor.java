@@ -10,6 +10,8 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.*;
+import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
+import ru.rbt.barsgl.ejb.repository.dict.AccTypeAeplRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
@@ -67,6 +69,12 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     @EJB
     private GLAccountService accountService;
+
+    @EJB
+    private AccTypeAeplRepository aeplRepository;
+
+    @Inject
+    private ActParmRepository actParmRepository;
 
     @Override
     public void fillValidationContext(AccountKeys target, ValidationContext context) {
@@ -585,11 +593,21 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         }
 
         // параметры счета ЦБ
+        if (aeplRepository.isAepl(keys.getAccountType())) {
+            if (!actParmRepository.isPlCodeExists(keys.getPlCode(), dateOpen))
+                throw new ValidationError(PLCODE_NOT_EXISTS, keys.getPlCode(),
+                        dateUtils.onlyDateString(dateOpen));
+        } else {
+            checkOfrParam(side, keys.getAccountType(), keys.getPlCode(), data.getString("PLCODE"), "PLCODE");
+            keys.setPlCode(data.getString("PLCODE"));       // PLCODE
+        }
+        checkOfrParam(side, keys.getAccountType(), keys.getAccount2(), data.getString("ACC2"), "ACC2");
         keys.setAccount2(data.getString("ACC2"));       // ACC2
-        keys.setPlCode(data.getString("PLCODE"));       // PLCODE
 
         // параметры счета Майдас
+        checkOfrParam(side, keys.getAccountType(), keys.getAccountCode(), data.getString("ACOD"), "ACOD");
         keys.setAccountCode(data.getString("ACOD"));    // ACOD
+        checkOfrParam(side, keys.getAccountType(), keys.getAccSequence(), data.getString("SQ"), "SQ");
         keys.setAccSequence(data.getString("SQ"));      // SQ
 
         // тип собственности
@@ -609,6 +627,12 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         keys.setAccountMidas(acid);
 
         return keys;
+    }
+
+    private void checkOfrParam(GLOperation.OperSide side, String accType, String keyParam, String dataParam, String nameParam) {
+        if (!isEmpty(keyParam) && !keyParam.equals(dataParam))
+            auditController.warning(AuditRecord.LogCode.Account, String.format("Ключи счета %s: %s '%s' не соответствует %s '%s' по AccountingType '%s'",
+                    side.getMsgName(), nameParam, keyParam, nameParam, dataParam, accType));
     }
 
     /**
