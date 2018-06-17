@@ -28,4 +28,8 @@ public class AqRepository extends AbstractBaseEntityRepository {
         return select(textResourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/aq/queue_stats.sql"));
     }
 
+    public String getQueueTableName() throws Exception {
+        return selectOne("select GLAQ_PKG_CONST.GET_QUEUE_TAB_NAME() TABLE_NAME from dual").getString("TABLE_NAME");
+    }
+
 }

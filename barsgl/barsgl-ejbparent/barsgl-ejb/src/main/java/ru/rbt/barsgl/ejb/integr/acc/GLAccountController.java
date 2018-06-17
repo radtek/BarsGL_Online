@@ -557,7 +557,7 @@ public class GLAccountController {
         return synchronizer.callSynchronously(monitor, () -> {
             return Optional.ofNullable(glAccountRepository.findGLPLAccount(keys.getCurrency()
                     , keys.getCustomerNumber(), keys.getAccountType(), keys.getCustomerType()
-                    , keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), operation.getValueDate()))
+                    , keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), rlnType, operation.getValueDate()))
                     .orElseGet(() ->
                     {
                         try {

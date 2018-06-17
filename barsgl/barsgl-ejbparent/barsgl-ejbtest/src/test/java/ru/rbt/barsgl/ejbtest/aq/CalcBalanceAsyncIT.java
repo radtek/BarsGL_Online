@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
+import ru.rbt.barsgl.ejb.repository.AqRepository;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
 import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.ejbcore.datarec.DBParam;
@@ -18,11 +19,13 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.SELECTED;
+import static ru.rbt.ejbcore.util.DateUtils.dbDateParse;
 
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
@@ -283,15 +286,88 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         checkCurrentBalanceMode(BalanceMode.GIBRID);
     }
 
-    @Test public void testErrors() {
+    @Test public void testErrors() throws Exception {
+
+        setGibridBalanceMode();
+        // проверка - очередь запущена на прием
+        DataRecord queue = baseEntityRepository.selectFirst("select * from user_queues where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
+        Assert.assertEquals("YES", queue.getString("ENQUEUE_ENABLED").trim());
+        Assert.assertEquals("YES", queue.getString("DEQUEUE_ENABLED").trim());
+
+        stopListeningQueue();
+        purgeQueueTable();
+
+        // отключаем задержку переобработки сообщений
+        baseEntityRepository.executeNativeUpdate("" +
+                "declare pragma autonomous_transaction; " +
+                "BEGIN DBMS_AQADM.ALTER_QUEUE('BAL_QUEUE', RETRY_DELAY => 0); END;");
+
+        GLAccount account = findAccount("40702810%");
+//        Operday operday = getOperday();
+
         // берем счет и делаем для него битый baltur
+        baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
+
+        final Date dat1 = dbDateParse("2018-01-01");
+        final Date dat2 = dbDateParse("2018-01-02");
+        final Date incorrectDatto29 = dbDateParse("2029-01-29");
+        final Date correctDatto29 = dbDateParse("2029-01-01");
+        insertBaltur(account.getBsaAcid(), account.getAcid(), dat1, dat1);
+        insertBaltur(account.getBsaAcid(), account.getAcid(), dat2, incorrectDatto29);
+
         // делаем проводку в режиме gibrid
-        // делаем кол-во попыток равное MAX_RETRIES
+        long id = baseEntityRepository.nextId("PD_SEQ");
+        createPosting(id, id, account.getAcid(), account.getBsaAcid(), 1, 1, pbrGibrid, dat2
+                , dat2, BankCurrency.RUB.getCurrencyCode(), "0");
+        DataRecord queueProperties = baseEntityRepository.selectFirst("select * from USER_QUEUES where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
+        Assert.assertNotNull(queueProperties);
+
+        // делаем кол-во попыток равное MAX_RETRIES + 1
+        for (int i = 0; i <= queueProperties.getLong("MAX_RETRIES"); i++) {
+            try {
+                dequeueProcessOne();
+            } catch (Exception e) {
+                log.log(Level.WARNING, "error on dequing", e);
+            }
+        }
+
         // проверяем что сообщение в очереди ошибок
-        // обрабатываем сообщение из ошибок (?)
+        String exceptionQueueName = remoteAccess.invoke(AqRepository.class, "getExceptionQueueName");
+        String queueTableName = remoteAccess.invoke(AqRepository.class, "getQueueTableName");
+
+        List<DataRecord> errorMessages = baseEntityRepository.select("select Q_NAME from " + queueTableName +" t where t.user_data.id = ?", id);
+        Assert.assertEquals(1, errorMessages.size());
+        Assert.assertEquals(exceptionQueueName, errorMessages.get(0).getString("Q_NAME"));
+
+        // баланс не изменен
+        DataRecord balance = baseEntityRepository.selectFirst("select sum(OBAC+DTAC+CTAC) SM from baltur where bsaacid = ? and dat = ?", account.getBsaAcid(), dat2);
+        Assert.assertTrue(0 == balance.getInteger("sm"));
+
         // останавливаем обработку (?)
 
+        baseEntityRepository.executeNativeUpdate("BEGIN GLAQ_PKG_UTL.CHECK_ERROR_QUEUE; END;");
 
+        // проверка - очередь остановлена на прием
+        queue = baseEntityRepository.selectFirst("select * from user_queues where name = GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME");
+        Assert.assertEquals("NO", queue.getString("ENQUEUE_ENABLED").trim());
+        Assert.assertEquals("YES", queue.getString("DEQUEUE_ENABLED").trim());
+
+
+        // фиксим ошибки
+        baseEntityRepository.executeNativeUpdate("update baltur set datto = ? where bsaacid = ? and dat = ?"
+            , correctDatto29, account.getBsaAcid(), dat2);
+
+        // обрабатываем сообщение из ошибок
+        dequeueProcessExceptionQueue();
+        errorMessages = baseEntityRepository.select("select Q_NAME from " + queueTableName +" t where t.user_data.id = ?", id);
+        Assert.assertEquals(0, errorMessages.size());
+        balance = baseEntityRepository.selectFirst("select sum(OBAC+DTAC+CTAC) SM from baltur where bsaacid = ? and dat = ?", account.getBsaAcid(), dat2);
+        Assert.assertTrue(balance.getInteger("sm") + "", 1 == balance.getInteger("sm"));
+    }
+
+    private void insertBaltur(String bsaacid, String acid, Date dat, Date datto) {
+        baseEntityRepository.executeNativeUpdate("insert into baltur (bsaacid, acid, dat, datto, incl) values (?,?,?,?, '0')"
+                , bsaacid, acid, dat, datto);
     }
 
     private void createPosting (long id, long pcid, String acid, String bsaacid, long amount, long amountbc, String pbr, Date pod, Date vald, String ccy, String invisible) {
@@ -312,7 +388,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private void stopListeningQueue() {
         baseEntityRepository.executeNativeUpdate(
                 "begin\n" +
-                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%LISTEN%') loop\n" +
+                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%GLAQ_PKG_CONST.GET_BALANCE_QUEUE_LISTNR_PRFX%') loop\n" +
                 "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
                 "    end loop;\n" +
                 "end;");
@@ -325,6 +401,10 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private void cleanBvjrnlRecord(GLAccount account) {
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+    }
+
+    private void dequeueProcessExceptionQueue() {
+        baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_EXCEPTION_QUEUE_NAME); end;");
     }
 
 }

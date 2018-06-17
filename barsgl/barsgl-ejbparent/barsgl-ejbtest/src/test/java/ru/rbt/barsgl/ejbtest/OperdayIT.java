@@ -639,6 +639,16 @@ public class OperdayIT extends AbstractTimerJobIT {
         Assert.assertEquals(ONLINE, getOperday().getPhase());
         checkCurrentBalanceMode(BalanceMode.ONDEMAND);
 
+        setOperday(previousWorkday, previouseLwd, COB, CLOSED);
+        Assert.assertEquals(COB, getOperday().getPhase());
+        setOndemanBalanceMode();
+
+        SingleActionJob openOperdayJob3 = SingleActionJobBuilder.create().withClass(OpenOperdayTask.class)
+                .withProps(BALANCE_MODE_KEY+"="+BalanceMode.NOCHANGE).build();
+        jobService.executeJob(openOperdayJob3);
+        Assert.assertEquals(ONLINE, getOperday().getPhase());
+        checkCurrentBalanceMode(BalanceMode.ONDEMAND);
+
     }
 
     private void setLwdCut() {

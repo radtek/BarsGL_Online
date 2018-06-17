@@ -107,8 +107,9 @@ public class StamtUnloadBalanceTask implements ParamsAwareRunnable {
      */
     private int fillDataCurrent(Date executeDate) throws Exception {
         return (int) repository.executeInNewTransaction(persistence -> {
-            return repository.executeCallable(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_cur_select.sql")
-                    , DBParams.createParams(new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT, executeDate)));
+            DBParams result = repository.executeCallable(textResourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_cur_select.sql")
+                    , DBParams.createParams(new DBParam(Types.DATE, DBParam.DBParamDirectionType.IN, executeDate), new DBParam(Types.INTEGER, DBParam.DBParamDirectionType.OUT)));
+            return result.getParams().get(1).getValue();
         });
     }
 

@@ -257,7 +257,7 @@ public class GLAccountService {
 
                 return Optional.ofNullable(glAccountRepository
                         .findGLPLAccount(keys.getCurrency(), keys.getCustomerNumber(), keys.getAccountType()
-                            , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), dateOpen))
+                            , keys.getCustomerType(), keys.getTerm(), keys.getPlCode(), keys.getCompanyCode(), rlnType, dateOpen))
                         .map(GLAccount::getBsaAcid).orElseGet(() -> {
                             try {
                                 return glAccountController.createGLPLAccount(keys, rlnType, operation, operSide);

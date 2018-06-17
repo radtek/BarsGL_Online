@@ -673,7 +673,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
      */
     public GLAccount findGLPLAccount(String currency, String customerNumber,
                                       String accountType, String cbCustType, String term, String plcode, String cbccn,
-                                      Date dateCurrent) {
+                                     GLAccount.RelationType rlnType,
+                                     Date dateCurrent) {
         try {
             return Optional.ofNullable(selectFirst(
                             "select ID " +
@@ -682,7 +683,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
                             "   and DTO <= ? and (DTC is null or DTC > ?) and RLNTYPE = ?" +
                             "   and coalesce(CBCUSTTYPE, 0) = ? and coalesce(TERM, 0) = ? "
                     , currency, customerNumber, accountType, plcode, cbccn, dateCurrent, dateCurrent
-                    , GLAccount.RelationType.FIVE.getValue(), ifEmpty(cbCustType, "0"), ifEmpty(term, "0")))
+                    , rlnType.getValue(), ifEmpty(cbCustType, "0"), ifEmpty(term, "0")))
                     .map((record) -> findById(GLAccount.class, record.getLong("ID"))).orElse(null);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
@@ -1173,7 +1174,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
         return null;
     }
-
     public DataRecord checkAccountBalance(GLAccount account, Date operDate, BigDecimal amount)
     {
         try{
