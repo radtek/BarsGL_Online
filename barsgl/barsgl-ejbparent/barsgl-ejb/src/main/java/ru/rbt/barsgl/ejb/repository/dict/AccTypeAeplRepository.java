@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 @AccessTimeout(unit = TimeUnit.MINUTES, value = 15)
 @Lock(LockType.READ)
 public class AccTypeAeplRepository extends AbstractCachedRepository<AccountingTypeAepl, String> {
-    public Boolean isAepl(String accType) {
+    public Boolean isAePL(String accType) {
         AccountingTypeAepl aepl = super.findCached(accType);
         return (!StringUtils.isEmpty(accType) && (null != aepl));
     }

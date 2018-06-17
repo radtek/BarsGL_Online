@@ -593,7 +593,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         }
 
         // параметры счета ЦБ
-        if (aeplRepository.isAepl(keys.getAccountType())) {
+        if (aeplRepository.isAePL(keys.getAccountType())) {
             if (!actParmRepository.isPlCodeExists(keys.getPlCode(), dateOpen))
                 throw new ValidationError(PLCODE_NOT_EXISTS, keys.getPlCode(),
                         dateUtils.onlyDateString(dateOpen));
