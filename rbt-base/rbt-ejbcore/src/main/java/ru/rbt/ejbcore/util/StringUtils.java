@@ -9,6 +9,7 @@ import java.util.Iterator;
 public class StringUtils {
 
     public static final char[] quotes =  "“”«»".toCharArray();
+    final static String codeCharToNum = new String("ABCEHKMPTX");
 
     // TODO перенести в barsgl-shared
     public static boolean isEmpty(String target) {
@@ -24,6 +25,10 @@ public class StringUtils {
                 : target.substring(start, Integer.min(end,  target.length()));
     }
 
+    public static String currencyFirstCharToNum(String ch){
+        int pos = codeCharToNum.indexOf(ch);
+        return pos < 0? ch: String.valueOf(pos);
+    }
     public static String trimstr(String target) {
         return (isEmpty(target) ? "" : target.trim());
     }
