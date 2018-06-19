@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -119,14 +120,19 @@ public class SqlPageSupportBean implements SqlPageSupport {
                                 DataRecord rec = new DataRecord(rs, adapter);
                                 result.add(rec);
                                 if ((startWith + pageSize - 1) == result.size()) {
-                                    return result.subList(startWith - 1, result.size());
+                                    return standardSublist(result, startWith);
                                 }
                             }
-                            return result.subList(startWith - 1, result.size());
+                            if (startWith > result.size()) {
+                                // sometimes startsWith > total rows count!!! Possible GUI Bug?!
+                                return Collections.emptyList();
+                            } else {
+                                return standardSublist(result, startWith);
+                            }
                         }
                     } catch (SQLException e) {
                         if (result.size() > 0 && startWith <= result.size()) {
-                            return result.subList(startWith - 1, result.size());
+                            return standardSublist(result, startWith);
                         } else {
                             throw e;
                         }
@@ -273,6 +279,10 @@ public class SqlPageSupportBean implements SqlPageSupport {
     private int calculateCount(Repository dbRepository, String sql, Object[] params) throws Exception {
         List<DataRecord> result = getSqlResult(dbRepository, new SQL(sql, params), 1, MAX_ROW_COUNT + 1, DEFAULT_SQL_TIMEOUT.getTimeUnit(), DEFAULT_SQL_TIMEOUT.getTimeout());
         return MAX_ROW_COUNT + 1 == result.size() ? -MAX_ROW_COUNT : result.size();
+    }
+
+    private List<DataRecord> standardSublist(List<DataRecord> totalResult, int startWith) {
+        return totalResult.subList(startWith - 1, totalResult.size());
     }
 
 }
