@@ -11,7 +11,7 @@ import javax.persistence.Table;
  * Created by er18837 on 08.06.2018.
  */
 @Entity
-@Table(name = "GL_ACСTYPE_AEPL")
+@Table(name = "GL_ACCTYPE_AEPL")
 public class AccountingTypeAepl extends BaseEntity<String> {
     @Id
     @Column(name = "ACCTYPE", nullable = false, length = 10)
