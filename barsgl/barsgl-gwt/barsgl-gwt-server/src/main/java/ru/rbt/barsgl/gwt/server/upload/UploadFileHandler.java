@@ -12,9 +12,11 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessorBean;
 import ru.rbt.barsgl.ejb.controller.excel.CardMessageProcessorBean;
 import ru.rbt.barsgl.ejb.controller.excel.ParamsParserException;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
 import ru.rbt.barsgl.shared.NotAuthorizedUserException;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.shared.ExceptionUtils;
 
 import javax.servlet.ServletConfig;
@@ -42,6 +44,9 @@ public class UploadFileHandler extends HttpServlet {
 
     private static final String UPLOAD_TYPE = "uploadtype";
 
+    // TODO Property
+    private long maxFileSizeDef = 100000L;
+
     private ServerAccess localInvoker;
 
     @Override
@@ -64,6 +69,10 @@ public class UploadFileHandler extends HttpServlet {
                         String fieldvalue = item.getString();
                         params.put(fieldname, fieldvalue);
                     } else {
+                        //         return (int)(long)propertiesRepository.getNumberDef(PropertyName.BATPKG_MAXROWS.getName(), MAX_ROWS);
+                        long maxFileSize = localInvoker.invoke(PropertiesRepository.class, "getNumberDef", PropertyName.BATPKG_MAXSIZE.getName(), maxFileSizeDef);
+                        if (item.getSize() > maxFileSize)
+                            throw new IllegalArgumentException(String.format("Слишком большой файл: '%s' размер %d байт", item.getName(), item.getSize()));
                         file = writeFile(item);
                     }
                 }
@@ -80,7 +89,7 @@ public class UploadFileHandler extends HttpServlet {
                 throw new RuntimeException("Request is not have multipart content");
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String rusErr = getRusError(e);
             if (!rusErr.isEmpty()){
                 auditRecord("warning", rusErr, null);
@@ -133,6 +142,8 @@ public class UploadFileHandler extends HttpServlet {
             if (exception.getMessage() == null || exception.getMessage().trim().isEmpty())
                 rusErr = "Ошибки формата данных при загрузке пакета из файла";
             else rusErr = exception.getMessage();
+        }else if (e instanceof IllegalArgumentException){
+            rusErr = e.getMessage();
         }else if (ExceptionUtils.isExistsInException(e.getCause(), IllegalStateException.class)){
             rusErr = "Файл содержит формулы. Загрузка файла невозможна";
         }else if (ExceptionUtils.isExistsInException(e.getCause(), POIXMLException.class)){

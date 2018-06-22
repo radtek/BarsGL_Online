@@ -11,6 +11,7 @@ public enum PropertyName {
     , MANUAL_PROCESS_COUNT("manual.process.count")
     , BATCH_PROCESS_ALLOWED("manual.process.allowed")
     , BATPKG_MAXROWS("batpkg.max.count")
+    , BATPKG_MAXSIZE("batpkg.max.size")
     , MC_QUEUES_PARAM("mc.queues.param")
     , MC_TIMEOUT("mc.timeout.sec")
     , COB_STAT_INC("cob.stat.increase")
