@@ -205,6 +205,7 @@ public enum ErrorCode {
     , PACKAGE_STATUS_WRONG(4024, "Статус пакета не соответствует ожидаемому: '%s' (%s)")
     , REPROCESS_ERROR(4025, "%s")
     , BV_MANUAL_ERROR(4026, "%s")
+    , OPER_MANUAL_ERROR(4027, "%s")
 
     , AQ_COMMON_CODE(5000, "%s")
     , PD_SYNC_GIBRID(5100, "%s")

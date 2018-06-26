@@ -58,6 +58,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
 import static ru.rbt.barsgl.shared.enums.BatchPostStatus.*;
 import static ru.rbt.ejbcore.util.StringUtils.*;
+import static ru.rbt.ejbcore.validation.ErrorCode.OPER_MANUAL_ERROR;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_SAME_NOT_ALLOWED;
 import static ru.rbt.ejbcore.validation.ErrorCode.POSTING_STATUS_WRONG;
 import static ru.rbt.ejbcore.validation.ValidationError.initSource;
@@ -157,9 +158,9 @@ public class ManualPostingController {
                 auditController.warning(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
-                addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
+                String errMsg = addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
                 auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
-                return new RpcRes_Base<>(wrapper, true, e.getMessage());
+                return new RpcRes_Base<>(wrapper, true, errMsg);
             }
         }
     }
@@ -719,38 +720,22 @@ public class ManualPostingController {
     private BatchPosting updatePosting(ManualOperationWrapper wrapper, BatchPostStatus status) throws Exception {
         validateOperationRq(wrapper);
 
-        try {
-            BatchPosting posting0 = getPostingWithCheck(wrapper);
-            BatchPosting posting = createPostingHistory(posting0, BatchPostStep.HAND1, wrapper.getAction());
-            // редактировать операцию
-            posting = postingProcessor.updatePosting(wrapper, posting);
-            posting.setStatus(status);
-            return postingRepository.update(posting);     // сохранить входящую операцию
-
-        } catch (Throwable e) {
-            String msg = "Ошибка при изменении запроса на операцию ID = " + wrapper.getId();
-            addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
-            throw new DefaultApplicationException(msg, e);
-        }
+        BatchPosting posting0 = getPostingWithCheck(wrapper);
+        BatchPosting posting = createPostingHistory(posting0, BatchPostStep.HAND1, wrapper.getAction());
+        // редактировать операцию
+        posting = postingProcessor.updatePosting(wrapper, posting);
+        posting.setStatus(status);
+        return postingRepository.update(posting);     // сохранить входящую операцию
     }
 
     private BatchPosting deletePosting(ManualOperationWrapper wrapper) {
-        try {
-            BatchPosting posting = getPostingWithCheck(wrapper);
-            if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, BatchPostAction.DELETE)) {
-                postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), userContext.getUserName());
-                return postingRepository.findById(posting.getId());
-            } else {
-                postingRepository.deletePosting(posting.getId());   // удалить запрос на операцию
-                return null;
-            }
-
-        } catch (Throwable e) {
-            String msg = "Ошибка при удалении запроса на операцию ID = " + wrapper.getId();
-            addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
-            throw new DefaultApplicationException(msg, e);
+        BatchPosting posting = getPostingWithCheck(wrapper);
+        if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, BatchPostAction.DELETE)) {
+            postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), userContext.getUserName());
+            return postingRepository.findById(posting.getId());
+        } else {
+            postingRepository.deletePosting(posting.getId());   // удалить запрос на операцию
+            return null;
         }
     }
 
@@ -768,13 +753,13 @@ public class ManualPostingController {
                     "\n Обновите информацию и выполните операцию повторно"
                     , posting.getId(), posting.getStatus().name(), posting.getStatus().getLabel());
             wrapper.getErrorList().addErrorDescription(msg);
-            throw new DefaultApplicationException(wrapper.getErrorMessage());
+            throw new ValidationError(OPER_MANUAL_ERROR, wrapper.getErrorMessage());
         }
         if (!InvisibleType.N.equals(posting.getInvisible())) {
             String msg = String.format("Запрос на операцию ID = %d изменен, признак 'Удален': '%s' ('%s')\n Обновите информацию",
                     posting.getId(), posting.getInvisible().name(), posting.getInvisible().getLabel() );
             wrapper.getErrorList().addErrorDescription(msg);
-            throw new DefaultApplicationException(msg);
+            throw new ValidationError(OPER_MANUAL_ERROR, wrapper.getErrorMessage());
         }
         if (enabledStatus.length == 0)
             return true;
@@ -786,7 +771,7 @@ public class ManualPostingController {
         String msg = String.format("Запрос на операцию ID = '%d': нельзя '%s' запрос в статусе: '%s' ('%s')", posting.getId(),
                 wrapper.getAction().getLabel(), posting.getStatus().name(), posting.getStatus().getLabel());
         wrapper.getErrorList().addErrorDescription(msg);
-        throw new DefaultApplicationException(msg);
+        throw new ValidationError(OPER_MANUAL_ERROR, wrapper.getErrorMessage());
     }
 
     private BatchPosting createPostingHistory(BatchPosting posting, BatchPostStep step, BatchPostAction action) throws Exception {
