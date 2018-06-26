@@ -564,7 +564,7 @@ public class GLAccountController {
                             final String bsaacid = glAccountRepository
                                     .executeInNonTransaction(connection -> AccountUtil.generateAccountNumber(connection
                                             , keys.getAccount2(), keys.getCurrencyDigital(), keys.getCompanyCode(), keys.getPlCode()));
-                            final GLAccount account = createAccount(bsaacid, operation, N, operation.getValueDate(), keys, rlnType, GLAccount.OpenType.AENEW);
+                            final GLAccount account = createAccount(bsaacid, operation, operSide, operation.getValueDate(), keys, rlnType, GLAccount.OpenType.AENEW);
                             GLRelationAccountingType rt = Optional.ofNullable(relationAccountingTypeRepository
                                     .findById(GLRelationAccountingType.class, new GLRelationAccountingTypeId(account.getBsaAcid()
                                             , account.getAcid()))).orElseGet(() -> relationAccountingTypeRepository.createRelation(account.getAcid()

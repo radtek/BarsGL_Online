@@ -14,6 +14,7 @@ import ru.rbt.ejbcore.util.DateUtils;
 import javax.inject.Inject;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -87,6 +88,16 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
             String sql = "select 1 from gl_plcode where plcode=? and dat <= to_date('" + wrapper.getDtb() +
                          "', 'dd.mm.yyyy') and nvl(datto, to_date('2029-01-01', 'yyyy-mm-dd')) >= to_date('" + wrapper.getDtb() + "', 'dd.mm.yyyy')";
             return null != selectFirst(sql, wrapper.getPlcode());
+        } catch (SQLException e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    public boolean isPlCodeExists(String plCode, Date dtb){
+        try{
+            String sql = "select 1 from gl_plcode where plcode= ? and dat <= ? " +
+                    " and nvl(datto, to_date('2029-01-01', 'yyyy-mm-dd')) >= ?";
+            return null != selectFirst(sql, plCode, dtb, dtb);
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }

@@ -6,6 +6,8 @@ import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
 import ru.rbt.barsgl.ejb.entity.acc.*;
+import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
+import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParmId;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType;
@@ -1715,6 +1717,66 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         String bsaacid2 = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
                 , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
         Assert.assertEquals(bsaacid, bsaacid2);
+    }
+
+    @Test public void testPLAccountOpenByAccountTypeAEPL() throws SQLException {
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
+                , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
+
+        final String accType= "671030201";
+        final String plCode=  "26201";
+        final String plCodeAe=  "26202";
+        ActParm actParm = createAEPL(accType, plCode);
+
+        AccountKeys acCt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency("RUR").withCustomerNumber("00000018")
+                .withAccountType(accType)
+                .withCustomerType(actParm.getId().getCusType())
+                .withTerm(actParm.getId().getTerm())
+                .withPlCode(plCodeAe).withGlSequence("PL")
+                .withAcc2(actParm.getId().getAcc2())
+                .withAccountCode(actParm.getAcod()).withAccSequence(actParm.getAc_sq())
+                .build();
+
+        String bsaacid = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertTrue(bsaacid, !StringUtils.isEmpty(bsaacid));
+        logger.info("Account has created: " + bsaacid);
+
+        GLAccount account = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, "from GLAccount a where a.bsaAcid = ?1", bsaacid);
+        Assert.assertEquals(GLAccount.RelationType.TWO, account.getRelationTypeEnum());
+        Assert.assertEquals(plCodeAe, account.getPlCode());
+
+        // проверяем содержимое GL_RLNACT
+        GLRelationAccountingType relationAccountingType
+                = (GLRelationAccountingType) baseEntityRepository.selectFirst(GLRelationAccountingType.class
+                , "from GLRelationAccountingType r where r.id.bsaacid = ?1", account.getBsaAcid());
+        Assert.assertNotNull(relationAccountingType);
+
+        GLAccount acc = remoteAccess.invoke(GLAccountRepository.class, "findGLAccount", account.getBsaAcid());
+        Assert.assertNotNull(acc);
+        Assert.assertEquals(GLAccount.RelationType.TWO.getValue(), acc.getRelationType());
+
+        // поиск возвращает уже созданный счет
+        String bsaacid2 = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertEquals(bsaacid, bsaacid2);
+    }
+
+    private ActParm createAEPL(String accType, String plCode) {
+        // 671030201	Доходы от операций купли-продажи иностранной валюты в безналичной форме FX SPOT	N	N	N
+        // 671030201	00 	00	70601	26201	0110	01	2016-01-01 00:00:00
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACTPARM where ACCTYPE = ?", accType);
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACTNAME where ACCTYPE = ?", accType);
+        baseEntityRepository.executeNativeUpdate("insert into GL_ACTNAME (ACCTYPE, ACCNAME, PL_ACT, FL_CTRL, TECH_ACT) values (?, ?, ?, ?, ?)",
+                accType, "Доходы от операций купли-продажи иностранной валюты в безналичной форме FX SPOT", "N", "N","N");
+        ActParmId id = new ActParmId(accType, "00", "00", "70601", getOperday().getCurrentDate());
+        ActParm actParm = new ActParm(id, plCode, "0110", "01", null);
+        baseEntityRepository.save(actParm);
+        return actParm;
     }
 
     /**
