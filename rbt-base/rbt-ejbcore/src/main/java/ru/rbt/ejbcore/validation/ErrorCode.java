@@ -148,6 +148,7 @@ public enum ErrorCode {
     , ACCTYPE_EXDIFF_NOT_FOUND(2054, "Не найден ACCTYPE (GL_ACC2EXCH_ACCTYPE) для ACC2='%s', ACOD='%s', CASH='%s'")
     , ACCTYPE_EXDIFF_BAD(2055, "ACCTYPE курсовой разницы '%s' неверный, должен быть '%s' для ACC2='%s', ACOD='%s', CASH='%s'")
     , PLCODE_NOT_EXISTS(2056, "Cимвол ОФР '%s' c датой действия '%s' не найден")
+    , ACC2_NOT_EXISTS(2057, "Нет записи в таблице BSS для ACC2 = '%s'")
 
     // Опердень и задачи
     , OPEN_OPERDAY_ERROR(3001, "%s")

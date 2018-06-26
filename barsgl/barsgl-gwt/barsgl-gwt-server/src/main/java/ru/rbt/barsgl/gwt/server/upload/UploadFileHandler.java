@@ -45,7 +45,7 @@ public class UploadFileHandler extends HttpServlet {
     private static final String UPLOAD_TYPE = "uploadtype";
 
     // TODO Property
-    private long maxFileSizeDef = 100000L;
+    private long maxFileSizeDef = 256000L;
 
     private ServerAccess localInvoker;
 
@@ -72,7 +72,7 @@ public class UploadFileHandler extends HttpServlet {
                         //         return (int)(long)propertiesRepository.getNumberDef(PropertyName.BATPKG_MAXROWS.getName(), MAX_ROWS);
                         long maxFileSize = localInvoker.invoke(PropertiesRepository.class, "getNumberDef", PropertyName.BATPKG_MAXSIZE.getName(), maxFileSizeDef);
                         if (item.getSize() > maxFileSize)
-                            throw new IllegalArgumentException(String.format("Слишком большой файл: '%s' размер %d байт", item.getName(), item.getSize()));
+                            throw new IllegalArgumentException(String.format("Размер файла %,d байт превышает максимально допустимый для загрузки размер %,d байт", item.getSize(), maxFileSize));
                         file = writeFile(item);
                     }
                 }

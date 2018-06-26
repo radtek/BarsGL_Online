@@ -494,6 +494,10 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         // TODO потом проверять наличие полей и, если надо, определять по справочникам
         glAccount.setBalanceAccount2(keys.getAccount2());
         glAccount.setPlCode(keys.getPlCode());
+        String psav = glAccountRepository.getPassiveActive(glAccount.getBalanceAccount2());
+        if (isEmpty(psav)) {
+            throw new ValidationError(ACC2_NOT_EXISTS, glAccount.getBalanceAccount2());
+        }
         glAccount.setPassiveActive(glAccountRepository.getPassiveActive(glAccount.getBalanceAccount2()));
 /*
         short acode = (short) stringToLong(side, "ACOD Midas", keys.getAccountCode(), AccountKeys.getiAccountCode());
