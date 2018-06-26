@@ -252,7 +252,7 @@ public class GLAccountService {
         } else {
             GLAccount.RelationType rlnType = accountingTypeRepository.findById(AccountingType.class, keys.getAccountType()).isBarsAllowed() ? FIVE : TWO;
             // Перенесено сюда, так как портит данные для других этапов
-            glAccountProcessor.fillAccountOfrKeysMidas(operSide, dateOpen, keys);
+            glAccountProcessor.fillAccountOfrKeysMidas(operation, operSide, dateOpen, keys);
             glAccountProcessor.fillAccountOfrKeys(operSide, dateOpen, keys); // Обогащение
 
                 return Optional.ofNullable(glAccountRepository

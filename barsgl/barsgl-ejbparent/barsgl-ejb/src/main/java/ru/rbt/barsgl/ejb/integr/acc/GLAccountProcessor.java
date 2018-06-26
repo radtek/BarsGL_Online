@@ -587,7 +587,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
      * @param keys
      * @return
      */
-    public AccountKeys fillAccountOfrKeysMidas(GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
+    public AccountKeys fillAccountOfrKeysMidas(GLOperation operation, GLOperation.OperSide side, Date dateOpen, AccountKeys keys) {
         // TODO заполнить ключи счета из справочников
         DataRecord data = glAccountRepository.getAccountParams(keys.getAccountType(), keys.getCustomerType(), keys.getTerm(), dateOpen);
         if (null == data) {
@@ -602,16 +602,16 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
                 throw new ValidationError(PLCODE_NOT_EXISTS, keys.getPlCode(),
                         dateUtils.onlyDateString(dateOpen));
         } else {
-            checkOfrParam(side, keys.getAccountType(), keys.getPlCode(), data.getString("PLCODE"), "PLCODE");
+            checkOfrParam(operation, side, keys.getAccountType(), keys.getPlCode(), data.getString("PLCODE"), "PLCODE");
             keys.setPlCode(data.getString("PLCODE"));       // PLCODE
         }
-        checkOfrParam(side, keys.getAccountType(), keys.getAccount2(), data.getString("ACC2"), "ACC2");
+        checkOfrParam(operation, side, keys.getAccountType(), keys.getAccount2(), data.getString("ACC2"), "ACC2");
         keys.setAccount2(data.getString("ACC2"));       // ACC2
 
         // параметры счета Майдас
-        checkOfrParam(side, keys.getAccountType(), keys.getAccountCode(), data.getString("ACOD"), "ACOD");
+        checkOfrParam(operation, side, keys.getAccountType(), keys.getAccountCode(), data.getString("ACOD"), "ACOD");
         keys.setAccountCode(data.getString("ACOD"));    // ACOD
-        checkOfrParam(side, keys.getAccountType(), keys.getAccSequence(), data.getString("SQ"), "SQ");
+        checkOfrParam(operation, side, keys.getAccountType(), keys.getAccSequence(), data.getString("SQ"), "SQ");
         keys.setAccSequence(data.getString("SQ"));      // SQ
 
         // тип собственности
@@ -633,11 +633,12 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         return keys;
     }
 
-    private void checkOfrParam(GLOperation.OperSide side, String accType, String keyParam, String dataParam, String nameParam) {
+    private void checkOfrParam(GLOperation operation, GLOperation.OperSide side, String accType, String keyParam, String dataParam, String nameParam) {
         if (!isEmpty(keyParam) && !keyParam.equals(dataParam))
-            auditController.warning(AuditRecord.LogCode.Account, String.format("Ключи счета %s: %s '%s' не соответствует %s '%s' по AccountingType '%s'",
+            auditController.warning(AuditRecord.LogCode.Account, "Предупреждение при создании счета ОФР для операции GLOID = " + operation.getId(), operation,
+                    String.format("Ключи счета %s: %s '%s' не соответствует %s '%s' по AccountingType '%s'",
                     side.getMsgName(), nameParam, keyParam, nameParam, dataParam, accType));
-    }
+}
 
     /**
      * Заполняет недостающие параметры ключей счета ЦБ

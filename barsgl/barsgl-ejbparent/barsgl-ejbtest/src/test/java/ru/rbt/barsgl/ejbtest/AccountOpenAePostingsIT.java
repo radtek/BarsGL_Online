@@ -1766,6 +1766,46 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertEquals(bsaacid, bsaacid2);
     }
 
+    @Test public void testPLAccountOpenByAccountTypeKeyError() throws SQLException {
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, BUFFER);
+
+        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class
+                , baseEntityRepository.selectFirst("select gloid from gl_oper").getLong("gloid"));
+
+        final String accType= "671030201";
+        final String plCode=  "26201";
+        final String plCodeAe=  "26202";
+        ActParm actParm = createAEPL(accType, plCode);
+
+        AccountKeys acCt
+                = AccountKeysBuilder.create()
+                .withBranch("001").withCurrency("RUR").withCustomerNumber("00000018")
+                .withAccountType(accType)
+                .withCustomerType(actParm.getId().getCusType())
+                .withTerm(actParm.getId().getTerm())
+                .withPlCode(plCodeAe).withGlSequence("PL")
+                .withAcc2("01234")
+                .withAccountCode(actParm.getAcod()).withAccSequence(actParm.getAc_sq())
+                .build();
+
+        String bsaacid = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        Assert.assertTrue(bsaacid, !StringUtils.isEmpty(bsaacid));
+        logger.info("Account has created: " + bsaacid);
+
+        String bsaacid2 = "";
+        try {
+            acCt.setPlCode("01234");
+            bsaacid2 = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
+                    , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
+        } catch (Throwable t) {
+            Assert.assertTrue(isEmpty(bsaacid2));
+            logger.info("Account has not created");
+            return;
+        }
+        Assert.assertTrue(false);
+    }
+
     private ActParm createAEPL(String accType, String plCode) {
         // 671030201	Доходы от операций купли-продажи иностранной валюты в безналичной форме FX SPOT	N	N	N
         // 671030201	00 	00	70601	26201	0110	01	2016-01-01 00:00:00
