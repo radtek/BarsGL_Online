@@ -29,7 +29,7 @@ public class Components {
    * @return
    */
   public static DecBox createDecBox(int scale, int length, String width) {
-    DecBox box = new DecBox();
+    DecBox box = new DecBox(null);
     box.setScale(scale);
     box.setMaxLength(length);
     box.setVisibleLength(length);
