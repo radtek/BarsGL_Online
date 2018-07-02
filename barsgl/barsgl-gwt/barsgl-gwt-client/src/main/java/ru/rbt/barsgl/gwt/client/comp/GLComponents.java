@@ -8,6 +8,7 @@ import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.comp.Components;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.ColumnsBuilder;
+import ru.rbt.barsgl.gwt.core.ui.BtnDecBox;
 import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
@@ -432,6 +433,23 @@ public class GLComponents {
                 }
             }
         });
+
+        return box;
+    }
+
+    public static BtnDecBox createBtnDecBoxForSumma(int length, String width, Image img, String hint, final ICallMethod cm)
+    {
+        BtnDecBox box = new BtnDecBox(null, 2){
+            @Override
+            public void onBntClick()  {
+                if (cm != null) cm.method();
+            }
+        };
+        box.setMaxLength(length);
+        box.setVisibleLength(length);
+        box.setWidth(width);
+        box.setButtonImage(img);
+        box.setHint(hint);
 
         return box;
     }

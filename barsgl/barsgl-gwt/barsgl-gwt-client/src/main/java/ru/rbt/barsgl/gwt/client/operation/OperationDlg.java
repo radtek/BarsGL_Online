@@ -13,6 +13,7 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
+import ru.rbt.barsgl.gwt.core.ui.DecBox;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -66,7 +67,7 @@ public class OperationDlg extends OperationDlgBase {
     protected DatePickerBox mDateOperation;
     protected DatePickerBox mDateValue;
 
-    protected TxtBox mSumRu;
+    protected DecBox mSumRu;
     protected CheckBox mCheckSumRu;
     protected CheckBox mCheckCorrection;
 
@@ -226,7 +227,7 @@ public class OperationDlg extends OperationDlgBase {
         Grid grid = new Grid(2,4);
         //g3.setWidget(0, 0, createLabel("", "40px"));
         grid.setWidget(0, 0, Components.createLabel("Сумма в рублях", LABEL2_WIDTH));
-        grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
+        grid.setWidget(0, 1, mSumRu = Components.createDecBox(2, 20, SUM_WIDTH));
         grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без проводки по курсовой разнице"));
         grid.setWidget(1, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
 
@@ -274,18 +275,22 @@ public class OperationDlg extends OperationDlgBase {
         operation.setAccountDebit(check(mDtAccount.getValue()
                 , "Счет (дебет)", "длина строки < 20 символов", new CheckStringExactLength(20)));
 
+/*
         operation.setAmountCredit(check(mCrSum.getValue(),
                 "Кредит: сумма", "поле должно быть заполнено числом или числом с точкой"
                 , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
         operation.setAmountDebit(check(mDtSum.getValue(),
                 "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
                 , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
+*/
+/*
         if (mCheckSumRu.getValue()) {
             BigDecimal sumRu = check(mSumRu.getValue(),
                     "Сумма в рублях:", "поле должно быть заполнено числом > 0"
                     , new CheckNotZeroBigDecimal(), new ConvertStringToBigDecimal());
             operation.setAmountRu(sumRu);
         }
+*/
 
         checkSide(operation.getAmountDebit(), operation.getAmountRu(),
                 operation.getCurrencyDebit(), operation.getAccountCredit(), "Дебет:" );
@@ -321,18 +326,18 @@ public class OperationDlg extends OperationDlgBase {
             mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
             mDtFilial.setSelectValue(operation.getFilialDebit());
             mDtAccount.setValue(operation.getAccountDebit());
-            mDtSum.setValue(getSumma(operation.getAmountDebit()));
+            mDtSum.setValue(operation.getAmountDebit());
 
             mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
             mCrFilial.setSelectValue(operation.getFilialCredit());
             mCrAccount.setValue(operation.getAccountCredit());
-            mCrSum.setValue(getSumma(operation.getAmountCredit()));
+            mCrSum.setValue(operation.getAmountCredit());
 
             BigDecimal amountRu = getAmountRu(operation.getAmountRu(), operation.getAmountRuCredit(), operation.getCurrencyDebit(), operation.getCurrencyCredit());
             boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
                     && (null != amountRu);
             mCheckSumRu.setValue(withoutDiff);
-            mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "");
+            mSumRu.setValue(withoutDiff ? amountRu : null);
 
             mNarrativeEN.setValue(operation.getNarrative());
             mNarrativeEN.setValue(operation.getNarrative());
@@ -451,6 +456,7 @@ public class OperationDlg extends OperationDlgBase {
                         if (dtCurrency.equals(crCurrency)) {
                             showInfo("Ошибка", "Сумма в рублях вводится только для операции в разных валютах");
                             return;
+/*
                         } else if ("RUR".equals(dtCurrency)) {
                             mSumRu.setValue(check(mDtSum.getValue(), "Дебет: сумма", "поле должно быть не 0", checkBigDecimal));
                         } else if ("RUR".equals(crCurrency)) {
@@ -458,6 +464,7 @@ public class OperationDlg extends OperationDlgBase {
                         } else if (!checkBigDecimal.check(mDtSum.getValue()) || !checkBigDecimal.check(mCrSum.getValue())) {
                             showInfo("Ошибка", "Сумма в валюте может быть равна 0 только для операций по курсовой разнице");
                             return;
+*/
                         } else {
                             mSumRu.setEnabled(true);
                         }
@@ -494,6 +501,7 @@ public class OperationDlg extends OperationDlgBase {
         mDtSum.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
+/*
                 if (isRurDebit) {
                     if (new CheckNotZeroBigDecimal().check(mDtSum.getValue())) {
                         mSumRu.setValue(mDtSum.getValue());
@@ -501,12 +509,14 @@ public class OperationDlg extends OperationDlgBase {
                         mCheckSumRu.setValue(false, true);
                     }
                 }
+*/
                 correctSum(mDtSum, mCrSum);
             }
         });
         mCrSum.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
+/*
                 if (isRurCredit) {
                     if (new CheckNotZeroBigDecimal().check(mCrSum.getValue())) {
                         mSumRu.setValue((String)mCrSum.getValue());
@@ -514,6 +524,7 @@ public class OperationDlg extends OperationDlgBase {
                         mCheckSumRu.setValue(false, true);
                     }
                 }
+*/
                 correctSum(mCrSum, mDtSum);
             }
         });
@@ -555,14 +566,16 @@ public class OperationDlg extends OperationDlgBase {
             return;
         }
 
-        String sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
+        BigDecimal sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
 
+/*
         if (!checkBigDecimal.check(sum)) {
             showInfo("Ошибка", Utils.Fmt("Сумма в валюте {0} должна быть заполнена и не равна нулю",
                     isDebit ? "кредита" : "дебета"));
             return;
         }
+*/
         calculateSum(createCurExchangeWrapper(isDebit), isDebit);
     }
 
@@ -571,7 +584,7 @@ public class OperationDlg extends OperationDlgBase {
         CurExchangeWrapper wrapper = new CurExchangeWrapper();
         wrapper.setDate(DateTimeFormat.getFormat("dd.MM.yyyy").format(mDateOperation.getValue()));
         wrapper.setSourceCurrency(isDebit ? (String) mCrCurrency.getValue() : (String) mDtCurrency.getValue());
-        wrapper.setSourceSum(new BigDecimal(isDebit ? mCrSum.getValue() : mDtSum.getValue()));
+        wrapper.setSourceSum(isDebit ? mCrSum.getValue() : mDtSum.getValue());
         wrapper.setTargetCurrency(isDebit ? (String) mDtCurrency.getValue() : (String) mCrCurrency.getValue());
 
         return wrapper;
@@ -596,18 +609,21 @@ public class OperationDlg extends OperationDlgBase {
 
     private void setSum(CurExchangeWrapper wrapper, boolean isDebit){
         if (isDebit){
-            mDtSum.setValue(wrapper.getTargetSum().toPlainString());
+            mDtSum.setValue(wrapper.getTargetSum()); //.toPlainString());
         }else {
-            mCrSum.setValue(wrapper.getTargetSum().toPlainString());
+            mCrSum.setValue(wrapper.getTargetSum()); //.toPlainString());
         }
     }
 
-    private void correctSum(TxtBox boxA, TxtBox boxB){
+    private void correctSum(DecBox boxA, DecBox boxB){
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
 
+/*
         if (checkBigDecimal.check(boxA.getValue()) && !checkBigDecimal.check(boxB.getValue()) &&
                 ((String)mDtCurrency.getValue()).equalsIgnoreCase((String) mCrCurrency.getValue())){
             boxB.setValue(boxA.getValue());
         }
+*/
+        boxB.setValue(boxA.getValue());
     }
 }

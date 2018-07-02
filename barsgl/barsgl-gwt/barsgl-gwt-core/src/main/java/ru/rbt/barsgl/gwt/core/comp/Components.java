@@ -28,9 +28,12 @@ public class Components {
    * Создает поле ввода десятичного числа с двумя знаками после запятой
    * @return
    */
-  public static DecBox createDecBox(int scale) {
+  public static DecBox createDecBox(int scale, int length, String width) {
     DecBox box = new DecBox();
-    box.setScale(2);
+    box.setScale(scale);
+    box.setMaxLength(length);
+    box.setVisibleLength(length);
+    box.setWidth(width);
     return box;
   }
 
