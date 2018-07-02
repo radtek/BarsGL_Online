@@ -25,10 +25,7 @@ import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
-import ru.rbt.barsgl.gwt.core.ui.AreaBox;
-import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
-import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
-import ru.rbt.barsgl.gwt.core.ui.TxtBox;
+import ru.rbt.barsgl.gwt.core.ui.*;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -93,11 +90,11 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
     private DataListBoxEx mDtCurrency;
     private DataListBoxEx mDtFilial;
     private TxtBox mDtAccount;
-    private TxtBox mDtSum;
+    private DecBox mDtSum;
     private DataListBoxEx mCrCurrency;
     private DataListBoxEx mCrFilial;
     private TxtBox mCrAccount;
-    private TxtBox mCrSum;
+    private DecBox mCrSum;
     private CheckBox mCheckCorrection;
     protected String _reasonOfDeny;
 
@@ -233,8 +230,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
 
         grid.setWidget(5, 0, createLabel("Сумма"));
 
-        TxtBox mSum;
-        grid.setWidget(5,1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
+        DecBox mSum;
+        grid.setWidget(5,1, mSum = createDecBoxForSumma(20, SUM_WIDTH));
 
         if (isDebit) {
             mDtAccount = mAccount;
@@ -391,7 +388,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         mDtAccountType.setValue(accDtType);
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
 
-        mDtSum.setValue(ifEmpty(getFieldValue("AMNT_DR"), ""));
+        mDtSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMNT_DR"), "")));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
         mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
@@ -399,7 +396,7 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         String accCrType = Utils.fillUp(getFieldText("ACCTYPE_CR"),9);
         mCrAccountType.setValue(accCrType);
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
-        mCrSum.setValue(ifEmpty(getFieldValue("AMNT_CR"), ""));
+        mCrSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMNT_CR"), "")));
 
         mNarrativeEN.setValue(getFieldText("NRT"));
         mNarrativeRU.setValue(getFieldText("RNARLNG"));
@@ -511,8 +508,8 @@ public class PostingTechDlg extends EditableDialog<ManualTechOperationWrapper> {
         operation.setAccountTypeCredit(mCrAccountType.getValue());
         operation.setCurrencyCredit(mCrCurrency.getParam("CCY").toString());
         operation.setCurrencyDebit(mDtCurrency.getParam("CCY").toString());
-        operation.setAmountDebit(new BigDecimal(mDtSum.getValue()));
-        operation.setAmountCredit(new BigDecimal(mCrSum.getValue()));
+        operation.setAmountDebit(mDtSum.getValue());
+        operation.setAmountCredit(mCrSum.getValue());
 
         ArrayList<Long> pdList = new ArrayList<Long>();
         operation.setPdIdList(pdList);

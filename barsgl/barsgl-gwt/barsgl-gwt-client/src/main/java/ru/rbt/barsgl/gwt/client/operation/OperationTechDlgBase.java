@@ -15,6 +15,7 @@ import ru.rbt.barsgl.gwt.client.dictionary.AccTechFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.ui.AreaBox;
+import ru.rbt.barsgl.gwt.core.ui.DecBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -52,13 +53,13 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
     protected DataListBoxEx mDtCurrency;
     protected DataListBoxEx mDtFilial;
     protected TxtBox mDtAccount;
-    protected TxtBox mDtSum;
+    protected DecBox mDtSum;
     protected TxtBox mDtAccType;
 
     protected DataListBoxEx mCrCurrency;
     protected DataListBoxEx mCrFilial;
     protected TxtBox mCrAccount;
-    protected TxtBox mCrSum;
+    protected DecBox mCrSum;
     protected TxtBox mCrAccType;
 
     protected AreaBox mNarrativeRU;
@@ -89,7 +90,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
         DataListBoxEx mFilial;
         TxtBox mAccount;
         TxtBox mAccType;
-        TxtBox mSum = null;
+        DecBox mSum = null;
         Button mButton;
 
         boolean isDebit = side.equals(Side.DEBIT);
@@ -125,7 +126,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
 
         if (withSum) {
             grid.setWidget(5, 0, createLabel("Сумма"));
-            grid.setWidget(5, 1, mSum = createTextBoxForSumma(20, SUM_WIDTH));
+            grid.setWidget(5, 1, mSum = createDecBoxForSumma(20, SUM_WIDTH));
         }
 
         if (isDebit) {

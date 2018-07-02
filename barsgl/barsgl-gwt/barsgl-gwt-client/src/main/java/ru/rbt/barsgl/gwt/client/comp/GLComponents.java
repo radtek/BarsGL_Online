@@ -10,6 +10,7 @@ import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.ColumnsBuilder;
 import ru.rbt.barsgl.gwt.core.ui.BtnDecBox;
 import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
+import ru.rbt.barsgl.gwt.core.ui.DecBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.HasLabel;
@@ -32,39 +33,6 @@ import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.STRING;
  * Created by ER18837 on 28.10.15.
  */
 public class GLComponents {
-    public static final char decimalPoint = '.';
-
-
-    public static TxtBox createTextBoxForSumma(int length, String width)
-    {
-    	TxtBox res = Components.createTxtBox(length, width);
-    	res.addKeyPressHandler(new KeyPressHandler() {
-
-            public void onKeyPress(KeyPressEvent event) {
-                char charCode = event.getCharCode();
-                String val = ((TextBox) event.getSource()).getText();
-                int indPoint = val.indexOf(decimalPoint);
-                boolean digitOk = Character.isDigit(charCode) && (indPoint < 0 || val.length() - indPoint <= 2);
-                boolean pointOk = (decimalPoint == charCode) && (indPoint < 0);
-                if (!digitOk && !pointOk || val.length() >= ((TextBox) event.getSource()).getMaxLength()) {
-                    ((TextBox) event.getSource()).cancelKey();
-                }
-            }
-        });
-
-
-    	return res;
-    }
-
-    public static String getSumma(BigDecimal amt) {
-        return getSumma(amt, 2);
-    }
-
-    public static String getSumma(BigDecimal amt, int scale) {
-        if (null == amt)
-            return "";
-        return new BigDecimal(String.valueOf(amt)).setScale(scale, BigDecimal.ROUND_HALF_UP).toString();
-    }
 
     /**
      * Создает поле выбора источника
@@ -91,7 +59,6 @@ public class GLComponents {
         }
         return createDealSourceListBox(src, width);
     }
-
 
     public static DataListBox createCachedDealSourceAuthListBox(String name, String src, String width){
         DataListBox cachedBox = getCachedListBox(name, src);
@@ -405,36 +372,9 @@ public class GLComponents {
         return cachedBox;
     }
 
-    public static BtnTxtBox createBtnTextBoxForSumma(int length, String width, Image img, String hint, final ICallMethod cm)
+    public static DecBox createDecBoxForSumma(int length, String width)
     {
-        BtnTxtBox box = new BtnTxtBox(){
-            @Override
-            public void onBntClick()  {
-                if (cm != null) cm.method();
-            }
-        };
-        box.setMaxLength(length);
-        box.setVisibleLength(length);
-        box.setWidth(width);
-        box.setButtonImage(img);
-        box.setHint(hint);
-
-
-        box.addKeyPressHandler(new KeyPressHandler() {
-
-            public void onKeyPress(KeyPressEvent event) {
-                char charCode = event.getCharCode();
-                String val = ((TextBox) event.getSource()).getText();
-                int indPoint = val.indexOf(decimalPoint);
-                boolean digitOk = Character.isDigit(charCode) && (indPoint < 0 || val.length() - indPoint <= 2);
-                boolean pointOk = (decimalPoint == charCode) && (indPoint < 0);
-                if (!digitOk && !pointOk || val.length() >= ((TextBox) event.getSource()).getMaxLength()) {
-                    ((TextBox) event.getSource()).cancelKey();
-                }
-            }
-        });
-
-        return box;
+        return Components.createDecBox(2, length, width);
     }
 
     public static BtnDecBox createBtnDecBoxForSumma(int length, String width, Image img, String hint, final ICallMethod cm)
@@ -453,4 +393,17 @@ public class GLComponents {
 
         return box;
     }
+
+/*
+    public static String getSumma(BigDecimal amt) {
+        return getSumma(amt, 2);
+    }
+
+    public static String getSumma(BigDecimal amt, int scale) {
+        if (null == amt)
+            return "";
+        return new BigDecimal(String.valueOf(amt)).setScale(scale, BigDecimal.ROUND_HALF_UP).toString();
+    }
+*/
+
 }

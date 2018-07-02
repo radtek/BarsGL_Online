@@ -39,7 +39,7 @@ public class DecBox extends BaseBox<BigDecimal>{
 				String val = textBox.getText();
 				int pos = textBox.getCursorPos();
 				int indPoint = val.indexOf(ds);
-				boolean digitOk = Character.isDigit(ch) && (indPoint < 0 || pos < indPoint || val.length() - indPoint <= scale);
+				boolean digitOk = Character.isDigit(ch) && (indPoint < 0 || pos <= indPoint || val.length() - indPoint <= scale);
 				boolean pointEn = (indPoint < 0) && (val.length() - pos <= scale);
 				boolean pointOk = pointEn && (ds == ch);
 				if (!digitOk && !pointOk || textBox.getMaxLength() > 0 && val.length() >= (textBox.getMaxLength())) {

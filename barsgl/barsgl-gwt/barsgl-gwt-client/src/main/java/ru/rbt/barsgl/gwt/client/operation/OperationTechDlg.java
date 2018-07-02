@@ -15,6 +15,7 @@ import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
+import ru.rbt.barsgl.gwt.core.ui.DecBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -30,7 +31,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createCachedDealSourceAuthListBox;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getSumma;
 import static ru.rbt.barsgl.gwt.core.comp.Components.*;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
@@ -200,10 +200,10 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
         operation.setAmountCredit(check(mCrSum.getValue(),
                 "Кредит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
+                , new CheckNotNullBigDecimal())); //, new ConvertStringToBigDecimal()));
         operation.setAmountDebit(check(mDtSum.getValue(),
                 "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
+                , new CheckNotNullBigDecimal())); //, new ConvertStringToBigDecimal()));
 
         checkSide(operation.getAmountDebit(), operation.getAmountRu(),
                 operation.getCurrencyDebit(), operation.getAccountCredit(), "Дебет:" );
@@ -244,13 +244,13 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
         mDtFilial.setValue(operation.getFilialDebit());
         mDtAccount.setValue(operation.getAccountDebit());
-        mDtSum.setValue(getSumma(operation.getAmountDebit()));
+        mDtSum.setValue(operation.getAmountDebit());
 
         mCrAccType.setValue(operation.getAccountTypeCredit());
         mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
         mCrFilial.setSelectValue(operation.getFilialCredit());
         mCrAccount.setValue(operation.getAccountCredit());
-        mCrSum.setValue(getSumma(operation.getAmountCredit()));
+        mCrSum.setValue(operation.getAmountCredit());
 
         mNarrativeEN.setValue(operation.getNarrative());
         mNarrativeEN.setValue(operation.getNarrative());
@@ -380,13 +380,13 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     private void setSum(CurExchangeWrapper wrapper, boolean isDebit){
         if (isDebit){
-            mDtSum.setValue(wrapper.getTargetSum().toPlainString());
+            mDtSum.setValue(wrapper.getTargetSum()); //.toPlainString());
         }else {
-            mCrSum.setValue(wrapper.getTargetSum().toPlainString());
+            mCrSum.setValue(wrapper.getTargetSum()); //.toPlainString());
         }
     }
 
-    private void correctSum(TxtBox boxA, TxtBox boxB){
+    private void correctSum(DecBox boxA, DecBox boxB){
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
 
         if (checkBigDecimal.check(boxA.getValue()) && !checkBigDecimal.check(boxB.getValue()) &&

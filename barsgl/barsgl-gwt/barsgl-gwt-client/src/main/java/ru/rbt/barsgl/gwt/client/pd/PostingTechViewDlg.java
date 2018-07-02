@@ -23,10 +23,7 @@ import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
-import ru.rbt.barsgl.gwt.core.ui.AreaBox;
-import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
-import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
-import ru.rbt.barsgl.gwt.core.ui.TxtBox;
+import ru.rbt.barsgl.gwt.core.ui.*;
 import ru.rbt.barsgl.shared.ClientDateUtils;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -97,7 +94,7 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
     protected TxtBox mCustomerName;
     protected TxtBox mCustomerType;
     protected DatePickerBox mDateOpen;
-    protected BtnTxtBox mSum = null;
+    protected BtnDecBox mSum = null;
     protected TxtBox mDtAccountType;
     protected TxtBox mCrAccountType;
     protected AreaBox mNarrativeRU;
@@ -108,11 +105,11 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
     protected DataListBoxEx mDtCurrency;
     protected DataListBoxEx mDtFilial;
     protected TxtBox mDtAccount;
-    protected TxtBox mDtSum;
+    protected DecBox mDtSum;
     protected DataListBoxEx mCrCurrency;
     protected DataListBoxEx mCrFilial;
     protected TxtBox mCrAccount;
-    protected TxtBox mCrSum;
+    protected DecBox mCrSum;
     protected CheckBox mCheckCorrection;
 
     protected String _reasonOfDeny;
@@ -260,7 +257,7 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
         grid.setWidget(5, 0, createLabel("Сумма"));
 
         grid.setWidget(5,1,
-        mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
+        mSum = createBtnDecBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
                 @Override
                 public void method() {
                 }
@@ -424,14 +421,14 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
         mDtAccountType.setValue(accDtType);
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
 
-        mDtSum.setValue(ifEmpty(getFieldValue("AMNT_DR"), ""));
+        mDtSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMNT_DR"), "")));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
         mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
         String accCrType = Utils.fillUp(getFieldText("ACCTYPE_CR"),9);
         mCrAccountType.setValue(accCrType);
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
-        mCrSum.setValue(ifEmpty(getFieldValue("AMNT_CR"), ""));
+        mCrSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMNT_CR"), "")));
 
         /*mSumRu.setValue(ifEmpty(getFieldValue("AMNTBC_DR"), ""));
         mSumRu.setVisible(false);
@@ -565,8 +562,8 @@ public class PostingTechViewDlg extends EditableDialog<ManualTechOperationWrappe
         operation.setAccountTypeCredit(mCrAccountType.getValue());
         operation.setCurrencyCredit(mCrCurrency.getParam("CCY").toString());
         operation.setCurrencyDebit(mCrCurrency.getParam("CCY").toString());
-        operation.setAmountDebit(new BigDecimal(mDtSum.getValue()));
-        operation.setAmountCredit(new BigDecimal(mCrSum.getValue()));
+        operation.setAmountDebit(mDtSum.getValue());
+        operation.setAmountCredit(mCrSum.getValue());
 
         ArrayList<Long> pdList = new ArrayList<Long>();
         operation.setPdIdList(pdList);

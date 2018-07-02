@@ -7,13 +7,12 @@ import java.math.BigDecimal;
 /**
  * Created by ER18837 on 08.02.16.
  */
-public class CheckNotZeroBigDecimal implements AppPredicate<String> {
+public class CheckNotZeroBigDecimal implements AppPredicate<BigDecimal> {
     @Override
-    public boolean check(String target) {
+    public boolean check(BigDecimal target) {
         try {
-            if (null != target && !target.trim().isEmpty()) {
-                final BigDecimal dec = new BigDecimal(target);
-                return dec.compareTo(BigDecimal.ZERO) != 0;
+            if (null != target) {
+                return target.compareTo(BigDecimal.ZERO) != 0;
             } else {
                 return false;
             }
