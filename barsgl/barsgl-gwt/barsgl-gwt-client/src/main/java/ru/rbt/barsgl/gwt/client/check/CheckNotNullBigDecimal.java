@@ -7,19 +7,10 @@ import java.math.BigDecimal;
 /**
  * Created by Ivan Sevastyanov
  */
-public class CheckNotNullBigDecimal implements AppPredicate<String> {
+public class CheckNotNullBigDecimal implements AppPredicate<BigDecimal> {
 
     @Override
-    public boolean check(String target) {
-        try {
-            if (null != target && !target.trim().isEmpty()) {
-                final BigDecimal dec = new BigDecimal(target);
-                return true;
-            } else {
-                return false;
-            }
-        } catch (NumberFormatException e) {
-            return false;
-        }
+    public boolean check(BigDecimal target) {
+        return null != target;
     }
 }

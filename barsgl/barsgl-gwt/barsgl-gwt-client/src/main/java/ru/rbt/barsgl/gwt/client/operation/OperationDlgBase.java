@@ -58,12 +58,12 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     protected DataListBoxEx mDtCurrency;
     protected DataListBoxEx mDtFilial;
     protected TxtBox mDtAccount;
-    protected TxtBox mDtSum;
+    protected DecBox mDtSum;
 
     protected DataListBoxEx mCrCurrency;
     protected DataListBoxEx mCrFilial;
     protected TxtBox mCrAccount;
-    protected TxtBox mCrSum;
+    protected DecBox mCrSum;
 
     protected AreaBox mNarrativeRU;
     protected AreaBox mNarrativeEN;
@@ -99,7 +99,7 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
     protected Grid createOneSide(String label, final Side side, boolean withSum) {
         DataListBoxEx mCurrency;
         DataListBoxEx mFilial;
-        BtnTxtBox mSum = null;
+        BtnDecBox mSum = null;
         Button mButton;
 
         boolean isDebit = side.equals(Side.DEBIT);
@@ -124,7 +124,7 @@ public abstract class OperationDlgBase extends EditableDialog<ManualOperationWra
 
         if (withSum) {
             grid.setWidget(4, 0, createLabel("Сумма"));
-            grid.setWidget(4, 1, mSum = createBtnTextBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
+            grid.setWidget(4, 1, mSum = createBtnDecBoxForSumma(20, SUM_WIDTH, new Image(ImageConstants.INSTANCE.coins()), "Конвертация по курсу ЦБ", new ICallMethod() {
                 @Override
                 public void method() {
                     btnClick(side);

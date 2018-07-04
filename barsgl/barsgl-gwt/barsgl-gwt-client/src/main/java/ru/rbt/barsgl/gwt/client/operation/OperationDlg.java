@@ -13,6 +13,7 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.check.*;
 import ru.rbt.barsgl.gwt.client.comp.CachedListEnum;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
+import ru.rbt.barsgl.gwt.core.ui.DecBox;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -44,6 +45,8 @@ import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import ru.rbt.barsgl.gwt.core.comp.Components;
+
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.createBtnDecBoxForSumma;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
@@ -66,7 +69,7 @@ public class OperationDlg extends OperationDlgBase {
     protected DatePickerBox mDateOperation;
     protected DatePickerBox mDateValue;
 
-    protected TxtBox mSumRu;
+    protected DecBox mSumRu;
     protected CheckBox mCheckSumRu;
     protected CheckBox mCheckCorrection;
 
@@ -141,8 +144,6 @@ public class OperationDlg extends OperationDlgBase {
         return mainVP;
     }
 
-//    List glAccDeals = Arrays.asList(new String[]{"45201"});
-//45204810620150000063
     protected ChangeHandler create_mAccount_ChangeHandler() {
         return new ChangeHandler() {
             @Override
@@ -158,10 +159,10 @@ public class OperationDlg extends OperationDlgBase {
         String smSubDealId = mSubDealId.getValue();
         if (!(smDealId == null || smDealId.isEmpty()) || !(smSubDealId == null || smSubDealId.isEmpty()))
             return;
-//                log.info("mAccount");
-//                log.info("mAccount = "+mAccount.getValue());
 
-        if (null == account || account.length() < 20 || ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(account.substring(0,5)) < 1) return;
+        if (null == account || account.length() < 20 || ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(account.substring(0,5)) < 1)
+            return;
+
         GridEntryPoint.asyncGridService.selectFirst("select DEALID, SUBDEALID from gl_acc where bsaacid=?",new Serializable[]{account}, new AuthCheckAsyncCallback<Row>() {
             @Override
             public void onFailureOthers(Throwable throwable) {
@@ -226,7 +227,7 @@ public class OperationDlg extends OperationDlgBase {
         Grid grid = new Grid(2,4);
         //g3.setWidget(0, 0, createLabel("", "40px"));
         grid.setWidget(0, 0, Components.createLabel("Сумма в рублях", LABEL2_WIDTH));
-        grid.setWidget(0, 1, mSumRu = createTextBoxForSumma(20, SUM_WIDTH));
+        grid.setWidget(0, 1, mSumRu = createDecBoxForSumma(20, SUM_WIDTH));
         grid.setWidget(0, 2, mCheckSumRu = new CheckBox("без проводки по курсовой разнице"));
         grid.setWidget(1, 2, mCheckCorrection = new CheckBox("исправительная проводка"));
 
@@ -261,13 +262,11 @@ public class OperationDlg extends OperationDlgBase {
 
         operation.setCurrencyCredit((String) mCrCurrency.getValue());
         operation.setCurrencyDebit((String) mDtCurrency.getValue());
-        // operation.setFilialCredit((String) mCrFilial.getValue());
-        //operation.setFilialDebit((String) mDtFilial.getValue());
-        operation.setFilialDebit(check((String) mDtFilial.getValue()
-                , "Филиал (дебет)", "поле не заполнено", new CheckNotEmptyString()));
 
         operation.setFilialCredit(check((String) mCrFilial.getValue()
                 , "Филиал (кредит)", "поле не заполнено", new CheckNotEmptyString()));
+        operation.setFilialDebit(check((String) mDtFilial.getValue()
+                , "Филиал (дебет)", "поле не заполнено", new CheckNotEmptyString()));
 
         operation.setAccountCredit(check(mCrAccount.getValue()
                 , "Счет (кредит)", "длина строки < 20 символов", new CheckStringExactLength(20)));
@@ -276,14 +275,14 @@ public class OperationDlg extends OperationDlgBase {
 
         operation.setAmountCredit(check(mCrSum.getValue(),
                 "Кредит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
+                , new CheckNotNullBigDecimal()));
         operation.setAmountDebit(check(mDtSum.getValue(),
-                "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal(), new ConvertStringToBigDecimal()));
+                "Дебет: сумма", "поле должно быть заполнено числом или числом с точкой"
+                , new CheckNotNullBigDecimal()));
         if (mCheckSumRu.getValue()) {
             BigDecimal sumRu = check(mSumRu.getValue(),
                     "Сумма в рублях:", "поле должно быть заполнено числом > 0"
-                    , new CheckNotZeroBigDecimal(), new ConvertStringToBigDecimal());
+                    , new CheckNotZeroBigDecimal());
             operation.setAmountRu(sumRu);
         }
 
@@ -321,18 +320,18 @@ public class OperationDlg extends OperationDlgBase {
             mDtCurrency.setSelectValue(ifEmpty(operation.getCurrencyDebit(), "RUR"));
             mDtFilial.setSelectValue(operation.getFilialDebit());
             mDtAccount.setValue(operation.getAccountDebit());
-            mDtSum.setValue(getSumma(operation.getAmountDebit()));
+            mDtSum.setValue(operation.getAmountDebit());
 
             mCrCurrency.setSelectValue(ifEmpty(operation.getCurrencyCredit(), "RUR"));
             mCrFilial.setSelectValue(operation.getFilialCredit());
             mCrAccount.setValue(operation.getAccountCredit());
-            mCrSum.setValue(getSumma(operation.getAmountCredit()));
+            mCrSum.setValue(operation.getAmountCredit());
 
             BigDecimal amountRu = getAmountRu(operation.getAmountRu(), operation.getAmountRuCredit(), operation.getCurrencyDebit(), operation.getCurrencyCredit());
             boolean withoutDiff = !operation.getCurrencyDebit().equals(operation.getCurrencyCredit())
                     && (null != amountRu);
             mCheckSumRu.setValue(withoutDiff);
-            mSumRu.setValue(withoutDiff ? getSumma(amountRu) : "");
+            mSumRu.setValue(withoutDiff ? amountRu : null);
 
             mNarrativeEN.setValue(operation.getNarrative());
             mNarrativeEN.setValue(operation.getNarrative());
@@ -509,7 +508,7 @@ public class OperationDlg extends OperationDlgBase {
             public void onChange(ChangeEvent event) {
                 if (isRurCredit) {
                     if (new CheckNotZeroBigDecimal().check(mCrSum.getValue())) {
-                        mSumRu.setValue((String)mCrSum.getValue());
+                        mSumRu.setValue(mCrSum.getValue());
                     } else {
                         mCheckSumRu.setValue(false, true);
                     }
@@ -555,7 +554,7 @@ public class OperationDlg extends OperationDlgBase {
             return;
         }
 
-        String sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
+        BigDecimal sum = isDebit ? mCrSum.getValue() : mDtSum.getValue();
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
 
         if (!checkBigDecimal.check(sum)) {
@@ -571,7 +570,7 @@ public class OperationDlg extends OperationDlgBase {
         CurExchangeWrapper wrapper = new CurExchangeWrapper();
         wrapper.setDate(DateTimeFormat.getFormat("dd.MM.yyyy").format(mDateOperation.getValue()));
         wrapper.setSourceCurrency(isDebit ? (String) mCrCurrency.getValue() : (String) mDtCurrency.getValue());
-        wrapper.setSourceSum(new BigDecimal(isDebit ? mCrSum.getValue() : mDtSum.getValue()));
+        wrapper.setSourceSum(isDebit ? mCrSum.getValue() : mDtSum.getValue());
         wrapper.setTargetCurrency(isDebit ? (String) mDtCurrency.getValue() : (String) mCrCurrency.getValue());
 
         return wrapper;
@@ -596,13 +595,13 @@ public class OperationDlg extends OperationDlgBase {
 
     private void setSum(CurExchangeWrapper wrapper, boolean isDebit){
         if (isDebit){
-            mDtSum.setValue(wrapper.getTargetSum().toPlainString());
+            mDtSum.setValue(wrapper.getTargetSum());
         }else {
-            mCrSum.setValue(wrapper.getTargetSum().toPlainString());
+            mCrSum.setValue(wrapper.getTargetSum());
         }
     }
 
-    private void correctSum(TxtBox boxA, TxtBox boxB){
+    private void correctSum(DecBox boxA, DecBox boxB){
         CheckNotZeroBigDecimal checkBigDecimal = new CheckNotZeroBigDecimal();
 
         if (checkBigDecimal.check(boxA.getValue()) && !checkBigDecimal.check(boxB.getValue()) &&

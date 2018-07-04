@@ -18,6 +18,7 @@ import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
 import ru.rbt.shared.user.AppUserWrapper;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.*;
@@ -78,15 +79,15 @@ public class PostingDlg extends OperationDlg {
 
         mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
-        mDtSum.setValue(ifEmpty(getFieldValue("AMT_DR"), ""));
+        mDtSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMT_DR"), "")));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
         mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
 
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
-        mCrSum.setValue(ifEmpty(getFieldValue("AMT_CR"), ""));
+        mCrSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMT_CR"), "")));
 
-        mSumRu.setValue(ifEmpty(getFieldValue("AMTRU"), ""));
+        mSumRu.setValue(new BigDecimal(ifEmpty(getFieldValue("AMTRU"), "")));
         mCheckSumRu.setValue(false);
 
         mNarrativeEN.setValue(getFieldText("NRT"));
