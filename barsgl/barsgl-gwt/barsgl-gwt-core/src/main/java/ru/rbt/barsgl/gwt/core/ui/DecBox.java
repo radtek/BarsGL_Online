@@ -17,7 +17,6 @@ public class DecBox extends BaseBox<BigDecimal>{
 	//    private String decimalSeparator = ".";
 	private char ds = LocaleInfo.getCurrentLocale().getNumberConstants().decimalSeparator().charAt(0);
 	private final String separators = ".,юб<>/?";
-
 	private String decFmt = ".00000000000000000000000000000000";
 
 	public DecBox(){

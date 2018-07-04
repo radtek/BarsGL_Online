@@ -200,10 +200,10 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
         operation.setAmountCredit(check(mCrSum.getValue(),
                 "Кредит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal())); //, new ConvertStringToBigDecimal()));
+                , new CheckNotNullBigDecimal()));
         operation.setAmountDebit(check(mDtSum.getValue(),
-                "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal())); //, new ConvertStringToBigDecimal()));
+                "Дебет: сумма", "поле должно быть заполнено числом или числом с точкой"
+                , new CheckNotNullBigDecimal()));
 
         checkSide(operation.getAmountDebit(), operation.getAmountRu(),
                 operation.getCurrencyDebit(), operation.getAccountCredit(), "Дебет:" );
@@ -380,9 +380,9 @@ public class OperationTechDlg extends OperationTechDlgBase {
 
     private void setSum(CurExchangeWrapper wrapper, boolean isDebit){
         if (isDebit){
-            mDtSum.setValue(wrapper.getTargetSum()); //.toPlainString());
+            mDtSum.setValue(wrapper.getTargetSum());
         }else {
-            mCrSum.setValue(wrapper.getTargetSum()); //.toPlainString());
+            mCrSum.setValue(wrapper.getTargetSum());
         }
     }
 

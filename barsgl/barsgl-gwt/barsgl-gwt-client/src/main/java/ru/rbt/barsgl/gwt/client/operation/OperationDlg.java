@@ -144,8 +144,6 @@ public class OperationDlg extends OperationDlgBase {
         return mainVP;
     }
 
-//    List glAccDeals = Arrays.asList(new String[]{"45201"});
-//45204810620150000063
     protected ChangeHandler create_mAccount_ChangeHandler() {
         return new ChangeHandler() {
             @Override
@@ -161,10 +159,10 @@ public class OperationDlg extends OperationDlgBase {
         String smSubDealId = mSubDealId.getValue();
         if (!(smDealId == null || smDealId.isEmpty()) || !(smSubDealId == null || smSubDealId.isEmpty()))
             return;
-//                log.info("mAccount");
-//                log.info("mAccount = "+mAccount.getValue());
 
-        if (null == account || account.length() < 20 || ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(account.substring(0,5)) < 1) return;
+        if (null == account || account.length() < 20 || ((ArrayList)LocalDataStorage.getParam("Acc2ForDeals")).indexOf(account.substring(0,5)) < 1)
+            return;
+
         GridEntryPoint.asyncGridService.selectFirst("select DEALID, SUBDEALID from gl_acc where bsaacid=?",new Serializable[]{account}, new AuthCheckAsyncCallback<Row>() {
             @Override
             public void onFailureOthers(Throwable throwable) {
@@ -264,13 +262,11 @@ public class OperationDlg extends OperationDlgBase {
 
         operation.setCurrencyCredit((String) mCrCurrency.getValue());
         operation.setCurrencyDebit((String) mDtCurrency.getValue());
-        // operation.setFilialCredit((String) mCrFilial.getValue());
-        //operation.setFilialDebit((String) mDtFilial.getValue());
-        operation.setFilialDebit(check((String) mDtFilial.getValue()
-                , "Филиал (дебет)", "поле не заполнено", new CheckNotEmptyString()));
 
         operation.setFilialCredit(check((String) mCrFilial.getValue()
                 , "Филиал (кредит)", "поле не заполнено", new CheckNotEmptyString()));
+        operation.setFilialDebit(check((String) mDtFilial.getValue()
+                , "Филиал (дебет)", "поле не заполнено", new CheckNotEmptyString()));
 
         operation.setAccountCredit(check(mCrAccount.getValue()
                 , "Счет (кредит)", "длина строки < 20 символов", new CheckStringExactLength(20)));
@@ -279,14 +275,14 @@ public class OperationDlg extends OperationDlgBase {
 
         operation.setAmountCredit(check(mCrSum.getValue(),
                 "Кредит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal())); //, new ConvertStringToBigDecimal()));
+                , new CheckNotNullBigDecimal()));
         operation.setAmountDebit(check(mDtSum.getValue(),
-                "Дебит: сумма", "поле должно быть заполнено числом или числом с точкой"
-                , new CheckNotNullBigDecimal())); //, new ConvertStringToBigDecimal()));
+                "Дебет: сумма", "поле должно быть заполнено числом или числом с точкой"
+                , new CheckNotNullBigDecimal()));
         if (mCheckSumRu.getValue()) {
             BigDecimal sumRu = check(mSumRu.getValue(),
                     "Сумма в рублях:", "поле должно быть заполнено числом > 0"
-                    , new CheckNotZeroBigDecimal()); //, new ConvertStringToBigDecimal());
+                    , new CheckNotZeroBigDecimal());
             operation.setAmountRu(sumRu);
         }
 
@@ -599,9 +595,9 @@ public class OperationDlg extends OperationDlgBase {
 
     private void setSum(CurExchangeWrapper wrapper, boolean isDebit){
         if (isDebit){
-            mDtSum.setValue(wrapper.getTargetSum()); //.toPlainString());
+            mDtSum.setValue(wrapper.getTargetSum());
         }else {
-            mCrSum.setValue(wrapper.getTargetSum()); //.toPlainString());
+            mCrSum.setValue(wrapper.getTargetSum());
         }
     }
 
