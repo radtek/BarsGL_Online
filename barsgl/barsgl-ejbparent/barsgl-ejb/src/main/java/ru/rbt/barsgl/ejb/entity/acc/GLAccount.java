@@ -179,6 +179,9 @@ public class GLAccount extends BaseEntity<Long> {
     @Column(name = "REV_CCY")
     private String excangeCurrency;
 
+    @Column(name = "SUBCCY")
+    private String subCcy;
+
     // -----------------------------------
 
     @Override
@@ -461,5 +464,12 @@ public class GLAccount extends BaseEntity<Long> {
         this.transactSrc = transactSrc;
     }
 
+    public String getSubCcy() {
+        return subCcy;
+    }
+
+    public void setSubCcy(String subCcy) {
+        this.subCcy = subCcy;
+    }
 
 }

@@ -529,20 +529,39 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
         operation.setCurrencyDebit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyDebit()));
         operation.setCurrencyCredit(bankCurrencyRepository.refreshCurrency(operation.getCurrencyCredit()));
 
+        // код субвалюты
+        operation.setSubCcyDebit(getSubCcy(operation.getAccountDebit(), operation.getCurrencyDebit().getCurrencyCode()));
+        operation.setSubCcyCredit(getSubCcy(operation.getAccountCredit(), operation.getCurrencyCredit().getCurrencyCode()));
+
         // параметры ДЕБЕТА: курс валюты, рублевый эквивалент
-        BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
+        BigDecimal rateDebit = getRate(operation.getSubCcyDebit(), operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
+//        BigDecimal rateDebit = rateRepository.getRate(operation.getCurrencyDebit().getCurrencyCode(), operation.getPostDate());
         BigDecimal eqvDebit = rateRepository.getEquivalent(rateDebit, operation.getAmountDebit());
         operation.setRateDebit(rateDebit);
         operation.setEquivalentDebit(eqvDebit);
 
         // параметры КРЕДИТА: курс валюты, рублевый эквивалент
-        BigDecimal rateCredit = rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
+        BigDecimal rateCredit = getRate(operation.getSubCcyCredit(), operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
+//        BigDecimal rateCredit = rateRepository.getRate(operation.getCurrencyCredit().getCurrencyCode(), operation.getPostDate());
         BigDecimal eqvCredit = rateRepository.getEquivalent(rateCredit, operation.getAmountCredit());
         operation.setRateCredit(rateCredit);
         operation.setEquivalentCredit(eqvCredit);
 
         // параметры обмена валюты
         setExchengeParameters(operation);
+    }
+
+    private BigDecimal getRate(String subCcy, String currencyCode, Date postDate){
+        return subCcy == null || subCcy.trim().isEmpty()?
+                rateRepository.getRate(currencyCode, postDate):
+                glOperationRepository.getSubCcyRate(subCcy);
+    }
+
+    private String getSubCcy(String account, String ccy){
+        if (!ccy.equals(BankCurrency.RUB) && account != null &&!account.trim().isEmpty()){
+            return glOperationRepository.getSubCcy(account);
+        }
+        return "";
     }
 
     /**
