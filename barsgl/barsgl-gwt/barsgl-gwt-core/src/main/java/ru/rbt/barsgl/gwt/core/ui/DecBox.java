@@ -38,8 +38,8 @@ public class DecBox extends BaseBox<BigDecimal>{
 				String val = textBox.getText();
 				int pos = textBox.getCursorPos();
 				int indPoint = val.indexOf(ds);
-				boolean digitOk = Character.isDigit(ch) && (indPoint < 0 || pos <= indPoint || val.length() - indPoint <= scale);
-				boolean pointEn = (indPoint < 0) && (val.length() - pos <= scale);
+				boolean digitOk = Character.isDigit(ch); // && (indPoint < 0 || pos <= indPoint || val.length() - indPoint <= scale);
+				boolean pointEn = (indPoint < 0); // && (val.length() - pos <= scale);
 				boolean pointOk = pointEn && (ds == ch);
 				if (!digitOk && !pointOk || textBox.getMaxLength() > 0 && val.length() >= (textBox.getMaxLength())) {
 					textBox.cancelKey();
@@ -56,7 +56,7 @@ public class DecBox extends BaseBox<BigDecimal>{
 		textBox.addFocusHandler(new FocusHandler() {
 			@Override
 			public void onFocus(FocusEvent focusEvent) {
-				textBox.setText(value != null && value.compareTo(BigDecimal.ZERO) != 0 ? getEditFormat().format(value) : "");
+				textBox.setText(value != null && value.compareTo(BigDecimal.ZERO) != 0 ? getEditValue() : "");
 			}
 		});
 	}
@@ -96,7 +96,7 @@ public class DecBox extends BaseBox<BigDecimal>{
 
 	@Override
 	protected String makeVisibleString() {
-		return value != null ? getViewFormat().format(value) : "";
+		return value != null ? getViewValue() : "";
 	}
 
 	@Override
@@ -123,15 +123,26 @@ public class DecBox extends BaseBox<BigDecimal>{
 		return textBox.getText().trim().replace(",", ".").replace("\u00A0", "");
 	}
 
-	private NumberFormat getViewFormat() {
-		final String viewFmt = "#,##0";
-    	String fmt = scale > 0 ? viewFmt + decFmt.substring(0, scale + 1) : viewFmt;
-    	return NumberFormat.getFormat(fmt);
+	private String getViewValue() {
+    	final String fmt = "#,##0";
+		if (scale == 0) {
+			return NumberFormat.getFormat(fmt).format(value);
+		} else if (scale > 0) {
+			return NumberFormat.getFormat(fmt + decFmt.substring(0, scale + 1)).format(value);
+		} else {
+    		return value.toPlainString();
+		}
 	}
 
-	private NumberFormat getEditFormat() {
-		final String editFmt = "0";
-		String fmt = scale > 0 ? editFmt + decFmt.substring(0, scale + 1) : editFmt;
-		return NumberFormat.getFormat(fmt);
+	private String getEditValue() {
+		final String fmt = "0";
+		if (scale == 0) {
+			return NumberFormat.getFormat(fmt).format(value);
+		} else if (scale > 0) {
+			return NumberFormat.getFormat(fmt + decFmt.substring(0, scale + 1)).format(value);
+		} else {
+			return value.toPlainString();
+		}
 	}
+
 }
