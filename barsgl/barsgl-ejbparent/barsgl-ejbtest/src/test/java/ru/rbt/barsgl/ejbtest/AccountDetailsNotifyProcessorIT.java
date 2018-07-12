@@ -36,7 +36,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
     public static final Logger logger = Logger.getLogger(AccountDetailsNotifyProcessorIT.class.getName());
 //    public static final String parentNode = "//soapenv:Body/acc:AccountList/acc:AccountDetails";    //"//Body/AccountList/AccountDetails";
 //    public static final String cbNode = "/acc:CBAccountNo";
-    public static final String parentNode = "Body/AccountList/AccountDetails";
+    public static final String acdenoParentNode = "Body/AccountList/AccountDetails";
     public static final String cbNode = "CBAccountNo";
     public static final String openNode = "OpenDate";
     public static final String closeNode = "CloseDate";
@@ -178,7 +178,7 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
     }
 
     private String getAccountParam(Document doc, String paramName) throws XPathExpressionException {
-        return (String) xPath.evaluate(parentNode + "/" + paramName, doc.getDocumentElement(), XPathConstants.STRING);
+        return (String) xPath.evaluate(acdenoParentNode + "/" + paramName, doc.getDocumentElement(), XPathConstants.STRING);
     }
 
     private String changeAccountParam(String message, String paramName, String oldValue, String newValue) {
@@ -200,6 +200,11 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
 
     public static Long getAcdenoMaxId() throws SQLException {
         DataRecord res = baseEntityRepository.selectFirst("select max(MESSAGE_ID) from GL_ACDENO");
+        return null == res.getLong(0) ? 0 : res.getLong(0);
+    }
+
+    public static Long getGLAccMaxId() throws SQLException {
+        DataRecord res = baseEntityRepository.selectFirst("select max(ID) from GL_ACC");
         return null == res.getLong(0) ? 0 : res.getLong(0);
     }
 

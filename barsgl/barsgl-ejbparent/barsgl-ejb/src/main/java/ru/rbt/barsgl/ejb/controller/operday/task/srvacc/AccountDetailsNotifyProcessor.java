@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejb.repository.dict.CurrencyCacheRepository;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 
@@ -21,6 +22,9 @@ import javax.inject.Inject;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 
@@ -46,9 +50,9 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
     public static final String parentNodePath = "Body/AccountList/AccountDetails";
 
     // TODO нельзя делать static SimpleDateFormat!!
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     // многопоточный форматтер
-//    protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+    protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
     static XmlParam[] paramNamesFCC = {
             new XmlParam("AccountNo", true, 20),
@@ -153,13 +157,13 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
         String closeDateXml = xmlData.get("CloseDate");
         GLAccount account;
         if (!isEmpty(bsaacid) && !isEmpty(hostABS) && !isEmpty(closeDateXml) && source.name().equals(hostABS)) {
-            Date closeDate = sdf.parse(closeDateXml);
+            Date closeDate = df.parse(closeDateXml);
             if (glAccountRepository.isExistsGLAccount(bsaacid, closeDate)) {
                 glAccountController.closeGLAccountNotify(bsaacid, closeDate);
                 journalRepository.updateLogStatus(jId, PROCESSED, "Счет с bsaacid=" + bsaacid + " закрыт");
                 auditController.info(AccountDetailsNotify, String.format("Счет '%s' закрыт по нотификации от %s", bsaacid, source.name()));
             } else if (null != (account = glAccountRepository. findGLAccount(bsaacid))) {
-                journalRepository.updateLogStatus(jId, ERROR, String.format("Счет '%s' уже закрыт с датой ''", bsaacid, sdf.format(account.getDateClose()))); //new DateUtils().onlyDateString(account.getDateClose())));
+                journalRepository.updateLogStatus(jId, ERROR, String.format("Счет '%s' уже закрыт с датой ''", bsaacid, df.format(account.getDateClose()))); //new DateUtils().onlyDateString(account.getDateClose())));
                 return;
             } else {
                 journalRepository.updateLogStatus(jId, ERROR, String.format("Счет '%s' не существует", bsaacid));
@@ -226,7 +230,8 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
             return;
         }
 
-        Date openDate = sdf.parse(xmlData.get("OpenDate"));
+        Date openDate = new SimpleDateFormat("yyyy-MM-dd").parse(xmlData.get("OpenDate"));
+//        java.sql.Date openDate = java.sql.Date.valueOf(LocalDate.parse(xmlData.get("OpenDate"), sdf));
         if (glAccountRepository.isExistsGLAccount(bsaacid, openDate)) {
             journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " уже существует в GL_ACC");
             return;
