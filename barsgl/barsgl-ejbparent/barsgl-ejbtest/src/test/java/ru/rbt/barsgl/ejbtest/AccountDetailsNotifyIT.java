@@ -59,10 +59,10 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     public static final String host = "vs11205"; //"mbrk4-inta.testhpcsa.imb.ru"; // "vs11205";
     public static final String broker = "QM_MBROKER4";
 
-    private static final String channel= "SYSTEM.DEF.SVRCONN";
+    private static final String channel = "SYSTEM.DEF.SVRCONN";
     private static final String login = "srvwbl4mqtest";
     private static final String passw = "UsATi8hU";
-    private static final String acdeno6  = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
+    private static final String acdeno6 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
     private static final String acdeno12 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF";
     private static final Boolean writeOut = false;
     private static final int batchSize = 7;
@@ -270,7 +270,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid=? and branch=?", bsaacid, oldBranch))
             assertTrue(true);
-        else{
+        else {
             baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", bsaacid, oldBranch);
             assertTrue(false);
         }
@@ -299,8 +299,8 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         if (null != baseEntityRepository.selectFirst("SELECT branch from gl_acc where bsaacid=? and branch=?", bsaacid, oldBranch)) {
             assertTrue(true);
-        }else{
-            baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", bsaacid, oldBranch );
+        } else {
+            baseEntityRepository.executeNativeUpdate("UPDATE GL_ACC SET branch=? WHERE BSAACID=?", bsaacid, oldBranch);
             assertTrue(false);
         }
     }
@@ -317,9 +317,6 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         String qType = AcDNJournal.Sources.FCC.name();
         String qName = acdeno6;
 
-        String property = getJobProperty (qType + ":" + qName, qName, null, host, "1414", broker, channel, login, passw, "30", writeOut)
-                + "mq.algo = simple\n";
-
         printCommunicatorName();
 
         QueueProperties properties = getQueueProperties(qType, qName);
@@ -332,25 +329,12 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
                 "select message from gl_acdeno where status_date <= ? and source = 'FCC' and status = 'PROCESSED' and \"COMMENT\" like '%/40817%' order by message_id desc", cnt, new Object[]{dbDate});
         Assert.assertNotEquals(0, mlist.size());
         for (DataRecord rec : mlist) {
-            String message = rec.getString(0);
-            Document doc = getDocument(docBuilder, message);
-            String bsaacid = getXmlParam(xPath, doc, acdenoParentNode, cbNode);
-            String dateOpenStr = getXmlParam(xPath, doc, acdenoParentNode, openNode);
-            message = changeXmlParam(message, openNode, dateOpenStr, curDateStr);
-            baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?", bsaacid);
-            sendToQueue(message, properties, null, null, qName);
+            sendOneMessage(rec.getString(0), curDateStr, properties, qName);
         }
 
         Thread.sleep(1000L);
-/*
-        SingleActionJob job =
-                SingleActionJobBuilder.create()
-                        .withClass(AccountDetailsNotifyTask.class)
-                        .withProps(property)
-                        .build();
-        jobService.executeJob(job);
-*/
 
+        String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, login, passw, "30", writeOut) + "mq.algo = simple\n";
 
         cnt = mlist.size();
         long idJ = getAcdenoMaxId();
@@ -360,10 +344,10 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         long cntrec = 0;
         long cntrec0 = -1;
-        while(cntrec < cnt && cntrec != cntrec0) {
+        while (cntrec < cnt && cntrec != cntrec0) {
             Thread.sleep(30 * 1000L);
             cntrec0 = cntrec;
-            cntrec  = getStatistics(idJ);
+            cntrec = getStatistics(idJ);
 
         }
         Assert.assertEquals("Обработаны не все запросы", cnt, cntrec);
@@ -381,11 +365,81 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     }
 
+    private void sendOneMessage(String message, String curDateStr, QueueProperties properties, String qName) throws IOException, SAXException, XPathExpressionException, JMSException {
+        Document doc = getDocument(docBuilder, message);
+        String bsaacid = getXmlParam(xPath, doc, acdenoParentNode, cbNode);
+        String dateOpenStr = getXmlParam(xPath, doc, acdenoParentNode, openNode);
+        message =
+
+        changeXmlParam(message, openNode, dateOpenStr, curDateStr);
+                baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?",bsaacid);
+
+        sendToQueue(message, properties, null,null,qName);
+    }
+
     private long getStatistics(long idJ) throws SQLException {
         DataRecord record = baseEntityRepository.selectOne("select min(message_id), max(message_id), count(*), max(status_date) - min(status_date) from gl_acdeno where message_id > ? and status != 'RAW'", idJ);
         long cnt = record.getLong(2);
         System.out.println(String.format("Всего записей: %d, время: %s", cnt, record.getString(3)));
         return cnt;
+    }
+
+    @Test
+    public void testReconectProps() throws Exception {
+
+        int cnt = 3;
+
+        Date dbDate = DateUtils.dbDateParse("2017-11-09");
+        String curDateStr = DateUtils.dbDateString(getOperday().getCurrentDate());
+        String qType = AcDNJournal.Sources.FCC.name();
+        String qName = acdeno6;
+
+        printCommunicatorName();
+
+        QueueProperties properties = getQueueProperties(qType, qName);
+        clearQueue(properties, qName, cnt * 2);
+
+        shutdownJob(ACDENO_TASK);
+        startConnection(properties);
+
+        long idJ = getAcdenoMaxId();
+        long idAudit = getAuditMaxId();
+        System.out.println(String.format("message_id = %d, gl_audit.id = %d", idJ, idAudit));
+
+        List<DataRecord> mlist = baseEntityRepository.selectMaxRows(
+                "select message from gl_acdeno where status_date <= ? and source = 'FCC' and status = 'PROCESSED' and \"COMMENT\" like '%/40817%' order by message_id desc", cnt, new Object[]{dbDate});
+        Assert.assertNotEquals(0, mlist.size());
+
+        String []pass = {passw, "passw", passw};
+        int i = 0;
+        for (DataRecord rec : mlist) {
+            sendOneMessage(rec.getString(0), curDateStr, properties, qName);
+            String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, login, pass[i], "10", writeOut) + "mq.algo = simple\n";
+            Thread.sleep(1000L);
+            SingleActionJob job =
+                    SingleActionJobBuilder.create()
+                            .withClass(AccountDetailsNotifyTask.class)
+                            .withProps(property)
+                            .build();
+            jobService.executeJob(job);
+//            runAcdenoJob(property, 50L);
+            Thread.sleep(1000L);
+            AuditRecord audit = getAuditError(idAudit);
+            if (null != audit) {
+                idAudit = audit.getId();
+                System.out.println(audit.getMessage());
+                System.out.println(audit.getErrorMessage());
+                Assert.assertTrue(i == 1);
+            } else {
+                System.out.println("Нет ошибки подключения");
+                Assert.assertTrue(i != 1);
+            }
+            i++;
+        }
+
+        shutdownJob(ACDENO_TASK);
+        clearQueue(properties, qName, cnt);
+
     }
 
     private void reopenAccount(String bsaacid) {

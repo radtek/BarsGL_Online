@@ -21,6 +21,7 @@ import javax.inject.Inject;
 
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -49,10 +50,8 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
     public static final String parentNodeName = "AccountDetails";
     public static final String parentNodePath = "Body/AccountList/AccountDetails";
 
-    // TODO нельзя делать static SimpleDateFormat!!
-    private SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     // многопоточный форматтер
-    protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
     static XmlParam[] paramNamesFCC = {
             new XmlParam("AccountNo", true, 20),
@@ -94,6 +93,17 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
     protected void updateLogStatusError(Long journalId, String message) {
         journalRepository.updateLogStatus(journalId, ERROR, "Ошибка во время распознования XML: " + message);
         return;
+    }
+
+
+    private Date parseDate(String dateStr) throws ParseException {
+        return new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+//        return java.sql.Date.valueOf(LocalDate.parse(dateStr, sdf));
+    }
+
+    private String formatDate(Date date) {
+        return new SimpleDateFormat("yyyy-MM-dd").format(date);
+//        return sdf.format(date.toInstant());
     }
 
     public void process(AcDNJournal.Sources source, String textMessage, final Long jId) throws Exception {
@@ -157,13 +167,13 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
         String closeDateXml = xmlData.get("CloseDate");
         GLAccount account;
         if (!isEmpty(bsaacid) && !isEmpty(hostABS) && !isEmpty(closeDateXml) && source.name().equals(hostABS)) {
-            Date closeDate = df.parse(closeDateXml);
+            Date closeDate = parseDate(closeDateXml);
             if (glAccountRepository.isExistsGLAccount(bsaacid, closeDate)) {
                 glAccountController.closeGLAccountNotify(bsaacid, closeDate);
                 journalRepository.updateLogStatus(jId, PROCESSED, "Счет с bsaacid=" + bsaacid + " закрыт");
                 auditController.info(AccountDetailsNotify, String.format("Счет '%s' закрыт по нотификации от %s", bsaacid, source.name()));
             } else if (null != (account = glAccountRepository. findGLAccount(bsaacid))) {
-                journalRepository.updateLogStatus(jId, ERROR, String.format("Счет '%s' уже закрыт с датой ''", bsaacid, df.format(account.getDateClose()))); //new DateUtils().onlyDateString(account.getDateClose())));
+                journalRepository.updateLogStatus(jId, ERROR, String.format("Счет '%s' уже закрыт с датой ''", bsaacid, formatDate(account.getDateClose()))); //new DateUtils().onlyDateString(account.getDateClose())));
                 return;
             } else {
                 journalRepository.updateLogStatus(jId, ERROR, String.format("Счет '%s' не существует", bsaacid));
@@ -230,8 +240,7 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
             return;
         }
 
-        Date openDate = new SimpleDateFormat("yyyy-MM-dd").parse(xmlData.get("OpenDate"));
-//        java.sql.Date openDate = java.sql.Date.valueOf(LocalDate.parse(xmlData.get("OpenDate"), sdf));
+        Date openDate = parseDate(xmlData.get("OpenDate"));
         if (glAccountRepository.isExistsGLAccount(bsaacid, openDate)) {
             journalRepository.updateLogStatus(jId, ERROR, "Счет с bsaacid=" + bsaacid + " уже существует в GL_ACC");
             return;
