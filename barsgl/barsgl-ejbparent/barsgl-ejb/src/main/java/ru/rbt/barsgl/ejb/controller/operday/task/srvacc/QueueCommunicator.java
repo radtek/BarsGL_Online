@@ -18,7 +18,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.QueueProcessor;
  * Created by er18837 on 23.04.2018.
  */
 public interface QueueCommunicator {
-    void startConnection(QueueProperties queueProperties) throws JMSException;
+    void startConnection(QueueProperties queueProperties, boolean restart) throws JMSException;
 
     void reConnect();
 

@@ -16,10 +16,6 @@ import javax.inject.Inject;
 import javax.jms.*;
 import javax.persistence.EntityManager;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -42,8 +38,10 @@ public abstract class CommonQueueController {
 
     protected QueueProperties queueProperties;
 
-    public void setQueueProperties(Properties properties) throws Exception {
+    public boolean newQueueProperties(Properties properties) throws Exception {
+        QueueProperties oldProps = this.queueProperties ;
         this.queueProperties = new QueueProperties(properties);
+        return !queueProperties.equals(oldProps);
     }
 
     public QueueProperties getQueueProperties() {
@@ -91,9 +89,9 @@ public abstract class CommonQueueController {
 
     public void process(Properties properties) throws Exception {
         try {
-            setQueueProperties(properties);
+            boolean newProps = newQueueProperties(properties);
             try{
-                queueCommunicator.startConnection(getQueueProperties());
+                queueCommunicator.startConnection(getQueueProperties(), newProps);
                 afterConnect();
                 processSources();
             }catch(JMSRuntimeException | JMSException ex){

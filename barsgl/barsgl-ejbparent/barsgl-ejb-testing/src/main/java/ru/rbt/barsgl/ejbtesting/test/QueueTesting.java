@@ -27,8 +27,8 @@ public class QueueTesting {
     @Any
     private QueueCommunicator queueCommunicator;
 
-    public void startConnection(QueueProperties queueProperties) throws JMSException {
-        queueCommunicator.startConnection(queueProperties);
+    public void startConnection(QueueProperties queueProperties, boolean restart) throws JMSException {
+        queueCommunicator.startConnection(queueProperties, restart);
     }
 
     public void reConnect() {
@@ -56,7 +56,7 @@ public class QueueTesting {
     }
 
     public long clearQueue(QueueProperties queueProperties, String queueName, long count) throws JMSException {
-        startConnection(queueProperties);
+        startConnection(queueProperties, false);
         long n = queueCommunicator.clearQueue(queueName, count);
 
 /*

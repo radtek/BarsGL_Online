@@ -36,8 +36,8 @@ public class JMSQueueCommunicator implements QueueCommunicator {
     protected AuditController auditController;
 
     @Override
-    public void startConnection(QueueProperties queueProperties) throws JMSException {
-        if (jmsContext == null) {
+    public void startConnection(QueueProperties queueProperties, boolean restart) throws JMSException {
+        if (this.jmsContext == null || restart) {
             MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
             cf.setHostName(queueProperties.mqHost);
             cf.setPort(queueProperties.mqPort);

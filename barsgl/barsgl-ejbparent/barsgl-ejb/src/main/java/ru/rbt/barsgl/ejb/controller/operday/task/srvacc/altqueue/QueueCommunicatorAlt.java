@@ -29,7 +29,7 @@ public class QueueCommunicatorAlt implements QueueCommunicator {
     private QueueProperties queueProperties = null;
 
     @Override
-    public void startConnection(QueueProperties queueProperties) throws JMSException {
+    public void startConnection(QueueProperties queueProperties, boolean restart) throws JMSException {
         this.queueProperties = queueProperties;
     }
 
