@@ -73,11 +73,11 @@ public class BackvalueJournalRepository extends AbstractBaseEntityRepository<Bac
                 journal = new BackvalueJournal(recordId);
                 journal.setState(NEW);
                 return save(journal);
-            } else if(!NEW.equals(journal.getState())) {
-                journal.setState(NEW);
-                return save(journal);
             } else {
-                return journal;
+                // принудительный найтивный апдейт для гарантированного изменения поля SEQ на триггере
+                coreRepository.executeNativeUpdate("update gl_bvjrnl set state = ? where bsaacid = ? and acid = ? and pod = ?"
+                    , NEW.name(), recordId.getBsaAcid(), recordId.getAcid(), recordId.getPostingDate());
+                return findById(BackvalueJournal.class, recordId);
             }
         });
     }

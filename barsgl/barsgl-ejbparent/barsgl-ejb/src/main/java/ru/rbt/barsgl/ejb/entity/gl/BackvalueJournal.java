@@ -36,6 +36,9 @@ public class BackvalueJournal extends BaseEntity<BackvalueJournalId>{
     @Enumerated(EnumType.STRING)
     private BackvalueJournalState state;
 
+    @Column(name = "SEQ", updatable = false, insertable = false)
+    private long sequence;
+
     @Override
     public BackvalueJournalId getId() {
         return id;
@@ -52,5 +55,13 @@ public class BackvalueJournal extends BaseEntity<BackvalueJournalId>{
 
     public void setState(BackvalueJournalState state) {
         this.state = state;
+    }
+
+    public long getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(long sequence) {
+        this.sequence = sequence;
     }
 }

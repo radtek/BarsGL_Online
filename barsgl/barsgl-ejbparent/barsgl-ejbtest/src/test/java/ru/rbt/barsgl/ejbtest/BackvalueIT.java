@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.LOADED;
+import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
 
 /**
  * Created by Ivan Sevastyanov
@@ -200,6 +201,87 @@ public class BackvalueIT extends AbstractTimerJobIT {
         Assert.assertNotNull(journalCt);
         Assert.assertEquals(BackvalueJournal.BackvalueJournalState.PROCESSED, journalCt.getState());
 
+    }
+
+    /**
+     * проверка обновления gl_bvjrnl.seq при последовательной обработке проводок бэквалуе в случае если строка журнала со статусом NEW
+     * @throws SQLException
+     */
+    @Test public void testCheckSeq() throws SQLException {
+        final Operday operday = getOperday();
+        setOperday(operday.getCurrentDate(), operday.getLastWorkingDay(), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN, Operday.PdMode.BUFFER);
+
+        List<DataRecord> accounts = baseEntityRepository.select("select * from gl_acc where bsaacid like '40702036%' and rownum <= 2 and dtc is null");
+        Assert.assertEquals(2, accounts.size());
+        final String bsaAcidCt = accounts.get(0).getString("bsaacid");
+        final String bsaAcidDt = accounts.get(1).getString("bsaacid");
+
+        baseEntityRepository.executeUpdate("delete from BackvalueJournal j where j.id.bsaAcid = ?1", bsaAcidCt);
+        baseEntityRepository.executeUpdate("delete from BackvalueJournal j where j.id.bsaAcid = ?1", bsaAcidDt);
+
+        GLOperation operation1 = createBackvalueOper(getOperday().getLastWorkingDay(), bsaAcidCt, bsaAcidDt);
+        GLPd pdDr1 = getDebit(operation1);
+        GLPd pdCr1 = getCredit(operation1);
+
+        BackvalueJournal journalDt1 = getBackvalueJournal(pdDr1);
+        BackvalueJournal journalCt1 = getBackvalueJournal(pdCr1);
+
+        Assert.assertTrue(journalDt1.getSequence() > 0);
+        Assert.assertTrue(journalCt1.getSequence() > 0);
+
+        GLOperation operation2 = createBackvalueOper(getOperday().getLastWorkingDay(), bsaAcidCt, bsaAcidDt);
+
+        GLPd pdDr2 = getDebit(operation2);
+        GLPd pdCr2 = getCredit(operation2);
+
+        BackvalueJournal journalDt2 = getBackvalueJournal(pdDr2);
+        BackvalueJournal journalCt2 = getBackvalueJournal(pdCr2);
+
+        Assert.assertTrue(journalDt2.getSequence() > 0);
+        Assert.assertTrue(journalCt2.getSequence() > 0);
+
+        Assert.assertNotEquals(journalDt1.getSequence(), journalDt2.getSequence());
+        Assert.assertNotEquals(journalCt1.getSequence(), journalCt2.getSequence());
+        Assert.assertEquals(journalCt2.getState(), NEW);
+        Assert.assertEquals(journalDt2.getState(), NEW);
+
+    }
+
+    private GLOperation createBackvalueOper(Date backdate, String bsaAcidCt, String bsaAcidDt) {
+        EtlPosting pst = newPosting(System.currentTimeMillis(), (EtlPackage)baseEntityRepository.selectFirst(EtlPackage.class, "from EtlPackage p"));
+        pst.setValueDate(getOperday().getLastWorkingDay());
+        pst.setAccountCredit(bsaAcidCt);
+        pst.setAccountDebit(bsaAcidDt);
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.AUD);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+        pst.setAePostingId("PSTID_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 5));
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        operation = (GLOperation) baseEntityRepository
+                .selectFirst(GLOperation.class, "from GLOperation o where o.aePostingId = ?1", pst.getAePostingId());
+        Assert.assertNotNull(operation);
+        Assert.assertEquals(OperState.POST, operation.getState());
+        return operation;
+    }
+
+    private GLPd getDebit(GLOperation operation) {
+        List<GLPd> pdList = getGLPostings(operation);
+        Assert.assertTrue(pdList.size() > 0);
+        return pdList.stream().filter(p -> p.getAmountBC() < 0).findFirst().orElseThrow(() -> new RuntimeException("debit not found"));
+    }
+
+    private GLPd getCredit(GLOperation operation) {
+        List<GLPd> pdList = getGLPostings(operation);
+        Assert.assertTrue(pdList.size() > 0);
+        return pdList.stream().filter(p -> p.getAmountBC() > 0).findFirst().orElseThrow(() -> new RuntimeException("credit not found"));
+    }
+
+    private BackvalueJournal getBackvalueJournal(GLPd glpd) {
+        return (BackvalueJournal) baseEntityRepository.findById(BackvalueJournal.class,
+                new BackvalueJournalId(glpd.getAcid(), glpd.getBsaAcid(), glpd.getPod()));
     }
 
 }
