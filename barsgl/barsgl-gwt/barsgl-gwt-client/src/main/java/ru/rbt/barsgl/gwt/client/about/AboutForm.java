@@ -23,21 +23,24 @@ public class AboutForm extends DlgFrame {
 
     @Override
     public Widget createContent() {
-        Grid grid = new Grid(4, 2);
+        Grid grid = new Grid(5, 2);
         grid.setText(0, 0, "Продукт");
         grid.setText(0, 1, "BARS GL");
         grid.setText(1, 0, "Версия");
         grid.setText(1, 1, Version.VERSION);
         grid.setText(2, 0, "Ревизия");
         grid.setText(2, 1, Version.REVISION);
-        grid.setText(3, 0, "Версия БД");
-        grid.setWidget(3, 1, databaseVersionLabel = new Label());
+        grid.setText(3, 0, "Бранч");
+        grid.setText(3, 1, Version.BUILDSCMBRANCH);
+        grid.setText(4, 0, "Версия БД");
+        grid.setWidget(4, 1, databaseVersionLabel = new Label());
 
         grid.getCellFormatter().setWidth(0, 0, "80px");
         grid.getCellFormatter().getElement(0, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
         grid.getCellFormatter().getElement(1, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
         grid.getCellFormatter().getElement(2, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
         grid.getCellFormatter().getElement(3, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
+        grid.getCellFormatter().getElement(4, 0).getStyle().setFontWeight(Style.FontWeight.BOLD);
 
         SimplePanel panel = new SimplePanel();
         panel.add(grid);

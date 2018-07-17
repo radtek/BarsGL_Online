@@ -9,5 +9,6 @@ public class Version {
     public static final String GROUPID = "${project.groupId}";
     public static final String ARTIFACTID = "${project.artifactId}";
     public static final String REVISION = "${buildNumber}";
+    public static final String BUILDSCMBRANCH = "${scmBranch}";
 
 }
