@@ -1,10 +1,26 @@
 package ru.rbt.ejbcore.datarec;
 
 import java.io.Serializable;
+import java.sql.Types;
 
 public class DBParam implements Serializable {
 
     private static final int serialVersionUID = -1;
+
+    public enum DbParamType {
+
+        VARCHAR(Types.VARCHAR), DATE(Types.DATE), LONG(Types.BIGINT);
+
+        private final int paramType;
+
+        DbParamType(int paramType) {
+            this.paramType = paramType;
+        }
+
+        public int getParamType() {
+            return paramType;
+        }
+    }
 
     public enum DBParamDirectionType {
         IN, OUT, IN_OUT
@@ -29,6 +45,10 @@ public class DBParam implements Serializable {
     public DBParam(int type, Object value) {
         this.paramType = type;
         this.value = value;
+    }
+
+    public DBParam(DbParamType type, DBParamDirectionType direction, Object value) {
+        this(type.getParamType(), direction, value);
     }
 
     public int getParamType() {
