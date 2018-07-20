@@ -9,6 +9,7 @@ import ru.rbt.ejbcore.util.DateUtils;
 
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -85,7 +86,6 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
 
         String repTableNameWorkproc = getTableName(DBCfgString.valueOf(cfgName, cfgRepTableName, REP_WORKPROC));
 
-        final Date operday = getOperday().getCurrentDate();
         final Date lwDate = getOperday().getLastWorkingDay();
         final Date startDate =DateUtils.addDays(lwDate, -30);
 
@@ -98,15 +98,14 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         Assert.assertTrue(0 < load4Analyze(GL_WORKPROC, startDate, Source.GL));
         Assert.assertTrue(0 < load4Analyze(REP_WORKPROC, startDate, Source.BARSREP));
 
-        //
-        //
-        //
-        //
-        //
-        //
-        //
-        //
-        //
+        // заполнение таблицы сеанса расчета с вычислением прогнозируемых продолжительностей шагов - предварительный расчет
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ESTIMATE_STEP1; END;");
+
+        List<DataRecord> ests = baseEntityRepository.select("select * from GL_STAT_EST_WORKPROC");
+        Assert.assertEquals(2, ests.size());
+
+        // на данном шаге в т.ч. происходит исключение с настраиваего процента точек с максимальной пограшностью и перерасчет прогнозируемых значений
+
     }
 
     private String getTableName (DBCfgString cfgString) throws SQLException {
