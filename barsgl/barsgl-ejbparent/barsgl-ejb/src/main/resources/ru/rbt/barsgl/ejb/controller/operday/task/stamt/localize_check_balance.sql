@@ -1,3 +1,5 @@
+-- для включения параллелизма необходим INSERT, PARALLEL QUERY отключен на уровне сессии
+insert into GL_TMP_BALANCE_CHK (DAT,BSAACID,ACID,CNT)
 select * from (
   select /*+ parallel (b 4)*/c.dat, b.bsaacid, b.acid, count(1) cnt
     from baltur b, cal c

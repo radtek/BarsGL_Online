@@ -121,8 +121,9 @@ public class StamtLocalizationSessionTask extends AbstractJobHistoryAwareTask {
     private boolean checkBaltur() throws Exception {
         try {
             final Date minDate = calendarDayRepository.getWorkDateBefore(operdayController.getOperday().getCurrentDate(), 5, false);
-            List<DataRecord> failedEntries= jobHistoryRepository.select(textResourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/localize_check_balance.sql")
-                , minDate, operdayController.getOperday().getCurrentDate(), minDate);
+            jobHistoryRepository.executeNativeUpdate(textResourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/localize_check_balance.sql")
+                    , minDate, operdayController.getOperday().getCurrentDate(), minDate);
+            List<DataRecord> failedEntries= jobHistoryRepository.select("select * from GL_TMP_BALANCE_CHK");
             Assert.isTrue(failedEntries.isEmpty(), () -> new ValidationError(TASK_ERROR, "Обнаружены дубли в балансе банка, выборочно по следующим счетам: "
                 + failedEntries.stream().map(d -> format("Счет %s:%s Дата %s Кол-во строк %s"
                         , d.getString("bsaacid"), d.getString("acid"), dateUtils.onlyDateString(d.getDate("dat")), d.getLong("cnt"))).collect(Collectors.joining(",", "<", ">"))));
