@@ -3,17 +3,23 @@ package ru.rbt.barsgl.ejbtest.aq;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejb.repository.AqRepository;
+import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
+import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.BalanceMode;
+import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DBParam;
 import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -23,8 +29,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.SELECTED;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.ONLINE;
 import static ru.rbt.ejbcore.util.DateUtils.dbDateParse;
 
 public class CalcBalanceAsyncIT extends AbstractRemoteIT {
@@ -363,6 +372,46 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         Assert.assertEquals(0, errorMessages.size());
         balance = baseEntityRepository.selectFirst("select sum(OBAC+DTAC+CTAC) SM from baltur where bsaacid = ? and dat = ?", account.getBsaAcid(), dat2);
         Assert.assertTrue(balance.getInteger("sm") + "", 1 == balance.getInteger("sm"));
+    }
+
+    /**
+     * установка целевого режима пересчета остатков при окончании закрытии дня
+     * в случае текущего режима обработки проводок DIRECT
+     * @throws Exception
+     */
+    @Test
+    public void testExecutePreCOBNew_balanceMode() throws Exception {
+
+        final String jobName = ExecutePreCOBTaskNew.class.getSimpleName();
+
+        // DIRECT MODE
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+
+        setGibridBalanceMode();
+
+        Operday operday = getOperday();
+        Assert.assertEquals(Operday.OperdayPhase.ONLINE, operday.getPhase());
+        Assert.assertEquals(GIBRID, operday.getBalanceMode());
+
+        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
+
+        JobHistory history1 = getLastHistRecordObject(jobName);
+
+        SingleActionJob precobJob =SingleActionJobBuilder.create()
+                .withClass(ExecutePreCOBTaskNew.class).withName(jobName)
+                .withProps(ExecutePreCOBTaskNew.FINAL_BALANCE_MODE_KEY+ "=" + ONLINE.name()).build();
+
+        jobService.executeJob(precobJob);
+
+        JobHistory history2 = getLastHistRecordObject(jobName);
+        Assert.assertNotEquals(history1.getId(), history2.getId());
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history2.getResult());
+
+        operday = getOperday();
+        Assert.assertEquals(COB, operday.getPhase());
+        Assert.assertEquals(ONLINE, operday.getBalanceMode());
     }
 
     private void insertBaltur(String bsaacid, String acid, Date dat, Date datto) {

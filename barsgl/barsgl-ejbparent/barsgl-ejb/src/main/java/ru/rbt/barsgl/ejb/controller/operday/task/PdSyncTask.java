@@ -214,13 +214,25 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
     }
 
     /**
-     * ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode#NOCHANGE by default
+     * ru.rbt.barsgl.ejb.common.mapping.od.Operday.BalanceMode#NOCHANGE by default, balanceMode parameter key
      * @param properties set ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask#BALANCE_MODE_KEY for target mode
      * @return balance mode
      */
     public BalanceMode getTargetBalanceMode(Properties properties) {
-        BalanceMode balanceMode = Optional.ofNullable(properties.getProperty(OpenOperdayTask.BALANCE_MODE_KEY))
-                .map(BalanceMode::valueOf).orElse(NOCHANGE);
+        return getTargetBalanceMode(properties, OpenOperdayTask.BALANCE_MODE_KEY, NOCHANGE);
+    }
+
+    /**
+     * target balance calculation mode
+     * @param properties task properties
+     * @param defaultMode default value
+     * @return result
+     */
+    public BalanceMode getTargetBalanceMode(Properties properties, String key, BalanceMode defaultMode) {
+        Assert.isTrue(!StringUtils.isEmpty(key));
+        Assert.isTrue(null != defaultMode);
+        BalanceMode balanceMode = Optional.ofNullable(properties.getProperty(key))
+                .map(BalanceMode::valueOf).orElse(defaultMode);
         auditController.info(BufferModeSync, String.format("Целевой режим обработки проводок: %s", balanceMode.name()));
         return balanceMode;
     }

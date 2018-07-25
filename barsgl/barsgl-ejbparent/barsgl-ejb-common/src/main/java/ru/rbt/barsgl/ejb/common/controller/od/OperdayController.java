@@ -236,6 +236,7 @@ public class OperdayController {
             auditController.error(AuditRecord.LogCode.Operday, "Не удалось переключить обработку в режим " + mode, null, e);
             throw e;
         }
+        init();
     }
 
 }

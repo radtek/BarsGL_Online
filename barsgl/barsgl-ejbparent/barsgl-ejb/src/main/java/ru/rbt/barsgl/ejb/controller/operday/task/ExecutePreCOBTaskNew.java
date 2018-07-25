@@ -53,6 +53,7 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.shared.enums.CobPhase.*;
+import static ru.rbt.barsgl.shared.enums.CobStepStatus.Error;
 import static ru.rbt.barsgl.shared.enums.CobStepStatus.*;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
@@ -65,6 +66,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     public static final String TIME_LOAD_BEFORE_KEY = "timeLoadBefore";
     public static final String CHECK_CHRONOLOGY_KEY = "chronology";
     public static final String CHECK_PACKAGES_KEY = "checkPackages";
+    public static final String FINAL_BALANCE_MODE_KEY = "finalBalanceMode";
 
     private static final Logger log = Logger.getLogger(ExecutePreCOBTaskNew.class);
 
@@ -191,7 +193,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         }));
 
         works.add(new CobRunningStepWork(CobStartEtlProc, (Long idCob, CobPhase phase) -> {
-            return startProcessing(operday, idCob, phase);
+            return startProcessing(idCob, phase, syncTask.getTargetBalanceMode(properties, FINAL_BALANCE_MODE_KEY, BalanceMode.NOCHANGE));
         }));
         Assert.isTrue(CobPhase.values().length >= works.size());
 
@@ -469,7 +471,7 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
             return new CobStepResult(Success, "Успешное завершение закрытия счетов");
     }
 
-    public CobStepResult startProcessing(Operday operday, Long idCob, CobPhase phase) {
+    public CobStepResult startProcessing(Long idCob, CobPhase phase, BalanceMode finalBalanceMode) {
         try {
             repository.executeInNewTransaction(persistence1 -> {
                 operdayController.setCOB();
@@ -479,6 +481,13 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         } catch (Exception e) {
             String msg = format("Ошибка при установке состояния операционного дняв статус %s", COB);
 //            auditController.warning(AuditRecord.LogCode.Operday, msg, null, e);
+            return stepErrorResult(Halt, msg, e);
+        }
+        try {
+            operdayController.switchBalanceMode(finalBalanceMode);
+            statInfo(idCob, phase, format("Установлен режим пересчета остатков %s", finalBalanceMode));
+        } catch (Exception e) {
+            String msg = format("Ошибка при установке режима пересчета остатков %s", finalBalanceMode);
             return stepErrorResult(Halt, msg, e);
         }
         try {
