@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejbtest;
 
-import ru.rbt.barsgl.shared.enums.BalanceMode;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -53,7 +52,6 @@ import ru.rbt.ejbcore.controller.etc.ITextResourceController;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.repository.BaseEntityRepository;
 import ru.rbt.ejbcore.repository.IBaseEntityMultiRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
@@ -74,9 +72,7 @@ import java.util.*;
 import static com.google.common.collect.Iterables.find;
 import static java.lang.String.format;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.*;
-import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
-import static ru.rbt.barsgl.shared.enums.BalanceMode.ONDEMAND;
-import static ru.rbt.barsgl.shared.enums.BalanceMode.ONLINE;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.*;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
 import static ru.rbt.ejbcore.util.StringUtils.rightPad;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -849,12 +845,15 @@ public abstract class AbstractRemoteIT  {
     }
 
     protected static GLAccount findAccount(String bsaacidLike) throws SQLException {
-        DataRecord record = baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ?", bsaacidLike);
-        if (record != null) {
-            return (GLAccount) baseEntityRepository.findById(GLAccount.class, record.getLong("id"));
-        } else {
-            throw new RuntimeException(bsaacidLike + " not found");
-        }
+        return Optional.ofNullable(baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ? and dtc is null", bsaacidLike)).map(
+                r -> (GLAccount) baseEntityRepository.findById(GLAccount.class, r.getLong("id")))
+                .orElseThrow(() -> new RuntimeException(format("Account like '%s' is not found")));
+    }
+
+    protected static GLAccount findAccountLikeAndNotEquals(String bsaacidLike, String not) throws SQLException {
+        return Optional.ofNullable(baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ? and dtc is null and bsaacid <> ?", bsaacidLike, not)).map(
+                r -> (GLAccount) baseEntityRepository.findById(GLAccount.class, r.getLong("id")))
+                .orElseThrow(() -> new RuntimeException(format("Account like '%s' is not found")));
     }
 
     protected Criteria filialCriteria(String filial) {

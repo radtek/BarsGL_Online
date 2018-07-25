@@ -14,6 +14,7 @@ import ru.rbt.barsgl.ejb.controller.operday.task.PdSyncTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.gibrid.PdSyncAutoTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.SyncStamtBackvalueTask;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -89,8 +90,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -180,8 +182,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -267,8 +270,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         // !!! проводки бэквалуе
         pst.setValueDate(getOperday().getLastWorkingDay());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -366,7 +370,7 @@ public class BufferModeIT extends AbstractRemoteIT {
     /**
      * В случае обработки проводок в процессе синхронизации запрещено обновлять перенесенные обороты
      */
-    @Test public void testErrpost() {
+    @Test public void testErrpost() throws SQLException {
 
         Operday operday = getOperday();
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
@@ -380,8 +384,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -434,8 +439,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -478,7 +484,8 @@ public class BufferModeIT extends AbstractRemoteIT {
                 , "createHeader", PdSyncTask.class.getSimpleName(), getOperday().getCurrentDate());
 
         SingleActionJob syncJob = SingleActionJobBuilder.create()
-                .withProps(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name() + "=" + history.getId())
+                .withProps(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name() + "=" + history.getId() + "\n" +
+                        OpenOperdayTask.PD_MODE_KEY+"="+ Operday.PdMode.DIRECT)
                 .withClass(PdSyncTask.class)
                 .withName("PdSyncTask001").build();
         jobService.executeJob(syncJob);
@@ -547,8 +554,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -675,7 +683,7 @@ public class BufferModeIT extends AbstractRemoteIT {
 
     }
 
-    private static void processOneOperation() {
+    private static void processOneOperation() throws SQLException {
         long stamp = System.currentTimeMillis();
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
@@ -684,8 +692,9 @@ public class BufferModeIT extends AbstractRemoteIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        GLAccount accountCt = findAccount("40817036%");
+        pst.setAccountCredit(accountCt.getBsaAcid());
+        pst.setAccountDebit(findAccountLikeAndNotEquals("40817036%", accountCt.getBsaAcid()).getBsaAcid());
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
