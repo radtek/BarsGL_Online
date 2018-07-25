@@ -4,7 +4,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>barsgl</artifactId>
-        <version>4.0.16-SNAPSHOT</version>
+        <version>4.0.16</version>
     </parent>
     <artifactId>security</artifactId>
     <name>${project.artifactId}:${project.packaging}:${project.version}</name>
