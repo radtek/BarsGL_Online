@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
@@ -77,7 +78,7 @@ public class OperdayController {
 
     @Lock(READ)
     public Operday getOperday() {
-        return operday;
+        return Optional.ofNullable(operday).orElseThrow(() -> new DefaultApplicationException("Опердень не инициализирован"));
     }
 
     @Lock(WRITE)
@@ -176,20 +177,25 @@ public class OperdayController {
     }
 
     private void initOperday() {
-        Map<String,String> map = ImmutableMap.<String,String>builder()
-                .put("javax.persistence.cache.storeMode", "REFRESH").build();
-        List<Operday> operdays = repository.selectHinted(Operday.class, "from Operday o", null, map);
-        Assert.isTrue(!operdays.isEmpty() && 1 == operdays.size()
-                , format("Неверно инициализирован опердень: '%s', '%s'", !operdays.isEmpty(), operdays.size()));
-        Operday orig = operdays.get(0);
-        operday = new Operday();
-        operday.setCurrentDate(orig.getCurrentDate());
-        operday.setLastWorkdayStatus(orig.getLastWorkdayStatus());
-        operday.setLastWorkingDay(orig.getLastWorkingDay());
-        operday.setPhase(orig.getPhase());
-        operday.setPdMode(orig.getPdMode());
-        operday.setProcessingStatus(orig.getProcessingStatus());
-        operday.setAccessMode(orig.getAccessMode());
+        try {
+            Map<String,String> map = ImmutableMap.<String,String>builder()
+                    .put("javax.persistence.cache.storeMode", "REFRESH").build();
+            List<Operday> operdays = repository.selectHinted(Operday.class, "from Operday o", null, map);
+            Assert.isTrue(!operdays.isEmpty() && 1 == operdays.size()
+                    , format("Неверно инициализирован опердень: '%s', '%s'", !operdays.isEmpty(), operdays.size()));
+            Operday orig = operdays.get(0);
+            operday = new Operday();
+            operday.setCurrentDate(orig.getCurrentDate());
+            operday.setLastWorkdayStatus(orig.getLastWorkdayStatus());
+            operday.setLastWorkingDay(orig.getLastWorkingDay());
+            operday.setPhase(orig.getPhase());
+            operday.setPdMode(orig.getPdMode());
+            operday.setProcessingStatus(orig.getProcessingStatus());
+            operday.setAccessMode(orig.getAccessMode());
+            operday.setBalanceMode(getBalanceCalculationMode());
+        } catch (Throwable e) {
+            operday = null;
+        }
     }
 
     private void initTimeService() {

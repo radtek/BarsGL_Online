@@ -12,6 +12,7 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.repository.dict.SourcesDealsRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
@@ -27,7 +28,6 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -333,7 +333,10 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
                     try {
                         // записать полупроводки
                         for (Pd pd : pdList) {
-                            createOrUpdateAccountLock(pd.getBsaAcid());
+                            if (BalanceMode.ONLINE == operdayController.getOperday().getBalanceMode()){
+                                // блокировка только при синхронном пересчете остатков
+                                createOrUpdateAccountLock(pd.getBsaAcid());
+                            }
                             save(pd);
                             // пересчет/локализация только в рамках задачи мониторинга вход сообщений по журналу backvalue recalculate(pd);
                         }
