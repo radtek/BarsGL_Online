@@ -635,6 +635,11 @@ public class BufferModeIT extends AbstractRemoteIT {
         Assert.assertNotEquals(history2.getLong("id_hist"), history3.getLong("id_hist"));
         checkCurrentBalanceMode(BalanceMode.GIBRID);
         Assert.assertEquals(DIRECT, getOperday().getPdMode());
+
+        // повторно задача не запускается
+        jobService.executeJob(syncJob);
+        DataRecord history4 = getLastHistRecord(pdSyncAutoJobName);
+        Assert.assertEquals(history3.getLong("id_hist"), history4.getLong("id_hist"));
     }
 
     private void incldeBs2ByBufferOperation(GLOperation operation) throws SQLException {
