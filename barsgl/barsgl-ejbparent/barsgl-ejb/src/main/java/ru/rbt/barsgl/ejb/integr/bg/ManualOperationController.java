@@ -19,10 +19,8 @@ import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
-import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.security.ejb.repository.AppUserRepository;
@@ -43,7 +41,6 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_NOW;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.BT_PAST;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
@@ -124,11 +121,6 @@ public class ManualOperationController {
             cntError = asyncProcessPostings(postings);
         } catch (Exception e) {
             auditController.error(Package, "Ошибка при обработке ручных операций", null, e);
-        } finally {
-            // pseudo online localization in DIRECT mode only
-            if (DIRECT == operdayController.getOperday().getPdMode()) {
-                recalculateBackvalue("по ручным операциям: " + StringUtils.listToString(postings, ","));
-            }
         }
         return cntError;
     }
@@ -174,11 +166,6 @@ public class ManualOperationController {
             result.setPackageStatistics(packageRepository.getPackageStatistics(idPackage), true);
             result.setErrorMessage(getErrorMessage(e));
             return result;
-        } finally {
-            // pseudo online localization in DIRECT mode only
-            if (DIRECT == operdayController.getOperday().getPdMode()) {
-                recalculateBackvalue("по пакету Excel " + idPackage);
-            }
         }
     }
 
@@ -423,22 +410,6 @@ public class ManualOperationController {
         int cnt = postingRepository.executeInNewTransaction(persistence -> packageRepository.updatePackageStateNew(idPackage, state));
         if (cnt != 1) {
             throw new ValidationError(ErrorCode.PACKAGE_IS_WORKING, idPackage.toString(), state.name());
-        }
-    }
-
-    /**
-     * локализация и пересчет по журналу сформированному пакетом
-     * @throws Exception
-     */
-    private void recalculateBackvalue(String ident) {
-        try {
-            log.info("Начало пересчета/локализации " + ident);
-            beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) ->
-                {journalController.recalculateBackvalueJournal(); return null;});
-            log.info("Успешное окончание пересчета/локализации " + ident);
-        } catch (Exception e) {
-            auditController.error(Task, "Ошибка при пересчете остатков БС2/ локализации " + ident +
-                    "\nЗаписи не прошедшие пересчет/локализацию в таблице GL_BVJRNL.STATE = 'ERROR'", null, e);
         }
     }
 

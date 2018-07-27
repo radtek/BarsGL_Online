@@ -15,7 +15,6 @@ import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 
@@ -32,8 +31,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Task;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Package;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.barsgl.shared.enums.OperState.ERPROC;
 
@@ -124,11 +122,6 @@ public class ProcessBackValueOperationsTask implements ParamsAwareRunnable {
                     cntError = asyncProcessOperations(operations);
                 } catch (Exception e) {
                     auditController.error(Package, "Ошибка при обработке операций BackValue", null, e);
-                } finally {
-                    // pseudo online localization in DIRECT mode only
-                    if (DIRECT == operdayController.getOperday().getPdMode()) {
-                        recalculateBackvalue("по операциям BackValue: " + StringUtils.listToString(operations, ","));
-                    }
                 }
                 return cntError;
             }
@@ -170,21 +163,5 @@ public class ProcessBackValueOperationsTask implements ParamsAwareRunnable {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class, DefaultApplicationException.class,
                 PersistenceException.class);
-    }
-
-    /**
-     * локализация и пересчет по журналу сформированному пакетом
-     * @throws Exception
-     */
-    private void recalculateBackvalue(String ident) {
-        try {
-            log.info("Начало пересчета/локализации " + ident);
-            beanManagedProcessor.executeInNewTxWithDefaultTimeout((persistence, connection) ->
-            {journalController.recalculateBackvalueJournal(); return null;});
-            log.info("Успешное окончание пересчета/локализации " + ident);
-        } catch (Exception e) {
-            auditController.error(Task, "Ошибка при пересчете остатков БС2/ локализации " + ident +
-                    "\nЗаписи не прошедшие пересчет/локализацию в таблице GL_BVJRNL.STATE = 'ERROR'", null, e);
-        }
     }
 }
