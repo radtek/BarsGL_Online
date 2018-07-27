@@ -10,6 +10,7 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.common.repository.od.OperdayRepository;
 import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
+import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.task.*;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -97,6 +98,9 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from workproc where dat = ?", previosOperday.getCurrentDate());
         checkCreateFinalFlexStep(previosOperday.getCurrentDate());
 
+        // проверка сброса сиквенса проводок буфера в ноль
+        remoteAccess.invoke(OperdaySynchronizationController.class, "restartSequenceGLPD", 5000000);
+
         SingleActionJobBuilder openOperdayTaskBuilder = SingleActionJobBuilder.create()
                 .withName(OpenOperdayTask.class.getSimpleName())
                 .withClass(OpenOperdayTask.class).withProps(
@@ -118,6 +122,8 @@ public class OperdayIT extends AbstractTimerJobIT {
         previosOperday = getOperday();
         Assert.assertEquals(COB, previosOperday.getPhase());
         Assert.assertEquals(BUFFER, previosOperday.getPdMode());
+        // сброс последовательности на GL_PD
+        Assert.assertEquals(new Long(2L), baseEntityRepository.selectFirst("select SEQ_GL_PD0.nextval v from dual").getLong("v"));
 
         openOperdayTaskBuilder = SingleActionJobBuilder.create()
                 .withClass(OpenOperdayTask.class)

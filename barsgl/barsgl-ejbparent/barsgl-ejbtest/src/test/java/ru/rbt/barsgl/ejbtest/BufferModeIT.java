@@ -82,6 +82,8 @@ public class BufferModeIT extends AbstractRemoteIT {
         setOperday(operday.getCurrentDate(), operday.getLastWorkingDay()
                 , ONLINE, OPEN, BUFFER);
 
+        remoteAccess.invoke(OperdaySynchronizationController.class, "restartSequenceGLPD", 5000000);
+
         long stamp = System.currentTimeMillis();
 
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
