@@ -48,7 +48,7 @@ public class EtlPackageRepository extends AbstractBaseEntityRepository<EtlPackag
     public String getPackageStatistics(Date from, Date to) {
         String sql = "select G.ID_PKG, G.DT_LOAD, P.VD from GL_ETLPKG G " +
                 "join (select ID_PKG, max(VDATE) VD from GL_ETLPST group by ID_PKG, VDATE order by ID_PKG desc) P on G.ID_PKG = P.ID_PKG " +
-                "where G.STATE = 'LOADED' and DT_LOAD >= ? and DT_LOAD < ? order by ID_PKG";
+                "where G.STATE = 'LOADED' and DT_LOAD >= ? and DT_LOAD < ? AND ROWNUM <= 10 order by ID_PKG";
         try {
             List<DataRecord> listRec = select(sql, from, to);
             StringBuilder builder = new StringBuilder();
