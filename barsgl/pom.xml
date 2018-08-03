@@ -95,6 +95,16 @@
         </plugins>
     </build>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.9</version>
+            </plugin>
+        </plugins>
+    </reporting>
+
     <!--<scm>
         <connection>scm:svn:http://vs278/svn/SVN_DWH/DWH/BARS/trunk/BarsGLOnline/barsgl</connection>
         <developerConnection>scm:svn:http://vs278/svn/SVN_DWH/DWH/BARS/trunk/BarsGLOnline/barsgl</developerConnection>
