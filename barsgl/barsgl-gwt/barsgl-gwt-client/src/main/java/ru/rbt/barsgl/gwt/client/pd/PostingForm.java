@@ -80,6 +80,7 @@ public class PostingForm extends MDForm {
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
         masterActionBar.addAction(BackValuePostingReport());
+        masterActionBar.addAction(createReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
@@ -443,6 +444,45 @@ public class PostingForm extends MDForm {
         }
     }
 
+    private GridAction createReport() {
+        final PopupPanel repPanel = new PopupPanel(true, true);
+        VerticalPanel vp = new VerticalPanel();
+        vp.add(new HTML("<b>Создать отчет</b>"));
+        MenuItem itemBV = new MenuItem("Отчет по Back Value", new Command() {
+            @Override
+            public void execute() {
+                repPanel.hide();
+                BackValuePostingReport().execute();
+            }
+        });
+        MenuItem itemRecon = new MenuItem("Отчет по счетам с acode 4496 и sq 99", new Command() {
+            @Override
+            public void execute() {
+                repPanel.hide();
+                Reconc4496PostingReport().execute();
+            }
+        });
+        MenuBar bar = new MenuBar(true);
+        bar.addItem(itemBV);
+        bar.addItem(itemRecon);
+        vp.add(bar);
+        repPanel.setWidget(vp);
+
+        return new GridAction(masterGrid, null, "Создать отчет", new Image(ImageConstants.INSTANCE.report()), 5) {
+            @Override
+            public void execute() {
+                final PushButton button = masterActionBar.getButton(this);
+                repPanel.show();
+                repPanel.setPopupPositionAndShow(new PopupPanel.PositionCallback() {
+
+                    @Override
+                    public void setPosition(int i, int i1) {
+                        repPanel.setPopupPosition(button.getAbsoluteLeft(), button.getAbsoluteTop() + button.getOffsetHeight());
+                    }
+                });
+            }
+        };
+    }
 
     private GridAction BackValuePostingReport() {
         return new GridAction(masterGrid, null, "Отчет по Back Value", new Image(ImageConstants.INSTANCE.report()), 5) {
@@ -453,6 +493,57 @@ public class PostingForm extends MDForm {
             @Override
             public void execute() {
                 if (dlg == null) dlg = new BackValueReportDlg();
+                dlg.setDlgEvents(this);
+                dlg.show(null);
+            }
+
+            public void onDlgOkClick(Object prms){
+                dlg.hide();
+
+                final String date = (String)((Object[]) prms)[0];
+                final String limit = (String)((Object[]) prms)[1];
+                WaitingManager.show("Проверка наличия данных...");
+
+                BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+
+                    @Override
+                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                        if (res.isError()) {
+                            WaitingManager.hide();
+                            DialogManager.message("Отчет", res.getMessage());
+                        } else {
+                            dlg.hide();
+                            WaitingManager.hide();
+                            setEnable(false);
+
+                            String user = "";
+                            AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+                            if (current_user != null){
+                                user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
+                            }
+
+                            ExcelExportHead head = new ExcelExportHead(Utils.Fmt("ОТЧЕТ по операциям BACK VALUE за {0}", date),
+                                    user, Utils.Fmt("дата проводки меньше {0}", date));
+
+                            Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(date, limit), head,
+                                    new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
+                            e2e.export(true);
+                        }
+                    }
+                });
+            }
+        };
+    }
+
+    private GridAction Reconc4496PostingReport() {
+        return new GridAction(masterGrid, null, null, new Image(ImageConstants.INSTANCE.report()), 5) {
+
+            Reconc4496ReportDlg dlg = null;
+            GridAction act = this;
+
+            @Override
+            public void execute() {
+                if (dlg == null) dlg = new Reconc4496ReportDlg();
                 dlg.setDlgEvents(this);
                 dlg.show(null);
             }
