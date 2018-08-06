@@ -120,6 +120,13 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         Assert.assertEquals(2, ests.size());
         Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("Y"))));
         Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("EST"))));
+
+        // вычисление макс/миним длительности шагов
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.UPDATE_MINMAX; END;");
+        ests = baseEntityRepository.select("select * from GL_STAT_EST_WORKPROC");
+        Assert.assertTrue(ests.stream().anyMatch(r -> !"0".equals(r.getString("minest"))));
+        Assert.assertTrue(ests.stream().anyMatch(r -> !"0".equals(r.getString("maxest"))));
+
     }
 
     private String getTableName (DBCfgString cfgString) throws SQLException {
