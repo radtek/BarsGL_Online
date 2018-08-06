@@ -99,13 +99,27 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         Assert.assertTrue(0 < load4Analyze(REP_WORKPROC, startDate, Source.BARSREP));
 
         // заполнение таблицы сеанса расчета с вычислением прогнозируемых продолжительностей шагов - предварительный расчет
-        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ESTIMATE_STEP1; END;");
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ESTIMATE_STEP; END;");
 
         List<DataRecord> ests = baseEntityRepository.select("select * from GL_STAT_EST_WORKPROC");
         Assert.assertEquals(2, ests.size());
+        Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("Y"))));
+        Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("EST"))));
 
         // на данном шаге в т.ч. происходит исключение с настраиваего процента точек с максимальной пограшностью и перерасчет прогнозируемых значений
+        // должно удалиться 2 записи, т.е. в GL_STAT_TMP_WORKPROC остается 28 записей по каждому источнику
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.CLEAR_STAT_TAB; END;");
 
+        DataRecord cnt = baseEntityRepository.selectFirst("select count(1) cnt from GL_STAT_TMP_WORKPROC");
+        Assert.assertTrue(cnt.getString("cnt"), 28L * 2 == cnt.getLong("cnt"));
+
+        // производим пересчет после исключения точек с максимальной погрешностью
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ESTIMATE_STEP; END;");
+        // средние значения не поменяются
+        ests = baseEntityRepository.select("select * from GL_STAT_EST_WORKPROC");
+        Assert.assertEquals(2, ests.size());
+        Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("Y"))));
+        Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("EST"))));
     }
 
     private String getTableName (DBCfgString cfgString) throws SQLException {
@@ -175,7 +189,7 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "    execute immediate 'delete from '||l_tabname;\n" +
             "    for nn in (select rownum rn from dual connect by rownum <= 30) loop\n" +
             "        execute immediate 'insert into '||l_tabname||' (DAT, ID, STARTTIME, ENDTIME, RESULT, COUNT) values (:1,:2,:3,:4,:5,:6)'\n" +
-            "            using l_startdat + nn.rn - 1, l_stepname,  l_startdat + nn.rn - 1 + 3/24, l_startdat + nn.rn - 1 + 3/24 + 1/48, 'O', 1; \n" +
+            "            using l_startdat + nn.rn - 1, l_stepname,  l_startdat + nn.rn - 1 + 3/24 - mod(nn.rn, 10) * 1/24/60, l_startdat + nn.rn - 1 + 3/24 + 1/48 + mod(nn.rn, 10) * 1/24/60, 'O', 1; \n" +
             "    end loop;\n" +
             "end;";
 
