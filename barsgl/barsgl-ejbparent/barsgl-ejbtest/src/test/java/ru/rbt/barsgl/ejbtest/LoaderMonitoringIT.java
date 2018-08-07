@@ -78,6 +78,8 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         // каждая таблица (GL,BARSREP) должна быть зарегистрирована в настройках DB_CFG
         // загрузка GL через представление на workproc
 
+        createStepProps();
+
         String cfgName = baseEntityRepository.selectOne("select pkg_workproc_mon.get_monitor_cfgname() nm from dual").getString("nm");
         String cfgGlTableName = baseEntityRepository.selectOne("select pkg_workproc_mon.get_monitor_propname_gltab() nm from dual").getString("nm");
         String cfgRepTableName = baseEntityRepository.selectOne("select pkg_workproc_mon.get_monitor_propname_reptab() nm from dual").getString("nm");
@@ -109,6 +111,12 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         Assert.assertEquals(2, ests.size());
         Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("Y"))));
         Assert.assertTrue(ests.stream().anyMatch(r -> "39".equals(r.getString("EST"))));
+        DataRecord glest = ests.stream().filter(r -> r.getString("src").equals(Source.GL.name())).findAny()
+                .orElseThrow(() -> new RuntimeException("gl is not found"));
+        Assert.assertTrue(glest.getString("PARM"), glest.getLong("PARM") == GL_PARAM);
+        DataRecord repest = ests.stream().filter(r -> r.getString("src").equals(Source.BARSREP.name())).findAny()
+                .orElseThrow(() -> new RuntimeException("rep not found"));
+        Assert.assertTrue(repest.getString("PARM"), repest.getLong("PARM") == REP_PARAM);
 
         // на данном шаге в т.ч. происходит исключение с настраиваего процента точек с максимальной пограшностью и перерасчет прогнозируемых значений
         // должно удалиться 2 записи, т.е. в GL_STAT_TMP_WORKPROC остается 28 записей по каждому источнику
@@ -140,6 +148,7 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
 
         // запрет пересчета - нет запрета
         final long minEscalate = 100L;
+        final long minEscalateCalc = 23L; // расчетное значение
         Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update " + GL_WORKPROC_ESCAL_HIST + " set MINESCALATE = ?, fixed = ? where id = ?"
             , minEscalate, "0", STEP_NAME));
         eschist = baseEntityRepository.select("select * from " + GL_WORKPROC_ESCAL_HIST);
@@ -150,7 +159,7 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
                 , Source.GL.name(), GL_WORKPROC_ESCAL_HIST);
         eschist = baseEntityRepository.select("select * from " + GL_WORKPROC_ESCAL_HIST);
         Assert.assertEquals(1, eschist.size());
-        Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), 23L == eschist.get(0).getLong("MINESCALATE"));
+        Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), minEscalateCalc == eschist.get(0).getLong("MINESCALATE"));
 
         // запрет пересчета - включаем запрет
         Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update " + GL_WORKPROC_ESCAL_HIST + " set MINESCALATE = ?, fixed = ? where id = ?"
@@ -165,7 +174,9 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         baseEntityRepository.executeNativeUpdate(CREATE_BARSREP_ESCALATE_HIST, BARSREP_WORKPROC_ESCAL_HIST);
         baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ACCEPT_HIST(?, ?); END;"
                 , Source.BARSREP.name(), BARSREP_WORKPROC_ESCAL_HIST);
-
+        eschist = baseEntityRepository.select("select * from " + BARSREP_WORKPROC_ESCAL_HIST);
+        Assert.assertEquals(1, eschist.size());
+        Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), minEscalateCalc == eschist.get(0).getLong("MINESCALATE"));
     }
 
     private String getTableName (DBCfgString cfgString) throws SQLException {
@@ -208,6 +219,15 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
 
     }
 
+    private static void createStepProps() {
+        baseEntityRepository.executeNativeUpdate(CREATE_CONST_FUNC);
+        baseEntityRepository.executeNativeUpdate("delete from WORK_ESCALATE_STEP");
+        baseEntityRepository.executeNativeUpdate("insert into WORK_ESCALATE_STEP (ID_STEP, DEFMIN, FUNCNAME,SRC) values (?,?,?,?)"
+            , STEP_NAME, DEFMIN, CONST_FUNC_NAME, Source.GL.name());
+        baseEntityRepository.executeNativeUpdate("insert into WORK_ESCALATE_STEP (ID_STEP, DEFMIN, FUNCNAME,SRC) values (?,?,?,?)"
+            , STEP_NAME, DEFMIN, CONST_FUNC_NAME, Source.BARSREP.name());
+    }
+
     private static final String CREATE_WORKPROC_TAB_STRING =
                     "declare\n" +
                     "    pragma autonomous_transaction;\n" +
@@ -248,7 +268,7 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "    ? := l_count;\n" +
             "end;";
 
-    private static String CREATE_BARSREP_ESCALATE_HIST =
+    private final static String CREATE_BARSREP_ESCALATE_HIST =
             "declare\n" +
             "    pragma autonomous_transaction;\n" +
             "    l_esc_tab varchar2(30) := ?;\n" +
@@ -256,6 +276,30 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "    DB_CONF.DROP_TABLE_IF_EXISTS(user, l_esc_tab);\n" +
             "    execute immediate 'create table '||l_esc_tab||' as select * from WORK_ESCALATE_HIST where rownum < 1';\n" +
             "    commit;\n" +
+            "end;";
+
+    private static final String CONST_FUNC_NAME = "MON_STEP1";
+
+
+    private static final int GL_PARAM = 111;
+    private static final int REP_PARAM = 112;
+    private static final int DEFMIN = 2323;
+
+    private static final String CREATE_CONST_FUNC =
+            "declare\n" +
+            "   pragma autonomous_transaction;\n" +
+            "begin\n" +
+            "    execute immediate q'[\n" +
+            "    create or replace function "+CONST_FUNC_NAME+"(a_step varchar2, a_dat date, a_src varchar2) return number is\n" +
+            "    begin\n" +
+            "        if (a_src = PKG_WORKPROC_MON.C_SRC_GL) then\n" +
+            "            return "+ GL_PARAM+";\n" +
+            "        else\n" +
+            "            return "+REP_PARAM+";\n" +
+            "        end if;\n" +
+            "    end "+CONST_FUNC_NAME+";\n" +
+            "    ]';\n" +
+            "   commit;\n" +
             "end;";
 
 }
