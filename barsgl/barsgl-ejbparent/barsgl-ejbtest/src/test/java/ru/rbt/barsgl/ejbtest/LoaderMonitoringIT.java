@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static ru.rbt.ejbcore.datarec.DBParam.DBParamDirectionType.IN;
@@ -84,7 +85,7 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         String cfgGlTableName = baseEntityRepository.selectOne("select pkg_workproc_mon.get_monitor_propname_gltab() nm from dual").getString("nm");
         String cfgRepTableName = baseEntityRepository.selectOne("select pkg_workproc_mon.get_monitor_propname_reptab() nm from dual").getString("nm");
 
-        baseEntityRepository.executeNativeUpdate("delete from db_cfg where CFG_NAME = ? ", cfgName);
+//        baseEntityRepository.executeNativeUpdate("delete from db_cfg where CFG_NAME = ? ", cfgName);
 
         String glTableNameWorkproc = getTableName(DBCfgString.valueOf(cfgName, cfgGlTableName, GL_WORKPROC));
 
@@ -177,6 +178,37 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         eschist = baseEntityRepository.select("select * from " + BARSREP_WORKPROC_ESCAL_HIST);
         Assert.assertEquals(1, eschist.size());
         Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), minEscalateCalc == eschist.get(0).getLong("MINESCALATE"));
+    }
+
+    @Test
+    public void testAll() throws SQLException, InterruptedException {
+
+        baseEntityRepository.executeNativeUpdate("delete from " + GL_WORKPROC_ESCAL_HIST);
+        baseEntityRepository.executeNativeUpdate("delete from " + BARSREP_WORKPROC_ESCAL_HIST);
+        baseEntityRepository.executeNativeUpdate("delete from GL_STAT_EST_WORKPROC");
+        createStepProps();
+
+        final Date lwDate = getOperday().getLastWorkingDay();
+        final Date startDate =DateUtils.addDays(lwDate, -30);
+        fillWorkproc(GL_WORKPROC, startDate);
+        fillWorkproc(REP_WORKPROC, startDate);
+
+        // должны быть завершены конечные шаги загрузки на GL и REP
+        baseEntityRepository.executeNativeUpdate(STEPS_OK);
+
+        baseEntityRepository.executeNativeUpdate("begin PKG_WORKPROC_MON.EXEC_CALC; end;");
+
+        List<DataRecord> ests = baseEntityRepository.select("select to_char(ts,'yyyy-mm-dd hh24:mi:ss') t1 from GL_STAT_EST_WORKPROC order by id_step, src");
+        Assert.assertEquals(2, ests.size());
+
+        TimeUnit.SECONDS.sleep(2);
+
+        baseEntityRepository.executeNativeUpdate("begin PKG_WORKPROC_MON.EXEC_CALC; end;");
+        List<DataRecord> ests2 = baseEntityRepository.select("select to_char(ts,'yyyy-mm-dd hh24:mi:ss') t1 from GL_STAT_EST_WORKPROC order by id_step, src");
+
+        // повторной выгрузки не произошло
+        Assert.assertEquals(ests.get(0).getString(0), ests2.get(0).getString(0));
+
     }
 
     private String getTableName (DBCfgString cfgString) throws SQLException {
@@ -300,6 +332,34 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "    end "+CONST_FUNC_NAME+";\n" +
             "    ]';\n" +
             "   commit;\n" +
+            "end;";
+
+    private static final String STEPS_OK = "declare\n" +
+            "    l_cnt number := 0;\n" +
+            "    procedure insupd(a_step varchar2, a_tab varchar2, a_dat date) is\n" +
+            "    begin\n" +
+            "        execute immediate 'update '||a_tab||' set result = ''O'' where trim(id) = :1 and dat = :2'\n" +
+            "            using a_step, a_dat;\n" +
+            "        if (sql%rowcount = 0) then\n" +
+            "            execute immediate 'insert into '||a_tab||' (ID, DAT,STARTTIME, ENDTIME, RESULT, COUNT) values (:1, :2, sysdate,sysdate,''O'', 1)'\n" +
+            "                using a_step, a_dat;\n" +
+            "        end if;\n" +
+            "    end;\n" +
+            "begin\n" +
+            "    for nn in (select column_value from table(pkg_util.COMMA_TO_TAB(PKG_WORKPROC_MON.get_glfinal_steps()))) loop\n" +
+            "        execute immediate 'select count(1) from '||PKG_WORKPROC_MON.get_glworkproc()||' where trim(id) = :1 and dat = :2 and result = ''O'''\n" +
+            "            into l_cnt using trim(nn.column_value), PKG_WORKPROC_MON.get_workday();\n" +
+            "        if (l_cnt = 0) then\n" +
+            "            insupd(nn.column_value, PKG_WORKPROC_MON.get_glworkproc(), PKG_WORKPROC_MON.get_workday());\n" +
+            "        end if;\n" +
+            "    end loop;\n" +
+            "    for nn in (select column_value from table(pkg_util.COMMA_TO_TAB(PKG_WORKPROC_MON.get_repfinal_steps()))) loop\n" +
+            "        execute immediate 'select count(1) from '||PKG_WORKPROC_MON.get_repworkproc()||' where trim(id) = :1 and dat = :2 and result = ''O'''\n" +
+            "            into l_cnt using trim(nn.column_value), PKG_WORKPROC_MON.get_workday();\n" +
+            "        if (l_cnt = 0) then\n" +
+            "            insupd(nn.column_value, PKG_WORKPROC_MON.get_repworkproc(), PKG_WORKPROC_MON.get_workday());\n" +
+            "        end if;\n" +
+            "    end loop;\n" +
             "end;";
 
 }
