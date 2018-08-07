@@ -26,6 +26,8 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
 
     private static final String GL_WORKPROC = "GL_STAT_GLWORKPROC";
     private static final String REP_WORKPROC = "GL_STAT_REPWORKPROC";
+    private static final String GL_WORKPROC_ESCAL_HIST = "WORK_ESCALATE_HIST";
+    private static final String BARSREP_WORKPROC_ESCAL_HIST = "BARSREP_WORK_ESCALATE_HIST";
     private static final String STEP_NAME = "STEP1";
     private enum Source {
         GL, BARSREP
@@ -86,6 +88,8 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
 
         String repTableNameWorkproc = getTableName(DBCfgString.valueOf(cfgName, cfgRepTableName, REP_WORKPROC));
 
+        baseEntityRepository.executeNativeUpdate("delete from " + GL_WORKPROC_ESCAL_HIST);
+
         final Date lwDate = getOperday().getLastWorkingDay();
         final Date startDate =DateUtils.addDays(lwDate, -30);
 
@@ -126,6 +130,41 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         ests = baseEntityRepository.select("select * from GL_STAT_EST_WORKPROC");
         Assert.assertTrue(ests.stream().anyMatch(r -> !"0".equals(r.getString("minest"))));
         Assert.assertTrue(ests.stream().anyMatch(r -> !"0".equals(r.getString("maxest"))));
+
+        // применить значения в историю
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ACCEPT_HIST(?, ?); END;"
+            , Source.GL.name(), GL_WORKPROC_ESCAL_HIST);
+
+        List<DataRecord> eschist = baseEntityRepository.select("select * from " + GL_WORKPROC_ESCAL_HIST);
+        Assert.assertEquals(1, eschist.size());
+
+        // запрет пересчета - нет запрета
+        final long minEscalate = 100L;
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update " + GL_WORKPROC_ESCAL_HIST + " set MINESCALATE = ?, fixed = ? where id = ?"
+            , minEscalate, "0", STEP_NAME));
+        eschist = baseEntityRepository.select("select * from " + GL_WORKPROC_ESCAL_HIST);
+        Assert.assertEquals(1, eschist.size());
+        Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), minEscalate == eschist.get(0).getLong("MINESCALATE"));
+
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ACCEPT_HIST(?, ?); END;"
+                , Source.GL.name(), GL_WORKPROC_ESCAL_HIST);
+        eschist = baseEntityRepository.select("select * from " + GL_WORKPROC_ESCAL_HIST);
+        Assert.assertEquals(1, eschist.size());
+        Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), 23L == eschist.get(0).getLong("MINESCALATE"));
+
+        // запрет пересчета - включаем запрет
+        Assert.assertEquals(1, baseEntityRepository.executeNativeUpdate("update " + GL_WORKPROC_ESCAL_HIST + " set MINESCALATE = ?, fixed = ? where id = ?"
+                , minEscalate, "1", STEP_NAME));
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ACCEPT_HIST(?, ?); END;"
+                , Source.GL.name(), GL_WORKPROC_ESCAL_HIST);
+        eschist = baseEntityRepository.select("select * from " + GL_WORKPROC_ESCAL_HIST);
+        Assert.assertEquals(1, eschist.size());
+        Assert.assertTrue(eschist.get(0).getString("MINESCALATE"), minEscalate == eschist.get(0).getLong("MINESCALATE"));
+
+        // еще таблица
+        baseEntityRepository.executeNativeUpdate(CREATE_BARSREP_ESCALATE_HIST, BARSREP_WORKPROC_ESCAL_HIST);
+        baseEntityRepository.executeNativeUpdate("BEGIN PKG_WORKPROC_MON.ACCEPT_HIST(?, ?); END;"
+                , Source.BARSREP.name(), BARSREP_WORKPROC_ESCAL_HIST);
 
     }
 
@@ -207,6 +246,16 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "    PKG_WORKPROC_MON.load_history(?, ?, ?, l_count);\n" +
             "    \n" +
             "    ? := l_count;\n" +
+            "end;";
+
+    private static String CREATE_BARSREP_ESCALATE_HIST =
+            "declare\n" +
+            "    pragma autonomous_transaction;\n" +
+            "    l_esc_tab varchar2(30) := ?;\n" +
+            "begin\n" +
+            "    DB_CONF.DROP_TABLE_IF_EXISTS(user, l_esc_tab);\n" +
+            "    execute immediate 'create table '||l_esc_tab||' as select * from WORK_ESCALATE_HIST where rownum < 1';\n" +
+            "    commit;\n" +
             "end;";
 
 }
