@@ -19,6 +19,11 @@ public class DBParams implements Serializable {
         return this;
     }
 
+    public DBParams addParam(DBParam.DbParamType type, DBParamDirectionType direction, Object value) {
+        store.add(new DBParam(type, direction, value));
+        return this;
+    }
+
     public DBParams addParam(int type, Object value) {
         store.add(new DBParam(type, DBParamDirectionType.IN, value));
         return this;
