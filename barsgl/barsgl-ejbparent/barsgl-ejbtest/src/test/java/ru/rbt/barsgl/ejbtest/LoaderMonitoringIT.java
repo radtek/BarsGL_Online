@@ -196,7 +196,13 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         // должны быть завершены конечные шаги загрузки на GL и REP
         baseEntityRepository.executeNativeUpdate(STEPS_OK);
 
-        baseEntityRepository.executeNativeUpdate("begin PKG_WORKPROC_MON.EXEC_CALC; end;");
+        baseEntityRepository.executeNativeUpdate(
+                "declare " +
+                "   pragma autonomous_transaction;" +
+                "begin " +
+                "   PKG_WORKPROC_MON.EXEC_CALC; " +
+                "   COMMIT; " +
+                "end;");
 
         List<DataRecord> ests = baseEntityRepository.select("select to_char(ts,'yyyy-mm-dd hh24:mi:ss') t1 from GL_STAT_EST_WORKPROC order by id_step, src");
         Assert.assertEquals(2, ests.size());
@@ -267,16 +273,24 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
                     "    \n" +
                     "    e_tabnotfound exception;\n" +
                     "    pragma exception_init(e_tabnotfound, -942);\n" +
+                    "\n" +
+                    "    e_synnotfound exception;\n" +
+                    "    pragma exception_init(e_synnotfound, -1434);\n" +
                     "begin\n" +
                     "    begin\n" +
                     "        execute immediate 'drop table '||l_table_name;\n" +
                     "    exception \n" +
                     "        when e_tabnotfound then null;\n" +
                     "    end;\n" +
+                    "    begin\n" +
+                    "        execute immediate 'drop synonym '||l_table_name;\n" +
+                    "    exception \n" +
+                    "        when e_synnotfound then null;\n" +
+                    "    end;\n" +
                     "    \n" +
                     "    execute immediate 'create table '||l_table_name||' as select * from workproc where rownum < 1';\n" +
                     "    commit;\n" +
-                    "end;\n";
+                    "end;";
 
     private static final String FILL_WORKPROC_CONST =
             "declare\n" +
@@ -304,9 +318,19 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "declare\n" +
             "    pragma autonomous_transaction;\n" +
             "    l_esc_tab varchar2(30) := ?;\n" +
+            "    e_synnotfound exception;\n" +
+            "    pragma exception_init(e_synnotfound, -1434);\n" +
             "begin\n" +
             "    DB_CONF.DROP_TABLE_IF_EXISTS(user, l_esc_tab);\n" +
+            "\n" +
+            "    begin\n" +
+            "        execute immediate 'drop synonym '||l_esc_tab;\n" +
+            "    exception \n" +
+            "        when e_synnotfound then null;\n" +
+            "    end;\n" +
+            "\n" +
             "    execute immediate 'create table '||l_esc_tab||' as select * from WORK_ESCALATE_HIST where rownum < 1';\n" +
+            "    execute immediate 'alter table '||l_esc_tab||' modify fixed default ''0''';\n" +
             "    commit;\n" +
             "end;";
 
