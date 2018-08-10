@@ -74,7 +74,7 @@ public class OvpUnloadTask implements ParamsAwareRunnable {
 
         try {
             long idresthead = createHeader(OvpUnloadParam.REST);
-            auditController.info(AuditRecord.LogCode.Ocp, format("Выгружено остатков по ОВП: %s", unloadRest()));
+            auditController.info(AuditRecord.LogCode.Ocp, format("Выгружено остатков по ОВП: %s", unloadRest(operdayController.getOperday().getCurrentDate())));
             updateHeaderState(idresthead, DwhUnloadStatus.SUCCEDED);
         } catch (Throwable e) {
             auditController.error(AuditRecord.LogCode.Ocp, "Ошибка при выгрузке остатков по ОВП. Остатки не выгружаем.", null, e);
@@ -130,13 +130,14 @@ public class OvpUnloadTask implements ParamsAwareRunnable {
         });
     }
 
-    private int unloadRest() throws Exception {
+    private int unloadRest(Date currentDate) throws Exception {
         return (int) repository.executeInNewTransaction(persistence -> {
             return repository.executeTransactionally((conn)-> {
-                try (CallableStatement statement = conn.prepareCall("{ CALL PKG_OVP.UNLOAD_REST(?) }")){
-                    statement.registerOutParameter(1, Types.INTEGER);
+                try (CallableStatement statement = conn.prepareCall("{ CALL PKG_OVP.UNLOAD_REST(?, ?) }")){
+                    statement.setDate(1, new java.sql.Date(currentDate.getTime()));
+                    statement.registerOutParameter(2, Types.INTEGER);
                     statement.execute();
-                    return statement.getInt(1);
+                    return statement.getInt(2);
                 }
             });
         });
