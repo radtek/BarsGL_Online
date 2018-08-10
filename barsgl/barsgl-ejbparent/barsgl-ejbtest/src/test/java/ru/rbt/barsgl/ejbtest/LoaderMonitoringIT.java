@@ -196,25 +196,27 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
         // должны быть завершены конечные шаги загрузки на GL и REP
         baseEntityRepository.executeNativeUpdate(STEPS_OK);
 
-        baseEntityRepository.executeNativeUpdate(
-                "declare " +
-                "   pragma autonomous_transaction;" +
-                "begin " +
-                "   PKG_WORKPROC_MON.EXEC_CALC; " +
-                "   COMMIT; " +
-                "end;");
+        baseEntityRepository.executeNativeUpdate(EXEC_CALC_STRING);
 
         List<DataRecord> ests = baseEntityRepository.select("select to_char(ts,'yyyy-mm-dd hh24:mi:ss') t1 from GL_STAT_EST_WORKPROC order by id_step, src");
         Assert.assertEquals(2, ests.size());
 
         TimeUnit.SECONDS.sleep(2);
 
-        baseEntityRepository.executeNativeUpdate("begin PKG_WORKPROC_MON.EXEC_CALC; end;");
+        baseEntityRepository.executeNativeUpdate(EXEC_CALC_STRING);
         List<DataRecord> ests2 = baseEntityRepository.select("select to_char(ts,'yyyy-mm-dd hh24:mi:ss') t1 from GL_STAT_EST_WORKPROC order by id_step, src");
 
         // повторной выгрузки не произошло
         Assert.assertEquals(ests.get(0).getString(0), ests2.get(0).getString(0));
 
+        TimeUnit.SECONDS.sleep(2);
+        // обновляем статус на ошибку для повторной выгрузки
+        baseEntityRepository.executeNativeUpdate("update GL_STAT_EST_WORKPROC set state = 'ERROR'");
+        baseEntityRepository.executeNativeUpdate(EXEC_CALC_STRING);
+        ests2 = baseEntityRepository.select("select to_char(ts,'yyyy-mm-dd hh24:mi:ss') t1 from GL_STAT_EST_WORKPROC order by id_step, src");
+
+        // прошла повторная выгрузка после ошибки
+        Assert.assertNotEquals(ests.get(0).getString(0), ests2.get(0).getString(0));
     }
 
     private String getTableName (DBCfgString cfgString) throws SQLException {
@@ -384,6 +386,13 @@ public class LoaderMonitoringIT extends AbstractRemoteIT {
             "            insupd(nn.column_value, PKG_WORKPROC_MON.get_repworkproc(), PKG_WORKPROC_MON.get_workday());\n" +
             "        end if;\n" +
             "    end loop;\n" +
+            "end;";
+
+    public static final String EXEC_CALC_STRING = "declare " +
+            "   pragma autonomous_transaction;" +
+            "begin " +
+            "   PKG_WORKPROC_MON.EXEC_CALC; " +
+            "   COMMIT; " +
             "end;";
 
 }
