@@ -26,6 +26,7 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.Reconc4496Wrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
@@ -548,11 +549,11 @@ public class PostingForm extends MDForm {
                 dlg.show(null);
             }
 
+/*
             public void onDlgOkClick(Object prms){
                 dlg.hide();
 
-                final String date = (String)((Object[]) prms)[0];
-                final String limit = (String)((Object[]) prms)[1];
+                final Reconc4496Wrapper wrapper = (Reconc4496Wrapper) prms;
                 WaitingManager.show("Проверка наличия данных...");
 
                 BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
@@ -583,6 +584,7 @@ public class PostingForm extends MDForm {
                     }
                 });
             }
+*/
         };
     }
 }
