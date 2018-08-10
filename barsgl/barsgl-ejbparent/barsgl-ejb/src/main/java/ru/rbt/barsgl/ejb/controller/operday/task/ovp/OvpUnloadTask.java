@@ -100,14 +100,18 @@ public class OvpUnloadTask implements ParamsAwareRunnable {
         }
     }
 
-    public long createHeader(OvpUnloadParam param) throws Exception {
+    public long createHeader(OvpUnloadParam param, Date operday) throws Exception {
         return (long) repository.executeInNewTransaction(persistence -> {
             long id = repository.nextId("GL_SEQ_OCPTDS");
             repository.executeNativeUpdate("insert into GL_OCPTDS (ID_KEY,PARNAME,PARVALUE,PARDESC,OPERDAY,START_LOAD,END_LOAD)\n" +
                             "            values (?, ?, ?, ?, ?, systimestamp, null)"
-                    , id, param.getParName(), DwhUnloadStatus.STARTED.getFlag(), param.getParDesc(), operdayController.getOperday().getCurrentDate());
+                    , id, param.getParName(), DwhUnloadStatus.STARTED.getFlag(), param.getParDesc(), operday);
             return id;
         });
+    }
+
+    private long createHeader(OvpUnloadParam param) throws Exception {
+        return createHeader(param, operdayController.getOperday().getCurrentDate());
     }
 
     public void updateHeaderState(long headerId, DwhUnloadStatus status) throws Exception {

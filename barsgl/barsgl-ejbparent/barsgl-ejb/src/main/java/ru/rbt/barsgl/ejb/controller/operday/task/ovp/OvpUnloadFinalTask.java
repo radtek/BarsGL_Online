@@ -40,7 +40,7 @@ public class OvpUnloadFinalTask extends AbstractJobHistoryAwareTask {
         Date executeOperday = getOperday(properties);
 
         try {
-            long idposthead = originalTask.createHeader(OvpUnloadParam.FINAL_POSTING);
+            long idposthead = originalTask.createHeader(OvpUnloadParam.FINAL_POSTING, executeOperday);
             auditController.info(AuditRecord.LogCode.Ocp, format("Выгружено проводок по ОВП: %s", originalTask.unloadPostings(executeOperday)));
             originalTask.updateHeaderState(idposthead, DwhUnloadStatus.SUCCEDED);
         } catch (Throwable e) {
@@ -49,7 +49,7 @@ public class OvpUnloadFinalTask extends AbstractJobHistoryAwareTask {
         }
 
         try {
-            long idresthead = originalTask.createHeader(OvpUnloadParam.FINAL_REST);
+            long idresthead = originalTask.createHeader(OvpUnloadParam.FINAL_REST, executeOperday);
             auditController.info(AuditRecord.LogCode.Ocp, format("Выгружено остатков по ОВП: %s", originalTask.unloadRest(executeOperday)));
             originalTask.updateHeaderState(idresthead, DwhUnloadStatus.SUCCEDED);
             return true;

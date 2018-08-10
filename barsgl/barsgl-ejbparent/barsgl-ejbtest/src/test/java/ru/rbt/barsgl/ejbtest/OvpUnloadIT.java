@@ -15,6 +15,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.controller.operday.task.ovp.OvpUnloadParam.FINAL_POSTING;
 import static ru.rbt.barsgl.ejb.controller.operday.task.ovp.OvpUnloadParam.FINAL_REST;
 
@@ -23,7 +27,12 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.ovp.OvpUnloadParam.FINAL
  */
 public class OvpUnloadIT extends AbstractRemoteIT {
 
+    /**
+     * выгрузка по ОВП
+     * @throws Exception
+     */
     @Test public void test() throws Exception {
+        updateOperday(ONLINE, OPEN);
         baseEntityRepository.executeNativeUpdate("delete from GL_OCPTDS");
 
         SingleActionJob ovpjob = SingleActionJobBuilder.create().withClass(OvpUnloadTask.class).withName(OvpUnloadTask.class.getSimpleName()).build();
@@ -40,8 +49,13 @@ public class OvpUnloadIT extends AbstractRemoteIT {
 
     }
 
+    /**
+     * финальная выгрузка по ОПВ
+     * @throws Exception
+     */
     @Test public void testFinal() throws Exception {
         final String jobName = OvpUnloadFinalTask.class.getSimpleName();
+        updateOperday(COB, CLOSED);
 
         baseEntityRepository.executeNativeUpdate("delete from GL_OCPTDS");
         baseEntityRepository.executeNativeUpdate("update gl_sched_h set SCHRSLT = 2 where SCHED_NAME = ?", jobName);
@@ -70,7 +84,7 @@ public class OvpUnloadIT extends AbstractRemoteIT {
         // следующий ОД
         Date newOperday = DateUtils.addDay(getOperday().getCurrentDate(), 1);
         Date newLwOperday = DateUtils.addDay(getOperday().getLastWorkingDay(), 1);
-        setOperday(newOperday, newLwOperday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        setOperday(newOperday, newLwOperday, Operday.OperdayPhase.COB, Operday.LastWorkdayStatus.CLOSED);
 
         jobService.executeJob(ovpFinalJob);
         headers2 = baseEntityRepository.select("select * from GL_OCPTDS");
