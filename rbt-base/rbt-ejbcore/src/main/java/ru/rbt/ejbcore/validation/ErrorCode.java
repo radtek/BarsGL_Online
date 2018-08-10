@@ -210,6 +210,8 @@ public enum ErrorCode {
     , AQ_COMMON_CODE(5000, "%s")
     , PD_SYNC_GIBRID(5100, "%s")
 
+    , OCP_UNLOAD_ERR(5200, "%s")
+
 //    , VALIDATION_ERROR(10000, "%s %s %s")
     ;
 
