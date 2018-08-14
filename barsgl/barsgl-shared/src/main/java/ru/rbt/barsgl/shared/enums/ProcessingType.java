@@ -7,11 +7,13 @@ import ru.rbt.barsgl.shared.HasLabel;
  */
 public enum ProcessingType implements HasLabel {
 
-    ALL("Все"), PROCESSED("Обработанные"), UNPROCESSED ("Необработанные");
+    ALL("Все", ""), PROCESSED("Обработанные", "Да"), UNPROCESSED ("Необработанные", "Нет");
     private String label;
+    private String value;
 
-    ProcessingType(String label) {
+    ProcessingType(String label, String value) {
         this.label = label;
+        this.value = value;
     }
 
     @Override
@@ -19,4 +21,7 @@ public enum ProcessingType implements HasLabel {
         return label;
     }
 
+    public String getValue() {
+        return value;
+    }
 }

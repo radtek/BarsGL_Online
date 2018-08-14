@@ -5,7 +5,7 @@ import ru.rbt.barsgl.shared.enums.ProcessingType;
 /**
  * Created by er18837 on 06.08.2018.
  */
-public class Reconc4496Wrapper {
+public class Reconc47422Wrapper {
 
     private String contract;
     private String currency;

@@ -5,7 +5,7 @@ import ru.rbt.barsgl.shared.HasLabel;
 /**
  * Created by er18837 on 06.08.2018.
  */
-public enum Exclude4496Status implements HasLabel {
+public enum Exclude47422Status implements HasLabel {
     
     PROC("Успешно обработаны"),
     ERRPROC("Неизвестная ошибка обработки проводок, попадающих под условия склейки/замены"),
@@ -18,7 +18,7 @@ public enum Exclude4496Status implements HasLabel {
     
     private String label;
 
-    Exclude4496Status(String label) {
+    Exclude47422Status(String label) {
         this.label = label;
     }
 

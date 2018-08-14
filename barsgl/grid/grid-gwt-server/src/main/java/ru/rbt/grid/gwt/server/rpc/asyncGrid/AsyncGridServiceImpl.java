@@ -110,7 +110,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             for (int i = 0; i < columns.getColumnCount(); i++) {
                 Column column = columns.getColumnByIndex(i);
                 if (column.isVisible() && column.getWidth() > 0)
-                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat(), column.getWidth()));
             }
             String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, repository, xlsColumns,
                     filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head, allrows);

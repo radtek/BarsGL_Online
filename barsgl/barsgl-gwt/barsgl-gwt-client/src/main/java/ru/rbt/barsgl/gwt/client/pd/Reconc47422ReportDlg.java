@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -12,14 +12,12 @@ import ru.rbt.barsgl.gwt.client.comp.DataListBoxEx;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterShowEvent;
-import ru.rbt.barsgl.gwt.core.resources.ClientUtils;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.shared.ClientDateUtils;
-import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.enums.ProcessingType;
-import ru.rbt.barsgl.shared.operation.Reconc4496Wrapper;
+import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.comp.Components.createDateBox;
@@ -30,7 +28,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
 /**
  * Created by er18837 on 03.08.2018.
  */
-public class Reconc4496ReportDlg extends DlgFrame implements IAfterShowEvent {
+public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
     protected final String WIDTH1 = "80px";
     protected final String WIDTH2 = "120px";
 
@@ -42,7 +40,7 @@ public class Reconc4496ReportDlg extends DlgFrame implements IAfterShowEvent {
     private DatePickerBox mDateFrom;
     private DatePickerBox mDateTo;
 
-    public Reconc4496ReportDlg() {
+    public Reconc47422ReportDlg() {
         super();
         setCaption("Фильтр для реконсиляционного отчета");
         ok.setText("Выбрать");
@@ -57,9 +55,9 @@ public class Reconc4496ReportDlg extends DlgFrame implements IAfterShowEvent {
         grid.setWidget(0, 0, createLabel("Номер договора"));
         grid.setWidget(0, 1, mContract = createTxtBox(12, WIDTH1));
         grid.setWidget(1, 0, createLabel("Валюта"));
-        grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name() ,  "RUR", WIDTH1, false, false));
+        grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name(), null, WIDTH1, false, true));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name() , null, WIDTH1, false, true));
+        grid.setWidget(2, 1, mFilial = createCachedFilialListBox(CachedListEnum.Filials.name(), null, WIDTH1, false, true));
         grid.setWidget(3, 0, createLabel("Статус"));
         grid.setWidget(3, 1, mStatus = new ValuesBox(getEnumLabelsOnlyList(ProcessingType.values())));
         mStatus.setWidth(WIDTH2);
@@ -93,15 +91,15 @@ public class Reconc4496ReportDlg extends DlgFrame implements IAfterShowEvent {
     protected boolean onClickOK() throws Exception {
         try{
             checkUp();
-            Reconc4496Wrapper wrapper = new Reconc4496Wrapper();
+            Reconc47422Wrapper wrapper = new Reconc47422Wrapper();
             wrapper.setContract(mContract.getValue());
             wrapper.setCurrency((String) mCurrency.getValue());
             wrapper.setFilial((String) mFilial.getValue());
+            wrapper.setProcType(ProcessingType.valueOf((String) mStatus.getValue()));
+
             wrapper.setBoolNow(mNow.getValue());
-            if (!wrapper.getBoolNow()) {
-                wrapper.setDateFromStr(ClientDateUtils.Date2String(mDateFrom.getValue()));
-                wrapper.setDateToStr(ClientDateUtils.Date2String(mDateTo.getValue()));
-            }
+            wrapper.setDateFromStr(ClientDateUtils.Date2String(mDateFrom.getValue()));
+            wrapper.setDateToStr(ClientDateUtils.Date2String(mDateTo.getValue()));
             params = wrapper;
             return true;
         } catch (Exception ex){

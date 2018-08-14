@@ -2,6 +2,7 @@ package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
@@ -26,10 +27,12 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
-import ru.rbt.barsgl.shared.operation.Reconc4496Wrapper;
+import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
+import ru.rbt.grid.gwt.client.export.Export2ExcelHead;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
+import ru.rbt.grid.gwt.client.export.IExportData;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
@@ -460,7 +463,7 @@ public class PostingForm extends MDForm {
             @Override
             public void execute() {
                 repPanel.hide();
-                Reconc4496PostingReport().execute();
+                Reconc47422PostingReport().execute();
             }
         });
         MenuBar bar = new MenuBar(true);
@@ -536,55 +539,60 @@ public class PostingForm extends MDForm {
         };
     }
 
-    private GridAction Reconc4496PostingReport() {
+    private GridAction Reconc47422PostingReport() {
         return new GridAction(masterGrid, null, null, new Image(ImageConstants.INSTANCE.report()), 5) {
 
-            Reconc4496ReportDlg dlg = null;
+            Reconc47422ReportDlg dlg = null;
             GridAction act = this;
 
             @Override
             public void execute() {
-                if (dlg == null) dlg = new Reconc4496ReportDlg();
+                if (dlg == null) dlg = new Reconc47422ReportDlg();
                 dlg.setDlgEvents(this);
                 dlg.show(null);
             }
 
-/*
+
             public void onDlgOkClick(Object prms){
                 dlg.hide();
 
-                final Reconc4496Wrapper wrapper = (Reconc4496Wrapper) prms;
+                final Reconc47422Wrapper wrapper = (Reconc47422Wrapper) prms;
                 WaitingManager.show("Проверка наличия данных...");
 
-                BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
-
-                    @Override
-                    public void onSuccess(RpcRes_Base<Boolean> res) {
-                        if (res.isError()) {
-                            WaitingManager.hide();
-                            DialogManager.message("Отчет", res.getMessage());
-                        } else {
+//                BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+//
+//                    @Override
+//                    public void onSuccess(RpcRes_Base<Boolean> res) {
+//                        if (res.isError()) {
+//                            WaitingManager.hide();
+//                            DialogManager.message("Отчет", res.getMessage());
+//                        } else {
                             dlg.hide();
                             WaitingManager.hide();
                             setEnable(false);
 
+/*
                             String user = "";
                             AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
                             if (current_user != null){
                                 user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
                             }
+*/
+                            IExportData reportData = new PostingReconc47422ReportData(wrapper);
+                            ExcelExportHead head = new Export2ExcelHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
+                                    reportData.masterFilterItems()).createExportHead();
+//                            ExcelExportHead head = new ExcelExportHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
+//                                    user, "дата проводки с по"); // Utils.Fmt("дата проводки с {0} по (1)", wrapper.getDateFromStr(), wrapper.getDateToStr()));
 
-                            ExcelExportHead head = new ExcelExportHead(Utils.Fmt("ОТЧЕТ по операциям BACK VALUE за {0}", date),
-                                    user, Utils.Fmt("дата проводки меньше {0}", date));
-
-                            Export2Excel e2e = new Export2Excel(new PostingBackValueReportData(date, limit), head,
+                Window.alert("head=" + head.getFilter());
+                            Export2Excel e2e = new Export2Excel(reportData, head,
                                     new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
                             e2e.export(true);
-                        }
-                    }
-                });
+//                        }
+//                    }
+//                });
             }
-*/
+
         };
     }
 }
