@@ -36,4 +36,10 @@ public class Export2Excel {
         List<FilterItem> filterItems = FilterUtils.combineFilterCriteria(data.masterFilterItems(), data.detailFilterItems());
         GridEntryPoint.asyncGridService.export2Excel(Repository.BARSGL, data.sql(), data.columns(), filterItems, data.sortItems(), head, allrows, callback);
     }
+
+    public void exportSort(boolean allrows) {
+        DialogUtils.showInfo(TEXT_CONSTANTS.export2Excel());
+        List<FilterItem> filterItems = FilterUtils.combineFilterCriteria(data.masterFilterItems(), data.detailFilterItems());
+        GridEntryPoint.asyncGridService.export2ExcelSort(Repository.BARSGL, data.sql(), data.columns(), filterItems, data.sortItems(), head, allrows, callback);
+    }
 }

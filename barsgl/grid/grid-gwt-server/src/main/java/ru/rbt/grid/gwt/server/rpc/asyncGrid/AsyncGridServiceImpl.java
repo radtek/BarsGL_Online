@@ -28,6 +28,7 @@ import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.filterCriteriaAdapter;
 
@@ -122,6 +123,30 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         }
     }
 
+    /*
+    * метод дублирует предыдущий, но выгружает с учетом сортировки
+    * добавлен, чтобы не перетестировать общий метод
+    * */
+
+    @Override
+    public String export2ExcelSort(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable {
+        try {
+            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
+            for (int i = 0; i < columns.getColumnCount(); i++) {
+                Column column = columns.getColumnByIndex(i);
+                if (column.isVisible() && column.getWidth() > 0)
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat(), column.getWidth()));
+            }
+            String fileName = localInvoker.invoke(SqlPageSupport.class, "export2ExcelSort", sql, repository, xlsColumns,
+                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaListAdapter(sortCriteria), head, allrows);
+
+            return fileName;
+        } catch (Throwable t) {
+            processException(t, sql, "Ошибка при экспорте в Excel");
+            return null;
+        }
+    }
+
     @Override
     public Integer getAsyncCount(String sql, List<FilterItem> filterCriteria) throws Throwable {
         return getAsyncCount(Repository.BARSGL, sql, filterCriteria);
@@ -178,6 +203,13 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         if (sortCriteria == null || sortCriteria.isEmpty()) return null;
         SortItem item = sortCriteria.get(0);
         return new OrderByColumn(item.getName(), item.getType() == Column.Sort.ASC ? OrderByType.ASC : OrderByType.DESC);
+    }
+
+    private List<OrderByColumn> sortCriteriaListAdapter(List<SortItem> sortCriteria){
+        if (sortCriteria == null || sortCriteria.isEmpty()) return null;
+        return sortCriteria.stream().map(item ->
+                new OrderByColumn(item.getName(), item.getType() == Column.Sort.ASC ? OrderByType.ASC : OrderByType.DESC))
+                .collect(Collectors.toList());
     }
 
     @Override

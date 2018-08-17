@@ -214,6 +214,38 @@ public class SqlPageSupportBean implements SqlPageSupport {
         return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
     }
 
+    public static SQL prepareCommonSqlOrder(final String nativeSql, Criterion criterion, List<OrderByColumn> orderBy) {
+        Assert.isTrue(!StringUtils.isEmpty(nativeSql), "sql is empty");
+
+        final String HINT = "first_rows";
+
+        final boolean isHinted = nativeSql.toLowerCase().contains(HINT);
+
+
+        String resultSql = nativeSql.trim();
+
+
+        final boolean isWherePresents = isWherePresents(resultSql);
+
+        SQL whereClause = null;
+
+        if (criterion != null) {
+            whereClause = WhereInterpreter.interpret(criterion, isWherePresents ? WHERE_ALIAS : null);
+        }
+
+        // применяем where
+        resultSql = isWherePresents ? "select * from (" + resultSql + ") " + WHERE_ALIAS : resultSql;
+        resultSql += (null != whereClause ? " where " + whereClause.getQuery() : "");
+        resultSql += (null != orderBy ? (" order by " + StringUtils.listToString(
+                orderBy.stream().map(order -> order.getColumn() + " " + order.getOrder()).collect(Collectors.toList()), ",")) : "");
+
+        if (!isHinted) {
+            resultSql = SELECT_PATPATTERN.matcher(resultSql).replaceFirst("select /*+ first_rows(30) */");
+        }
+
+        return new SQL(resultSql, null != whereClause ? whereClause.getParams() : null);
+    }
+
     private static String defineSql(String sql) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
         if (sql.trim().toLowerCase().startsWith("select")) return sql;
         String[] parts = sql.split("@");
@@ -234,6 +266,45 @@ public class SqlPageSupportBean implements SqlPageSupport {
         final ArrayList<Object> params = new ArrayList<>();
         try {
             SQL sql = prepareCommonSql(defineSql(nativeSql), criterion, null);
+            if (null != sql.getParams()) {
+                params.addAll(Arrays.asList(sql.getParams()));
+            }
+
+            resultSql =  "select * from ( " + sql.getQuery() + " ) where rownum <= " + ((allrows ? MAX_ROW_COUNT_LIMIT : MAX_ROW_COUNT)  + 1);
+
+            List<DataRecord> dataRecords = getRows4Excel(repository, resultSql, sql.getParams());
+            Sql2Xls getXls = new Sql2Xls(dataRecords);
+            if (dataRecords.size() == MAX_ROW_COUNT_LIMIT) {
+                head.setFormTitle(head.getFormTitle() + format(" \n\n !!! ВНИМАНИЕ! Выборка неполная. Достигнут максимальный размер выгрузки данных: %s строк!", MAX_ROW_COUNT_LIMIT));
+            }
+            getXls.setHead(head);
+            getXls.setColumns(xlsColumns);
+
+            File f = File.createTempFile("barsgl", ".xlsx", new File(System.getProperty("java.io.tmpdir")));
+            OutputStream outStream = new FileOutputStream(f);
+
+            try {
+                getXls.process(outStream);
+                outStream.flush();
+                return f.getAbsolutePath();
+            } catch (Exception e) {
+                throw new DefaultApplicationException(e.getMessage(), e);
+            } finally {
+                outStream.close();
+            }
+
+        } catch (Exception e) {
+            throw new DefaultApplicationException((e.getMessage() != null ? e.getMessage() : "") + (resultSql != null ? (" sql: " + resultSql
+                    + " Parameters list: " + params.stream().map(p -> "param = " + p).collect(Collectors.joining(":"))) : ""), e);
+        }
+    }
+
+    @Override
+    public String export2ExcelSort(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy, ExcelExportHead head, boolean allrows) throws Exception {
+        String resultSql = null;
+        final ArrayList<Object> params = new ArrayList<>();
+        try {
+            SQL sql = prepareCommonSqlOrder(defineSql(nativeSql), criterion, orderBy);
             if (null != sql.getParams()) {
                 params.addAll(Arrays.asList(sql.getParams()));
             }

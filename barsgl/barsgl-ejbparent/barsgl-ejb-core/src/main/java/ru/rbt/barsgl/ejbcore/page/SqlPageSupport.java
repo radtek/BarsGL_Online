@@ -104,4 +104,6 @@ public interface SqlPageSupport {
 
     String export2Excel(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head, boolean allrows) throws Exception;
 
+    String export2ExcelSort(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy, ExcelExportHead head, boolean allrows) throws Exception;
+
 }

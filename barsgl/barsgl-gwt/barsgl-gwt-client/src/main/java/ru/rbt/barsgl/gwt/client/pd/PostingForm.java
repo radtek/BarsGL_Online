@@ -83,7 +83,6 @@ public class PostingForm extends MDForm {
         masterActionBar.addAction(createPreview());
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
-        masterActionBar.addAction(BackValuePostingReport());
         masterActionBar.addAction(createReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
@@ -557,6 +556,7 @@ public class PostingForm extends MDForm {
                 dlg.hide();
 
                 final Reconc47422Wrapper wrapper = (Reconc47422Wrapper) prms;
+                IExportData reportData = new PostingReconc47422ReportData(wrapper);
                 WaitingManager.show("Проверка наличия данных...");
 
 //                BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
@@ -571,23 +571,12 @@ public class PostingForm extends MDForm {
                             WaitingManager.hide();
                             setEnable(false);
 
-/*
-                            String user = "";
-                            AppUserWrapper current_user = (AppUserWrapper) LocalDataStorage.getParam("current_user");
-                            if (current_user != null){
-                                user = Utils.Fmt("{0}({1})", current_user.getUserName(), current_user.getSurname());
-                            }
-*/
-                            IExportData reportData = new PostingReconc47422ReportData(wrapper);
                             ExcelExportHead head = new Export2ExcelHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
                                     reportData.masterFilterItems()).createExportHead();
-//                            ExcelExportHead head = new ExcelExportHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
-//                                    user, "дата проводки с по"); // Utils.Fmt("дата проводки с {0} по (1)", wrapper.getDateFromStr(), wrapper.getDateToStr()));
 
-                Window.alert("head=" + head.getFilter());
                             Export2Excel e2e = new Export2Excel(reportData, head,
                                     new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
-                            e2e.export(true);
+                            e2e.exportSort(true);
 //                        }
 //                    }
 //                });

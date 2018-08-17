@@ -32,4 +32,6 @@ public interface AsyncGridServiceAsync {
                       List<SortItem> sortCriteria, ExcelExportHead head, AsyncCallback<String> callback);
     void export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
                       List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows, AsyncCallback<String> callback);
+    void export2ExcelSort(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
+                      List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows, AsyncCallback<String> callback);
 }

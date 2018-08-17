@@ -7,7 +7,7 @@ import ru.rbt.barsgl.shared.HasLabel;
  */
 public enum ProcessingType implements HasLabel {
 
-    ALL("Все", ""), PROCESSED("Обработанные", "Да"), UNPROCESSED ("Необработанные", "Нет");
+    ALL("Все", ""), PROCESSED("Обработанные", "Y"), UNPROCESSED ("Необработанные", "N");
     private String label;
     private String value;
 

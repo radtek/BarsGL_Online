@@ -2,6 +2,8 @@ package ru.rbt.barsgl.shared.operation;
 
 import ru.rbt.barsgl.shared.enums.ProcessingType;
 
+import java.util.Date;
+
 /**
  * Created by er18837 on 06.08.2018.
  */
@@ -11,9 +13,9 @@ public class Reconc47422Wrapper {
     private String currency;
     private String filial;
     private ProcessingType procType;
-    private Boolean boolNow;
-    private String dateFromStr;
-    private String dateToStr;
+    private Date dateFrom;
+    private Date dateTo;
+    private boolean isRegister;
 
     public String getContract() {
         return contract;
@@ -47,27 +49,27 @@ public class Reconc47422Wrapper {
         this.procType = procType;
     }
 
-    public Boolean getBoolNow() {
-        return boolNow;
+    public Date getDateFrom() {
+        return dateFrom;
     }
 
-    public void setBoolNow(Boolean boolNow) {
-        this.boolNow = boolNow;
+    public void setDateFrom(Date dateFrom) {
+        this.dateFrom = dateFrom;
     }
 
-    public String getDateFromStr() {
-        return dateFromStr;
+    public Date getDateTo() {
+        return dateTo;
     }
 
-    public void setDateFromStr(String dateFromStr) {
-        this.dateFromStr = dateFromStr;
+    public void setDateTo(Date dateTo) {
+        this.dateTo = dateTo;
     }
 
-    public String getDateToStr() {
-        return dateToStr;
+    public boolean isRegister() {
+        return isRegister;
     }
 
-    public void setDateToStr(String dateToStr) {
-        this.dateToStr = dateToStr;
+    public void setRegister(boolean register) {
+        isRegister = register;
     }
 }
