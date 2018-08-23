@@ -110,7 +110,8 @@
         <class>ru.rbt.barsgl.ejb.entity.gl.GLPosting</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.Memorder</class>
         <class>ru.rbt.barsgl.ejb.entity.gl.Pd</class>
-        
+        <class>ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal</class>
+
         <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskPattern</class>
         <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep</class>
         <class>ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStepPattern</class>
