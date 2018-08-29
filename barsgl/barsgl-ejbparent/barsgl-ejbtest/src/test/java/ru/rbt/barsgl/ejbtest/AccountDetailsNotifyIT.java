@@ -3,13 +3,13 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccDealCloseNotifyTask;
+import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountDetailsNotifyTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.*;
 import ru.rbt.barsgl.ejb.entity.acc.AcDNJournal;
 import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static junit.framework.TestCase.assertTrue;
-import static ru.rbt.barsgl.ejb.common.CommonConstants.ACLIRQ_TASK;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.PROCESSED;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.ejbtest.AccountDetailsNotifyProcessorIT.*;
@@ -52,7 +51,8 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     public static final Logger logger = Logger.getLogger(AccountDetailsNotifyIT.class.getName());
 
-    public static final String ACDENO_TASK = "AccountDetailsNotifyTask";
+    public static final String ACOPEN_TASK = "AccountDetailsNotifyTask";
+    public static final String ACCLOSE_TASK = "AccountDetailsNotifyTaskClose";
 //    private final static String host = "vs529";
 //    private final static String broker = "QM_MBROKER4_T5";
 
@@ -61,7 +61,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     private static final String channel = "SYSTEM.DEF.SVRCONN";
     private static final String login = "srvwbl4mqtest";
-    private static final String passw = "UsATi8hU";
+    private static final String passw = "JxQGk7nJ";
     private static final String acdeno6 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
     private static final String acdeno12 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF";
     private static final Boolean writeOut = false;
@@ -307,12 +307,13 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     /* =========================================================================================================================
     * */
+    @Ignore
     @Test
     public void testOpenFccStress() throws Exception {
 
         int cnt = 300;
 
-        Date dbDate = DateUtils.dbDateParse("2017-11-09");
+        Date dbDate = DateUtils.dbDateParse("2018-07-17");  // это дата где лежат нормальные сообщения
         String curDateStr = DateUtils.dbDateString(getOperday().getCurrentDate());
         String qType = AcDNJournal.Sources.FCC.name();
         String qName = acdeno6;
@@ -322,25 +323,25 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         QueueProperties properties = getQueueProperties(qType, qName);
         clearQueue(properties, qName, cnt * 2);
 
-        shutdownJob(ACDENO_TASK);
+        shutdownJob(ACOPEN_TASK);
         startConnection(properties);
 
         List<DataRecord> mlist = baseEntityRepository.selectMaxRows(
                 "select message from gl_acdeno where status_date <= ? and source = 'FCC' and status = 'PROCESSED' and \"COMMENT\" like '%/40817%' order by message_id desc", cnt, new Object[]{dbDate});
-        Assert.assertNotEquals(0, mlist.size());
+        cnt = mlist.size();
+        Assert.assertNotEquals(0, cnt);
         for (DataRecord rec : mlist) {
-            sendOneMessage(rec.getString(0), curDateStr, properties, qName);
+            sendOpenMessage(rec.getString(0), curDateStr, properties, qName);
         }
 
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, login, passw, "30", writeOut) + "mq.algo = simple\n";
 
-        cnt = mlist.size();
         long idJ = getAcdenoMaxId();
         long idAcc = getGLAccMaxId();
-        System.out.println(String.format("message_id = %d, gl_acc.id = %d", idJ, idAcc));
-        runAcdenoJob(property, 50L);
+        System.out.println(String.format("message_id = %d, gl_acc.id = %d, cnt = %d", idJ, idAcc, cnt));
+        runAcdenoJob(ACOPEN_TASK, property, 50L);
 
         long cntrec = 0;
         long cntrec0 = -1;
@@ -348,8 +349,8 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
             Thread.sleep(30 * 1000L);
             cntrec0 = cntrec;
             cntrec = getStatistics(idJ);
-
         }
+        shutdownJob(ACOPEN_TASK);
         Assert.assertEquals("Обработаны не все запросы", cnt, cntrec);
 
         DataRecord data = baseEntityRepository.selectFirst(
@@ -360,19 +361,80 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
                 "select count(*) from gl_acc where id > ? and dto = ?", idAcc, getOperday().getCurrentDate());
         Assert.assertEquals("Есть ошибки даты открытия", cnt, data.getLong(0).longValue());
 
-        shutdownJob(ACDENO_TASK);
         clearQueue(properties, qName, cnt);
 
     }
 
-    private void sendOneMessage(String message, String curDateStr, QueueProperties properties, String qName) throws IOException, SAXException, XPathExpressionException, JMSException {
+    @Ignore
+    @Test
+    public void testCloseFccStress() throws Exception {
+
+        int cnt = 100;
+
+        Date dbDate = DateUtils.dbDateParse("2018-07-17");  // это дата где лежат нормальные сообщения
+        String curDateStr = DateUtils.dbDateString(getOperday().getCurrentDate());
+        String qType = AcDNJournal.Sources.FCC_CLOSE.name();
+        String qName = acdeno6;
+
+        printCommunicatorName();
+
+        QueueProperties properties = getQueueProperties(qType, qName);
+        clearQueue(properties, qName, cnt * 2);
+
+        shutdownJob(ACCLOSE_TASK);
+        startConnection(properties);
+
+        List<DataRecord> mlist = baseEntityRepository.selectMaxRows(
+                "select message from gl_acdeno where status_date <= ? and source = 'FCC_CLOSE' and status = 'PROCESSED' and \"COMMENT\" like '%закрыт%' order by message_id desc", cnt, new Object[]{dbDate});
+        Assert.assertNotEquals(0, mlist.size());
+        for (DataRecord rec : mlist) {
+            sendCloseMessage(rec.getString(0), curDateStr, properties, qName);
+        }
+
+        Thread.sleep(2000L);
+
+        String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, login, passw, "30", writeOut) + "mq.algo = simple\n";
+
+        cnt = mlist.size();
+        long idJ = getAcdenoMaxId();
+        long idAcc = getGLAccMaxId();
+        System.out.println(String.format("message_id = %d, gl_acc.id = %d, cnt = %d", idJ, idAcc, cnt));
+        runAcdenoJob(ACCLOSE_TASK, property, 50L);
+
+        long cntrec = 0;
+        long cntrec0 = -1;
+        while (cntrec < cnt && cntrec != cntrec0) {
+            Thread.sleep(30 * 1000L);
+            cntrec0 = cntrec;
+            cntrec = getStatistics(idJ);
+        }
+        shutdownJob(ACCLOSE_TASK);
+        Assert.assertEquals("Обработаны не все запросы", cnt, cntrec);
+
+        DataRecord data = baseEntityRepository.selectFirst(
+                "select count(*) from gl_acdeno where message_id > ? and status != 'PROCESSED'", idJ);
+        Assert.assertEquals("Есть ошибки обработки", 0, data.getLong(0).longValue());
+
+        clearQueue(properties, qName, cnt);
+
+    }
+
+    private void sendOpenMessage(String message, String curDateStr, QueueProperties properties, String qName) throws IOException, SAXException, XPathExpressionException, JMSException {
         Document doc = getDocument(docBuilder, message);
         String bsaacid = getXmlParam(xPath, doc, acdenoParentNode, cbNode);
         String dateOpenStr = getXmlParam(xPath, doc, acdenoParentNode, openNode);
-        message =
+        message = changeXmlParam(message, openNode, dateOpenStr, curDateStr);
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?",bsaacid);
 
-        changeXmlParam(message, openNode, dateOpenStr, curDateStr);
-                baseEntityRepository.executeNativeUpdate("delete from GL_ACC where BSAACID = ?",bsaacid);
+        sendToQueue(message, properties, null,null,qName);
+    }
+
+    private void sendCloseMessage(String message, String curDateStr, QueueProperties properties, String qName) throws IOException, SAXException, XPathExpressionException, JMSException {
+        Document doc = getDocument(docBuilder, message);
+        String bsaacid = getXmlParam(xPath, doc, acdenoParentNode, cbNode);
+        String dateCloseStr = getXmlParam(xPath, doc, acdenoParentNode, closeNode);
+        message = changeXmlParam(message, closeNode, dateCloseStr, curDateStr);
+        baseEntityRepository.executeNativeUpdate("update GL_ACC set DTC = null where BSAACID = ?", bsaacid);
 
         sendToQueue(message, properties, null,null,qName);
     }
@@ -384,6 +446,11 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         return cnt;
     }
 
+    /**
+     * не получилось обновлять настройки подключения ((
+     * @throws Exception
+     */
+    @Ignore
     @Test
     public void testReconectProps() throws Exception {
 
@@ -399,7 +466,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         QueueProperties properties = getQueueProperties(qType, qName);
         clearQueue(properties, qName, cnt * 2);
 
-        shutdownJob(ACDENO_TASK);
+        shutdownJob(ACOPEN_TASK);
         startConnection(properties);
 
         long idJ = getAcdenoMaxId();
@@ -414,7 +481,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         String []hosts = {host, "vs", host};
         int i = 0;
         for (DataRecord rec : mlist) {
-            sendOneMessage(rec.getString(0), curDateStr, properties, qName);
+            sendOpenMessage(rec.getString(0), curDateStr, properties, qName);
             String property = getJobProperty(qType + ":" + qName, qName, null, hosts[i], "1414", broker, channel, login, passw, "10", writeOut) + "mq.algo = simple\n";
             Thread.sleep(1000L);
             SingleActionJob job =
@@ -438,7 +505,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
             i++;
         }
 
-        shutdownJob(ACDENO_TASK);
+        shutdownJob(ACOPEN_TASK);
         clearQueue(properties, qName, cnt);
 
     }
@@ -482,28 +549,29 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
         Date dateOpen = DateUtils.dbDateParse(dtOpenParam);
         return dateOpen;
     }
-    public static void runAcdenoJob(String props, long interval) throws SQLException {
-        DataRecord tsk = baseEntityRepository.selectFirst("select * from GL_SCHED_S where TSKNM = ?", ACDENO_TASK);
+
+    public static void runAcdenoJob(String taskName, String props, long interval) throws SQLException {
+        DataRecord tsk = baseEntityRepository.selectFirst("select * from GL_SCHED_S where TSKNM = ?", taskName);
         TimerJob acdenoTaskJob = (TimerJob) baseEntityRepository.selectFirst(TimerJob.class
-                , "from TimerJob j where j.name = ?1", ACDENO_TASK);
+                , "from TimerJob j where j.name = ?1", taskName);
         if(null != acdenoTaskJob &&
                 (!acdenoTaskJob.getSchedulingType().equals(JobSchedulingType.INTERVAL)
                         || acdenoTaskJob.getInterval() != interval
                         || !props.equals(acdenoTaskJob.getProperties())
                 )
                 || null != tsk) {
-            baseEntityRepository.executeUpdate("delete from TimerJob j where j.name = ?1", ACDENO_TASK);
+            baseEntityRepository.executeUpdate("delete from TimerJob j where j.name = ?1", taskName);
             acdenoTaskJob = null;
         }
         if (null == acdenoTaskJob) {
             IntervalJob acdenoJob = new IntervalJob();
             acdenoJob.setDelay(0L);
-            acdenoJob.setDescription(ACDENO_TASK);
+            acdenoJob.setDescription(taskName);
             acdenoJob.setRunnableClass(AccountDetailsNotifyTask.class.getName());
             acdenoJob.setProperties(props);
             acdenoJob.setStartupType(MANUAL);
             acdenoJob.setState(STOPPED);
-            acdenoJob.setName(ACDENO_TASK);
+            acdenoJob.setName(taskName);
             acdenoJob.setInterval(interval);
             try {
                 acdenoTaskJob = (IntervalJob) baseEntityRepository.save(acdenoJob);
@@ -517,4 +585,12 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 //            registerJob(aclirqJob);
     }
 
+    @Test
+    public void testDecodePassw() {
+        final String encryptedPswd = "M1p5OTZ3M2M=";
+        final String decryptedPswd = "3Zy96w3c";
+//        String pswd =  CryptoUtil.decrypt(encryptedPswd);
+        String pswd =  remoteAccess.invoke(BackvalueJournalController.class, "decript", encryptedPswd);
+        Assert.assertTrue(decryptedPswd.equals(pswd));
+    }
 }

@@ -53,8 +53,6 @@ public class AccountDetailsNotifyProcessorIT extends AbstractTimerJobIT  {
         xPath = XmlUtilityLocator.getInstance().newXPath();
     }
 
-    // TODO тесты на ошибку
-
     @Test
     public void testOpenFcc() throws Exception {
         String message = IOUtils.toString(this.getClass().getResourceAsStream("/AccountDetailsOpenFcc.xml"), "UTF-8");

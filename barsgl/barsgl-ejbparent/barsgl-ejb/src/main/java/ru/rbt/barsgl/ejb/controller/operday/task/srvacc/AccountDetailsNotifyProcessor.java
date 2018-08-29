@@ -95,15 +95,16 @@ public class AccountDetailsNotifyProcessor extends CommonNotifyProcessor {
         return;
     }
 
-
+    private static final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     private Date parseDate(String dateStr) throws ParseException {
-        return new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
-//        return java.sql.Date.valueOf(LocalDate.parse(dateStr, sdf));
+//        return df.parse(dateStr);       // в этом случае возникает ошибка при параллельной обработке. Оставила как образец ошибки
+//        return new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+        return java.sql.Date.valueOf(LocalDate.parse(dateStr, sdf));
     }
 
     private String formatDate(Date date) {
-        return new SimpleDateFormat("yyyy-MM-dd").format(date);
-//        return sdf.format(date.toInstant());
+//        return new SimpleDateFormat("yyyy-MM-dd").format(date);
+        return sdf.format(date.toInstant());
     }
 
     public void process(AcDNJournal.Sources source, String textMessage, final Long jId) throws Exception {

@@ -181,4 +181,8 @@ public class BackvalueJournalController {
         }
     }
 
+    public String decript(String encryptedPswd) {
+        return CryptoUtil.decrypt(encryptedPswd);
+    }
+
 }

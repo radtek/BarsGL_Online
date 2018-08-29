@@ -39,7 +39,6 @@ public class CommonAccountQueryProcessor {
 
     // многопоточный форматтер
     protected static final DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
-//    protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public String prepareDescription(String desc){
         if(isEmpty(desc)) return "";
