@@ -60,8 +60,6 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     public static final String broker = "QM_MBROKER4";
 
     private static final String channel = "SYSTEM.DEF.SVRCONN";
-    private static final String login = "srvwbl4mqtest";
-    private static final String passw = "JxQGk7nJ";
     private static final String acdeno6 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC.NOTIF";
     private static final String acdeno12 = "UCBRU.ADP.BARSGL.V5.ACDENO.FCC12.NOTIF";
     private static final Boolean writeOut = false;
@@ -307,6 +305,11 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     /* =========================================================================================================================
     * */
+
+    /**
+     * многопоточное открытие счетов
+     * @throws Exception
+     */
     @Ignore
     @Test
     public void testOpenFccStress() throws Exception {
@@ -336,7 +339,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         Thread.sleep(2000L);
 
-        String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, login, passw, "30", writeOut) + "mq.algo = simple\n";
+        String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut) + "mq.algo = simple\n";
 
         long idJ = getAcdenoMaxId();
         long idAcc = getGLAccMaxId();
@@ -365,6 +368,10 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
     }
 
+    /**
+     * многопоточное закрытие счетов
+     * @throws Exception
+     */
     @Ignore
     @Test
     public void testCloseFccStress() throws Exception {
@@ -393,7 +400,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 
         Thread.sleep(2000L);
 
-        String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, login, passw, "30", writeOut) + "mq.algo = simple\n";
+        String property = getJobProperty(qType + ":" + qName, qName, null, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut) + "mq.algo = simple\n";
 
         cnt = mlist.size();
         long idJ = getAcdenoMaxId();
@@ -477,12 +484,11 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
                 "select message from gl_acdeno where status_date <= ? and source = 'FCC' and status = 'PROCESSED' and \"COMMENT\" like '%/40817%' order by message_id desc", cnt, new Object[]{dbDate});
         Assert.assertNotEquals(0, mlist.size());
 
-        String []pass = {passw, "passw", passw};
         String []hosts = {host, "vs", host};
         int i = 0;
         for (DataRecord rec : mlist) {
             sendOpenMessage(rec.getString(0), curDateStr, properties, qName);
-            String property = getJobProperty(qType + ":" + qName, qName, null, hosts[i], "1414", broker, channel, login, passw, "10", writeOut) + "mq.algo = simple\n";
+            String property = getJobProperty(qType + ":" + qName, qName, null, hosts[i], "1414", broker, channel, mqTestLogin, mqTestPassw, "10", writeOut) + "mq.algo = simple\n";
             Thread.sleep(1000L);
             SingleActionJob job =
                     SingleActionJobBuilder.create()
@@ -520,12 +526,12 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     }
 
     private String getJobProperty(String topic, String queueIn) {
-        return getJobProperty (topic, queueIn, null, host, "1414", broker, channel, login, passw, Integer.toString(batchSize), writeOut)
+        return getJobProperty (topic, queueIn, null, host, "1414", broker, channel, mqTestLogin, mqTestPassw, Integer.toString(batchSize), writeOut)
                 + "mq.algo = simple\n";
     }
 
     private QueueProperties getQueueProperties(String topic, String qName) {
-        return getQueueProperties(topic, qName, null, host, 1414, broker, channel, login, passw, 30, writeOut, false);
+        return getQueueProperties(topic, qName, null, host, 1414, broker, channel, mqTestLogin, mqTestPassw, 30, writeOut, false);
     }
 
     public String getResourceText(String resource) throws IOException {
@@ -585,12 +591,4 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
 //            registerJob(aclirqJob);
     }
 
-    @Test
-    public void testDecodePassw() {
-        final String encryptedPswd = "M1p5OTZ3M2M=";
-        final String decryptedPswd = "3Zy96w3c";
-//        String pswd =  CryptoUtil.decrypt(encryptedPswd);
-        String pswd =  remoteAccess.invoke(BackvalueJournalController.class, "decript", encryptedPswd);
-        Assert.assertTrue(decryptedPswd.equals(pswd));
-    }
 }

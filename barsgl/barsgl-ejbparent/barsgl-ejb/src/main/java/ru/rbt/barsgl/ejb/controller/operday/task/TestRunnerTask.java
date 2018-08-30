@@ -52,11 +52,11 @@ public class TestRunnerTask implements ParamsAwareRunnable {
 
         if ("send".equals(properties.getProperty("mode"))) {
             auditController.info(TestRunner, "Старт отправки", null, "");
-            sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST", testALQ.getBytes(), "UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE", "srvwbl4mqtest", "UsATi8hU");
+            //sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST", testALQ.getBytes(), "UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE", "srvwbl4mqtest", "JxQGk7nJ"); // AbstractQueueIT.mqTestPassw
             auditController.info(TestRunner, "Окончание отправки", null, "");
         } else {
             auditController.info(TestRunner, "Старт получения", null, "");
-            receiveFromQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE", "srvwbl4mqtest", "UsATi8hU");
+            //receiveFromQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE", "srvwbl4mqtest", "JxQGk7nJ"); // AbstractQueueIT.mqTestPassw
             auditController.info(TestRunner, "Окончание получения", null, "");
         }
     }

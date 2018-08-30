@@ -27,6 +27,8 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
  * Created by er18837 on 23.03.2018.
  */
 public class AbstractQueueIT extends AbstractTimerJobIT {
+    public static final String mqTestLogin = "srvwbl4mqtest";
+    public static final String mqTestPassw = "JxQGk7nJ";
 
     public QueueProperties getQueueProperties (String topic, String inQueue, String outQueue, String ahost, int aport, String abroker, String achannel,
                                                 String alogin, String apassw, int batchSize, boolean writeOut, boolean remoteQueueOut) {
@@ -68,7 +70,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
     }
 
     public static void startConnection(QueueProperties queueProperties) throws JMSException {
-        remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties, false);
+        remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties);
     }
 
     public static void closeConnection() throws JMSException {
