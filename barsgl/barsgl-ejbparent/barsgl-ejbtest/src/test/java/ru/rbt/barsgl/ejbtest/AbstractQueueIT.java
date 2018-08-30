@@ -68,7 +68,7 @@ public class AbstractQueueIT extends AbstractTimerJobIT {
     }
 
     public static void startConnection(QueueProperties queueProperties) throws JMSException {
-        remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties);
+        remoteAccess.invoke(QueueTesting.class, "startConnection", queueProperties, false);
     }
 
     public static void closeConnection() throws JMSException {
