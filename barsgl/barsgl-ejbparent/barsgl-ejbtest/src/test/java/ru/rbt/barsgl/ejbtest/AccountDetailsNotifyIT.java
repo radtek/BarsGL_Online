@@ -306,10 +306,37 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
     /* =========================================================================================================================
     * */
 
-    /**
-     * многопоточное открытие счетов
-     * @throws Exception
-     */
+    @Ignore
+    @Test
+    public void testSendFcc() throws Exception {
+
+        int cnt = 30;
+
+        Date dbDate = DateUtils.dbDateParse("2018-07-17");  // это дата где лежат нормальные сообщения
+        String qType = AcDNJournal.Sources.FCC.name();
+        String qName = acdeno6;
+
+        printCommunicatorName();
+
+        QueueProperties properties = getQueueProperties(qType, qName);
+        clearQueue(properties, qName, cnt * 2);
+
+        shutdownJob(ACOPEN_TASK);
+        startConnection(properties);
+
+        List<DataRecord> mlist = baseEntityRepository.selectMaxRows(
+                "select message from gl_acdeno where status_date <= ? and source = 'FCC' and status = 'PROCESSED' and \"COMMENT\" like '%/40817%' order by message_id desc", cnt, new Object[]{dbDate});
+        cnt = mlist.size();
+        Assert.assertNotEquals(0, cnt);
+        for (DataRecord rec : mlist) {
+            sendToQueue(rec.getString(0), properties, null,null,qName);
+        }
+    }
+
+        /**
+         * многопоточное открытие счетов
+         * @throws Exception
+         */
     @Ignore
     @Test
     public void testOpenFccStress() throws Exception {

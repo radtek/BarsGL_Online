@@ -48,8 +48,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     public static final Logger logger = Logger.getLogger(AccountQueryMPIT.class.getName());
 
     private static final String qType = "LIRQ";
-//    private final static String host = "vs569";
+//    private final static String host = "vs569";   // int C
 //    private final static String broker = "QM_MBROKER4_T4";
+//    private final static String host = "vs529";   // int D
+//    private final static String broker = "QM_MBROKER4_T5";
     public static final String host = "vs11205";    //"mbrk4-inta.testhpcsa.imb.ru";
     private final static String broker = "QM_MBROKER4";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
@@ -94,9 +96,9 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn);
+        sendToQueue(getResourceText("/AccountQueryProcessorTest_1.xml"), properties, null, null, acliquIn);
 
-        Thread.sleep(1000L);
+        Thread.sleep(30000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
@@ -105,7 +107,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
                         .build();
         jobService.executeJob(job);
 
-        Thread.sleep(4000L);
+        Thread.sleep(30000L);
 
         QueueInputMessage answer = receiveFromQueue(acliquOut, charset);
         Assert.assertFalse("Нет ответного сообщения", StringUtils.isEmpty(answer.getTextMessage()));
@@ -132,7 +134,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn, cnt);
+        sendToQueue(getResourceText("/AccountQueryProcessorTest_1.xml"), properties, null, null, acliquIn, cnt);
 
         long idAudit = getAuditMaxId();
 
@@ -176,7 +178,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn, cnt);
+        sendToQueue(getResourceText("/AccountQueryProcessorTest_1.xml"), properties, null, null, acliquIn, cnt);
 
         long idAudit = getAuditMaxId();
 
@@ -249,10 +251,10 @@ public class AccountQueryMPIT extends AbstractQueueIT {
      */
     @Test
     @Ignore
-    public void testSend5000() throws Exception {
+    public void testSend() throws Exception {
 
-        int cnt = 5000;
-        int cntmax = cnt * 2;
+        int cnt = 500;
+        int cntmax = Math.max(cnt * 2, 5000);
 
         printCommunicatorName();
 
