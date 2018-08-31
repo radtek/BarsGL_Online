@@ -1,10 +1,12 @@
 package ru.rbt.barsgl.ejb.repository;
 
 import ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
+import java.sql.SQLException;
 import java.util.Date;
 
 /**
@@ -45,5 +47,6 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
     public int updateChangedPstOld() {
         return executeNativeUpdate("update GL_REG47422 set valid = 'N' where valid = 'U'");
     }
+
 }
 
