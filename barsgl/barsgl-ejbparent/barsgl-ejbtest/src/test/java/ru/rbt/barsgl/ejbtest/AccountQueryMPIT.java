@@ -96,9 +96,9 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountQueryProcessorTest_1.xml"), properties, null, null, acliquIn);
+        sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn);
 
-        Thread.sleep(30000L);
+        Thread.sleep(4000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
@@ -107,7 +107,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
                         .build();
         jobService.executeJob(job);
 
-        Thread.sleep(30000L);
+        Thread.sleep(6000L);
 
         QueueInputMessage answer = receiveFromQueue(acliquOut, charset);
         Assert.assertFalse("Нет ответного сообщения", StringUtils.isEmpty(answer.getTextMessage()));
@@ -134,7 +134,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountQueryProcessorTest_1.xml"), properties, null, null, acliquIn, cnt);
+        sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn, cnt);
 
         long idAudit = getAuditMaxId();
 
@@ -142,7 +142,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 //        setPropertyTimeout("MINUTES", 1);
         setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
 
-        Thread.sleep(1000L);
+        Thread.sleep(5000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
@@ -151,9 +151,9 @@ public class AccountQueryMPIT extends AbstractQueueIT {
                         .build();
         jobService.executeJob(job);
 
-        Thread.sleep(5000L);
+        Thread.sleep(10000L);
         long n = clearQueue(properties, acliquOut, cntmax);
-//        Assert.assertTrue("Нет сообщений в выходной очереди", n > 0);
+        Assert.assertTrue("Нет сообщений в выходной очереди", n > 0);
 //        Assert.assertTrue("Все сообщения обработаны", n < cnt);
 
         AuditRecord record = getAuditError(idAudit, SysError);
@@ -178,7 +178,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
-        sendToQueue(getResourceText("/AccountQueryProcessorTest_1.xml"), properties, null, null, acliquIn, cnt);
+        sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn, cnt);
 
         long idAudit = getAuditMaxId();
 
@@ -235,7 +235,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
         setPropertyTimeout("MINUTES", 10);
         runAclirqJob(getJobProperty(qType, acliquIn, acliquOut, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut));
-        Thread.sleep(60 * 3000L);
+        Thread.sleep(60 * 5000L);
         shutdownJob(ACLIRQ_TASK);
 
         long n = clearQueue(properties, acliquOut, cntmax);
@@ -253,7 +253,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     @Ignore
     public void testSend() throws Exception {
 
-        int cnt = 500;
+        int cnt = 5000;
         int cntmax = Math.max(cnt * 2, 5000);
 
         printCommunicatorName();
