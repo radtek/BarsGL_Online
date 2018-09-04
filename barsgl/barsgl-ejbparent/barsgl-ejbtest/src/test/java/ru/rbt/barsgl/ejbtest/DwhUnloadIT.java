@@ -1,47 +1,25 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadFullTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.DwhUnloadParams;
 import ru.rbt.barsgl.ejb.controller.operday.task.dwh.DwhProcessClosedDealsTask;
-import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
-import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
-import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
-import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
-import static ru.rbt.barsgl.ejb.controller.operday.task.dwh.DwhProcessClosedDealsTask.DWH_CLOSED_DEALS_STATUS_TABNAME_KEY;
-import static ru.rbt.barsgl.ejb.controller.operday.task.dwh.DwhProcessClosedDealsTask.DWH_CLOSED_DEALS_TABNAME_KEY;
-import static ru.rbt.barsgl.ejb.controller.operday.task.dwh.DwhProcessClosedDealsTask.LOAD_TYPE_KEY;
-import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.cleanHeader;
-import static ru.rbt.barsgl.shared.enums.DealSource.KondorPlus;
+import static ru.rbt.barsgl.ejb.controller.operday.task.dwh.DwhProcessClosedDealsTask.*;
 
 /**
  * загрузка данных из DWH
@@ -55,6 +33,7 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
 
     @BeforeClass
     public static void beforeClass() throws SQLException {
+        baseEntityRepository.executeNativeUpdate("delete from GL_DEALCLOSE");
         dropTestTable(DWH_STATUS_TAB);
         dropTestTable(DWH_DEALS_TAB);
         createTableDwhStatus(DWH_STATUS_TAB);
@@ -72,6 +51,7 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
         jobService.executeJob(SingleActionJobBuilder.create().withClass(DwhProcessClosedDealsTask.class)
                 .withProps(LOAD_TYPE_KEY+"="+ DwhProcessClosedDealsTask.LoadType.Full
                 + "\n"+DWH_CLOSED_DEALS_STATUS_TABNAME_KEY + "=" +DWH_STATUS_TAB
+                + "\n"+DWH_CLOSED_DEALS_STREAM_KEY + "= someStream"
                 + "\n"+DWH_CLOSED_DEALS_TABNAME_KEY + "=" +DWH_DEALS_TAB).withName(jobName)
         .build());
         DataRecord record = baseEntityRepository.selectFirst("select * from GL_LOADSTAT");
@@ -95,6 +75,7 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
         SingleActionJob singleActionJob = SingleActionJobBuilder.create().withClass(DwhProcessClosedDealsTask.class)
                 .withProps(LOAD_TYPE_KEY+"="+ DwhProcessClosedDealsTask.LoadType.Discrete
                         + "\n"+DWH_CLOSED_DEALS_STATUS_TABNAME_KEY + "=" +DWH_STATUS_TAB
+                        + "\n"+DWH_CLOSED_DEALS_STREAM_KEY + "=" + streamId
                         + "\n"+DWH_CLOSED_DEALS_TABNAME_KEY + "=" +DWH_DEALS_TAB).withName(jobName)
                 .build();
         jobService.executeJob(singleActionJob);
@@ -114,8 +95,65 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(1, histories.size());
     }
 
+    @Test public void testOneDealStream() throws Exception {
+        cleanStatTable();
+
+        // stream #1
+        final String streamId_1 = "KP1";
+        fillDwhStateTable(DWH_STATUS_TAB, getOperday().getLastWorkingDay(), streamId_1);
+
+        final String dealId_1 = StringUtils.rsubstr(System.currentTimeMillis() + "", 6);
+        createDwhDeal(DWH_DEALS_TAB, dealId_1, streamId_1, getOperday().getLastWorkingDay());
+
+        // stream #1
+        final String streamId_2 = "KP2";
+        fillDwhStateTable(DWH_STATUS_TAB, getOperday().getLastWorkingDay(), streamId_2);
+
+        final String dealId_2 = StringUtils.rsubstr(System.currentTimeMillis() + "", 6);
+        createDwhDeal(DWH_DEALS_TAB, dealId_2, streamId_2, getOperday().getLastWorkingDay());
+
+        final String jobName = "JOB1_" + StringUtils.rsubstr(System.currentTimeMillis()+"", 5);
+        SingleActionJob singleActionJob = SingleActionJobBuilder.create().withClass(DwhProcessClosedDealsTask.class)
+                .withProps(LOAD_TYPE_KEY+"="+ DwhProcessClosedDealsTask.LoadType.Discrete
+                        + "\n"+DWH_CLOSED_DEALS_STATUS_TABNAME_KEY + "=" +DWH_STATUS_TAB
+                        + "\n"+DWH_CLOSED_DEALS_STREAM_KEY + "=" + streamId_1
+                        + "\n"+DWH_CLOSED_DEALS_TABNAME_KEY + "=" +DWH_DEALS_TAB).withName(jobName)
+                .build();
+        jobService.executeJob(singleActionJob);
+        DataRecord record = baseEntityRepository.selectFirst("select * from GL_LOADSTAT where stream_id = ?", streamId_1);
+        Assert.assertNotNull(record);
+        Assert.assertEquals(getStatusOk(), record.getString("status"));
+        JobHistory history = (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.jobName = ?1", jobName);
+        Assert.assertNotNull(history);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history.getResult());
+
+        List<DataRecord> dealsGL = baseEntityRepository.select("select * from GL_DEALCLOSE ");
+        Assert.assertEquals(1, dealsGL.size());
+        Assert.assertTrue(dealsGL.stream().anyMatch(d -> streamId_1.equals(d.getString("SOURCE"))));
+
+        final String jobName_2 = "JOB2_" + StringUtils.rsubstr(System.currentTimeMillis()+"", 5);
+        SingleActionJob singleActionJob_2 = SingleActionJobBuilder.create().withClass(DwhProcessClosedDealsTask.class)
+                .withProps(LOAD_TYPE_KEY+"="+ DwhProcessClosedDealsTask.LoadType.Discrete
+                        + "\n"+DWH_CLOSED_DEALS_STATUS_TABNAME_KEY + "=" +DWH_STATUS_TAB
+                        + "\n"+DWH_CLOSED_DEALS_STREAM_KEY + "=" + streamId_2
+                        + "\n"+DWH_CLOSED_DEALS_TABNAME_KEY + "=" +DWH_DEALS_TAB).withName(jobName_2)
+                .build();
+        jobService.executeJob(singleActionJob_2);
+        DataRecord record_2 = baseEntityRepository.selectFirst("select * from GL_LOADSTAT where stream_id = ?", streamId_2);
+        Assert.assertNotNull(record_2);
+        Assert.assertEquals(getStatusOk(), record_2.getString("status"));
+        JobHistory history_2 = (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.jobName = ?1", jobName_2);
+        Assert.assertNotNull(history_2);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history_2.getResult());
+
+        dealsGL = baseEntityRepository.select("select * from GL_DEALCLOSE ");
+        Assert.assertEquals(2, dealsGL.size());
+        Assert.assertTrue(dealsGL.stream().anyMatch(d -> streamId_1.equals(d.getString("SOURCE"))));
+        Assert.assertTrue(dealsGL.stream().anyMatch(d -> streamId_2.equals(d.getString("SOURCE"))));
+
+    }
+
     @Test @Ignore public void testReal() throws Exception {
-        baseEntityRepository.executeNativeUpdate("delete from GL_DEALCLOSE");
         SingleActionJob singleActionJob = SingleActionJobBuilder.create().withClass(DwhProcessClosedDealsTask.class)
                 .withProps(LOAD_TYPE_KEY+"="+ DwhProcessClosedDealsTask.LoadType.Full)
                 .build();
@@ -144,7 +182,7 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
     }
 
     private String getStatusOk() throws SQLException {
-        return baseEntityRepository.selectFirst("select PKG_DWHDEALS.get_status_ok col from dual").getString("col");
+        return baseEntityRepository.selectFirst("select PKG_DWHDEALS.get_status_ok() col from dual").getString("col");
     }
 
     private void createDwhDeal(String tableName, String dealId, String streamId, Date validFrom) {
@@ -155,7 +193,7 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
     }
 
     private void fillDwhStateTable(String tableName, Date asOfDate, String streamId) {
-        baseEntityRepository.executeNativeUpdate("delete from " + tableName);
+        baseEntityRepository.executeNativeUpdate("delete from " + tableName + " where stream = ?", streamId);
         baseEntityRepository.executeNativeUpdate("insert into " + tableName + " (AS_OF_DATE, stream) values (?, ?)"
                 , asOfDate, streamId);
     }
@@ -165,7 +203,7 @@ public class DwhUnloadIT extends AbstractTimerJobIT {
             " STREAM CHAR(3 BYTE)\n" +
             ")";
 
-    public static final String DEALS_TAB_DDL = "create table %s (\n" +
+    private static final String DEALS_TAB_DDL = "create table %s (\n" +
             "DEAL_NUMBER              VARCHAR2(42)\n" +
             ", SUB_DEAL_NUMBER          VARCHAR2(128)\n" +
             ", CNUM                     VARCHAR2(50)\n" +
