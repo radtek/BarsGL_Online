@@ -409,7 +409,12 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         SequenceGenerator seq = entityClass.getDeclaredAnnotation(SequenceGenerator.class);
         if(null == seq)
             seq = entityClass.getAnnotation(SequenceGenerator.class);
+        Assert.assertNotNull("Не определено sequenceName для класса " + entityClass.getSimpleName(), seq);
         String seqName = seq.sequenceName();
+        restartSequence(entityClass, seqName);
+    }
+
+    protected static void restartSequence(Class<? extends BaseEntity<Long>> entityClass, String seqName) throws SQLException {
         Long idSeq = baseEntityRepository.nextId(seqName);
         Long idTable = (Long) baseEntityRepository.selectFirst(entityClass, "select max(t.id) from " + entityClass.getName() + " t");
         if (idSeq < idTable) {
