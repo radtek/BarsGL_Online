@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MakeInvisible47422;
@@ -88,16 +89,16 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         int cntLoad = loadNewData(dateFrom);
         if (cntLoad == 0)
             return true;
-        /* TODO
-        склеить проводки с одной датой
-            одиночные
-            веера
-        обработать проводки с разной датой
-            одиночные
-            веера
-        */
+        // склеить проводки с одной датой: одиночные, веера
+        processEqualDate(true, dateFrom);
+        processEqualDate(false, dateFrom);
+        // TODO  обработать проводки с разной датой: одиночные, веера
 
         return false;
+    }
+
+    public boolean testExec(JobHistory jobHistory, Properties properties) throws Exception {
+        return execWork(jobHistory, properties);
     }
 
     /**
@@ -146,7 +147,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
             int inserted = journalRepository.insertNewAndChangedPst(dateFrom);
             if (changed > 0) {
                 // статус измененных = 'N'
-                Assert.isTrue(changed == journalRepository.updateChangedPstOld(), String.format("Ошибка при изменении статуса, ожидается записей: %в", changed));
+                Assert.isTrue(changed == journalRepository.updateChangedPstOld(), String.format("Ошибка при изменении статуса, ожидается записей: %d", changed));
             }
             return inserted;
         });
@@ -154,6 +155,12 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         return res;
     }
 
+    /**
+     * sql для выброра проводок для обработки
+     * @param withSum - true = с одинаковой суммой
+     * @param withPod - true = с одинаковой датой
+     * @return
+     */
     private String getGroupSql(boolean withSum, boolean withPod) {
         String strPod = withPod ? ", pod" : "";
         String strSum = withSum ? ", abs(amnt)" : "";
@@ -170,6 +177,8 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 "        listagg (case when amnt>0 then pcid else null end,',') within group (order by pd_id) pcid_cr,\n" +
                 "        listagg (case when amnt<0 then pd_id else null end,',') within group (order by pd_id) id_dr,\n" +
                 "        listagg (case when amnt>0 then pd_id else null end,',') within group (order by pd_id) id_cr,\n" +
+                "        listagg (case when amnt<0 then glo_ref else null end,',') within group (order by glo_ref) glo_dr,\n" +
+                "        listagg (case when amnt>0 then glo_ref else null end,',') within group (order by glo_ref) glo_cr,\n" +
                 "        listagg (case when amnt<0 then pod else null end,',') within group (order by pd_id) pod_dr,\n" +
                 "        listagg (case when amnt>0 then pod else null end,',') within group (order by pd_id) pod_cr\n" +
                 "        " + strPod + "\n" +
@@ -184,7 +193,13 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 "order by cnt_cr, cnt_dr" + strPod + ", ndog";
     }
 
-    private int glueEqualDate(boolean withSum, Date dateFrom) {
+    /**
+     * обработка проводок с одинаковой датой
+     * @param withSum = true - одиночные проводки, иначе веер
+     * @param dateFrom - начиная с даты
+     * @return
+     */
+    private int processEqualDate(boolean withSum, Date dateFrom) {
         String sql = getGroupSql(withSum, false);
         try {
             List<DataRecord> glueList = journalRepository.select(sql, dateFrom);    // наборы для склейки
@@ -195,15 +210,24 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                     // совпадение PBR, записать статус ERRSRC
                     continue;
                 }
-                String pcid =  getPcid(phSide,
-                        new int[]{glued.getInteger("cnt_dr"), glued.getInteger("cnt_cr")},
-                        new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")});
-                Reg47422params params = fillCommonFields(phSide, new String[]{glued.getString("id_dr"), glued.getString("id_cr")});
-
-
+                // сторона ручки веера
+                PstSide stickSide = glued.getInteger("cnt_dr") > 1 ? C : glued.getInteger("cnt_cr") > 1 ? D : N;
+                // сторона PCID
+                PstSide pcidSide = stickSide != N ? stickSide : phSide;
+                Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
+                        new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
+                        new String[]{glued.getString("id_dr"), glued.getString("id_cr")});
+                journalRepository.executeInNewTransaction(persistence -> {
+                    gluePostings(params);
+                    updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
+                    if (phSide != pcidSide) {
+                        // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
+                    }
+                    return null;
+                });
             }
             return glueList.size();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             auditController.error(MakeInvisible47422, "Ошибка при обработке проводок по счетам 47422", null, e);
             return 0;
         }
@@ -216,30 +240,84 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         return pbrList[0].indexOf("@@GL-PH")>=0 || pbrList[0].indexOf("@@IF") >=0 ? D : C;  // сторона PH или FCC6
     }
 
-    private String getPcid(PstSide phSide, int[] cnt, String[] pcidList) {
-        PstSide pcidSide = cnt[0] > 1 ? C : cnt[1] > 1 ? D : phSide;
-        return pcidList[pcidSide.ordinal()];
-    }
-
-    private Reg47422params fillCommonFields(PstSide phSide, String[] idList) throws SQLException {
-        int indPh = D == phSide ? 0 : 1;
+    /**
+     * заполняет параметры для склейки проводок
+     * @param phSide
+     * @param pcidList
+     * @param idList
+     * @return
+     * @throws SQLException
+     */
+    private Reg47422params fillGlueParams(PstSide phSide, PstSide stickSide, PstSide pcidSide, String[] pcidList, String[] idList) throws SQLException {
         Reg47422params reg = new Reg47422params();
+        reg.pcidNew = pcidList[pcidSide.ordinal()];
+        reg.pcidOld = pcidList[0] + "," + pcidList[1];
+        reg.idInvisible = idList[0] + "," + idList[1];
+
+        // парные полупроводки - останутся видимыми
+        List<DataRecord> idData = journalRepository.select("select id from pst where pcid in (" + reg.pcidOld + ") and id not in (" + reg.idInvisible + ") order by pcid");
+        reg.idVisible = idData.stream().map(data -> data.getString(0)).collect(Collectors.joining(",")); // StringUtils.arrayToString();
+
+        int indPh = phSide.ordinal();
         // параметры PH
-        DataRecord recPh = journalRepository.selectFirst("select PREF, PMT_REF from PST where id in (" + idList[indPh] + ") order by id");
+        DataRecord recPh = journalRepository.selectFirst("select PREF from PST where id in (" + idList[indPh] + ") order by id");
         reg.pref = recPh.getString(0);
-        reg.pmtref = recPh.getString(1);
         // параметры Flex
         DataRecord recFcc = journalRepository.selectFirst("select PBR, DEAL_ID, PNAR, RNARLNG from PST where id in (" + idList[indPh^1] + ") order by abs(amnt) desc");
         reg.pbr = recFcc.getString(0);
         reg.dealId = recFcc.getString(1);
         reg.pnar = recFcc.getString(2);
         reg.rnarlng = recFcc.getString(3);
+
+        if (stickSide != N) {
+            // параметры веера
+            DataRecord recs = journalRepository.selectFirst("select PMT_REF from PST where id = " + idList[stickSide.ordinal()]);
+            reg.parRf = recs.getString(0);
+        }
         return reg;
     }
 
+    /**
+     * склеивает проводки с одинаковой датой
+     * @param params
+     */
+    private void gluePostings(Reg47422params params) {
+        // подавить проводки по 47422
+        journalRepository.executeNativeUpdate("update PST p1 set INVISIBLE = '1' where id in (" + params.idInvisible + ")");
+        // ссылка на парную полупроводку (со старым PCID) в CPDRF
+        journalRepository.executeNativeUpdate("update PST p1 set p1.CPDRF = (select ID from PST p2 where p2.PCID = p1.PCID and p2.ID != p1.ID)" +
+                                              "  where id in (" + params.idVisible + ")");
+        // update проводки с другой стороны: PCID, DEAL_ID, PBR, PNAR, RNARLNG, PREF, PMT_REF = PREF
+        journalRepository.executeNativeUpdate("update PST p1 set PCID = ?, DEAL_ID = ?, PBR = ?, PNAR = ?, RNARLNG = ?, PREF = ?" +
+                                              "  where id in (" + params.idVisible + ")",
+                params.pcidNew, params.dealId, params.pbr, params.pnar, params.rnarlng, params.pref);
+    }
+
+    private void updateOperations(PstSide stickSide, String[] gloList, Reg47422params params) {
+        String gloAll = gloList[0] + "," + gloList[1];
+        // INP_METHOD = 'AE_GL'
+        journalRepository.executeNativeUpdate("update GL_OPER set INP_METHOD = 'AE_GL' where GLOID in (" + gloAll + ")");
+        if (stickSide == N)
+            return;
+        // только для веера
+        String gloPar = gloList[stickSide.ordinal()];
+        // GL_POSTING: POST_TYPE = '5' (для ручки)
+        journalRepository.executeNativeUpdate("update GL_POSTING set POST_TYPE = '5' where GLO_REF = " + gloPar);
+        // GL_OPER: FAN = 'Y', PAR_RF = PMT_REF, PAR_GLO = GLOID
+        //          FP_SIDE = 'D'/'C' – сторона, обратная ручке (для всех операций)
+        journalRepository.executeNativeUpdate("update GL_OPER set FAN = 'Y', PAR_RF = ?, PAR_GLO = " + gloPar + ", FP_SIDE = ? where GLOID in (" + gloAll + ")",
+                params.parRf, PstSide.values()[stickSide.ordinal()^1].name());
+        //          FB_SIDE = 'С'/'D' - сторона ручки (только для ручки)
+        journalRepository.executeNativeUpdate("update GL_OPER set FB_SIDE = ? where GLOID = " + gloPar, stickSide.name());
+    }
+
     private class Reg47422params {
+        private String pcidNew;
+        private String pcidOld;
+        private String idInvisible;
+        private String idVisible;
         private String pref;
-        private String pmtref;
+        private String parRf;
         private String pbr;
         private String dealId;
         private String pnar;
