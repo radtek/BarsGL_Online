@@ -4,7 +4,6 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
-
 import org.apache.log4j.Logger;
 
 import java.io.InputStream;
@@ -87,4 +86,7 @@ public class SshProcedureRunner {
         session.disconnect();
     }
 
+    public void executeSshCommand(SshCommand cmd) throws Exception {
+        executeSshCommand(cmd.getHost(), cmd.getUser(),  cmd.getDecryptedPassword(), cmd.getPort(), cmd.getCommand(), cmd.getOutputStream());
+    }
 }

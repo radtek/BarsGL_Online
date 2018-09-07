@@ -52,7 +52,9 @@ public enum PropertyName {
     , BARSREP_REPL_SSH_RUN_CMD("barsrep.repl.ssh.run.cmd")
 
     , AQBALANCE_CHECK_MSG_CNT("aqbalance.queue.check.msgcnt")
-    , AQBALANCE_CHECK_EMSG_CNT("aqbalance.queue.check.emsgcnt");
+    , AQBALANCE_CHECK_EMSG_CNT("aqbalance.queue.check.emsgcnt")
+
+    , INTELMATCH_SSH_CMD("intelmatch.ssh.cmd");
 
     private String name;
 

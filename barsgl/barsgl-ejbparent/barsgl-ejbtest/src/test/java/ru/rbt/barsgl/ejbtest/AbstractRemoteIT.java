@@ -734,14 +734,9 @@ public abstract class AbstractRemoteIT  {
     }
 
     public JobHistory getLastHistRecordObject(String jobName) throws SQLException {
-        DataRecord record = baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName);
-        if (null != record)
-        {
-            return  (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.id = ?1", record.getLong("id_hist"));
-        }
-        else {
-            return null;
-        }
+        return Optional.ofNullable(baseEntityRepository.selectFirst("select * from gl_sched_h where sched_name = ? order by 1 desc ", jobName))
+                .map(record -> (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.id = ?1", record.getLong("id_hist")))
+                .orElse(null);
     }
 
     public static GLOperation getLastOperation(Long idpst) {
