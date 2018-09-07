@@ -38,6 +38,7 @@ import static junit.framework.TestCase.assertTrue;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.PROCESSED;
 import static ru.rbt.barsgl.ejbcore.mapping.job.TimerJob.JobState.STOPPED;
 import static ru.rbt.barsgl.ejbtest.AccountDetailsNotifyProcessorIT.*;
+import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.restartSequence;
 import static ru.rbt.barsgl.ejbtest.AccountQueryMPIT.restartSequenceWithTable;
 import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
 import static ru.rbt.barsgl.shared.enums.JobStartupType.MANUAL;
@@ -609,7 +610,7 @@ public class AccountDetailsNotifyIT extends AbstractQueueIT {
             try {
                 acdenoTaskJob = (IntervalJob) baseEntityRepository.save(acdenoJob);
             } catch (Exception e) {
-                restartSequenceWithTable(IntervalJob.class);
+                restartSequence(IntervalJob.class, "GL_SCHED_SEQ");
                 acdenoTaskJob = (IntervalJob) baseEntityRepository.save(acdenoJob);
             }
         }
