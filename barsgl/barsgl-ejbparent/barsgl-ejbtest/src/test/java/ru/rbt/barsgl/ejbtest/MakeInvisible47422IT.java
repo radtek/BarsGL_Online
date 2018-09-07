@@ -12,6 +12,8 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 
     @Test
     public void testFirst() {
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, new Properties());
+        Properties props = new Properties();
+        props.setProperty("depth", "30");
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
     }
 }

@@ -39,6 +39,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
 
     public static final String REG47422_DEPTH_KEY = "depth";
     public static final String REG47422_CRPRD_KEY = "withClosedPeriod";
+    public static final String REG47422_MODE_KEY = "mode";
 
     private final int REG47422_DEF_DEPTH = 4;
 
@@ -149,7 +150,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 // статус измененных = 'N'
                 Assert.isTrue(changed == journalRepository.updateChangedPstOld(), String.format("Ошибка при изменении статуса, ожидается записей: %d", changed));
             }
-            return inserted;
+            return inserted + changed;
         });
         auditController.info(MakeInvisible47422, "Вставлено новых / измененных записей в GL_REG47422: " + res);
         return res;
@@ -260,14 +261,14 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
 
         int indPh = phSide.ordinal();
         // параметры PH
-        DataRecord recPh = journalRepository.selectFirst("select PREF from PST where id in (" + idList[indPh] + ") order by id");
-        reg.pref = recPh.getString(0);
+//        DataRecord recPh = journalRepository.selectFirst("select PREF from PST where id in (" + idList[indPh] + ") order by id");
+//        reg.pref = recPh.getString(0);
         // параметры Flex
         DataRecord recFcc = journalRepository.selectFirst("select PBR, DEAL_ID, PNAR, RNARLNG from PST where id in (" + idList[indPh^1] + ") order by abs(amnt) desc");
         reg.pbr = recFcc.getString(0);
-        reg.dealId = recFcc.getString(1);
-        reg.pnar = recFcc.getString(2);
-        reg.rnarlng = recFcc.getString(3);
+//        reg.dealId = recFcc.getString(1);
+//        reg.pnar = recFcc.getString(2);
+//        reg.rnarlng = recFcc.getString(3);
 
         if (stickSide != N) {
             // параметры веера
@@ -288,9 +289,8 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         journalRepository.executeNativeUpdate("update PST p1 set p1.CPDRF = (select ID from PST p2 where p2.PCID = p1.PCID and p2.ID != p1.ID)" +
                                               "  where id in (" + params.idVisible + ")");
         // update проводки с другой стороны: PCID, DEAL_ID, PBR, PNAR, RNARLNG, PREF, PMT_REF = PREF
-        journalRepository.executeNativeUpdate("update PST p1 set PCID = ?, DEAL_ID = ?, PBR = ?, PNAR = ?, RNARLNG = ?, PREF = ?" +
-                                              "  where id in (" + params.idVisible + ")",
-                params.pcidNew, params.dealId, params.pbr, params.pnar, params.rnarlng, params.pref);
+        journalRepository.executeNativeUpdate("update PST p1 set PCID = ?, PBR = ? where id in (" + params.idVisible + ")",
+                params.pcidNew, params.pbr);
     }
 
     private void updateOperations(PstSide stickSide, String[] gloList, Reg47422params params) {
@@ -316,11 +316,11 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         private String pcidOld;
         private String idInvisible;
         private String idVisible;
-        private String pref;
-        private String parRf;
         private String pbr;
-        private String dealId;
-        private String pnar;
-        private String rnarlng;
+//        private String pref;
+//        private String dealId;
+//        private String pnar;
+//        private String rnarlng;
+        private String parRf;
     }
 }
