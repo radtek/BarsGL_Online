@@ -16,14 +16,15 @@ import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MakeInvisible47422;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Glue;
+import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Load;
+import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Standard;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.C;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.D;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.N;
@@ -44,6 +45,12 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
     private final int REG47422_DEF_DEPTH = 4;
 
     enum PstSide {D, C, N};
+    enum GlueMode {
+        Standard,       // загружаем и обрабатываем, если есть изменения
+        Load,           // загружаем и обрабатываем все с заданной даты
+        Glue,
+        Full            // только загружаем
+        };
 
     @EJB
     private Reg47422JournalRepository journalRepository;
@@ -86,9 +93,13 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         // определить дату начала dateFrom (POD >= dateFrom && POD <= lwdate, PROCDATE is null or PROCDATE <= lwdate)
         Operday operday = operdayController.getOperday();
         Date dateFrom = getDateFrom(operday.getCurrentDate(), properties);
+        GlueMode mode = GlueMode.valueOf(Optional.ofNullable(properties.getProperty(REG47422_MODE_KEY)).orElse(Standard.name()));
         // обновить GL_REG47422
-        int cntLoad = loadNewData(dateFrom);
-        if (cntLoad == 0)
+        int cntLoad = 0;
+        if (mode != Glue) {
+            cntLoad = loadNewData(dateFrom);
+        }
+        if (mode == Load || (mode == Standard && cntLoad == 0))
             return true;
         // склеить проводки с одной датой: одиночные, веера
         processEqualDate(true, dateFrom);
@@ -178,6 +189,8 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 "        listagg (case when amnt>0 then pcid else null end,',') within group (order by pd_id) pcid_cr,\n" +
                 "        listagg (case when amnt<0 then pd_id else null end,',') within group (order by pd_id) id_dr,\n" +
                 "        listagg (case when amnt>0 then pd_id else null end,',') within group (order by pd_id) id_cr,\n" +
+                "        listagg (case when amnt<0 then pmt_ref else null end,',') within group (order by pmt_ref) pmt_dr,\n" +
+                "        listagg (case when amnt>0 then pmt_ref else null end,',') within group (order by pmt_ref) pmt_cr,\n" +
                 "        listagg (case when amnt<0 then glo_ref else null end,',') within group (order by glo_ref) glo_dr,\n" +
                 "        listagg (case when amnt>0 then glo_ref else null end,',') within group (order by glo_ref) glo_cr,\n" +
                 "        listagg (case when amnt<0 then pod else null end,',') within group (order by pd_id) pod_dr,\n" +
@@ -201,7 +214,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
      * @return
      */
     private int processEqualDate(boolean withSum, Date dateFrom) {
-        String sql = getGroupSql(withSum, false);
+        String sql = getGroupSql(withSum, true);
         try {
             List<DataRecord> glueList = journalRepository.select(sql, dateFrom);    // наборы для склейки
             for (DataRecord glued: glueList) {
@@ -217,7 +230,10 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 PstSide pcidSide = stickSide != N ? stickSide : phSide;
                 Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
                         new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
-                        new String[]{glued.getString("id_dr"), glued.getString("id_cr")});
+                        new String[]{glued.getString("id_dr"), glued.getString("id_cr")},
+                        new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
+                        new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
+                        );
                 journalRepository.executeInNewTransaction(persistence -> {
                     gluePostings(params);
                     updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
@@ -249,7 +265,8 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
      * @return
      * @throws SQLException
      */
-    private Reg47422params fillGlueParams(PstSide phSide, PstSide stickSide, PstSide pcidSide, String[] pcidList, String[] idList) throws SQLException {
+    private Reg47422params fillGlueParams(PstSide phSide, PstSide stickSide, PstSide pcidSide,
+                                          String[] pcidList, String[] idList, String[] pbrList, String[] pmtList) throws SQLException {
         Reg47422params reg = new Reg47422params();
         reg.pcidNew = pcidList[pcidSide.ordinal()];
         reg.pcidOld = pcidList[0] + "," + pcidList[1];
@@ -259,21 +276,26 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         List<DataRecord> idData = journalRepository.select("select id from pst where pcid in (" + reg.pcidOld + ") and id not in (" + reg.idInvisible + ") order by pcid");
         reg.idVisible = idData.stream().map(data -> data.getString(0)).collect(Collectors.joining(",")); // StringUtils.arrayToString();
 
+        int indFl = phSide.ordinal()^1;
+        List<String> pbrStr = Arrays.asList(pbrList[indFl].split(","));
+        reg.pbr = pbrStr.stream().filter(p -> p.equals("@@GLFCL")).findFirst().orElse(pbrStr.get(0));
+/*
         int indPh = phSide.ordinal();
         // параметры PH
-//        DataRecord recPh = journalRepository.selectFirst("select PREF from PST where id in (" + idList[indPh] + ") order by id");
-//        reg.pref = recPh.getString(0);
+        DataRecord recPh = journalRepository.selectFirst("select PREF from PST where id in (" + idList[indPh] + ") order by id");
+        reg.pref = recPh.getString(0);
         // параметры Flex
         DataRecord recFcc = journalRepository.selectFirst("select PBR, DEAL_ID, PNAR, RNARLNG from PST where id in (" + idList[indPh^1] + ") order by abs(amnt) desc");
         reg.pbr = recFcc.getString(0);
-//        reg.dealId = recFcc.getString(1);
-//        reg.pnar = recFcc.getString(2);
-//        reg.rnarlng = recFcc.getString(3);
+        reg.dealId = recFcc.getString(1);
+        reg.pnar = recFcc.getString(2);
+        reg.rnarlng = recFcc.getString(3);
+*/
 
         if (stickSide != N) {
             // параметры веера
-            DataRecord recs = journalRepository.selectFirst("select PMT_REF from PST where id = " + idList[stickSide.ordinal()]);
-            reg.parRf = recs.getString(0);
+//            DataRecord recs = journalRepository.selectFirst("select PMT_REF from PST where id = " + idList[stickSide.ordinal()]);
+            reg.parRf = pmtList[stickSide.ordinal()];
         }
         return reg;
     }
@@ -286,7 +308,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         // подавить проводки по 47422
         journalRepository.executeNativeUpdate("update PST p1 set INVISIBLE = '1' where id in (" + params.idInvisible + ")");
         // ссылка на парную полупроводку (со старым PCID) в CPDRF
-        journalRepository.executeNativeUpdate("update PST p1 set p1.CPDRF = (select ID from PST p2 where p2.PCID = p1.PCID and p2.ID != p1.ID)" +
+        journalRepository.executeNativeUpdate("update PST p1 set p1.CPDRF = (select ID from PST p2 where p2.PCID = p1.PCID and p2.INVISIBLE = '1')" +
                                               "  where id in (" + params.idVisible + ")");
         // update проводки с другой стороны: PCID, DEAL_ID, PBR, PNAR, RNARLNG, PREF, PMT_REF = PREF
         journalRepository.executeNativeUpdate("update PST p1 set PCID = ?, PBR = ? where id in (" + params.idVisible + ")",

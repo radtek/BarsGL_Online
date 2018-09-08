@@ -72,6 +72,9 @@ public class Reg47422Journal extends BaseEntity<Long> {
     @Column(name = "NDOG")
     private String contract;
 
+    @Column(name = "PMT_REF")
+    private String paymentRef;
+
     @Column(name = "GLO_REF")
     private Long glOperationId;
 

@@ -32,8 +32,8 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
     }
 
     public int insertNewAndChangedPst(Date fromDate) {
-        return executeNativeUpdate("insert into GL_REG47422 (ID,PD_ID,PCID,INVISIBLE,POD,VALD,PROCDATE,PBR,ACID,BSAACID,CCY,AMNT,AMNTBC,DC,CBCC,RNARLNG,NDOG,GLO_REF,OPERDAY,STATE,VALID) " +
-                "select GL_REG47422_SEQ.nextval,p.PD_ID,p.PCID,p.INVISIBLE,p.POD,p.VALD,p.PROCDATE,p.PBR,p.ACID,p.BSAACID,p.CCY,p.AMNT,p.AMNTBC,p.DC,p.CBCC,p.RNARLNG,p.NDOG,p.GLO_REF,p.OPERDAY, " +
+        return executeNativeUpdate("insert into GL_REG47422 (ID,PD_ID,PCID,INVISIBLE,POD,VALD,PROCDATE,PBR,ACID,BSAACID,CCY,AMNT,AMNTBC,DC,CBCC,RNARLNG,NDOG,PMT_REF,GLO_REF,OPERDAY,STATE,VALID) " +
+                "select GL_REG47422_SEQ.nextval,p.PD_ID,p.PCID,p.INVISIBLE,p.POD,p.VALD,p.PROCDATE,p.PBR,p.ACID,p.BSAACID,p.CCY,p.AMNT,p.AMNTBC,p.DC,p.CBCC,p.RNARLNG,p.NDOG,p.PMT_REF,p.GLO_REF,p.OPERDAY, " +
                 "case when r.pd_id is null then 'LOAD' else 'CHANGE' end,'Y' " +
                 "from V_GL_PST47422 p left join GL_REG47422 r on r.pd_id=p.pd_id " +
                 "where p.INVISIBLE <> '1' and (r.pd_id is null or r.valid = 'U')  " +
