@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.ibm.mq.jms.MQQueueConnectionFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,10 +38,8 @@ import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.ERROR;
 import static ru.rbt.barsgl.ejb.entity.acc.AcDNJournal.Status.RAW;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Cancel;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Change;
-import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.CloseType.Normal;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.OpenType.ERR;
 import static ru.rbt.barsgl.ejbtest.mq.MqUtil.answerToQueue;
-import static ru.rbt.barsgl.ejbtest.mq.MqUtil.getConnectionFactory;
 
 /**
  * Created by er18837 on 16.03.2018.
@@ -74,8 +71,6 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     private static final String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
     private static final String ktpIn = "UCBRU.P2P.KTP2GL.CLOSEACC.REQUEST";
     private static final String ktpOut = "UCBRU.P2P.KTP2GL.CLOSEACC.RESPONSE";
-    private static final String login = "srvwbl4mqtest";
-    private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
     private static final boolean remoteQueueOut = true;
 
@@ -94,11 +89,11 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 //    }
 
     private String getJobProperty(String topic, String ahost, String abroker) {
-        return getJobProperty (topic, ktpIn, ktpOut, ahost, "1414", abroker, channel, login, passw, "30", writeOut);
+        return getJobProperty (topic, ktpIn, ktpOut, ahost, "1414", abroker, channel, mqTestLogin, mqTestPassw, "30", writeOut);
     }
 
     private QueueProperties getQueueProperties(String topic, String ahost, String abroker) {
-        return getQueueProperties(topic, ktpIn, ktpOut, ahost, 1414, abroker, channel, login, passw, 30, writeOut, false);
+        return getQueueProperties(topic, ktpIn, ktpOut, ahost, 1414, abroker, channel, mqTestLogin, mqTestPassw, 30, writeOut, false);
     }
 
     public String getResourceText(String resource) throws IOException {

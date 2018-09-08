@@ -22,6 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static ru.rbt.barsgl.ejbtest.AbstractQueueIT.mqTestLogin;
+import static ru.rbt.barsgl.ejbtest.AbstractQueueIT.mqTestPassw;
 
 /**
  * Created by ER22228
@@ -47,48 +49,7 @@ public class AccountQueryIT extends AbstractTimerJobIT {
         cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         cf.setQueueManager("QM_MBROKER10_TEST");
         cf.setChannel("SYSTEM.DEV.SVRCONN");
-/*
-mq.type = queue
-mq.host = vs529
-mq.port = 1414
-mq.queueManager = QM_MBROKER4_T5
-mq.channel = SYSTEM.ADMIN.SVRCONN
-mq.batchSize = 30
-mq.topics = LIRQ:UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST:UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE;BALIRQ:UCBRU.ADP.BARSGL.V3.ACBALIQU.REQUEST:UCBRU.ADP.BARSGL.V3.ACBALIQU.RESPONSE
-mq.user=srvwbl4mqtest
-mq.password=UsATi8hU
- */
-//        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryProcessor.fullTopicTestA);
-//        sendToQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF", AccountQueryBAProcessor.fullTopicTestB);        
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST",new File("c:\\develop\\Projects\\er21775\\task53\\AccountListQuery-Simple.xml"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST",new File("C:\\Projects\\task53\\AccountListQuery-Simple.xml"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B1"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF",new File("C:\\Projects\\task53\\AccountBalanceListQuery-B2"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF", new File("C:\\Projects\\task53\\AccountBalanceListQuery-B3.txt"));
-//        sendToQueue(cf, "UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF",new File("C:\\Projects\\task53\\AccountListQuery-Over100000.xml"));
 
-        /*
-        SingleActionJob job =
-            SingleActionJobBuilder.create()
-                .withClass(AccountQueryTask.class)
-                .withProps(
-                    "mq.type = queue\n" +
-                        "mq.host = vs338\n" +
-                        "mq.port = 1414\n" +
-                        "mq.queueManager = QM_MBROKER10_TEST\n" +
-                        "mq.channel = SYSTEM.DEF.SVRCONN\n" +
-                        "mq.batchSize = 30\n" + //todo
-                        "mq.topics = LIRQ:UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST:UCBRU.ADP.BARSGL.V2.ACLIQU.RESPONSE"+
-                        ";BALIRQ:UCBRU.ADP.BARSGL.V3.ACBALIQU.REQUEST:UCBRU.ADP.BARSGL.V3.ACBALIQU.RESPONSE\n"+
-//                        "mq.topics = LIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF" +
-//                        ";BALIRQ:UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF:UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF\n" +
-                        "mq.user=srvwbl4mqtest\n" +
-                        "mq.password=UsATi8hU"
-
-                )//;MIDAS_UPDATE:UCBRU.ADP.BARSGL.V4.ACDENO.MDSUPD.NOTIF
-                .build();
-        jobService.executeJob(job);
-*/
 //        receiveFromQueue(cf,"UCBRU.ADP.BARSGL.V4.ACDENO.MDSOPEN.NOTIF");
         File file = new File(BatchMessageIT.class.getClassLoader().getResource("AccountQueryProcessorTest.xml").getFile());
         sendToQueue(cf, "UCBRU.ADP.BARSGL.V2.ACLIQU.REQUEST", file);
@@ -98,7 +59,7 @@ mq.password=UsATi8hU
     }
 
     private void receiveFromQueue(MQQueueConnectionFactory cf, String queueName) throws JMSException {
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection("srvwbl4mqtest","UsATi8hU");
+        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(mqTestLogin,mqTestPassw);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
 //        MQQueueSender sender = (MQQueueSender) session.createSender(queue);
@@ -158,7 +119,7 @@ mq.password=UsATi8hU
             System.exit(1);
         }
 
-        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection("srvwbl4mqtest","UsATi8hU");
+        MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection(mqTestLogin,mqTestPassw);
         MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         MQQueue queue = (MQQueue) session.createQueue("queue:///" + queueName);//UCBRU.ADP.BARSGL.V4.ACDENO.FCC.NOTIF
         MQQueueSender sender = (MQQueueSender) session.createSender(queue);

@@ -1523,7 +1523,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 .withAccountType(acctype).withCustomerType(record.getString("CUSTYPE").trim()).withTerm("00").withPlCode(record.getString("PLCODE").trim())
                 .withGlSequence("PL").withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim()).withAccSequence(record.getString("ac_sq").trim())
                 .build();
-        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeysMidas(operation, C, getOperday().getCurrentDate(), acCt);
         acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
 
         Assert.assertFalse(StringUtils.isEmpty(acCt.getAccountMidas()));
@@ -1571,7 +1571,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
                 .withAccSequence(record.getString("ac_sq").trim())
                 .build();
-        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeysMidas(operation, C, getOperday().getCurrentDate(), acCt);
         acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
 
         cleanAccountsByMidas(acCt.getAccountMidas());
@@ -1627,7 +1627,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 .withAcc2(record.getString("ACC2").trim()).withAccountCode(record.getString("acod").trim())
                 .withAccSequence(record.getString("ac_sq").trim())
                 .build();
-        acCt = fillAccountOfrKeysMidas(C, getOperday().getCurrentDate(), acCt);
+        acCt = fillAccountOfrKeysMidas(operation, C, getOperday().getCurrentDate(), acCt);
         acCt = fillAccountOfrKeys(C, getOperday().getCurrentDate(), acCt);
 
         cleanAccountsByMidas(acCt.getAccountMidas());
@@ -1890,9 +1890,9 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                 , "fillAccountKeysMidas", operSide, vdate, keys);
     }
 
-    private AccountKeys fillAccountOfrKeysMidas(GLOperation.OperSide operSide, Date vdate, AccountKeys keys) {
-        return remoteAccess.invoke(GLAccountProcessor.class, "fillAccountOfrKeysMidas"
-                , operSide, vdate, keys);
+    private AccountKeys fillAccountOfrKeysMidas(GLOperation operation, GLOperation.OperSide operSide, Date vdate, AccountKeys keys) {
+        return remoteAccess.invoke(GLAccountProcessor.class, "fillAccountOfrKeysMidas",
+                operation, operSide, vdate, keys);
     }
 
     private AccountKeys fillAccountOfrKeys(GLOperation.OperSide operSide, Date vdate, AccountKeys keys) {

@@ -29,6 +29,7 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
     public static String LOAD_DATE_KEY = "Load_Date";
     public static String DWH_CLOSED_DEALS_STATUS_TABNAME_KEY = "DwhStatus_TabName";
     public static String DWH_CLOSED_DEALS_TABNAME_KEY = "ClosedDeals_TabName";
+    public static String DWH_CLOSED_DEALS_STREAM_KEY = "ClosedDeals_StreamId";
     public static String MAP_KEY = "map";
 
     private enum TaskProcessClosedContext {
@@ -48,12 +49,13 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
                 jobHistoryRepository.executeTransactionally(jobHistoryRepository.getDataSource(Repository.BARSGLNOXA), connection -> {
                     try (PreparedStatement preparedStatement = connection.prepareStatement(
                             "begin\n" +
-                                    "    PKG_DWHDEALS.process_deals(?, ?, ?, ?);\n" +
+                                    "    PKG_DWHDEALS.process_deals(?, ?, ?, ?, ?);\n" +
                                     "end;")){
                         preparedStatement.setDate(1, null != getLoadDateContext(properties) ? new java.sql.Date(getLoadDateContext(properties).getTime()) : null);
                         preparedStatement.setString(2, getLoadTypeContext(properties).name());
-                        preparedStatement.setString(3, getDwhClosedDealsStatusTabname(properties));
-                        preparedStatement.setString(4, getDwhClosedDealsTabname(properties));
+                        preparedStatement.setString(3, getDwhClosedDealsStreamId(properties));
+                        preparedStatement.setString(4, getDwhClosedDealsStatusTabname(properties));
+                        preparedStatement.setString(5, getDwhClosedDealsTabname(properties));
                         preparedStatement.executeUpdate();
                         return null;
                     }
@@ -73,7 +75,7 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
         try {
             return isLoadDatePresetContext(properties)
                     || getLoadTypeContext(properties) == LoadType.Full
-                    || checkMart(getDwhClosedDealsStatusTabname(properties));
+                    || checkMart(getDwhClosedDealsStatusTabname(properties), getDwhClosedDealsStreamId(properties));
         } catch (ValidationError e) {
             auditController.error(AccDealCloseTask, e.getMessage(), null, e);
             return false;
@@ -144,23 +146,33 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
         });
     }
 
-    private boolean checkMart(String dwhStatusTableName) throws Exception {
+    private String getDwhClosedDealsStreamId(Properties properties) {
+        return Optional.ofNullable(properties.getProperty(DWH_CLOSED_DEALS_STREAM_KEY))
+                .orElseThrow(() -> new DefaultApplicationException(String.format("Не задано название потока ключом '%s'", DWH_CLOSED_DEALS_STREAM_KEY)));
+    }
+
+    private boolean checkMart(String dwhStatusTableName, String streamId) throws Exception {
         try {
             DataRecord dmartRecord = jobHistoryRepository
                     .selectFirst(jobHistoryRepository.getDataSource(Repository.BARSGLNOXA)
                             , format("select case when o.lwdate <= t.as_of_date then '1' else '0' end st, as_of_date, stream, nvl(l.STATUS,'NONE') ok_state\n" +
                                     "  from gl_od o, %s t, GL_LOADSTAT l\n" +
                                     " where t.STREAM = l.STREAM_ID(+)\n" +
-                                    "   and t.as_of_date = l.DTL(+)", dwhStatusTableName));
+                                    "   and t.STREAM = ? \n" +
+                                    "   and t.as_of_date = l.DTL(+)", dwhStatusTableName), streamId);
             Assert.isTrue(null != dmartRecord, ()-> new ValidationError(ErrorCode.TASK_ERROR, "Невозможно проверить статус витрины DWH. Статусная таблица пуста."));
             Assert.isTrue(Objects.equals(dmartRecord.getString("st"), "1")
                     , ()-> new ValidationError(ErrorCode.TASK_ERROR, "Невозможно выгрузить закрытые сделки из DWH. Дата готовности меньше LWDATE"));
-            Assert.isTrue(!Objects.equals(dmartRecord.getString("ok_state"), "P")
+            Assert.isTrue(!Objects.equals(dmartRecord.getString("ok_state"), getOkStatus())
                     , ()-> new ValidationError(ErrorCode.TASK_ERROR, format("Выгрузка по потоку %s в дате %s уже была проведена успешно", dmartRecord.getString("stream"), dateUtils.onlyDateString(dmartRecord.getDate("as_of_date")))));
             return true;
         } catch (Throwable e) {
             auditController.error(AccDealCloseTask, "Не прошла проверка готовности витрины DWH", null, e);
             return false;
         }
+    }
+
+    private String getOkStatus() throws SQLException {
+        return jobHistoryRepository.selectFirst("select PKG_DWHDEALS.get_status_ok() col from dual").getString("col");
     }
 }

@@ -90,6 +90,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , BackValueOperation
         , Localization
         , Ocp
+        , OcpFinal
         , QueueProcessor
         , CustomerDetailsNotify
         , NewAccounts

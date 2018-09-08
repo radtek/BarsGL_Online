@@ -1,8 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
-import com.ibm.mq.jms.MQQueueConnectionFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
@@ -20,10 +18,8 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
-import javax.jms.JMSException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 
 import static ru.rbt.barsgl.ejb.entity.cust.CustDNJournal.Status.*;
@@ -43,8 +39,6 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
     private final static String broker = "QM_MBROKER4_T5";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
     private final static String cudenoIn = "UCBRU.ADP.BARSGL.V3.CUDENO.NOTIF";
-    private static final String login = "srvwbl4mqtest";    // srvwb14mqtest    l != 1 !!!
-    private static final String passw = "UsATi8hU";
     private static final Boolean writeOut = true;
     private static final String unspents = "show";
 
@@ -76,24 +70,24 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
      */
     @Test
     public void testReadProperties() throws Exception {
-        testProperties(qType, host, "1414", broker, login, passw, "30", false);
-        testProperties(qType, host, " 1414 ", broker, login, passw, "30", false);
-        testProperties(qType, host, "1414", "", login, passw, "-1", true);
-        testProperties(qType, "", "1414", broker, login, passw, "-1", true);
-        testProperties(qType, host, "1414a", broker, login, passw, "0", true);
+        testProperties(qType, host, "1414", broker, mqTestLogin, mqTestPassw, "30", false);
+        testProperties(qType, host, " 1414 ", broker, mqTestLogin, mqTestPassw, "30", false);
+        testProperties(qType, host, "1414", "", mqTestLogin, mqTestPassw, "-1", true);
+        testProperties(qType, "", "1414", broker, mqTestLogin, mqTestPassw, "-1", true);
+        testProperties(qType, host, "1414a", broker, mqTestLogin, mqTestPassw, "0", true);
         testProperties("mq.batchSize = 30\n"
                 + "mq.host = " + host + "\n"
                 + "mq.port = 1414\n"
 //                + "mq.queueManager = " + broker + "\n"
 //                + "mq.channel = SYSTEM.DEF.SVRCONN\n"
                 + "mq.topics = " + qType + ":" + cudenoIn + "\n"   // + ":" + outQueue
-                + "mq.user=" + login + "\n"
-                + "mq.password=" + passw +"\n"
+                + "mq.user=" + mqTestLogin + "\n"
+                + "mq.password=" + mqTestPassw +"\n"
                 , true);
     }
 
     private void testProperties(String topic, String ahost, String aport, String abroker, String alogin, String apassw, String batch, boolean isError) throws Exception {
-        testProperties(getJobProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, login, passw, batch, writeOut), isError);
+        testProperties(getJobProperty (topic, cudenoIn, null, ahost, aport, abroker, channel, mqTestLogin, mqTestPassw, batch, writeOut), isError);
     }
 
     /**
@@ -109,7 +103,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
                 SingleActionJobBuilder.create()
                         .withClass(CustomerDetailsNotifyTask.class)
                         .withName("CustomerNotify1")
-                        .withProps(getJobProperty(qType, host, broker, login, passw))
+                        .withProps(getJobProperty(qType, host, broker, mqTestLogin, mqTestPassw))
                         .build();
         jobService.executeJob(job);
 
@@ -126,7 +120,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idAudit = getAuditMaxId();
         closeConnection();
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         startConnection(properties);
         sendToQueue(getResourceText("/CustomerDetailsTest_B.xml"), properties, null, null, cudenoIn);
         sendToQueue(getResourceText("/CustomerDetailsTest_C.xml"), properties, null, null, cudenoIn);
@@ -172,7 +166,7 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idCudeno = getCudenoMaxId();
         closeConnection();
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         startConnection(properties);
         sendToQueue(getResourceText("/CustomerDetailsTest_B.xml"), properties, null, null, cudenoIn);
 
@@ -207,15 +201,9 @@ public class CustomerDetailsNotifyIT extends AbstractQueueIT {
         long idCudeno = getCudenoMaxId();
         closeConnection();
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         startConnection(properties);
         sendToQueue(getResourceText("/CustomerDetailsTest_Xs.xml"), properties, null, null, cudenoIn);
-
-/*
-        sendToQueue(cf, cudenoIn,
-                new File(this.getClass().getResource("/CustomerDetailsTest_Xs.xml").getFile()),
-                null, login, passw);
-*/
 
         SingleActionJob job =
                 SingleActionJobBuilder.create()

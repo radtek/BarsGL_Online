@@ -1,16 +1,13 @@
 package ru.rbt.barsgl.ejbtest;
 
 import com.ibm.mq.jms.*;
-import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.io.FileUtils;
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountQueryTaskMT;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccountQueryProcessor;
-import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.CustomerNotifyProcessor;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueInputMessage;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.QueueProperties;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
@@ -26,13 +23,11 @@ import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
 
-import javax.persistence.PersistenceException;
 import javax.persistence.SequenceGenerator;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.logging.Logger;
 
 import static ru.rbt.audit.entity.AuditRecord.LogLevel.Error;
@@ -53,15 +48,15 @@ public class AccountQueryMPIT extends AbstractQueueIT {
     public static final Logger logger = Logger.getLogger(AccountQueryMPIT.class.getName());
 
     private static final String qType = "LIRQ";
-//    private final static String host = "vs569";
+//    private final static String host = "vs569";   // int C
 //    private final static String broker = "QM_MBROKER4_T4";
+//    private final static String host = "vs529";   // int D
+//    private final static String broker = "QM_MBROKER4_T5";
     public static final String host = "vs11205";    //"mbrk4-inta.testhpcsa.imb.ru";
     private final static String broker = "QM_MBROKER4";
     private final static String channel= "SYSTEM.DEF.SVRCONN";
     private final static String acliquIn = "UCBRU.ADP.BARSGL.ACLIQU.REQUEST";
     private final static String acliquOut = "UCBRU.ADP.BARSGL.ACLIQU.RESPONSE";
-    private static final String login = "srvwbl4mqtest";
-    private static final String passw = "UsATi8hU";
     private static final boolean writeOut = true;
     private static final Charset charset = StandardCharsets.UTF_8;
 
@@ -96,23 +91,23 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         deletePropertyTimeout();
         deletePropertyExecutor();
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         clearQueue(properties, acliquIn, 1000);
         clearQueue(properties, acliquOut, 1000);
 
         startConnection(properties);
         sendToQueue(getResourceText("/AccountQueryProcessorTest.xml"), properties, null, null, acliquIn);
 
-        Thread.sleep(1000L);
+        Thread.sleep(4000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
                         .withName("AccountQueryTaskMT_A")
-                        .withProps(getJobProperty(properties))    //(qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut))
+                        .withProps(getJobProperty(properties))
                         .build();
         jobService.executeJob(job);
 
-        Thread.sleep(4000L);
+        Thread.sleep(6000L);
 
         QueueInputMessage answer = receiveFromQueue(acliquOut, charset);
         Assert.assertFalse("Нет ответного сообщения", StringUtils.isEmpty(answer.getTextMessage()));
@@ -134,7 +129,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         printCommunicatorName();
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         clearQueue(properties, acliquIn, 1000);
         clearQueue(properties, acliquOut, 1000);
 
@@ -147,18 +142,18 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 //        setPropertyTimeout("MINUTES", 1);
         setPropertyExecutor(AsyncProcessor.ExecutorType.EE);
 
-        Thread.sleep(1000L);
+        Thread.sleep(5000L);
         SingleActionJob job =
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
                         .withName("AccountQueryTaskMT_A")
-                        .withProps(getJobProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut))
+                        .withProps(getJobProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut))
                         .build();
         jobService.executeJob(job);
 
-        Thread.sleep(5000L);
+        Thread.sleep(10000L);
         long n = clearQueue(properties, acliquOut, cntmax);
-//        Assert.assertTrue("Нет сообщений в выходной очереди", n > 0);
+        Assert.assertTrue("Нет сообщений в выходной очереди", n > 0);
 //        Assert.assertTrue("Все сообщения обработаны", n < cnt);
 
         AuditRecord record = getAuditError(idAudit, SysError);
@@ -178,7 +173,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         printCommunicatorName();
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         clearQueue(properties, acliquIn, 1000);
         clearQueue(properties, acliquOut, 1000);
 
@@ -196,7 +191,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
                 SingleActionJobBuilder.create()
                         .withClass(AccountQueryTaskMT.class)
                         .withName("AccountQueryTaskMT_A")
-                        .withProps(getJobProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut))
+                        .withProps(getJobProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut))
                         .build();
         jobService.executeJob(job);
 
@@ -224,7 +219,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         shutdownJob(ACLIRQ_TASK);
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         clearQueue(properties, acliquIn, cntmax);
         clearQueue(properties, acliquOut, cntmax);
 
@@ -239,8 +234,8 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         setPropertyExecutor(AsyncProcessor.ExecutorType.SE);
         setPropertyTimeout("MINUTES", 10);
-        runAclirqJob(getJobProperty(qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
-        Thread.sleep(60 * 3000L);
+        runAclirqJob(getJobProperty(qType, acliquIn, acliquOut, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut));
+        Thread.sleep(60 * 5000L);
         shutdownJob(ACLIRQ_TASK);
 
         long n = clearQueue(properties, acliquOut, cntmax);
@@ -256,20 +251,20 @@ public class AccountQueryMPIT extends AbstractQueueIT {
      */
     @Test
     @Ignore
-    public void testSend5000() throws Exception {
+    public void testSend() throws Exception {
 
         int cnt = 5000;
-        int cntmax = cnt * 2;
+        int cntmax = Math.max(cnt * 2, 5000);
 
         printCommunicatorName();
 
         shutdownJob(ACLIRQ_TASK);
 
         MQQueueConnectionFactory cf = MqUtil.getConnectionFactory(host, broker, channel);
-        MqUtil.clearQueue(cf, acliquIn, login, passw, cntmax);
-        MqUtil.clearQueue(cf, acliquOut, login, passw, cntmax);
+        MqUtil.clearQueue(cf, acliquIn, mqTestLogin, mqTestPassw, cntmax);
+        MqUtil.clearQueue(cf, acliquOut, mqTestLogin, mqTestPassw, cntmax);
 
-        MqUtil.sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, login, passw, cnt);
+        MqUtil.sendToQueue(cf, acliquIn, new File(this.getClass().getResource("/AccountQueryProcessorTest_1.xml").getFile()), acliquOut, mqTestLogin, mqTestPassw, cnt);
     }
 
     /**
@@ -287,7 +282,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
 
         shutdownJob(ACLIRQ_TASK);
 
-        QueueProperties properties = getQueueProperties(qType, host, broker, login, passw);
+        QueueProperties properties = getQueueProperties(qType, host, broker, mqTestLogin, mqTestPassw);
         clearQueue(properties, acliquIn, cntmax);
         clearQueue(properties, acliquOut, cntmax);
 
@@ -299,7 +294,7 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         long idJ = getJournalMaxId();
 
         setPropertyTimeout("MINUTES", 10);
-        runAclirqJob(getJobProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, login, passw, "30", writeOut));
+        runAclirqJob(getJobProperty (qType, acliquIn, acliquOut, host, "1414", broker, channel, mqTestLogin, mqTestPassw, "30", writeOut));
 
         long cntrec = 0;
         while(cntrec < cnt) {
@@ -414,7 +409,12 @@ public class AccountQueryMPIT extends AbstractQueueIT {
         SequenceGenerator seq = entityClass.getDeclaredAnnotation(SequenceGenerator.class);
         if(null == seq)
             seq = entityClass.getAnnotation(SequenceGenerator.class);
+        Assert.assertNotNull("Не определено sequenceName для класса " + entityClass.getSimpleName(), seq);
         String seqName = seq.sequenceName();
+        restartSequence(entityClass, seqName);
+    }
+
+    protected static void restartSequence(Class<? extends BaseEntity<Long>> entityClass, String seqName) throws SQLException {
         Long idSeq = baseEntityRepository.nextId(seqName);
         Long idTable = (Long) baseEntityRepository.selectFirst(entityClass, "select max(t.id) from " + entityClass.getName() + " t");
         if (idSeq < idTable) {

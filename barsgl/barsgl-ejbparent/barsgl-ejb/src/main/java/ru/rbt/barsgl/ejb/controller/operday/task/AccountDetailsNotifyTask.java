@@ -49,43 +49,10 @@ public class AccountDetailsNotifyTask implements ParamsAwareRunnable {
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         try {
-            if (checkRun(operdayController.getOperday(), properties)) {
-                queueController.process(properties);
-            }
+            queueController.process(properties);
         } catch (Exception e) {
             log.error("AccountDetailsNotify #run ", e);
             auditController.error(AccountDetailsNotify, "Ошибка при выполнении задачи AccountDetailsNotifyTask", null, e);
-        }
-    }
-
-    private java.util.Date getExecuteDate(Operday operday, Properties properties) throws ParseException {
-        String propday = Optional.ofNullable(properties.getProperty(UU_DATE_KEY)).orElse("");
-        java.util.Date execday;
-        if (isEmpty(propday)) {
-            execday = operday.getCurrentDate();
-        } else {
-            execday = DateUtils.parseDate(propday, "dd.MM.yyyy", "yyyy-MM-dd");
-        }
-//        auditController.info(AccountDetailsNotify, "operday: " + operday);
-        return execday;
-    }
-
-    public boolean checkRun(Operday operday, Properties properties) throws Exception {
-        if (Boolean.parseBoolean(Optional.ofNullable(properties.getProperty(UU_CHECK_RUN)).orElse("true"))) {
-            java.util.Date executeDate = getExecuteDate(operday, properties);
-            DataRecord rec = operdayRepository.selectFirst(
-                    "select count (1) from GL_ETLDWHS where PARDESC = ? and OPERDAY = ?"
-                    , SCHEDULED_TASK_NAME, executeDate);
-            boolean already = 0 < rec.getInteger(0);
-            if (already) {
-                auditController.warning(AccountDetailsNotify, "Ошибка при открытии счетов из SRVACC", null
-                        , format("Открытие счетов из SRVACC невозможна: уже запущена или выполнена в текущем ОД (%s) <%s>"
-                                , dateUtils.onlyDateString(executeDate), true));
-                return false;
-            }
-            return true;
-        } else {
-            return true;
         }
     }
 

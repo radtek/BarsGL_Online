@@ -38,6 +38,79 @@ public class QueueProperties implements Serializable{
     public String writeSleepThreadTime;
     public String remoteQueueOut;
 
+    private QueueProperties() {
+    }
+
+    public QueueProperties(Properties properties) throws Exception {
+        try {
+            this.mqHost = ifEmpty(properties.getProperty("mq.host", noParam).trim(), noParam);
+            this.mqPort = Integer.parseInt(properties.getProperty("mq.port","1414").trim());
+            this.mqQueueManager = ifEmpty(properties.getProperty("mq.queueManager", "QM_MBROKER").trim(), noParam);
+            this.mqChannel = ifEmpty(properties.getProperty("mq.channel", noParam).trim(), noParam);;
+            this.mqBatchSize = Integer.parseInt(properties.getProperty("mq.batchSize","50").trim());
+            this.mqTopics = ifEmpty(properties.getProperty("mq.topics", noParam).trim(), noParam);;
+            this.unspents = properties.getProperty("unspents", "hide").trim();
+            this.writeOut = properties.getProperty("writeOut", "false").trim();
+            this.remoteQueueOut = properties.getProperty("remoteQueueOut", "false").trim();
+            this.writeSleepThreadTime = properties.getProperty("writeSleepThreadTime", "false").trim();
+            this.mqUser = ifEmpty(properties.getProperty("mq.user", noParam).trim(), noParam);;
+            this.mqPassword = ifEmpty(properties.getProperty("mq.password", noParam).trim(), noParam);
+            if ((this.toString()).contains(noParam)) {
+                logError();
+            }
+        } catch (NumberFormatException ex) {
+            logError();
+        }
+    }
+
+    public QueueProperties(String mqHost, int mqPort, String mqQueueManager, String mqChannel, int mqBatchSize, String mqTopics,
+                           String mqUser, String mqPassword, String unspents, String writeOut, String writeSleepThreadTime, String remoteQueueOut) {
+        this.mqHost = mqHost;
+        this.mqPort = mqPort;
+        this.mqQueueManager = mqQueueManager;
+        this.mqChannel = mqChannel;
+        this.mqBatchSize = mqBatchSize;
+        this.mqTopics = mqTopics;
+        this.mqUser = mqUser;
+        this.mqPassword = mqPassword;
+        this.unspents = unspents;
+        this.writeOut = writeOut;
+        this.writeSleepThreadTime = writeSleepThreadTime;
+        this.remoteQueueOut = remoteQueueOut;
+    }
+
+    public QueueProperties(String mqHost, int mqPort, String mqQueueManager, String mqChannel, int mqBatchSize, String mqTopics,
+                           String mqUser, String mqPassword, String unspents, boolean writeOut, boolean writeSleepThreadTime, boolean remoteQueueOut) {
+        this(mqHost, mqPort, mqQueueManager, mqChannel, mqBatchSize, mqTopics,
+                mqUser, mqPassword, unspents, Boolean.toString(writeOut), Boolean.toString(writeSleepThreadTime), Boolean.toString(remoteQueueOut));
+    }
+
+    @Override
+    protected QueueProperties clone() {
+        return new QueueProperties(mqHost, mqPort, mqQueueManager, mqChannel, mqBatchSize, mqTopics,
+                mqUser, mqPassword, unspents, writeOut, writeSleepThreadTime, remoteQueueOut);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof QueueProperties))
+            return false;
+        QueueProperties prop = (QueueProperties)obj;
+        return
+                this.mqHost.equals(prop.mqHost) &&
+                this.mqPort == prop.mqPort &&
+                this.mqQueueManager.equals(prop.mqQueueManager) &&
+                this.mqChannel.equals(prop.mqChannel) &&
+                this.mqBatchSize == mqBatchSize &&
+                this.mqTopics.equals(prop.mqTopics) &&
+                this.mqUser.equals(prop.mqUser) &&
+                this.mqPassword.equals(prop.mqPassword) &&
+                this.unspents.equals(prop.unspents) &&
+                this.writeOut.equals(prop.writeOut) &&
+                this.writeSleepThreadTime.equals(prop.writeSleepThreadTime) &&
+                this.remoteQueueOut.equals(prop.remoteQueueOut);
+    }
+
     @Override
     public String toString() {
 /*
@@ -66,49 +139,7 @@ public class QueueProperties implements Serializable{
                 + "writeOut=" + writeOut +"\n"
                 + "writeSleepThreadTime=" + writeSleepThreadTime + "\n"
                 + "remoteQueueOut=" + remoteQueueOut +"\n"
-
                 ;
-    }
-
-    private QueueProperties() {
-    }
-
-    public QueueProperties(Properties properties) throws Exception {
-        try {
-            this.mqHost = ifEmpty(properties.getProperty("mq.host", noParam).trim(), noParam);
-            this.mqPort = Integer.parseInt(properties.getProperty("mq.port","1414").trim());
-            this.mqQueueManager = ifEmpty(properties.getProperty("mq.queueManager", "QM_MBROKER").trim(), noParam);
-            this.mqChannel = ifEmpty(properties.getProperty("mq.channel", noParam).trim(), noParam);;
-            this.mqBatchSize = Integer.parseInt(properties.getProperty("mq.batchSize","50").trim());
-            this.mqTopics = ifEmpty(properties.getProperty("mq.topics", noParam).trim(), noParam);;
-            this.unspents = properties.getProperty("unspents", "hide").trim();
-            this.writeOut = properties.getProperty("writeOut", "false").trim();
-            this.remoteQueueOut = properties.getProperty("remoteQueueOut", "false").trim();
-            this.writeSleepThreadTime = properties.getProperty("writeSleepThreadTime", "false").trim();
-            this.mqUser = ifEmpty(properties.getProperty("mq.user", noParam).trim(), noParam);;
-            this.mqPassword = ifEmpty(properties.getProperty("mq.password", noParam).trim(), noParam);
-            if ((this.toString()).contains(noParam)) {
-                logError();
-            }
-        } catch (NumberFormatException ex) {
-            logError();
-        }
-    }
-
-    public QueueProperties(String mqHost, int mqPort, String mqQueueManager, String mqChannel, int mqBatchSize, String mqTopics,
-                           String mqUser, String mqPassword, String unspents, boolean writeOut, boolean writeSleepThreadTime, boolean remoteQueueOut) {
-        this.mqHost = mqHost;
-        this.mqPort = mqPort;
-        this.mqQueueManager = mqQueueManager;
-        this.mqChannel = mqChannel;
-        this.mqBatchSize = mqBatchSize;
-        this.mqTopics = mqTopics;
-        this.mqUser = mqUser;
-        this.mqPassword = mqPassword;
-        this.unspents = unspents;
-        this.writeOut = Boolean.toString(writeOut);
-        this.writeSleepThreadTime = Boolean.toString(writeSleepThreadTime);
-        this.remoteQueueOut = Boolean.toString(remoteQueueOut);
     }
 
     private void logError() {
