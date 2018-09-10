@@ -307,7 +307,7 @@ public class ReprocessErrorIT extends AbstractTimerJobIT {
         return (EtlPosting) baseEntityRepository.save(pst);
     }
 
-    public EtlPosting newPosting(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccyDt, BankCurrency ccyCt, BigDecimal sumDt, BigDecimal sumCt ) throws SQLException {
+    public static EtlPosting newPosting(EtlPackage pkg, String src, String acDt, String acCt, BankCurrency ccyDt, BankCurrency ccyCt, BigDecimal sumDt, BigDecimal sumCt ) throws SQLException {
         Operday od = getOperday();
         long stamp = System.currentTimeMillis();
 

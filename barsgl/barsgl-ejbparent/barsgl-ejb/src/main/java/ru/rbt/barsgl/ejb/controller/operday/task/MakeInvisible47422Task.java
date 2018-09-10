@@ -5,10 +5,15 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
+import ru.rbt.barsgl.ejb.entity.gl.Memorder;
+import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.Reg47422JournalRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.Assert;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -28,6 +33,7 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.G
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.C;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.D;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.N;
+import static ru.rbt.barsgl.ejb.entity.gl.Memorder.DocType.BANK_ORDER;
 import static ru.rbt.barsgl.ejb.props.PropertyName.REG47422_DEPTH;
 import static ru.rbt.ejbcore.validation.ErrorCode.REG47422_ERROR;
 
@@ -63,6 +69,9 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
 
     @EJB
     private ClosedPeriodCashedRepository closedPeriodRepository;
+
+    @EJB
+    private MemorderController memorderController;
 
     @Inject
     private BankCalendarDayRepository calendarDayRepository;
@@ -239,6 +248,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                     updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
                     if (phSide != pcidSide) {
                         // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
+                        reviseDocType(params);
                     }
                     return null;
                 });
@@ -293,8 +303,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
 */
 
         if (stickSide != N) {
-            // параметры веера
-//            DataRecord recs = journalRepository.selectFirst("select PMT_REF from PST where id = " + idList[stickSide.ordinal()]);
+            // связка веера
             reg.parRf = pmtList[stickSide.ordinal()];
         }
         return reg;
@@ -323,14 +332,31 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
             return;
         // только для веера
         String gloPar = gloList[stickSide.ordinal()];
+        if (StringUtils.isEmpty(gloPar)) {
+            auditController.error(MakeInvisible47422, "Ошибка при исключении проводок по техническим счетам 47422", "PST", params.pcidNew,
+                    String.format("Не найдена родительская операция при склейке проводок в веер PCID = '%s'", params.pcidNew));
+            return;
+        }
         // GL_POSTING: POST_TYPE = '5' (для ручки)
         journalRepository.executeNativeUpdate("update GL_POSTING set POST_TYPE = '5' where GLO_REF = " + gloPar);
         // GL_OPER: FAN = 'Y', PAR_RF = PMT_REF, PAR_GLO = GLOID
         //          FP_SIDE = 'D'/'C' – сторона, обратная ручке (для всех операций)
-        journalRepository.executeNativeUpdate("update GL_OPER set FAN = 'Y', PAR_RF = ?, PAR_GLO = " + gloPar + ", FP_SIDE = ? where GLOID in (" + gloAll + ")",
-                params.parRf, PstSide.values()[stickSide.ordinal()^1].name());
+        journalRepository.executeNativeUpdate("update GL_OPER set FAN = 'Y', PAR_GLO = " + gloPar + ", FP_SIDE = ? where GLOID in (" + gloAll + ")",    // PAR_RF = ?,
+                PstSide.values()[stickSide.ordinal()^1].name());                                                                                        // params.parRf,
         //          FB_SIDE = 'С'/'D' - сторона ручки (только для ручки)
         journalRepository.executeNativeUpdate("update GL_OPER set FB_SIDE = ? where GLOID = " + gloPar, stickSide.name());
+    }
+
+    private void reviseDocType(Reg47422params params) throws SQLException {
+        Memorder memorder = journalRepository.selectFirst(Memorder.class, "from Memorder m where m.id = ?", params.pcidNew);
+        if (memorder.getDocType() == BANK_ORDER)
+            return;
+        List<Pd> pdDebit = journalRepository.select(Pd.class, "from Pd p where p.id in (" + params.idVisible + ") and p.amount < 0");
+        List<Pd> pdCredit = journalRepository.select(Pd.class, "from Pd p where p.id in (" + params.idVisible + ") and p.amount > 0");
+        Memorder.DocType docType = memorderController.getDocType(false, pdDebit, pdCredit, memorder.getPostDate());
+        if (docType == BANK_ORDER) {
+            journalRepository.executeUpdate("update Memorder m set m.docType = ?1 where m.id = ?2", BANK_ORDER, params.pcidNew);
+        }
     }
 
     private class Reg47422params {
