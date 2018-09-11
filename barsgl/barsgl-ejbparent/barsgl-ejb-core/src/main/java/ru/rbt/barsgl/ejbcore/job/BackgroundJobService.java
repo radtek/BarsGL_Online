@@ -34,6 +34,7 @@ public interface BackgroundJobService {
      */
     void executeJob(TimerJob timerJob, Properties properties) throws Exception;
     void executeJob(String jobName, Properties properties) throws Exception;
+    void executeJob(Class<? extends ParamsAwareRunnable> clazz, String jobName, Properties properties) throws Exception;
 
     void executeJob(String jobName) throws Exception;
 

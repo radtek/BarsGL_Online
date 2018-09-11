@@ -47,9 +47,7 @@ public final class JobWrapper implements Serializable {
         if (inProgress.compareAndSet(false, true)) {
             try {
                 execCount++;
-                ParamsAwareRunnable runnable = findBackgroundService().findParamsAwareRunnableJob(job.getWorker().getClass());
-//                job.getWorker().run(job.getName(), job.getProperties());
-                runnable.run(job.getName(), job.getProperties());
+                findBackgroundService().executeJob(job.getWorker().getClass(), job.getName(), job.getProperties());
             } finally {
                 inProgress.set(false);
             }
