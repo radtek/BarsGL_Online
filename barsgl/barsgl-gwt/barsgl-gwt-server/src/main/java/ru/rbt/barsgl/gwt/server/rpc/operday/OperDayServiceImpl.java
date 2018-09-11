@@ -1,38 +1,42 @@
 package ru.rbt.barsgl.gwt.server.rpc.operday;
 
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.COB_OK_Controller;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.PdModeController;
-import ru.rbt.barsgl.ejb.controller.operday.task.*;
+import ru.rbt.barsgl.ejb.controller.operday.task.CloseLwdBalanceCutTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
+import ru.rbt.barsgl.ejb.controller.operday.task.OpenOperdayTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
 import ru.rbt.barsgl.ejb.integr.dict.LwdBalanceCutController;
-import ru.rbt.barsgl.shared.enums.BalanceMode;
-import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
-import ru.rbt.tasks.ejb.job.BackgroundJobsController;
-import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
-import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
-import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
-import ru.rbt.shared.ExceptionUtils;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.cob.CobWrapper;
+import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.barsgl.shared.jobs.TimerJobHistoryWrapper;
 import ru.rbt.barsgl.shared.operday.COB_OKWrapper;
+import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl;
+import ru.rbt.shared.ExceptionUtils;
+import ru.rbt.tasks.ejb.job.BackgroundJobsController;
+import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
 
 import javax.persistence.PersistenceException;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Operday;
 import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_FAKE_NAME;
 import static ru.rbt.barsgl.ejb.controller.cob.CobStatService.COB_TASK_NAME;
-import ru.rbt.security.gwt.server.rpc.operday.info.OperDayInfoServiceImpl;
 
 /**
  * Created by akichigi on 23.03.15.
@@ -233,6 +237,7 @@ public class OperDayServiceImpl extends OperDayInfoServiceImpl implements OperDa
                 TimerJobHistoryWrapper history = localInvoker.invoke(BackgroundJobsController.class, "createTimerJobHistory", COB_TASK_NAME);
                 properties.setProperty(AbstractJobHistoryAwareTask.JobHistoryContext.HISTORY_ID.name(), history.getIdHistory().toString());
                 localInvoker.invoke(BackgroundJobsController.class, "executeJobAsync", COB_TASK_NAME, properties, COB_DELAY_SEC * 1000);
+                localInvoker.invoke(AuditController.class, "info", Operday, "Запуск задачи закрытия операционного дня");
                 return new RpcRes_Base<>(history, false, "Задача СОВ запустится через " + COB_DELAY_SEC + " сек");
             }
         } catch (Exception e) {
