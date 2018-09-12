@@ -13,8 +13,8 @@ import java.util.Date;
 @SequenceGenerator(name = "Register47422IdSeq", sequenceName = "GL_REG47422_SEQ", allocationSize = 1)
 public class Reg47422Journal extends BaseEntity<Long> {
 
-    enum Reg47422State {LOAD, CHANGE, PROC_GL, PROC_ACC, ERRSRC, ERRPROC, WT47416};
-    enum Reg47422Valid {Y, N, U}
+    public enum Reg47422State {LOAD, CHANGE, PROC_GL, PROC_ACC, ERRSRC, ERRPROC, WT47416};
+    public enum Reg47422Valid {Y, N, U}
 
     @Id
     @Column(name = "ID")
@@ -26,6 +26,9 @@ public class Reg47422Journal extends BaseEntity<Long> {
 
     @Column(name = "PCID")
     private Long pcId;
+
+    @Column(name = "PCID_NEW")
+    private Long pcIdNew;
 
     @Column(name = "INVISIBLE")
     private String invisible;
@@ -275,5 +278,21 @@ public class Reg47422Journal extends BaseEntity<Long> {
 
     public void setLoadDate(Date loadDate) {
         this.loadDate = loadDate;
+    }
+
+    public Long getPcIdNew() {
+        return pcIdNew;
+    }
+
+    public void setPcIdNew(Long pcIdNew) {
+        this.pcIdNew = pcIdNew;
+    }
+
+    public String getPaymentRef() {
+        return paymentRef;
+    }
+
+    public void setPaymentRef(String paymentRef) {
+        this.paymentRef = paymentRef;
     }
 }

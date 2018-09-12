@@ -5,7 +5,6 @@ import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
-import ru.rbt.barsgl.ejb.entity.gl.AbstractPd;
 import ru.rbt.barsgl.ejb.entity.gl.Memorder;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
@@ -192,12 +191,13 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 "        sum(case when amnt>0 then amnt else 0 end) sum_cr,\n" +
                 "        sum(case when amnt<0 then 1 else 0 end) cnt_dr,\n" +
                 "        sum(case when amnt>0 then 1 else 0 end) cnt_cr,\n" +
+                "        listagg (id,',') within group (order by pd_id) id_reg,\n" +
                 "        listagg (case when amnt<0 then pbr else null end,',') within group (order by pd_id) pbr_dr,\n" +
                 "        listagg (case when amnt>0 then pbr else null end,',') within group (order by pd_id) pbr_cr,\n" +
                 "        listagg (case when amnt<0 then pcid else null end,',') within group (order by pd_id) pcid_dr,\n" +
                 "        listagg (case when amnt>0 then pcid else null end,',') within group (order by pd_id) pcid_cr,\n" +
-                "        listagg (case when amnt<0 then pd_id else null end,',') within group (order by pd_id) id_dr,\n" +
-                "        listagg (case when amnt>0 then pd_id else null end,',') within group (order by pd_id) id_cr,\n" +
+                "        listagg (case when amnt<0 then pd_id else null end,',') within group (order by pd_id) pdid_dr,\n" +
+                "        listagg (case when amnt>0 then pd_id else null end,',') within group (order by pd_id) pdid_cr,\n" +
                 "        listagg (case when amnt<0 then pmt_ref else null end,',') within group (order by pmt_ref) pmt_dr,\n" +
                 "        listagg (case when amnt>0 then pmt_ref else null end,',') within group (order by pmt_ref) pmt_cr,\n" +
                 "        listagg (case when amnt<0 then glo_ref else null end,',') within group (order by glo_ref) glo_dr,\n" +
@@ -239,7 +239,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 PstSide pcidSide = stickSide != N ? stickSide : phSide;
                 Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
                         new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
-                        new String[]{glued.getString("id_dr"), glued.getString("id_cr")},
+                        new String[]{glued.getString("pdid_dr"), glued.getString("pdid_cr")},
                         new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
                         new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
                         );
@@ -250,6 +250,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                         // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
                         reviseDocType(params);
                     }
+                    journalRepository.updateProcGLPst(glued.getString("id_reg"), params.pcidNew);
                     return null;
                 });
             }
