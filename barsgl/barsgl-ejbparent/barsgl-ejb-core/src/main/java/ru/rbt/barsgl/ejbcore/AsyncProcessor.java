@@ -201,7 +201,7 @@ public class AsyncProcessor {
                         corePoolSize, maximumPoolSize,
                         0L,// A time value of zero will cause excess threads to terminate immediately after executing tasks(see doc) OFFER_DEFAULT_TIMEOUT_MS,
                         MILLISECONDS,
-                        new ArrayBlockingQueue<>(queueSize)
+                        new LinkedBlockingDeque<>(queueSize)
                         )
                 ;
         return threadPoolExecutor;

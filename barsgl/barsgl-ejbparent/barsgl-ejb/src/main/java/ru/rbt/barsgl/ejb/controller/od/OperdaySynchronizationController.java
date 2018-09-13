@@ -33,14 +33,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
-import ru.rbt.barsgl.shared.enums.BalanceMode.*;
-import static ru.rbt.barsgl.ejb.repository.props.ConfigProperty.SyncIcrementMaxGLPdCount;
+import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.barsgl.shared.enums.BalanceMode.*;
 
 /**
@@ -341,27 +341,47 @@ public class OperdaySynchronizationController {
                     , pdRepository.executeNativeUpdate("update gl_baltur set moved = 'Y' where dat < ?", operday)));
             // сбрасываем сначала обороты
             int[] count = {0};
+            final Long[] maxPstId = {getMaxPdId(1L)};
+            Long currentGLPdSeq = glPdRepository.getNextId();
             return pdRepository.executeTransactionally(connection -> {
-               auditController.info(BufferModeSyncBackvalue, format("Начало синхронизации п/проводок backvalue од '%s'"
-                       , dateUtils.onlyDateString(operday)));
-               count[0] = 0;
-               try (PreparedStatement stGLPd = connection.prepareStatement(
-                       "select id from gl_pd p, gl_baltur b where p.bsaacid = b.bsaacid " +
-                       "   and p.pod = b.dat and b.moved = 'Y' and pod < ? and pd_id is null")) {
-                   stGLPd.setDate(1, new java.sql.Date(operday.getTime()));
-                   Long currentPdSeq = Long.max(pdRepository.getNextId(), getMaxPdId(1L));
-                   Long currentGLPdSeq = glPdRepository.getNextId();
-                   try (ResultSet rs = stGLPd.executeQuery()){
-                       while (rs.next()) {
-                           syncOneGLPd(rs.getLong(1), currentPdSeq, currentGLPdSeq);
-                           count[0]++;
-                           if (count[0]%10 == 0) {
-                               log.info(format("Синхронизировано проводок backvalue %s", count[0]));
-                           }
-                       }
-                   }
-               }
-               return count[0];
+                auditController.info(BufferModeSyncBackvalue, format("Начало синхронизации п/проводок backvalue од '%s'"
+                        , dateUtils.onlyDateString(operday)));
+                count[0] = 0;
+                int maxConcurrency = propertiesRepository
+                        .getNumber(PD_CONCURENCY.getName()).intValue();
+                ExecutorService executorService = asyncProcessor.getBlockingQueueThreadPoolExecutor(1, maxConcurrency, countPd.getInteger(0));
+                try (PreparedStatement stGLPd = connection.prepareStatement(
+                        "select id from gl_pd p, gl_baltur b where p.bsaacid = b.bsaacid " +
+                                "   and p.pod = b.dat and b.moved = 'Y' and pod < ? and pd_id is null")) {
+                    stGLPd.setDate(1, new java.sql.Date(operday.getTime()));
+                    Long currentPdSeq = Long.max(pdRepository.getNextId(), maxPstId[0]++);
+                    try (ResultSet rs = stGLPd.executeQuery()) {
+                        while (rs.next()) {
+                            long id = rs.getLong(1);
+                            executorService.submit(() -> {
+                                try {
+                                    pdRepository.executeInNewTransaction(persistence -> {
+                                        syncOneGLPd(id, currentPdSeq, currentGLPdSeq);
+                                        return null;
+                                    });
+                                } catch (Throwable e) {
+                                    auditController.error(BufferModeSyncBackvalue, String.format("Ошибка при синхронизации строки GL_PD.ID='%s'", id), null, e);
+                                }
+                            });
+                            count[0]++;
+                            if (count[0] % 10 == 0) {
+                                log.info(format("Отправлено на синхронизацию проводок backvalue %s", count[0]));
+                            }
+                        }
+                    }
+                    executorService.shutdown();
+                    executorService.awaitTermination(1, TimeUnit.HOURS);
+                    long notProcessedCount = pdRepository.selectFirst(
+                            "select count(1) cnt from gl_pd p, gl_baltur b where p.bsaacid = b.bsaacid " +
+                            "   and p.pod = b.dat and b.moved = 'Y' and pod < ? and pd_id is null", operday).getLong(0);
+                    Assert.isTrue(0 == notProcessedCount, () -> new DefaultApplicationException(String.format("Остались необработанные проводки после синхронизации backvalue: %s", notProcessedCount)));
+                }
+                return count[0];
             });
         } catch (Throwable e) {
             auditController.error(BufferModeSyncBackvalue, format("Ошибка синхронизации backvalue в ОД '%s'", dateUtils.onlyDateString(operday)), null, e);
