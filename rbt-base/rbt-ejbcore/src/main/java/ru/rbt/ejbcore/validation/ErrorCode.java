@@ -56,7 +56,8 @@ public enum ErrorCode {
     , ANY_CURRNCY_IS_RUR(46,"Одна из валют должна быть RUR")
     , ACCOUNT_TH_IS_CLOSED(47, "Счет %s закрыт: '%s' (дата закрытия: '%s')")
     , ACCOUNT_BALANCE_ERROR(48,"Ошибка при проверке балланса...\n  %s")
- 
+    , TOO_MANY_ACCOUNTS_CHANGE_DTO(49, "Найдено более одного счета '%s' при обновлении даты открытия на '%s'")
+
     /**
      * Ошибки при создании проводки (runtime)
      */

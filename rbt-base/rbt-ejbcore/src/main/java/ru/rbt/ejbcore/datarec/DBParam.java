@@ -2,6 +2,7 @@ package ru.rbt.ejbcore.datarec;
 
 import java.io.Serializable;
 import java.sql.Types;
+import java.util.Date;
 
 public class DBParam implements Serializable {
 
@@ -51,6 +52,10 @@ public class DBParam implements Serializable {
         this(type.getParamType(), direction, value);
     }
 
+    public DBParam(DbParamType type, DBParamDirectionType direction) {
+        this(type.getParamType(), direction);
+    }
+
     public int getParamType() {
         return paramType;
     }
@@ -69,6 +74,14 @@ public class DBParam implements Serializable {
 
     public Object getValue() {
         return value;
+    }
+
+    public Date getDate() {
+        return (Date) value;
+    }
+
+    public String getString() {
+        return (String) value;
     }
 
     public void setValue(Object value) {

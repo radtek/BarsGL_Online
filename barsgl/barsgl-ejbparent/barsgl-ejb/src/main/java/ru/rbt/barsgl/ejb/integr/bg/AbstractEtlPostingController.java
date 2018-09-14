@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejb.integr.bg;
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.cob.CobStepResult;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -18,10 +17,9 @@ import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.security.GLErrorController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.barsgl.shared.enums.CobStepStatus;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
@@ -32,7 +30,6 @@ import javax.ejb.EJB;
 import javax.ejb.EJBContext;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -44,6 +41,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.integr.ValidationAwareHandler.validationErrorsToString;
 import static ru.rbt.barsgl.shared.enums.OperState.*;
@@ -108,6 +106,9 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
 
     @EJB
     protected GlPdThRepository glPdThRepository;
+
+    @Inject
+    private DateUtils dateUtils;
 
     /**
      * Вадидирует операцию. Если только ошибка "Нет счета" = статус WTAC, иначе ERCHK
@@ -184,7 +185,15 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
      * поменять дату открытия в gl_acc, accrln, bsaacc
      */
     protected void updateOpenDate(String bsaacid, Date vdate) throws Exception{
-        glAccountRepository.updGlAccOpenDate(bsaacid, vdate);
+        // новая транзакция, чтоб в последующих поисках по диапазону дат этот счет стал виден
+        glAccountRepository.executeInNewTransaction(persistence -> {
+            Date oldDate = glAccountRepository.updGlAccOpenDate(bsaacid, vdate);
+            if (null != oldDate) {
+                auditController.warning(Account, format("Автоматически обновлена дата открытия счета '%s' '%s' на '%s'"
+                        , bsaacid, oldDate, dateUtils.onlyDateString(vdate)));
+            }
+            return null;
+        });
     }
 
     /**
