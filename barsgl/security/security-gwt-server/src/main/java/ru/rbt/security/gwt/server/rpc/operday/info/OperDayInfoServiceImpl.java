@@ -1,14 +1,17 @@
 package ru.rbt.security.gwt.server.rpc.operday.info;
 
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
+import ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.OperDayButtons;
+import ru.rbt.barsgl.shared.operday.DatesWrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by akichigi on 23.03.15.
@@ -67,6 +70,19 @@ public class OperDayInfoServiceImpl extends AbstractGwtService implements OperDa
                 wrapper.setEnabledButton(buttonStatus);
 
                 additionalAction(wrapper);
+
+                return new RpcRes_Base<>(wrapper, false, "");
+            }
+        }.process();
+    }
+
+    @Override
+    public RpcRes_Base<DatesWrapper> getRep47425Dates() throws Exception {
+        return new RpcResProcessor<DatesWrapper>() {
+            @Override
+            protected RpcRes_Base<DatesWrapper> buildResponse() throws Throwable {
+                // получаем
+                DatesWrapper wrapper = localInvoker.invoke(Rep47422Controller.class, "getDatesReport");
 
                 return new RpcRes_Base<>(wrapper, false, "");
             }

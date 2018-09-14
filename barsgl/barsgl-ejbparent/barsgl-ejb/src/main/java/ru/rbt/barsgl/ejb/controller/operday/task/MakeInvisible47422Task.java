@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -10,6 +9,8 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
 import ru.rbt.barsgl.ejb.repository.Reg47422JournalRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
+import ru.rbt.barsgl.shared.HasLabel;
+import ru.rbt.barsgl.shared.enums.Reg47422State;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.MakeInvisible47422;
+import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEF_DEPTH;
+import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEPTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Glue;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Load;
@@ -33,7 +36,9 @@ import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.P
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.D;
 import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.N;
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.DocType.BANK_ORDER;
-import static ru.rbt.barsgl.ejb.props.PropertyName.REG47422_DEPTH;
+import static ru.rbt.barsgl.shared.enums.Reg47422State.CHANGE;
+import static ru.rbt.barsgl.shared.enums.Reg47422State.LOAD;
+import static ru.rbt.barsgl.shared.enums.Reg47422State.WT47416;
 import static ru.rbt.ejbcore.validation.ErrorCode.REG47422_ERROR;
 
 /**
@@ -41,30 +46,38 @@ import static ru.rbt.ejbcore.validation.ErrorCode.REG47422_ERROR;
  */
 public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
 
-    private static final String myTaskName = CloseLwdBalanceCutTask.class.getSimpleName();
+    private final String myTaskName = this.getClass().getSimpleName();
 
     public static final String REG47422_DEPTH_KEY = "depth";
     public static final String REG47422_CRPRD_KEY = "withClosedPeriod";
     public static final String REG47422_MODE_KEY = "mode";
 
-    private final int REG47422_DEF_DEPTH = 4;
 
     enum PstSide {D, C, N};
-    enum GlueMode {
-        Standard,       // загружаем и обрабатываем, если есть изменения
-        Load,           // загружаем и обрабатываем все с заданной даты
-        Glue,
-        Full            // только загружаем
-        };
+    enum GlueMode implements HasLabel{
+        Standard("Загрузка и обработка, если есть изменения"),
+        Load("Загрузка новых / измененных"),
+        Glue("Обработка с заданной даты"),
+        Full("Загрузка и обработка (даже без изменений)")            ;
+
+        private String label;
+
+        GlueMode(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+
+    };
 
     @EJB
     private Reg47422JournalRepository journalRepository;
 
     @EJB
     private PropertiesRepository propertiesRepository;
-
-    @EJB
-    private AuditController auditController;
 
     @EJB
     private ClosedPeriodCashedRepository closedPeriodRepository;
@@ -102,6 +115,9 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         Operday operday = operdayController.getOperday();
         Date dateFrom = getDateFrom(operday.getCurrentDate(), properties);
         GlueMode mode = GlueMode.valueOf(Optional.ofNullable(properties.getProperty(REG47422_MODE_KEY)).orElse(Standard.name()));
+        auditController.info(MakeInvisible47422, String.format("Запуск задачи %s в режиме %s(%s) с даты '%s' по дату '%s'",
+                myTaskName, mode.name(), mode.getLabel(), dateUtils.onlyDateString(dateFrom),
+                dateUtils.onlyDateString(operday.getLastWorkingDay())));
         // обновить GL_REG47422
         int cntLoad = 0;
         if (mode != Glue) {
@@ -110,11 +126,12 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         if (mode == Load || (mode == Standard && cntLoad == 0))
             return true;
         // склеить проводки с одной датой: одиночные, веера
-        processEqualDate(true, dateFrom);
-        processEqualDate(false, dateFrom);
+        processEqualDates(true, dateFrom);
+        processEqualDates(false, dateFrom);
         // TODO  обработать проводки с разной датой: одиночные, веера
 
-        return false;
+        auditController.info(MakeInvisible47422, String.format("Окончание выполнения задачи %s", myTaskName));
+        return true;
     }
 
     public boolean testExec(JobHistory jobHistory, Properties properties) throws Exception {
@@ -142,7 +159,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
             }
         }
         else {
-            depth = (int)(long)propertiesRepository.getNumberDef(REG47422_DEPTH.name(), (long)REG47422_DEF_DEPTH);
+            depth = getDepthDef();
         }
         Date dateFrom = calendarDayRepository.getWorkDateBefore(curdate, depth, false);
         boolean withClosedPeriod = Boolean.valueOf(properties.getProperty(REG47422_CRPRD_KEY));
@@ -153,6 +170,11 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         return dateFrom;
     }
 
+    private int getDepthDef() {
+        int depth = (int)(long)propertiesRepository.getNumberDef(REG47422_DEPTH, (long)REG47422_DEF_DEPTH);
+        return depth > 0 ? depth : 1;
+    }
+
     /**
      * Заполняет журнал новыми и измененными данными
      * @param dateFrom
@@ -160,7 +182,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
      * @throws Exception
      */
     private int loadNewData(Date dateFrom) throws Exception {
-        int res = journalRepository.executeInNewTransaction(persistence -> {
+        int[] res = journalRepository.executeInNewTransaction(persistence -> {
             // найти проводки с отличием, проапдейтить VALID = 'U'
             int changed = journalRepository.findChangedPst();
             // вставить измененные записи (STATE = 'CHANGE') и новын записи (STATE = 'LOAD')
@@ -169,10 +191,10 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 // статус измененных = 'N'
                 Assert.isTrue(changed == journalRepository.updateChangedPstOld(), String.format("Ошибка при изменении статуса, ожидается записей: %d", changed));
             }
-            return inserted + changed;
+            return new int[] {inserted - changed, changed};
         });
-        auditController.info(MakeInvisible47422, "Вставлено новых / измененных записей в GL_REG47422: " + res);
-        return res;
+        auditController.info(MakeInvisible47422, String.format("Вставлено записей в GL_REG47422: новых %d, измененных %d", res[0], res[1]));
+        return res[0] + res[1];
     }
 
     /**
@@ -207,7 +229,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 "        " + strPod + "\n" +
                 "  from GL_REG47422 \n" +
                 "    where  valid = 'Y' \n" +
-                "        and state not like 'PROC%'\n" +
+                "        and state in (" + StringUtils.arrayToString(new Reg47422State[] {LOAD, CHANGE, WT47416}, ",", "'") + ")\n" +
                 "        and pod > ?\n" +
                 "  group by acid, ndog" + strPod + strSum + "\n" +
                 "  )\n" +
@@ -222,37 +244,21 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
      * @param dateFrom - начиная с даты
      * @return
      */
-    private int processEqualDate(boolean withSum, Date dateFrom) {
+    private int processEqualDates(boolean withSum, Date dateFrom) {
         String sql = getGroupSql(withSum, true);
         try {
             List<DataRecord> glueList = journalRepository.select(sql, dateFrom);    // наборы для склейки
             for (DataRecord glued: glueList) {
                 // сторона PH
                 PstSide phSide = getPaymentHubSide(new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")});
-                if (N == phSide) {
-                    // совпадение PBR, записать статус ERRSRC
+                if (N == phSide) {  // совпадение PBR
+                    journalRepository.executeInNewTransaction(persistence -> {
+                        journalRepository.updateState(glued.getString("id_reg"), Reg47422State.ERRSRC);
+                        return null;
+                    });
                     continue;
                 }
-                // сторона ручки веера
-                PstSide stickSide = glued.getInteger("cnt_dr") > 1 ? C : glued.getInteger("cnt_cr") > 1 ? D : N;
-                // сторона PCID
-                PstSide pcidSide = stickSide != N ? stickSide : phSide;
-                Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
-                        new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
-                        new String[]{glued.getString("pdid_dr"), glued.getString("pdid_cr")},
-                        new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
-                        new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
-                        );
-                journalRepository.executeInNewTransaction(persistence -> {
-                    gluePostings(params);
-                    updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
-                    if (phSide != pcidSide) {
-                        // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
-                        reviseDocType(params);
-                    }
-                    journalRepository.updateProcGLPst(glued.getString("id_reg"), params.pcidNew);
-                    return null;
-                });
+                processGlue(glued, phSide);
             }
             return glueList.size();
         } catch (Exception e) {
@@ -261,12 +267,56 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         }
     }
 
+    private void processGlue(DataRecord glued, PstSide phSide) throws Exception {
+        // сторона ручки веера
+        PstSide stickSide = glued.getInteger("cnt_dr") > 1 ? C : glued.getInteger("cnt_cr") > 1 ? D : N;
+        // сторона PCID
+        PstSide pcidSide = stickSide != N ? stickSide : phSide;
+        Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
+                new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
+                new String[]{glued.getString("pdid_dr"), glued.getString("pdid_cr")},
+                new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
+                new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
+        );
+        journalRepository.executeInNewTransaction(persistence -> {
+            gluePostings(params);
+            updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
+            if (phSide != pcidSide) {
+                // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
+                reviseDocType(params);
+            }
+            journalRepository.updateProcGL(glued.getString("id_reg"), params.pcidNew);
+            return null;
+        });
+    }
+
     private PstSide getPaymentHubSide(String[] pbrList) {
         int indOne = pbrList[0].length() < pbrList[1].length() ? 0 : 1; // индекс стороны, где одна проводка
         if (pbrList[indOne^1].indexOf(pbrList[indOne]) >= 0)            // PBR по дб и кр совпадают - ошибка
             return N;
         return pbrList[0].indexOf("@@GL-PH")>=0 || pbrList[0].indexOf("@@IF") >=0 ? D : C;  // сторона PH или FCC6
     }
+
+/*
+    private String getPbr(String[] pbrList, PstSide phSide, PstSide stickSide) {
+        // проверка совпадения PBR
+        boolean pbrSame;
+        if (stickSide == N) {
+            pbrSame = pbrList[0].equals(pbrList[1]);
+        } else {
+            int iStick = stickSide.ordinal();
+            List<String> pbrFeather = Arrays.asList(pbrList[iStick^1].split(","));
+            pbrSame = (pbrFeather.stream().filter(p -> p.equals(pbrList[iStick^1])).findFirst().orElse(null) == null);
+        }
+        if (pbrSame)
+            throw new ValidationError(REG47422_ERROR, String.format(""), pbrList[0], pbrList[0]);
+
+        // получить PBR со стороны Flex
+        int iFlex = phSide.ordinal()^1;
+        List<String> pbrStr = Arrays.asList(pbrList[iFlex].split(","));
+        return pbrStr.stream().filter(p -> p.equals("@@GLFCL")).findFirst().orElse(pbrStr.get(0));
+    }
+*/
 
     /**
      * заполняет параметры для склейки проводок
@@ -372,4 +422,5 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
 //        private String rnarlng;
         private String parRf;
     }
+
 }

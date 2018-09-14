@@ -126,7 +126,7 @@ public class PostingReconc47422ReportData implements IExportData {
         result.addColumn(new Column("PCID", Column.Type.LONG, "PCID", 100));
         result.addColumn(new Column("ID_REF", Column.Type.LONG, "ID регистра", 80));
         result.addColumn(new Column("STATE_ORDER", Column.Type.INTEGER, "Сортировка", 60, false, true));
-        result.addColumn(new Column("LWD", Column.Type.STRING, "Опер.рег.", 60, true, true));
+//        result.addColumn(new Column("LWD", Column.Type.STRING, "Опер.регистр", 60, true, true));
         result.addColumn(new Column("OPERDAY", Column.Type.DATE, "Дата опердня обработки", 80));
         result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 80));
 

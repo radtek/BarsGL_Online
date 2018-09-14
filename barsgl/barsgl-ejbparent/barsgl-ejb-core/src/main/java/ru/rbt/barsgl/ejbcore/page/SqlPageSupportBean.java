@@ -5,6 +5,7 @@ import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.barsgl.ejbcore.util.Sql2Xls;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
@@ -331,6 +332,30 @@ public class SqlPageSupportBean implements SqlPageSupport {
             } finally {
                 outStream.close();
             }
+
+        } catch (Exception e) {
+            throw new DefaultApplicationException((e.getMessage() != null ? e.getMessage() : "") + (resultSql != null ? (" sql: " + resultSql
+                    + " Parameters list: " + params.stream().map(p -> "param = " + p).collect(Collectors.joining(":"))) : ""), e);
+        }
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> export2ExcelExists(String nativeSql, Repository repository, Criterion<?> criterion) throws Exception {
+        String resultSql = null;
+        final ArrayList<Object> params = new ArrayList<>();
+        try {
+            SQL sql = prepareCommonSql(defineSql(nativeSql), criterion, null);
+            if (null != sql.getParams()) {
+                params.addAll(Arrays.asList(sql.getParams()));
+            }
+
+            resultSql =  "select 1 from ( " + sql.getQuery() + " ) where rownum <= 1";
+
+            List<DataRecord> dataRecords = getRows4Excel(repository, resultSql, sql.getParams());
+            if (null == dataRecords || dataRecords.size() == 0)
+                return new RpcRes_Base<>(false, true, "Нет данных для выгрузки");
+            else
+                return new RpcRes_Base<>(true, false, "");
 
         } catch (Exception e) {
             throw new DefaultApplicationException((e.getMessage() != null ? e.getMessage() : "") + (resultSql != null ? (" sql: " + resultSql

@@ -1,6 +1,7 @@
 package ru.rbt.security.gwt.client.operday;
 
 import com.google.gwt.user.client.Window;
+import ru.rbt.barsgl.shared.operday.DatesWrapper;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
 import ru.rbt.barsgl.gwt.core.dialogs.DialogManager;
@@ -40,6 +41,24 @@ public class OperDayGetter {
             }
         });
 
+    }
+
+    public static void getRep47422Dates(final IDataConsumer<DatesWrapper> consumer) {
+        CommonEntryPoint.operDayService.getRep47425Dates(new AuthCheckAsyncCallback<RpcRes_Base<DatesWrapper>>() {
+            @Override
+            public void onFailureOthers(Throwable throwable) {
+                Window.alert("Операция не удалась.\nОшибка: " + throwable.getLocalizedMessage());
+            }
+
+            @Override
+            public void onSuccess(RpcRes_Base<DatesWrapper> res) {
+                if (res.isError()){
+                    DialogManager.error("Ошибка", "Операция не удалась.\nОшибка: " + res.getMessage());
+                } else {
+                    consumer.accept(res.getResult());
+                }
+            }
+        });
     }
 
     //@@@

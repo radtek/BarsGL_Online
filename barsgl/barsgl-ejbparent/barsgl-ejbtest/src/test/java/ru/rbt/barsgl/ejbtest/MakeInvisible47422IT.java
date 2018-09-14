@@ -14,6 +14,7 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.DealSource;
+import ru.rbt.barsgl.shared.enums.Reg47422State;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 
@@ -29,10 +30,12 @@ import static com.sun.xml.internal.ws.policy.sourcemodel.wspolicy.XmlToken.Optio
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.EUR;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 //import static ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal.Reg47422State.PROC_GL;
-import static ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal.Reg47422State.PROC_GL;
 import static ru.rbt.barsgl.ejbtest.AbstractTimerJobIT.restoreOperday;
 import static ru.rbt.barsgl.ejbtest.MakeInvisible47422IT.Filial.EKB;
 import static ru.rbt.barsgl.ejbtest.MakeInvisible47422IT.Filial.MOS;
+import static ru.rbt.barsgl.shared.enums.DealSource.Flex12;
+import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
+import static ru.rbt.barsgl.shared.enums.Reg47422State.ERRSRC;
 
 /**
  * Created by er18837 on 06.09.2018.
@@ -98,11 +101,48 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
     @Test
     public void testFull30() {
         Properties props = new Properties();
-        props.setProperty("depth", "30");
-        props.setProperty("withClosedPeriod", "true");
+//        props.setProperty("depth", "30");
+//        props.setProperty("withClosedPeriod", "true");
         props.setProperty("mode", "Glue");
 //        props.setProperty("mode", "Full");
         remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+    }
+
+    @Test
+    public void testLoad() throws SQLException {
+        Properties props = new Properties();
+        props.setProperty("mode", "Load");
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        long id0 = getMaxRegId();
+
+        Long[] gloids = makeSimpleOneday(EKB, RUB, new BigDecimal("567.89"));
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        long id1 = getMaxRegId();
+        Assert.assertEquals(id0+2, id1);
+
+        baseEntityRepository.executeNativeUpdate("update GL_REG47422 set RNARLNG = RNARLNG || '_' where id = ?", id1);
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        long id2 = getMaxRegId();
+        Assert.assertEquals(id1+1, id2);
+
+        DataRecord rec = baseEntityRepository.selectFirst("select valid from GL_REG47422 where id = ?", id1);
+        Assert.assertEquals("N", rec.getString(0));
+    }
+
+    @Test
+    public void testPbr() throws SQLException {
+        Long[] glo1 = makeSimpleOneday(MOS, RUB, new BigDecimal("999"), new String[] {"30102", "47427"}, new DealSource[] {PaymentHub, PaymentHub} );
+        Long[] glo2 = makeFanOneday(MOS, EUR, new BigDecimal("444"), new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, PaymentHub});
+
+        Properties props = new Properties();
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+
+        DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", ERRSRC.name());
+        Assert.assertEquals(glo1.length, (int)rec1.getInteger(0));
+
+        DataRecord rec2 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo2, ",", "") + ") and STATE = ? and VALID = 'Y'", ERRSRC.name());
+        Assert.assertEquals(glo2.length, (int)rec2.getInteger(0));
+
     }
 
     @Test
@@ -143,8 +183,8 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
     }
 
     private void checkPostings(Long[] gloids) {
-        List<Reg47422Journal> regLoad = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.N, Reg47422Journal.Reg47422State.LOAD);
-        List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422Journal.Reg47422State.PROC_GL);
+        List<Reg47422Journal> regLoad = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.N, Reg47422State.LOAD);
+        List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422State.PROC_GL);
 
         Reg47422Journal regMain = regProc.stream().filter(r -> r.getPcIdNew().equals(r.getPcId())).findFirst().orElse(null);
         List<Pd> pdList = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId = ?1 and p.invisible = '0' and not p.stornoRef is null", regMain.getPcId());
@@ -157,33 +197,41 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
         Assert.assertEquals(gloids.length > 2 ? "5" : "1", postList.get(0).getPostType());
     }
 
-    private List<Reg47422Journal> getJournalListByGloid(Long[] gloids, Reg47422Journal.Reg47422Valid valid, Reg47422Journal.Reg47422State state) {
+    private List<Reg47422Journal> getJournalListByGloid(Long[] gloids, Reg47422Journal.Reg47422Valid valid, Reg47422State state) {
         List<Reg47422Journal> regList = baseEntityRepository.select(Reg47422Journal.class,
                 "from Reg47422Journal r where r.glOperationId in (" + StringUtils.arrayToString(gloids, ",", "") + ") and r.valid = ?1 and r.state = ?2", valid, state);
         Assert.assertEquals(gloids.length, regList.size());
         return regList;
     }
 
-    private Long[] makeSimpleOneday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
+    private Long[] makeSimpleOneday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src ) throws SQLException {
         Date pod = getOperday().getLastWorkingDay();
         String ndog = generateNdog();
 
-        long glo1 = makeOperation(pod, DealSource.PaymentHub, filial, ccy, ndog, amnt, "30102", GLOperation.OperSide.C);
-        long glo2 = makeOperation(pod, DealSource.Flex12, filial, ccy, ndog, amnt, "47427", GLOperation.OperSide.D);
+        long glo1 = makeOperation(pod, src[0], filial, ccy, ndog, amnt, acc2[0], GLOperation.OperSide.C);
+        long glo2 = makeOperation(pod, src[1], filial, ccy, ndog, amnt, acc2[1], GLOperation.OperSide.D);
 
         return new Long[]{glo1, glo2};
     }
 
-    private Long[] makeFanOneday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
+    private Long[] makeSimpleOneday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
+        return makeSimpleOneday(filial, ccy, amnt, new String[] {"30102", "47427"}, new DealSource[] {PaymentHub, Flex12} );
+    }
+
+    private Long[] makeFanOneday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src) throws SQLException {
         Date pod = getOperday().getLastWorkingDay();
         String ndog = generateNdog();
         BigDecimal amnt1 = amnt.multiply(new BigDecimal(0.75));
 
-        long glo1 = makeOperation(pod, DealSource.PaymentHub, filial, ccy, ndog, amnt, "30114", GLOperation.OperSide.C);
-        long glo2 = makeOperation(pod, DealSource.Flex12, filial, ccy, ndog, amnt1, "47427", GLOperation.OperSide.D);
-        long glo3 = makeOperation(pod, DealSource.Flex12, filial, ccy, ndog, amnt.subtract(amnt1), "45605", GLOperation.OperSide.D);
+        long glo1 = makeOperation(pod, src[0], filial, ccy, ndog, amnt, acc2[0], GLOperation.OperSide.C);
+        long glo2 = makeOperation(pod, src[1], filial, ccy, ndog, amnt1, acc2[1], GLOperation.OperSide.D);
+        long glo3 = makeOperation(pod, src[2], filial, ccy, ndog, amnt.subtract(amnt1), acc2[2], GLOperation.OperSide.D);
 
         return new Long[]{glo1, glo2, glo3};
+    }
+
+    private Long[] makeFanOneday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
+        return makeFanOneday(filial, ccy, amnt, new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, Flex12});
     }
 
     private String generateNdog() throws SQLException {
@@ -233,4 +281,8 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
         return (EtlPosting) baseEntityRepository.save(pst);
     }
 
+    private long getMaxRegId() throws SQLException {
+        DataRecord rec = baseEntityRepository.selectFirst("select max(ID) from gL_REG47422");
+        return rec.getLong(0);
+    }
 }

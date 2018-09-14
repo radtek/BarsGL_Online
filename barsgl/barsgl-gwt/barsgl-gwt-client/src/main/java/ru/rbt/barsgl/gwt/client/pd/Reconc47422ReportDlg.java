@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.pd;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Grid;
@@ -23,30 +23,28 @@ import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.TxtBox;
 import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
+import ru.rbt.barsgl.gwt.core.utils.AppPredicate;
+import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.enums.ProcessingType;
 import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
 import ru.rbt.barsgl.shared.operday.DatesWrapper;
-import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
-import ru.rbt.security.gwt.client.operday.OperDayGetter;
-
-import java.util.Date;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.*;
 import static ru.rbt.barsgl.gwt.core.comp.Components.createDateBox;
 import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
 import static ru.rbt.barsgl.gwt.core.comp.Components.createTxtBox;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
-import static ru.rbt.security.gwt.client.operday.OperDayGetter.getOperday;
+import static ru.rbt.security.gwt.client.operday.OperDayGetter.getRep47422Dates;
 
 /**
  * Created by er18837 on 03.08.2018.
  */
 public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
-    private final String parDates = "rep47425dates";
-    private final String parLists = "rep47425lists";
-    private final String WIDTH1 = "80px";
-    private final String WIDTH2 = "120px";
+    private final String parDates = "rep47422dates";
+    private final String parLists = "rep47422lists";
+    private final String FWIDTH = "120px";
+    private final RegExp regExp = RegExp.compile("\\d{3}/\\d{4}\\w/\\d{2}");
 
     private TxtBox mContract;
     private DataListBoxEx mCurrency;
@@ -82,13 +80,10 @@ public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
         if(datesWrapper != null)
             return;
         // TODO сделать метод дл получения допустимых дат
-        getOperday(new IDataConsumer<OperDayWrapper>() {
+        getRep47422Dates(new IDataConsumer<DatesWrapper>() {
             @Override
-            public void accept(OperDayWrapper wrapper) {
-                datesWrapper = new DatesWrapper();
-                Date lwd = DateTimeFormat.getFormat(OperDayGetter.dateFormat).parse(wrapper.getPreviousOD());
-                datesWrapper.setDateFrom(new Date(lwd.getTime() - (1000 * 60 * 60 * 24 * 4)));
-                datesWrapper.setDateTo(lwd);
+            public void accept(DatesWrapper wrapper) {
+                datesWrapper = wrapper;
                 LocalDataStorage.putParam(parDates, datesWrapper);
             }
         });
@@ -117,14 +112,15 @@ public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
         Grid grid = new Grid(8, 2);
 
         grid.setWidget(0, 0, createLabel("Номер договора"));
-        grid.setWidget(0, 1, mContract = createTxtBox(12, WIDTH1));
+        grid.setWidget(0, 1, mContract = createTxtBox(12, FWIDTH));
+        mContract.setTitle("000/0000L/00");
         grid.setWidget(1, 0, createLabel("Валюта"));
-        grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name(), null, WIDTH1, false, true));
+        grid.setWidget(1, 1, mCurrency = createCachedCurrencyListBox(CachedListEnum.Currency.name(), null, FWIDTH, false, true));
         grid.setWidget(2, 0, createLabel(("Филиал")));
-        grid.setWidget(2, 1, mFilial = createFilialAuthListBox(null, WIDTH1, false, true));
+        grid.setWidget(2, 1, mFilial = createFilialAuthListBox(null, FWIDTH, false, true));
         grid.setWidget(3, 0, createLabel("Статус"));
         grid.setWidget(3, 1, mStatus = new ValuesBox(getEnumLabelsOnlyList(ProcessingType.values())));
-        mStatus.setWidth(WIDTH2);
+        mStatus.setWidth(FWIDTH);
 
         grid.setWidget(5, 0, createLabel("Оперативный регистр"));
         grid.setWidget(5, 1, mRegister = new CheckBox());
@@ -133,8 +129,8 @@ public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
         grid.setWidget(6, 1, mDateFrom = createDateBox());
         grid.setWidget(7, 0, createLabel("Дата конца"));
         grid.setWidget(7, 1, mDateTo = createDateBox());
-        mDateFrom.setWidth(WIDTH2);
-        mDateTo.setWidth(WIDTH2);
+        mDateFrom.setWidth(FWIDTH);
+        mDateTo.setWidth(FWIDTH);
 
         grid.getCellFormatter().getElement(0, 0).getStyle().setWidth(150, Style.Unit.PX);
         grid.getElement().getStyle().setMarginBottom(8, Style.Unit.PX);
@@ -192,6 +188,15 @@ public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
     }
 
     private void checkUp() throws Exception {
+        if (!DialogUtils.isEmpty(mContract.getValue())) {
+            check(mContract.getValue(), "Номер договора", "формат '000/0000L/00', где 0 – цифры от 0 до 9, L – любые буквы",
+                    new AppPredicate<String>() {
+                        @Override
+                        public boolean check(String target) {
+                            return regExp.test(target);
+                        }
+                    });
+        }
         check(mDateFrom.getValue(), "Дата начала", "поле не заполнено", new CheckNotNullDate());
         check(mDateTo.getValue(), "Дата конца", "поле не заполнено", new CheckNotNullDate());
         check(mDateFrom.getValue(), "Дата начала", "дата не может быть больше даты конца", new CheckDateNotAfter(mDateTo.getValue()));

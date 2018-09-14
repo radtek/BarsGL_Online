@@ -7,6 +7,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 
 import java.io.Serializable;
 import java.util.List;
@@ -34,4 +35,5 @@ public interface AsyncGridServiceAsync {
                       List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows, AsyncCallback<String> callback);
     void export2ExcelSort(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
                       List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows, AsyncCallback<String> callback);
+    void export2ExcelExists(Repository repository, String sql, List<FilterItem> filterCriteria, AsyncCallback<RpcRes_Base<Boolean>> callback);
 }

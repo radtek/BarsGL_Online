@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejb.entity.gl;
 
+import ru.rbt.barsgl.shared.enums.Reg47422State;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 
 import javax.persistence.*;
@@ -13,7 +14,6 @@ import java.util.Date;
 @SequenceGenerator(name = "Register47422IdSeq", sequenceName = "GL_REG47422_SEQ", allocationSize = 1)
 public class Reg47422Journal extends BaseEntity<Long> {
 
-    public enum Reg47422State {LOAD, CHANGE, PROC_GL, PROC_ACC, ERRSRC, ERRPROC, WT47416};
     public enum Reg47422Valid {Y, N, U}
 
     @Id

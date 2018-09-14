@@ -20,6 +20,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
+import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -29,6 +30,7 @@ import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
+import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
 import ru.rbt.grid.gwt.client.export.Export2ExcelHead;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
@@ -559,27 +561,26 @@ public class PostingForm extends MDForm {
                 IExportData reportData = new PostingReconc47422ReportData(wrapper);
                 WaitingManager.show("Проверка наличия данных...");
 
-//                BarsGLEntryPoint.operationService.operExists(date, limit, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
-//
-//                    @Override
-//                    public void onSuccess(RpcRes_Base<Boolean> res) {
-//                        if (res.isError()) {
-//                            WaitingManager.hide();
-//                            DialogManager.message("Отчет", res.getMessage());
-//                        } else {
+                ExcelExportHead head = new Export2ExcelHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
+                        reportData.masterFilterItems()).createExportHead();
+
+                final Export2Excel e2e = new Export2Excel(reportData, head,
+                        new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
+                e2e.exportExists(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                        if (res.isError()) {
+                            WaitingManager.hide();
+                            DialogManager.message("Отчет", res.getMessage());
+                        } else {
                             dlg.hide();
                             WaitingManager.hide();
                             setEnable(false);
 
-                            ExcelExportHead head = new Export2ExcelHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
-                                    reportData.masterFilterItems()).createExportHead();
-
-                            Export2Excel e2e = new Export2Excel(reportData, head,
-                                    new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
                             e2e.exportSort(true);
-//                        }
-//                    }
-//                });
+                        }
+                    }
+                });
             }
 
         };
