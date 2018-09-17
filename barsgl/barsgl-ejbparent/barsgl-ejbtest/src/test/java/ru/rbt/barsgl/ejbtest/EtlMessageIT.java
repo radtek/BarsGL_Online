@@ -4,12 +4,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.entity.acc.AccRlnId;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -25,6 +23,7 @@ import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.math.BigDecimal;
@@ -1098,7 +1097,6 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      * обработка при выполнении задачи мониторинга сообщ АЕ
      * @throws SQLException
      */
-    @Ignore // ошибка при backvalue
     @Test public void testClientErrorsMonitor() throws Exception {
         updateOperday(ONLINE,OPEN);
 
@@ -1151,6 +1149,9 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         // меняем статус пакеиа на LOAD чтоб прошла переобработка ошибок
         baseEntityRepository.executeUpdate("update EtlPackage p set p.packageState = ?1 where p.id = ?2"
                 , LOADED, pkg.getId());
+
+        baseEntityRepository.executeNativeUpdate("update gl_prprp set string_value = '1' where id_prp = 'client.transit.reprocess'");
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
 
         jobService.executeJob(SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build());
 
