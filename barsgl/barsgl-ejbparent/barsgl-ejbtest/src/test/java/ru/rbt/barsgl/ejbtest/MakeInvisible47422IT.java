@@ -2,7 +2,9 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.poi.hssf.record.chart.DatRecord;
 import org.junit.*;
+import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
@@ -63,6 +65,18 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
     private static HashMap<Filial, HashMap<Currency, String>> accTechMap;
 
     @BeforeClass
+    public static void beforeClass() throws SQLException {
+        defineTech();
+        addBvParm();
+    }
+
+    public static void addBvParm() throws SQLException {
+        //       insert into gl_bvparm (ID_SRC, BV_SHIFT, DTB) values ('PH', 30, '2017-01-01');
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvparm where ID_SRC in (?, ?)", PaymentHub.getLabel(), Flex12.getLabel());
+        baseEntityRepository.executeNativeUpdate("insert into gl_bvparm (ID_SRC, BV_SHIFT, DTB) values (?, 30, TO_DATE('2017-01-01', 'YYYY-MM-DD'))", PaymentHub.getLabel());
+        baseEntityRepository.executeNativeUpdate("insert into gl_bvparm (ID_SRC, BV_SHIFT, DTB) values (?, 30, TO_DATE('2017-01-01', 'YYYY-MM-DD'))", Flex12.getLabel());
+    }
+
     public static void defineTech() throws SQLException {
         accTechMap = new HashMap<>();
         String sql = "select cbcc, ccy, bsaacid from gl_acc where acc2 = '47422' and acod='4496' and sq='99' "
@@ -146,7 +160,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
     }
 
     @Test
-    public void testSimpleOneday() throws SQLException {
+    public void testSimpleOneDay() throws SQLException {
         Long[] gloids = makeSimpleOneday(EKB, RUB, new BigDecimal("315.45"));
 
         Properties props = new Properties();
@@ -157,7 +171,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
     }
 
     @Test
-    public void testFanOneday() throws SQLException {
+    public void testFanOneDay() throws SQLException {
         Long[] gloids = makeFanOneday(MOS, EUR, new BigDecimal("8421"));
 
         Properties props = new Properties();
@@ -168,7 +182,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
     }
 
     @Test
-    public void testOneday() throws SQLException {
+    public void testOneDay() throws SQLException {
         Long[] glo1 = makeSimpleOneday(MOS, RUB, new BigDecimal("888.88"));
         Long[] glo2 = makeSimpleOneday(MOS, RUB, new BigDecimal("888.88"));
         Long[] glo3 = makeFanOneday(MOS, EUR, new BigDecimal("888.88"));
@@ -181,6 +195,29 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
         checkPostings(glo2);
         checkPostings(glo3);
     }
+
+    @Test
+    public void testAbsent47416() throws SQLException {
+        Long[] gloids = makeSimpleDiffday(EKB, RUB, new BigDecimal("1980"));
+
+        Properties props = new Properties();
+//        props.setProperty("mode", "Full");
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+
+        checkPostings(gloids);
+    }
+
+    @Test
+    public void testSimpleDiffDay() throws SQLException {
+        Long[] gloids = makeSimpleDiffday(MOS, RUB, new BigDecimal("2543"));
+
+        Properties props = new Properties();
+//        props.setProperty("mode", "Full");
+        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+
+        checkPostings(gloids);
+    }
+
 
     private void checkPostings(Long[] gloids) {
         List<Reg47422Journal> regLoad = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.N, Reg47422State.LOAD);
@@ -204,14 +241,31 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
         return regList;
     }
 
-    private Long[] makeSimpleOneday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src ) throws SQLException {
-        Date pod = getOperday().getLastWorkingDay();
+    private Long[] makeSimple(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src, Date[] pod  ) throws SQLException {
         String ndog = generateNdog();
 
-        long glo1 = makeOperation(pod, src[0], filial, ccy, ndog, amnt, acc2[0], GLOperation.OperSide.C);
-        long glo2 = makeOperation(pod, src[1], filial, ccy, ndog, amnt, acc2[1], GLOperation.OperSide.D);
+        long glo1 = makeOperation(pod[0], src[0], filial, ccy, ndog, amnt, acc2[0], GLOperation.OperSide.C);
+        long glo2 = makeOperation(pod[1], src[1], filial, ccy, ndog, amnt, acc2[1], GLOperation.OperSide.D);
 
         return new Long[]{glo1, glo2};
+
+    }
+
+    private Long[] makeSimpleDiffday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src ) throws SQLException {
+        Date pod = getOperday().getLastWorkingDay();
+        Date pod1 = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", pod, false);
+        return makeSimple(filial, ccy, amnt, acc2, src, new Date[] {pod, pod1}  );
+    }
+
+    private Long[] makeSimpleDiffday(Filial filial, BankCurrency ccy, BigDecimal amnt ) throws SQLException {
+        Date pod = getOperday().getLastWorkingDay();
+        Date cday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", pod, false);
+        return makeSimple(filial, ccy, amnt, new String[] {"30102", "47427"}, new DealSource[] {PaymentHub, Flex12}, new Date[] {pod, cday}  );
+    }
+
+    private Long[] makeSimpleOneday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src ) throws SQLException {
+        Date pod = getOperday().getLastWorkingDay();
+        return makeSimple(filial, ccy, amnt, acc2, src, new Date[] {pod, pod}  );
     }
 
     private Long[] makeSimpleOneday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
