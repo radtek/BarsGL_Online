@@ -122,10 +122,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
                                     , jobName, StringUtils.substr(ExceptionUtils.getErrorMessage(e, ValidationError.class, DataTruncation.class
                                             , SQLException.class, DefaultApplicationException.class), 500))));
             return false;
-        } finally {
-            allowAccess();
         }
-
     }
 
     @Override
