@@ -36,7 +36,7 @@ public class PostingReconc47422ReportData implements IExportData {
                     " ACID_DR, BSAACID_DR, AMNT_DR, AMNTBC_DR," +
                     " ACID_CR, BSAACID_CR, AMNT_CR, AMNTBC_CR," +
                     " PBR_DR, RNARLNG_DR, PBR_CR, RNARLNG_CR, ACID_TECH, BSAACID_TECH," +
-                    " INVISIBLE_DC, PCID, ID_REF, LWD, OPERDAY, STATE, STATE_ORDER" +
+                    " INVISIBLE_DC, PCID, ID_REF, LWD, OPERDAY, STATE, STATE_ORDER, KIND" +
                     " FROM V_GL_REP47422" +
                     " WHERE 1=1 " + whereClause
                     + getFilialPart("AND", "CBCC");
@@ -90,6 +90,7 @@ public class PostingReconc47422ReportData implements IExportData {
         items.add(new SortItem("STATE_ORDER", Column.Sort.ASC));
         items.add(new SortItem("NDOG", Column.Sort.ASC));
         items.add(new SortItem("ID_REF", Column.Sort.ASC));
+        items.add(new SortItem("KIND", Column.Sort.ASC));
         items.add(new SortItem("POD", Column.Sort.ASC));
         items.add(new SortItem("PCID", Column.Sort.ASC));
         return items;
@@ -125,10 +126,11 @@ public class PostingReconc47422ReportData implements IExportData {
         result.addColumn(new Column("INVISIBLE_DC", Column.Type.STRING, "Отменена ДБ,КР", 60));
         result.addColumn(new Column("PCID", Column.Type.LONG, "PCID", 100));
         result.addColumn(new Column("ID_REF", Column.Type.LONG, "ID регистра", 80));
-        result.addColumn(new Column("STATE_ORDER", Column.Type.INTEGER, "Сортировка", 60, false, true));
 //        result.addColumn(new Column("LWD", Column.Type.STRING, "Опер.регистр", 60, true, true));
         result.addColumn(new Column("OPERDAY", Column.Type.DATE, "Дата опердня обработки", 80));
         result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 80));
+        result.addColumn(new Column("STATE_ORDER", Column.Type.INTEGER, "Сортировка", 60, false, true));
+        result.addColumn(new Column("KIND", Column.Type.INTEGER, "Веер", 60, false, true));
 
         return result;
     }

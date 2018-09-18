@@ -126,6 +126,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         }
         if (mode == Load || (mode == Standard && cntLoad == 0))
             return true;
+
         // склеить проводки с одной датой: одиночные, веера
         processEqualDates(true, dateFrom);
         processEqualDates(false, dateFrom);
@@ -260,7 +261,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 PstSide phSide = getPaymentHubSide(new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")});
                 if (N == phSide) {  // совпадение PBR
                     journalRepository.executeInNewTransaction(persistence -> {
-                        journalRepository.updateState(glued.getString("id_reg"), Reg47422State.ERRSRC);
+                        journalRepository.updateState(glued.getString("id_reg"), Reg47422State.SKIP_SRC);
                         return null;
                     });
                     continue;
@@ -312,14 +313,14 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
                 PstSide phSide = getPaymentHubSide(new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")});
                 if (N == phSide) {  // совпадение PBR
                     journalRepository.executeInNewTransaction(persistence -> {
-                        journalRepository.updateState(glued.getString("id_reg"), Reg47422State.ERRSRC);
+                        journalRepository.updateState(glued.getString("id_reg"), Reg47422State.SKIP_SRC);
                         return null;
                     });
                     continue;
                 }
                 // сторона ручки веера
                 PstSide stickSide = glued.getInteger("cnt_dr") > 1 ? C : glued.getInteger("cnt_cr") > 1 ? D : N;
-                processChange(glued, phSide, stickSide);
+                processChangeAcc(glued, phSide, stickSide);
             }
             return glueList.size();
         } catch (Exception e) {
@@ -328,7 +329,7 @@ public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
         }
     }
 
-    private void processChange(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
+    private void processChangeAcc(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
         // определить счет на замену
         String acid = glued.getString("acid");
         GLAccParam ac47416 = journalRepository.getAccount47416(acid);

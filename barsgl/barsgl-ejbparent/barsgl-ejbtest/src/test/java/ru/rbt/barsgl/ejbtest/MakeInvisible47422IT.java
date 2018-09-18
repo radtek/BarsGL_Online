@@ -1,13 +1,10 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.apache.poi.hssf.record.chart.DatRecord;
 import org.junit.*;
-import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
-import ru.rbt.barsgl.ejb.entity.dict.SourcesDeals;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -23,21 +20,19 @@ import ru.rbt.ejbcore.util.StringUtils;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static com.sun.xml.internal.ws.policy.sourcemodel.wspolicy.XmlToken.Optional;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.EUR;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
-//import static ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal.Reg47422State.PROC_GL;
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbtest.AbstractTimerJobIT.restoreOperday;
 import static ru.rbt.barsgl.ejbtest.MakeInvisible47422IT.Filial.EKB;
 import static ru.rbt.barsgl.ejbtest.MakeInvisible47422IT.Filial.MOS;
 import static ru.rbt.barsgl.shared.enums.DealSource.Flex12;
+import static ru.rbt.barsgl.shared.enums.DealSource.Manual;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
-import static ru.rbt.barsgl.shared.enums.Reg47422State.ERRSRC;
+import static ru.rbt.barsgl.shared.enums.Reg47422State.SKIP_SRC;
 
 /**
  * Created by er18837 on 06.09.2018.
@@ -145,40 +140,19 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 
     @Test
     public void testPbr() throws SQLException {
-        Long[] glo1 = makeSimpleOneday(MOS, RUB, new BigDecimal("999"), new String[] {"30102", "47427"}, new DealSource[] {PaymentHub, PaymentHub} );
+        Long[] glo1 = makeSimpleOneday(MOS, USD, new BigDecimal("777"), new String[] {"47422840720010000106", "47422840720010000106"}, new DealSource[] {Manual, Manual} );
+//        Long[] glo1 = makeSimpleOneday(MOS, RUB, new BigDecimal("999"), new String[] {"30102", "47427"}, new DealSource[] {Manual, Manual} );
         Long[] glo2 = makeFanOneday(MOS, EUR, new BigDecimal("444"), new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, PaymentHub});
 
         Properties props = new Properties();
         remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
 
-        DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", ERRSRC.name());
+        DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
         Assert.assertEquals(glo1.length, (int)rec1.getInteger(0));
 
-        DataRecord rec2 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo2, ",", "") + ") and STATE = ? and VALID = 'Y'", ERRSRC.name());
+        DataRecord rec2 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo2, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
         Assert.assertEquals(glo2.length, (int)rec2.getInteger(0));
 
-    }
-
-    @Test
-    public void testSimpleOneDay() throws SQLException {
-        Long[] gloids = makeSimpleOneday(EKB, RUB, new BigDecimal("315.45"));
-
-        Properties props = new Properties();
-//        props.setProperty("mode", "Full");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
-
-        checkPostings(gloids);
-    }
-
-    @Test
-    public void testFanOneDay() throws SQLException {
-        Long[] gloids = makeFanOneday(MOS, EUR, new BigDecimal("8421"));
-
-        Properties props = new Properties();
-//        props.setProperty("mode", "Full");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
-
-        checkPostings(gloids);
     }
 
     @Test
@@ -191,9 +165,9 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 //        props.setProperty("mode", "Full");
         remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
 
-        checkPostings(glo1);
-        checkPostings(glo2);
-        checkPostings(glo3);
+        checkProcDat(glo1);
+        checkProcDat(glo2);
+        checkProcDat(glo3);
     }
 
     @Test
@@ -204,34 +178,61 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 //        props.setProperty("mode", "Full");
         remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
 
-        checkPostings(gloids);
+        checkWt47416(gloids);
     }
 
     @Test
-    public void testSimpleDiffDay() throws SQLException {
-        Long[] gloids = makeSimpleDiffday(MOS, RUB, new BigDecimal("2543"));
+    public void testDiffDay() throws SQLException {
+        Long[] glo1 = makeSimpleDiffday(MOS, RUB, new BigDecimal("7810"));
+        Long[] glo2 = makeFanDiffday(MOS, RUB, new BigDecimal("4444.8"));
 
         Properties props = new Properties();
 //        props.setProperty("mode", "Full");
         remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
 
-        checkPostings(gloids);
+        checkProcAcc(glo1);
+        checkProcAcc(glo2);
     }
 
-
-    private void checkPostings(Long[] gloids) {
-        List<Reg47422Journal> regLoad = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.N, Reg47422State.LOAD);
-        List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422State.PROC_GL);
+    private void checkProcDat(Long[] gloids) {
+        List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422State.PROC_DAT);
 
         Reg47422Journal regMain = regProc.stream().filter(r -> r.getPcIdNew().equals(r.getPcId())).findFirst().orElse(null);
         List<Pd> pdList = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId = ?1 and p.invisible = '0' and not p.stornoRef is null", regMain.getPcId());
         Assert.assertEquals(gloids.length, pdList.size());
+        Assert.assertNull(regProc.stream().filter(r -> !r.getParentId().equals(regMain.getId())).findFirst().orElse(null));
         long sum = pdList.stream().mapToLong(p -> p.getAmount()).sum();
         Assert.assertEquals(0, sum);
 
         List<GLPosting> postList = baseEntityRepository.select(GLPosting.class, "from GLPosting p where p.operation.id = ?1", regMain.getGlOperationId());
         Assert.assertEquals(1, postList.size());
         Assert.assertEquals(gloids.length > 2 ? "5" : "1", postList.get(0).getPostType());
+    }
+
+    private void checkProcAcc(Long[] gloids) {
+        List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422State.PROC_ACC);
+
+        Reg47422Journal regMain = regProc.stream().filter(r -> r.getParentId().equals(r.getId())).findFirst().orElse(null);
+        String pcidStr = regProc.stream().map(r -> r.getPcId().toString()).collect(Collectors.joining(","));
+        List<Pd> pdList = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId in (" + pcidStr + ") and p.invisible = '0' and not p.stornoRef is null");
+        Assert.assertEquals(gloids.length * 2, pdList.size());
+        Assert.assertNull(regProc.stream().filter(r -> !r.getParentId().equals(regMain.getId())).findFirst().orElse(null));
+        long sum = pdList.stream().mapToLong(p -> p.getAmount()).sum();
+        Assert.assertEquals(0, sum);
+
+        Assert.assertEquals(gloids.length, pdList.stream().filter(p -> !p.getBsaAcid().startsWith("47416")).collect(Collectors.toList()).size());
+    }
+
+    private void checkWt47416(Long[] gloids) {
+        List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422State.WT47416);
+
+        String pcidStr = regProc.stream().map(r -> r.getPcId().toString()).collect(Collectors.joining(","));
+        List<Pd> pdList = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId in (" + pcidStr + ") and p.invisible = '0'");
+        Assert.assertEquals(gloids.length * 2, pdList.size());
+        long sum = pdList.stream().mapToLong(p -> p.getAmount()).sum();
+        Assert.assertEquals(0, sum);
+
+        Assert.assertEquals(gloids.length, pdList.stream().filter(p -> !p.getBsaAcid().startsWith("47422")).collect(Collectors.toList()).size());
     }
 
     private List<Reg47422Journal> getJournalListByGloid(Long[] gloids, Reg47422Journal.Reg47422Valid valid, Reg47422State state) {
@@ -272,20 +273,31 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
         return makeSimpleOneday(filial, ccy, amnt, new String[] {"30102", "47427"}, new DealSource[] {PaymentHub, Flex12} );
     }
 
-    private Long[] makeFanOneday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src) throws SQLException {
-        Date pod = getOperday().getLastWorkingDay();
+    private Long[] makeFan(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src, Date[] pod) throws SQLException {
         String ndog = generateNdog();
         BigDecimal amnt1 = amnt.multiply(new BigDecimal(0.75));
 
-        long glo1 = makeOperation(pod, src[0], filial, ccy, ndog, amnt, acc2[0], GLOperation.OperSide.C);
-        long glo2 = makeOperation(pod, src[1], filial, ccy, ndog, amnt1, acc2[1], GLOperation.OperSide.D);
-        long glo3 = makeOperation(pod, src[2], filial, ccy, ndog, amnt.subtract(amnt1), acc2[2], GLOperation.OperSide.D);
+        long glo1 = makeOperation(pod[0], src[0], filial, ccy, ndog, amnt, acc2[0], GLOperation.OperSide.C);
+        long glo2 = makeOperation(pod[1], src[1], filial, ccy, ndog, amnt1, acc2[1], GLOperation.OperSide.D);
+        long glo3 = makeOperation(pod[2], src[2], filial, ccy, ndog, amnt.subtract(amnt1), acc2[2], GLOperation.OperSide.D);
 
         return new Long[]{glo1, glo2, glo3};
     }
 
+    private Long[] makeFanOneday(Filial filial, BankCurrency ccy, BigDecimal amnt, String[] acc2, DealSource[] src) throws SQLException {
+        Date pod = getOperday().getLastWorkingDay();
+        return makeFan(filial, ccy, amnt, acc2, src, new Date[] {pod, pod, pod});
+    }
+
     private Long[] makeFanOneday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
-        return makeFanOneday(filial, ccy, amnt, new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, Flex12});
+        Date pod = getOperday().getLastWorkingDay();
+        return makeFan(filial, ccy, amnt, new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, Flex12}, new Date[] {pod, pod, pod});
+    }
+
+    private Long[] makeFanDiffday(Filial filial, BankCurrency ccy, BigDecimal amnt) throws SQLException {
+        Date pod = getOperday().getLastWorkingDay();
+        Date cday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkDateBefore", pod, false);
+        return makeFan(filial, ccy, amnt, new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, Flex12}, new Date[] {pod, cday, pod});
     }
 
     private String generateNdog() throws SQLException {
@@ -301,7 +313,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 
         Currency currency = Currency.valueOf(ccy.getCurrencyCode());
         String accTech = getAccTech(filial, currency);
-        String accSrc = Utl4Tests.findBsaacid(baseEntityRepository, pod, getAccMask(acc2, filial, currency));
+        String accSrc = (acc2.length() == 20) ? acc2 : Utl4Tests.findBsaacid(baseEntityRepository, pod, getAccMask(acc2, filial, currency));
         String accDt = techSide == GLOperation.OperSide.D ? accTech : accSrc;
         String accCt = techSide == GLOperation.OperSide.C ? accTech : accSrc;
 

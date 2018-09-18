@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.ejb.repository;
 
-import ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccParam;
 import ru.rbt.barsgl.ejb.entity.gl.Reg47422Journal;
 import ru.rbt.barsgl.shared.enums.Reg47422State;
@@ -38,7 +37,7 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
                         "or p.PBR <> r.PBR or p.POD <> r.POD " +
                         "or p.ACID <> r.ACID or p.BSAACID <> r.BSAACID " +
                         "or p.AMNT <> r.AMNT or p.PCID <> r.PCID " +
-                    " )) ", U.name(), Y.name(), PROC_GL.name(), PROC_ACC.name()
+                    " )) ", U.name(), Y.name(), PROC_DAT.name(), PROC_ACC.name()
         );
     }
 
@@ -116,7 +115,7 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
                 " select GL_REG47422_SEQ.nextval,p.ID,p.PCID,p.INVISIBLE,p.POD,p.VALD,p.PROCDATE,p.PBR,p.ACID,p.BSAACID,p.CCY,p.AMNT,p.AMNTBC,r.DC,r.CBCC,p.RNARLNG,r.NDOG,p.PMT_REF,p.GLO_REF, " +
                 " ?, (select CURDATE from GL_OD), ?, ? " +
                 " from GL_REG47422 r join PST p on p.ID = r.PD_ID " +
-                " where r.ID in (" + idList + ") ", pcid, PROC_GL.name(), Y.name());
+                " where r.ID in (" + idList + ") ", pcid, PROC_DAT.name(), Y.name());
         return executeNativeUpdate("update GL_REG47422 r1 set ID_REF = (select r2.ID from GL_REG47422 r2 where PCID = ? and valid = ?) where PCID_NEW = ? and valid = ?",
                 pcid, Y.name(), pcid, Y.name());
     }
