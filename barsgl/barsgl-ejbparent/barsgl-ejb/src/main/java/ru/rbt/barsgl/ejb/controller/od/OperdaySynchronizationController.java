@@ -375,7 +375,7 @@ public class OperdaySynchronizationController {
                         }
                     }
                     executorService.shutdown();
-                    executorService.awaitTermination(1, TimeUnit.HOURS);
+                    executorService.awaitTermination(2, TimeUnit.HOURS);
                     long notProcessedCount = pdRepository.selectFirst(
                             "select count(1) cnt from gl_pd p, gl_baltur b where p.bsaacid = b.bsaacid " +
                             "   and p.pod = b.dat and b.moved = 'Y' and pod < ? and pd_id is null", operday).getLong(0);
