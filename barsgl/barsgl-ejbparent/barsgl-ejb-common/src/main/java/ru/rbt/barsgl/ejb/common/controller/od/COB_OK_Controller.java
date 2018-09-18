@@ -24,8 +24,7 @@ public class COB_OK_Controller {
             "select state, reason from V_GLA_COB_OK";
 
     private final String vip_sql =
-            //"select  is_vip, cnt from  V_GLA2_ERRORS_Test fetch first 2 rows only"; //test
-            "select is_vip, count(1) cnt from v_gla2_errors where rownum <= 2 group by is_vip";
+            "select is_vip, count(1) cnt from v_gla2_errors group by is_vip";
 
     public COB_OKWrapper getData() throws SQLException {
         try {
