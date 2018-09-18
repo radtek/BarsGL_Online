@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * Created by er18837 on 06.08.2018.
  */
-public class Reconc47422Wrapper {
+public class Rep47422Wrapper {
 
     private String contract;
     private String currency;

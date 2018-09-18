@@ -3,7 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task;
+import ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -27,8 +27,8 @@ import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.EUR;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
 import static ru.rbt.barsgl.ejbtest.AbstractTimerJobIT.restoreOperday;
-import static ru.rbt.barsgl.ejbtest.MakeInvisible47422IT.Filial.EKB;
-import static ru.rbt.barsgl.ejbtest.MakeInvisible47422IT.Filial.MOS;
+import static ru.rbt.barsgl.ejbtest.Exclude47422IT.Filial.EKB;
+import static ru.rbt.barsgl.ejbtest.Exclude47422IT.Filial.MOS;
 import static ru.rbt.barsgl.shared.enums.DealSource.Flex12;
 import static ru.rbt.barsgl.shared.enums.DealSource.Manual;
 import static ru.rbt.barsgl.shared.enums.DealSource.PaymentHub;
@@ -37,7 +37,7 @@ import static ru.rbt.barsgl.shared.enums.Reg47422State.SKIP_SRC;
 /**
  * Created by er18837 on 06.09.2018.
  */
-public class MakeInvisible47422IT extends AbstractRemoteIT {
+public class Exclude47422IT extends AbstractRemoteIT {
 
     enum Filial {
         MOS("01"), SPB("02"), EKB("40"), CHL("16");
@@ -114,23 +114,23 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 //        props.setProperty("withClosedPeriod", "true");
         props.setProperty("mode", "Glue");
 //        props.setProperty("mode", "Full");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
     }
 
     @Test
     public void testLoad() throws SQLException {
         Properties props = new Properties();
         props.setProperty("mode", "Load");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
         long id0 = getMaxRegId();
 
         Long[] gloids = makeSimpleOneday(EKB, RUB, new BigDecimal("567.89"));
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
         long id1 = getMaxRegId();
         Assert.assertEquals(id0+2, id1);
 
         baseEntityRepository.executeNativeUpdate("update GL_REG47422 set RNARLNG = RNARLNG || '_' where id = ?", id1);
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
         long id2 = getMaxRegId();
         Assert.assertEquals(id1+1, id2);
 
@@ -145,7 +145,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
         Long[] glo2 = makeFanOneday(MOS, EUR, new BigDecimal("444"), new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, PaymentHub});
 
         Properties props = new Properties();
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
 
         DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
         Assert.assertEquals(glo1.length, (int)rec1.getInteger(0));
@@ -163,7 +163,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 
         Properties props = new Properties();
 //        props.setProperty("mode", "Full");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
 
         checkProcDat(glo1);
         checkProcDat(glo2);
@@ -176,7 +176,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 
         Properties props = new Properties();
 //        props.setProperty("mode", "Full");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
 
         checkWt47416(gloids);
     }
@@ -188,7 +188,7 @@ public class MakeInvisible47422IT extends AbstractRemoteIT {
 
         Properties props = new Properties();
 //        props.setProperty("mode", "Full");
-        remoteAccess.invoke(MakeInvisible47422Task.class, "testExec", null, props);
+        remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
 
         checkProcAcc(glo1);
         checkProcAcc(glo2);

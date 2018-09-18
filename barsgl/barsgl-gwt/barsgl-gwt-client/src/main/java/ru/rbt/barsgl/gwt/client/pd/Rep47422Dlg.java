@@ -26,7 +26,7 @@ import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.gwt.core.utils.AppPredicate;
 import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.shared.enums.ProcessingType;
-import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
+import ru.rbt.barsgl.shared.operation.Rep47422Wrapper;
 import ru.rbt.barsgl.shared.operday.DatesWrapper;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 
@@ -40,7 +40,7 @@ import static ru.rbt.security.gwt.client.operday.OperDayGetter.getRep47422Dates;
 /**
  * Created by er18837 on 03.08.2018.
  */
-public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
+public class Rep47422Dlg extends DlgFrame implements IAfterShowEvent {
     private final String parDates = "rep47422dates";
     private final String parLists = "rep47422lists";
     private final String FWIDTH = "120px";
@@ -61,7 +61,7 @@ public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
     private HandlerRegistration registration;
     private Timer timer;
 
-    public Reconc47422ReportDlg() {
+    public Rep47422Dlg() {
         super();
         setCaption("Фильтр для реконсиляционного отчета");
         ok.setText("Выбрать");
@@ -207,7 +207,7 @@ public class Reconc47422ReportDlg extends DlgFrame implements IAfterShowEvent {
     protected boolean onClickOK() throws Exception {
         try{
             checkUp();
-            Reconc47422Wrapper wrapper = new Reconc47422Wrapper();
+            Rep47422Wrapper wrapper = new Rep47422Wrapper();
             wrapper.setContract(mContract.getValue());
             wrapper.setCurrency((String) mCurrency.getValue());
             wrapper.setFilial((String) mFilial.getValue());

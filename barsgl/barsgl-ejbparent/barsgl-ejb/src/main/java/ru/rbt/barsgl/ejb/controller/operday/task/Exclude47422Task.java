@@ -30,12 +30,12 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.MakeInvisible47422;
 import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEF_DEPTH;
 import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEPTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
-import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Glue;
-import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Load;
-import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.GlueMode.Standard;
-import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.C;
-import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.D;
-import static ru.rbt.barsgl.ejb.controller.operday.task.MakeInvisible47422Task.PstSide.N;
+import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.GlueMode.Glue;
+import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.GlueMode.Load;
+import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.GlueMode.Standard;
+import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.PstSide.C;
+import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.PstSide.D;
+import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.PstSide.N;
 import static ru.rbt.barsgl.ejb.entity.gl.Memorder.DocType.BANK_ORDER;
 import static ru.rbt.barsgl.shared.enums.Reg47422State.CHANGE;
 import static ru.rbt.barsgl.shared.enums.Reg47422State.LOAD;
@@ -45,7 +45,7 @@ import static ru.rbt.ejbcore.validation.ErrorCode.REG47422_ERROR;
 /**
  * Created by er18837 on 20.08.2018.
  */
-public class MakeInvisible47422Task extends AbstractJobHistoryAwareTask {
+public class Exclude47422Task extends AbstractJobHistoryAwareTask {
 
     private final String myTaskName = this.getClass().getSimpleName();
 

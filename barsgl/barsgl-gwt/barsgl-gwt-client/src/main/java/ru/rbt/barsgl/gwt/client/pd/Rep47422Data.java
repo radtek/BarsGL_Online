@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
-import com.google.gwt.user.client.*;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
@@ -9,7 +8,7 @@ import ru.rbt.barsgl.gwt.core.utils.DialogUtils;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.enums.ProcessingType;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
-import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
+import ru.rbt.barsgl.shared.operation.Rep47422Wrapper;
 import ru.rbt.grid.gwt.client.export.IExportData;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getFilialPart;
 /**
  * Created by er18837 on 06.08.2018.
  */
-public class PostingReconc47422ReportData implements IExportData {
+public class Rep47422Data implements IExportData {
     private Table table;
     private Column colContract;
     private Column colCurrency;
@@ -41,7 +40,7 @@ public class PostingReconc47422ReportData implements IExportData {
                     " WHERE 1=1 " + whereClause
                     + getFilialPart("AND", "CBCC");
 
-    public PostingReconc47422ReportData(Reconc47422Wrapper wrapper) {
+    public Rep47422Data(Rep47422Wrapper wrapper) {
         this.table = prepareTable();
         filterItems = new ArrayList<>();
         if (!DialogUtils.isEmpty(wrapper.getContract())) {

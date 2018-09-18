@@ -2,7 +2,6 @@ package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.gridForm.MDForm;
@@ -20,7 +19,6 @@ import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.utils.UUID;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
-import ru.rbt.barsgl.shared.Repository;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.dict.FormAction;
@@ -28,9 +26,8 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
-import ru.rbt.barsgl.shared.operation.Reconc47422Wrapper;
+import ru.rbt.barsgl.shared.operation.Rep47422Wrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
-import ru.rbt.grid.gwt.client.GridEntryPoint;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
 import ru.rbt.grid.gwt.client.export.Export2ExcelHead;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
@@ -543,12 +540,12 @@ public class PostingForm extends MDForm {
     private GridAction Reconc47422PostingReport() {
         return new GridAction(masterGrid, null, null, new Image(ImageConstants.INSTANCE.report()), 5) {
 
-            Reconc47422ReportDlg dlg = null;
+            Rep47422Dlg dlg = null;
             GridAction act = this;
 
             @Override
             public void execute() {
-                if (dlg == null) dlg = new Reconc47422ReportDlg();
+                if (dlg == null) dlg = new Rep47422Dlg();
                 dlg.setDlgEvents(this);
                 dlg.show(null);
             }
@@ -557,8 +554,8 @@ public class PostingForm extends MDForm {
             public void onDlgOkClick(Object prms){
                 dlg.hide();
 
-                final Reconc47422Wrapper wrapper = (Reconc47422Wrapper) prms;
-                IExportData reportData = new PostingReconc47422ReportData(wrapper);
+                final Rep47422Wrapper wrapper = (Rep47422Wrapper) prms;
+                IExportData reportData = new Rep47422Data(wrapper);
                 WaitingManager.show("Проверка наличия данных...");
 
                 ExcelExportHead head = new Export2ExcelHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
