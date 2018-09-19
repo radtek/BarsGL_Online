@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.MakeInvisible47422;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.Exclude47422;
 import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEF_DEPTH;
 import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEPTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -40,7 +40,7 @@ import static ru.rbt.barsgl.ejb.entity.gl.Memorder.DocType.BANK_ORDER;
 import static ru.rbt.barsgl.shared.enums.Reg47422State.CHANGE;
 import static ru.rbt.barsgl.shared.enums.Reg47422State.LOAD;
 import static ru.rbt.barsgl.shared.enums.Reg47422State.WT47416;
-import static ru.rbt.ejbcore.validation.ErrorCode.REG47422_ERROR;
+import static ru.rbt.ejbcore.validation.ErrorCode.EXCLUDE_47422_ERROR;
 
 /**
  * Created by er18837 on 20.08.2018.
@@ -116,7 +116,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         Operday operday = operdayController.getOperday();
         Date dateFrom = getDateFrom(operday.getCurrentDate(), properties);
         GlueMode mode = GlueMode.valueOf(Optional.ofNullable(properties.getProperty(REG47422_MODE_KEY)).orElse(Standard.name()));
-        auditController.info(MakeInvisible47422, String.format("Запуск задачи %s в режиме %s(%s) с даты '%s' по дату '%s'",
+        auditController.info(Exclude47422, String.format("Запуск задачи %s в режиме %s(%s) с даты '%s' по дату '%s'",
                 myTaskName, mode.name(), mode.getLabel(), dateUtils.onlyDateString(dateFrom),
                 dateUtils.onlyDateString(operday.getLastWorkingDay())));
         // обновить GL_REG47422
@@ -135,7 +135,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         processDiffDates(true, dateFrom);
         processDiffDates(false, dateFrom);
 
-        auditController.info(MakeInvisible47422, String.format("Окончание выполнения задачи %s", myTaskName));
+        auditController.info(Exclude47422, String.format("Окончание выполнения задачи %s", myTaskName));
         return true;
     }
 
@@ -159,8 +159,8 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                 if (depth < 1 || depth > 30)
                     throw new NumberFormatException("Значение должно быть от 1 до 30");
             } catch (NumberFormatException e) {
-                ValidationError error = new ValidationError(REG47422_ERROR, String.format("Неверное значение %s в свойствах задачи: %s %s", REG47422_DEPTH_KEY, depthProp, e.getMessage()));
-                auditController.error(MakeInvisible47422, "Ошибка при выполнении задачи " + myTaskName, null, error);
+                ValidationError error = new ValidationError(EXCLUDE_47422_ERROR, String.format("Неверное значение %s в свойствах задачи: %s %s", REG47422_DEPTH_KEY, depthProp, e.getMessage()));
+                auditController.error(Exclude47422, "Ошибка при выполнении задачи " + myTaskName, null, error);
             }
         }
         else {
@@ -190,60 +190,24 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
      * @throws Exception
      */
     private int loadNewData(Date dateFrom) throws Exception {
-        int[] res = journalRepository.executeInNewTransaction(persistence -> {
-            // найти проводки с отличием, проапдейтить VALID = 'U'
-            int changed = journalRepository.findChangedPst();
-            // вставить измененные записи (STATE = 'CHANGE') и новын записи (STATE = 'LOAD')
-            int inserted = journalRepository.insertNewAndChangedPst(dateFrom);
-            if (changed > 0) {
-                // статус измененных = 'N'
-                Assert.isTrue(changed == journalRepository.updateChangedPstOld(), String.format("Ошибка при изменении статуса, ожидается записей: %d", changed));
-            }
-            return new int[] {inserted - changed, changed};
-        });
-        auditController.info(MakeInvisible47422, String.format("Вставлено записей в GL_REG47422: новых %d, измененных %d", res[0], res[1]));
-        return res[0] + res[1];
-    }
-
-    /**
-     * sql для выброра проводок для обработки
-     * @param withSum - true = с одинаковой суммой
-     * @param withPod - true = с одинаковой датой
-     * @return
-     */
-    private String getGroupSql(boolean withSum, boolean withPod, Reg47422State[] status) {
-        String strPod = withPod ? ", pod" : "";
-        String strSum = withSum ? ", abs(amnt)" : "";
-        return "with glued as\n" +
-                "  (select \n" +
-                "        ndog, acid, sum(amnt) flag,\n" +
-                "        sum(case when amnt<0 then amnt else 0 end) sum_dr,\n" +
-                "        sum(case when amnt>0 then amnt else 0 end) sum_cr,\n" +
-                "        sum(case when amnt<0 then 1 else 0 end) cnt_dr,\n" +
-                "        sum(case when amnt>0 then 1 else 0 end) cnt_cr,\n" +
-                "        listagg (id,',') within group (order by pd_id) id_reg,\n" +
-                "        listagg (case when amnt<0 then pbr else null end,',') within group (order by pd_id) pbr_dr,\n" +
-                "        listagg (case when amnt>0 then pbr else null end,',') within group (order by pd_id) pbr_cr,\n" +
-                "        listagg (case when amnt<0 then pcid else null end,',') within group (order by pd_id) pcid_dr,\n" +
-                "        listagg (case when amnt>0 then pcid else null end,',') within group (order by pd_id) pcid_cr,\n" +
-                "        listagg (case when amnt<0 then pd_id else null end,',') within group (order by pd_id) pdid_dr,\n" +
-                "        listagg (case when amnt>0 then pd_id else null end,',') within group (order by pd_id) pdid_cr,\n" +
-                "        listagg (case when amnt<0 then pmt_ref else null end,',') within group (order by pmt_ref) pmt_dr,\n" +
-                "        listagg (case when amnt>0 then pmt_ref else null end,',') within group (order by pmt_ref) pmt_cr,\n" +
-                "        listagg (case when amnt<0 then glo_ref else null end,',') within group (order by glo_ref) glo_dr,\n" +
-                "        listagg (case when amnt>0 then glo_ref else null end,',') within group (order by glo_ref) glo_cr,\n" +
-                "        listagg (case when amnt<0 then pod else null end,',') within group (order by pd_id) pod_dr,\n" +
-                "        listagg (case when amnt>0 then pod else null end,',') within group (order by pd_id) pod_cr\n" +
-                "        " + strPod + "\n" +
-                "  from GL_REG47422 \n" +
-                "    where  valid = 'Y' \n" +
-                "        and state in (" + StringUtils.arrayToString(status, ",", "'") + ")\n" +
-                "        and pod > ?\n" +
-                "  group by acid, ndog" + strPod + strSum + "\n" +
-                "  )\n" +
-                "select * from glued\n" +
-                "where flag=0 and (cnt_cr=1 or cnt_dr=1)\n" +
-                "order by cnt_cr, cnt_dr" + strPod + ", ndog";
+        try {
+            int[] res = journalRepository.executeInNewTransaction(persistence -> {
+                // найти проводки с отличием, проапдейтить VALID = 'U'
+                int changed = journalRepository.markChangedPst();
+                // вставить измененные записи (STATE = 'CHANGE') и новын записи (STATE = 'LOAD')
+                int inserted = journalRepository.insertNewAndChangedPst(dateFrom);
+                if (changed > 0) {
+                    // статус измененных = 'N'
+                    Assert.isTrue(changed == journalRepository.updateChangedPstOld(), String.format("Ошибка при изменении статуса, ожидается записей: %d", changed));
+                }
+                return new int[] {inserted - changed, changed};
+            });
+            auditController.info(Exclude47422, String.format("Вставлено записей в GL_REG47422: новых %d, измененных %d", res[0], res[1]));
+            return res[0] + res[1];
+        } catch (Exception e) {
+            auditController.error(Exclude47422, "Ошибка при поиске проводок по счетам 47422", null, e);
+            return 0;
+        }
     }
 
     /**
@@ -253,9 +217,8 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
      * @return
      */
     private int processEqualDates(boolean withSum, Date dateFrom) {
-        String sql = getGroupSql(withSum, true, new Reg47422State[] {LOAD, CHANGE});
         try {
-            List<DataRecord> glueList = journalRepository.select(sql, dateFrom);    // наборы для склейки
+            List<DataRecord> glueList = journalRepository.getGroupedList(dateFrom, withSum, true, LOAD, CHANGE);    // наборы для склейки
             for (DataRecord glued: glueList) {
                 // сторона PH
                 PstSide phSide = getPaymentHubSide(new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")});
@@ -272,7 +235,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
             }
             return glueList.size();
         } catch (Exception e) {
-            auditController.error(MakeInvisible47422, "Ошибка при обработке проводок по счетам 47422", null, e);
+            auditController.error(Exclude47422, "Ошибка при обработке проводок по счетам 47422", null, e);
             return 0;
         }
     }
@@ -305,9 +268,8 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
      * @return
      */
     private int processDiffDates(boolean withSum, Date dateFrom) {
-        String sql = getGroupSql(withSum, false, new Reg47422State[] {LOAD, CHANGE});   // , WT47416
         try {
-            List<DataRecord> glueList = journalRepository.select(sql, dateFrom);    // наборы для склейки
+            List<DataRecord> glueList = journalRepository.getGroupedList(dateFrom, withSum, false, LOAD, CHANGE, WT47416);    // наборы для склейки
             for (DataRecord glued: glueList) {
                 // сторона PH
                 PstSide phSide = getPaymentHubSide(new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")});
@@ -324,7 +286,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
             }
             return glueList.size();
         } catch (Exception e) {
-            auditController.error(MakeInvisible47422, "Ошибка при обработке проводок по счетам 47422", null, e);
+            auditController.error(Exclude47422, "Ошибка при обработке проводок по счетам 47422", null, e);
             return 0;
         }
     }
@@ -334,8 +296,8 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         String acid = glued.getString("acid");
         GLAccParam ac47416 = journalRepository.getAccount47416(acid);
         if (null == ac47416) {    // нет счета на подмену
-            auditController.error(MakeInvisible47422, "Ошибка при обработке проводок по счетам 47422", null,
-                    new ValidationError(REG47422_ERROR, String.format("Не найден счет с ACC2='47416' для замены счета c ACC2='47422' , ACID = '%s'", acid)));
+            auditController.error(Exclude47422, "Ошибка при обработке проводок по счетам 47422", null,
+                    new ValidationError(EXCLUDE_47422_ERROR, String.format("Не найден счет с ACC2='47416' для замены счета c ACC2='47422' , ACID = '%s'", acid)));
             journalRepository.executeInNewTransaction(persistence -> {
                 journalRepository.updateState(glued.getString("id_reg"), WT47416);
                 return null;
@@ -351,6 +313,12 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         });
     }
 
+    /**
+     * определить сторону PH
+     * ошибка при совпадении источников
+     * @param pbrList
+     * @return
+     */
     private PstSide getPaymentHubSide(String[] pbrList) {
         int indOne = pbrList[0].length() < pbrList[1].length() ? 0 : 1; // индекс стороны, где одна проводка
         if (pbrList[indOne^1].indexOf(pbrList[indOne]) >= 0)            // PBR по дб и кр совпадают - ошибка
@@ -380,7 +348,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         int indFl = phSide.ordinal()^1;
         List<String> pbrStr = Arrays.asList(pbrList[indFl].split(","));
         reg.pbr = pbrStr.stream().filter(p -> p.equals("@@GLFCL")).findFirst().orElse(pbrStr.get(0));
-/*
+/*      // пока убрали заполнение дополнительных полей
         int indPh = phSide.ordinal();
         // параметры PH
         DataRecord recPh = journalRepository.selectFirst("select PREF from PST where id in (" + idList[indPh] + ") order by id");
@@ -401,22 +369,11 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
     }
 
     /**
-     * склеивает проводки с одинаковой датой
+     *  превратить операцию в веер
+     * @param stickSide
+     * @param gloList
      * @param params
      */
-/*
-    private void gluePostings(Reg47422params params) {
-        // подавить проводки по 47422
-        journalRepository.executeNativeUpdate("update PST p1 set INVISIBLE = '1' where id in (" + params.idInvisible + ")");
-        // ссылка на парную полупроводку (со старым PCID) в CPDRF
-        journalRepository.executeNativeUpdate("update PST p1 set p1.CPDRF = (select ID from PST p2 where p2.PCID = p1.PCID and p2.INVISIBLE = '1')" +
-                                              "  where id in (" + params.idVisible + ")");
-        // update проводки с другой стороны: PCID, DEAL_ID, PBR, PNAR, RNARLNG, PREF, PMT_REF = PREF
-        journalRepository.executeNativeUpdate("update PST p1 set PCID = ?, PBR = ? where id in (" + params.idVisible + ")",
-                params.pcidNew, params.pbr);
-    }
-*/
-
     private void updateOperations(PstSide stickSide, String[] gloList, Reg47422params params) {
         String gloAll = gloList[0] + "," + gloList[1];
         // INP_METHOD = 'AE_GL' - убрала, может испортиться склейка GL_OPER с GL_ETLPST и GL_BATPST
@@ -426,23 +383,18 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         // только для веера
         String gloPar = gloList[stickSide.ordinal()];
         if (StringUtils.isEmpty(gloPar)) {
-            auditController.error(MakeInvisible47422, "Ошибка при исключении проводок по техническим счетам 47422", "PST", params.pcidNew,
+            auditController.error(Exclude47422, "Ошибка при исключении проводок по техническим счетам 47422", "PST", params.pcidNew,
                     String.format("Не найдена родительская операция при склейке проводок в веер PCID = '%s'", params.pcidNew));
             return;
         }
         journalRepository.updateOperations(gloPar, gloAll, stickSide.name(), PstSide.values()[stickSide.ordinal()^1].name());
-/*
-        // GL_POSTING: POST_TYPE = '5' (для ручки)
-        journalRepository.executeNativeUpdate("update GL_POSTING set POST_TYPE = '5' where GLO_REF = " + gloPar);
-        // GL_OPER: FAN = 'Y', PAR_RF = PMT_REF, PAR_GLO = GLOID
-        //          FP_SIDE = 'D'/'C' – сторона, обратная ручке (для всех операций)
-        journalRepository.executeNativeUpdate("update GL_OPER set FAN = 'Y', PAR_GLO = " + gloPar + ", FP_SIDE = ? where GLOID in (" + gloAll + ")",    // PAR_RF = ?,
-                PstSide.values()[stickSide.ordinal()^1].name());                                                                                        // params.parRf,
-        //          FB_SIDE = 'С'/'D' - сторона ручки (только для ручки)
-        journalRepository.executeNativeUpdate("update GL_OPER set FB_SIDE = ? where GLOID = " + gloPar, stickSide.name());
-*/
     }
 
+    /**
+     * проверить / изменить DocType
+     * @param params
+     * @throws SQLException
+     */
     private void reviseDocType(Reg47422params params) throws SQLException {
         Memorder memorder = journalRepository.selectFirst(Memorder.class, "from Memorder m where m.id = ?", params.pcidNew);
         if (memorder.getDocType() == BANK_ORDER)

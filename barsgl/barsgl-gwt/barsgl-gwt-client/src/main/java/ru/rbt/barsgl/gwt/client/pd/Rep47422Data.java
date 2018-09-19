@@ -100,6 +100,9 @@ public class Rep47422Data implements IExportData {
 
         result.addColumn(colContract = new Column("NDOG", Column.Type.STRING, "Номер договора", 10));
         result.addColumn(colState = new Column("PROCESSED", Column.Type.STRING, "Обработана", 60));
+        result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 80));
+        result.addColumn(new Column("ID_REF", Column.Type.LONG, "ID регистра", 80));
+        result.addColumn(new Column("PCID", Column.Type.LONG, "PCID", 100));
         result.addColumn(new Column("DEAL_ID", Column.Type.STRING, "ИД сделки", 100));
         result.addColumn(new Column("SUBDEALID", Column.Type.STRING, "ИД субсделки", 100));
         result.addColumn(new Column("PMT_REF", Column.Type.STRING, "ИД платежа", 100));
@@ -123,11 +126,8 @@ public class Rep47422Data implements IExportData {
         result.addColumn(new Column("ACID_TECH", Column.Type.STRING, "Техсчет Midas", 160));
         result.addColumn(new Column("BSAACID_TECH", Column.Type.STRING, "Техсчет ЦБ", 160));
         result.addColumn(new Column("INVISIBLE_DC", Column.Type.STRING, "Отменена ДБ,КР", 60));
-        result.addColumn(new Column("PCID", Column.Type.LONG, "PCID", 100));
-        result.addColumn(new Column("ID_REF", Column.Type.LONG, "ID регистра", 80));
 //        result.addColumn(new Column("LWD", Column.Type.STRING, "Опер.регистр", 60, true, true));
         result.addColumn(new Column("OPERDAY", Column.Type.DATE, "Дата опердня обработки", 80));
-        result.addColumn(new Column("STATE", Column.Type.STRING, "Статус", 80));
         result.addColumn(new Column("STATE_ORDER", Column.Type.INTEGER, "Сортировка", 60, false, true));
         result.addColumn(new Column("KIND", Column.Type.INTEGER, "Веер", 60, false, true));
 

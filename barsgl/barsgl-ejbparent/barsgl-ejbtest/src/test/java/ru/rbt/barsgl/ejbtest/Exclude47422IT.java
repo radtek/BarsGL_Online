@@ -152,7 +152,6 @@ public class Exclude47422IT extends AbstractRemoteIT {
 
         DataRecord rec2 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo2, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
         Assert.assertEquals(glo2.length, (int)rec2.getInteger(0));
-
     }
 
     @Test
