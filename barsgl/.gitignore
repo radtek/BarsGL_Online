@@ -18,3 +18,4 @@ rollback.bat
 /build-srv-prod.bat
 /release-srv.bat
 .directory
+/build-srv.bat

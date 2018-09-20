@@ -50,7 +50,7 @@ public class BranchDictRepository<E extends BaseEntity<String>> extends Abstract
     }
 
     public long insGlLoadStat(Date dtl, Date operday) throws Exception {
-        Long id = selectOne(BARSGLNOXA, "select GL_LOADSTAT_SEQ.nextval from dual", null).getLong(0);
+        Long id = selectOne(BARSGLNOXA, "select SEQ_GL_DEALCLOSE.nextval from dual", null).getLong(0);
         repository.executeInNewTransaction(getPersistence(BARSGLNOXA), p -> {
             executeNativeUpdate("insert into GL_LOADSTAT(ID, STREAM_ID, DTL, STATUS, OPERDAY, START_LOAD ) values(?,?,?,?,?,SYSDATE)", id, LoadBranchDictTask.STREAM_ID, dtl, "N", operday);
             return null;

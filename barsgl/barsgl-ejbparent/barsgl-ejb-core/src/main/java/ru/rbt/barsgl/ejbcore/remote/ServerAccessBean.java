@@ -11,13 +11,15 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
-import javax.enterprise.inject.Instance;
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.lang.String.format;
 
 /**
  * Created by Ivan Sevastyanov
@@ -27,28 +29,43 @@ public class ServerAccessBean implements ServerAccess, ServerAccessEJBLocal, Ser
 
     private static final Logger logger = Logger.getLogger(ServerAccessBean.class.getName());
 
-    @Inject
-    private Instance<Object> services;
-
     @Resource
     private SessionContext sessionContext;
 
+    @Inject
+    private BeanManager beanManager;
+
+    /**
+     * Метод переписан из-за утечек памяти в старой короткой реализации.
+     * Нормально работало под WLS 12.1. Утечки появились в WLS 12.2.
+     * @param clazz класс интерфеса серверного бина
+     * @param method вызываемый метод
+     * @param params параметры вызова серверного метода
+     * @param <T>
+     * @return
+     */
     @Override
-    public <T> T invoke(Class clazz, String method, Object... params) {
-        final Instance<T> filtered = services.select(clazz);
-        for (Object bean : filtered) {
-            logger.log(Level.FINE, format("About to check bean '%s' on compatibility to '%s'", bean, clazz));
-            if (clazz.isAssignableFrom(bean.getClass())) {
-                logger.log(Level.FINE, format("Accepting to bean %s#%s(%s) from remote call", bean, method, null != params ? params : ""));
-                try {
-                    return (T) MethodUtils.invokeMethod(bean, method, params);
-                } catch (Throwable e) {
-                    logger.log(Level.SEVERE, "error invoking server bean:", e);
-                    throw new DefaultApplicationException(e.getMessage(), e);
-                }
+    public <T> T invoke(Class clazz, String method, Object ... params) {
+        Set<Bean<?>> beans = beanManager.getBeans(clazz);
+        Bean bean;
+        try {
+            bean = beans.iterator().next();
+        } catch (NoSuchElementException e) {
+            throw new DefaultApplicationException("No bean found: " + clazz.getName());
+        }
+        CreationalContext<?> creationalContext = null;
+        try {
+            creationalContext = beanManager.createCreationalContext( bean );
+            Object runnable = beanManager.getReference(bean, clazz, creationalContext);
+            return (T) MethodUtils.invokeMethod(runnable, method, params);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "error invoking server bean:", e);
+            throw new DefaultApplicationException(e.getMessage(), e);
+        } finally {
+            if (null != creationalContext) {
+                creationalContext.release();
             }
         }
-        throw new DefaultApplicationException(format("Service for class '%s' has not found on Instance", clazz.getName()));
     }
 
     @Override

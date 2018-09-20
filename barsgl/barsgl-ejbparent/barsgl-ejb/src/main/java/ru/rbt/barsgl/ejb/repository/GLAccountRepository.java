@@ -11,8 +11,12 @@ import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbcore.validation.ResultCode;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.controller.etc.TextResourceController;
+import ru.rbt.ejbcore.datarec.DBParam;
+import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.repository.AbstractBaseEntityRepository;
+import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -20,6 +24,7 @@ import ru.rbt.shared.Assert;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,6 +37,10 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.datarec.DBParam.DBParamDirectionType.IN;
+import static ru.rbt.ejbcore.datarec.DBParam.DBParamDirectionType.OUT;
+import static ru.rbt.ejbcore.datarec.DBParam.DbParamType.DATE;
+import static ru.rbt.ejbcore.datarec.DBParam.DbParamType.VARCHAR;
 import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
@@ -50,6 +59,12 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
     private static final String CFG_NAME_SPOD = "SPOD";
     private static final String PROP_NAME_SPOD = "LAST_SPOD_DAY";
     public static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+    @Inject
+    private TextResourceController textResourceController;
+
+    @Inject
+    private DateUtils dateUtils;
 
     /**
      * Проверяет наличие в БД счета Майдас
@@ -1128,8 +1143,25 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public void updGlAccOpenDate(String bsaacid, Date newDate) throws Exception{
-        executeNativeUpdate("update gl_acc set dto=? where bsaacid=?", newDate, bsaacid);
+    /**
+     *
+     * @param bsaacid счет
+     * @param newOpenDate новая дата открытия - должна быть раньше текущей
+     * @return true, если дата открытия обновлена
+     * @throws Exception
+     */
+    public Date updGlAccOpenDate(String bsaacid, Date newOpenDate) throws Exception {
+        try {
+            DBParams params = DBParams.createParams(new DBParam(VARCHAR, IN, bsaacid)
+                    , new DBParam(DATE, IN, newOpenDate), new DBParam(DATE, OUT));
+            executeCallable(textResourceController.getContent("ru/rbt/barsgl/ejb/repository/update_acc_dto.sql"), params);
+            return params.getParams().get(2).getDate();
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 20111) {
+                throw new ValidationError(TOO_MANY_ACCOUNTS_CHANGE_DTO, bsaacid, dateUtils.onlyDateString(newOpenDate));
+            }
+            throw e;
+        }
     }
 
     public void updGlAccCloseDate(String bsaacid, Date dateClose) {

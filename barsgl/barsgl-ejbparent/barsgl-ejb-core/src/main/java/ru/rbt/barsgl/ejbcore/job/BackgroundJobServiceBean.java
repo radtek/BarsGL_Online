@@ -5,6 +5,7 @@ import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.IntervalJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
+import ru.rbt.barsgl.ejbcore.remote.ServerAccessEJBLocal;
 import ru.rbt.barsgl.shared.enums.JobStartupType;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -14,8 +15,6 @@ import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.*;
 import javax.ejb.Timer;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -43,8 +42,8 @@ public class BackgroundJobServiceBean implements BackgroundJobService {
     @EJB
     private TimerJobRepository timerJobRepository;
 
-    @Inject
-    private Instance<ParamsAwareRunnable> jobs;
+    @EJB
+    private ServerAccessEJBLocal serverAccess;
 
     @Override
     public List<TimerJob> getTimerJobs(boolean exclusive) {
@@ -303,33 +302,29 @@ public class BackgroundJobServiceBean implements BackgroundJobService {
     }
 
     public ParamsAwareRunnable findParamsAwareRunnableJob(Class<? extends ParamsAwareRunnable> clazz) {
-        /*TODO сделать нармальный лог (возможно java.util.logging...)
-        if (LOG.isDebugEnabled()) {
-            for (ParamsAwareRunnable job : jobs) {
-                LOG.debug(format("Found a job: '%s', '%s'.isAssignableFrom('%s') = '%s'"
-                        , job, clazz, job.getClass(), clazz.isAssignableFrom(job.getClass())));
-            }
-        }*/
-        Instance<? extends ParamsAwareRunnable> filtered = jobs.select(clazz);
-        for (ParamsAwareRunnable job : filtered) {
-            if (clazz.isAssignableFrom(job.getClass())) return job;
+        try {
+            return clazz.newInstance();
+        } catch (Throwable e) {
+            throw new DefaultApplicationException(e.getMessage(), e);
         }
-        throw new DefaultApplicationException("Not found: " + clazz);
+    }
+
+    public void executeJob(Class<? extends ParamsAwareRunnable> clazz, String jobName, Properties properties) throws Exception {
+        serverAccess.invoke(clazz, "run", jobName, properties);
     }
 
     @Override
     public void executeJob(TimerJob timerJob) throws Exception {
+        // todo удалить ссылки на findParamsAwareRunnableJob !!!
         final Properties properties = new Properties();
         if (!isEmpty(timerJob.getProperties())) {
             properties.load(new StringReader(timerJob.getProperties()));
         }
-        findParamsAwareRunnableJob((Class<? extends ParamsAwareRunnable>) Class.forName(timerJob.getRunnableClass()))
-                .run(timerJob.getName(), properties);
+        executeJob((Class<? extends ParamsAwareRunnable>) Class.forName(timerJob.getRunnableClass()), timerJob.getName(), properties);
     }
 
     public void executeJob(TimerJob timerJob, Properties properties) throws Exception {
-        findParamsAwareRunnableJob((Class<? extends ParamsAwareRunnable>) Class.forName(timerJob.getRunnableClass()))
-                .run(timerJob.getName(), properties);
+        executeJob((Class<? extends ParamsAwareRunnable>) Class.forName(timerJob.getRunnableClass()), timerJob.getName(), properties);
     }
 
     @Override
