@@ -13,14 +13,7 @@ public class ClientDateUtils {
     public final static TimeZone TZ_CLIENT =  TimeZone.createTimeZone(-TZ_CLIENT_OFFSET);
 
     private static final String onlyDate = "dd.MM.yyyy";
-
-    public static String Date2String(Date date) {
-        return  date == null ? null : DateTimeFormat.getFormat(onlyDate).format(date);
-    }
-
-    public static Date String2Date(String dateStr) throws IllegalArgumentException{
-        return null == dateStr ? null : DateTimeFormat.getFormat(onlyDate).parse(dateStr);
-    }
+    private static final String dbDate = "yyyy-MM-dd";
 
     public static String Date2String(Date date, String format) {
         return  date == null ? null : DateTimeFormat.getFormat(format).format(date);
@@ -29,4 +22,21 @@ public class ClientDateUtils {
     public static Date String2Date(String dateStr, String format) throws IllegalArgumentException{
         return null == dateStr ? null : DateTimeFormat.getFormat(format).parse(dateStr);
     }
+
+    public static String Date2String(Date date) {
+        return Date2String(date, onlyDate);
+    }
+
+    public static Date String2Date(String dateStr) throws IllegalArgumentException{
+        return String2Date(dateStr, onlyDate);
+    }
+
+    public static String DateDb2String(Date date) {
+        return Date2String(date, dbDate);
+    }
+
+    public static Date String2DateDb(String dateStr) throws IllegalArgumentException{
+        return String2Date(dateStr, dbDate);
+    }
+
 }

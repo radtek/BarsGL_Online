@@ -331,6 +331,14 @@ public class GLComponents {
         return list;
     }
 
+    public static <T extends Enum & HasLabel> HashMap<Serializable, String> getEnumLabelsOnlyList(T[] values){
+        HashMap<Serializable, String> list = new HashMap<Serializable, String>();
+        for (T value: values){
+            list.put(value.name(), value.getLabel());
+        }
+        return list;
+    }
+
     public static <T> HashMap<Serializable, String> getArrayValuesList(T[] values){
         HashMap<Serializable, String> list = new HashMap<Serializable, String>();
         for (T value: values){

@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejbcore.util;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.column.XlsColumn;
@@ -22,6 +23,7 @@ public class Sql2Xls {
 
     public static final Logger logger = Logger.getLogger(Sql2Xls.class.getName());
 
+    private final int koeffWidth = 35;
     private List<XlsColumn> columns = new ArrayList();
     private ExcelExportHead head = null;
     private List<DataRecord> dataRecords;
@@ -59,7 +61,7 @@ public class Sql2Xls {
             throw new Exception("Колонки не заданы");
         } else {
             SXSSFWorkbook wb;
-            Sheet curSheet;
+            SXSSFSheet curSheet;
             Row row;
             int rowNumber = head == null ? 0 : 5;
             wb = new SXSSFWorkbook(100);
@@ -77,7 +79,12 @@ public class Sql2Xls {
                 }
                 for(int e = 0; e < this.columns.size(); ++e) {
                     try {
-                        curSheet.autoSizeColumn(e, true);
+                        if (this.columns.get(e).getWidth() > 10) {
+                            curSheet.setColumnWidth(e, this.columns.get(e).getWidth() * koeffWidth);
+                        } else {
+                            curSheet.trackColumnForAutoSizing(e);
+                            curSheet.autoSizeColumn(e, true);
+                        }
                     } catch (Throwable t) {
                         logger.log(Level.SEVERE, "Error on autosizing column: " + e, t);
                     }

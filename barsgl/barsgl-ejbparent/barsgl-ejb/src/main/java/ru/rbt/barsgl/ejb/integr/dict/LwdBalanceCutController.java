@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static javax.ejb.LockType.READ;
 import static javax.ejb.LockType.WRITE;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.User;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
@@ -59,6 +60,7 @@ public class LwdBalanceCutController extends BaseDictionaryController<LwdBalance
     @Inject
     ru.rbt.ejbcore.util.DateUtils dateUtils;
 
+    @Lock(READ)
     public RpcRes_Base<LwdBalanceCutWrapper> get() {
         LwdBalanceCutView record = cachedRepository.getRecord();
         LwdBalanceCutWrapper wrapper = new LwdBalanceCutWrapper();

@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbcore.page;
 
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.criteria.Criterion;
 import ru.rbt.barsgl.shared.criteria.OrderByColumn;
@@ -104,4 +105,7 @@ public interface SqlPageSupport {
 
     String export2Excel(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy, ExcelExportHead head, boolean allrows) throws Exception;
 
+    String export2ExcelSort(String nativeSql, Repository repository, List<XlsColumn> xlsColumns, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy, ExcelExportHead head, boolean allrows) throws Exception;
+
+    RpcRes_Base<Boolean> export2ExcelExists(String nativeSql, Repository repository, Criterion<?> criterion) throws Exception;
 }

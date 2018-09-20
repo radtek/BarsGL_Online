@@ -99,6 +99,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , AccDealCloseTask
         , BackgroundLocalization
         , BufferModeSyncAuto
+        , Exclude47422
     }
 
     public enum LogLevel {

@@ -10,13 +10,19 @@ public class XlsColumn implements Serializable {
     private String name;
     private XlsType type;
     private String format;
+    private int width;
 
     public XlsColumn() {
     }
 
     public XlsColumn(String name, XlsType type, String caption, String format) {
+        this(name, type, caption, format, -1);
+    }
+
+    public XlsColumn(String name, XlsType type, String caption, String format, int width) {
         this.name = name;
         this.type = type;
+        this.width = width;
         this.caption = caption;
         if(format != null && !format.isEmpty()) {
             this.format = format;
@@ -67,4 +73,11 @@ public class XlsColumn implements Serializable {
         this.format = format;
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
 }

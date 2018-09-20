@@ -177,6 +177,7 @@ public enum ErrorCode {
 
     , QUEUE_ERROR(3030, "%s")
     , ACCCLOSE_ERROR(3031, "%s")
+    , EXCLUDE_47422_ERROR(3032, "%s")
 
     // Авторизация и ручная обработка
     , BAD_DATE_FORMAT(4000, "Неверный формат поля '%s': %s")

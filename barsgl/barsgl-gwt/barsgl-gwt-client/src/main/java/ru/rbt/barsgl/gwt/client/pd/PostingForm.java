@@ -26,9 +26,12 @@ import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.PostingChoice;
 import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.barsgl.shared.operation.Rep47422Wrapper;
 import ru.rbt.barsgl.shared.operday.OperDayWrapper;
 import ru.rbt.grid.gwt.client.export.Export2Excel;
+import ru.rbt.grid.gwt.client.export.Export2ExcelHead;
 import ru.rbt.grid.gwt.client.export.ExportActionCallback;
+import ru.rbt.grid.gwt.client.export.IExportData;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.security.gwt.client.operday.IDataConsumer;
 import ru.rbt.security.gwt.client.operday.OperDayGetter;
@@ -79,7 +82,7 @@ public class PostingForm extends MDForm {
         masterActionBar.addAction(createPreview());
         masterActionBar.addSecureAction(editChoiceAction(), OperPstChng, OperPstChngDate, OperPstChngDateArcRight);
         masterActionBar.addSecureAction(new DeleteAction(), OperPstMakeInvisible);
-        masterActionBar.addAction(BackValuePostingReport());
+        masterActionBar.addAction(createReport());
 
         getOperday(new IDataConsumer<OperDayWrapper>() {
             @Override
@@ -443,6 +446,45 @@ public class PostingForm extends MDForm {
         }
     }
 
+    private GridAction createReport() {
+        final PopupPanel repPanel = new PopupPanel(true, true);
+        VerticalPanel vp = new VerticalPanel();
+        vp.add(new HTML("<b>Создать отчет</b>"));
+        MenuItem itemBV = new MenuItem("Отчет по Back Value", new Command() {
+            @Override
+            public void execute() {
+                repPanel.hide();
+                BackValuePostingReport().execute();
+            }
+        });
+        MenuItem itemRecon = new MenuItem("Отчет по счетам с acode 4496 и sq 99", new Command() {
+            @Override
+            public void execute() {
+                repPanel.hide();
+                Reconc47422PostingReport().execute();
+            }
+        });
+        MenuBar bar = new MenuBar(true);
+        bar.addItem(itemBV);
+        bar.addItem(itemRecon);
+        vp.add(bar);
+        repPanel.setWidget(vp);
+
+        return new GridAction(masterGrid, null, "Создать отчет", new Image(ImageConstants.INSTANCE.report()), 5) {
+            @Override
+            public void execute() {
+                final PushButton button = masterActionBar.getButton(this);
+                repPanel.show();
+                repPanel.setPopupPositionAndShow(new PopupPanel.PositionCallback() {
+
+                    @Override
+                    public void setPosition(int i, int i1) {
+                        repPanel.setPopupPosition(button.getAbsoluteLeft(), button.getAbsoluteTop() + button.getOffsetHeight());
+                    }
+                });
+            }
+        };
+    }
 
     private GridAction BackValuePostingReport() {
         return new GridAction(masterGrid, null, "Отчет по Back Value", new Image(ImageConstants.INSTANCE.report()), 5) {
@@ -492,6 +534,52 @@ public class PostingForm extends MDForm {
                     }
                 });
             }
+        };
+    }
+
+    private GridAction Reconc47422PostingReport() {
+        return new GridAction(masterGrid, null, null, new Image(ImageConstants.INSTANCE.report()), 5) {
+
+            Rep47422Dlg dlg = null;
+            GridAction act = this;
+
+            @Override
+            public void execute() {
+                if (dlg == null) dlg = new Rep47422Dlg();
+                dlg.setDlgEvents(this);
+                dlg.show(null);
+            }
+
+
+            public void onDlgOkClick(Object prms){
+                dlg.hide();
+
+                final Rep47422Wrapper wrapper = (Rep47422Wrapper) prms;
+                IExportData reportData = new Rep47422Data(wrapper);
+                WaitingManager.show("Проверка наличия данных...");
+
+                ExcelExportHead head = new Export2ExcelHead("Реконсиляционный отчет для проверки проводок по счетам acode 4496 sq 99",
+                        reportData.masterFilterItems()).createExportHead();
+
+                final Export2Excel e2e = new Export2Excel(reportData, head,
+                        new ExportActionCallback(act, UUID.randomUUID().replace("-", "")));
+                e2e.exportExists(new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                    @Override
+                    public void onSuccess(RpcRes_Base<Boolean> res) {
+                        if (res.isError()) {
+                            WaitingManager.hide();
+                            DialogManager.message("Отчет", res.getMessage());
+                        } else {
+                            dlg.hide();
+                            WaitingManager.hide();
+                            setEnable(false);
+
+                            e2e.exportSort(true);
+                        }
+                    }
+                });
+            }
+
         };
     }
 }

@@ -10,10 +10,12 @@ import ru.rbt.barsgl.gwt.core.datafields.Field;
 import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
+import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.SqlQueryTimeoutException;
 import ru.rbt.barsgl.shared.column.XlsColumn;
 import ru.rbt.barsgl.shared.column.XlsType;
@@ -28,6 +30,7 @@ import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.filterCriteriaAdapter;
 
@@ -110,7 +113,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             for (int i = 0; i < columns.getColumnCount(); i++) {
                 Column column = columns.getColumnByIndex(i);
                 if (column.isVisible() && column.getWidth() > 0)
-                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat()));
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat(), column.getWidth()));
             }
             String fileName = localInvoker.invoke(SqlPageSupport.class, "export2Excel", sql, repository, xlsColumns,
                     filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaAdapter(sortCriteria), head, allrows);
@@ -120,6 +123,53 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
             processException(t, sql, "Ошибка при экспорте в Excel");
             return null;
         }
+    }
+
+    /*
+    * метод дублирует предыдущий, но выгружает с учетом сортировки
+    * добавлен, чтобы не перетестировать общий метод
+    * */
+
+    @Override
+    public String export2ExcelSort(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria, List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable {
+        try {
+            List<XlsColumn> xlsColumns = new ArrayList<XlsColumn>();
+            for (int i = 0; i < columns.getColumnCount(); i++) {
+                Column column = columns.getColumnByIndex(i);
+                if (column.isVisible() && column.getWidth() > 0)
+                    xlsColumns.add(new XlsColumn(column.getName(), XlsType.getType(column.getType().toString()), column.getCaption(), column.getFormat(), column.getWidth()));
+            }
+            String fileName = localInvoker.invoke(SqlPageSupport.class, "export2ExcelSort", sql, repository, xlsColumns,
+                    filterCriteriaAdapter(filterCriteria), 0, 0, sortCriteriaListAdapter(sortCriteria), head, allrows);
+
+            return fileName;
+        } catch (Throwable t) {
+            processException(t, sql, "Ошибка при экспорте в Excel");
+            return null;
+        }
+    }
+
+    @Override
+    public RpcRes_Base<Boolean> export2ExcelExists(Repository repository, String sql, List<FilterItem> filterCriteria) throws Throwable {
+        return new RpcResProcessor<Boolean>(){
+
+            @Override
+            protected RpcRes_Base<Boolean> buildResponse() throws Throwable {
+                RpcRes_Base<Boolean> res = localInvoker.invoke(SqlPageSupport.class, "export2ExcelExists", sql, repository,
+                        filterCriteriaAdapter(filterCriteria));
+                if (res == null) throw new Throwable("Не удалось проверить наличие данных для отчета");
+                return res;
+            }
+        }.process();
+
+//        try {
+//            return localInvoker.invoke(SqlPageSupport.class, "export2ExcelExists", sql, repository,
+//                    filterCriteriaAdapter(filterCriteria));
+//
+//        } catch (Throwable t) {
+//            processException(t, sql, "Ошибка при экспорте в Excel");
+//            return null;
+//        }
     }
 
     @Override
@@ -178,6 +228,13 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
         if (sortCriteria == null || sortCriteria.isEmpty()) return null;
         SortItem item = sortCriteria.get(0);
         return new OrderByColumn(item.getName(), item.getType() == Column.Sort.ASC ? OrderByType.ASC : OrderByType.DESC);
+    }
+
+    private List<OrderByColumn> sortCriteriaListAdapter(List<SortItem> sortCriteria){
+        if (sortCriteria == null || sortCriteria.isEmpty()) return null;
+        return sortCriteria.stream().map(item ->
+                new OrderByColumn(item.getName(), item.getType() == Column.Sort.ASC ? OrderByType.ASC : OrderByType.DESC))
+                .collect(Collectors.toList());
     }
 
     @Override

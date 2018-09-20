@@ -8,6 +8,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.Export.ExcelExportHead;
 import ru.rbt.barsgl.shared.Repository;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 
 import java.io.Serializable;
 import java.util.List;
@@ -23,15 +24,19 @@ public interface AsyncGridService extends RemoteService {
                            List<SortItem> sortCriteria) throws Throwable;
     Row selectOne(String sql, Serializable[] params) throws Throwable;
     Row selectFirst(String sql, Serializable[] params) throws Throwable;
+    Row selectOne(Repository repository, String sql, Serializable[] params) throws Throwable;
     void Debug(String msg) throws Exception;
-    String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria,
-                        List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable;
-    String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
-                        List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable;
     Integer getAsyncCount(Repository repository, String sql, List<FilterItem> filterCriteria) throws Throwable;
     List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria,
                            List<SortItem> sortCriteria) throws Throwable;
-    Row selectOne(Repository repository, String sql, Serializable[] params) throws Throwable;
+
+    String export2Excel(String sql, Columns columns, List<FilterItem> filterCriteria,
+                        List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable;
     String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
                         List<SortItem> sortCriteria, ExcelExportHead head) throws Throwable;
+    String export2Excel(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
+                        List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable;
+    String export2ExcelSort(Repository repository, String sql, Columns columns, List<FilterItem> filterCriteria,
+                        List<SortItem> sortCriteria, ExcelExportHead head, boolean allrows) throws Throwable;
+    RpcRes_Base<Boolean> export2ExcelExists(Repository repository, String sql, List<FilterItem> filterCriteria) throws Throwable;
 }
