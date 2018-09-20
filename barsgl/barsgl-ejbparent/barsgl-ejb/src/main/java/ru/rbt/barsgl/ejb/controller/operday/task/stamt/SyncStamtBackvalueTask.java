@@ -98,12 +98,16 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
 
                 auditController.info(BufferModeSyncBackvalue, format("Разрешение обработки '%s'", allowAccess()));
 
-                Assert.isTrue(incrementTask.checkRun(operday.getCurrentDate(), new Properties())
-                        , () -> new ValidationError(TASK_ERROR, format("Не прошла проверка возм-ти выполнен инкр. выгрузки ОД %s"
-                                , dateUtils.onlyDateString(operday.getCurrentDate()))));
-                final String incrJobName = jobName + "_incr";
-                auditController.info(BufferModeSyncBackvalue, format("Запуск задачи %s инкрементальной выгрузки в STAMT после синхронизации", incrJobName));
-                incrementTask.run(incrJobName, new Properties());
+                try {
+                    Assert.isTrue(incrementTask.checkRun(operday.getCurrentDate(), new Properties())
+                            , () -> new ValidationError(TASK_ERROR, format("Не прошла проверка возм-ти выполнен инкр. выгрузки ОД %s"
+                                    , dateUtils.onlyDateString(operday.getCurrentDate()))));
+                    final String incrJobName = jobName + "_incr";
+                    auditController.info(BufferModeSyncBackvalue, format("Запуск задачи %s инкрементальной выгрузки в STAMT после синхронизации", incrJobName));
+                    incrementTask.run(incrJobName, new Properties());
+                } catch (ValidationError error) {
+                    auditController.warning(BufferModeSyncBackvalue, error.getMessage(), null, error);
+                }
             } else if (operday.getPhase() == COB) {
                 workprocRepository.updateWorkproc(getStepName(jobName, properties), getWorkprocDate(operday)
                         , O, format("Задача %s не выполнена опердень закрыт", jobName));
@@ -115,7 +119,7 @@ public class SyncStamtBackvalueTask extends AbstractJobHistoryAwareTask {
             return true;
         } catch (Throwable e) {
             auditController.error(BufferModeSyncBackvalue
-                    , "Ошибка при выполнении синхронизации/инкр.выгрузки проводок backvalue в STAMT", null, e);
+                    , "Ошибка при выполнении синхронизации/инкр.выгрузки проводок backvalue в STAMT. Необходимо проверить: 1) состояние буфера, 2) состояние обработки проводок!", null, e);
             jobHistoryRepository.executeInNewTransaction(persistence ->
                     workprocRepository.updateWorkproc(getStepName(jobName, properties), getWorkprocDate(operday)
                             , E, format("Ошибка при вып. задачи %s: %s"
