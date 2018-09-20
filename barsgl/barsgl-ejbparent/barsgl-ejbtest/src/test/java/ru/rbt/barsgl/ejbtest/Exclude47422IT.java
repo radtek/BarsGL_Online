@@ -193,6 +193,17 @@ public class Exclude47422IT extends AbstractRemoteIT {
         checkProcAcc(glo2);
     }
 
+    @Test
+    public void makeOperations() throws SQLException {
+//        makeSimpleOneday(MOS, RUB, new BigDecimal("4321.05"));
+//        makeFanOneday(MOS, EUR, new BigDecimal("2448.00"));
+
+        makeSimpleDiffday(MOS, RUB, new BigDecimal("2387"));
+        makeFanDiffday(MOS, RUB, new BigDecimal("6420"));
+
+        makeSimpleDiffday(EKB, RUB, new BigDecimal("333"));
+    }
+
     private void checkProcDat(Long[] gloids) {
         List<Reg47422Journal> regProc = getJournalListByGloid(gloids, Reg47422Journal.Reg47422Valid.Y, Reg47422State.PROC_DAT);
 

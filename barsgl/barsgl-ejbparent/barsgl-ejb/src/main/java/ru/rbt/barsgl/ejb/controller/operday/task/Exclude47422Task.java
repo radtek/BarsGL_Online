@@ -26,10 +26,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.BackgroundLocalization;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Exclude47422;
 import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEF_DEPTH;
 import static ru.rbt.barsgl.ejb.common.controller.od.Rep47422Controller.REG47422_DEPTH;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.GlueMode.Glue;
 import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.GlueMode.Load;
 import static ru.rbt.barsgl.ejb.controller.operday.task.Exclude47422Task.GlueMode.Standard;
@@ -56,8 +58,8 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
 
     public enum PstSide {D, C, N};
     public enum GlueMode implements HasLabel{
-        Standard("Загрузка и обработка, если есть изменения"),
-        Load("Загрузка новых / измененных"),
+        Standard("Загрузка и обработка"),
+        Load("Загрузка новых/измененных"),
         Glue("Обработка с заданной даты"),
         Full("Загрузка и обработка (даже без изменений)")            ;
 
@@ -98,16 +100,27 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
     protected boolean checkRun(String jobName, Properties properties) throws Exception {
         Operday operday = operdayController.getOperday();
         if (ONLINE != operday.getPhase()) {
-            auditController.warning(AuditRecord.LogCode.Operday, format("Нельзя запустить задачу '%s': опердень в статусе '%s'"
-                    , myTaskName, operday.getPhase().name() ));
+            auditController.warning(AuditRecord.LogCode.Operday, format("Нельзя запустить задачу '%s': опердень в статусе '%s', требуется '%s'"
+                    , jobName, operday.getPhase().name(), ONLINE.name() ));
+            return false;
+        }
+        if (DIRECT != operday.getPdMode()) {
+            auditController.warning(AuditRecord.LogCode.Operday, format("Нельзя запустить задачу '%s': режим обработки '%s', требуется '%s'"
+                    , jobName, operday.getPdMode().name(), DIRECT.name() ));
             return false;
         }
 
-//        final Date currentDateTime = operdayController.getSystemDateTime();
-//        final Date currentDate = DateUtils.onlyDate(currentDateTime);
-
-        checkAlreadyRunning(myTaskName, properties);
         return true;
+    }
+
+    @Override
+    protected boolean checkJobStatus(String jobName, Properties properties) {
+        try {
+            return checkAlreadyRunning(jobName, properties);
+        } catch (ValidationError e) {
+            auditController.warning(Exclude47422, format("Задача %s не выполнена", jobName), null, e);
+            return false;
+        }
     }
 
     @Override
@@ -115,28 +128,35 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         // определить дату начала dateFrom (POD >= dateFrom && POD <= lwdate, PROCDATE is null or PROCDATE <= lwdate)
         Operday operday = operdayController.getOperday();
         Date dateFrom = getDateFrom(operday.getCurrentDate(), properties);
-        GlueMode mode = GlueMode.valueOf(Optional.ofNullable(properties.getProperty(REG47422_MODE_KEY)).orElse(Standard.name()));
-        auditController.info(Exclude47422, String.format("Запуск задачи %s в режиме %s(%s) с даты '%s' по дату '%s'",
-                myTaskName, mode.name(), mode.getLabel(), dateUtils.onlyDateString(dateFrom),
-                dateUtils.onlyDateString(operday.getLastWorkingDay())));
-        // обновить GL_REG47422
-        int cntLoad = 0;
-        if (mode != Glue) {
-            cntLoad = loadNewData(dateFrom);
-        }
-        if (mode == Load || (mode == Standard && cntLoad == 0))
+        try {
+            GlueMode mode = GlueMode.valueOf(Optional.ofNullable(properties.getProperty(REG47422_MODE_KEY)).orElse(Standard.name()));
+            auditController.info(Exclude47422, String.format("Запуск задачи %s в режиме %s(%s) с даты '%s' по дату '%s'",
+                    myTaskName, mode.name(), mode.getLabel(), dateUtils.onlyDateString(dateFrom),
+                    dateUtils.onlyDateString(operday.getLastWorkingDay())));
+            // обновить GL_REG47422
+            int cntLoad = 0;
+            if (mode != Glue) {
+                cntLoad = loadNewData(dateFrom);
+            }
+            if (mode == Load) {     //  || (mode == Standard && cntLoad == 0)
+                auditController.info(Exclude47422, String.format("Окончание выполнения задачи %s (загрузка данных)", myTaskName));
+                return true;
+            }
+
+            // склеить проводки с одной датой: одиночные, веера
+            processEqualDates(true, dateFrom);
+            processEqualDates(false, dateFrom);
+
+            // обработать проводки с разной датой: одиночные, веера
+            processDiffDates(true, dateFrom);
+            processDiffDates(false, dateFrom);
+
+            auditController.info(Exclude47422, String.format("Окончание выполнения задачи %s", myTaskName));
             return true;
-
-        // склеить проводки с одной датой: одиночные, веера
-        processEqualDates(true, dateFrom);
-        processEqualDates(false, dateFrom);
-
-        // обработать проводки с разной датой: одиночные, веера
-        processDiffDates(true, dateFrom);
-        processDiffDates(false, dateFrom);
-
-        auditController.info(Exclude47422, String.format("Окончание выполнения задачи %s", myTaskName));
-        return true;
+        } catch (IllegalArgumentException e) {
+            auditController.warning(Exclude47422, String.format("Ошибка при выполнении задачи %s", myTaskName), null, e);
+            return false;
+        }
     }
 
     public boolean testExec(JobHistory jobHistory, Properties properties) throws Exception {
@@ -218,6 +238,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
      */
     private int processEqualDates(boolean withSum, Date dateFrom) {
         try {
+            int cnt = 0;
             List<DataRecord> glueList = journalRepository.getGroupedList(dateFrom, withSum, true, LOAD, CHANGE);    // наборы для склейки
             for (DataRecord glued: glueList) {
                 // сторона PH
@@ -231,16 +252,19 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                 }
                 // сторона ручки веера
                 PstSide stickSide = glued.getInteger("cnt_dr") > 1 ? C : glued.getInteger("cnt_cr") > 1 ? D : N;
-                processGlue(glued, phSide, stickSide);
+                boolean ok = processGlue(glued, phSide, stickSide);
+                if(ok) cnt++;
             }
-            return glueList.size();
+            auditController.info(Exclude47422, String.format("Выбрано записей для обработки в одной дате (%s): %d, успешно обработано: %d",
+                    withSum ? "1:1" : "веера", glueList.size(), cnt));
+            return cnt;
         } catch (Exception e) {
             auditController.error(Exclude47422, "Ошибка при обработке проводок по счетам 47422", null, e);
             return 0;
         }
     }
 
-    private void processGlue(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
+    private boolean processGlue(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
         // сторона PCID
         PstSide pcidSide = stickSide != N ? stickSide : phSide;
         Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
@@ -249,7 +273,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                 new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
                 new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
         );
-        journalRepository.executeInNewTransaction(persistence -> {
+        return journalRepository.executeInNewTransaction(persistence -> {
             journalRepository.gluePostings(params.idInvisible, params.idVisible, params.pcidNew, params.pbr);
             updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
             if (phSide != pcidSide) {
@@ -257,7 +281,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                 reviseDocType(params);
             }
             journalRepository.updateProcGL(glued.getString("id_reg"), params.pcidNew);
-            return null;
+            return true;
         });
     }
 
@@ -269,6 +293,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
      */
     private int processDiffDates(boolean withSum, Date dateFrom) {
         try {
+            int cnt = 0;
             List<DataRecord> glueList = journalRepository.getGroupedList(dateFrom, withSum, false, LOAD, CHANGE, WT47416);    // наборы для склейки
             for (DataRecord glued: glueList) {
                 // сторона PH
@@ -282,8 +307,11 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                 }
                 // сторона ручки веера
                 PstSide stickSide = glued.getInteger("cnt_dr") > 1 ? C : glued.getInteger("cnt_cr") > 1 ? D : N;
-                processChangeAcc(glued, phSide, stickSide);
+                boolean ok = processChangeAcc(glued, phSide, stickSide);
+                if(ok) cnt++;
             }
+            auditController.info(Exclude47422, String.format("Выбрано записей для обработки в разных датах (%s): %d, успешно обработано: %d",
+                    withSum ? "1:1" : "веера", glueList.size(), cnt));
             return glueList.size();
         } catch (Exception e) {
             auditController.error(Exclude47422, "Ошибка при обработке проводок по счетам 47422", null, e);
@@ -291,7 +319,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         }
     }
 
-    private void processChangeAcc(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
+    private boolean processChangeAcc(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
         // определить счет на замену
         String acid = glued.getString("acid");
         GLAccParam ac47416 = journalRepository.getAccount47416(acid);
@@ -302,14 +330,14 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                 journalRepository.updateState(glued.getString("id_reg"), WT47416);
                 return null;
             });
-            return;
+            return false;
         }
-        journalRepository.executeInNewTransaction(persistence -> {
+        return journalRepository.executeInNewTransaction(persistence -> {
             String pcidList = joinLists(glued.getString("pcid_dr"), glued.getString("pcid_cr"));
             PstSide pcidSide = stickSide != N ? stickSide : C;
             journalRepository.replace47416(pcidList, joinLists(glued.getString("pdid_dr"), glued.getString("pdid_cr")), ac47416);
             journalRepository.updateProcAcc(glued.getString("id_reg"), pcidList, glued.getString(pcidSide == D ? "pcid_dr" : "pcid_cr"));
-            return null;
+            return true;
         });
     }
 
