@@ -1,18 +1,13 @@
 package ru.rbt.barsgl.ejb.integr.dict;
 
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriod;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCut;
 import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.repository.dict.LwdBalanceCutRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.shared.RpcRes_Base;
-import ru.rbt.barsgl.shared.dict.BVSourceDealWrapper;
-import ru.rbt.barsgl.shared.dict.ClosedReportPeriodWrapper;
 import ru.rbt.barsgl.shared.operday.LwdBalanceCutWrapper;
 import ru.rbt.ejbcore.util.StringUtils;
 
@@ -21,16 +16,13 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static javax.ejb.LockType.READ;
 import static javax.ejb.LockType.WRITE;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.User;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -134,16 +126,17 @@ public class LwdBalanceCutController extends BaseDictionaryController<LwdBalance
                 return parseError;
 
             Date runDate = wrapper.getRunDate();
-            // runDate >= текущий ОД
-            if (runDate.before(operdayController.getOperday().getCurrentDate()))
-                errorList.add(format("Дата отсечения '%s' < текущего опердня '%s'"
-                        , wrapper.getRunDateStr(), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
+            Date lwDate = operdayController.getOperday().getLastWorkingDay();
+            // runDate >= предыдущий ОД + 1
+            if (!lwDate.before(runDate))
+                errorList.add(format("Дата отсечения '%s' должна быть > предыдущего рабочего дня '%s'"
+                        , wrapper.getRunDateStr(), dateUtils.onlyDateString(lwDate)));
 
             // runDate существует и рабочий день
             if (calendarDayRepository.getCalendarDays(runDate, runDate).isEmpty())
                 errorList.add(format("Дата отсечения '%s' отсутствует в календаре банка", wrapper.getRunDateStr()));
-            else if (!calendarDayRepository.isWorkday(runDate))
-                errorList.add(format("Дата отсечения '%s' - выходной день", wrapper.getRunDateStr()));
+//            else if (!calendarDayRepository.isWorkday(runDate))
+//                errorList.add(format("Дата отсечения '%s' - выходной день", wrapper.getRunDateStr()));
 
         } catch (Exception e) {
             errorList.add(e.getMessage());
