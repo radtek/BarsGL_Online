@@ -418,7 +418,7 @@ public class ManualPostingController {
             BatchPostStatus oldStatus = posting.getStatus();
             int count = operationRepository.executeInNewTransaction(persistence -> {
                 return postingRepository.refusePostingStatus(posting.getId(), wrapper.getReasonOfDeny(),
-                        userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
+                        userContext.getTimestamp(), getUserName(), status, oldStatus);
             });
             if (0 == count)
                 throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
@@ -447,13 +447,13 @@ public class ManualPostingController {
             // тестируем статус - что никто еще не менял
             updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);
             BatchPostStatus newStatus = getOperationRqStatusSigned(wrapper.getUserId(), posting.getPostDate());
-            setOperationRqStatusSigned(wrapper, userContext.getUserName(), SIGNEDVIEW, newStatus);
+            setOperationRqStatusSigned(wrapper, getUserName(), SIGNEDVIEW, newStatus);
 
             if (posting0.isControllable()) {                    // есть контролируемы счет
                 return sendMovement(posting, wrapper, newStatus);          // посылка запроса в MovementCreate
             } else {
                 // устанавливаем статус SIGNED / SIGNEDDATE / WAITDATE
-                return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
+                return setOperationRqStatusSigned(wrapper, getUserName(), newStatus, newStatus);
             }
         } catch (ValidationError e) {
                 String msg = "Ошибка при авторизации запроса на операцию ID = " + wrapper.getId();
@@ -489,7 +489,7 @@ public class ManualPostingController {
                     return null;
                 });
             }
-            return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
+            return setOperationRqStatusSigned(wrapper, getUserName(), newStatus, newStatus);
 //            return authorizeOperationRqInternal(posting, wrapper, newStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты запроса на операцию ID = " + wrapper.getId();
@@ -557,7 +557,7 @@ public class ManualPostingController {
         BatchPostStatus oldStatus = wrapper.getStatus();
         int count = operationRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
-                return postingRepository.updatePostingStatusChanged(wrapper.getId(), userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
+                return postingRepository.updatePostingStatusChanged(wrapper.getId(), userContext.getTimestamp(), getUserName(), status, oldStatus);
             } else {
                 return postingRepository.updatePostingStatus(wrapper.getId(), status, oldStatus);
             }
@@ -731,7 +731,7 @@ public class ManualPostingController {
     private BatchPosting deletePosting(ManualOperationWrapper wrapper) {
         BatchPosting posting = getPostingWithCheck(wrapper);
         if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, BatchPostAction.DELETE)) {
-            postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), userContext.getUserName());
+            postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), getUserName());
             return postingRepository.findById(posting.getId());
         } else {
             postingRepository.deletePosting(posting.getId());   // удалить запрос на операцию
@@ -812,7 +812,7 @@ public class ManualPostingController {
     public void checkHand12Diff(BatchPosting posting) {
         BatchPostStep step = posting.getStatus().getStep();
         if (step.isControlStep()) {
-            if (userContext.getUserName().equals(posting.getUserName())) {
+            if (getUserName().equals(posting.getUserName())) {
                 throw new ValidationError(POSTING_SAME_NOT_ALLOWED, posting.getId().toString());
             }
         }
@@ -870,6 +870,15 @@ public class ManualPostingController {
         wrapper.setInputMethod(posting.getInputMethod());
         wrapper.setStatus(posting.getStatus());
         return wrapper;
+    }
+
+    public String getUserName() {
+        String userName = userContext.getUserName();
+        if (isEmpty(userName)) {
+            log.error("Не удалось определить имя пользователя");
+//            throw new ValidationError(OPER_MANUAL_ERROR, "Не удалось определить имя пользователя");
+        }
+        return userName;
     }
 
     // ==============================================================================================

@@ -210,7 +210,7 @@ public class BatchPackageController {
         BatchPackageState pkgStatus = ON_CONTROL;
         postingRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
-                packageRepository.updatePostingsStatusChange(pkgId, userContext.getTimestamp(), userContext.getUserName(), status, statusIn);
+                packageRepository.updatePostingsStatusChange(pkgId, userContext.getTimestamp(), getUserName(), status, statusIn);
             } else {
                 packageRepository.updatePostingsStatus(pkgId, status, statusIn);
             }
@@ -296,7 +296,7 @@ public class BatchPackageController {
             checkPostingsStatusNotIn(wrapper, COMPLETED, WORKING, SIGNED, SIGNEDDATE);
             BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
             if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, wrapper.getAction())) {
-                packageRepository.setPackageInvisible(pkg.getId(), userContext.getTimestamp(), userContext.getUserName()); // сделать пакет невидимым
+                packageRepository.setPackageInvisible(pkg.getId(), userContext.getTimestamp(), getUserName()); // сделать пакет невидимым
                 return packageRepository.findById(pkg.getId());
             } else {
                 packageRepository.deletePackage(pkg.getId());   // удалить пакет
@@ -331,7 +331,7 @@ public class BatchPackageController {
             updatePackageStateNew(pkg, IS_SIGNEDVIEW);
             createPackageHistory(pkg, oldStatus.getStep(), wrapper.getAction());
             BatchPostStatus newStatus = postingController.getOperationRqStatusSigned(wrapper.getUserId(), pkg.getPostDate());
-            setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, SIGNEDVIEW, newStatus, oldStatus);
+            setPackageRqStatusSigned(wrapper, getUserName(), pkg, IS_SIGNEDVIEW, SIGNEDVIEW, newStatus, oldStatus);
             oldStatus = SIGNEDVIEW;
             List<Long> ctrlPostingsId = Collections.emptyList();
             if (!YesNo.Y.equals(pkg.getMovementOff())) {        // движение НЕ отключено
@@ -343,7 +343,7 @@ public class BatchPackageController {
                 return sendMovements(pkg, ctrlPostingsId, wrapper, newStatus);
             } else {
                 // изменить статус
-                return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, newStatus, newStatus, oldStatus);
+                return setPackageRqStatusSigned(wrapper, getUserName(), pkg, IS_SIGNEDVIEW, newStatus, newStatus, oldStatus);
             }
         } catch (ValidationError e) {
             String msg = "Ошибка при авторизации пакета, загруженного из файла";
@@ -351,6 +351,11 @@ public class BatchPackageController {
             auditController.error(BatchOperation, msg, null, e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
+    }
+
+    public String getUserName() {
+//        return userContext.getUserName();
+        return postingController.getUserName();
     }
 
     public RpcRes_Base<ManualOperationWrapper> sendMovements(final BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
@@ -429,7 +434,7 @@ public class BatchPackageController {
                     return null;
                 });
             }
-            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
+            return setPackageRqStatusSigned(wrapper, getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты пакета, загруженного из файла";
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
@@ -498,7 +503,7 @@ public class BatchPackageController {
             postingRepository.executeInNewTransaction(persistence -> {
                 BatchPackageState stateOld = pkg0.getPackageState();
                 createPackageHistory(pkg0, status0.getStep(), wrapper.getAction());
-                int cnt = packageRepository.refusePackageStatus(pkg0.getId(), stateOld, userContext.getTimestamp(), userContext.getUserName(),
+                int cnt = packageRepository.refusePackageStatus(pkg0.getId(), stateOld, userContext.getTimestamp(), getUserName(),
                         wrapper.getReasonOfDeny(), status);
                 if (0 == cnt)
                     throw  new ValidationError(PACKAGE_STATUS_WRONG, stateOld.name(), stateOld.getLabel());
@@ -529,7 +534,7 @@ public class BatchPackageController {
     public void checkHand12Diff(BatchPosting posting) {
         BatchPostStep step = posting.getStatus().getStep();
         if (step.isControlStep()) {
-            if (userContext.getUserName().equals(posting.getUserName())) {
+            if (getUserName().equals(posting.getUserName())) {
                 throw new ValidationError(PACKAGE_SAME_NOT_ALLOWED, posting.getPackageId().toString());
             }
         }
