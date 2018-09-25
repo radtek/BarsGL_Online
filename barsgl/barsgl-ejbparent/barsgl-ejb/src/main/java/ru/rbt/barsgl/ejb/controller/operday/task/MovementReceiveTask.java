@@ -2,7 +2,6 @@ package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
@@ -16,7 +15,6 @@ import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
-import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
@@ -119,19 +117,22 @@ public class MovementReceiveTask implements ParamsAwareRunnable {
         List<Long> packageIds = packageRepository.getPackagesReceiveSrv(operday);
         for (Long packageId : packageIds) {
             try {
-                BatchPackage pkg = packageRepository.findById(packageId);
-                if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
-                    packageController.updatePackageStateError(pkg, ERROR, ON_WAITSRV);
-                } else if (null == postingRepository.getOnePostingByPackageForSign(pkg.getId())) { // нет запросов для обработки
-                    packageController.updatePackageState(pkg, PROCESSED, ON_WAITSRV);
-                } else {
-                    BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
-                    BatchPostStatus postStatus = postingController.getOperationRqStatusSigned(posting.getSignerName(), pkg.getPostDate());
-                    ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
-                    wrapper.setAction(BatchPostAction.SIGN);
-                    packageController.setPackageRqStatusSigned(wrapper, posting.getSignerName(),
-                            pkg, pkg.getPackageState(), postStatus, postStatus, SIGNEDVIEW, OKSRV);   // TODO userName
-                }
+                postingRepository.executeInNewTransaction(persistence -> {
+                    BatchPackage pkg = packageRepository.findById(packageId);
+                    if (null == postingRepository.getOnePostingByPackageWithoutStatus(pkg.getId(), ERRSRV)) { // все с ошибками
+                        packageController.updatePackageStateError(pkg, ERROR, ON_WAITSRV);
+                    } else if (null == postingRepository.getOnePostingByPackageForSign(pkg.getId())) { // нет запросов для обработки
+                        packageController.updatePackageState(pkg, PROCESSED, ON_WAITSRV);
+                    } else {
+                        BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
+                        BatchPostStatus postStatus = postingController.getOperationRqStatusSigned(posting.getSignerName(), pkg.getPostDate());
+                        ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
+                        wrapper.setAction(BatchPostAction.SIGN);
+                        packageController.setPackageRqStatusSigned(wrapper, posting.getSignerName(),
+                                pkg, pkg.getPackageState(), postStatus, postStatus, SIGNEDVIEW, OKSRV);   // TODO userName
+                    }
+                    return null;
+                });
             } catch (Exception e) {
                 auditController.error(ManualOperation, "Ошибка при обработке обработке пакета " + packageId + " в задаче " + this.getClass().getSimpleName(), null, e);
             }
