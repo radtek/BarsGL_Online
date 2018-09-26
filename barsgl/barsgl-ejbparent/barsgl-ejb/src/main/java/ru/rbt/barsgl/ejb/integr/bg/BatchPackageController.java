@@ -51,6 +51,7 @@ import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 @LocalBean
 public class BatchPackageController {
     private final long MAX_ROWS = 1000;
+    private static final String packageName = "GL_BATPKG";
 
     @EJB
     private BatchPostingRepository postingRepository;
@@ -114,7 +115,7 @@ public class BatchPackageController {
                 auditController.warning(BatchOperation, msg + ": " + errorMsg, null, e);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
-                auditController.error(BatchOperation, msg, null, e);
+                auditController.error(BatchOperation, msg, packageName, getPackageId(wrapper), e);
                 return new RpcRes_Base<>(wrapper, true, msg + "\n" +  postingController.getErrorMessage(e));
             }
         }
@@ -193,7 +194,7 @@ public class BatchPackageController {
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             postingProcessor.checkBackvaluePermission(posting0.getPostDate(), wrapper.getUserId());
         } catch (ValidationError e) {
-            String msg = "Ошибка при передаче запроса на операцию на подпись";
+            String msg = "Ошибка при передаче на подпись пакета ID = " + wrapper.getPkgId();
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
             auditController.warning(BatchOperation, msg, new BatchPosting().getTableName(), wrapper.getId().toString(), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
@@ -271,7 +272,7 @@ public class BatchPackageController {
         String msg = result.getPackageSignedMessage();
 //        wrapper.getErrorList().addErrorDescription("", "", msg, null);
 
-        auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
+        auditController.info(BatchOperation, msg, packageName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
@@ -286,7 +287,7 @@ public class BatchPackageController {
         String userName = pkg.getUserName();
         postingRepository.executeInNewTransaction(persistence -> deletePackage(wrapper));
         String msg = "Пакет с ID = " + wrapper.getPkgId() + ", созданный пользователем '" + userName + "', удалён";
-        auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
+        auditController.info(BatchOperation, msg, packageName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
@@ -304,9 +305,9 @@ public class BatchPackageController {
             }
 
         } catch (Throwable e) {
-            String msg = "Ошибка при удалении пакета, загруженного из файла";
+            String msg = "Ошибка при удалении пакета ID = " + wrapper.getPkgId();
             postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(BatchOperation, msg, null, e);
+            auditController.error(BatchOperation, msg, packageName, getPackageId(wrapper), e);
             throw new DefaultApplicationException(msg, e);
         }
     }
@@ -346,17 +347,25 @@ public class BatchPackageController {
                 return setPackageRqStatusSigned(wrapper, getUserName(), pkg, IS_SIGNEDVIEW, newStatus, newStatus, oldStatus);
             }
         } catch (ValidationError e) {
-            String msg = "Ошибка при авторизации пакета, загруженного из файла";
+            String msg = "Ошибка при авторизации пакета ID = " + wrapper.getPkgId();
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(BatchOperation, msg, null, e);
+            auditController.error(BatchOperation, msg, packageName, getPackageId(wrapper), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
 
-    public String getUserName() {
-//        return userContext.getUserName();
-        return postingController.getUserName();
+    private String getPackageId(ManualOperationWrapper wrapper) {
+        return null == wrapper.getPkgId() ? "" : wrapper.getPkgId().toString();
     }
+
+    public String getUserName() {
+        String userName = userContext.getUserName();
+        if (isEmpty(userName)) {
+            throw new ValidationError(OPER_MANUAL_ERROR, "Не удалось определить имя пользователя при авторизации пакетов из файла");
+        }
+        return userName;
+    }
+
 
     public RpcRes_Base<ManualOperationWrapper> sendMovements(final BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
                                                              BatchPostStatus nextStatus) throws Exception {
@@ -436,9 +445,9 @@ public class BatchPackageController {
             }
             return setPackageRqStatusSigned(wrapper, getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
         } catch (ValidationError e) {
-            String msg = "Ошибка при подтверждении даты пакета, загруженного из файла";
+            String msg = "Ошибка при подтверждении даты пакета ID = " + wrapper.getPkgId();
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.warning(BatchOperation, msg, null, e);
+            auditController.warning(BatchOperation, msg, packageName, getPackageId(wrapper), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
@@ -512,7 +521,7 @@ public class BatchPackageController {
             wrapper.setStatus(status);
             msg = "Пакет с ID = " + wrapper.getPkgId() + " возвращён на доработку";
         }
-        auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
+        auditController.info(BatchOperation, msg, packageName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 

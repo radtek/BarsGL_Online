@@ -843,7 +843,7 @@ public class ManualPostingController {
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
-                SQLIntegrityConstraintViolationException.class, PersistenceException.class,
+                SQLIntegrityConstraintViolationException.class, PersistenceException.class, IllegalArgumentException.class,
                 DefaultApplicationException.class);
     }
 
@@ -872,11 +872,10 @@ public class ManualPostingController {
         return wrapper;
     }
 
-    public String getUserName() {
+    private String getUserName() {
         String userName = userContext.getUserName();
         if (isEmpty(userName)) {
-            log.error("Не удалось определить имя пользователя");
-//            throw new ValidationError(OPER_MANUAL_ERROR, "Не удалось определить имя пользователя");
+            throw new ValidationError(OPER_MANUAL_ERROR, "Не удалось определить имя пользователя при авторизации ручных операций");
         }
         return userName;
     }
