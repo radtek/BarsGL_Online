@@ -125,7 +125,7 @@ public class MovementReceiveTask implements ParamsAwareRunnable {
                         packageController.updatePackageState(pkg, PROCESSED, ON_WAITSRV);
                     } else {
                         BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
-                        BatchPostStatus postStatus = postingController.getOperationRqStatusSigned(posting.getSignerName(), pkg.getPostDate());
+                        BatchPostStatus postStatus = postingController.getOperationRqStatusSigned(posting.getId(), posting.getSignerName(), pkg.getPostDate());
                         ManualOperationWrapper wrapper = postingController.createStatusWrapper(posting);
                         wrapper.setAction(BatchPostAction.SIGN);
                         packageController.setPackageRqStatusSigned(wrapper, posting.getSignerName(),

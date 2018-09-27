@@ -570,9 +570,11 @@ public class ManualPostingController {
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
-    public BatchPostStatus getOperationRqStatusSigned(String signerName, Date postDate) throws Exception {
+    public BatchPostStatus getOperationRqStatusSigned(Long postingId, String signerName, Date postDate) throws Exception {
         AppUser user = userRepository.findUserByName(signerName);
-        Assert.notNull(user, "Не найден пользователь: " + signerName);
+//        Assert.notNull(user, "Не найден пользователь: " + signerName);
+        if (user == null)
+            throw new ValidationError(OPER_MANUAL_ERROR, String.format("Не найдено имя пользователя '%s', авторизовавшего ручную операцию ID = '%s'", signerName, postingId));
         return getOperationRqStatusSigned(user.getId(), postDate);
     }
 
@@ -946,7 +948,7 @@ public class ManualPostingController {
                 if (WAITSRV == oldStatus) {     // все ОК
                     setOperationRqStatusReceive(wrapper, movementId, OKSRV, 0, null);        // одобрен
                     if (null == posting.getPackageId()) {
-                        BatchPostStatus newStatus = getOperationRqStatusSigned(signerName, posting.getPostDate());
+                        BatchPostStatus newStatus = getOperationRqStatusSigned(posting.getId(), signerName, posting.getPostDate());
                         wrapper.setAction(BatchPostAction.SIGN);
                         setOperationRqStatusSigned(wrapper, signerName, newStatus, newStatus);  // авторизован
                     }
