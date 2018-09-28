@@ -52,7 +52,7 @@ insert into TMP_GL_BALSTMD
 , LSTOPERDAT
 )
 (
-select /*+ PARALLEL */ statdate
+select /*+ NO_PARALLEL */ statdate
        , stattype
        , hostsystem
        , fcccustnum
@@ -195,14 +195,16 @@ select /*+ PARALLEL */ statdate
         where rn = 1
         group by v1.bsaacid, v1.curdate, v1.acid
        ) acmx
-     where c.dat between acmx.pd_min and acmx.pd_max and c.ccy = 'RUR' and c.hol <> 'X'
+     where c.dat between acmx.pd_min and acmx.pd_max
+       and c.ccy = 'RUR' and c.hol <> 'X'
        and rln.acid = acmx.acid and rln.bsaacid = acmx.bsaacid
        and c.dat between b.dat and b.datto and b.acid = acmx.acid and b.bsaacid = acmx.bsaacid
-       and cc.glccy = substr(acmx.acid,9,3)
+       and cc.glccy = rln.ccy
        and cc.glccy = r.ccy and r.dat = c.dat
        and s.bbcust = rln.CUSTNO
-       and i.ccbbr = rln.CBCCN and rp.a8brcd = substr(acmx.acid,-3)
-       and c.dat <= (case when o.phase = 'COB' then o.curdate else o.lwdate end) -- при выгрузке в текущем открытом дне баланс за текущий день не отдаем
+       and i.ccbbr = rln.CBCCN
+       and rp.a8brcd = rln.branch
+       and c.dat <= (case when o.phase = 'COB' then o.curdate else o.lwdate end)
 ) p0
 left join gl_acc ac on ac.bsaacid = p0.cbaccount
 )
