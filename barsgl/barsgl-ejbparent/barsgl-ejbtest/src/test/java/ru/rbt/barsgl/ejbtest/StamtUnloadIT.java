@@ -839,6 +839,8 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstms where pardesc in (?, ?)"
                 , SESS_DELTA_POSTING.getParamDesc(), SESS_BALANCE_DELTA.getParamDesc());
 
+        stopQueueJob();
+
         purgeQueueTable();
 
         setGibridBalanceMode();
@@ -1311,5 +1313,17 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         return (GLOperation) postingController.processMessage(pst);
+    }
+
+    private void stopQueueJob() {
+        baseEntityRepository.executeNativeUpdate(
+                "begin\n" +
+                "    for nn in (select * from USER_SCHEDULER_RUNNING_JOBS where job_name like 'BALANCE%') loop\n" +
+                "        dbms_scheduler.disable(nn.job_name, true);\n" +
+                "    end loop;\n" +
+                "    for nn in (select * from USER_SCHEDULER_RUNNING_JOBS where job_name like 'BALANCE%') loop\n" +
+                "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
+                "    end loop;\n" +
+                "end;");
     }
 }
