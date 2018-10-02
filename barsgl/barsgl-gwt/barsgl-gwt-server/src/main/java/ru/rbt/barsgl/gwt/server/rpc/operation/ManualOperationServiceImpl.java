@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.rep.PostingBackValueRep;
 import ru.rbt.barsgl.ejb.rep.WaitCloseAccountsRep;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ru.rbt.barsgl.gwt.core.utils.WhereClauseBuilder.filterCriteriaAdapter;
+import static ru.rbt.barsgl.shared.NotAuthorizedUserException.NOT_AUTHORIZED_MESSAGE;
 
 /**
  * Created by ER18837 on 19.08.15.
@@ -63,7 +65,9 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
             public RpcRes_Base<ManualOperationWrapper> buildResponse() throws Throwable {
                 RpcRes_Base<ManualOperationWrapper> res = localInvoker.invoke(ManualPostingController.class, "processOperationRq", wrapper);
                 if (res == null) throw new Throwable("Не удалось обработать запрос на операцию");
-                return res;
+                if (res.isError() && NOT_AUTHORIZED_MESSAGE.equals(res.getMessage()))
+                    throw new NotAuthorizedUserException();
+                 return res;
             }
         }.process();
     }
@@ -87,6 +91,8 @@ public class ManualOperationServiceImpl extends AbstractGwtService implements Ma
             public RpcRes_Base<ManualOperationWrapper> buildResponse() throws Throwable {
                 RpcRes_Base<ManualOperationWrapper> res = localInvoker.invoke(BatchPackageController.class, "processPackageRq", wrapper);
                 if (res == null) throw new Throwable("Не удалось обработать пакет");
+                if (res.isError() && NOT_AUTHORIZED_MESSAGE.equals(res.getMessage()))
+                    throw new NotAuthorizedUserException();
                 return res;
             }
         }.process();

@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,11 +11,14 @@ import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessorBean;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
+import ru.rbt.barsgl.ejbtesting.test.ManualOperationAuthTesting;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.util.DateUtils;
 
+import javax.ejb.EJB;
 import java.io.File;
 import java.text.ParseException;
 import java.util.Date;
@@ -23,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static ru.rbt.barsgl.ejbtest.ManualOperationAuthIT.setMcDebug;
 
 //import ru.rbt.barsgl.gwt.server.upload.ExcelParser;
 
@@ -36,7 +42,8 @@ public class BatchMessageIT extends AbstractTimerJobIT {
     public static final String exampleBatchMcName = "example_batch_mc.xlsx";
     public static final String exampleBatchDateStr = "2018-07-19"; // "2015-02-26";
 //    private static final String ETL_SINGLE_ACTION_MONITOR = "ETL_SINGLE_ACTION_MONITOR";
-    private final Long USER_ID = 1L;
+    private static final Long USER_ID = 1L;
+    private static boolean mcDebug = false;
 
     @BeforeClass
 //    public static void beforeClass() {
@@ -49,10 +56,17 @@ public class BatchMessageIT extends AbstractTimerJobIT {
             setOperday(od, lw, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 //            setOperday(DateUtils.dbDateParse("2015-02-26"), DateUtils.dbDateParse("2015-02-25"),
 //                    Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+            mcDebug = setMcDebug(true);
         } catch (ParseException e) {
             e.printStackTrace();
         }
     }
+
+    @AfterClass
+    public static void afterClass() {
+        setMcDebug(mcDebug);
+    }
+
 
     /**
      * Загрузка сообщений из файла Excel
@@ -107,7 +121,7 @@ public class BatchMessageIT extends AbstractTimerJobIT {
         BatchPackage pkg0 = (BatchPackage) baseEntityRepository.findById(BatchPackage.class, wrapper.getPkgId());
         Assert.assertNotNull(pkg0);
 
-        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(BatchPackageController.class, "deletePackageRq", wrapper);
+        RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualOperationAuthTesting.class, "deletePackageRq", wrapper);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -140,7 +154,7 @@ public class BatchMessageIT extends AbstractTimerJobIT {
         // изменить пользователя
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set USER_NAME = 'USER1' where ID_PKG = ?", wrapper2.getPkgId());
 
-        res = remoteAccess.invoke(BatchPackageController.class, "deletePackageRq", wrapper2);
+        res = remoteAccess.invoke(ManualOperationAuthTesting.class, "deletePackageRq", wrapper2);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -182,7 +196,15 @@ public class BatchMessageIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set USER_NAME = 'zz' where ID_PKG = ?", wrapper2.getPkgId());
 
         wrapper2.setUserId(USER_ID);
-        res = remoteAccess.invoke(BatchPackageController.class, "authorizePackageRq", wrapper2, BatchPostStep.HAND2);
+        Exception ex = null;
+        try {
+            res = remoteAccess.invoke(BatchPackageController.class, "authorizePackageRq", wrapper2, BatchPostStep.HAND2);
+        } catch (Exception e) {
+            ex = e;
+            res = remoteAccess.invoke(ManualOperationAuthTesting.class, "authorizePackageRq", wrapper2, BatchPostStep.HAND2);
+        }
+        Assert.assertNotNull(ex);
+
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -225,7 +247,7 @@ public class BatchMessageIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set USER_NAME = 'zz' where ID_PKG = ?", wrapper2.getPkgId());
 
         wrapper2.setUserId(USER_ID);
-        res = remoteAccess.invoke(BatchPackageController.class, "authorizePackageRq", wrapper2, BatchPostStep.HAND2);
+        res = remoteAccess.invoke(ManualOperationAuthTesting.class, "authorizePackageRq", wrapper2, BatchPostStep.HAND2);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());

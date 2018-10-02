@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
@@ -35,6 +36,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
@@ -108,6 +110,10 @@ public class BatchPackageController {
             }
             return new RpcRes_Base<ManualOperationWrapper>(
                     wrapper, true, "Неверное действие");
+        } catch (NotAuthorizedUserException e) {
+            String msg = "Ошибка обработки пакета ID = " + wrapper.getPkgId();
+            auditController.warning(ManualOperation, msg, packageName, getPackageId(wrapper), e);
+            return new RpcRes_Base<>(wrapper, true, e.getMessage());
         } catch (Throwable e) {
             String msg = "Ошибка обработки пакета ID = " + wrapper.getPkgId();
             String errorMsg = wrapper.getErrorMessage();
@@ -358,10 +364,10 @@ public class BatchPackageController {
         return null == wrapper.getPkgId() ? "" : wrapper.getPkgId().toString();
     }
 
-    public String getUserName() {
+    public String getUserName() throws NotAuthorizedUserException {
         String userName = userContext.getUserName();
         if (isEmpty(userName)) {
-            throw new ValidationError(OPER_MANUAL_ERROR, "Не удалось определить имя пользователя при авторизации пакетов из файла");
+            throw new NotAuthorizedUserException();
         }
         return userName;
     }
@@ -540,7 +546,7 @@ public class BatchPackageController {
         }
     }
 
-    public void checkHand12Diff(BatchPosting posting) {
+    public void checkHand12Diff(BatchPosting posting) throws NotAuthorizedUserException {
         BatchPostStep step = posting.getStatus().getStep();
         if (step.isControlStep()) {
             if (getUserName().equals(posting.getUserName())) {

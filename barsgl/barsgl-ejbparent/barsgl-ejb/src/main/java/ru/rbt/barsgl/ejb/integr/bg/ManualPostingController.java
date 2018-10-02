@@ -20,6 +20,7 @@ import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -149,6 +150,10 @@ public class ManualPostingController {
             }
             return new RpcRes_Base<ManualOperationWrapper>(
                     wrapper, true, "Неверное действие");
+        } catch (NotAuthorizedUserException e) {
+            String msg = "Ошибка обработки запроса на операцию";
+            auditController.warning(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
+            return new RpcRes_Base<>(wrapper, true, e.getMessage());
         } catch (Throwable e) {
             String errorMsg = wrapper.getErrorMessage();
             String msg = "Ошибка обработки запроса на операцию";
@@ -730,7 +735,7 @@ public class ManualPostingController {
         return postingRepository.update(posting);     // сохранить входящую операцию
     }
 
-    private BatchPosting deletePosting(ManualOperationWrapper wrapper) {
+    private BatchPosting deletePosting(ManualOperationWrapper wrapper) throws NotAuthorizedUserException {
         BatchPosting posting = getPostingWithCheck(wrapper);
         if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, BatchPostAction.DELETE)) {
             postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), getUserName());
@@ -811,7 +816,7 @@ public class ManualPostingController {
         return status;
     }
 
-    public void checkHand12Diff(BatchPosting posting) {
+    public void checkHand12Diff(BatchPosting posting) throws NotAuthorizedUserException {
         BatchPostStep step = posting.getStatus().getStep();
         if (step.isControlStep()) {
             if (getUserName().equals(posting.getUserName())) {
@@ -874,10 +879,10 @@ public class ManualPostingController {
         return wrapper;
     }
 
-    private String getUserName() {
+    private String getUserName() throws NotAuthorizedUserException {
         String userName = userContext.getUserName();
         if (isEmpty(userName)) {
-            throw new ValidationError(OPER_MANUAL_ERROR, "Не удалось определить имя пользователя при авторизации ручных операций");
+            throw new NotAuthorizedUserException();
         }
         return userName;
     }
