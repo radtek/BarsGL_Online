@@ -22,7 +22,7 @@ with glued as
   from GL_REG47422
     where  valid = 'Y'
         and state in ($state_list$)
-        and pod > ?
+        and pod >= ?
   group by acid, ndog $fld_pod$ $fld_sum$
   )
 select * from glued

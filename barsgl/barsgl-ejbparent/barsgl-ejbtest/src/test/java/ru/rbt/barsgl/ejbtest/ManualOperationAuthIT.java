@@ -1,21 +1,23 @@
 package ru.rbt.barsgl.ejbtest;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
+import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.ejbtesting.test.ManualOperationAuthTesting;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.BatchPostStatus;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,13 +29,45 @@ import static ru.rbt.ejbcore.util.StringUtils.trim;
  */
 public class ManualOperationAuthIT extends AbstractTimerJobIT {
     private final SimpleDateFormat onlyDate = new SimpleDateFormat("dd.MM.yyyy");
-    private final Long USER_ID = 2L;
+    private static final Long USER_ID = 2L;
 
-    @Before
-    public void beforeClass() {
+    private static final String mcDebugId = "mc.debug";
+    private static boolean mcDebug = false;
+
+    @BeforeClass
+    public static void beforeClass() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
         Utl4Tests.createUser(USER_ID, baseEntityRepository);
         Utl4Tests.grantAllBranches(USER_ID, baseEntityRepository);
+        mcDebug = setMcDebug(true);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        setMcDebug(mcDebug);
+    }
+
+    public static boolean setMcDebug(boolean debug)  {
+        DataRecord res = null;
+        try {
+            res = baseEntityRepository.selectFirst("select STRING_VALUE from GL_PRPRP where ID_PRP = ?", mcDebugId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        boolean debugWas = !(res == null) && "Y".equals(res.getString(0));
+        if (debug == debugWas)
+            return debugWas;
+
+        // Insert into gl_prprp (ID_PRP,ID_PRN,REQUIRED,PRPTP,DESCRP,DECIMAL_VALUE,STRING_VALUE,NUMBER_VALUE) values ('mc.debug','root','N','STRING_TYPE','режим отладки SCASAMovementCreate',null,'Y',null);
+        if (debug)
+            baseEntityRepository.executeNativeUpdate("merge into gl_prprp p\n" +
+                    "using (select 'mc.debug' id_prp from dual) p2\n" +
+                    "on (p.id_prp = p2.id_prp)\n" +
+                    "when not matched then insert (ID_PRP,ID_PRN,REQUIRED,PRPTP,DESCRP,STRING_VALUE)\n" +
+                    "values (?,'root','N','STRING_TYPE','режим отладки SCASAMovementCreate','Y')", mcDebugId);
+        else
+            baseEntityRepository.executeNativeUpdate("delete from GL_PRPRP where ID_PRP = ?", mcDebugId);
+        return debugWas;
     }
 
     /**
@@ -211,6 +245,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
         Assert.assertTrue(0 < wrapper.getId());
 
         // удалить свой запрос
+        wrapper.setUserId(USER_ID);
         wrapper.setAction(BatchPostAction.DELETE);
         res = remoteAccess.invoke(ManualPostingController.class, "deleteOperationRq", wrapper);
         if (res.isError())
@@ -234,7 +269,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
 
         // удалить чужой запрос
         wrapper.setAction(BatchPostAction.DELETE);
-        res = remoteAccess.invoke(ManualPostingController.class, "deleteOperationRq", wrapper);
+        res = remoteAccess.invoke(ManualOperationAuthTesting.class, "deleteOperationRq", wrapper);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -273,7 +308,15 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
 //        wrapper.setAccountDebit("408170/36050010000015");
         // обработать свой запрос
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set USER_NAME = 'TEST' where ID = ?", wrapper.getId());
-        res = remoteAccess.invoke(ManualPostingController.class, "authorizeOperationRq", wrapper);
+        Exception ex = null;
+        try {
+            res = remoteAccess.invoke(ManualOperationController.class, "authorizeOperationRq", wrapper);
+        } catch (Exception e) {
+            ex = e;
+            res = remoteAccess.invoke(ManualOperationAuthTesting.class, "authorizeOperationRq", wrapper);
+        }
+        Assert.assertNotNull(ex);
+
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -297,6 +340,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
                 "MOS", bsaCt, "RUR", new BigDecimal("162.057")
         );
 
+        wrapper.setUserId(USER_ID);
         wrapper.setAction(BatchPostAction.SAVE);
         // создать запрос
         RpcRes_Base<ManualOperationWrapper> res = remoteAccess.invoke(ManualPostingController.class, "saveOperationRqInternal", wrapper, BatchPostStatus.CONTROL);
@@ -309,7 +353,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
         wrapper.setAction(BatchPostAction.REFUSE);
         wrapper.setReasonOfDeny("Не подписывать!");
         // обработать свой запрос
-        res = remoteAccess.invoke(ManualPostingController.class, "refuseOperationRq", wrapper, BatchPostStatus.REFUSE);
+        res = remoteAccess.invoke(ManualOperationAuthTesting.class, "refuseOperationRq", wrapper, BatchPostStatus.REFUSE);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());
@@ -351,7 +395,7 @@ public class ManualOperationAuthIT extends AbstractTimerJobIT {
 
         // обработать свой запрос
         baseEntityRepository.executeNativeUpdate("update GL_BATPST set USER_NAME = 'TEST' where ID = ?", wrapper.getId());
-        res = remoteAccess.invoke(ManualPostingController.class, "authorizeOperationRq", wrapper);
+        res = remoteAccess.invoke(ManualOperationAuthTesting.class, "authorizeOperationRq", wrapper);
         if (res.isError())
             System.out.println(res.getMessage());
         Assert.assertFalse(res.isError());

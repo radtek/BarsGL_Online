@@ -20,6 +20,7 @@ import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.barsgl.shared.ErrorList;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
@@ -149,6 +150,10 @@ public class ManualPostingController {
             }
             return new RpcRes_Base<ManualOperationWrapper>(
                     wrapper, true, "Неверное действие");
+        } catch (NotAuthorizedUserException e) {
+            String msg = "Ошибка обработки запроса на операцию";
+            auditController.warning(ManualOperation, msg, postingName, getWrapperId(wrapper), e);
+            return new RpcRes_Base<>(wrapper, true, e.getMessage());
         } catch (Throwable e) {
             String errorMsg = wrapper.getErrorMessage();
             String msg = "Ошибка обработки запроса на операцию";
@@ -418,7 +423,7 @@ public class ManualPostingController {
             BatchPostStatus oldStatus = posting.getStatus();
             int count = operationRepository.executeInNewTransaction(persistence -> {
                 return postingRepository.refusePostingStatus(posting.getId(), wrapper.getReasonOfDeny(),
-                        userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
+                        userContext.getTimestamp(), getUserName(), status, oldStatus);
             });
             if (0 == count)
                 throw new ValidationError(POSTING_STATUS_WRONG, oldStatus.name(), oldStatus.getLabel());
@@ -447,13 +452,13 @@ public class ManualPostingController {
             // тестируем статус - что никто еще не менял
             updatePostingStatusNew(posting0, SIGNEDVIEW, wrapper);
             BatchPostStatus newStatus = getOperationRqStatusSigned(wrapper.getUserId(), posting.getPostDate());
-            setOperationRqStatusSigned(wrapper, userContext.getUserName(), SIGNEDVIEW, newStatus);
+            setOperationRqStatusSigned(wrapper, getUserName(), SIGNEDVIEW, newStatus);
 
             if (posting0.isControllable()) {                    // есть контролируемы счет
                 return sendMovement(posting, wrapper, newStatus);          // посылка запроса в MovementCreate
             } else {
                 // устанавливаем статус SIGNED / SIGNEDDATE / WAITDATE
-                return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
+                return setOperationRqStatusSigned(wrapper, getUserName(), newStatus, newStatus);
             }
         } catch (ValidationError e) {
                 String msg = "Ошибка при авторизации запроса на операцию ID = " + wrapper.getId();
@@ -489,7 +494,7 @@ public class ManualPostingController {
                     return null;
                 });
             }
-            return setOperationRqStatusSigned(wrapper, userContext.getUserName(), newStatus, newStatus);
+            return setOperationRqStatusSigned(wrapper, getUserName(), newStatus, newStatus);
 //            return authorizeOperationRqInternal(posting, wrapper, newStatus);
         } catch (ValidationError e) {
             String msg = "Ошибка при подтверждении даты запроса на операцию ID = " + wrapper.getId();
@@ -557,7 +562,7 @@ public class ManualPostingController {
         BatchPostStatus oldStatus = wrapper.getStatus();
         int count = operationRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
-                return postingRepository.updatePostingStatusChanged(wrapper.getId(), userContext.getTimestamp(), userContext.getUserName(), status, oldStatus);
+                return postingRepository.updatePostingStatusChanged(wrapper.getId(), userContext.getTimestamp(), getUserName(), status, oldStatus);
             } else {
                 return postingRepository.updatePostingStatus(wrapper.getId(), status, oldStatus);
             }
@@ -570,9 +575,11 @@ public class ManualPostingController {
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
-    public BatchPostStatus getOperationRqStatusSigned(String signerName, Date postDate) throws Exception {
+    public BatchPostStatus getOperationRqStatusSigned(Long postingId, String signerName, Date postDate) throws Exception {
         AppUser user = userRepository.findUserByName(signerName);
-        Assert.notNull(user, "Не найден пользователь: " + signerName);
+//        Assert.notNull(user, "Не найден пользователь: " + signerName);
+        if (user == null)
+            throw new ValidationError(OPER_MANUAL_ERROR, String.format("Не найдено имя пользователя '%s', авторизовавшего ручную операцию ID = '%s'", signerName, postingId));
         return getOperationRqStatusSigned(user.getId(), postDate);
     }
 
@@ -728,10 +735,10 @@ public class ManualPostingController {
         return postingRepository.update(posting);     // сохранить входящую операцию
     }
 
-    private BatchPosting deletePosting(ManualOperationWrapper wrapper) {
+    private BatchPosting deletePosting(ManualOperationWrapper wrapper) throws NotAuthorizedUserException {
         BatchPosting posting = getPostingWithCheck(wrapper);
         if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, BatchPostAction.DELETE)) {
-            postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), userContext.getUserName());
+            postingRepository.setPostingInvisible(posting.getId(), userContext.getTimestamp(), getUserName());
             return postingRepository.findById(posting.getId());
         } else {
             postingRepository.deletePosting(posting.getId());   // удалить запрос на операцию
@@ -809,10 +816,10 @@ public class ManualPostingController {
         return status;
     }
 
-    public void checkHand12Diff(BatchPosting posting) {
+    public void checkHand12Diff(BatchPosting posting) throws NotAuthorizedUserException {
         BatchPostStep step = posting.getStatus().getStep();
         if (step.isControlStep()) {
-            if (userContext.getUserName().equals(posting.getUserName())) {
+            if (getUserName().equals(posting.getUserName())) {
                 throw new ValidationError(POSTING_SAME_NOT_ALLOWED, posting.getId().toString());
             }
         }
@@ -843,7 +850,7 @@ public class ManualPostingController {
     public String getErrorMessage(Throwable throwable) {
         return ExceptionUtils.getErrorMessage(throwable,
                 ValidationError.class, DataTruncation.class, SQLException.class, NullPointerException.class,
-                SQLIntegrityConstraintViolationException.class, PersistenceException.class,
+                SQLIntegrityConstraintViolationException.class, PersistenceException.class, IllegalArgumentException.class,
                 DefaultApplicationException.class);
     }
 
@@ -870,6 +877,14 @@ public class ManualPostingController {
         wrapper.setInputMethod(posting.getInputMethod());
         wrapper.setStatus(posting.getStatus());
         return wrapper;
+    }
+
+    private String getUserName() throws NotAuthorizedUserException {
+        String userName = userContext.getUserName();
+        if (isEmpty(userName)) {
+            throw new NotAuthorizedUserException();
+        }
+        return userName;
     }
 
     // ==============================================================================================
@@ -938,7 +953,7 @@ public class ManualPostingController {
                 if (WAITSRV == oldStatus) {     // все ОК
                     setOperationRqStatusReceive(wrapper, movementId, OKSRV, 0, null);        // одобрен
                     if (null == posting.getPackageId()) {
-                        BatchPostStatus newStatus = getOperationRqStatusSigned(signerName, posting.getPostDate());
+                        BatchPostStatus newStatus = getOperationRqStatusSigned(posting.getId(), signerName, posting.getPostDate());
                         wrapper.setAction(BatchPostAction.SIGN);
                         setOperationRqStatusSigned(wrapper, signerName, newStatus, newStatus);  // авторизован
                     }

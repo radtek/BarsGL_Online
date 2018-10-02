@@ -265,24 +265,33 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
     }
 
     private boolean processGlue(DataRecord glued, PstSide phSide, PstSide stickSide) throws Exception {
-        // сторона PCID
-        PstSide pcidSide = stickSide != N ? stickSide : phSide;
-        Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
-                new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
-                new String[]{glued.getString("pdid_dr"), glued.getString("pdid_cr")},
-                new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
-                new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
-        );
-        return journalRepository.executeInNewTransaction(persistence -> {
-            journalRepository.gluePostings(params.idInvisible, params.idVisible, params.pcidNew, params.pbr);
-            updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
-            if (phSide != pcidSide) {
-                // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
-                reviseDocType(params);
-            }
-            journalRepository.updateProcGL(glued.getString("id_reg"), params.pcidNew);
-            return true;
-        });
+        try {
+            // сторона PCID
+            PstSide pcidSide = stickSide != N ? stickSide : phSide;
+            Reg47422params params = fillGlueParams(phSide, stickSide, pcidSide,
+                    new String[]{glued.getString("pcid_dr"), glued.getString("pcid_cr")},
+                    new String[]{glued.getString("pdid_dr"), glued.getString("pdid_cr")},
+                    new String[]{glued.getString("pbr_dr"), glued.getString("pbr_cr")},
+                    new String[]{glued.getString("pmt_dr"), glued.getString("pmt_cr")}
+            );
+            return journalRepository.executeInNewTransaction(persistence -> {
+                journalRepository.gluePostings(params.idInvisible, params.idVisible, params.pcidNew, params.pbr);
+                updateOperations(stickSide, new String[] {glued.getString("glo_dr"), glued.getString("glo_cr")}, params);
+                if (phSide != pcidSide) {
+                    // проверить текущее значение поля BO_IND в таблице PCID_MO в случае, если BO_IND = 0, на соответствие значению
+                    reviseDocType(params);
+                }
+                journalRepository.updateProcGL(glued.getString("id_reg"), params.pcidNew);
+                return true;
+            });
+        } catch (Exception e) {
+            auditController.error(Exclude47422, "Ошибка при обработке проводок по счетам 47422", null, e);
+            journalRepository.executeInNewTransaction(persistence -> {
+                journalRepository.updateErrProc(glued.getString("id_reg"));
+                return null;
+            });
+            return false;
+        }
     }
 
     /**
@@ -411,7 +420,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         // только для веера
         String gloPar = gloList[stickSide.ordinal()];
         if (StringUtils.isEmpty(gloPar)) {
-            auditController.error(Exclude47422, "Ошибка при исключении проводок по техническим счетам 47422", "PST", params.pcidNew,
+            auditController.warning(Exclude47422, "Ошибка при исключении проводок по техническим счетам 47422", "PST", params.pcidNew,
                     String.format("Не найдена родительская операция при склейке проводок в веер PCID = '%s'", params.pcidNew));
             return;
         }
@@ -424,14 +433,14 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
      * @throws SQLException
      */
     private void reviseDocType(Reg47422params params) throws SQLException {
-        Memorder memorder = journalRepository.selectFirst(Memorder.class, "from Memorder m where m.id = ?", params.pcidNew);
+        Memorder memorder = journalRepository.selectFirst(Memorder.class, "from Memorder m where m.id = ?1", Long.valueOf(params.pcidNew));
         if (memorder.getDocType() == BANK_ORDER)
             return;
         List<Pd> pdDebit = journalRepository.select(Pd.class, "from Pd p where p.id in (" + params.idVisible + ") and p.amount < 0");
         List<Pd> pdCredit = journalRepository.select(Pd.class, "from Pd p where p.id in (" + params.idVisible + ") and p.amount > 0");
         Memorder.DocType docType = memorderController.getDocType(false, pdDebit, pdCredit, memorder.getPostDate());
         if (docType == BANK_ORDER) {
-            journalRepository.executeUpdate("update Memorder m set m.docType = ?1 where m.id = ?2", BANK_ORDER, params.pcidNew);
+            journalRepository.executeUpdate("update Memorder m set m.docType = ?1 where m.id = ?2", BANK_ORDER, Long.valueOf(params.pcidNew));
         }
     }
 

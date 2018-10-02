@@ -40,7 +40,6 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
      */
     public int markChangedPst() throws IOException {
         return executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/mark_changed_pst.sql")
-                , U.name(), Y.name(), PROC_DAT.name(), PROC_ACC.name()
         );
     }
 
@@ -52,7 +51,7 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
      */
     public int insertNewAndChangedPst(Date fromDate) throws IOException {
         return executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/insert_new_and_changed_pst.sql")
-                , LOAD.name(), CHANGE.name(), Y.name(), U.name(), fromDate);
+                , fromDate);
     }
 
     public int updateChangedPstOld() {
@@ -123,19 +122,26 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
 
     public int updateProcGL(String idList, String pcid) throws IOException {
         executeNativeUpdate("update GL_REG47422 set VALID = ? where ID in (" + idList + ") ", N.name());
-        executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/insert_proc.sql").replace("$fld_pcid$", pcid).replace("$id_list$", idList)
-                , PROC_DAT.name(), Y.name());
-        return executeNativeUpdate("update GL_REG47422 r1 set ID_REF = (select r2.ID from GL_REG47422 r2 where PCID = ? and valid = ?) where PCID_NEW = ? and valid = ?",
-                pcid, Y.name(), pcid, Y.name());
+        executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/insert_proc.sql")
+                        .replace("$fld_pcid$", pcid).replace("$id_list$", idList)
+                , PROC_DAT.name());
+        return executeNativeUpdate("update GL_REG47422 r1 set ID_REF = (select r2.ID from GL_REG47422 r2 where PCID = ? and valid = 'Y')" +
+                        " where PCID_NEW = ? and valid = 'Y'"
+                , pcid, pcid);
     }
 
     public int updateProcAcc(String idList, String pcidList, String pcid) throws IOException {
         executeNativeUpdate("update GL_REG47422 set VALID = ? where ID in (" + idList + ") ", N.name());
-        executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/insert_proc.sql").replace("$fld_pcid$", "p.PCID").replace("$id_list$", idList)
-                , PROC_ACC.name(), Y.name());
-        return executeNativeUpdate("update GL_REG47422 r1 set ID_REF = (select r2.ID from GL_REG47422 r2 where r2.PCID_NEW = ? and r2.VALID = ?)" +
-                        " where r1.PCID_NEW in (" + pcidList + ") and r1.VALID = ?",
-                pcid, Y.name(), Y.name());
+        executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/insert_proc.sql")
+                        .replace("$fld_pcid$", "p.PCID").replace("$id_list$", idList)
+                , PROC_ACC.name());
+        return executeNativeUpdate("update GL_REG47422 r1 set ID_REF = (select r2.ID from GL_REG47422 r2 where r2.PCID_NEW = ? and r2.VALID = 'Y')" +
+                        " where r1.PCID_NEW in (" + pcidList + ") and r1.VALID = 'Y'"
+                , pcid);
+    }
+
+    public int updateErrProc(String idList) throws IOException {
+        return executeNativeUpdate("update GL_REG47422 set STATE = ? where ID in (" + idList + ") ", ERRPROC.name());
     }
 
 }

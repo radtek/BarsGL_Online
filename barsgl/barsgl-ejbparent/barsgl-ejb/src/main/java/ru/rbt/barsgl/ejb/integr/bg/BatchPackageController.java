@@ -11,6 +11,7 @@ import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
+import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.BatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
@@ -35,6 +36,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
 import static ru.rbt.barsgl.ejb.controller.excel.BatchProcessResult.BatchProcessDate.*;
 import static ru.rbt.barsgl.shared.enums.BatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.BatchPostAction.CONFIRM_NOW;
@@ -51,6 +53,7 @@ import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 @LocalBean
 public class BatchPackageController {
     private final long MAX_ROWS = 1000;
+    private static final String packageName = "GL_BATPKG";
 
     @EJB
     private BatchPostingRepository postingRepository;
@@ -107,6 +110,10 @@ public class BatchPackageController {
             }
             return new RpcRes_Base<ManualOperationWrapper>(
                     wrapper, true, "Неверное действие");
+        } catch (NotAuthorizedUserException e) {
+            String msg = "Ошибка обработки пакета ID = " + wrapper.getPkgId();
+            auditController.warning(ManualOperation, msg, packageName, getPackageId(wrapper), e);
+            return new RpcRes_Base<>(wrapper, true, e.getMessage());
         } catch (Throwable e) {
             String msg = "Ошибка обработки пакета ID = " + wrapper.getPkgId();
             String errorMsg = wrapper.getErrorMessage();
@@ -114,7 +121,7 @@ public class BatchPackageController {
                 auditController.warning(BatchOperation, msg + ": " + errorMsg, null, e);
                 return new RpcRes_Base<>(wrapper, true, errorMsg);
             } else { //           if (null == validationEx && ) { // null == defaultEx &&
-                auditController.error(BatchOperation, msg, null, e);
+                auditController.error(BatchOperation, msg, packageName, getPackageId(wrapper), e);
                 return new RpcRes_Base<>(wrapper, true, msg + "\n" +  postingController.getErrorMessage(e));
             }
         }
@@ -193,7 +200,7 @@ public class BatchPackageController {
             checkFilialPermission(wrapper.getPkgId(), wrapper.getUserId());
             postingProcessor.checkBackvaluePermission(posting0.getPostDate(), wrapper.getUserId());
         } catch (ValidationError e) {
-            String msg = "Ошибка при передаче запроса на операцию на подпись";
+            String msg = "Ошибка при передаче на подпись пакета ID = " + wrapper.getPkgId();
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
             auditController.warning(BatchOperation, msg, new BatchPosting().getTableName(), wrapper.getId().toString(), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
@@ -210,7 +217,7 @@ public class BatchPackageController {
         BatchPackageState pkgStatus = ON_CONTROL;
         postingRepository.executeInNewTransaction(persistence -> {
             if (withChange) {
-                packageRepository.updatePostingsStatusChange(pkgId, userContext.getTimestamp(), userContext.getUserName(), status, statusIn);
+                packageRepository.updatePostingsStatusChange(pkgId, userContext.getTimestamp(), getUserName(), status, statusIn);
             } else {
                 packageRepository.updatePostingsStatus(pkgId, status, statusIn);
             }
@@ -271,7 +278,7 @@ public class BatchPackageController {
         String msg = result.getPackageSignedMessage();
 //        wrapper.getErrorList().addErrorDescription("", "", msg, null);
 
-        auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
+        auditController.info(BatchOperation, msg, packageName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
@@ -286,7 +293,7 @@ public class BatchPackageController {
         String userName = pkg.getUserName();
         postingRepository.executeInNewTransaction(persistence -> deletePackage(wrapper));
         String msg = "Пакет с ID = " + wrapper.getPkgId() + ", созданный пользователем '" + userName + "', удалён";
-        auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
+        auditController.info(BatchOperation, msg, packageName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
@@ -296,7 +303,7 @@ public class BatchPackageController {
             checkPostingsStatusNotIn(wrapper, COMPLETED, WORKING, SIGNED, SIGNEDDATE);
             BatchPosting posting = postingRepository.getOnePostingByPackage(pkg.getId());
             if (postingProcessor.needHistory(posting, BatchPostStep.HAND1, wrapper.getAction())) {
-                packageRepository.setPackageInvisible(pkg.getId(), userContext.getTimestamp(), userContext.getUserName()); // сделать пакет невидимым
+                packageRepository.setPackageInvisible(pkg.getId(), userContext.getTimestamp(), getUserName()); // сделать пакет невидимым
                 return packageRepository.findById(pkg.getId());
             } else {
                 packageRepository.deletePackage(pkg.getId());   // удалить пакет
@@ -304,9 +311,9 @@ public class BatchPackageController {
             }
 
         } catch (Throwable e) {
-            String msg = "Ошибка при удалении пакета, загруженного из файла";
+            String msg = "Ошибка при удалении пакета ID = " + wrapper.getPkgId();
             postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(BatchOperation, msg, null, e);
+            auditController.error(BatchOperation, msg, packageName, getPackageId(wrapper), e);
             throw new DefaultApplicationException(msg, e);
         }
     }
@@ -331,7 +338,7 @@ public class BatchPackageController {
             updatePackageStateNew(pkg, IS_SIGNEDVIEW);
             createPackageHistory(pkg, oldStatus.getStep(), wrapper.getAction());
             BatchPostStatus newStatus = postingController.getOperationRqStatusSigned(wrapper.getUserId(), pkg.getPostDate());
-            setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, SIGNEDVIEW, newStatus, oldStatus);
+            setPackageRqStatusSigned(wrapper, getUserName(), pkg, IS_SIGNEDVIEW, SIGNEDVIEW, newStatus, oldStatus);
             oldStatus = SIGNEDVIEW;
             List<Long> ctrlPostingsId = Collections.emptyList();
             if (!YesNo.Y.equals(pkg.getMovementOff())) {        // движение НЕ отключено
@@ -343,15 +350,28 @@ public class BatchPackageController {
                 return sendMovements(pkg, ctrlPostingsId, wrapper, newStatus);
             } else {
                 // изменить статус
-                return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg, IS_SIGNEDVIEW, newStatus, newStatus, oldStatus);
+                return setPackageRqStatusSigned(wrapper, getUserName(), pkg, IS_SIGNEDVIEW, newStatus, newStatus, oldStatus);
             }
         } catch (ValidationError e) {
-            String msg = "Ошибка при авторизации пакета, загруженного из файла";
+            String msg = "Ошибка при авторизации пакета ID = " + wrapper.getPkgId();
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.error(BatchOperation, msg, null, e);
+            auditController.error(BatchOperation, msg, packageName, getPackageId(wrapper), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
+
+    private String getPackageId(ManualOperationWrapper wrapper) {
+        return null == wrapper.getPkgId() ? "" : wrapper.getPkgId().toString();
+    }
+
+    public String getUserName() throws NotAuthorizedUserException {
+        String userName = userContext.getUserName();
+        if (isEmpty(userName)) {
+            throw new NotAuthorizedUserException();
+        }
+        return userName;
+    }
+
 
     public RpcRes_Base<ManualOperationWrapper> sendMovements(final BatchPackage pkg, List<Long> postingsId, ManualOperationWrapper pkgWrapper,
                                                              BatchPostStatus nextStatus) throws Exception {
@@ -429,11 +449,11 @@ public class BatchPackageController {
                     return null;
                 });
             }
-            return setPackageRqStatusSigned(wrapper, userContext.getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
+            return setPackageRqStatusSigned(wrapper, getUserName(), pkg0, IS_CLICKDATE, SIGNEDDATE, SIGNEDDATE, oldStatus);
         } catch (ValidationError e) {
-            String msg = "Ошибка при подтверждении даты пакета, загруженного из файла";
+            String msg = "Ошибка при подтверждении даты пакета ID = " + wrapper.getPkgId();
             String errMessage = postingController.addOperationErrorMessage(e, msg, wrapper.getErrorList(), initSource());
-            auditController.warning(BatchOperation, msg, null, e);
+            auditController.warning(BatchOperation, msg, packageName, getPackageId(wrapper), e);
             return new RpcRes_Base<>( wrapper, true, errMessage);
         }
     }
@@ -498,7 +518,7 @@ public class BatchPackageController {
             postingRepository.executeInNewTransaction(persistence -> {
                 BatchPackageState stateOld = pkg0.getPackageState();
                 createPackageHistory(pkg0, status0.getStep(), wrapper.getAction());
-                int cnt = packageRepository.refusePackageStatus(pkg0.getId(), stateOld, userContext.getTimestamp(), userContext.getUserName(),
+                int cnt = packageRepository.refusePackageStatus(pkg0.getId(), stateOld, userContext.getTimestamp(), getUserName(),
                         wrapper.getReasonOfDeny(), status);
                 if (0 == cnt)
                     throw  new ValidationError(PACKAGE_STATUS_WRONG, stateOld.name(), stateOld.getLabel());
@@ -507,7 +527,7 @@ public class BatchPackageController {
             wrapper.setStatus(status);
             msg = "Пакет с ID = " + wrapper.getPkgId() + " возвращён на доработку";
         }
-        auditController.info(BatchOperation, msg, new BatchPackage().getTableName(), wrapper.getPkgId().toString());
+        auditController.info(BatchOperation, msg, packageName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
 
@@ -526,10 +546,10 @@ public class BatchPackageController {
         }
     }
 
-    public void checkHand12Diff(BatchPosting posting) {
+    public void checkHand12Diff(BatchPosting posting) throws NotAuthorizedUserException {
         BatchPostStep step = posting.getStatus().getStep();
         if (step.isControlStep()) {
-            if (userContext.getUserName().equals(posting.getUserName())) {
+            if (getUserName().equals(posting.getUserName())) {
                 throw new ValidationError(PACKAGE_SAME_NOT_ALLOWED, posting.getPackageId().toString());
             }
         }
