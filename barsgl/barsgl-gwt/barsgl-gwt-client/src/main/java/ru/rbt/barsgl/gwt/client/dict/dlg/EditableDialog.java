@@ -14,9 +14,11 @@ import ru.rbt.barsgl.gwt.core.utils.AppPredicate;
 import ru.rbt.barsgl.shared.dict.FormAction;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 
 /**
  *
@@ -145,6 +147,15 @@ public abstract class EditableDialog<T extends Serializable> extends DlgFrame {
         else
             return null;
     }
+
+    protected BigDecimal getBigDecimal(String fieldName) {
+        String value = getFieldText(fieldName);
+        if (null != value && value.length() > 0)
+            return new BigDecimal(value);
+        else
+            return null;
+    }
+
 
     public Object[] getIntiParams() {
         return intiParams;

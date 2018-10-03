@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.gwt.client.pd;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.client.check.CheckNotNullDate;
 import ru.rbt.barsgl.gwt.client.operation.OperationDlg;
@@ -79,15 +80,15 @@ public class PostingDlg extends OperationDlg {
 
         mDtFilial.setSelectValue(getFieldText("FILIAL_DR"));
         mDtAccount.setValue(getFieldText("BSAACID_DR"));
-        mDtSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMT_DR"), "")));
+        mCrSum.setValue(getBigDecimal("AMT_DR"));
 
         mCrCurrency.setSelectValue(getFieldText("CCY_CR"));
         mCrFilial.setSelectValue(getFieldText("FILIAL_CR"));
 
         mCrAccount.setValue(getFieldText("BSAACID_CR"));
-        mCrSum.setValue(new BigDecimal(ifEmpty(getFieldValue("AMT_CR"), "")));
+        mCrSum.setValue(getBigDecimal("AMT_CR"));
 
-        mSumRu.setValue(new BigDecimal(ifEmpty(getFieldValue("AMTRU"), "")));
+        mCrSum.setValue(getBigDecimal("AMTRU"));
         mCheckSumRu.setValue(false);
 
         mNarrativeEN.setValue(getFieldText("NRT"));
@@ -115,7 +116,7 @@ public class PostingDlg extends OperationDlg {
             ok.setText(isInvisible ? "Восстановить" : "Подавить");
         }
     }
-    
+
     protected PostingChoice getPostingCoice() {
         return PST_SINGLE;
     }

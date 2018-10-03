@@ -85,9 +85,9 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
         executeNativeUpdate("update PST p1 set PCID = ?, PBR = ? where id in (" + idVisible + ")", pcidNew, pbr);
     }
 
-    public void updateOperations(String gloPar, String gloAll, String stickSide, String featherSide) {
+    public void updateOperations(String gloPar, String gloAll, String stickSide, String featherSide, String pcidNew) {
         // GL_POSTING: POST_TYPE = '5' (для ручки)
-        executeNativeUpdate("update GL_POSTING set POST_TYPE = '5' where GLO_REF = " + gloPar);
+        executeNativeUpdate("update GL_POSTING set POST_TYPE = '5' where GLO_REF = " + gloPar + " and PCID = " + pcidNew);
         // GL_OPER: FAN = 'Y', PAR_RF = PMT_REF, PAR_GLO = GLOID
         //          FP_SIDE = 'D'/'C' – сторона, обратная ручке (для всех операций)
         executeNativeUpdate("update GL_OPER set FAN = 'Y', PAR_GLO = " + gloPar + ", FP_SIDE = ? where GLOID in (" + gloAll + ")",    // PAR_RF = ?,

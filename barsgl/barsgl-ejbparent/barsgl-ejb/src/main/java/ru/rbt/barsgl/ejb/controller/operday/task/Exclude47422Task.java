@@ -424,7 +424,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
                     String.format("Не найдена родительская операция при склейке проводок в веер PCID = '%s'", params.pcidNew));
             return;
         }
-        journalRepository.updateOperations(gloPar, gloAll, stickSide.name(), PstSide.values()[stickSide.ordinal()^1].name());
+        journalRepository.updateOperations(gloPar, gloAll, stickSide.name(), PstSide.values()[stickSide.ordinal()^1].name(), params.pcidNew);
     }
 
     /**
