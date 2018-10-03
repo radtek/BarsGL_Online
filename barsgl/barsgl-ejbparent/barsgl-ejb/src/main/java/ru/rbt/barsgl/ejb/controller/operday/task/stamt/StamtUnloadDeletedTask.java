@@ -54,8 +54,7 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
             unloadController.setHeaderStatus(headerPstId[0], DwhUnloadStatus.SUCCEDED);
 
             headerBalId[0] = unloadController.createHeader(operday, UnloadStamtParams.BALANCE_DELTA2);
-            auditController.info(StamtPstDeleted, format("Выгружено в STAMT остатков по удаленным проводкам: %s, ОД: %s"
-                    , fillDeletedBalance(properties), dateUtils.onlyDateString(operday)));
+            fillDeletedBalance(properties);
             unloadController.setHeaderStatus(headerBalId[0], DwhUnloadStatus.SUCCEDED);
 
         } catch (Throwable e) {
@@ -138,13 +137,11 @@ public class StamtUnloadDeletedTask extends AbstractJobHistoryAwareTask {
      * остатки по удаленным счетам всегда отдаем по всем записям в таблице GL_STMDEL
      * @return кол-во строк - счет/дата
      */
-    private int fillDeletedBalance(Properties properties) throws Exception {
+    private void fillDeletedBalance(Properties properties) throws Exception {
         try {
-            return (int) repository.executeInNewTransaction(persistence -> {
-                repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/del/stamt_deleted_balance.sql"));
-                auditController.info(StamtPstDeleted, format("Удалено счетов из GL_BALSTMD записей для обновления '%s'"
-                        , repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/stamt/stamt_delete_exists.sql"))));
-                return repository.executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/etc/resource/stm/stmbal_delta_ins_res.sql"));
+            repository.executeInNewTransaction(persistence -> {
+                repository.executeNativeUpdate("begin PKG_STMT_DELETED.UNLOAD_DELETED(); END;");
+                return null;
             });
         } catch (Throwable e) {
             Date operday = (Date) properties.get(UnloadDeletedPostingsContext.OPERDAY);
