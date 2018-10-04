@@ -142,7 +142,8 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         String operday = "26.02.2015";
         Date unloadDate = DateUtils.parseDate(operday, "dd.MM.yyyy");
         baseEntityRepository.executeNativeUpdate("delete from GL_STMPARM");
-        baseEntityRepository.executeNativeUpdate("update gl_oper set procdate = ?", DateUtils.addDays(unloadDate, 10));
+//        baseEntityRepository.executeNativeUpdate("update gl_oper set procdate = ?", DateUtils.addDays(unloadDate, 10));
+        baseEntityRepository.executeNativeUpdate("update gl_oper set procdate = ? where procdate = ?", DateUtils.addDays(unloadDate,-10), unloadDate);
         GLOperation operation = getOneOper(unloadDate);
 
 
@@ -295,7 +296,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
     @Test public void testUnloadBackvalueIncrement() throws Exception {
 
-        baseEntityRepository.executeNativeUpdate("update gl_oper set postdate = vdate, procdate = procdate - 10");
+        //baseEntityRepository.executeNativeUpdate("update gl_oper set postdate = vdate, procdate = procdate - 10");
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstms");
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstmd");
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstma");
@@ -306,6 +307,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Date backdate = DateUtils.addDays(unloadDate, -2);
         setOperday(unloadDate, backdate, ONLINE, OPEN);
         setOnlineBalanceMode();
+
+        baseEntityRepository.executeNativeUpdate("update gl_oper set postdate = ?, procdate = ? where procdate = ?"
+                , DateUtils.addDays(unloadDate,-10), DateUtils.addDays(unloadDate,-10), unloadDate);
 
         GLOperation operation = getOneOperBackdate(getOperday());
         long pcid = getPcid(operation);
