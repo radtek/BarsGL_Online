@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -406,7 +407,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         jobService.executeJob(precobJob);
 
         JobHistory history2 = getLastHistRecordObject(jobName);
-        Assert.assertNotEquals(history1.getId(), history2.getId());
+        Assert.assertNotNull(history2);
+        Assert.assertTrue(history1 == null || !Objects.equals(history1.getId(), history2.getId()));
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history2.getResult());
 
         operday = getOperday();
@@ -437,8 +439,9 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
     private void stopListeningQueue() {
         baseEntityRepository.executeNativeUpdate(
                 "begin\n" +
-                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%GLAQ_PKG_CONST.GET_BALANCE_QUEUE_LISTNR_PRFX%') loop\n" +
+                "    for nn in (select * from user_scheduler_running_jobs where job_name like '%'||GLAQ_PKG_CONST.GET_BALANCE_QUEUE_LISTNR_PRFX||'%') loop\n" +
                 "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
+                "        dbms_scheduler.disable(nn.job_name, true);\n" +
                 "    end loop;\n" +
                 "end;");
     }
