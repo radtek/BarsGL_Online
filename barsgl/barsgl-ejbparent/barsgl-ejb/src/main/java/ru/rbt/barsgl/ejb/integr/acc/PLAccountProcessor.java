@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.ejb.integr.acc;
 
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.integr.ValidationAwareHandler;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
 import ru.rbt.ejbcore.validation.ValidationError;
@@ -10,7 +12,13 @@ import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
 
 import javax.inject.Inject;
 
+import java.util.Date;
+
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FIVE;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FOUR;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.TWO;
 import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_707_BAD_BRANCH;
+import static ru.rbt.ejbcore.validation.ErrorCode.ACCOUNT_PL_ALREADY_EXISTS;
 
 /**
  * Created by ER18837 on 03.12.16.
@@ -52,4 +60,24 @@ public class PLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         return keys;
     }
 
+    public GLAccount.RelationType getRlnTypePlMnl(String accType, short custype, String acc2, String acid, String plcode, Date dateOpen) {
+        GLAccount.RelationType rlnType;
+        // проверяем признак PL_ACT
+        if (acc2.startsWith("707")) {
+            rlnType = FOUR;
+        } else {
+            DataRecord data = glAccountRepository.getAccountTypeParams(accType);
+            if (data.getString("PL_ACT").equals("Y")) {
+                rlnType = FIVE;
+            } else {
+                data = glAccountRepository.getAccountForPl(acid, custype, plcode, acc2, dateOpen);
+                if (null != data ) {
+                    throw new ValidationError(ACCOUNT_PL_ALREADY_EXISTS,
+                            data.getString("ACCTYPE"), data.getString("BSAACID"), data.getString("ACID"), accType);
+                }
+                rlnType = TWO;
+            }
+        }
+        return rlnType;
+    }
 }

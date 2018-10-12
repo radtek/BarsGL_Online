@@ -1845,6 +1845,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
                     ? (isEmpty(account.getPlCode()) ? "4" : "2")
                     : (isEmpty(keys1.getPlCode()) ? "0" : "2"));
         }).getValue();
+        Assert.assertEquals(rlnType, account.getRelationType());
         if (!accMidas) {    // был создан новый счет
             Assert.assertNotNull(account);
             Assert.assertEquals(operSide, account.getOperSide());

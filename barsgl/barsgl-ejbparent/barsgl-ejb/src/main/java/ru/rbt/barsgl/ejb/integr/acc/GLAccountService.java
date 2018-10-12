@@ -13,7 +13,6 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.repository.*;
-import ru.rbt.barsgl.ejb.repository.dict.AccTypeAeplRepository;
 import ru.rbt.barsgl.ejb.repository.dict.AccountingTypeRepository;
 import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.shared.ErrorList;
@@ -413,24 +412,9 @@ public class GLAccountService {
                 }
 
                 plAccountProcessor.fillAccountKeysMidas(accountWrapper, keys);
-                GLAccount.RelationType rlnType;
-                // проверяем признак PL_ACT
-                if (keys.getAccount2().startsWith("707")) {
-                    rlnType = FOUR;
-                } else {
-                    DataRecord data = glAccountRepository.getAccountTypeParams(accountWrapper.getAccountType().toString());
-                    if (data.getString("PL_ACT").equals("Y")) {
-                        rlnType = FIVE;
-                    } else {
-                        data = glAccountRepository.getAccountForPl(keys.getAccountMidas(), accountWrapper.getCbCustomerType(),
-                                accountWrapper.getPlCode(), accountWrapper.getBalanceAccount2(), dateOpen);
-                        if (null != data ) {
-                            throw new ValidationError(ACCOUNT_PL_ALREADY_EXISTS,
-                                    data.getString("ACCTYPE"), data.getString("BSAACID"), data.getString("ACID"), keys.getAccountType());
-                        }
-                        rlnType = TWO;
-                    }
-                }
+
+                GLAccount.RelationType rlnType = plAccountProcessor.getRlnTypePlMnl(keys.getAccountType(),
+                        accountWrapper.getCbCustomerType(), keys.getAccount2(), keys.getAccountMidas(), keys.getPlCode(), dateOpen);
                 keys.setRelationType(rlnType.getValue());
 
                 BankCurrency currency = bankCurrencyRepository.refreshCurrency(keys.getCurrency());
