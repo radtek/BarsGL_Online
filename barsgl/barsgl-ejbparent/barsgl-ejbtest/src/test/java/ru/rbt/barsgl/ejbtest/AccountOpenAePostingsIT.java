@@ -45,6 +45,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.substring;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
+import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.FOUR;
 import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.ZERO;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
@@ -343,12 +344,12 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
                 operation, D, operation.getCurrentDate());
         Assert.assertNotNull(accountDt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountDt.getRelationType());
 
         GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
                 operation, C, operation.getCurrentDate());
         Assert.assertNotNull(accountCt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountCt.getRelationType());
 
 
         // проверка проводок
@@ -425,12 +426,12 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
                 operation, D, operation.getCurrentDate());
         Assert.assertNotNull(accountDt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountDt.getRelationType());
 
         GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper,
                 operation, C, operation.getCurrentDate());
         Assert.assertNotNull(accountCt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountCt.getRelationType());
 
         // проверка проводок
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
@@ -478,11 +479,11 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2 and a.dateOpen = ?3";
         GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, D, operation.getCurrentDate());
         Assert.assertNotNull(accountDt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountDt.getRelationType());
 
         GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, C, operation.getCurrentDate());
         Assert.assertNotNull(accountCt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountCt.getRelationType());
 
         EtlPosting pst1 = createPostingByCustTerm("", "00", "00", "", false );
 
@@ -513,11 +514,11 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         final String accountByOper = "from GLAccount a where a.operation = ?1 and a.operSide = ?2 and a.dateOpen = ?3";
         GLAccount accountDt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, D, operation.getCurrentDate());
         Assert.assertNotNull(accountDt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountDt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountDt.getRelationType());
 
         GLAccount accountCt = (GLAccount) baseEntityRepository.selectOne(GLAccount.class, accountByOper, operation, C, operation.getCurrentDate());
         Assert.assertNotNull(accountCt);
-        Assert.assertEquals(GLAccount.RelationType.FOUR.getValue(), accountCt.getRelationType());
+        Assert.assertEquals(FOUR.getValue(), accountCt.getRelationType());
 
         EtlPosting pst1 = createPostingByCustTerm("", "00", "00", "", false );
 
@@ -569,6 +570,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
 
     /**
      * Тест обработки счетов ЦБ (майдас-опц.) по проводке в случае если передены и ключи и счет (счет есть)
+     * Этот функционал уже не работает!
      * @throws ParseException
      */
     @Test public void testProcessAccountWithKeysDirect() throws ParseException, SQLException {
@@ -623,9 +625,9 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertNotNull(accountDt);
 //        Assert.assertEquals(operation, accountDt.getOperation());
 
-        // проверка счетов
-        String acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit(), ZERO);
-        String acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit(), ZERO);
+        // проверка счетов - сейчас счета открываются сервисом (RlnType = 4)
+        String acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit(), FOUR); //ZERO);
+        String acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit(), FOUR); //ZERO);
 
         // проверка проводок
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
@@ -704,9 +706,9 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertNotNull(accountDt);
 //        Assert.assertEquals(operation, accountDt.getOperation());
 
-        // проверка счетов
-        String acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit(), ZERO);
-        String acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit(), ZERO);
+        // проверка счетов - сейчас счета открываются сервисом (RlnType = 4)
+        String acidDr = checkDefinedAccount(D, operation.getAccountDebit(), operation.getAccountKeyDebit(), FOUR); //ZERO);
+        String acidCr = checkDefinedAccount(C, operation.getAccountCredit(), operation.getAccountKeyCredit(), FOUR); //ZERO);
 
         // проверка проводок
         Assert.assertEquals(getOperday().getCurrentDate(), operation.getCurrentDate());
