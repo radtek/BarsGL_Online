@@ -5,7 +5,9 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.entity.acc.*;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParmId;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
@@ -38,7 +40,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -1693,7 +1694,10 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // 001;RUR;00000018;611020100;18;09;PL00000334;0001;70601;;;;FC12_CL;;
         //AccountKeys acCt = new AccountKeys("001;RUR;00000018;611020100;18;09;PL00000334;0001;70601;;;;FC12_CL;;");
 
-        cleanAccountsByMidas(acCt.getAccountMidas());
+        baseEntityRepository.executeNativeUpdate(
+                "delete from gl_acc where acc2 = ? and CUSTNO = ? and CBCUSTTYPE = ? and ccy = ? and PLCODE = ? and ACCTYPE = ? and term = ?"
+                , acCt.getAccount2(), acCt.getCustomerNumber(), acCt.getCustomerType()
+                , acCt.getCurrency(), acCt.getPlCode(), acCt.getAccountType(), acCt.getTerm());
 
         String bsaacid = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
                 , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
