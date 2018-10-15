@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
@@ -1811,7 +1812,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertTrue(false);
     }
 
-    @Test public void testConcurrent1() throws SQLException {
+    @Test @Ignore  public void testConcurrent1() throws SQLException {
 
         final int requestCount = 1500;
         final int threads = 24;
@@ -1857,7 +1858,7 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         Assert.assertEquals(control, resultCount);
     }
 
-    @Test public void testConcurrent2() throws SQLException {
+    @Test @Ignore public void testConcurrent2() throws SQLException {
 
         final int requestCount = 1500;
         final int threads = 24;
