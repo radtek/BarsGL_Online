@@ -84,4 +84,6 @@ public interface BaseEntityRepository<T extends BaseEntity, K extends Serializab
 
     DBParams executeCallable(String sql, DBParams params) throws SQLException;
 
+    <R extends Enum> DBParams executeCallable(R repository, String sql, DBParams params) throws SQLException;
+
 }

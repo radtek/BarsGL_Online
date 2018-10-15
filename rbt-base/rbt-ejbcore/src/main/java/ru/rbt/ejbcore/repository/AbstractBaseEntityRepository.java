@@ -586,7 +586,7 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
         return persistenceProvider.getDefaultDataSource();
 }
 
-    public <T extends Enum> DataSource getDataSource(T repository) throws Exception {
+    public <R extends Enum> DataSource getDataSource(R repository) {
         return persistenceProvider.getDataSource(repository);
 
 //        if(null == repository) {
@@ -614,6 +614,11 @@ public abstract class AbstractBaseEntityRepository<T extends BaseEntity, K exten
     @Override
     public DBParams executeCallable(String callable, DBParams params) throws SQLException {
         return executeCallable(getDataSource(), callable, params);
+    }
+
+    @Override
+    public <R extends Enum> DBParams executeCallable(R repository, String callable, DBParams params) throws SQLException {
+        return executeCallable(getDataSource(repository), callable, params);
     }
 
     //    @PostConstruct

@@ -1,5 +1,6 @@
 package ru.rbt.shared;
 
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -97,6 +98,14 @@ public class Assert {
     public static <X extends Throwable> void isTrue(boolean test, Supplier<? extends X> supplier) throws X {
         if (!test) {
             throw supplier.get();
+        }
+    }
+
+    public static <T, X extends Throwable> T assertThat(T input, Predicate<T> test, Supplier<X> exception) throws X {
+        if (!test.test(input)) {
+            throw exception.get();
+        } else {
+            return input;
         }
     }
 

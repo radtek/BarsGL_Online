@@ -1164,8 +1164,8 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public void updGlAccCloseDate(String bsaacid, Date dateClose) {
-        executeNativeUpdate("UPDATE GL_ACC SET DTC=? WHERE BSAACID=?", dateClose, bsaacid);
+    public int updGlAccCloseDate(String bsaacid, Date dateClose) {
+        return executeNativeUpdate("UPDATE GL_ACC SET DTC=? WHERE BSAACID=? AND ? >= DTO AND ? <> DTC ", dateClose, bsaacid);
     }
 
     public boolean validateBranch(String branch) throws SQLException {

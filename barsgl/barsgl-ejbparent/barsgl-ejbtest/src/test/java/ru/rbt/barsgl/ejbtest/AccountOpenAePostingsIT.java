@@ -5,7 +5,9 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.EtlStructureMonitorTask;
-import ru.rbt.barsgl.ejb.entity.acc.*;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParmId;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
@@ -21,6 +23,7 @@ import ru.rbt.barsgl.ejb.integr.acc.*;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejbtest.utl.GLOperationBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.ejbtesting.test.AccountSrvConcurrentTesting;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -38,7 +41,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -1693,7 +1695,10 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
         // 001;RUR;00000018;611020100;18;09;PL00000334;0001;70601;;;;FC12_CL;;
         //AccountKeys acCt = new AccountKeys("001;RUR;00000018;611020100;18;09;PL00000334;0001;70601;;;;FC12_CL;;");
 
-        cleanAccountsByMidas(acCt.getAccountMidas());
+        baseEntityRepository.executeNativeUpdate(
+                "delete from gl_acc where acc2 = ? and CUSTNO = ? and CBCUSTTYPE = ? and ccy = ? and PLCODE = ? and ACCTYPE = ? and term = ?"
+                , acCt.getAccount2(), acCt.getCustomerNumber(), acCt.getCustomerType()
+                , acCt.getCurrency(), acCt.getPlCode(), acCt.getAccountType(), acCt.getTerm());
 
         String bsaacid = remoteAccess.invoke(GLPLAccountTesting.class, "getAccount"
                 , GLOperationBuilder.create(operation).withValueDate(getOperday().getCurrentDate()).build(), C, acCt);
@@ -1804,6 +1809,107 @@ public class AccountOpenAePostingsIT extends AbstractRemoteIT {
             return;
         }
         Assert.assertTrue(false);
+    }
+
+    @Test public void testConcurrent1() throws SQLException {
+
+        final int requestCount = 1500;
+        final int threads = 24;
+
+        logger.info("deleted " + baseEntityRepository
+                .executeNativeUpdate("delete from (select * from gl_acc a where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I'))"));
+        logger.info("updated " + baseEntityRepository
+                .executeNativeUpdate("update TMP_ACREQ set NEW_BSAACID = null where NEW_BSAACID is not null"));
+        int cnt = remoteAccess.invoke(AccountSrvConcurrentTesting.class, "testAll1", threads, requestCount, 3);
+        System.out.println("Count " + cnt);
+        Assert.assertTrue(cnt > 0);
+
+        long resultCount = baseEntityRepository.selectFirst(
+                "select sum(cnt) sm\n" +
+                 "  from (\n" +
+                 "select count(1) cnt, a.CCY, a.BRANCH, a.CUSTNO,  a.ACCTYPE, a.CBCUSTTYPE, nvl(a.TERM,'00') TERM\n" +
+                 "  from gl_acc a \n" +
+                 "where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I')\n" +
+                 "group by a.CCY,    a.BRANCH, a.CUSTNO, a.ACCTYPE, a.CBCUSTTYPE, nvl(a.TERM,'00') \n" +
+                 ")").getInteger(0);
+        logger.info("Created accounts " + resultCount);
+        Assert.assertTrue("req=" + requestCount + " res=" + resultCount, requestCount >= resultCount);
+
+        long doubles = baseEntityRepository.selectFirst(
+                "select count(1)\n" +
+                "  from (\n" +
+                "select count(1) cnt, a.CCY,    a.BRANCH,     a.CUSTNO,         a.ACCTYPE,            a.CBCUSTTYPE,         nvl(a.TERM,'00') TERM" +
+                "  from gl_acc a \n" +
+                "where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I')\n" +
+                "group by a.CCY,    a.BRANCH,     a.CUSTNO,         a.ACCTYPE,            a.CBCUSTTYPE,         nvl(a.TERM,'00')\n" +
+                "having count(1) > 1)").getInteger(0);
+
+        Assert.assertTrue("doubles=" + doubles , 0 == doubles);
+
+        long control = baseEntityRepository.selectFirst(
+                "select sum(cnt) sm\n" +
+                "  from (\n" +
+                "select count(1) cnt, a.CCY,    a.BRANCH,     a.CUSTNO,         a.ACCTYPE,            a.CBCUSTTYPE,         nvl(a.TERM,'00') TERM\n" +
+                "  from gl_acc a \n" +
+                "where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I')\n" +
+                "group by a.CCY,    a.BRANCH,     a.CUSTNO,         a.ACCTYPE,            a.CBCUSTTYPE,         nvl(a.TERM,'00') \n" +
+                ")").getLong(0);
+        Assert.assertEquals(control, resultCount);
+    }
+
+    @Test public void testConcurrent2() throws SQLException {
+
+        final int requestCount = 1500;
+        final int threads = 24;
+        final int resentCount = 1;
+
+        logger.info("deleted " + baseEntityRepository
+                .executeNativeUpdate("delete from (select * from gl_acc a where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I'))"));
+        logger.info("updated " + baseEntityRepository
+                .executeNativeUpdate("update TMP_ACREQ set NEW_BSAACID = null where NEW_BSAACID is not null"));
+        int cnt = remoteAccess.invoke(AccountSrvConcurrentTesting.class, "testAll2", threads, requestCount, resentCount);
+        System.out.println("Count " + cnt);
+        Assert.assertTrue(cnt > 0);
+
+        long resultCount = baseEntityRepository.selectFirst(
+                "select sum(cnt) sm\n" +
+                 "  from (\n" +
+                 "select count(1) cnt, a.CCY, a.BRANCH, a.CUSTNO,  a.ACCTYPE, a.CBCUSTTYPE, nvl(a.TERM,'00') TERM\n" +
+                 "  from gl_acc a \n" +
+                 "where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I')\n" +
+                 "group by a.CCY,    a.BRANCH, a.CUSTNO, a.ACCTYPE, a.CBCUSTTYPE, nvl(a.TERM,'00') \n" +
+                 ")").getInteger(0);
+        logger.info("Created accounts " + resultCount);
+        Assert.assertTrue("req=" + requestCount + " res=" + resultCount, requestCount >= resultCount);
+
+        long doubles = baseEntityRepository.selectFirst(
+                "select count(1)\n" +
+                "  from (\n" +
+                "    select  count(1)\n" +
+                "        , ac.BRANCH , ac.CCY,ac.CUSTNO, ac.ACCTYPE,coalesce(ac.DEALID, ' '), coalesce(ac.SUBDEALID, ' '), coalesce(lpad(to_char(ac.CBCUSTTYPE), 2, '0'), '0')\n" +
+                "      from GL_ACC ac \n" +
+                "     where exists (select 1 from  TMP_ACREQ t \n" +
+                "                     where ac.BRANCH = t.MIDAS_BRANCH and ac.CCY = t.ccy \n" +
+                "                       and ac.CUSTNO = t.CUSTOMER_NO and ac.ACCTYPE = t.ACCOUNTING_TYPE\n" +
+                "                       and coalesce(ac.DEALID, ' ') = coalesce(t.DEAL_ID, ' ') \n" +
+                "                       and coalesce(ac.SUBDEALID, ' ') = coalesce(t.SUBDEAL_ID, ' ') \n" +
+                "                       and coalesce(lpad(to_char(ac.CBCUSTTYPE), 2, '0'), '0') = coalesce(t.CUSTOMER_CBTYPE, '0') \n" +
+                "        )\n" +
+                "    group by ac.BRANCH , ac.CCY,ac.CUSTNO, ac.ACCTYPE,coalesce(ac.DEALID, ' '), coalesce(ac.SUBDEALID, ' '), coalesce(lpad(to_char(ac.CBCUSTTYPE), 2, '0'), '0')\n" +
+                "    having count(1) > 1\n" +
+                ")").getInteger(0);
+
+        Assert.assertTrue("doubles=" + doubles , 0 == doubles);
+
+        long control = baseEntityRepository.selectFirst(
+                "select sum(cnt) sm\n" +
+                "  from (\n" +
+                "select count(1) cnt, a.CCY,    a.BRANCH,     a.CUSTNO,         a.ACCTYPE,            a.CBCUSTTYPE,         nvl(a.TERM,'00') TERM\n" +
+                "  from gl_acc a \n" +
+                "where exists (select 1 from gl_acc_h t where t.bsaacid = a.bsaacid and ts > trunc(sysdate) and t.fl = 'I')\n" +
+                "group by a.CCY,    a.BRANCH,     a.CUSTNO,         a.ACCTYPE,            a.CBCUSTTYPE,         nvl(a.TERM,'00') \n" +
+                ")").getLong(0);
+        Assert.assertEquals(control, resultCount);
     }
 
     private ActParm createAEPL(String accType, String plCode) {
