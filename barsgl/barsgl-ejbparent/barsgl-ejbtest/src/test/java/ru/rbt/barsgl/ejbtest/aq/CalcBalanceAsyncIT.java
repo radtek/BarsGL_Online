@@ -9,6 +9,7 @@ import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
+import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
 import ru.rbt.barsgl.ejb.repository.AqRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
@@ -403,6 +404,9 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         SingleActionJob precobJob =SingleActionJobBuilder.create()
                 .withClass(ExecutePreCOBTaskNew.class).withName(jobName)
                 .withProps(ExecutePreCOBTaskNew.FINAL_BALANCE_MODE_KEY+ "=" + ONLINE.name()).build();
+
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg set state = ? where state in ('WORKING', 'LOADED', 'INPROGRESS')"
+                , EtlPackage.PackageState.ERROR.name());
 
         jobService.executeJob(precobJob);
 

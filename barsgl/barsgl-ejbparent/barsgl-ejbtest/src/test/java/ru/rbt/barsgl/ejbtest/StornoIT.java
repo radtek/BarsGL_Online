@@ -12,7 +12,6 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
-import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.mapping.YesNo;
 
@@ -247,7 +246,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertTrue(0 < operationS.getId());       // операция создана
 
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        Assert.assertEquals(OperState.POST, operationS.getState());
+        Assert.assertEquals("gloid=" + operationS.getId(), OperState.POST, operationS.getState());
         Assert.assertEquals(operationS.getPstScheme(), GLOperation.OperType.S);
         Assert.assertEquals(operationS.getStornoRegistration(), GLOperation.StornoType.S);
         Assert.assertEquals(operationS.getStornoOperation().getId(), operation.getId());        // ссылка на сторно операцию
