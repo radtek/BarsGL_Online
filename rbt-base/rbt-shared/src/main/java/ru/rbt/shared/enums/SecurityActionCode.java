@@ -97,6 +97,13 @@ public enum SecurityActionCode {
     , TechOperPstChngSuper("Изменение реквизитов проводки по техсчету, включая закрытый период")
     , Replication("Ручная репликация")
     , ReferAcc2Deals("Настройка списка счетов для контроля сделки")
+
+    , AccPkgFileLoad("Загрузка пакетов с запросами по счетам")
+    , AccPkgFileDel("Удаление пакетов с запросами по счетам")
+    , AccPkgFileOpen("Открытие счетов пакетной загрузки")
+    , AccPkgFileLook("Просмотр пакетов для загрузки счетов")
+    , AccountFileLook("Просмотр счетов пакетной загрузки")
+
     ;
 
     private final String desc;

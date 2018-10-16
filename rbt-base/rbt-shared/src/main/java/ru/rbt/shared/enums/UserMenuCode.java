@@ -13,7 +13,7 @@ public enum UserMenuCode {
     , Monitoring, CheckCardsRemains, FileIncomePkg, OperAuthorize, TechAccounting, TechAccount, TechPosting
     , TechOperInpConfirm, ErrorView, ErrorHandling, TechOperInpHistory, OperBackValue, OperNotAuthBV, OperAuthBV
     , BackValueParamsSetting, BackValuePeriodClosing, BackValueDepth, UserSessions
-
+    , FileAccounMenu, FileAccountPackage, FileAccountRequest
 
 
     /* Дополнительные коды меню, которые строятся всегда! */

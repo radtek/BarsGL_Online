@@ -13,6 +13,7 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
 import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
+import ru.rbt.barsgl.gwt.client.account.BatchAccountPkgForm;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
 import ru.rbt.barsgl.gwt.client.backvalue.BackValueForm;
@@ -285,6 +286,12 @@ public class MenuBuilder implements IMenuBuilder {
                 @Override
                 public void execute() {
                     formLoad(new BatchPackageForm());
+                }
+            });
+            case FileAccountPackage: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new BatchAccountPkgForm());
                 }
             });
             case PostingSource: return new MenuItem(wrapper.getMenuName(), false, new Command() {
