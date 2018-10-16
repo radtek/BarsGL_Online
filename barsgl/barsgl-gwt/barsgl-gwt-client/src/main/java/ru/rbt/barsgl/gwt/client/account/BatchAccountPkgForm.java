@@ -5,7 +5,7 @@ import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.shared.enums.BatchAccountPkgState;
+import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
@@ -47,7 +47,7 @@ public class BatchAccountPkgForm extends GridForm {
 
         result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60));
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус пакета", 120));
-        col.setList(getEnumLabelsList(BatchAccountPkgState.values()));
+        col.setList(getEnumLabelsList(AccountBatchPackageState.values()));
 
         result.addColumn(new Column("OD_LOAD", Column.Type.DATE, "Дата опердня загрузки", 75));
 

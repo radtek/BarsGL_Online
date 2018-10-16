@@ -5,7 +5,7 @@ import ru.rbt.barsgl.shared.HasLabel;
 /**
  * Created by er18837 on 15.10.2018.
  */
-public enum BatchAccountPkgState implements HasLabel {
+public enum AccountBatchPackageState implements HasLabel {
     IS_LOAD("Пакет загружен"),
     ON_VALID("Начало валидации"),
     IS_VALID("Валидация завершена успешно"),
@@ -17,7 +17,7 @@ public enum BatchAccountPkgState implements HasLabel {
 
     private String label;
 
-    BatchAccountPkgState(String label) {
+    AccountBatchPackageState(String label) {
         this.label = label;
     }
 

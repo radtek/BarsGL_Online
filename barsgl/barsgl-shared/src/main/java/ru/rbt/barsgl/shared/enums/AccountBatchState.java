@@ -5,7 +5,7 @@ import ru.rbt.barsgl.shared.HasLabel;
 /**
  * Created by er18837 on 16.10.2018.
  */
-public enum BatchAccountState implements HasLabel {
+public enum AccountBatchState implements HasLabel {
     LOAD("Загружен"),
     VALID("Проверен"),
     ERRCHK("Ошибка валидации"),
@@ -15,7 +15,7 @@ public enum BatchAccountState implements HasLabel {
 
     private String label;
 
-    BatchAccountState(String label) {
+    AccountBatchState(String label) {
         this.label = label;
     }
 
