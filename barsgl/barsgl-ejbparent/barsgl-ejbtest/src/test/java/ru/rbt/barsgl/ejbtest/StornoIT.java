@@ -234,6 +234,8 @@ public class StornoIT extends AbstractTimerJobIT {
 
         // Сторно операция - сдвигем день вперед на 1
         setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        checkCreateBankCurrency(getOperday().getCurrentDate(), BankCurrency.AUD, new BigDecimal("63.313"));
+
         stamp = System.currentTimeMillis();
         pkg = newPackage(stamp, "SimpleStornoBack");
         Assert.assertTrue(pkg.getId() > 0);
