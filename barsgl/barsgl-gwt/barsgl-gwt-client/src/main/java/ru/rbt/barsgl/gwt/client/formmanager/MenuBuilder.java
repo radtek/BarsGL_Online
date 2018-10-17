@@ -13,7 +13,7 @@ import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
 import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
-import ru.rbt.barsgl.gwt.client.account.BatchAccountPkgForm;
+import ru.rbt.barsgl.gwt.client.account.AccountBatchPkgForm;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
 import ru.rbt.barsgl.gwt.client.backvalue.BackValueForm;
@@ -22,7 +22,6 @@ import ru.rbt.barsgl.gwt.client.checkCardsRem.CheckCardRemForm;
 import ru.rbt.barsgl.gwt.client.dict.*;
 import ru.rbt.barsgl.gwt.client.dict.AccDealsDict;
 import ru.rbt.barsgl.gwt.client.events.ae.*;
-import ru.rbt.barsgl.gwt.client.loader.FullLoaderControlForm;
 import ru.rbt.barsgl.gwt.client.operBackValue.OperAuthBVForm;
 import ru.rbt.barsgl.gwt.client.operBackValue.OperNotAuthBVForm;
 import ru.rbt.barsgl.gwt.client.operBackValue.dict.BVDepthForm;
@@ -43,7 +42,6 @@ import ru.rbt.barsgl.gwt.core.forms.IDisposable;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.security.gwt.client.formmanager.IMenuBuilder;
-import ru.rbt.security.gwt.client.monitoring.Monitor;
 import ru.rbt.security.gwt.client.security.LoginFormHandler;
 import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 import ru.rbt.shared.access.UserMenuItemWrapper;
@@ -291,7 +289,7 @@ public class MenuBuilder implements IMenuBuilder {
             case FileAccountPackage: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
-                    formLoad(new BatchAccountPkgForm());
+                    formLoad(new AccountBatchPkgForm());
                 }
             });
             case PostingSource: return new MenuItem(wrapper.getMenuName(), false, new Command() {

@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.apache.poi.POIXMLException;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
+import ru.rbt.barsgl.ejb.controller.excel.AccountBatchProcessorBean;
 import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessorBean;
 import ru.rbt.barsgl.ejb.controller.excel.CardMessageProcessorBean;
 import ru.rbt.barsgl.ejb.controller.excel.ParamsParserException;
@@ -42,7 +43,7 @@ public class UploadFileHandler extends HttpServlet {
 
     private static Logger log = Logger.getLogger(UploadFileHandler.class);
 
-    private static final String UPLOAD_TYPE = "uploadtype";
+    public static final String UPLOAD_TYPE = "uploadtype";
 
     // TODO Property
     private long maxFileSizeDef = 256000L;
@@ -102,6 +103,23 @@ public class UploadFileHandler extends HttpServlet {
     }
 
     private Class<?> getUploadProcessor(String uploadType) throws Exception {
+        UploadFileType uploadFileType;
+        try {
+            uploadFileType = UploadFileType.valueOf(uploadType);
+        } catch (Exception e) {
+            throw new Exception("Не определен тип обработчика " + uploadType + " для загруженного файла");
+        }
+        switch (uploadFileType) {
+            case Oper:
+                return BatchMessageProcessorBean.class;
+            case Card:
+                return CardMessageProcessorBean.class;
+            case Account:
+                return AccountBatchProcessorBean.class;
+            default:
+                throw new IllegalAccessException("Не реализован тип обработчика " + uploadType + " для загруженного файла");
+        }
+/*
         if("Batch".equals(uploadType)) {
             return BatchMessageProcessorBean.class;
         } else if("Card".equals(uploadType)) {
@@ -109,6 +127,7 @@ public class UploadFileHandler extends HttpServlet {
         } else {
             throw new Exception("Не определен тип обработчика " + uploadType + " для загруженного файла");
         }
+*/
     }
 
     private File writeFile(FileItem fileItem) throws Exception {

@@ -1,9 +1,11 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
+
 /**
  * Created by ER18837 on 24.09.16.
  */
-public class LoadCardDlg extends LoadFileDlgBase {
+public class LoadCardDlg extends LoadOperDlgBase {
     public static final String TITLE = "Загрузка картотеки из Excel файла";
     public LoadCardDlg() {
         super();
@@ -27,7 +29,7 @@ public class LoadCardDlg extends LoadFileDlgBase {
 
     @Override
     protected String getUploadType() {
-        return "Card";
+        return UploadFileType.Card.name();
     }
 
     @Override

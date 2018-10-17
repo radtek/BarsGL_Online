@@ -3,6 +3,7 @@ package ru.rbt.barsgl.gwt.client.events.ae;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.loadFile.LoadFileFactory;
 import ru.rbt.barsgl.gwt.client.operation.OperationHandsDlg;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
@@ -14,6 +15,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
+import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
@@ -55,8 +57,8 @@ public class BatchPostingForm extends OperBase {
     @Override
     protected void reconfigure() {
         super.reconfigure();
-        abw.addAction(_loadFile = createLoad(LoadFileFactory.LoadType.FILE, ImageConstants.INSTANCE.load()));
-        abw.addAction(_loadCard = createLoad(LoadFileFactory.LoadType.CARD, ImageConstants.INSTANCE.load_blue()));
+        abw.addAction(_loadFile = createLoad(UploadFileType.Oper, ImageConstants.INSTANCE.load()));
+        abw.addAction(_loadCard = createLoad(UploadFileType.Card, ImageConstants.INSTANCE.load_blue()));
         abw.addAction(_delete = createDelete());
         abw.addAction(_forward = createForward());
         abw.addAction(_backward = createBackward());
@@ -76,10 +78,10 @@ public class BatchPostingForm extends OperBase {
         _packageStatAction.setVisible(true);
     }
 
-    private GridAction createLoad(final LoadFileFactory.LoadType loadType, ImageResource img) {
+    private GridAction createLoad(final UploadFileType loadType, ImageResource img) {
 
-        return new GridAction(grid, null, loadType == LoadFileFactory.LoadType.FILE ? LoadFileDlg.TITLE : LoadCardDlg.TITLE, new Image(img), 10) {
-            LoadFileDlgBase dlg = null;
+        return new GridAction(grid, null, loadType == UploadFileType.Oper ? LoadOperDlg.TITLE : LoadCardDlg.TITLE, new Image(img), 10) {
+            LoadOperDlgBase dlg = null;
 
             @Override
             public void execute() {

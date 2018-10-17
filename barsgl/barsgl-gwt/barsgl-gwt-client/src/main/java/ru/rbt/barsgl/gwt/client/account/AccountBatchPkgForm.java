@@ -1,33 +1,54 @@
 package ru.rbt.barsgl.gwt.client.account;
 
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.events.ae.LoadOperDlg;
+import ru.rbt.barsgl.gwt.client.events.ae.LoadOperDlgBase;
+import ru.rbt.barsgl.gwt.client.loadFile.LoadFileFactory;
+import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
+import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
+import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
+import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
+import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
+import ru.rbt.barsgl.shared.enums.BatchPostAction;
+import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
+import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
+import ru.rbt.shared.user.AppUserWrapper;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
+import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 
 /**
  * Created by er18837 on 15.10.2018.
  */
-public class BatchAccountPkgForm extends GridForm {
+public class AccountBatchPkgForm extends GridForm {
     public static final String FORM_NAME = "Пакеты для загрузки счетов";
 
-    public BatchAccountPkgForm(String title) {
+    private GridAction _loadFile;
+
+    public AccountBatchPkgForm(String title) {
         super(title);
     }
 
-    public BatchAccountPkgForm(String title, boolean delayLoad) {
+    public AccountBatchPkgForm(String title, boolean delayLoad) {
         super(title, delayLoad);
     }
 
-    public BatchAccountPkgForm() {
-        super(FORM_NAME, true);
+    public AccountBatchPkgForm() {
+        super(FORM_NAME, false);    // true
 //        _select = getSelectClause();
         reconfigure();
     }
@@ -36,7 +57,10 @@ public class BatchAccountPkgForm extends GridForm {
         GridAction quickFilterAction;
 //        abw.addAction(quickFilterAction = new BatchPackageForm.DateOwnQuickFilterAction(grid, colProcDate));
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
+        abw.addAction(_loadFile = createLoad(UploadFileType.Account, ImageConstants.INSTANCE.load()));
+
 //        abw.addAction(new PackageStatisticsAction(grid));
+
 //        quickFilterAction.execute();
     }
 
@@ -93,6 +117,59 @@ public class BatchAccountPkgForm extends GridForm {
                 " TRIM(REPLACE(U.SURNAME || ' '  || U.FIRSTNAME || ' ' || U.PATRONYMIC, '  ', ' ')) AS FIO, FILIAL\n" +
                 " FROM GL_ACBATPKG PKG LEFT JOIN GL_USER U ON U.USER_NAME = PKG.USER_LOAD "
                 + where;
+    }
+
+    private GridAction createLoad(final UploadFileType loadType, ImageResource img) {
+
+        return new GridAction(grid, null, LoadAccountDlg.TITLE, new Image(img), 10) {
+            LoadAccountDlg dlg = null;
+
+            @Override
+            public void execute() {
+                WaitingManager.show("Загрузка из файла...");
+                if (dlg == null) dlg = new LoadAccountDlg(); // LoadFileFactory.create(loadType);
+
+                dlg.setAfterCancelEvent(new IAfterCancelEvent() {
+                    @Override
+                    public void afterCancel() {
+                        WaitingManager.hide();
+                        dlg.hide();
+                        grid.refresh();
+                    }
+                });
+
+                dlg.setDlgEvents(new IDlgEvents() {
+                    @Override
+                    public void onDlgOkClick(Object prms) {
+                        WaitingManager.hide();
+                        WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                        ManualOperationWrapper wrapper = new ManualOperationWrapper();
+                        wrapper.setPkgId((Long) prms);
+                        wrapper.setAction(BatchPostAction.CONTROL);
+
+                        AppUserWrapper appUserWrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+                        wrapper.setUserId(appUserWrapper.getId());
+
+                        BarsGLEntryPoint.operationService.processPackageRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+                            @Override
+                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
+                                if (wrapper.isError()) {
+                                    showInfo("Ошибка", wrapper.getMessage());
+                                } else {
+                                    dlg.hide();
+                                    showInfo("Информация", wrapper.getMessage());
+
+                                    grid.refresh();
+                                }
+                                WaitingManager.hide();
+                            }
+                        });
+                    }
+                });
+
+                dlg.show(null);
+            }
+        };
     }
 
 }

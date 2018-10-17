@@ -40,7 +40,7 @@ import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
 /**
  * Created by akichigi on 20.06.16.
  */
-abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEvent {
+abstract public class LoadOperDlgBase extends DlgFrame implements IAfterShowEvent {
     private final static String LIST_DELIMITER = "#";
 
     private final String LABEL_WIDTH = "110px";
@@ -74,7 +74,7 @@ abstract public class LoadFileDlgBase extends DlgFrame implements IAfterShowEven
     private Timer timer;
 
 
-    public LoadFileDlgBase(){
+    public LoadOperDlgBase(){
         super();
         ok.setText("Передать на подпись");
         ok.setEnabled(false);

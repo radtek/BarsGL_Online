@@ -1,11 +1,13 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
+
 /**
  * Created by ER18837 on 24.09.16.
  */
-public class LoadFileDlg extends LoadFileDlgBase {
+public class LoadOperDlg extends LoadOperDlgBase {
     public static final String TITLE = "Загрузка операций из Excel файла";
-    public LoadFileDlg(){
+    public LoadOperDlg(){
         super();
         setCaption(TITLE);
     }
@@ -27,7 +29,7 @@ public class LoadFileDlg extends LoadFileDlgBase {
 
     @Override
     protected String getUploadType() {
-        return "Batch";
+        return UploadFileType.Oper.name();
     }
 
     @Override
