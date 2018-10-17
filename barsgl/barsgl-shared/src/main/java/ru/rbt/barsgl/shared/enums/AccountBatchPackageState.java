@@ -10,7 +10,7 @@ public enum AccountBatchPackageState implements HasLabel {
     ON_VALID("Начало валидации"),
     IS_VALID("Валидация завершена успешно"),
     ERROR("Валидация завершена с ошибкой"),
-    IS_START("Начало обработки"),
+    ON_OPEN("Начало обработки"),
     PROC_ERR("При обрабоке были ошибки"),
     PROCESSED("Обработка завершена усрешно"),
     ;
