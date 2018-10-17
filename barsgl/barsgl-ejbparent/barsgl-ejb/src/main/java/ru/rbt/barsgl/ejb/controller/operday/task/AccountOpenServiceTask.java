@@ -1,13 +1,15 @@
 package ru.rbt.barsgl.ejb.controller.operday.task;
 
 import org.apache.log4j.Logger;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.GLAccountRequestRepository;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
-import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
+import ru.rbt.ejbcore.datarec.DataRecord;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -31,13 +33,16 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
     private BeanManagedProcessor beanManagedProcessor;
 
     @EJB
-    GLAccountRequestRepository accountRequestRepository;
+    private GLAccountRequestRepository accountRequestRepository;
 
     @Inject
-    GLAccountService glAccountService;
+    private GLAccountService glAccountService;
 
     @EJB
     private AuditController auditController;
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
 
     @Override
     public void run(String jobName, Properties properties) throws Exception {
@@ -47,8 +52,9 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
     public void executeWork() throws Exception {
         try {
             beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
+                int hoursOld = propertiesRepository.getNumber(PropertyName.SRV_ACCRETRIEVE_HOURS.getName()).intValue();
                 // T0: читаем запросы с STATUS = 'NEW' с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
-                List<DataRecord> loadedRequests = accountRequestRepository.getRequestForProcessing(maxRequestCount);
+                List<DataRecord> loadedRequests = accountRequestRepository.getRequestForProcessing(maxRequestCount, hoursOld);
                 String msg = format("Предварительное кол-во запросов на открытие счетов '%s'", loadedRequests.size());
                 log.info(msg);
                 // T0: теперь читаем пакет по ID и проверяем статус в режиме CS

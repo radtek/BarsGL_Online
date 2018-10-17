@@ -55,7 +55,8 @@ public enum PropertyName {
     , AQBALANCE_CHECK_MSG_CNT("aqbalance.queue.check.msgcnt")
     , AQBALANCE_CHECK_EMSG_CNT("aqbalance.queue.check.emsgcnt")
 
-    , INTELMATCH_SSH_CMD("intelmatch.ssh.cmd");
+    , INTELMATCH_SSH_CMD("intelmatch.ssh.cmd")
+    , SRV_ACCRETRIEVE_HOURS("srv.accretrieve.hours");
 
     private String name;
 

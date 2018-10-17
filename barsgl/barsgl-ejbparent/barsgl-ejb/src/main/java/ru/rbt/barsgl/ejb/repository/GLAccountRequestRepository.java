@@ -13,7 +13,6 @@ import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
-import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
@@ -53,11 +52,13 @@ public class GLAccountRequestRepository extends AbstractBaseEntityRepository<GLA
 
     /**
      * Загрузка запросов на открытие счета
+     * @param maxRows строк к обработке
+     * @param hoursOld старше чем systimestam - hoursOld не обрабатываем
      * @return
      */
-    public List<DataRecord> getRequestForProcessing(int maxRows) {
+    public List<DataRecord> getRequestForProcessing(int maxRows, int hoursOld) {
         try {
-            return selectMaxRows("SELECT * FROM GL_ACOPENRQ WHERE STATUS = 'NEW' ORDER BY REQUEST_ID", maxRows, null);
+            return selectMaxRows("SELECT * FROM GL_ACOPENRQ WHERE STATUS = 'NEW' AND SYS_TIME > SYSTIMESTAMP - ?/24 ORDER BY SYS_TIME", maxRows, new Object[]{hoursOld});
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
