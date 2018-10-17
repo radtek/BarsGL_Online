@@ -6,7 +6,7 @@ import ru.rbt.barsgl.ejb.entity.acc.GLAccountRequest;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.GLAccountRequestRepository;
-import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
+import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.job.ParamsAwareRunnable;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -15,9 +15,11 @@ import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
-import static ru.rbt.audit.entity.AuditRecord.LogCode.Account;
+import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountRetrieve;
 
 
 /**
@@ -27,10 +29,10 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
 
     private static final Logger log = Logger.getLogger(AccountOpenServiceTask.class);
 
-    private static int maxRequestCount = 30;
+//    private static int maxRequestCount = 30;
 
-    @EJB
-    private BeanManagedProcessor beanManagedProcessor;
+//    @EJB
+//    private BeanManagedProcessor beanManagedProcessor;
 
     @EJB
     private GLAccountRequestRepository accountRequestRepository;
@@ -44,6 +46,9 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
     @EJB
     private PropertiesRepository propertiesRepository;
 
+    @EJB
+    private AsyncProcessor asyncProcessor;
+
     @Override
     public void run(String jobName, Properties properties) throws Exception {
         executeWork();
@@ -51,38 +56,50 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
 
     public void executeWork() throws Exception {
         try {
-            beanManagedProcessor.executeInNewTxWithTimeout(((persistence, connection) -> {
+            accountRequestRepository.executeInNewTransaction(persistence -> {
                 int hoursOld = propertiesRepository.getNumber(PropertyName.SRV_ACCRETRIEVE_HOURS.getName()).intValue();
-                // T0: читаем запросы с STATUS = 'NEW' с UR чтоб исключить блокировку сортируем по дате берем максимально по умолчанию 10 (параметр)
+                int maxRequestCount = propertiesRepository.getNumber(PropertyName.SRV_ACCRETRIEVE_REQUESTS.getName()).intValue();
+
                 List<DataRecord> loadedRequests = accountRequestRepository.getRequestForProcessing(maxRequestCount, hoursOld);
-                String msg = format("Предварительное кол-во запросов на открытие счетов '%s'", loadedRequests.size());
-                log.info(msg);
-                // T0: теперь читаем пакет по ID и проверяем статус в режиме CS
-                for (DataRecord reqRecord : loadedRequests) {
-                    String id = reqRecord.getString("REQUEST_ID");
-                    GLAccountRequest request = accountRequestRepository.findById(GLAccountRequest.class, id);
-                    if (GLAccountRequest.RequestStatus.NEW == request.getStatus()) {
-                        processRequest(request);
-                    } else {
-                        log.info(format("Запрос '%s' в недопустимом статусе: '%s'", request.getId(), request.getStatus()));
-                    }
-                }
+                log.info(format("Предварительное кол-во запросов на открытие счетов '%s'", loadedRequests.size()));
+                // читаем пакет по ID и проверяем статус
+
+                ExecutorService executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(10, 30, maxRequestCount);
+
+                loadedRequests.forEach(r -> {
+                    executor.submit(() -> {
+                        try {
+                            accountRequestRepository.executeInNewTransaction(persistence1 -> {
+                                GLAccountRequest request = accountRequestRepository.findById(GLAccountRequest.class, r.getString("REQUEST_ID"));
+                                if (GLAccountRequest.RequestStatus.NEW == request.getStatus()) {
+                                    processRequest(request);
+                                } else {
+                                    auditController.warning(AccountRetrieve, format("Запрос '%s' в недопустимом статусе: '%s'", request.getId(), request.getStatus()));
+                                }
+                                return null;
+                            });
+                        } catch (Throwable e) {
+                            auditController.error(AccountRetrieve, format("Ошибка при обработке запроса '%s' на открытие счета", r.getString("REQUEST_ID")), null, e);
+                        }
+                    });
+                });
+                asyncProcessor.awaitTermination(executor, 1, TimeUnit.HOURS, System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
                 return null;
-            }), 60 * 10);
-        } catch (Exception e) {
-            auditController.error(Account, "Ошибка при выполнении задачи AccountRetrieve", null, e);
+            });
+        } catch (Throwable e) {
+            auditController.error(AccountRetrieve, "Ошибка при выполнении задачи AccountRetrieve: " + e.getMessage(), null, e);
         }
     }
 
     private void processRequest(GLAccountRequest request) throws Exception {
         accountRequestRepository.executeInNewTransaction(persistence -> {
-            auditController.info(Account, format("Начало обработки запроса открытия счета c ИД '%s'", request.getId()));
+            auditController.info(AccountRetrieve, format("Начало обработки запроса открытия счета c ИД '%s'", request.getId()));
             try {
                 glAccountService.createRequestAccount(request);
-                auditController.info(Account, format("Обработка открытия счета с ИД '%s' завершена", request.getId()));
+                auditController.info(AccountRetrieve, format("Обработка открытия счета с ИД '%s' завершена", request.getId()));
                 return null;
             } catch (Exception e) {
-                auditController.error(Account, "Ошибка при обработке запроса открытия счета", request, e);
+                auditController.error(AccountRetrieve, "Ошибка при обработке запроса открытия счета", request, e);
                 return null;
             }
         });
