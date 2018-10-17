@@ -123,6 +123,7 @@
         <class>ru.rbt.barsgl.ejb.entity.monitor.AppHttpSession</class>
 
         <class>ru.rbt.barsgl.ejb.entity.etl.AccountBatchPackage</class>
+        <class>ru.rbt.barsgl.ejb.entity.etl.AccountBatchRequest</class>
 
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 
