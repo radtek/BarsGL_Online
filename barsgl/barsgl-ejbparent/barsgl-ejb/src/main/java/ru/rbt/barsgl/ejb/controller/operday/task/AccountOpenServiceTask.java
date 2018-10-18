@@ -59,12 +59,13 @@ public class AccountOpenServiceTask implements ParamsAwareRunnable {
             accountRequestRepository.executeInNewTransaction(persistence -> {
                 int hoursOld = propertiesRepository.getNumber(PropertyName.SRV_ACCRETRIEVE_HOURS.getName()).intValue();
                 int maxRequestCount = propertiesRepository.getNumber(PropertyName.SRV_ACCRETRIEVE_REQUESTS.getName()).intValue();
+                int maxThreads = propertiesRepository.getNumber(PropertyName.SRV_ACCRETRIEVE_THREADS.getName()).intValue();
 
                 List<DataRecord> loadedRequests = accountRequestRepository.getRequestForProcessing(maxRequestCount, hoursOld);
                 log.info(format("Предварительное кол-во запросов на открытие счетов '%s'", loadedRequests.size()));
                 // читаем пакет по ID и проверяем статус
 
-                ExecutorService executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(10, 30, maxRequestCount);
+                ExecutorService executor = asyncProcessor.getBlockingQueueThreadPoolExecutor(maxThreads, maxThreads, maxRequestCount);
 
                 loadedRequests.forEach(r -> {
                     executor.submit(() -> {

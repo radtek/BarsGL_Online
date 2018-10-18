@@ -57,7 +57,8 @@ public enum PropertyName {
 
     , INTELMATCH_SSH_CMD("intelmatch.ssh.cmd")
     , SRV_ACCRETRIEVE_HOURS("srv.accretrieve.hours")
-    , SRV_ACCRETRIEVE_REQUESTS("srv.accretrieve.requestscnt");
+    , SRV_ACCRETRIEVE_REQUESTS("srv.accretrieve.requestscnt")
+    , SRV_ACCRETRIEVE_THREADS("srv.accretrieve.threadscnt");
 
     private String name;
 
