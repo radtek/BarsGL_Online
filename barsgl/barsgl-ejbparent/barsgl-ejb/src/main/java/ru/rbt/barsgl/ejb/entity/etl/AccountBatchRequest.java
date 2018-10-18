@@ -30,7 +30,7 @@ public class AccountBatchRequest extends BaseEntity<Long> {
 
     @Column(name = "STATE")
     @Enumerated(EnumType.STRING)
-    private AccountBatchState batchState;
+    private AccountBatchState state;
 
     @Column(name = "BRANCH_IN")
     String inBranch;
@@ -142,12 +142,12 @@ public class AccountBatchRequest extends BaseEntity<Long> {
         this.lineNumber = lineNumber;
     }
 
-    public AccountBatchState getBatchState() {
-        return batchState;
+    public AccountBatchState getState() {
+        return state;
     }
 
-    public void setBatchState(AccountBatchState batchState) {
-        this.batchState = batchState;
+    public void setState(AccountBatchState state) {
+        this.state = state;
     }
 
     public String getInBranch() {

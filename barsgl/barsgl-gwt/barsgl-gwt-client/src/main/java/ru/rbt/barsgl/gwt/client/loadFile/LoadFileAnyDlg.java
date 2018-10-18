@@ -10,6 +10,7 @@ import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
+import org.apache.commons.lang3.ArrayUtils;
 import ru.rbt.barsgl.gwt.client.check.CheckFileExtention;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.core.comp.Components;
@@ -17,6 +18,9 @@ import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterShowEvent;
 import ru.rbt.barsgl.gwt.core.ui.RichAreaBox;
 import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
+
+import java.sql.Array;
+import java.util.Arrays;
 
 import static ru.rbt.barsgl.gwt.core.comp.Components.createAlignWidget;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
@@ -180,7 +184,6 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             }
             if (response.startsWith(LIST_DELIMITER)) {
                 String[] list = response.split(LIST_DELIMITER);
-
 /*
                 idPackage = parseLong(list[1], "пакет", ":");
                 Long all = parseLong(list[2], "всего", ":");
@@ -194,13 +197,8 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
                 boolean isOk = acceptResponse(list);
                 ok.setEnabled(isOk);
                 switchControlsState(!isOk);
-
-                return new StringBuilder()
-                        .append(list[1]).append("<BR>")
-                        .append(list[2]).append("<BR>")
-                        .append(list[3]).toString();
-            } else
-                return response.replaceAll(LIST_DELIMITER, "<BR>");
+            }
+            return response.replaceAll(LIST_DELIMITER, "<BR>");
         } catch (Exception e) {
             return e.getMessage();
         }

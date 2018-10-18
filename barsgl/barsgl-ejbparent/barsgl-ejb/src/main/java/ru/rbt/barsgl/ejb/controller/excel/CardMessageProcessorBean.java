@@ -52,7 +52,7 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
  */
 @Stateless
 @LocalBean
-public class CardMessageProcessorBean implements CardMessageProcessor {
+public class CardMessageProcessorBean implements BatchMessageProcessor {
     private static int START_ROW = 1;
     private static String LIST_DELIMITER = "#";
 

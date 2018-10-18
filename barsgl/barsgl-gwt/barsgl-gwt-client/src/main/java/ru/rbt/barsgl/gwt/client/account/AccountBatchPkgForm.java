@@ -16,6 +16,7 @@ import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
 import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
 import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
@@ -24,6 +25,9 @@ import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.user.AppUserWrapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
@@ -117,6 +121,13 @@ public class AccountBatchPkgForm extends GridForm {
                 " TRIM(REPLACE(U.SURNAME || ' '  || U.FIRSTNAME || ' ' || U.PATRONYMIC, '  ', ' ')) AS FIO, FILIAL\n" +
                 " FROM GL_ACBATPKG PKG LEFT JOIN GL_USER U ON U.USER_NAME = PKG.USER_LOAD "
                 + where;
+    }
+
+    @Override
+    protected List<SortItem> getInitialSortCriteria() {
+        ArrayList<SortItem> list = new ArrayList<SortItem>();
+        list.add(new SortItem("ID_PKG", Column.Sort.DESC));
+        return list;
     }
 
     private GridAction createLoad(final UploadFileType loadType, ImageResource img) {

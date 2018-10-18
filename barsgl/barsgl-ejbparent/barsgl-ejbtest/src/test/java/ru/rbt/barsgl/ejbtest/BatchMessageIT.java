@@ -4,21 +4,18 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
-import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessorBean;
+import ru.rbt.barsgl.ejb.controller.excel.BatchOperationProcessorBean;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejbtesting.test.ManualOperationAuthTesting;
-import ru.rbt.barsgl.shared.NotAuthorizedUserException;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.util.DateUtils;
 
-import javax.ejb.EJB;
 import java.io.File;
 import java.text.ParseException;
 import java.util.Date;
@@ -276,7 +273,7 @@ public class BatchMessageIT extends AbstractTimerJobIT {
         params.put("source", "K+TP");
         params.put("department", "AAC");
 
-        msg = remoteAccess.invoke(BatchMessageProcessorBean.class, "processMessage", file, params);
+        msg = remoteAccess.invoke(BatchOperationProcessorBean.class, "processMessage", file, params);
 	
         PackageParam param = getPackageParam(msg);
         Assert.assertNotNull(param.getId());

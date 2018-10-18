@@ -9,10 +9,7 @@ import org.apache.log4j.Logger;
 import org.apache.poi.POIXMLException;
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.barsgl.ejb.controller.excel.AccountBatchProcessorBean;
-import ru.rbt.barsgl.ejb.controller.excel.BatchMessageProcessorBean;
-import ru.rbt.barsgl.ejb.controller.excel.CardMessageProcessorBean;
-import ru.rbt.barsgl.ejb.controller.excel.ParamsParserException;
+import ru.rbt.barsgl.ejb.controller.excel.*;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejbcore.remote.ServerAccess;
 import ru.rbt.barsgl.gwt.serverutil.GwtServerUtils;
@@ -54,12 +51,12 @@ public class UploadFileHandler extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse resp) throws ServletException, IOException {
         GwtServerUtils.setRequest(request);
         resp.setContentType("text/html;charset=Windows-1251");
+        Map<String, String> params = new HashMap<>();
         try {
             if (ServletFileUpload.isMultipartContent(request)) {
                 FileItemFactory factory = new DiskFileItemFactory();
                 ServletFileUpload upload = new ServletFileUpload(factory);
                 List<FileItem> items = upload.parseRequest(request);
-                Map<String, String> params = new HashMap<>();
                 Iterator<FileItem> iterator = items.iterator();
                 File file = null;
                 while (iterator.hasNext()) {
@@ -70,7 +67,6 @@ public class UploadFileHandler extends HttpServlet {
                         String fieldvalue = item.getString();
                         params.put(fieldname, fieldvalue);
                     } else {
-                        //         return (int)(long)propertiesRepository.getNumberDef(PropertyName.BATPKG_MAXROWS.getName(), MAX_ROWS);
                         long maxFileSize = localInvoker.invoke(PropertiesRepository.class, "getNumberDef", PropertyName.BATPKG_MAXSIZE.getName(), maxFileSizeDef);
                         if (item.getSize() > maxFileSize)
                             throw new IllegalArgumentException(String.format("Размер файла %,d байт превышает максимально допустимый для загрузки размер %,d байт", item.getSize(), maxFileSize));
@@ -82,7 +78,7 @@ public class UploadFileHandler extends HttpServlet {
                 }
 
                 String uploadType = params.get(UPLOAD_TYPE);
-                Class<?> uploadProcessor = getUploadProcessor(uploadType);
+                Class<? extends BatchMessageProcessor> uploadProcessor = getUploadProcessor(uploadType);
                 String result = localInvoker.invoke(uploadProcessor, "processMessage", file, params);
                 resp.getWriter().append(result);
 
@@ -93,7 +89,7 @@ public class UploadFileHandler extends HttpServlet {
         } catch (Throwable e) {
             String rusErr = getRusError(e);
             if (!rusErr.isEmpty()){
-                auditRecord("warning", rusErr, null);
+                auditRecord("warning", "Ошибка при загрузке файла: " + params.toString(), rusErr);
                 resp.getWriter().print(rusErr);
             }else{
                 auditRecord("error", "Системная ошибка при загрузке файла:" + e.getMessage(), e);
@@ -102,7 +98,7 @@ public class UploadFileHandler extends HttpServlet {
         }
     }
 
-    private Class<?> getUploadProcessor(String uploadType) throws Exception {
+    private Class<? extends BatchMessageProcessor> getUploadProcessor(String uploadType) throws Exception {
         UploadFileType uploadFileType;
         try {
             uploadFileType = UploadFileType.valueOf(uploadType);
@@ -111,7 +107,7 @@ public class UploadFileHandler extends HttpServlet {
         }
         switch (uploadFileType) {
             case Oper:
-                return BatchMessageProcessorBean.class;
+                return BatchOperationProcessorBean.class;
             case Card:
                 return CardMessageProcessorBean.class;
             case Account:
@@ -150,6 +146,14 @@ public class UploadFileHandler extends HttpServlet {
             localInvoker.invoke(AuditController.class, method, AuditRecord.LogCode.BatchOperation, message, null, exc);
         } catch (Exception e) {
             log.error("error on create error audit record, on exception:", exc);
+            log.error("error on create error audit record:", e);
+        }
+    }
+
+    private void auditRecord(String method, String message, String errorMessage) {
+        try {
+            localInvoker.invoke(AuditController.class, method, AuditRecord.LogCode.BatchOperation, message, null, errorMessage);
+        } catch (Exception e) {
             log.error("error on create error audit record:", e);
         }
     }

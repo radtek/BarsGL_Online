@@ -6,12 +6,13 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchRequest;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
-import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.AccountBatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.AccountBatchRequestRepository;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.barsgl.shared.enums.BatchPackageState;
-import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
+import ru.rbt.barsgl.shared.enums.AccountBatchState;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.security.RequestContext;
@@ -29,9 +30,9 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBatch;
 /**
  * Created by er18837 on 17.10.2018.
  */
-public class AccountBatchProcessorBean implements BatchMessageProcessor {
-
+public class AccountBatchProcessorBean extends UploadProcessorBase implements BatchMessageProcessor {
     public static final Logger log = Logger.getLogger(AccountBatchProcessorBean.class);
+    private final long MAX_ROWS = 1000;
 
     private static int START_ROW = 1;
     private static int COLUMN_COUNT = 11;
@@ -55,6 +56,20 @@ public class AccountBatchProcessorBean implements BatchMessageProcessor {
     @Inject
     private AccountBatchPackageRepository packageRepository;
 
+    @EJB
+    private PropertiesRepository propertiesRepository;
+
+    @Override
+    protected long getColumnCount() {return COLUMN_COUNT; }
+
+    @Override
+    protected long getStartLine() {return START_ROW; }
+
+    @Override
+    protected long getMaxLines() {
+        return propertiesRepository.getNumberDef(PropertyName.BATPKG_MAXROWS.getName(), MAX_ROWS);  // TODO BATPKG_MAXROWS ??
+    }
+
     @Override
     public String processMessage(File file, Map<String, String> params) throws Exception {
         String fileName = new String(params.get("filename").getBytes("Cp1252"), "Cp1251");
@@ -67,8 +82,8 @@ public class AccountBatchProcessorBean implements BatchMessageProcessor {
                 ExcelParser parser = new ExcelParser(is);
         ) {
             Iterator<List<Object>> it = parser.parseSafe(0);
-//            batchPackage = requestRepository.executeInNewTransaction(persistence ->
-//                    buildPackage(it, fileName, parser.getRowCount(), userId));
+            batchPackage = requestRepository.executeInNewTransaction(persistence ->
+                    buildPackage(it, fileName, parser.getRowCount(), userId));
         }
         if (null == batchPackage )
             return "Нет строк для загрузки!";
@@ -81,66 +96,36 @@ public class AccountBatchProcessorBean implements BatchMessageProcessor {
         return result;
     }
 
-    public AccountBatchPackage buildPackage(Iterator<List<Object>> it, String fileName, int maxRowNum, Long userId) throws Exception {
+    public AccountBatchPackage buildPackage(Iterator<List<Object>> it, String fileName, long maxRowNum, Long userId) throws Exception {
         if(!it.hasNext() || 0 == maxRowNum) {
             return null;
         }
 
-        AccountBatchPackage pkg = new AccountBatchPackage();
+        if (!checkRowHeader(it.next(), maxRowNum))
+            return null;
 
         final UserRequestHolder requestHolder = contextBean.getRequest().orElse(UserRequestHolder.empty());
         String userName = requestHolder.getUser();
         String filial = requestHolder.getUserWrapper().getFilial();
         if (null == userId)
             userId = requestHolder.getUserWrapper().getId();
-        pkg.setLoadUser(userName);
-
-        Date curdate = operdayController.getOperday().getCurrentDate();
-        Date timestamp = operdayController.getSystemDateTime();
 
         List<AccountBatchRequest> requests = new ArrayList<>();
-        List<String> errorList = new ArrayList<String>();
+        List<String> errorList = new ArrayList<>();
 
-        rowHeader = it.next();
-        if (rowHeader.isEmpty())
-            return null;
-        if (rowHeader.size() < COLUMN_COUNT) {
-            String msg = "Неверное количество столбцов: " + rowHeader.size() + ", должно быть не менее " + COLUMN_COUNT;
-            auditController.error(AccountBatch, "Ошибка при загрузке файла", null, msg);
-            throw new ParamsParserException(msg);
-        }
-
+        Date curdate = operdayController.getOperday().getCurrentDate();
         int row = START_ROW;
-
-        int maxRows = START_ROW + 1000; // TODO packageController.getMaxRowsExcel();
-        if (maxRowNum > maxRows) {
-            errorList.add(format("Нельзя загрузить файл размером больше %d строк", maxRows));
-            throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
-        }
-
-/*
-        Date postDate0 = null;
         if(it.hasNext()) {
-            AccountBatchRequest request0 = createPosting(it.next(), row, source, department, errorList);
-            if (null == request0)
-                return null;
-            postDate0 = request0.getPostDate();
-            if (null != postDate0) {
-                checkBackvaluePermission(postDate0, userId);
-                checkFilialPermission(request0.getFilialDebit(), request0.getFilialCredit(), userId);
-                requests.add(request0);
-                row++;
-                while(it.hasNext()) {
-                    BatchPosting posting = createPosting(it.next(), row, source, department, errorList);
-                    if (null != posting) {
-                        checkDateEquals(postDate0, posting.getPostDate());
-                        checkFilialPermission(posting.getFilialDebit(), posting.getFilialCredit(), userId);
-                        requests.add(posting);
-                    }
-                    row++;
-                    if (errorList.size() > 10)
-                        break;
+            while(it.hasNext()) {
+                AccountBatchRequest request = createRequest(it.next(), row, curdate, errorList);
+                if (null != request) {
+//                    checkFilialPermission(request.getInBranch(), userId);     // TODO
+//                    checkOpenDate(request.getOpenDate(), curdate);            // TODO
+                    requests.add(request);
                 }
+                row++;
+                if (errorList.size() > 10)
+                    break;
             }
         }
 
@@ -148,23 +133,44 @@ public class AccountBatchProcessorBean implements BatchMessageProcessor {
             throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
         };
 
-        int errorCount = 0;
-
-        pkg.setPostingCount(requests.size());
-        pkg.setErrorCount(errorCount);
+        AccountBatchPackage pkg = new AccountBatchPackage();
+        pkg.setLoadUser(userName);
         pkg.setFileName(fileName);
-        pkg.setDateLoad(new Date());
-        pkg.setMovementOff(movementOff ? YesNo.Y : YesNo.N);
-        pkg.setPostDate(postDate0);
-        pkg.setProcDate(curdate);
-        pkg.setPackageState(errorCount > 0 ? BatchPackageState.ERROR : BatchPackageState.LOADED);
+        pkg.setOperday(curdate);
+        pkg.setCntRequests((long)requests.size());
+        pkg.setState(AccountBatchPackageState.IS_LOAD);
         pkg = packageRepository.save(pkg);
 
-        for (BatchPosting posting : requests) {
-            posting.setPackageId(pkg.getId());
-            requestRepository.save(posting);
+        for (AccountBatchRequest request : requests) {
+            request.setBatchPackage(pkg);
+            requestRepository.save(request);
         }
-*/
 
         return pkg;
-    }}
+    }
+
+    public AccountBatchRequest createRequest(List<Object> rowParams, int row, Date curdate, List<String> errorList) throws ParamsParserException {
+        if (null == rowParams || rowParams.isEmpty())
+            return null;
+
+        AccountBatchRequest request = new AccountBatchRequest();
+        // required
+        request.setInBranch(getString(rowParams, row, 0, true, 3, true, errorList));
+        request.setInCcy(getString(rowParams, row, 1, true, 3, true, errorList));
+        request.setInCustno(getNumberString(rowParams, row, 2, true, 8, true, errorList));
+        request.setInAcctype(getNumberString(rowParams, row, 3, true, 9, true, errorList));
+
+        // optional
+        request.setInAcc2(getNumberString(rowParams, row, 4, false, 5, true, errorList));
+        request.setInCtype(getNumberString(rowParams, row, 5, false, 2, false, errorList));
+        request.setInTerm(getNumberString(rowParams, row, 6, false, 2, false, errorList));
+        request.setInDealsrc(getString(rowParams, row, 7, false, 8, false, errorList));
+        request.setInDealid(getString(rowParams, row, 8, false, 20, false, errorList));
+        request.setInSubdealid(getString(rowParams, row, 9, false, 20, false, errorList));
+        request.setInOpendate(getDate(rowParams, row, 10, false, curdate, errorList));
+
+        request.setLineNumber(getRowNumber(row));
+        request.setState(AccountBatchState.LOAD);
+        return request;
+    }
+}

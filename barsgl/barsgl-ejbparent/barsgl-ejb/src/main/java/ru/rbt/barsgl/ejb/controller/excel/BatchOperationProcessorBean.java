@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
@@ -46,15 +47,10 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.BatchOperation;
  */
 @Stateless
 @LocalBean
-public class BatchMessageProcessorBean implements BatchMessageProcessor {
+public class BatchOperationProcessorBean extends UploadProcessorBase implements BatchMessageProcessor {
 
-    public static final Logger log = Logger.getLogger(BatchMessageProcessorBean.class);
-
-    private static int START_ROW = 1;
-    private static int COLUMN_COUNT = 16;   // TODO 17
-    private static String LIST_DELIMITER = "#";
-
-    private List<Object> rowHeader = null;
+    private static final int START_ROW = 1;
+    private static final int COLUMN_COUNT = 16;   // TODO 17
 
     @Inject
     OperdayController operdayController;
@@ -64,9 +60,6 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
 
     @EJB
     private BatchPostingRepository postingRepository;
-
-    @Inject
-    private BankCurrencyRepository bankCurrencyRepository;
 
     @Inject
     private BatchPostingProcessor postingProcessor;
@@ -79,6 +72,17 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
 
     @EJB
     private BatchPackageController packageController;
+
+    @Override
+    protected long getColumnCount() {return COLUMN_COUNT; }
+
+    @Override
+    protected long getStartLine() {return START_ROW; }
+
+    @Override
+    protected long getMaxLines() {
+        return packageController.getMaxRowsExcel();
+    }
 
     @Override
     public String processMessage(File file, Map<String, String> params) throws Exception {
@@ -115,38 +119,22 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
             return null;
         }
 
-        BatchPackage pkg = new BatchPackage();
+        if (!checkRowHeader(it.next(), maxRowNum))
+            return null;
 
         final UserRequestHolder requestHolder = contextBean.getRequest().orElse(UserRequestHolder.empty());
         String userName = requestHolder.getUser();
         String filial = requestHolder.getUserWrapper().getFilial();
         if (null == userId)
             userId = requestHolder.getUserWrapper().getId();
-        pkg.setUserName(userName);
 
         Date curdate = operdayController.getOperday().getCurrentDate();
-        Date timestamp = operdayController.getSystemDateTime();
 
         List<BatchPosting> postings = new ArrayList<>();
         List<String> errorList = new ArrayList<String>();
 
-        rowHeader = it.next();
-        if (rowHeader.isEmpty())
-            return null;
-        if (rowHeader.size() < COLUMN_COUNT) {
-            String msg = "Неверное количество столбцов: " + rowHeader.size() + ", должно быть не менее " + COLUMN_COUNT;
-            auditController.error(BatchOperation, "Ошибка при загрузке файла", null, msg);
-            throw new ParamsParserException(msg);
-        }
-
-        int row = START_ROW;
-        int maxRows = START_ROW + packageController.getMaxRowsExcel();
-        if (maxRowNum > maxRows) {
-            errorList.add(format("Нельзя загрузить файл размером больше %d строк", maxRows));
-            throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
-        }
-
         Date postDate0 = null;
+        int row = START_ROW;
         if(it.hasNext()) {
             BatchPosting posting0 = createPosting(it.next(), row, source, department, errorList);
             if (null == posting0)
@@ -182,6 +170,8 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
                 errorCount++;
         }
 
+        BatchPackage pkg = new BatchPackage();
+        pkg.setUserName(userName);
         pkg.setPostingCount(postings.size());
         pkg.setErrorCount(errorCount);
         pkg.setFileName(fileName);
@@ -271,7 +261,7 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         posting.setSourcePosting(source);
         posting.setDeptId(department);
 
-        posting.setRowNumber(getRowNumber(row));  // TODO передавать?
+        posting.setRowNumber((int)getRowNumber(row));  // TODO передавать?
         posting.setFilialDebit(postingProcessor.getFilial(posting.getAccountDebit()));
         posting.setFilialCredit(postingProcessor.getFilial(posting.getAccountCredit()));
         return posting;
@@ -294,149 +284,6 @@ public class BatchMessageProcessorBean implements BatchMessageProcessor {
         return posting;
     }
 
-    private String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
-        return getValue(rowParams, row, index, notNull, String.class, maxLength, exact, errorList);
-    }
-
-    private String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, List<String> errorList) throws ParamsParserException {
-//        return StringUtils.removeCtrlChars(getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList));
-        return getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList);
-    }
-
-    private <T> T getValue(List<Object> rowParams, int row, int index, boolean notNull, Class<T> clazz, List<String> errorList) throws ParamsParserException {
-        return getValue(rowParams, row, index, notNull, clazz, 0, false, errorList);
-    }
-
-    private <T> T getValue(List<Object> rowParams, int row, int index, boolean notNull, Class<T> clazz, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
-        if (rowParams.size() <= index) {
-            return null;
-        }
-        Object param = rowParams.get(index);
-        try {
-            if (null == param) {
-                if (notNull)
-                    errorList.add(format("%s Не задано значение", getLocation(row, index)));
-                return null;
-            }
-            String valueStr = param.toString().trim();
-            if (isEmpty(valueStr)) {
-                if (notNull)
-                    errorList.add(format("%s Не задано значение", getLocation(row, index)));
-                return null;
-            }
-            if (clazz.equals(String.class)) {
-                if (exact && valueStr.length() != maxLength) {
-                    errorList.add(format("%s Неверная длина строка (<>%d): '%s'",
-                            getLocation(row, index), maxLength, rowParams.get(index)));
-                    return (T) valueStr;
-                }
-                else if (valueStr.length() > maxLength) {
-                    errorList.add(format("%s Слишком длинная строка (>%d): '%s'",
-                            getLocation(row, index), maxLength, rowParams.get(index)));
-                    return (T) valueStr.substring(0, maxLength);
-                }
-                else {  // (Double)param - (int)(double)(Double) param == 0
-                    return (T) ((param instanceof Double && ((Double)param - (int)(double)(Double) param == 0)) ?
-                            String.format("%.0f", (Double) param) : valueStr);
-                }
-            } else if (clazz.isAssignableFrom(param.getClass())) {
-                return (T) param;
-            } else if (clazz.equals(Date.class)) {
-                Date value = DateUtils.parseDate(valueStr, "dd.MM.yyyy", "dd.MM.yy");
-                return (T) value;
-            } else if (clazz.equals(Double.class)) {
-                Double value = Double.parseDouble(valueStr);
-                return (T) value;
-            } else if (clazz.equals(Long.class)) {
-                Long value = Long.parseLong(valueStr);
-                return (T) value;
-            } else if (clazz.equals(Integer.class)) {
-                Integer value = Integer.parseInt(valueStr);
-                return (T) value;
-            } else if (clazz.equals(Short.class)) {
-                Short value = Short.parseShort(valueStr);
-                return (T) value;
-            } else {
-                errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
-                        getLocation(row, index), getClassDescr(clazz), param));
-                return null;
-            }
-        } catch (NumberFormatException e){
-            errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
-                    getLocation(row, index), getClassDescr(clazz), param));
-            return null;
-        } catch (Throwable e){
-            final String message = format("%s Ошибка при получении значения",
-                    getLocation(row, index), e.getMessage());
-            log.error(message, e);
-            throw new ParamsParserException(message);
-        }
-    }
-
-    private YesNo getYesNo(List<Object> rowParams, int row, int index, boolean notNull, List<String> errorList) throws ParamsParserException {
-        String value = getString(rowParams, row, index, notNull, 3, errorList);
-        if (isEmpty(value))
-            return null;
-
-        switch(value.toUpperCase().charAt(0)) {
-            case '0':
-            case 'N':
-                return YesNo.N;
-            case '1':
-            case 'Y':
-                return YesNo.Y;
-            default:
-                errorList.add(format("%s Неверное значение (допустимо Y/1 или N/0): '%s'",
-                        getLocation(row, index), value));
-                return null;
-        }
-    }
-
-    private BigDecimal getAmount(List<Object> rowParams, int row, int index, boolean notNull, List<String> errorList) throws ParamsParserException {
-        Double amount = getValue(rowParams, row, index, notNull,Double.class, errorList);
-        return null == amount ? null : new BigDecimal(amount).setScale(2, BigDecimal.ROUND_HALF_UP);
-    }
-
-    private BankCurrency getCurrency(List<Object> rowParams, int row, int index, boolean notNull, List<String> errorList) throws ParamsParserException {
-        String ccy = getValue(rowParams, row, index, notNull,String.class, 3, true, errorList);
-        if (!isEmpty(ccy)) {
-            BankCurrency currency = bankCurrencyRepository.findById(BankCurrency.class, ccy);
-            if (null == currency)
-                errorList.add(format("%s Неверная валюта: '%s'", getLocation(row, index), ccy));
-            return currency;
-        } else
-            return null;
-    }
-
-    private String getLocation(int row, int index) {
-        return format("Cтрока '%d' столбец '%c' (%s): ",
-                getRowNumber(row), getColumnChar(index), rowHeader.get(index));
-    }
-
-    private char getColumnChar(int index) {
-        return (char)((int)'A' + index);
-    }
-
-    private int getRowNumber(int row) {
-        return row + START_ROW;
-    }
-
-    private String getClassDescr(Class clazz) {
-        String classDescr = clazz.getSimpleName();
-        switch (classDescr) {
-            case "String":
-                classDescr = "строка";
-                break;
-            case "Double":
-                classDescr = "числовое значение";
-                break;
-            case "Integer":
-            case "Long":
-                classDescr = "целое число";
-                break;
-        }
-        return classDescr;
-    }
 
 
 }

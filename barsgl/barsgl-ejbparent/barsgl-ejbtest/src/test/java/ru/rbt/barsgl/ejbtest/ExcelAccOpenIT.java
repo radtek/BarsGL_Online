@@ -35,7 +35,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(package1);
         request.setLineNumber(1L);
-        request.setBatchState(AccountBatchState.LOAD);
+        request.setState(AccountBatchState.LOAD);
         request.setInBranch("001");
         request.setInCcy("RUR");
         request.setInCustno("001");

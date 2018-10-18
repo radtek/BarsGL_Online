@@ -24,7 +24,7 @@ public class AccountBatchPackage extends BaseEntity<Long> {
     @Column(name = "OD_LOAD")
     private Date operday;
 
-    @Column(name = "TS_LOAD")
+    @Column(name = "TS_LOAD", insertable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date loadedDate;
 

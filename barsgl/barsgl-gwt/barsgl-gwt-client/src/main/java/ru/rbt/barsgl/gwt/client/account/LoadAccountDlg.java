@@ -37,7 +37,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     @Override
     protected boolean acceptResponse(String[] list) {
-        return false;
+        return true;
     }
 
     @Override
