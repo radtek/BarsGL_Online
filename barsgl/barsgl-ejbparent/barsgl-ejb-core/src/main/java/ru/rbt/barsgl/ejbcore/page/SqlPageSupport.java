@@ -46,7 +46,7 @@ public interface SqlPageSupport {
      * @param orderBy сортировка
      * @return список строк завернутых в DataRecord
      */
-    List<DataRecord> selectRows(String nativeSql, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy);
+    List<DataRecord> selectRows(String nativeSql, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy);
 
     /**
      * Получаем строки по <code>nativeSql</code> страницей размером <code>pageSize</code> начиная с <code>startWith</code>, используя сортировку <code>orderBy</code>
@@ -57,7 +57,7 @@ public interface SqlPageSupport {
      * @param orderBy сортировка
      * @return список строк завернутых в DataRecord
      */
-    List<DataRecord> selectRows(String nativeSql, Repository repository, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy);
+    List<DataRecord> selectRows(String nativeSql, Repository repository, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy);
 
     /**
      * Кол-во строк с учетом критерий фильтрации

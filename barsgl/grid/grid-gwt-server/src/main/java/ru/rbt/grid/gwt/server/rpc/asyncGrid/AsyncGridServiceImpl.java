@@ -53,7 +53,7 @@ public class AsyncGridServiceImpl extends AbstractGwtService implements AsyncGri
     public List<Row> getAsyncRows(Repository repository, String sql, Columns columns, int start, int pageSize, List<FilterItem> filterCriteria, List<SortItem> sortCriteria) throws Throwable {
         try {
             List<DataRecord> data = localInvoker.invoke(SqlPageSupport.class, "selectRows", sql, repository, filterCriteriaAdapter(filterCriteria), pageSize,
-                    start + 1, sortCriteriaAdapter(sortCriteria));
+                    start + 1, sortCriteriaListAdapter(sortCriteria));
             List<Row> result = new ArrayList<Row>();
 
             for(DataRecord r: data) {

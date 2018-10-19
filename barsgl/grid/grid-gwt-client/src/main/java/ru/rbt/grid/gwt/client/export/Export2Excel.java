@@ -31,7 +31,7 @@ public class Export2Excel {
     }
 
     public void export() {
-        export(false);
+        exportSort(false);
     }
 
     public void export(boolean allrows) {

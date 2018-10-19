@@ -78,24 +78,28 @@ public class SqlPageSupportBean implements SqlPageSupport {
 
     @Override
     public List<DataRecord> select(final String nativeSql, Criterion<?> criterion, int pageSize, int pageNumber, OrderByColumn orderBy) {
-        return selectRows(nativeSql, criterion, pageSize, getFirstRowNumber(pageSize, pageNumber), orderBy);
+        List<OrderByColumn> orderList = new ArrayList<OrderByColumn>();
+        orderList.add(orderBy);
+        return selectRows(nativeSql, criterion, pageSize, getFirstRowNumber(pageSize, pageNumber), orderList);
     }
 
     @Override
     public List<DataRecord> select(final String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int pageNumber, OrderByColumn orderBy) {
-        return selectRows(nativeSql, rep, criterion, pageSize, getFirstRowNumber(pageSize, pageNumber), orderBy);
+        List<OrderByColumn> orderList = new ArrayList<OrderByColumn>();
+        orderList.add(orderBy);
+        return selectRows(nativeSql, rep, criterion, pageSize, getFirstRowNumber(pageSize, pageNumber), orderList);
     }
 
     @Override
-    public List<DataRecord> selectRows(String nativeSql, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
+    public List<DataRecord> selectRows(String nativeSql, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy) {
         return selectRows(nativeSql, Repository.BARSGL, criterion, pageSize, startWith, orderBy);
     }
 
     @Override
-    public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, OrderByColumn orderBy) {
+    public List<DataRecord> selectRows(String nativeSql, Repository rep, Criterion<?> criterion, int pageSize, int startWith, List<OrderByColumn> orderBy) {
         SQL sql = null;
         try {
-            sql = prepareCommonSql(defineSql(nativeSql), criterion, orderBy);
+            sql = prepareCommonSqlOrder(defineSql(nativeSql), criterion, orderBy);
             log.info("SQL[selectRows] => " + sql.getQuery());
             log.info("Parameters list: " + Arrays.asList(sql.getParams()).stream().map(p -> "param = " + p).collect(Collectors.joining(":")));
             return getSqlResult(rep, sql, startWith, pageSize, TimeoutInternal.DEFAULT_SQL_TIMEOUT.getTimeUnit(), TimeoutInternal.DEFAULT_SQL_TIMEOUT.getTimeout());
