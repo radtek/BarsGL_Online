@@ -92,6 +92,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
                 .append("ID пакета: ").append(batchPackage.getId()).append(LIST_DELIMITER)
                 .append("Загружено строк всего: ").append(batchPackage.getCntRequests()).append(LIST_DELIMITER)
                 .toString();
+        // TODO подробней
         auditController.info(AccountBatch, "Загружен пакет счетов из файла.\n" + result, BatchPackage.class.getName(), batchPackage.getId().toString());
         return result;
     }

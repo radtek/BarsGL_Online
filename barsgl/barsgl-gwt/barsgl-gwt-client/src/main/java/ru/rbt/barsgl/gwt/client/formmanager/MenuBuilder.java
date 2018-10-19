@@ -11,9 +11,10 @@ import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.Widget;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.about.AboutForm;
+import ru.rbt.barsgl.gwt.client.account.AccountBatchForm;
 import ru.rbt.barsgl.gwt.client.account.AccountForm;
 import ru.rbt.barsgl.gwt.client.account.AccountFormTech;
-import ru.rbt.barsgl.gwt.client.account.AccountBatchPkgForm;
+import ru.rbt.barsgl.gwt.client.account.AccountBatchPackageForm;
 import ru.rbt.barsgl.gwt.client.accountPl.PlAccountForm;
 import ru.rbt.barsgl.gwt.client.audit.AuditForm;
 import ru.rbt.barsgl.gwt.client.backvalue.BackValueForm;
@@ -289,7 +290,13 @@ public class MenuBuilder implements IMenuBuilder {
             case FileAccountPackage: return new MenuItem(wrapper.getMenuName(), false, new Command() {
                 @Override
                 public void execute() {
-                    formLoad(new AccountBatchPkgForm());
+                    formLoad(new AccountBatchPackageForm());
+                }
+            });
+            case FileAccountRequest: return new MenuItem(wrapper.getMenuName(), false, new Command() {
+                @Override
+                public void execute() {
+                    formLoad(new AccountBatchForm());
                 }
             });
             case PostingSource: return new MenuItem(wrapper.getMenuName(), false, new Command() {

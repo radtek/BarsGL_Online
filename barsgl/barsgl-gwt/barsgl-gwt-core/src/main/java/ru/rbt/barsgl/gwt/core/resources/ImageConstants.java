@@ -116,6 +116,9 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"load_blue.png"})
     public abstract ImageResource load_blue();
 
+    @ClientBundle.Source({"load_acc.png"})
+    public abstract ImageResource load_acc();
+
     @ClientBundle.Source({"preview.png"})
     public abstract ImageResource preview();
 
