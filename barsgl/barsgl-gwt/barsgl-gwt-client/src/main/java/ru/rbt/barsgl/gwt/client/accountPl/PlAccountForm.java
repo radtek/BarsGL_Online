@@ -108,10 +108,10 @@ public class PlAccountForm extends EditableDictionary<ManualAccountWrapper> {
     protected void save(ManualAccountWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> asyncCallbackImpl) throws Exception {
         switch(action) {
             case CREATE:
-                BarsGLEntryPoint.operationService.savePlAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.savePlAccount(cnw, asyncCallbackImpl);
                 break;
             case UPDATE:
-                BarsGLEntryPoint.operationService.updateAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.updateAccount(cnw, asyncCallbackImpl);
                 break;
         }
     }

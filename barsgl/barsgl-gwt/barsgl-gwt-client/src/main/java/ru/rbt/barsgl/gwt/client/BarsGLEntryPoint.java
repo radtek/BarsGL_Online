@@ -2,6 +2,8 @@ package ru.rbt.barsgl.gwt.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import ru.rbt.barsgl.gwt.server.rpc.account.ManualAccountService;
+import ru.rbt.barsgl.gwt.server.rpc.account.ManualAccountServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.replication.ReplService;
 import ru.rbt.barsgl.gwt.server.rpc.replication.ReplServiceAsync;
 import ru.rbt.barsgl.gwt.server.rpc.access.AccessService;
@@ -29,6 +31,7 @@ public class BarsGLEntryPoint implements EntryPoint {
 
     public static OperDayServiceAsync operDayService;
     public static ManualOperationServiceAsync operationService;
+    public static ManualAccountServiceAsync accountService;
     public static ManualDictionaryServiceAsync dictionaryService;
     public static AccessServiceAsync accessService;
     public static PdSyncServiceAsync pdSyncService;
@@ -40,6 +43,7 @@ public class BarsGLEntryPoint implements EntryPoint {
     public void onModuleLoad() {
         operDayService = GWT.create(OperDayService.class);
         operationService = GWT.create(ManualOperationService.class);
+        accountService = GWT.create(ManualAccountService.class);
         dictionaryService = GWT.create(ManualDictionaryService.class);
         accessService = GWT.create(AccessService.class);
         pdSyncService = GWT.create(PdSyncService.class);

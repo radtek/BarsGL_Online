@@ -16,12 +16,12 @@ import java.util.List;
  * Created by ER18837 on 19.08.15.
  */
 public interface ManualOperationServiceAsync {
-    void processOperationBv(BackValueWrapper wrapper, AsyncCallback<RpcRes_Base<Integer>> callback);
-
-    void getCardReport(CardReportWrapper wrapper, AsyncCallback<RpcRes_Base<CardReportWrapper>> callback );
 
     void processOperationRq(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
     void processPackageRq(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
+    void exchangeCurrency(CurExchangeWrapper wrapper, AsyncCallback<RpcRes_Base<CurExchangeWrapper>> callback);
+
+    void processOperationBv(BackValueWrapper wrapper, AsyncCallback<RpcRes_Base<Integer>> callback);
 
     void updatePostings(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
     void suppressPostings(ManualOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualOperationWrapper>> callback);
@@ -32,20 +32,10 @@ public interface ManualOperationServiceAsync {
     void processTechOperationRq(ManualTechOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualTechOperationWrapper>> callback);
     void saveTechOperation(ManualTechOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualTechOperationWrapper>> callback);
     void updateTechOperation(ManualTechOperationWrapper wrapper, AsyncCallback<RpcRes_Base<ManualTechOperationWrapper>> callback);
-    void saveTechAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-    void updateTechAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-    void closeTechAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-    void findAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-
-    void saveAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-    void updateAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-    void closeAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-    void savePlAccount(ManualAccountWrapper wrapper, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> callback);
-
-    void exchangeCurrency(CurExchangeWrapper wrapper, AsyncCallback<RpcRes_Base<CurExchangeWrapper>> callback);
 
     void correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type, AsyncCallback<RpcRes_Base<Integer>> callback);
 
     void operExists(String date, String limit, AsyncCallback<RpcRes_Base<Boolean>> callback);
-    void repWaitAcc(String begDate, String endDate, Boolean isAllAcc, AsyncCallback<RpcRes_Base<Boolean>> callback);
+    void getCardReport(CardReportWrapper wrapper, AsyncCallback<RpcRes_Base<CardReportWrapper>> callback );
+
 }

@@ -44,6 +44,10 @@
         <servlet-class>ru.rbt.barsgl.gwt.server.rpc.operation.ManualOperationServiceImpl</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>ManualAccountServiceImpl</servlet-name>
+        <servlet-class>ru.rbt.barsgl.gwt.server.rpc.account.ManualAccountServiceImpl</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>MonitoringSupportServlet</servlet-name>
         <servlet-class>ru.rbt.barsgl.gwt.server.service.MonitoringSupportServlet</servlet-class>
     </servlet>
@@ -107,6 +111,10 @@
     <servlet-mapping>
         <servlet-name>ManualOperationServiceImpl</servlet-name>
         <url-pattern>/barsgl/service/ManualOperationService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ManualAccountServiceImpl</servlet-name>
+        <url-pattern>/barsgl/service/ManualAccountService</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>MonitoringSupportServlet</servlet-name>

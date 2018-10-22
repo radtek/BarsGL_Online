@@ -610,7 +610,7 @@ public class GLAccountService {
         }
     }
 
-    public RpcRes_Base<ManualAccountWrapper> findManualAccount(ManualAccountWrapper accountWrapper) throws Exception {
+    public RpcRes_Base<ManualAccountWrapper> findManualAccountTech(ManualAccountWrapper accountWrapper) throws Exception {
         try{
             Long acct = accountWrapper.getAccountType();
             AccountingType accType = accountingTypeRepository.findById(AccountingType.class, Utils.fillUp(acct.toString(),9));

@@ -151,13 +151,13 @@ public class AccountFormTech extends EditableDictionary<ManualAccountWrapper> {
     protected void save(ManualAccountWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> asyncCallbackImpl) throws Exception {
         switch(action) {
             case CREATE:
-                BarsGLEntryPoint.operationService.saveTechAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.saveTechAccount(cnw, asyncCallbackImpl);
                 break;
             case UPDATE:
-                BarsGLEntryPoint.operationService.updateTechAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.updateTechAccount(cnw, asyncCallbackImpl);
                 break;
             case OTHER:
-                BarsGLEntryPoint.operationService.closeTechAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.closeTechAccount(cnw, asyncCallbackImpl);
                 break;
         }
     }

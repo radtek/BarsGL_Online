@@ -247,7 +247,7 @@ public abstract class OperationTechDlgBase extends EditableDialog<ManualTechOper
             accWrapper.setCurrency(ccy);
             accWrapper.setFilial(cbccn);
 
-            BarsGLEntryPoint.operationService.findAccount(accWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualAccountWrapper>>() {
+            BarsGLEntryPoint.accountService.findTechAccount(accWrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualAccountWrapper>>() {
                 @Override
                 public void onSuccess(RpcRes_Base<ManualAccountWrapper> wrapper) {
                     if (!wrapper.isError()) {

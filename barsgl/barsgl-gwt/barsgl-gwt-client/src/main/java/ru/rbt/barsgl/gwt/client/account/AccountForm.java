@@ -165,13 +165,13 @@ public class AccountForm extends EditableDictionary<ManualAccountWrapper> {
     protected void save(ManualAccountWrapper cnw, FormAction action, AsyncCallback<RpcRes_Base<ManualAccountWrapper>> asyncCallbackImpl) throws Exception {
         switch(action) {
             case CREATE:
-                BarsGLEntryPoint.operationService.saveAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.saveAccount(cnw, asyncCallbackImpl);
                 break;
             case UPDATE:
-                BarsGLEntryPoint.operationService.updateAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.updateAccount(cnw, asyncCallbackImpl);
                 break;
             case OTHER:
-                BarsGLEntryPoint.operationService.closeAccount(cnw, asyncCallbackImpl);
+                BarsGLEntryPoint.accountService.closeAccount(cnw, asyncCallbackImpl);
                 break;
         }
     }
@@ -322,7 +322,7 @@ public class AccountForm extends EditableDictionary<ManualAccountWrapper> {
 
                 WaitingManager.show("Проверка наличия данных...");
 
-                BarsGLEntryPoint.operationService.repWaitAcc(begDate, endDate, isAllAccounts, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
+                BarsGLEntryPoint.accountService.repWaitAcc(begDate, endDate, isAllAccounts, new AuthCheckAsyncCallback<RpcRes_Base<Boolean>>() {
 
                     @Override
                     public void onSuccess(RpcRes_Base<Boolean> res) {

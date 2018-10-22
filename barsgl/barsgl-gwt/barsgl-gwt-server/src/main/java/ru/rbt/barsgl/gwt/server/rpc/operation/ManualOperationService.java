@@ -19,38 +19,33 @@ import java.util.List;
  */
 @RemoteServiceRelativePath("service/ManualOperationService")
 public interface ManualOperationService  extends RemoteService {
-    RpcRes_Base<CardReportWrapper> getCardReport(CardReportWrapper wrapper) throws Exception;
 
-    RpcRes_Base<Integer> processOperationBv(BackValueWrapper wrapper) throws Exception;
-
+    // авторизация ручных операций и пакетов
     RpcRes_Base<ManualOperationWrapper> processOperationRq(ManualOperationWrapper wrapper) throws Exception;
     RpcRes_Base<ManualOperationWrapper> processPackageRq(ManualOperationWrapper wrapper) throws Exception;
+    RpcRes_Base<CurExchangeWrapper> exchangeCurrency(CurExchangeWrapper wrapper) throws Exception;
 
-    //Операции по техническим счетам
+    // авторизация операций backvalue
+    RpcRes_Base<Integer> processOperationBv(BackValueWrapper wrapper) throws Exception;
+
+    // редактирование проводок
+    RpcRes_Base<ManualOperationWrapper> updatePostings(ManualOperationWrapper wrapper) throws Exception;
+    RpcRes_Base<ManualOperationWrapper> suppressPostings(ManualOperationWrapper wrapper) throws Exception;
+
+    // Операции по техническим счетам
     RpcRes_Base<ManualTechOperationWrapper> updateTechPostings(ManualTechOperationWrapper wrapper) throws Exception;
     RpcRes_Base<ManualTechOperationWrapper> suppressPdTh(ManualTechOperationWrapper wrapper) throws Exception;
     RpcRes_Base<ManualTechOperationWrapper> processTechOperationRq(ManualTechOperationWrapper wrapper) throws Exception;
     RpcRes_Base<ManualTechOperationWrapper> saveTechOperation(ManualTechOperationWrapper wrapper) throws Exception;
     RpcRes_Base<ManualTechOperationWrapper> updateTechOperation(ManualTechOperationWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> saveTechAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> updateTechAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> closeTechAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> findAccount(ManualAccountWrapper wrapper) throws Exception;
 
-
-    RpcRes_Base<ManualOperationWrapper> updatePostings(ManualOperationWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualOperationWrapper> suppressPostings(ManualOperationWrapper wrapper) throws Exception;
-
-
-    RpcRes_Base<ManualAccountWrapper> saveAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> updateAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> closeAccount(ManualAccountWrapper wrapper) throws Exception;
-    RpcRes_Base<ManualAccountWrapper> savePlAccount(ManualAccountWrapper wrapper) throws Exception;
-
-    RpcRes_Base<CurExchangeWrapper> exchangeCurrency(CurExchangeWrapper wrapper) throws Exception;
-
+    // переобработка ошибок
     RpcRes_Base<Integer> correctErrors (List<Long> errorIdList, String comment, String idPstCorr, ErrorCorrectType type) throws Exception;
 
+    // отчет по backvalue
     RpcRes_Base<Boolean>  operExists(String date, String limit) throws Exception;
-    RpcRes_Base<Boolean>  repWaitAcc(String begDate, String endDate, Boolean isAllAcc) throws Exception;
+
+    // отчет по картотеки
+    RpcRes_Base<CardReportWrapper> getCardReport(CardReportWrapper wrapper) throws Exception;
+
 }
