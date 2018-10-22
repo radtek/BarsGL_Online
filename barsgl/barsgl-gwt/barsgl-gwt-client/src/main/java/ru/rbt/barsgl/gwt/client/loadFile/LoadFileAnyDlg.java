@@ -76,6 +76,8 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
 
     protected abstract void switchControlsState(Boolean state);
 
+    protected abstract void parseResponseBody(String[] list);
+
     @Override
     public Widget createContent(){
         return createUploadPanelBase();
@@ -184,6 +186,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             }
             if (response.startsWith(LIST_DELIMITER)) {
                 String[] list = response.split(LIST_DELIMITER);
+                parseResponseBody(list);
 /*
                 idPackage = parseLong(list[1], "пакет", ":");
                 Long all = parseLong(list[2], "всего", ":");

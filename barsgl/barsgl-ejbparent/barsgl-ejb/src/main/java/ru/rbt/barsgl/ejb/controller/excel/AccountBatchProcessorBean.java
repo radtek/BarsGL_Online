@@ -50,10 +50,10 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
     @EJB
     private AuditController auditController;
 
-    @EJB
+    @Inject
     private AccountBatchRequestRepository requestRepository;
 
-    @Inject
+    @EJB
     private AccountBatchPackageRepository packageRepository;
 
     @EJB
@@ -82,7 +82,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
                 ExcelParser parser = new ExcelParser(is);
         ) {
             Iterator<List<Object>> it = parser.parseSafe(0);
-            batchPackage = requestRepository.executeInNewTransaction(persistence ->
+            batchPackage = packageRepository.executeInNewTransaction(persistence ->
                     buildPackage(it, fileName, parser.getRowCount(), userId));
         }
         if (null == batchPackage )

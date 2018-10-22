@@ -1,11 +1,14 @@
 package ru.rbt.barsgl.gwt.server.rpc.account;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import ru.rbt.barsgl.ejb.integr.acc.AccountBatchController;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.rep.WaitCloseAccountsRep;
 import ru.rbt.barsgl.gwt.core.server.rpc.AbstractGwtService;
 import ru.rbt.barsgl.gwt.core.server.rpc.RpcResProcessor;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.operation.AccountBatchWrapper;
 
 /**
  * Created by er18837 on 22.10.2018.
@@ -97,6 +100,18 @@ public class ManualAccountServiceImpl extends AbstractGwtService implements Manu
     }
 
     @Override
+    public RpcRes_Base<ManualAccountWrapper> findTechAccount(ManualAccountWrapper wrapper) throws Exception {
+        return new RpcResProcessor<ManualAccountWrapper>() {
+            @Override
+            public RpcRes_Base<ManualAccountWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<ManualAccountWrapper> res = localInvoker.invoke(GLAccountService.class, "findManualAccountTech", wrapper);
+                if (res == null) throw new Throwable("Не удалось изменить счет");
+                return res;
+            }
+        }.process();
+    }
+
+    @Override
     public RpcRes_Base<Boolean> repWaitAcc(String begDate, String endDate, Boolean isAllAcc) throws Exception {
         return new RpcResProcessor<Boolean>(){
 
@@ -110,15 +125,14 @@ public class ManualAccountServiceImpl extends AbstractGwtService implements Manu
     }
 
     @Override
-    public RpcRes_Base<ManualAccountWrapper> findTechAccount(ManualAccountWrapper wrapper) throws Exception {
-        return new RpcResProcessor<ManualAccountWrapper>() {
+    public RpcRes_Base<AccountBatchWrapper> processAccountBatchRq(AccountBatchWrapper wrapper) throws Exception {
+        return new RpcResProcessor<AccountBatchWrapper>() {
             @Override
-            public RpcRes_Base<ManualAccountWrapper> buildResponse() throws Throwable {
-                RpcRes_Base<ManualAccountWrapper> res = localInvoker.invoke(GLAccountService.class, "findManualAccountTech", wrapper);
-                if (res == null) throw new Throwable("Не удалось изменить счет");
+            public RpcRes_Base<AccountBatchWrapper> buildResponse() throws Throwable {
+                RpcRes_Base<AccountBatchWrapper> res = localInvoker.invoke(AccountBatchController.class, "processAccountBatchRq", wrapper);
+                if (res == null) throw new Throwable("Не удалось обработать пакет счетов");
                 return res;
             }
         }.process();
     }
-
 }

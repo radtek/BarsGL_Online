@@ -4,6 +4,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.account.ManualAccountWrapper;
+import ru.rbt.barsgl.shared.operation.AccountBatchWrapper;
 
 /**
  * Created by er18837 on 22.10.2018.
@@ -26,4 +27,6 @@ public interface ManualAccountService extends RemoteService {
     // отчет по закрытым счетам
     RpcRes_Base<Boolean> repWaitAcc(String begDate, String endDate, Boolean isAllAcc) throws Exception;
 
+    // пакеты счетов
+    RpcRes_Base<AccountBatchWrapper> processAccountBatchRq(AccountBatchWrapper wrapper) throws Exception;
 }

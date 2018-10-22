@@ -9,6 +9,7 @@ import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
  */
 public class LoadAccountDlg extends LoadFileAnyDlg {
     public static final String TITLE = "Загрузка счетов из Excel файла";
+    private Long idPackage = null;
 
     public LoadAccountDlg(){
         super();
@@ -66,8 +67,20 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
     }
 
     @Override
+    protected void parseResponseBody(String[] list) {
+        idPackage = parseLong(list[1], ":");
+        Long all = parseLong(list[2], ":");
+        boolean isError = false; // (null != err) && (err > 0); // TODO
+        errorButton.setEnabled(isError);
+        showButton.setEnabled(idPackage != null);
+        deleteButton.setEnabled(idPackage != null);
+        boolean isOk = !(idPackage == null || isError);
+    }
+
+    @Override
     protected boolean onClickOK() throws Exception {
-        return false;
+        params = idPackage;
+        return idPackage != null;
     }
 
     @Override

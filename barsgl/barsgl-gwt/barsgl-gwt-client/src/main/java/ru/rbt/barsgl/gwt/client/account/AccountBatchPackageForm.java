@@ -22,6 +22,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
+import ru.rbt.barsgl.shared.operation.AccountBatchWrapper;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
@@ -36,6 +37,7 @@ import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilial
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
+import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.OPEN;
 
 /**
  * Created by er18837 on 15.10.2018.
@@ -151,16 +153,16 @@ public class AccountBatchPackageForm extends GridForm {
                     public void onDlgOkClick(Object prms) {
                         WaitingManager.hide();
                         WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
-                        ManualOperationWrapper wrapper = new ManualOperationWrapper();
-                        wrapper.setPkgId((Long) prms);
-                        wrapper.setAction(BatchPostAction.CONTROL);
+                        AccountBatchWrapper wrapper = new AccountBatchWrapper();
+                        wrapper.setPackageId((Long) prms);
+                        wrapper.setAction(OPEN);
 
                         AppUserWrapper appUserWrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
                         wrapper.setUserId(appUserWrapper.getId());
 
-                        BarsGLEntryPoint.operationService.processPackageRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<ManualOperationWrapper>>() {
+                        BarsGLEntryPoint.accountService.processAccountBatchRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<AccountBatchWrapper>>() {
                             @Override
-                            public void onSuccess(RpcRes_Base<ManualOperationWrapper> wrapper) {
+                            public void onSuccess(RpcRes_Base<AccountBatchWrapper> wrapper) {
                                 if (wrapper.isError()) {
                                     showInfo("Ошибка", wrapper.getMessage());
                                 } else {
