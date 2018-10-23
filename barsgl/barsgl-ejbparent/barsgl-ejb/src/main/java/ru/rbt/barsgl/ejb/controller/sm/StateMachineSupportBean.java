@@ -1,6 +1,6 @@
-package ru.rbt.barsgl.ejb.controller.acc.sm;
+package ru.rbt.barsgl.ejb.controller.sm;
 
-import ru.rbt.barsgl.ejb.controller.acc.act.AccountBatchValidateStart;
+import ru.rbt.barsgl.ejb.controller.acc.act.AccountBatchSendToValidate;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.util.ServerUtils;
@@ -23,7 +23,7 @@ public class StateMachineSupportBean {
     private CoreRepository repository;
 
     @Inject
-    private AccountBatchValidateStart start;
+    private AccountBatchSendToValidate start;
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public <Event extends Enum, Entity extends StatefullObject> Event executeAction(Entity entity, Transition transition) throws Exception {

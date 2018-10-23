@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.logging.Logger;
 
 import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.IS_VALID;
+import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.ON_VALID;
 
 /**
  * Created by Ivan Sevastyanov on 16.10.2018.
@@ -75,10 +76,14 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype);
 
         // валидируем
-        remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
+        remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
 
         // проверяем состояние
 
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ON_VALID, pkg.getState());
+
+        remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
         pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
         Assert.assertEquals(IS_VALID, pkg.getState());
 

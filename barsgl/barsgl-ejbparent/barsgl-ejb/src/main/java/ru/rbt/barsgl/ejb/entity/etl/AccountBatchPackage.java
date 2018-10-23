@@ -1,6 +1,6 @@
 package ru.rbt.barsgl.ejb.entity.etl;
 
-import ru.rbt.barsgl.ejb.controller.acc.sm.StatefullObject;
+import ru.rbt.barsgl.ejb.controller.sm.StatefullObject;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.ejbcore.mapping.YesNo;
 

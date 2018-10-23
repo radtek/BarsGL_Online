@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.ejb.controller.acc.sm;
+package ru.rbt.barsgl.ejb.controller.sm;
 
 import ru.rbt.barsgl.shared.Builder;
 

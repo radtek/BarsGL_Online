@@ -1,4 +1,4 @@
-package ru.rbt.barsgl.ejb.controller.acc.sm;
+package ru.rbt.barsgl.ejb.controller.sm;
 
 /**
  * Created by Ivan Sevastyanov on 22.10.2018.
