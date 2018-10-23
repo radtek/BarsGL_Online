@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejb.integr.acc;
 import org.apache.log4j.Logger;
 import ru.rb.ucb.util.AccountUtil;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
@@ -12,6 +11,7 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.GLRelationAccountingTypeId;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.integr.acc.wrap.GLAccountCreated;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.dict.AccType.ActParmRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
@@ -48,7 +48,6 @@ import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.*;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
 import static ru.rbt.ejbcore.util.StringUtils.*;
-import static ru.rbt.ejbcore.util.StringUtils.currencyFirstCharToNum;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
@@ -62,6 +61,8 @@ public class GLAccountController {
     private static final Logger log = Logger.getLogger(GLAccountController.class);
 
     private java.util.concurrent.locks.Lock monitor = new ReentrantLock();
+
+    private static final ThreadLocal<GLAccountCreated> isNewAccount = new ThreadLocal<>();
 
     @EJB
     private GLAccountRepository glAccountRepository;
@@ -422,9 +423,11 @@ public class GLAccountController {
     }
 
     private GLAccount internalCreateGLAccountMnl(AccountKeys keys, GLAccount.RelationType rlnType, ErrorList descriptors, Date dateOpen, GLAccount.OpenType openType) throws Exception {
+        isNewAccount.set(null);
         return synchronizer.callSynchronously(monitor, () -> {
             GLAccount glAccount = findGLAccountMnlnoLock(keys);     // счет создается вручную
             if (null != glAccount) {
+                isNewAccount.set(new GLAccountCreated(glAccount, false));
                 return glAccount;
             }
             List<ValidationError> errors = glAccountProcessor.validate(keys, new ValidationContext());
@@ -439,6 +442,7 @@ public class GLAccountController {
             // создать счет с этим номером в GL и BARS
             glAccount = createAccount(bsaAcid, null, GLOperation.OperSide.N, dateOpen, keys, rlnType, openType);
 
+            isNewAccount.set(new GLAccountCreated(glAccount, true));
             return glAccount;
         });
     }
@@ -1093,6 +1097,38 @@ public class GLAccountController {
     @Lock(LockType.READ)
     public String findForPlcodeNo7903(AccountKeys keys, Date dateOpen, Date dateStart446P) {
         return glAccountRepository.findForPlcodeNo7903(keys, dateOpen, dateStart446P);
+    }
+
+    /**
+     * <pre>
+     * Определяет создан ли счет в текущем потоке
+     * состояние сохранияется только на один вызов ru.rbt.barsgl.ejb.integr.acc.GLAccountController#createGLAccountMnl
+     * при следующем вызове значение изменяется
+     * после получения статуса значение обнуляется
+     * Пример использования
+     * </pre>
+     * <pre>
+     *     // Single Thread execution
+     *     GLAccount glAccount = glAccountController.createGLAccountMnl(keys, dateOpen, accountWrapper.getErrorList(), GLAccount.OpenType.MNL);
+     *     // true если создан в этом вызове
+     *     boolean isNewAccount = glAccountController.isNewAccount(glAccount.getBsaAcid());
+     *     // ..... some code is skipped
+     *     // Always false!!!
+     *     boolean isNewAccount2 = glAccountController.isNewAccount(glAccount.getBsaAcid());
+     *
+     * </pre>
+     *
+     * @param account для проверки соответствия номера счета
+     * @return true, если счет создан в текущем потоке
+     */
+    public boolean isNewAccount(String account) {
+        try {
+            return null != isNewAccount.get()
+                    && isNewAccount.get().getAccount().getBsaAcid().equals(account)
+                    && isNewAccount.get().isNewAccount();
+        } finally {
+            isNewAccount.set(null);
+        }
     }
 
     /**
