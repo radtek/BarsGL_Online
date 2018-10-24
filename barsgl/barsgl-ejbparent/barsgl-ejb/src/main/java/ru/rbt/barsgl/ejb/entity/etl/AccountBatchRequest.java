@@ -33,62 +33,62 @@ public class AccountBatchRequest extends BaseEntity<Long> {
     private AccountBatchState state;
 
     @Column(name = "BRANCH_IN")
-    String inBranch;
+    private String inBranch;
 
     @Column(name = "CCY_IN")
-    String inCcy;
+    private String inCcy;
 
     @Column(name = "CUSTNO_IN")
-    String inCustno;
+    private String inCustno;
 
     @Column(name = "ACCTYPE_IN")
-    String inAcctype;
+    private String inAcctype;
 
     @Column(name = "CTYPE_IN")
-    String inCtype;
+    private String inCtype;
 
     @Column(name = "TERM_IN")
-    String inTerm;
+    private String inTerm;
 
     @Column(name = "ACC2_IN")
-    String inAcc2;
+    private String inAcc2;
 
     @Column(name = "DEALSRC_IN")
-    String inDealsrc;
+    private String inDealsrc;
 
     @Column(name = "DEALID_IN")
-    String inDealid;
+    private String inDealid;
 
     @Column(name = "SUBDEALID_IN")
-    String inSubdealid;
+    private String inSubdealid;
 
     @Column(name = "OPENDATE_IN")
     @Temporal(TemporalType.DATE)
-    Date inOpendate;
+    private Date inOpendate;
 
     @Column(name = "CTYPE_CUS")
-    String calcCtype;
+    private String calcCtype;
 
     @Column(name = "CTYPE_PARM")
-    String calcCtypeParm;
+    private String calcCtypeParm;
 
     @Column(name = "TERM_PARM")
-    String calcTermParm;
+    private String calcTermParm;
 
     @Column(name = "ACC2_PARM")
-    String calcAcc2Parm;
+    private String calcAcc2Parm;
 
     @Column(name = "ACOD_PARM")
-    String calcAcodParm;
+    private String calcAcodParm;
 
     @Column(name = "ACSQ_PARM")
-    String calcAcsqParm;
+    private String calcAcsqParm;
 
     @Column(name = "PLCODE_PARM")
-    String calcPlcodeParm;
+    private String calcPlcodeParm;
 
     @Column(name = "CBCC_BR")
-    String calcCbcc;
+    private String calcCbcc;
 
     @JoinColumn(name = "GLACID")
     @ManyToOne(fetch = FetchType.LAZY)
