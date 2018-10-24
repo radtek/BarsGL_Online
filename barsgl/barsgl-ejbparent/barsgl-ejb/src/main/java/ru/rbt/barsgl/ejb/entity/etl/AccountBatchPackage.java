@@ -22,6 +22,7 @@ public class AccountBatchPackage extends StatefullObject<AccountBatchPackageStat
     private Long id;
 
     @Column(name = "OD_LOAD")
+    @Temporal(TemporalType.DATE)
     private Date operday;
 
     @Column(name = "TS_LOAD", insertable = false)

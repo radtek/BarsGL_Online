@@ -1,13 +1,11 @@
 package ru.rbt.barsgl.ejb.controller.sm;
 
-import ru.rbt.ejbcore.mapping.BaseEntity;
-
 import java.util.Objects;
 
 /**
  * Created by Ivan Sevastyanov on 22.10.2018.
  */
-public class Transition <State extends Enum, Event extends Enum, Entity extends BaseEntity> {
+public class Transition <State extends Enum, Event extends Enum> {
 
     private State from;
     private State to;
@@ -51,5 +49,15 @@ public class Transition <State extends Enum, Event extends Enum, Entity extends 
     @Override
     public int hashCode() {
         return Objects.hash(from, to, event);
+    }
+
+    @Override
+    public String toString() {
+        return "Transition{" +
+                "from=" + from +
+                ", to=" + to +
+                ", event=" + event +
+                ", actionClass=" + actionClass +
+                '}';
     }
 }

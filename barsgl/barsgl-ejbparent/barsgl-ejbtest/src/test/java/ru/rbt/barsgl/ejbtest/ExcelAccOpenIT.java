@@ -12,8 +12,7 @@ import ru.rbt.ejbcore.mapping.YesNo;
 import java.util.Date;
 import java.util.logging.Logger;
 
-import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.IS_VALID;
-import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.ON_VALID;
+import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.*;
 
 /**
  * Created by Ivan Sevastyanov on 16.10.2018.
@@ -53,7 +52,6 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         Assert.assertTrue(0 < request.getId());
     }
 
-
     @Test public void testProcess() {
 
         final String branch = "001";
@@ -91,6 +89,27 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         Assert.assertEquals(AccountBatchState.VALID, request.getState());
 
         // обрабатываем
+
+    }
+
+    @Test
+    public void testValidation() {
+        final String branch = "001";
+        final String ccy = "RUR";
+        final String custno = "00151555";
+        final String acctype = "161020100";
+
+        AccountBatchPackage pkg = createPackage();
+        pkg.setOperday(getOperday().getLastWorkingDay());
+        pkg.setState(ON_VALID);
+        baseEntityRepository.update(pkg);
+
+        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype);
+
+        remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
+
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ERROR, pkg.getState());
 
     }
 
