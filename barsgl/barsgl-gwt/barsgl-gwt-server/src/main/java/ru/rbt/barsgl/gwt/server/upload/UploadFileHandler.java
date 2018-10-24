@@ -115,15 +115,6 @@ public class UploadFileHandler extends HttpServlet {
             default:
                 throw new IllegalAccessException("Не реализован тип обработчика " + uploadType + " для загруженного файла");
         }
-/*
-        if("Batch".equals(uploadType)) {
-            return BatchMessageProcessorBean.class;
-        } else if("Card".equals(uploadType)) {
-            return CardMessageProcessorBean.class;
-        } else {
-            throw new Exception("Не определен тип обработчика " + uploadType + " для загруженного файла");
-        }
-*/
     }
 
     private File writeFile(FileItem fileItem) throws Exception {

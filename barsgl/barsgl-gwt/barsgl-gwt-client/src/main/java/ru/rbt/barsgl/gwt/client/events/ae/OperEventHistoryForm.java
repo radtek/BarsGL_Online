@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.gwt.client.events.ae;
 
+import ru.rbt.barsgl.gwt.client.quickFilter.DateOwnHistQuickFilterAction;
 import ru.rbt.shared.enums.SecurityActionCode;
 import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
@@ -197,22 +198,15 @@ public class OperEventHistoryForm  extends OperSuperBase {
         return list;
     }
 
-    class DateHistoryQuickFilterAction extends DateIntervalQuickFilterAction {
-        private Column histColumn;
+    class DateHistoryQuickFilterAction extends DateOwnHistQuickFilterAction {
 
         public DateHistoryQuickFilterAction(GridWidget grid, Column dateColumn, Column histColumn) {
-            super(grid, dateColumn);
-            this.histColumn = histColumn;
+            super(grid, dateColumn, histColumn);
         }
 
         @Override
         public DlgFrame getFilterDialog() {
             return new OperHistoryDlg();
-        }
-
-        @Override
-        public IQuickFilterParams getFilterParams() {
-            return new DateHistoryQuickFilterParams(dateColumn, histColumn);
         }
 
         @Override

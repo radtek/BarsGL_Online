@@ -39,6 +39,18 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
     private static int COLUMN_DATE = COLUMN_COUNT - 1;
     private static String LIST_DELIMITER = "#";
 
+    private static final int I_Branch = 0;
+    private static final int I_Ccy = 1;
+    private static final int I_Custno = 2;
+    private static final int I_Acctype = 3;
+    private static final int I_Acc2 = 4;
+    private static final int I_Ctype = 5;
+    private static final int I_Term = 6;
+    private static final int I_Dealsrc = 7;
+    private static final int I_Dealid = 8;
+    private static final int I_Subdealid = 9;
+    private static final int I_Opendate = 10;
+
     private List<Object> rowHeader = null;
 
     @Inject
@@ -60,10 +72,14 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
     private PropertiesRepository propertiesRepository;
 
     @Override
-    protected long getColumnCount() {return COLUMN_COUNT; }
+    protected long getColumnCount() {
+        return COLUMN_COUNT;
+    }
 
     @Override
-    protected long getStartLine() {return START_ROW; }
+    protected long getStartLine() {
+        return START_ROW;
+    }
 
     @Override
     protected long getMaxLines() {
@@ -85,7 +101,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
             batchPackage = packageRepository.executeInNewTransaction(persistence ->
                     buildPackage(it, fileName, parser.getRowCount(), userId));
         }
-        if (null == batchPackage )
+        if (null == batchPackage)
             return "Нет строк для загрузки!";
 
         String result = new StringBuffer().append(LIST_DELIMITER)
@@ -98,7 +114,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
     }
 
     public AccountBatchPackage buildPackage(Iterator<List<Object>> it, String fileName, long maxRowNum, Long userId) throws Exception {
-        if(!it.hasNext() || 0 == maxRowNum) {
+        if (!it.hasNext() || 0 == maxRowNum) {
             return null;
         }
 
@@ -107,21 +123,26 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
         final UserRequestHolder requestHolder = contextBean.getRequest().orElse(UserRequestHolder.empty());
         String userName = requestHolder.getUser();
-        String filial = requestHolder.getUserWrapper().getFilial();
         if (null == userId)
             userId = requestHolder.getUserWrapper().getId();
 
-        List<AccountBatchRequest> requests = new ArrayList<>();
         List<String> errorList = new ArrayList<>();
+        List<String> allowedBranches = packageRepository.getAllowedBranches(userId);
+        if (allowedBranches == null || allowedBranches.isEmpty()) {
+            throw new ParamsParserException("У вас не заданы права на создание счетов в филиалах");
+        }
 
+        boolean allBranches = allowedBranches.get(0).equals("*");
+        List<AccountBatchRequest> requests = new ArrayList<>();
         Date curdate = operdayController.getOperday().getCurrentDate();
         int row = START_ROW;
-        if(it.hasNext()) {
-            while(it.hasNext()) {
+        if (it.hasNext()) {
+            while (it.hasNext()) {
                 AccountBatchRequest request = createRequest(it.next(), row, curdate, errorList);
                 if (null != request) {
-//                    checkFilialPermission(request.getInBranch(), userId);     // TODO
-//                    checkOpenDate(request.getOpenDate(), curdate);            // TODO
+                    if (!allBranches && !allowedBranches.contains(request.getInBranch())) {
+                        errorList.add(format("%s У вас нет прав на открытие счетов в бранче '%s'", getLocation(row, I_Branch), request.getInBranch()));
+                    }
                     requests.add(request);
                 }
                 row++;
@@ -132,13 +153,13 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
         if (errorList.size() > 0) {
             throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
-        };
+        }
 
         AccountBatchPackage pkg = new AccountBatchPackage();
         pkg.setLoadUser(userName);
         pkg.setFileName(fileName);
         pkg.setOperday(curdate);
-        pkg.setCntRequests((long)requests.size());
+        pkg.setCntRequests((long) requests.size());
         pkg.setState(AccountBatchPackageState.IS_LOAD);
         pkg = packageRepository.save(pkg);
 
@@ -156,22 +177,24 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
         AccountBatchRequest request = new AccountBatchRequest();
         // required
-        request.setInBranch(getString(rowParams, row, 0, true, 3, true, errorList));
-        request.setInCcy(getString(rowParams, row, 1, true, 3, true, errorList));
-        request.setInCustno(getNumberString(rowParams, row, 2, true, 8, true, errorList));
-        request.setInAcctype(getNumberString(rowParams, row, 3, true, 9, true, errorList));
+        request.setInBranch(getString(rowParams, row, I_Branch, true, 3, true, errorList));
+        request.setInCcy(getString(rowParams, row, I_Ccy, true, 3, true, errorList));
+        request.setInCustno(getNumberString(rowParams, row, I_Custno, true, 8, true, errorList));
+        request.setInAcctype(getNumberString(rowParams, row, I_Acctype, true, 9, true, errorList));
 
         // optional
-        request.setInAcc2(getNumberString(rowParams, row, 4, false, 5, true, errorList));
-        request.setInCtype(getNumberString(rowParams, row, 5, false, 2, false, errorList));
-        request.setInTerm(getNumberString(rowParams, row, 6, false, 2, false, errorList));
-        request.setInDealsrc(getString(rowParams, row, 7, false, 8, false, errorList));
-        request.setInDealid(getString(rowParams, row, 8, false, 20, false, errorList));
-        request.setInSubdealid(getString(rowParams, row, 9, false, 20, false, errorList));
-        request.setInOpendate(getDate(rowParams, row, 10, false, curdate, errorList));
+        request.setInAcc2(getNumberString(rowParams, row, I_Acc2, false, 5, true, errorList));
+        request.setInCtype(getNumberString(rowParams, row, I_Ctype, false, 2, false, errorList));
+        request.setInTerm(getNumberString(rowParams, row, I_Term, false, 2, false, errorList));
+        request.setInDealsrc(getString(rowParams, row, I_Dealsrc, false, 8, false, errorList));
+        request.setInDealid(getString(rowParams, row, I_Dealid, false, 20, false, errorList));
+        request.setInSubdealid(getString(rowParams, row, I_Subdealid, false, 20, false, errorList));
+        request.setInOpendate(getDate(rowParams, row, I_Opendate, false, curdate, errorList));
 
         request.setLineNumber(getRowNumber(row));
         request.setState(AccountBatchState.LOAD);
         return request;
     }
+
 }
+

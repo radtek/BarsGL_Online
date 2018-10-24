@@ -3,27 +3,23 @@ package ru.rbt.barsgl.gwt.client.account;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.events.ae.LoadOperDlg;
-import ru.rbt.barsgl.gwt.client.events.ae.LoadOperDlgBase;
-import ru.rbt.barsgl.gwt.client.loadFile.LoadFileFactory;
+import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
+import ru.rbt.barsgl.gwt.client.quickFilter.DateOwnHistQuickFilterAction;
+import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
-import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
-import ru.rbt.barsgl.gwt.core.dialogs.IAfterCancelEvent;
-import ru.rbt.barsgl.gwt.core.dialogs.IDlgEvents;
-import ru.rbt.barsgl.gwt.core.dialogs.WaitingManager;
+import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
+import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
-import ru.rbt.barsgl.shared.enums.BatchPostAction;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
 import ru.rbt.barsgl.shared.operation.AccountBatchWrapper;
-import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.user.AppUserWrapper;
@@ -45,23 +41,30 @@ import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAct
 public class AccountBatchPackageForm extends GridForm {
     public static final String FORM_NAME = "Пакеты для загрузки счетов";
 
+    private Boolean _ownMessages;
+
+    private Column _colProcDate;
+    private Column _colInvisible;
+    private String _select = "";
+    private String _where_ownMessages = "";
     private GridAction _loadFile;
 
     public AccountBatchPackageForm() {
-        super(FORM_NAME, false);    // true
-//        _select = getSelectClause();
+        super(FORM_NAME, true);
+        _select = getSelectClause();
         reconfigure();
     }
 
     private void reconfigure() {
-        GridAction quickFilterAction;
-//        abw.addAction(quickFilterAction = new BatchPackageForm.DateOwnQuickFilterAction(grid, colProcDate));
+        GridAction quickFilterAction = new AccountBatchPackageQFAction(grid, _colProcDate, _colInvisible);
+        abw.addAction(quickFilterAction);
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addAction(_loadFile = createLoad(UploadFileType.Account, ImageConstants.INSTANCE.load_acc()));
+//        abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go()));
 
 //        abw.addAction(new PackageStatisticsAction(grid));
 
-//        quickFilterAction.execute();
+        quickFilterAction.execute();
     }
 
     @Override
@@ -73,7 +76,7 @@ public class AccountBatchPackageForm extends GridForm {
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус пакета", 120));
         col.setList(getEnumLabelsList(AccountBatchPackageState.values()));
 
-        result.addColumn(new Column("OD_LOAD", Column.Type.DATE, "Дата загрузки", 75));
+        result.addColumn(_colProcDate = new Column("OD_LOAD", Column.Type.DATE, "Дата загрузки", 75));
 
         result.addColumn(new Column("CNT_REQ", Column.Type.INTEGER, "Всего запросов", 70));
         result.addColumn(new Column("CNT_OPEN", Column.Type.INTEGER, "Открыто счетов", 70));        // TODO
@@ -97,8 +100,8 @@ public class AccountBatchPackageForm extends GridForm {
         result.addColumn(col = new Column("FIO", Column.Type.STRING, "ФИО обработавшего пакет", 250));
 
         result.addColumn(new Column("FILE_NAME", Column.Type.STRING, "Имя файла", 100, false, false));
-        result.addColumn(col = new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
-        col.setList(getYesNoList());
+        result.addColumn(_colInvisible = new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
+        _colInvisible.setList(getYesNoList());
 
         return result;
     }
@@ -122,11 +125,31 @@ public class AccountBatchPackageForm extends GridForm {
                 + where;
     }
 
+    public void setSql(String text){
+        sql_select = text;
+        setExcelSql(sql_select);
+    }
+
+    private String sql(){
+        return new StringBuilder()
+                .append(_select )
+                .append(_where_ownMessages).toString();
+    }
+
     @Override
     protected List<SortItem> getInitialSortCriteria() {
         ArrayList<SortItem> list = new ArrayList<SortItem>();
         list.add(new SortItem("ID_PKG", Column.Sort.DESC));
         return list;
+    }
+
+    protected String getOwnMessagesClause(Boolean ownMessages){
+        if (!ownMessages) return "";
+
+        AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+        if (wrapper == null) return "";
+
+        return  " and " + "'" + wrapper.getUserName() + "' in (USER_LOAD, USER_PROC)";
     }
 
     private GridAction createLoad(final UploadFileType loadType, ImageResource img) {
@@ -181,5 +204,36 @@ public class AccountBatchPackageForm extends GridForm {
             }
         };
     }
+/*
 
+    private GridAction createGotoAccounts(ImageResource img) {
+        return new GridAction(grid, null, LoadAccountDlg.TITLE, new Image(img), 10) {
+
+            @Override
+            public void execute() {
+                Row row = grid.getCurrentRow();
+                if (row == null) return ;
+
+                Long idPackage = (Long)row.getField(grid.getTable().getColumns().getColumnIndexByName("ID_PKG")).getValue();
+                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(new PackageFilterParams()));
+            }
+        };
+    }
+*/
+
+    class AccountBatchPackageQFAction extends DateOwnHistQuickFilterAction {
+
+        public AccountBatchPackageQFAction(GridWidget grid, Column dateColumn, Column histColumn) {
+            super(grid, dateColumn, histColumn);
+        }
+
+        @Override
+        public void beforeFireFilterEvent(IQuickFilterParams filterParams) {
+            DateHistoryQuickFilterParams params = (DateHistoryQuickFilterParams)filterParams;
+            _ownMessages = params.getOwnMessages();
+            _where_ownMessages = getOwnMessagesClause(_ownMessages);
+
+            setSql(sql());
+        }
+    }
 }

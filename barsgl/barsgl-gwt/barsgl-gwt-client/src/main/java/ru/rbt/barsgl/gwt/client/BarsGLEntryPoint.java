@@ -38,7 +38,9 @@ public class BarsGLEntryPoint implements EntryPoint {
     public static PropertiesServiceAsync propertiesService;
     public static LoaderControlServiceAsync loaderService;
     public static ReplServiceAsync replService;
-    
+
+    public static MenuBuilder menuBuilder;
+
     @Override
     public void onModuleLoad() {
         operDayService = GWT.create(OperDayService.class);
@@ -51,7 +53,7 @@ public class BarsGLEntryPoint implements EntryPoint {
         loaderService = GWT.create(LoaderControlService.class);
         replService = GWT.create(ReplService.class);
 
-        SecurityEntryPoint.init(new MenuBuilder());
+        SecurityEntryPoint.init(menuBuilder = new MenuBuilder());
         SecurityEntryPoint.checkSession();
         SecurityEntryPoint.setDatabaseVersion();
     }
