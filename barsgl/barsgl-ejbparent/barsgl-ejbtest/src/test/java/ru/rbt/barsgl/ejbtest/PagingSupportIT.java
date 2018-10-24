@@ -10,6 +10,7 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,12 +42,12 @@ public class PagingSupportIT extends AbstractRemoteIT {
         int cnt = pagingSupport.count(sql, criterion);
         Assert.assertEquals(2, cnt);
 
-        list = pagingSupport.selectRows(sql, criterion, 2, 1, ASC);
+        list = pagingSupport.selectRows(sql, criterion, 2, 1, Collections.singletonList(ASC));
         Assert.assertEquals(2, list.size());
         Assert.assertEquals(one.getLong(0), list.get(0).getLong(0));
         Assert.assertEquals(two.getLong(0), list.get(1).getLong(0));
 
-        list = pagingSupport.selectRows(sql, criterion, 2, 2, ASC);
+        list = pagingSupport.selectRows(sql, criterion, 2, 2, Collections.singletonList(ASC));
         Assert.assertEquals(1, list.size());
         Assert.assertEquals(two.getLong(0), list.get(0).getLong(0));
     }

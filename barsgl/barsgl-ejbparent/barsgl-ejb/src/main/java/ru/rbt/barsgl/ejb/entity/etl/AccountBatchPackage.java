@@ -1,7 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.etl;
 
+import ru.rbt.barsgl.ejb.controller.sm.StatefullObject;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
-import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.persistence.*;
@@ -14,7 +14,7 @@ import java.util.Date;
 @Entity
 @Table(name = "GL_ACBATPKG")
 @SequenceGenerator(name = "AccountBatchPackageIdSeq", sequenceName = "SEQ_GL_ACBATPKG", allocationSize = 1)
-public class AccountBatchPackage extends BaseEntity<Long> {
+public class AccountBatchPackage extends StatefullObject<AccountBatchPackageState, Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "AccountBatchPackageIdSeq")
@@ -202,4 +202,6 @@ public class AccountBatchPackage extends BaseEntity<Long> {
     public void setInvisible(YesNo invisible) {
         this.invisible = invisible;
     }
+
+
 }
