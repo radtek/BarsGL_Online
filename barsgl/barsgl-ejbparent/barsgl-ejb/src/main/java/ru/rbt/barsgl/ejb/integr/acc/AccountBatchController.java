@@ -93,11 +93,11 @@ public class AccountBatchController {
 
         Date curdate = operdayController.getOperday().getCurrentDate();
         if (!curdate.equals(pkg.getOperday()))
-            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя передать пакет счетов ID = %s на обработку," +
+            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя передать пакет счетов с ID = %s на обработку," +
                     " дата создания пакета '%s' не равна текущему опердню '%s'",
                      pkg.getId(), dateUtils.onlyDateString(pkg.getOperday()), dateUtils.onlyDateString(curdate)));
         if (!packageRepository.checkAccountRequestState(pkg.getId(), LOAD))
-            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя передать пакет счетов ID = %s на обработку," +
+            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя передать пакет счетов с ID = %s на обработку," +
                     " в пакете есть счета не в статусе '%s'", pkg.getId(), LOAD.name()));
 
         String userProc = getUserName();
@@ -109,7 +109,7 @@ public class AccountBatchController {
             return null;
         });
         wrapper.setPackageState(ON_VALID);
-        String msg = "Пакет счетов ID = " + wrapper.getPackageId() + " передан на обработку";
+        String msg = "Пакет счетов с ID = " + wrapper.getPackageId() + " передан на обработку";
         auditController.info(AccountBatch, msg, tableName, getPackageId(wrapper));
         return new RpcRes_Base<>(wrapper, false, msg);
     }
@@ -119,7 +119,7 @@ public class AccountBatchController {
 
         AccountBatchPackageState packageState = pkg.getState();
         if (!(packageState == IS_LOAD || packageState == ERROR))
-            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов ID = %s," +
+            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов с ID = %s," +
                     " статус пакета '%s' (допустимые статусы '%s', '%s')", pkg.getId(),
                     packageState.name(), IS_LOAD.name(), ERROR.name()));
 
@@ -137,10 +137,10 @@ public class AccountBatchController {
             });
         }
 
-        String msg = String.format("Пакет счетов ID = %d, загруженный пользователем %s, удален пользователем %s",
+        String msg = String.format("Пакет счетов с ID = %d, загруженный пользователем %s, удален пользователем %s",
                 wrapper.getPackageId(), pkg.getLoadUser(), userProc );
         auditController.info(AccountBatch, msg, tableName, getPackageId(wrapper));
-        return new RpcRes_Base<>(wrapper, false, msg);
+        return new RpcRes_Base<>(wrapper, false, "Пакет счетов с ID = " + wrapper.getPackageId() + " удален");
     }
 
     private AccountBatchPackage getPackageWithCheck(AccountBatchWrapper wrapper, AccountBatchPackageState... packageState) throws SQLException {
@@ -154,7 +154,7 @@ public class AccountBatchController {
             states.addAll(Arrays.asList(packageState));
             if (!states.contains(pkg.getState())) {
                 throw new ValidationError(ACCOUNT_BATCH_ERROR,
-                        String.format("Пакет счетов ID = %s: нельзя открыть счета пакета в статусе: '%s' ('%s'). Обновите информацию",
+                        String.format("Пакет ID = %s: нельзя открыть счета пакета в статусе: '%s' ('%s'). Обновите информацию",
                                 id, pkg.getState(), pkg.getState().getLabel()));
             }
         }
@@ -188,7 +188,7 @@ public class AccountBatchController {
         }
         if(!actionRepository.getAvailableActions(userContext.getUserId()).contains(actionCode)) {       {
             throw new ValidationError(ACCOUNT_BATCH_ERROR,
-                    String.format("Пакет счетов ID = %s: нельзя %s пакет, загруженный другим пользователем ('%s')",
+                    String.format("Пакет ID = %s: нельзя %s пакет, загруженный другим пользователем ('%s')",
                             wrapper.getPackageId(), act, userLoad));
             }
         }

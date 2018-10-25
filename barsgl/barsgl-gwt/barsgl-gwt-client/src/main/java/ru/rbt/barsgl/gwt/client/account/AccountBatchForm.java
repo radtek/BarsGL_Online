@@ -37,9 +37,12 @@ public class AccountBatchForm extends GridForm {
 
     private Boolean _ownMessages;
 
-    private Column _colIdPackage;
-    private Column _colProcDate;
-    private Column _colInvisible;
+    protected GridAction quickFilterAction;
+
+    protected Column _colIdPackage;
+    protected Column _colProcDate;
+    protected Column _colInvisible;
+
     private String _select = "";
     private String _where_ownMessages = "";
     private GridAction _loadFile;
@@ -48,40 +51,25 @@ public class AccountBatchForm extends GridForm {
         super(FORM_NAME, true);
         _select = getSelectClause();
         reconfigure();
-    }
-
-/*
-    public AccountBatchForm(List<FilterDescr> filterList) {
-        this();
-        Window.alert("filterList=" + filterList);
-        InitFilterAction filterAction = new InitFilterAction(grid, "Записи по пакету", "Просмотр записей по пакету");
-        filterAction.setFilterParams(filterParams);
-        filterAction.execute();
-    }
-*/
-
-    public AccountBatchForm(Long idPackage) {
-        this();
-        List<FilterItem> filterCriteria = new ArrayList<>();
-        filterCriteria.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage));
-        Window.alert("filterCriteria=" + filterCriteria);
-        LocalEventBus.fireEvent(new GridEvents(grid.getId(), GridEvents.EventType.FILTER, filterCriteria));
-    }
-
-    protected void reconfigure() {
-        GridAction quickFilterAction = new AccountBatchQFAction(grid, _colProcDate, _colInvisible);
-        abw.addAction(quickFilterAction);
-        abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
 
         quickFilterAction.execute();
     }
 
-    @Override
-    protected Table prepareTable() {
-        return prepareTable(true);
+    public AccountBatchForm(boolean delayLoad, Boolean ownMessages) {
+        super(FORM_NAME, delayLoad);
+        _ownMessages = ownMessages;
+        _select = getSelectClause();
+        reconfigure();
     }
 
-    protected Table prepareTable(boolean full) {
+    protected void reconfigure() {
+        quickFilterAction = new AccountBatchQFAction(grid, _colProcDate, _colInvisible);
+        abw.addAction(quickFilterAction);
+        abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
+    }
+
+    @Override
+    protected Table prepareTable() {
         Table result = new Table();
         Column col;
 
@@ -95,10 +83,10 @@ public class AccountBatchForm extends GridForm {
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус запроса", 100));
         col.setList(getEnumLabelsList(AccountBatchState.values()));
 
+        result.addColumn(new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(col = new Column("WAS_ACC", Column.Type.STRING, "Открыт ранее", 60));
         col.setList(getYesNoList());
 
-        result.addColumn(new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(new Column("ACID", Column.Type.STRING, "Счет Midas", 160));
         result.addColumn(new Column("BRANCH_IN", Column.Type.STRING, "Отделение", 60));
         result.addColumn(new Column("CBCC_BR", Column.Type.STRING, "Филиал", 60));
@@ -187,71 +175,6 @@ public class AccountBatchForm extends GridForm {
         list.add(new SortItem("RECNO", Column.Sort.ASC));
         return list;
     }
-
-
-/*
-    @Override
-    public ArrayList<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
-        Long idPackage = (Long)initialFilterParams[0];
-
-        ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-        list.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage, true));
-
-        return list;
-    }
-*/
-
-/*
-    private class InitFilterAction extends GridAction {
-        private List<FilterItem> initFilterItems = null;
-
-        protected void beforeFireFilterEvent(IQuickFilterParams filterParams) {};
-
-        public InitFilterAction(GridWidget grid, String name, String hint, Image image, double separator) {
-            super(grid, name, hint, image, separator, false);
-        }
-
-        public InitFilterAction(GridWidget grid, String name, String hint) {
-            this(grid, name, hint, null, 0);
-        }
-
-        @Override
-        public void execute() {
-            ArrayList<FilterItem> filterCriteria = filterParams.getFilter();
-            if (initFilterItems != null) filterCriteria.addAll(initFilterItems);
-//            beforeFireFilterEvent(filterParams);
-            LocalEventBus.fireEvent(new GridEvents(grid.getId(), GridEvents.EventType.FILTER, filterCriteria));
-        }
-
-        public void setInitFilterItems(List<FilterItem> initFilterItems) {
-            this.initFilterItems = initFilterItems;
-        }
-
-        public void setFilterParams(IQuickFilterParams filterParams) { this.filterParams = filterParams; }
-
-        public IQuickFilterParams makeFilterParams(List<FilterDescr> filterDescrList) {
-            filterParams = new IQuickFilterParams() {
-                @Override
-                public void setInitialFilterParams(Object[] params) {
-
-                }
-
-                @Override
-                public ArrayList<FilterItem> getFilter() {
-                    return null;
-                }
-            };
-            if (filterDescrList == null)
-                return null;
-            filterDescrList.forEach(f -> {
-                Column filterColumn = grid.getTable().getColumn(f.columnName);
-                if (filterColumn != null) {
-
-                }
-            });
-        }
-    }
-*/
 
     class AccountBatchQFAction extends DateOwnHistQuickFilterAction {
 

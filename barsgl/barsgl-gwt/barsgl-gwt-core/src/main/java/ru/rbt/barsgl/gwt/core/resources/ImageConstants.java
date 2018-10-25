@@ -176,4 +176,13 @@ public abstract interface ImageConstants extends ClientBundle{
     @ClientBundle.Source({"male.png"})
     public abstract ImageResource male();
 
+    @ClientBundle.Source({"add_list.png"})
+    public abstract ImageResource add_list();
+
+    @ClientBundle.Source({"err_list.png"})
+    public abstract ImageResource err_list();
+
+    @ClientBundle.Source({"del_list.png"})
+    public abstract ImageResource del_list();
+
 }

@@ -68,15 +68,13 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected abstract String getUploadType();
     protected abstract String getExampleName();
 
-    protected abstract boolean acceptResponse(String[] list);
     protected abstract void onClickDelete(ClickEvent clickEvent);
     protected abstract void onClickUpload(ClickEvent clickEvent);
     protected abstract void onClickShow(ClickEvent clickEvent);
     protected abstract void onClickError(ClickEvent clickEvent);
 
-    protected abstract void switchControlsState(Boolean state);
-
-    protected abstract void parseResponseBody(String[] list);
+    protected abstract boolean acceptResponse(String[] list);
+//    protected abstract void parseResponseBody(String[] list);
 
     @Override
     public Widget createContent(){
@@ -175,9 +173,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
 
     private String parseResponse(String response) {
         try {
-            errorButton.setEnabled(false);
-            showButton.setEnabled(false);
-            deleteButton.setEnabled(false);
+            switchButtonState(false, false);
             if (isEmpty(response))
                 return response;
             if (response.contains("NotAuthorizedUserException")) {
@@ -186,7 +182,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             }
             if (response.startsWith(LIST_DELIMITER)) {
                 String[] list = response.split(LIST_DELIMITER);
-                parseResponseBody(list);
+//                parseResponseBody(list);
 /*
                 idPackage = parseLong(list[1], "пакет", ":");
                 Long all = parseLong(list[2], "всего", ":");
@@ -241,10 +237,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
                 //get the filename to be uploaded
                 try {
                     switchControlsState(false);
-                    errorButton.setEnabled(false);
-                    showButton.setEnabled(false);
-                    deleteButton.setEnabled(false);
-                    ok.setEnabled(false);
+                    switchButtonState(false, false);
                     loadingResult.clear();
 
                     onClickUpload(event);
@@ -303,13 +296,22 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         return btn;
     }
 
+    protected void switchControlsState(boolean state) {
+        uploadButton.setEnabled(state);
+        anchorExample.setEnabled(state);
+    }
+
+    protected void switchButtonState(boolean state, boolean error) {
+        errorButton.setEnabled(error);
+        showButton.setEnabled(state);
+        deleteButton.setEnabled(state);
+        ok.setEnabled(state && !error);
+    }
+
     @Override
     public void afterShow() {
         switchControlsState(true);
-        errorButton.setEnabled(false);
-        showButton.setEnabled(false);
-        deleteButton.setEnabled(false);
-        ok.setEnabled(false);
+        switchButtonState(false, false);
         loadingResult.clear();
     }
 }

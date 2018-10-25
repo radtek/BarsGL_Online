@@ -1,8 +1,10 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
+import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateOwnHistQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;
@@ -10,30 +12,39 @@ import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.*;
 import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.gwt.server.upload.UploadFileType;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.enums.InvisibleType;
+import ru.rbt.barsgl.shared.filter.FilterCriteria;
 import ru.rbt.barsgl.shared.operation.AccountBatchWrapper;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 import ru.rbt.security.gwt.client.AuthCheckAsyncCallback;
 import ru.rbt.shared.user.AppUserWrapper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import static ru.rbt.barsgl.gwt.client.account.AccountBatchErrorForm.ViewType.V_ERROR;
+import static ru.rbt.barsgl.gwt.client.account.AccountBatchErrorForm.ViewType.V_FULL;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
+import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
+import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.DELETE;
 import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.OPEN;
+import static ru.rbt.shared.enums.SecurityActionCode.AccPkgFileDel;
+import static ru.rbt.shared.enums.SecurityActionCode.AccPkgFileLoad;
+import static ru.rbt.shared.enums.SecurityActionCode.AccPkgFileOpen;
 
 /**
  * Created by er18837 on 15.10.2018.
@@ -43,28 +54,39 @@ public class AccountBatchPackageForm extends GridForm {
 
     private Boolean _ownMessages;
 
-    private Column _colProcDate;
-    private Column _colInvisible;
+    protected Column _colProcDate;
+    protected Column _colInvisible;
     private String _select = "";
     private String _where_ownMessages = "";
-    private GridAction _loadFile;
+
+    protected GridAction quickFilterAction;
+    private GridAction _loadPackage;
+    private GridAction _delPackage;
+    private GridAction _openAccounts;
+    private GridAction _viewFull;
+    private GridAction _viewError;
+    private GridAction _gotoAccounts;
 
     public AccountBatchPackageForm() {
         super(FORM_NAME, true);
         _select = getSelectClause();
         reconfigure();
+
+        quickFilterAction.execute();
     }
 
     private void reconfigure() {
-        GridAction quickFilterAction = new AccountBatchPackageQFAction(grid, _colProcDate, _colInvisible);
+        quickFilterAction = new AccountBatchPackageQFAction(grid, _colProcDate, _colInvisible);
         abw.addAction(quickFilterAction);
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
-        abw.addAction(_loadFile = createLoad(UploadFileType.Account, ImageConstants.INSTANCE.load_acc()));
-//        abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go()));
-
+        abw.addSecureAction(_loadPackage = createLoad(ImageConstants.INSTANCE.load()), AccPkgFileLoad);
+        abw.addSecureAction(_openAccounts = createCommand(ImageConstants.INSTANCE.add_list(), OPEN, "Открыть счета пакета"), AccPkgFileLoad, AccPkgFileOpen);
+        abw.addSecureAction(_delPackage = createCommand(ImageConstants.INSTANCE.del_list(), DELETE, "Удалить пакет"), AccPkgFileLoad, AccPkgFileDel);
+        abw.addAction(_viewError = createView(ImageConstants.INSTANCE.err_list(), V_ERROR, "Просмотр ошибок пакета"));
+        abw.addAction(_viewFull = createView(ImageConstants.INSTANCE.preview(), V_FULL, "Просмотр счетов пакета"));
+        abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go(), "Переход на форму счетов по пакету"));
 //        abw.addAction(new PackageStatisticsAction(grid));
 
-        quickFilterAction.execute();
     }
 
     @Override
@@ -152,7 +174,12 @@ public class AccountBatchPackageForm extends GridForm {
         return  " and " + "'" + wrapper.getUserName() + "' in (USER_LOAD, USER_PROC)";
     }
 
-    private GridAction createLoad(final UploadFileType loadType, ImageResource img) {
+    private Long getIdPackage(){
+        Row row;
+        return (row = grid.getCurrentRow()) == null ? null : (Long) row.getField(0).getValue();
+    }
+
+    private GridAction createLoad(ImageResource img) {
 
         return new GridAction(grid, null, LoadAccountDlg.TITLE, new Image(img), 10) {
             LoadAccountDlg dlg = null;
@@ -191,7 +218,6 @@ public class AccountBatchPackageForm extends GridForm {
                                 } else {
                                     dlg.hide();
                                     showInfo("Информация", wrapper.getMessage());
-
                                     grid.refresh();
                                 }
                                 WaitingManager.hide();
@@ -204,22 +230,97 @@ public class AccountBatchPackageForm extends GridForm {
             }
         };
     }
-/*
 
-    private GridAction createGotoAccounts(ImageResource img) {
-        return new GridAction(grid, null, LoadAccountDlg.TITLE, new Image(img), 10) {
-
+    private GridAction createCommand(ImageResource img, final AccountBatchWrapper.AccountBatchAction batchAction, final String hint) {
+        return new GridAction(grid, null, hint, new Image(img), 10) {
             @Override
             public void execute() {
-                Row row = grid.getCurrentRow();
-                if (row == null) return ;
-
-                Long idPackage = (Long)row.getField(grid.getTable().getColumns().getColumnIndexByName("ID_PKG")).getValue();
-                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(new PackageFilterParams()));
+                final long idPackage = getIdPackage();
+                showConfirm("Вы уверены, что хотите " + hint.toLowerCase() + " ID = " + idPackage + "?",
+                        new IDlgEvents() {
+                            @Override
+                            public void onDlgOkClick(Object p) throws Exception {
+                                executeCommand(batchAction, idPackage);
+                            }
+                        }
+                        , null);
             }
         };
     }
-*/
+
+    private void executeCommand(final AccountBatchWrapper.AccountBatchAction batchAction, long idPackage) {
+        AccountBatchWrapper wrapper = new AccountBatchWrapper();
+        wrapper.setPackageId(idPackage);
+        wrapper.setAction(batchAction);
+        wrapper.setUserId(((AppUserWrapper) LocalDataStorage.getParam("current_user")).getId());
+
+        BarsGLEntryPoint.accountService.processAccountBatchRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<AccountBatchWrapper>>() {
+            @Override
+            public void onSuccess(RpcRes_Base<AccountBatchWrapper> wrapper) {
+                WaitingManager.show(TEXT_CONSTANTS.waitMessage_Load());
+                if (wrapper.isError()) {
+                    showInfo("Ошибка", wrapper.getMessage());
+                    WaitingManager.hide();
+                } else {
+                    showInfo("Информация", wrapper.getMessage());
+                    grid.refresh();
+                    WaitingManager.hide();
+                }
+            }
+        });
+    }
+
+    private GridAction createView(ImageResource img, final AccountBatchErrorForm.ViewType viewType, final String hint) {
+        return new GridAction(grid, null, hint, new Image(img), 10) {
+            @Override
+            public void execute() {
+                try {
+                    GridFormDlgBase dlg = new AccountBatchFormDlg(viewType) {
+                        @Override
+                        public AccountBatchErrorForm.ViewType getViewType() {
+                            return viewType;
+                        }
+
+                        @Override
+                        protected boolean setResultList(HashMap<String, Object> result) {
+                            return true;
+                        }
+
+                        @Override
+                        protected Object[] getInitialFilterParams() {
+                            return new Object[] {getIdPackage()};
+                        }
+                    };
+                    dlg.setModal(true);
+                    dlg.show();
+                } catch (Exception e) {
+                    Window.alert(e.getMessage());
+                }
+            }
+        };
+    }
+
+    private GridAction createGotoAccounts(ImageResource img, final String hint) {
+        return new GridAction(grid, null, hint, new Image(img), 10) {
+
+            @Override
+            public void execute() {
+                final Long idPackage = getIdPackage();
+                if (idPackage == null) return ;
+
+                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(false, _ownMessages){
+                    @Override
+                    protected List<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
+                        ArrayList<FilterItem> list = new ArrayList<>();
+                        list.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage));
+//                        List<FilterItem> listPkg =  AccountBatchPackageForm.this.grid.getFilterCriteria();// todo
+
+                        return list;
+                    }
+                });
+            }
+        };
+    }
 
     class AccountBatchPackageQFAction extends DateOwnHistQuickFilterAction {
 
