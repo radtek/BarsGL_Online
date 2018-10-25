@@ -20,6 +20,8 @@ import ru.rbt.barsgl.ejb.integr.bg.EtlTechnicalPostingController;
 import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
+import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.EnumUtils;
 import ru.rbt.barsgl.shared.enums.OperState;
@@ -75,7 +77,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      * @fsd 7.5.2.1
      * @throws ParseException
      */
-    @Test public void test() throws ParseException {
+    @Test public void test() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -85,8 +87,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String bsaCt = findBsaAccount("40817036%", getOperday().getCurrentDate());
+        String bsaDt = findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", bsaCt).build());
+        pst.setAccountCredit(bsaCt);
+        pst.setAccountDebit(bsaDt);
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -127,7 +131,7 @@ public class EtlMessageIT extends AbstractTimerJobIT {
      * @fsd 7.5.2.1
      * @throws ParseException
      */
-    @Test public void testPH() throws ParseException {
+    @Test public void testPH() throws ParseException, SQLException {
 
 //        updateOperdayMode(BUFFER, ProcessingStatus.STARTED);
         long stamp = System.currentTimeMillis();
@@ -138,8 +142,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String bsaCt = findBsaAccount("40817036%", getOperday().getCurrentDate());
+        String bsaDt = findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", bsaCt).build());
+        pst.setAccountCredit(bsaCt);
+        pst.setAccountDebit(bsaDt);
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -836,8 +842,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         Assert.assertTrue(pkg.getId() > 0);
 
         EtlPosting pst = newPosting(stamp, pkg);
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String bsaCt = findBsaAccount("40817036%", getOperday().getCurrentDate());
+        String bsaDt = findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", bsaCt).build());
+        pst.setAccountCredit(bsaCt);
+        pst.setAccountDebit(bsaDt);
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -906,8 +914,10 @@ public class EtlMessageIT extends AbstractTimerJobIT {
         setOperday(curr, prev, ONLINE, OPEN, pdMode);
 
         EtlPosting pst = newPosting(stamp, pkg);
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String bsaCt = findBsaAccount("40817036%", getOperday().getCurrentDate());
+        String bsaDt = findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", bsaCt).build());
+        pst.setAccountCredit(bsaCt);
+        pst.setAccountDebit(bsaDt);
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);

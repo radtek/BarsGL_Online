@@ -10,7 +10,7 @@ public class DBParam implements Serializable {
 
     public enum DbParamType {
 
-        VARCHAR(Types.VARCHAR), DATE(Types.DATE), LONG(Types.BIGINT);
+        VARCHAR(Types.VARCHAR), DATE(Types.DATE), LONG(Types.BIGINT), INTEGER(Types.INTEGER);
 
         private final int paramType;
 
