@@ -60,6 +60,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         final String acctype = "161020100";
         final String cbcusttype = "18";
         final String term = "7";
+        final String sealSrc = "IMEX";
         final String dealid = "511_A073C_18";
         final String subdealid = "00151555RURCL0P00171";
 
@@ -71,7 +72,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         // формируем пакет
         AccountBatchPackage pkg = createPackage();
 
-        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype);
+        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc);
 
         // валидируем
         remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
@@ -104,7 +105,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         pkg.setState(ON_VALID);
         baseEntityRepository.update(pkg);
 
-        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype);
+        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, "001", "0003", "");
 
         remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
 
@@ -128,7 +129,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         return  (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, package1.getId());
     }
 
-    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy, String custno, String acctype) {
+    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy, String custno, String acctype, String dealId, String subdealId, String sealSrc) {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(pkg);
         request.setLineNumber(lineNumber);
@@ -137,6 +138,9 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         request.setInCcy(ccy);
         request.setInCustno(custno);
         request.setInAcctype(acctype);
+        request.setInDealsrc(sealSrc);
+        request.setInDealid(dealId);
+        request.setInSubdealid(subdealId);
         return  (AccountBatchRequest) baseEntityRepository.save(request);
     }
 

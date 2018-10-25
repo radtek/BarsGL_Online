@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.controller.sm;
 
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.shared.Assert;
 
 import javax.naming.InitialContext;
 import java.util.ArrayList;
@@ -36,9 +37,12 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
         List<Transition> filteredTransitions = transitions.stream()
                 .filter(t -> t.getEvent() == event && t.getFrom() == entity0.getState()).collect(Collectors.toList());
         if (1 == filteredTransitions.size()) {
-            Transition targetTransition = filteredTransitions.get(0);
-            Event newEvent = supportBean.executeAction(entity, targetTransition);
-            supportBean.updateToTargetState(entity, targetTransition);
+            Transition transition = filteredTransitions.get(0);
+            Event newEvent = supportBean.executeAction(entity, transition);
+
+            checkCurrentState(supportBean, transition, entity);
+
+            supportBean.updateToTargetState(entity, transition);
 
             if (null != newEvent) {
                 acceptEvent(entity0, newEvent);
@@ -58,7 +62,11 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
         }
     }
 
-
-
+    private void checkCurrentState(StateMachineSupport supportBean, Transition transition, Entity entity) throws StateMachineException {
+        Entity entity1 = supportBean.refreshStatefullObject(entity);
+        Assert.isTrue(transition.getFrom() == entity1.getState()
+                , () -> new StateMachineException(format("Текущий статус '%s' объекта '%s' отличается от ожидаемого '%s' для обновления в целевой статус '%s'"
+                        , entity1.getState(), entity1, transition.getFrom(), transition.getTo())));
+    }
 
 }
