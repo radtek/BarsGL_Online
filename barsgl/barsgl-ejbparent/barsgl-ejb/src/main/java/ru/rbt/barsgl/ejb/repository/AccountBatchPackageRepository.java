@@ -13,6 +13,7 @@ import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by er18837 on 17.10.2018.
@@ -62,7 +63,6 @@ public class AccountBatchPackageRepository extends AbstractBaseEntityRepository<
         }
 
         List<DataRecord> dataList = select("select A8BRCD from IMBCBBRP where A8CMCD = ?", filial);
-        dataList.stream().map(r -> list.add(r.getString(0)));
-        return list;
+        return dataList.stream().map(r -> r.getString(0)).collect(Collectors.toList());
     };
 }

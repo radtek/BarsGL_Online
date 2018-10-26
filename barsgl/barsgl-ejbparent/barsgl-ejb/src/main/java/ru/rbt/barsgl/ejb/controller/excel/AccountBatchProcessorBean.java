@@ -186,7 +186,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         request.setInAcc2(getNumberString(rowParams, row, I_Acc2, false, 5, true, errorList));
         request.setInCtype(getNumberString(rowParams, row, I_Ctype, false, 2, false, errorList));
         request.setInTerm(getNumberString(rowParams, row, I_Term, false, 2, false, errorList));
-        request.setInDealsrc(getString(rowParams, row, I_Dealsrc, false, 8, false, errorList));
+        request.setInDealsrc(getString(rowParams, row, I_Dealsrc, true, 8, false, errorList));     // required
         request.setInDealid(getString(rowParams, row, I_Dealid, false, 20, false, errorList));
         request.setInSubdealid(getString(rowParams, row, I_Subdealid, false, 20, false, errorList));
         request.setInOpendate(getDate(rowParams, row, I_Opendate, false, curdate, errorList));

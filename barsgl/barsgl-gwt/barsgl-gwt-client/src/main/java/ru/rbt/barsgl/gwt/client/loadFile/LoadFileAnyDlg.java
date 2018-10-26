@@ -105,6 +105,13 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         g2.setWidget(0, 1, errorButton = createErrorButton());
         g2.setWidget(0, 2, showButton = createShowButton());
         g2.setWidget(0, 3, deleteButton = createDeleteButton());
+/*
+        HorizontalPanel g2 = new HorizontalPanel();
+        g2.add(uploadButton = createUploadButton());
+        g2.add(errorButton = createErrorButton());
+        g2.add(showButton = createShowButton());
+        g2.add(deleteButton = createDeleteButton());
+*/
         errorButton.setEnabled(false);
         deleteButton.setEnabled(false);
         showButton.setEnabled(false);
@@ -155,6 +162,8 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         fileUpload.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
+                switchControlsState(true);
+                switchButtonState(false, false);
                 loadingResult.clear();
             }
         });

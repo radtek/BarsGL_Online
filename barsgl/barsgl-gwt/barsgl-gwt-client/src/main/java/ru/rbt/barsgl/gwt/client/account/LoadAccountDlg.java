@@ -138,6 +138,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     @Override
     protected boolean onClickOK() throws Exception {
+        params = idPackage;
         showConfirm("Вы уверены, что хотите открыть счета?", this.getDlgEvents(), params);
         return false;
     }

@@ -53,6 +53,7 @@ public class AccountBatchPackageForm extends GridForm {
     public static final String FORM_NAME = "Пакеты для загрузки счетов";
 
     private Boolean _ownMessages;
+    private int _indIdPackage;
 
     protected Column _colProcDate;
     protected Column _colInvisible;
@@ -75,6 +76,15 @@ public class AccountBatchPackageForm extends GridForm {
         quickFilterAction.execute();
     }
 
+    public AccountBatchPackageForm(boolean ownMessages) {
+        super(FORM_NAME, false);
+        _select = getSelectClause();
+        _ownMessages = ownMessages;
+        _where_ownMessages = getOwnMessagesClause(_ownMessages);
+        setSql(sql());
+        reconfigure();
+    }
+
     private void reconfigure() {
         quickFilterAction = new AccountBatchPackageQFAction(grid, _colProcDate, _colInvisible);
         abw.addAction(quickFilterAction);
@@ -95,6 +105,7 @@ public class AccountBatchPackageForm extends GridForm {
         Column col;
 
         result.addColumn(new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60));
+        _indIdPackage = 0;
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус пакета", 120));
         col.setList(getEnumLabelsList(AccountBatchPackageState.values()));
 
@@ -134,7 +145,7 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     protected String getSelectClause() {
-        String where = getSourceAndFilialPart("where", "", "FILIAL");
+        String where = getSourceAndFilialPart("where", "", "U1.FILIAL");
         if (isEmpty(where))
             where = " where 1=1";
         return " SELECT ID_PKG, OD_LOAD, CNT_REQ, CNT_ERR, CNT_FOUND, CNT_REQ - CNT_ERR - CNT_FOUND CNT_OPEN,\n" +
@@ -175,8 +186,9 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     private Long getIdPackage(){
-        Row row;
-        return (row = grid.getCurrentRow()) == null ? null : (Long) row.getField(0).getValue();
+        if(grid.getRowCount() == 0) return null;
+        Row row = grid.getCurrentRow();
+        return row == null ? null : (Long) row.getField(_indIdPackage).getValue();
     }
 
     private GridAction createLoad(ImageResource img) {
@@ -232,10 +244,12 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     private GridAction createCommand(ImageResource img, final AccountBatchWrapper.AccountBatchAction batchAction, final String hint) {
-        return new GridAction(grid, null, hint, new Image(img), 10) {
+        return new GridAction(grid, null, hint, new Image(img), 10, true) {
             @Override
             public void execute() {
-                final long idPackage = getIdPackage();
+                final Long idPackage = getIdPackage();
+                if (idPackage == null)
+                    return;
                 showConfirm("Вы уверены, что хотите " + hint.toLowerCase() + " ID = " + idPackage + "?",
                         new IDlgEvents() {
                             @Override
@@ -271,10 +285,13 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     private GridAction createView(ImageResource img, final AccountBatchErrorForm.ViewType viewType, final String hint) {
-        return new GridAction(grid, null, hint, new Image(img), 10) {
+        return new GridAction(grid, null, hint, new Image(img), 10, true) {
             @Override
             public void execute() {
                 try {
+                    final Long idPackage = getIdPackage();
+                    if (idPackage == null)
+                        return;
                     GridFormDlgBase dlg = new AccountBatchFormDlg(viewType) {
                         @Override
                         public AccountBatchErrorForm.ViewType getViewType() {
@@ -288,7 +305,7 @@ public class AccountBatchPackageForm extends GridForm {
 
                         @Override
                         protected Object[] getInitialFilterParams() {
-                            return new Object[] {getIdPackage()};
+                            return new Object[] {idPackage};
                         }
                     };
                     dlg.setModal(true);
@@ -301,19 +318,23 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     private GridAction createGotoAccounts(ImageResource img, final String hint) {
-        return new GridAction(grid, null, hint, new Image(img), 10) {
+        return new GridAction(grid, null, hint, new Image(img), 10, true) {
 
             @Override
             public void execute() {
                 final Long idPackage = getIdPackage();
                 if (idPackage == null) return ;
 
-                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(false, _ownMessages){
+                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(_ownMessages){
                     @Override
                     protected List<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
                         ArrayList<FilterItem> list = new ArrayList<>();
+                        List<FilterItem> listPkg =  AccountBatchPackageForm.this.grid.getFilterCriteria();
+                        for (FilterItem item : listPkg) {
+                            if (item.getName().equals(_colProcDate.getName()))
+                                list.add(item);
+                        }
                         list.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage));
-//                        List<FilterItem> listPkg =  AccountBatchPackageForm.this.grid.getFilterCriteria();// todo
 
                         return list;
                     }

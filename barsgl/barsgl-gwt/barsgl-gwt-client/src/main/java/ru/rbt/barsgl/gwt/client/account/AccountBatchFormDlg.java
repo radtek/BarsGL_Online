@@ -46,7 +46,7 @@ public abstract class AccountBatchFormDlg extends GridFormDlgBase {
                 Long idPackage = (Long)initialFilterParams[0];
 
                 ArrayList<FilterItem> list = new ArrayList<FilterItem>();
-                list.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage, true));
+                list.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage, true, true, true));
                 if (_viewType == V_ERROR) {
                     list.add(new FilterItem(_colError, FilterCriteria.NOT_EMPTY, null, false));
                 }

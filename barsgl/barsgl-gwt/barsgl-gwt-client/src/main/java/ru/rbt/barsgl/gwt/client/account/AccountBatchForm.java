@@ -1,6 +1,9 @@
 package ru.rbt.barsgl.gwt.client.account;
 
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.*;
+import com.google.gwt.user.client.ui.Image;
+import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateHistoryQuickFilterParams;
 import ru.rbt.barsgl.gwt.client.quickFilter.DateOwnHistQuickFilterAction;
 import ru.rbt.barsgl.gwt.client.quickFilter.IQuickFilterParams;
@@ -8,11 +11,13 @@ import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.actions.GridAction;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
+import ru.rbt.barsgl.gwt.core.datafields.Row;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.dialogs.FilterItem;
 import ru.rbt.barsgl.gwt.core.events.GridEvents;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
+import ru.rbt.barsgl.gwt.core.resources.ImageConstants;
 import ru.rbt.barsgl.gwt.core.widgets.GridWidget;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
@@ -36,6 +41,7 @@ public class AccountBatchForm extends GridForm {
     public static final String FORM_NAME = "Счета пакетной загрузки";
 
     private Boolean _ownMessages;
+    private int _indIdPackage;
 
     protected GridAction quickFilterAction;
 
@@ -55,10 +61,12 @@ public class AccountBatchForm extends GridForm {
         quickFilterAction.execute();
     }
 
-    public AccountBatchForm(boolean delayLoad, Boolean ownMessages) {
-        super(FORM_NAME, delayLoad);
-        _ownMessages = ownMessages;
+    public AccountBatchForm(boolean ownMessages) {
+        super(FORM_NAME, false);
         _select = getSelectClause();
+        _ownMessages = ownMessages;
+        _where_ownMessages = getOwnMessagesClause(_ownMessages);
+        setSql(sql());
         reconfigure();
     }
 
@@ -66,6 +74,7 @@ public class AccountBatchForm extends GridForm {
         quickFilterAction = new AccountBatchQFAction(grid, _colProcDate, _colInvisible);
         abw.addAction(quickFilterAction);
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
+        abw.addAction(createGotoPackage(ImageConstants.INSTANCE.oper_go(), "Переход на форму пакетов"));
     }
 
     @Override
@@ -75,6 +84,7 @@ public class AccountBatchForm extends GridForm {
 
         result.addColumn(new Column("ID_REQ", Column.Type.LONG, "ID запроса", 60));
         result.addColumn(_colIdPackage = new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60));
+        _indIdPackage = 1;
         result.addColumn(_colProcDate = new Column("OD_LOAD", Column.Type.DATE, "Дата загрузки", 75));
         result.addColumn(new Column("RECNO", Column.Type.INTEGER, "Номер строки", 70));
 
@@ -191,4 +201,37 @@ public class AccountBatchForm extends GridForm {
             setSql(sql());
         }
     }
+
+    private Long getIdPackage(){
+        if(grid.getRowCount() == 0) return null;
+        Row row = grid.getCurrentRow();
+        return row == null ? null : (Long) row.getField(_indIdPackage).getValue();
+    }
+
+    private GridAction createGotoPackage(ImageResource img, final String hint) {
+        return new GridAction(grid, null, hint, new Image(img), 10, true) {
+
+            @Override
+            public void execute() {
+                final Long idPackage = getIdPackage();
+                if (idPackage == null) return ;
+
+                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchPackageForm(_ownMessages){
+                    @Override
+                    protected List<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
+                        ArrayList<FilterItem> list = new ArrayList<>();
+                        List<FilterItem> listPkg =  AccountBatchForm.this.grid.getFilterCriteria();
+                        for (FilterItem item : listPkg) {
+                            if (item.getName().equals(_colProcDate.getName()))
+                                list.add(item);
+                        }
+                        list.add(new FilterItem(_colIdPackage, FilterCriteria.EQ, idPackage));
+
+                        return list;
+                    }
+                });
+            }
+        };
+    }
+
 }
