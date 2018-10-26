@@ -31,6 +31,7 @@ import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBatch;
 import static ru.rbt.barsgl.ejb.controller.acc.AccountBatchPackageEvent.VALIDATE_ERROR;
 import static ru.rbt.barsgl.ejb.controller.acc.AccountBatchPackageEvent.VALIDATE_SUCESS;
 import static ru.rbt.barsgl.ejb.integr.ValidationAwareHandler.validationErrorsToString;
+import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.leftPad;
 import static ru.rbt.ejbcore.validation.ErrorCode.ACC_BATCH_OPEN;
 import static ru.rbt.shared.ExceptionUtils.getErrorMessage;
@@ -236,6 +237,42 @@ public class AccountBatchValidate extends AbstractAccountBatchAction {
                 throw new DefaultApplicationException(e.getMessage(), e);
             }
         });
+        final Integer ctypeInt = parseIntSafe(request.getCalcCtype());
+        context.addValidator(() -> {
+            try {
+                if (ctypeInt < 4) {
+                    DataRecord imb = repository.selectFirst("Select A8BRCD from IMBCBBRP where A8BICN = ?", request.getInCustno());
+                    if (null != imb) {
+                        Assert.isTrue(imb.getString("A8BRCD").equals(request.getInBranch())
+                            , () -> new ValidationError(ACC_BATCH_OPEN, format("Отделение '%s' не соответствует клиенту '%s', который соответствует отдеделению IMBCBBRP.A8BRCD"
+                                    , request.getInBranch(), request.getInCustno())));
+                    }
+                }
+            } catch (SQLException e) {
+                throw new DefaultApplicationException(e.getMessage(), e);
+            }
+        });
+        context.addValidator(()-> {
+            if ("0".equals(ifEmpty(request.getInCtype(), "0"))) {
+                if (ctypeInt > 3) {
+                    request.setCalcCtypeAcc(ctypeInt.toString());
+                } else if (ctypeInt >= 0 && ctypeInt <=3) {
+                    request.setCalcCtypeAcc("0");
+                }
+            } else {
+                if (request.getInCtype().equals(ctypeInt.toString())) {
+                    request.setCalcCtypeAcc(request.getInCtype());
+                } else if (!request.getInCtype().equals(ctypeInt.toString())) {
+                    if (parseIntSafe(request.getInCtype()) > 3 && ctypeInt >=0 && ctypeInt <= 3) {
+                        request.setCalcCtypeAcc(request.getInCtype());
+                    } else {
+                        throw new ValidationError(ACC_BATCH_OPEN
+                                , format("Тип собственности клиента CTYPE_IN '%s' не соответствует значению CTYPE_CUS '%s' из справочника клиентов SDCUSTPD для клиента CUSTNO_IN '%s'"
+                            , request.getInCtype(), ctypeInt, request.getInCustno()));
+                    }
+                }
+            }
+        });
         context.validateAll();
         if (!context.getErrors().isEmpty()) {
             updateRequestState(request, AccountBatchState.ERRCHK, validationErrorsToString(context.getErrors()));
@@ -289,6 +326,15 @@ public class AccountBatchValidate extends AbstractAccountBatchAction {
             return true;
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
+        }
+    }
+
+    private Integer parseIntSafe(String integer) {
+        final Integer undefined = -100;
+        try {
+            return StringUtils.isEmpty(integer) ? undefined: Integer.parseInt(integer.trim());
+        } catch (NumberFormatException e) {
+            return undefined;
         }
     }
 

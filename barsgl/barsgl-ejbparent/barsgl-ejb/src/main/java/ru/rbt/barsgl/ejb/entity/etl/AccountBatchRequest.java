@@ -72,6 +72,9 @@ public class AccountBatchRequest extends BaseEntity<Long> {
     @Column(name = "CTYPE_PARM")
     private String calcCtypeParm;
 
+    @Column(name = "CTYPE_ACC")
+    private String calcCtypeAcc;
+
     @Column(name = "TERM_PARM")
     private String calcTermParm;
 
@@ -252,6 +255,14 @@ public class AccountBatchRequest extends BaseEntity<Long> {
 
     public void setCalcCtypeParm(String calcCtypeParm) {
         this.calcCtypeParm = calcCtypeParm;
+    }
+
+    public String getCalcCtypeAcc() {
+        return calcCtypeAcc;
+    }
+
+    public void setCalcCtypeAcc(String calcCtypeAcc) {
+        this.calcCtypeAcc = calcCtypeAcc;
     }
 
     public String getCalcTermParm() {

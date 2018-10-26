@@ -46,6 +46,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         request.setInCcy("RUR");
         request.setInCustno("001");
         request.setInAcctype("090909090");
+        request.setInDealsrc("IMEX");
 
         request = (AccountBatchRequest) baseEntityRepository.save(request);
 
@@ -105,7 +106,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         pkg.setState(ON_VALID);
         baseEntityRepository.update(pkg);
 
-        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, "001", "0003", "");
+        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, "001", "0003", "IMEX");
 
         remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
 
@@ -130,7 +131,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         return  (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, package1.getId());
     }
 
-    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy, String custno, String acctype, String dealId, String subdealId, String sealSrc) {
+    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy, String custno, String acctype, String dealId, String subdealId, String dealSrc) {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(pkg);
         request.setLineNumber(lineNumber);
@@ -139,7 +140,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         request.setInCcy(ccy);
         request.setInCustno(custno);
         request.setInAcctype(acctype);
-        request.setInDealsrc(sealSrc);
+        request.setInDealsrc(dealSrc);
         request.setInDealid(dealId);
         request.setInSubdealid(subdealId);
         return  (AccountBatchRequest) baseEntityRepository.save(request);
