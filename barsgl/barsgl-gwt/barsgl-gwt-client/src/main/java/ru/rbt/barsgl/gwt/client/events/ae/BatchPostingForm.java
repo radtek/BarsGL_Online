@@ -59,6 +59,7 @@ public class BatchPostingForm extends OperBase {
         super.reconfigure();
         abw.addAction(_loadFile = createLoad(UploadFileType.Oper, ImageConstants.INSTANCE.load()));
         abw.addAction(_loadCard = createLoad(UploadFileType.Card, ImageConstants.INSTANCE.load_blue()));
+        _loadCard.setEnable(false);
         abw.addAction(_delete = createDelete());
         abw.addAction(_forward = createForward());
         abw.addAction(_backward = createBackward());

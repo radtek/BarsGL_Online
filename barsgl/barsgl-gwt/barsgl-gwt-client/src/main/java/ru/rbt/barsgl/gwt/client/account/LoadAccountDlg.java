@@ -3,7 +3,7 @@ package ru.rbt.barsgl.gwt.client.account;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
 import ru.rbt.barsgl.gwt.client.dictionary.BatchPostingFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
@@ -19,6 +19,7 @@ import ru.rbt.shared.user.AppUserWrapper;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.account.AccountBatchErrorForm.ViewType.V_LOAD;
+import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.DELETE;
@@ -53,6 +54,23 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
     @Override
     protected String getExampleName() {
         return "example_acc.xlsx";
+    }
+
+    @Override
+    public Widget createContent(){
+        VerticalPanel panel = new VerticalPanel();
+
+        createHiddenPanel(panel);
+        createFileUpload(panel);
+        createButtons(panel);
+        createResult(panel);
+        createExample(panel);
+        formPanel = createFormPanel(panel);
+
+        errorButton.setVisible(false);
+        panel.setSpacing(10);
+
+        return formPanel;
     }
 
     @Override
@@ -130,14 +148,15 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     @Override
     protected boolean acceptResponse(String[] list) {
-        idPackage = parseLong(list[1], ":");
-        Long all = parseLong(list[2], ":");
+        idPackage = parseLong(list[1], "пакет", ":");
+        Long all = parseLong(list[2], "всего", ":");
         switchButtonState(idPackage != null, false);
         return idPackage != null;
     }
 
     @Override
     protected boolean onClickOK() throws Exception {
+        // TODO оставаться на форме по аналогии с DELETE
         params = idPackage;
         showConfirm("Вы уверены, что хотите открыть счета?", this.getDlgEvents(), params);
         return false;
@@ -147,7 +166,6 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
     @Override
     public void afterShow() {
         switchControlsState(true);
-        errorButton.setVisible(false);
 
         showButton.setEnabled(false);
         deleteButton.setEnabled(false);

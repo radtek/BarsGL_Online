@@ -30,13 +30,12 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
  * Created by er18837 on 17.10.2018.
  */
 public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent {
-    private final static String LIST_DELIMITER = "#";
+    protected final static String LIST_DELIMITER = "#";
 
-    private final String BORDER_WIDTH = "120px";
-    private final String LABEL_WIDTH = "110px";
-    private final String FIELD_WIDTH = "300px";
+    protected final String LABEL_WIDTH = "130px";
+    protected final String FIELD_WIDTH = "300px";
 
-    private static final String UPLOAD_TYPE = "uploadtype";
+    protected static final String UPLOAD_TYPE = "uploadtype";
 
     protected FormPanel formPanel;
     protected FileUpload fileUpload;
@@ -48,12 +47,10 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected Button deleteButton;
     protected Panel loadingResult;
 
-    protected HorizontalPanel hidden;
+    protected Panel hidden;
     protected Hidden fileName;
 
     private RichAreaBox requestBox;
-
-    private Timer timer;
 
     public LoadFileAnyDlg(){
         super();
@@ -74,90 +71,43 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected abstract void onClickError(ClickEvent clickEvent);
 
     protected abstract boolean acceptResponse(String[] list);
-//    protected abstract void parseResponseBody(String[] list);
 
     @Override
     public Widget createContent(){
-        return createUploadPanelBase();
-    }
-
-    protected Panel createUploadPanelBase() {
         VerticalPanel panel = new VerticalPanel();
 
-        panel.add(new Hidden(UPLOAD_TYPE, getUploadType()));
+        createHiddenPanel(panel);
+        createFileUpload(panel);
+        createButtons(panel);
+        createResult(panel);
+        createExample(panel);
+        formPanel = createFormPanel(panel);
 
+        panel.setSpacing(10);
+
+        return formPanel;
+    }
+
+    protected Panel createHiddenPanel(Panel parentPanel) {
+        parentPanel.add(new Hidden(UPLOAD_TYPE, getUploadType()));
         hidden = new HorizontalPanel();
         fileName = new Hidden();
         fileName.setName("filename");
         hidden.add(fileName);
-        panel.add(fileName);
 
+        parentPanel.add(fileName);
+        return hidden;
+
+    }
+
+    protected FileUpload createFileUpload(Panel parentPanel) {
         Label selectLabel = Components.createLabel("Файл для загрузки");
-        panel.add(selectLabel);
+        parentPanel.add(selectLabel);
 
         fileUpload = new FileUpload();
         fileUpload.setName(getFileUploadName());
-        fileUpload.setWidth("500px");
-        panel.add(fileUpload);
-
-        Grid g2 = new Grid(1, 4);
-        g2.setWidget(0, 0, uploadButton = createUploadButton());
-        g2.setWidget(0, 1, errorButton = createErrorButton());
-        g2.setWidget(0, 2, showButton = createShowButton());
-        g2.setWidget(0, 3, deleteButton = createDeleteButton());
-/*
-        HorizontalPanel g2 = new HorizontalPanel();
-        g2.add(uploadButton = createUploadButton());
-        g2.add(errorButton = createErrorButton());
-        g2.add(showButton = createShowButton());
-        g2.add(deleteButton = createDeleteButton());
-*/
-        errorButton.setEnabled(false);
-        deleteButton.setEnabled(false);
-        showButton.setEnabled(false);
-        panel.add(g2);
-
-        loadingResult = new VerticalPanel();
-        loadingResult.setWidth("100%");
-        panel.add(loadingResult);
-
-        formPanel = new FormPanel();
-        formPanel.setWidget(panel);
-        formPanel.setAction(getServletUploadName());
-        formPanel.setEncoding(FormPanel.ENCODING_MULTIPART);
-        formPanel.setMethod(FormPanel.METHOD_POST);
-
-        final String urlExample = GWT.getHostPageBaseURL() + "excel/" + getExampleName();
-        HorizontalPanel hp = new HorizontalPanel();
-        hp.add(new Label("Скачать пример "));
-        anchorExample = new Anchor(getExampleName());
-        anchorExample.getElement().getStyle().setMarginLeft(10, Style.Unit.PX);
-        anchorExample.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                Window.open(urlExample, "_self", "disabled");
-            }
-        });
-        hp.add(anchorExample);
-
-        panel.add(hp);
-
-        formPanel.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
-            @Override
-            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-                switchControlsState(true);
-                loadingResult.clear();
-                String message = parseResponse(event.getResults());
-                if (!isEmpty(message)) {
-                    requestBox = new RichAreaBox();
-                    requestBox.setReadOnly(true);
-                    requestBox.setWidth("100%");
-                    requestBox.setHeight("200px");
-                    requestBox.setHTML(message.replaceAll(LIST_DELIMITER, "<BR>"));
-                    loadingResult.add(requestBox);
-                }
-            }
-        });
+        fileUpload.setWidth("100%");    // 500px
+        parentPanel.add(fileUpload);
 
         fileUpload.addChangeHandler(new ChangeHandler() {
             @Override
@@ -175,8 +125,73 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             }
         });
 
-        panel.setSpacing(10);
+        return fileUpload;
+    }
 
+    protected Panel createButtons(Panel parentPanel) {
+        Panel g2 = new HorizontalPanel();
+        g2.setWidth("100%");
+        g2.add(createAlignWidget(uploadButton = createUploadButton(), LABEL_WIDTH));
+        g2.add(createAlignWidget(errorButton = createErrorButton(), LABEL_WIDTH));
+        g2.add(createAlignWidget(showButton = createShowButton(), LABEL_WIDTH));
+        g2.add(createAlignWidget(deleteButton = createDeleteButton(), LABEL_WIDTH));
+
+        errorButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+        showButton.setEnabled(false);
+
+        parentPanel.add(g2);
+        return g2;
+    }
+
+    protected Panel createResult(Panel parentPanel) {
+        loadingResult = new VerticalPanel();
+        loadingResult.setWidth("100%");
+        parentPanel.add(loadingResult);
+        return loadingResult;
+    }
+
+    protected Panel createExample(Panel parentPanel) {
+        final String urlExample = GWT.getHostPageBaseURL() + "excel/" + getExampleName();
+        HorizontalPanel hp = new HorizontalPanel();
+        hp.add(new Label("Скачать пример "));
+        anchorExample = new Anchor(getExampleName());
+        anchorExample.getElement().getStyle().setMarginLeft(10, Style.Unit.PX);
+        anchorExample.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                Window.open(urlExample, "_self", "disabled");
+            }
+        });
+        hp.add(anchorExample);
+
+        parentPanel.add(hp);
+        return hp;
+    }
+
+    protected FormPanel createFormPanel(Panel parentPanel) {
+        formPanel = new FormPanel();
+        formPanel.setWidget(parentPanel);
+        formPanel.setAction(getServletUploadName());
+        formPanel.setEncoding(FormPanel.ENCODING_MULTIPART);
+        formPanel.setMethod(FormPanel.METHOD_POST);
+
+        formPanel.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
+            @Override
+            public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
+                switchControlsState(true);
+                loadingResult.clear();
+                String message = parseResponse(event.getResults());
+                if (!isEmpty(message)) {
+                    requestBox = new RichAreaBox();
+                    requestBox.setReadOnly(true);
+                    requestBox.setWidth("100%");
+                    requestBox.setHeight("200px");
+                    requestBox.setHTML(message.replaceAll(LIST_DELIMITER, "<BR>"));
+                    loadingResult.add(requestBox);
+                }
+            }
+        });
         return formPanel;
     }
 
@@ -191,18 +206,8 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             }
             if (response.startsWith(LIST_DELIMITER)) {
                 String[] list = response.split(LIST_DELIMITER);
-//                parseResponseBody(list);
-/*
-                idPackage = parseLong(list[1], "пакет", ":");
-                Long all = parseLong(list[2], "всего", ":");
-                Long err = parseLong(list[3], "с ошибкой", ":");
-                boolean isError = (null != err) && (err > 0);
-                errorButton.setEnabled(isError);
-                showButton.setEnabled(idPackage != null);
-                deleteButton.setEnabled(idPackage != null);
-                boolean isOk = !(idPackage == null || isError);
-*/
                 boolean isOk = acceptResponse(list);
+
                 ok.setEnabled(isOk);
                 switchControlsState(!isOk);
             }
@@ -212,7 +217,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         }
     }
 
-    protected Long parseLong(String stringWithNumber, String delim) {
+    protected Long parseLong(String stringWithNumber, String text, String delim) {
         int index;
         if (!isEmpty(stringWithNumber) && (index = stringWithNumber.indexOf(delim)) >= 0) {
             try {
@@ -250,14 +255,6 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
                     loadingResult.clear();
 
                     onClickUpload(event);
-/*
-                    idPackage = null;
-                    CheckNotEmptyString check = new CheckNotEmptyString();
-                    source.setValue(check((String) mSource.getValue()
-                            , "Источник сделки", "поле не заполнено", check));
-                    department.setValue((String) mDepartment.getValue());
-                    movementOff.setValue(excludeOper.getValue().toString());
-*/
 
                     String filename = check(fileUpload.getFilename(), "Файл для загрузки", "не выбран", new CheckNotEmptyString());
 
