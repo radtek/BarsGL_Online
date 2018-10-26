@@ -122,6 +122,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         package1.setState(AccountBatchPackageState.IS_LOAD);
         package1.setLoadUser("system");
         package1.setFileName("file1.xlsx");
+        package1.setProcUser("er21006");
         package1 = (AccountBatchPackage) baseEntityRepository.save(package1);
 
         Assert.assertTrue(0 < package1.getId());
