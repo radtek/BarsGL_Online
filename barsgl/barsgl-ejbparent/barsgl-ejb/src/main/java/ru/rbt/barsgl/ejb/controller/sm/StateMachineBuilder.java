@@ -24,4 +24,9 @@ public class StateMachineBuilder<State extends Enum, Event extends Enum,  Entity
         return this;
     }
 
+    public StateMachineBuilder<State, Event,  Entity> addStateTrigger(State state, Class<? extends StateTrigger> triggerClass) {
+        sm.addOnStateEnterTrigger(state, triggerClass);
+        return this;
+    }
+
 }

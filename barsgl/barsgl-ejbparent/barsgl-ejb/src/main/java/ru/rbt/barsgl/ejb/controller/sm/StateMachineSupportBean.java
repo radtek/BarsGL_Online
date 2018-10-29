@@ -24,6 +24,9 @@ public class StateMachineSupportBean implements StateMachineSupport {
     @Inject
     private Instance<StateAction<?,?>> actions;
 
+    @Inject
+    private Instance<StateTrigger<?>> stateTriggers;
+
     @EJB
     private CoreRepository repository;
 
@@ -58,6 +61,13 @@ public class StateMachineSupportBean implements StateMachineSupport {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    @Override
+    public <Entity extends StatefullObject, T extends StateTrigger<?>> void fireTrigger(Entity entity
+            , Class<T> triggerClass) throws StateMachineException {
+        StateTrigger trigger = ServerUtils.findAssignable(triggerClass, stateTriggers);
+        trigger.onStateEnter(entity);
     }
 
     @Override

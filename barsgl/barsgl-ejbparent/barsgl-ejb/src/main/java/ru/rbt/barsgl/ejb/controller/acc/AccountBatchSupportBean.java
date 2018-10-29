@@ -134,7 +134,7 @@ public class AccountBatchSupportBean {
         }
     }
 
-    private void updatePackageState(long batchPackageId, long cntErrors) {
+    public void updatePackageState(long batchPackageId, long cntErrors) {
         try {
             repository.executeInNewTransaction(persistence -> {
                 repository.executeUpdate("update AccountBatchPackage p set p.cntErrors = ?1, p.validateEndDate = ?2 where p.id = ?3", cntErrors, operdayController.getSystemDateTime(), batchPackageId);
@@ -145,19 +145,22 @@ public class AccountBatchSupportBean {
         }
     }
 
+    public DataRecord getPackageValidateStatistics(AccountBatchPackage batchPackage) throws SQLException {
+        return repository.selectFirst(
+                "select nvl(sum(case when state = 'VALID' then 1 else 0 end),0) valid\n" +
+                        "       , nvl(sum(case when state = 'ERRCHK' then 1 else 0 end),0) erchk\n" +
+                        "       , nvl(sum(case when state not in ('ERRCHK','VALID') then 1 else 0 end),0) other\n" +
+                        "  from GL_ACBATREQ where ID_PKG = ?", batchPackage.getId());
+    }
+
     private boolean checkPackageRequestsState(AccountBatchPackage batchPackage) {
         try {
-            DataRecord pkgStat = repository.selectFirst(
-                    "select nvl(sum(case when state = 'VALID' then 1 else 0 end),0) valid\n" +
-                            "       , nvl(sum(case when state = 'ERRCHK' then 1 else 0 end),0) erchk\n" +
-                            "       , nvl(sum(case when state not in ('ERRCHK','VALID') then 1 else 0 end),0) other\n" +
-                            "  from GL_ACBATREQ where ID_PKG = ?", batchPackage.getId());
+            DataRecord pkgStat = getPackageValidateStatistics(batchPackage);
             long erchk = pkgStat.getLong("ERCHK"); long other = pkgStat.getLong("OTHER"); long valid = pkgStat.getLong("VALID");
 
             if (erchk > 0 || other > 0) {
                 auditController.error(AccountBatch, format("Не прошла полная валидация запросов пакета '%s': всего запросов '%s', ошибок '%s', в других статусах '%s'"
                         , batchPackage, erchk + other + valid, erchk, other), null, "");
-                updatePackageState(batchPackage.getId(), erchk);
                 return false;
             }
             return true;

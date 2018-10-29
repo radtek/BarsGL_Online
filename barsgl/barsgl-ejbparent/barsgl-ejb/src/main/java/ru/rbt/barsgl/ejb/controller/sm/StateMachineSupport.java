@@ -10,6 +10,9 @@ public interface StateMachineSupport {
 
     <Event extends Enum, Entity extends StatefullObject> Event executeAction(Entity entity, Transition transition) throws StateMachineException;
 
+    <Entity extends StatefullObject, T extends StateTrigger<?>> void fireTrigger(Entity entity
+            , Class<T> triggerClass) throws StateMachineException;
+
     <Entity extends StatefullObject> void updateToTargetState(final Entity entity, Transition transition);
 
     <O extends StatefullObject> O refreshStatefullObject(O statefullObject);

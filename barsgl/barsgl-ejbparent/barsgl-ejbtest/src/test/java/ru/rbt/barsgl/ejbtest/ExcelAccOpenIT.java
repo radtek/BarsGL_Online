@@ -142,6 +142,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
         pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
         Assert.assertEquals(ERROR, pkg.getState());
+        Assert.assertTrue(1 == pkg.getCntErrors());
 
         request1 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request1.getId());
         Assert.assertEquals(AccountBatchState.VALID, request1.getState());

@@ -5,7 +5,9 @@ import ru.rbt.shared.Assert;
 
 import javax.naming.InitialContext;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -20,12 +22,17 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
     private static final Logger logger = Logger.getLogger(StateMachine.class.getName());
 
     private List<Transition< State, Event>> transitions = new ArrayList<>();
+    private Map<State, Class<? extends StateTrigger>> triggers = new HashMap<>();
 
     StateMachine() {
     }
 
     void addTransition(Transition<State, Event> transition) {
         transitions.add(transition);
+    }
+
+    void addOnStateEnterTrigger(State state, Class<? extends StateTrigger> trigger) {
+        triggers.putIfAbsent(state, trigger);
     }
 
     public void acceptEvent(Entity entity, Event event) throws Exception {
@@ -43,6 +50,10 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
                 acceptEvent(entity0, newEvent);
             }
             if (checkCurrentState(supportBean, transition, entity)) {
+                Class<? extends StateTrigger> triggerClass = findStateTrigger((State) transition.getTo());
+                if (null != triggerClass) {
+                    supportBean.fireTrigger(entity, triggerClass);
+                }
                 supportBean.updateToTargetState(entity, transition);
             } else {
                 logger.log(Level.WARNING
@@ -75,6 +86,10 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
             logger.log(Level.WARNING, e.getMessage(), e);
             return false;
         }
+    }
+
+    private Class<? extends StateTrigger> findStateTrigger(State state) {
+        return triggers.get(state);
     }
 
 }
