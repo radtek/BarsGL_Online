@@ -60,7 +60,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         final String custno = "00151555";
         final String acctype = "161020100";
         final String cbcusttype = "18";
-        final String term = "7";
+        final String term = "04";
         final String sealSrc = "IMEX";
         final String dealid = "511_A073C_18";
         final String subdealid = "00151555RURCL0P00171";
@@ -73,7 +73,8 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         // формируем пакет
         AccountBatchPackage pkg = createPackage();
 
-        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc);
+        AccountBatchRequest request1 = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc, term);
+        AccountBatchRequest request2 = createBatchRequest(pkg, 2L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc, "05");
 
         // валидируем
         remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
@@ -87,11 +88,55 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
         Assert.assertEquals(IS_VALID, pkg.getState());
 
-        request = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request.getId());
-        Assert.assertEquals(AccountBatchState.VALID, request.getState());
+        request1 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request1.getId());
+        Assert.assertEquals(AccountBatchState.VALID, request1.getState());
 
-        // обрабатываем
+        request2 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request2.getId());
+        Assert.assertEquals(AccountBatchState.VALID, request2.getState());
 
+    }
+
+    @Test public void testValidationErrorMulti() {
+        final String branch = "001";
+        final String ccy = "RUR";
+        final String custno = "00151555";
+        final String acctype = "161020100";
+        final String cbcusttype = "18";
+        final String term = "04";
+        final String sealSrc = "IMEX";
+        final String dealid = "511_A073C_18";
+        final String subdealid = "00151555RURCL0P00171";
+
+        // готовим счет
+        log.info("deleted accounts: " + baseEntityRepository.executeNativeUpdate(
+                "delete from gl_acc where BRANCH = ? and CCY = ? and CUSTNO = ? and ACCTYPE = ? and CBCUSTTYPE = ? and TERM = ? and DEALID = ? and SUBDEALID = ?"
+                ,branch,ccy,custno,acctype,cbcusttype,term,dealid,subdealid));
+
+        // формируем пакет
+        AccountBatchPackage pkg = createPackage();
+
+        AccountBatchRequest request1 = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc, term);
+        AccountBatchRequest request2 = createBatchRequest(pkg, 1L, branch, ccy, custno, "161020222", dealid, subdealid, sealSrc, term);
+
+        // валидируем
+        remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ON_VALID, pkg.getState());
+
+        // проверяем состояние
+
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ON_VALID, pkg.getState());
+
+        remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ERROR, pkg.getState());
+
+        request1 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request1.getId());
+        Assert.assertEquals(AccountBatchState.VALID, request1.getState());
+
+        request2 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request2.getId());
+        Assert.assertEquals(AccountBatchState.ERRCHK, request2.getState());
     }
 
     @Test
@@ -106,7 +151,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         pkg.setState(ON_VALID);
         baseEntityRepository.update(pkg);
 
-        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, "001", "0003", "IMEX");
+        AccountBatchRequest request = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, "001", "0003", "IMEX", "00");
 
         remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
 
@@ -131,7 +176,8 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         return  (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, package1.getId());
     }
 
-    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy, String custno, String acctype, String dealId, String subdealId, String dealSrc) {
+    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy
+            , String custno, String acctype, String dealId, String subdealId, String dealSrc, String term) {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(pkg);
         request.setLineNumber(lineNumber);
@@ -143,6 +189,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         request.setInDealsrc(dealSrc);
         request.setInDealid(dealId);
         request.setInSubdealid(subdealId);
+        request.setInTerm(term);
         return  (AccountBatchRequest) baseEntityRepository.save(request);
     }
 

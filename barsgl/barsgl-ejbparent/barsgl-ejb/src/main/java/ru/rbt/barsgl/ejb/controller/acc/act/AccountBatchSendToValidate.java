@@ -11,6 +11,6 @@ public class AccountBatchSendToValidate extends AbstractAccountBatchAction{
 
     @Override
     public AccountBatchPackageEvent proceed(AccountBatchPackage stateObject, Transition transition) {
-        return AccountBatchPackageEvent.VALIDATE;
+        return null;
     }
 }

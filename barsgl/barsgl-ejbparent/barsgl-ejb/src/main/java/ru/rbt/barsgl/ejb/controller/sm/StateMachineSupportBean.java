@@ -1,13 +1,12 @@
 package ru.rbt.barsgl.ejb.controller.sm;
 
 import ru.rbt.barsgl.ejb.controller.acc.act.AccountBatchSendToValidate;
+import ru.rbt.barsgl.ejbcore.BarsglPersistenceProvider;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
 import ru.rbt.ejbcore.util.ServerUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.util.logging.Logger;
@@ -31,8 +30,10 @@ public class StateMachineSupportBean implements StateMachineSupport {
     @Inject
     private AccountBatchSendToValidate start;
 
+    @Inject
+    private BarsglPersistenceProvider persistenceProvider;
+
     @SuppressWarnings("All")
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public <Event extends Enum, Entity extends StatefullObject> Event executeAction(Entity entity, Transition transition) throws StateMachineException {
         if (null != transition.getActionClass()) {
             try {
@@ -61,6 +62,8 @@ public class StateMachineSupportBean implements StateMachineSupport {
 
     @Override
     public <O extends StatefullObject> O refreshStatefullObject(O statefullObject) {
-        return (O) repository.refresh(statefullObject, true);
+        StatefullObject attached = (StatefullObject) repository.refresh(statefullObject, true);
+        persistenceProvider.getDefaultPersistence().refresh(attached);
+        return (O) attached;
     }
 }

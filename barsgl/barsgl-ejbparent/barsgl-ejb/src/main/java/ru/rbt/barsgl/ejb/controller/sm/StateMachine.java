@@ -39,18 +39,20 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
         if (1 == filteredTransitions.size()) {
             Transition transition = filteredTransitions.get(0);
             Event newEvent = supportBean.executeAction(entity, transition);
-
-            checkCurrentState(supportBean, transition, entity);
-
-            supportBean.updateToTargetState(entity, transition);
-
             if (null != newEvent) {
                 acceptEvent(entity0, newEvent);
             }
+            if (checkCurrentState(supportBean, transition, entity)) {
+                supportBean.updateToTargetState(entity, transition);
+            } else {
+                logger.log(Level.WARNING
+                        , format("Не прошла проверка на обновление объекта %s в целевой статус: %s. Статус объекта не изменен."
+                        , entity, transition.getTo()));
+            }
         } else if (filteredTransitions.isEmpty()) {
-            logger.log(Level.WARNING, format("Не найдено допустимого перехода для события '%s' на объекте '%s'", entity, entity));
+            logger.log(Level.WARNING, format("Не найдено допустимого перехода для события '%s' на объекте '%s' в статуса '%s'", event, entity, entity.getState()));
         } else {
-            throw new StateMachineException(format("Найдено более одного перехода для события '%s' на объекте '%s'", entity, entity));
+            throw new StateMachineException(format("Найдено более одного перехода для события '%s' на объекте '%s'", event, entity));
         }
     }
 
@@ -62,11 +64,17 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
         }
     }
 
-    private void checkCurrentState(StateMachineSupport supportBean, Transition transition, Entity entity) throws StateMachineException {
-        Entity entity1 = supportBean.refreshStatefullObject(entity);
-        Assert.isTrue(transition.getFrom() == entity1.getState()
-                , () -> new StateMachineException(format("Текущий статус '%s' объекта '%s' отличается от ожидаемого '%s' для обновления в целевой статус '%s'"
-                        , entity1.getState(), entity1, transition.getFrom(), transition.getTo())));
+    private boolean checkCurrentState(StateMachineSupport supportBean, Transition transition, Entity entity) throws StateMachineException {
+        try {
+            Entity entity1 = supportBean.refreshStatefullObject(entity);
+            Assert.isTrue(transition.getFrom() == entity1.getState()
+                    , () -> new StateMachineException(format("Текущий статус '%s' объекта '%s' отличается от ожидаемого '%s' для обновления в целевой статус '%s'"
+                            , entity1.getState(), entity1, transition.getFrom(), transition.getTo())));
+            return true;
+        } catch (StateMachineException e) {
+            logger.log(Level.WARNING, e.getMessage(), e);
+            return false;
+        }
     }
 
 }
