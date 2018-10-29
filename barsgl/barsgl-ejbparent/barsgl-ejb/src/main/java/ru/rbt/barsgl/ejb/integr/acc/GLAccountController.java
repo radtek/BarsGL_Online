@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejb.integr.acc;
 import org.apache.log4j.Logger;
 import ru.rb.ucb.util.AccountUtil;
 import ru.rbt.audit.controller.AuditController;
-import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.*;
 import ru.rbt.barsgl.ejb.entity.dict.AccType.ActParm;
@@ -49,7 +48,6 @@ import static ru.rbt.barsgl.ejb.entity.acc.GLAccount.RelationType.*;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.N;
 import static ru.rbt.ejbcore.util.StringUtils.*;
-import static ru.rbt.ejbcore.util.StringUtils.currencyFirstCharToNum;
 import static ru.rbt.ejbcore.validation.ErrorCode.*;
 
 /**
@@ -379,13 +377,13 @@ public class GLAccountController {
     }
 
 
-    @Lock(LockType.WRITE)
+    @Lock(LockType.READ)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLAccountMnl(AccountKeys keys, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
         return internalCreateGLAccountMnl(keys, FOUR, descriptors, dateOpen, openType);
     }
 
-    @Lock(LockType.WRITE)
+    @Lock(LockType.READ)
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public GLAccount createGLAccountMnlInRequiredTrans(AccountKeys keys, GLAccount.RelationType rlnType, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
         return internalCreateGLAccountMnl(keys, rlnType, descriptors, dateOpen, openType);
