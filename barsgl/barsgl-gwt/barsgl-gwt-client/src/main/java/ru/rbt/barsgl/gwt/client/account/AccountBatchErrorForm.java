@@ -27,6 +27,7 @@ public class AccountBatchErrorForm extends GridForm {
 
     ViewType _viewType;
     protected Column _colIdPackage;
+    protected Column _colState;
     protected Column _colRow;
     protected Column _colBsaacid;
     protected Column _colError;
@@ -57,8 +58,8 @@ public class AccountBatchErrorForm extends GridForm {
         result.addColumn(_colIdPackage = new Column("ID_PKG", Column.Type.LONG, "ID пакета", 60));
         result.addColumn(_colRow = new Column("RECNO", Column.Type.INTEGER, "Номер строки", 70));
 
-        result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус запроса", 100));
-        col.setList(getEnumLabelsList(AccountBatchState.values()));
+        result.addColumn(_colState = new Column("STATE", Column.Type.STRING, "Статус запроса", 100));
+        _colState.setList(getEnumLabelsList(AccountBatchState.values()));
 
         result.addColumn(_colError = new Column("ERROR_MSG", Column.Type.STRING, "Описание ошибки", 800));
 

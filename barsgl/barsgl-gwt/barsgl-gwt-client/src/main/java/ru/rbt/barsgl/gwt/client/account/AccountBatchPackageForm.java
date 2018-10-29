@@ -52,7 +52,7 @@ import static ru.rbt.shared.enums.SecurityActionCode.AccPkgFileOpen;
 public class AccountBatchPackageForm extends GridForm {
     public static final String FORM_NAME = "Пакеты для загрузки счетов";
 
-    private Boolean _ownMessages;
+    private Boolean _ownMessages = null;
     private int _indIdPackage;
 
     protected Column _colProcDate;
@@ -76,7 +76,7 @@ public class AccountBatchPackageForm extends GridForm {
         quickFilterAction.execute();
     }
 
-    public AccountBatchPackageForm(boolean ownMessages) {
+    public AccountBatchPackageForm(Boolean ownMessages) {
         super(FORM_NAME, false);
         _select = getSelectClause();
         _ownMessages = ownMessages;
@@ -93,7 +93,7 @@ public class AccountBatchPackageForm extends GridForm {
         abw.addSecureAction(_openAccounts = createCommand(ImageConstants.INSTANCE.add_list(), OPEN, "Открыть счета пакета"), AccPkgFileLoad, AccPkgFileOpen);
         abw.addSecureAction(_delPackage = createCommand(ImageConstants.INSTANCE.del_list(), DELETE, "Удалить пакет"), AccPkgFileLoad, AccPkgFileDel);
         abw.addAction(_viewError = createView(ImageConstants.INSTANCE.err_list(), V_ERROR, "Просмотр ошибок пакета"));
-        abw.addAction(_viewFull = createView(ImageConstants.INSTANCE.preview(), V_FULL, "Просмотр счетов пакета"));
+        abw.addAction(_viewFull = createView(ImageConstants.INSTANCE.preview(), V_FULL, "Просмотр пакета"));
         abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go(), "Переход на форму счетов по пакету"));
 //        abw.addAction(new PackageStatisticsAction(grid));
 
@@ -177,7 +177,7 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     protected String getOwnMessagesClause(Boolean ownMessages){
-        if (!ownMessages) return "";
+        if (ownMessages == null || !ownMessages) return "";
 
         AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
         if (wrapper == null) return "";
@@ -325,11 +325,14 @@ public class AccountBatchPackageForm extends GridForm {
                 final Long idPackage = getIdPackage();
                 if (idPackage == null) return ;
 
-                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(_ownMessages){
+                Boolean ownMessage = _ownMessages == null ? false : _ownMessages;
+                BarsGLEntryPoint.menuBuilder.formLoad(new AccountBatchForm(ownMessage){
                     @Override
                     protected List<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
                         ArrayList<FilterItem> list = new ArrayList<>();
                         List<FilterItem> listPkg =  AccountBatchPackageForm.this.grid.getFilterCriteria();
+                        if (listPkg == null)
+                            listPkg = new ArrayList<>();
                         for (FilterItem item : listPkg) {
                             if (item.getName().equals(_colProcDate.getName()))
                                 list.add(item);

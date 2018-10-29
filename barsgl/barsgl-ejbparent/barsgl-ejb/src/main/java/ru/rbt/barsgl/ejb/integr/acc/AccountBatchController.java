@@ -89,7 +89,7 @@ public class AccountBatchController {
     }
 
     public RpcRes_Base<AccountBatchWrapper> authorizePackage(AccountBatchWrapper wrapper) throws Exception {
-        AccountBatchPackage pkg = getPackageWithCheck(wrapper, IS_LOAD);
+        AccountBatchPackage pkg = getPackageWithCheck(wrapper, "открыть счета пакета", IS_LOAD);
 
         Date curdate = operdayController.getOperday().getCurrentDate();
         if (!curdate.equals(pkg.getOperday()))
@@ -111,11 +111,14 @@ public class AccountBatchController {
         wrapper.setPackageState(ON_VALID);
         String msg = "Пакет счетов с ID = " + wrapper.getPackageId() + " передан на обработку";
         auditController.info(AccountBatch, msg, tableName, getPackageId(wrapper));
-        return new RpcRes_Base<>(wrapper, false, msg);
+        return new RpcRes_Base<>(wrapper, false, msg +
+                "\n\nСчета будут открыты после успешной валидации всего пакета" +
+                "\nТекущее состояние и результат обработки пакета можно" +
+                "\nпосмотреть на странице пакетов или счетов по ID пакета = " + wrapper.getPackageId());
     }
 
     public RpcRes_Base<AccountBatchWrapper> deletePackage(AccountBatchWrapper wrapper) throws Exception {
-        AccountBatchPackage pkg = getPackageWithCheck(wrapper, IS_LOAD);
+        AccountBatchPackage pkg = getPackageWithCheck(wrapper, "удалить пакет счетов", IS_LOAD, ERROR);
 
         AccountBatchPackageState packageState = pkg.getState();
         if (!(packageState == IS_LOAD || packageState == ERROR))
@@ -143,18 +146,18 @@ public class AccountBatchController {
         return new RpcRes_Base<>(wrapper, false, "Пакет счетов с ID = " + wrapper.getPackageId() + " удален");
     }
 
-    private AccountBatchPackage getPackageWithCheck(AccountBatchWrapper wrapper, AccountBatchPackageState... packageState) throws SQLException {
+    private AccountBatchPackage getPackageWithCheck(AccountBatchWrapper wrapper, String msg, AccountBatchPackageState... allowedPackageState) throws SQLException {
         Long id = wrapper.getPackageId();
         final AccountBatchPackage pkg = packageRepository.findById(id);
         if (null == pkg ) {
             throw new ValidationError(ACCOUNT_BATCH_ERROR, "Не найден пакет с ID = " + id + ". Обновите информацию");
         }
         Set<AccountBatchPackageState> states = new HashSet<AccountBatchPackageState>();
-        if (packageState != null) {
-            states.addAll(Arrays.asList(packageState));
+        if (allowedPackageState != null) {
+            states.addAll(Arrays.asList(allowedPackageState));
             if (!states.contains(pkg.getState())) {
                 throw new ValidationError(ACCOUNT_BATCH_ERROR,
-                        String.format("Пакет ID = %s: нельзя открыть счета пакета в статусе: '%s' ('%s'). Обновите информацию",
+                        String.format("Пакет ID = %s: нельзя " + msg + " в статусе: '%s' ('%s'). Обновите информацию",
                                 id, pkg.getState(), pkg.getState().getLabel()));
             }
         }

@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -105,8 +106,11 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
             return "Нет строк для загрузки!";
 
         String result = new StringBuffer().append(LIST_DELIMITER)
+                .append("Пакет успешно загружен").append(LIST_DELIMITER)
                 .append("ID пакета: ").append(batchPackage.getId()).append(LIST_DELIMITER)
                 .append("Загружено строк всего: ").append(batchPackage.getCntRequests()).append(LIST_DELIMITER)
+                .append(LIST_DELIMITER).append("Проверьте содержимое пакета по кнопке \"Просмотр пакета\"").append(LIST_DELIMITER)
+                .append("После чего нажмите кнопку \"Открыть счета\"")
                 .toString();
         // TODO подробней
         auditController.info(AccountBatch, "Загружен пакет счетов из файла.\n" + result, BatchPackage.class.getName(), batchPackage.getId().toString());
@@ -135,10 +139,11 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         boolean allBranches = allowedBranches.get(0).equals("*");
         List<AccountBatchRequest> requests = new ArrayList<>();
         Date curdate = operdayController.getOperday().getCurrentDate();
+        Date startDate = new SimpleDateFormat("yyyy-mm-dd").parse("2000-01-01");
         int row = START_ROW;
         if (it.hasNext()) {
             while (it.hasNext()) {
-                AccountBatchRequest request = createRequest(it.next(), row, curdate, errorList);
+                AccountBatchRequest request = createRequest(it.next(), row, startDate, null, errorList);
                 if (null != request) {
                     if (!allBranches && !allowedBranches.contains(request.getInBranch())) {
                         errorList.add(format("%s У вас нет прав на открытие счетов в бранче '%s'", getLocation(row, I_Branch), request.getInBranch()));
@@ -171,7 +176,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         return pkg;
     }
 
-    public AccountBatchRequest createRequest(List<Object> rowParams, int row, Date curdate, List<String> errorList) throws ParamsParserException {
+    public AccountBatchRequest createRequest(List<Object> rowParams, int row, Date dateFrom, Date dateTo, List<String> errorList) throws ParamsParserException {
         if (null == rowParams || rowParams.isEmpty())
             return null;
 
@@ -189,7 +194,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         request.setInDealsrc(getString(rowParams, row, I_Dealsrc, true, 8, false, errorList));     // required
         request.setInDealid(getString(rowParams, row, I_Dealid, false, 20, false, errorList));
         request.setInSubdealid(getString(rowParams, row, I_Subdealid, false, 20, false, errorList));
-        request.setInOpendate(getDate(rowParams, row, I_Opendate, false, curdate, errorList));
+        request.setInOpendate(getDate(rowParams, row, I_Opendate, false, dateFrom, dateTo, errorList));
 
         request.setLineNumber(getRowNumber(row));
         request.setState(AccountBatchState.LOAD);

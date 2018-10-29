@@ -180,9 +180,12 @@ public abstract class UploadProcessorBase {
             return null;
     }
 
-    protected Date getDate(List<Object> rowParams, int row, int index, boolean notNull, Date toDate, List<String> errorList) throws ParamsParserException {
+    protected Date getDate(List<Object> rowParams, int row, int index, boolean notNull, Date fromDate, Date toDate, List<String> errorList) throws ParamsParserException {
         Date date = getValue(rowParams, row, index, notNull, java.util.Date.class, errorList);
-        if (null != toDate && null != date && date.after(toDate)) {
+        if (null != fromDate && null != date && date.before(fromDate)) {
+            errorList.add(format("%s Неверная дата: '%s', должна быть >= '%s'", getLocation(row, index), onlyDate.format(date), onlyDate.format(fromDate)));
+        }
+        else if (null != toDate && null != date && date.after(toDate)) {
             errorList.add(format("%s Неверная дата: '%s', должна быть <= '%s'", getLocation(row, index), onlyDate.format(date), onlyDate.format(toDate)));
         }
         return date;

@@ -90,22 +90,6 @@ abstract public class LoadOperDlgBase extends LoadFileAnyDlg {
     }
 
     @Override
-    public Widget createContent(){
-        VerticalPanel panel = new VerticalPanel();
-
-        createHiddenPanel(panel);
-        createDataPanel(panel, hidden);
-        createFileUpload(panel);
-        createButtons(panel);
-        createResult(panel);
-        createExample(panel);
-        formPanel = createFormPanel(panel);
-
-        panel.setSpacing(10);
-
-        return formPanel;
-    }
-
     protected Panel createDataPanel(Panel parentPanel, Panel hiddenPanel) {
         Grid g = new Grid(2, 2);
         parentPanel.add(g);
@@ -168,7 +152,7 @@ abstract public class LoadOperDlgBase extends LoadFileAnyDlg {
                     deleteButton.setEnabled(false);
                     showButton.setEnabled(false);
                     errorButton.setEnabled(false);
-                    loadingResult.clear();
+                    clearResult();
                     idPackage = null;
                     showInfo("Информация", wrapper.getMessage());
                 }

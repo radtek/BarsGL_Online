@@ -23,6 +23,7 @@ import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.DELETE;
+import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.OPEN;
 
 /**
  * Created by er18837 on 17.10.2018.
@@ -30,6 +31,7 @@ import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAct
 public class LoadAccountDlg extends LoadFileAnyDlg {
     public static final String TITLE = "Загрузка счетов из Excel файла";
     private Long idPackage = null;
+    private Long allCount = null;
 
     public LoadAccountDlg(){
         super();
@@ -58,56 +60,10 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     @Override
     public Widget createContent(){
-        VerticalPanel panel = new VerticalPanel();
-
-        createHiddenPanel(panel);
-        createFileUpload(panel);
-        createButtons(panel);
-        createResult(panel);
-        createExample(panel);
-        formPanel = createFormPanel(panel);
-
+        super.createContent();
         errorButton.setVisible(false);
-        panel.setSpacing(10);
 
         return formPanel;
-    }
-
-    @Override
-    protected void onClickDelete(ClickEvent clickEvent) {
-        showConfirm("Вы уверены, что хотите удалить пакет?",
-                new IDlgEvents() {
-                    @Override
-                    public void onDlgOkClick(Object p) throws Exception {
-                        executeCommand(DELETE);
-                    }
-                },
-                null);
-    }
-
-    private void executeCommand(final AccountBatchWrapper.AccountBatchAction batchAction) {
-        AccountBatchWrapper wrapper = new AccountBatchWrapper();
-        wrapper.setPackageId((Long) idPackage);
-        wrapper.setAction(batchAction);
-
-        AppUserWrapper appUserWrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
-        wrapper.setUserId(appUserWrapper.getId());
-
-        BarsGLEntryPoint.accountService.processAccountBatchRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<AccountBatchWrapper>>() {
-            @Override
-            public void onSuccess(RpcRes_Base<AccountBatchWrapper> wrapper) {
-                if (wrapper.isError()) {
-                    showInfo("Ошибка", wrapper.getMessage());
-                } else {
-                    switchControlsState(true);
-                    switchButtonState(false, false);
-                    loadingResult.clear();
-                    idPackage = null;
-                    showInfo("Информация", wrapper.getMessage());
-                }
-            }
-        });
-
     }
 
     @Override
@@ -148,12 +104,25 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     @Override
     protected boolean acceptResponse(String[] list) {
-        idPackage = parseLong(list[1], "пакет", ":");
-        Long all = parseLong(list[2], "всего", ":");
+        idPackage = parseLong(list[2], "пакет", ":");
+        allCount = parseLong(list[3], "всего", ":");
         switchButtonState(idPackage != null, false);
         return idPackage != null;
     }
 
+    @Override
+    protected void onClickDelete(ClickEvent clickEvent) {
+        showConfirm("Вы уверены, что хотите удалить пакет?",
+                new IDlgEvents() {
+                    @Override
+                    public void onDlgOkClick(Object p) throws Exception {
+                        executeCommand(DELETE, false);
+                    }
+                },
+                null);
+    }
+
+/*
     @Override
     protected boolean onClickOK() throws Exception {
         // TODO оставаться на форме по аналогии с DELETE
@@ -161,7 +130,49 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
         showConfirm("Вы уверены, что хотите открыть счета?", this.getDlgEvents(), params);
         return false;
     }
+*/
+    @Override
+    protected boolean onClickOK() {
+        showConfirm("Вы уверены, что хотите открыть счета?",
+            new IDlgEvents() {
+                @Override
+                public void onDlgOkClick(Object p) throws Exception {
+                    executeCommand(OPEN, true);
+                }
+            },
+            null);
+        return false;
+    }
 
+    private void executeCommand(final AccountBatchWrapper.AccountBatchAction batchAction, final boolean showEnable) {
+        AccountBatchWrapper wrapper = new AccountBatchWrapper();
+        wrapper.setPackageId(idPackage);
+        wrapper.setAction(batchAction);
+
+        AppUserWrapper appUserWrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
+        wrapper.setUserId(appUserWrapper.getId());
+
+        BarsGLEntryPoint.accountService.processAccountBatchRq(wrapper, new AuthCheckAsyncCallback<RpcRes_Base<AccountBatchWrapper>>() {
+            @Override
+            public void onSuccess(RpcRes_Base<AccountBatchWrapper> wrapper) {
+                if (wrapper.isError()) {
+                    showInfo("Ошибка", wrapper.getMessage());
+                } else {
+                    switchControlsState(false);
+                    showButton.setEnabled(showEnable);
+                    deleteButton.setEnabled(false);
+                    ok.setEnabled(false);
+//                    idPackage = null;
+                    if (wrapper.getMessage() != null) {
+                        showResult(wrapper.getMessage().replaceAll("\n", "<BR>"));
+                    } else {
+                        clearResult();
+                    }
+                }
+            }
+        });
+
+    }
 
     @Override
     public void afterShow() {
@@ -170,7 +181,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
         showButton.setEnabled(false);
         deleteButton.setEnabled(false);
         ok.setEnabled(false);
-        loadingResult.clear();
+        clearResult();
     }
 
 }

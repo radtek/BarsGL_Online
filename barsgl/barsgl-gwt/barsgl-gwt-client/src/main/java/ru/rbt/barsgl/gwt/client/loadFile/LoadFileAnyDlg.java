@@ -7,10 +7,8 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
-import org.apache.commons.lang3.ArrayUtils;
 import ru.rbt.barsgl.gwt.client.check.CheckFileExtention;
 import ru.rbt.barsgl.gwt.client.check.CheckNotEmptyString;
 import ru.rbt.barsgl.gwt.core.comp.Components;
@@ -18,9 +16,6 @@ import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.dialogs.IAfterShowEvent;
 import ru.rbt.barsgl.gwt.core.ui.RichAreaBox;
 import ru.rbt.security.gwt.client.security.SecurityEntryPoint;
-
-import java.sql.Array;
-import java.util.Arrays;
 
 import static ru.rbt.barsgl.gwt.core.comp.Components.createAlignWidget;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.check;
@@ -32,6 +27,8 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
 public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent {
     protected final static String LIST_DELIMITER = "#";
 
+    protected final String BT_LOAD_WIDTH = "115px";
+    protected final String BUTTON_WIDTH = "130px";
     protected final String LABEL_WIDTH = "130px";
     protected final String FIELD_WIDTH = "300px";
 
@@ -65,6 +62,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected abstract String getUploadType();
     protected abstract String getExampleName();
 
+    protected Panel createDataPanel(Panel parentPanel, Panel hiddenPanel) {return null;};
     protected abstract void onClickDelete(ClickEvent clickEvent);
     protected abstract void onClickUpload(ClickEvent clickEvent);
     protected abstract void onClickShow(ClickEvent clickEvent);
@@ -77,6 +75,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         VerticalPanel panel = new VerticalPanel();
 
         createHiddenPanel(panel);
+        createDataPanel(panel, hidden);
         createFileUpload(panel);
         createButtons(panel);
         createResult(panel);
@@ -114,14 +113,14 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             public void onChange(ChangeEvent event) {
                 switchControlsState(true);
                 switchButtonState(false, false);
-                loadingResult.clear();
+                clearResult();;
             }
         });
 
         fileUpload.addAttachHandler(new AttachEvent.Handler() {
             @Override
             public void onAttachOrDetach(AttachEvent event) {
-                loadingResult.clear();
+                clearResult();;
             }
         });
 
@@ -131,10 +130,10 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected Panel createButtons(Panel parentPanel) {
         Panel g2 = new HorizontalPanel();
         g2.setWidth("100%");
-        g2.add(createAlignWidget(uploadButton = createUploadButton(), LABEL_WIDTH));
-        g2.add(createAlignWidget(errorButton = createErrorButton(), LABEL_WIDTH));
-        g2.add(createAlignWidget(showButton = createShowButton(), LABEL_WIDTH));
-        g2.add(createAlignWidget(deleteButton = createDeleteButton(), LABEL_WIDTH));
+        g2.add(createAlignWidget(uploadButton = createUploadButton(), BT_LOAD_WIDTH));
+        g2.add(createAlignWidget(errorButton = createErrorButton(), BUTTON_WIDTH));
+        g2.add(createAlignWidget(showButton = createShowButton(), BUTTON_WIDTH));
+        g2.add(createAlignWidget(deleteButton = createDeleteButton(), BUTTON_WIDTH));
 
         errorButton.setEnabled(false);
         deleteButton.setEnabled(false);
@@ -149,6 +148,22 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         loadingResult.setWidth("100%");
         parentPanel.add(loadingResult);
         return loadingResult;
+    }
+
+    protected void showResult(String message) {
+        if (requestBox == null) {
+            requestBox = new RichAreaBox();
+            requestBox.setReadOnly(true);
+            requestBox.setWidth("100%");
+            requestBox.setHeight("200px");
+            loadingResult.add(requestBox);
+        }
+        requestBox.setHTML(message);
+    }
+
+    protected void clearResult() {
+        loadingResult.clear();
+        requestBox = null;
     }
 
     protected Panel createExample(Panel parentPanel) {
@@ -180,15 +195,10 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
             @Override
             public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
                 switchControlsState(true);
-                loadingResult.clear();
+                clearResult();
                 String message = parseResponse(event.getResults());
                 if (!isEmpty(message)) {
-                    requestBox = new RichAreaBox();
-                    requestBox.setReadOnly(true);
-                    requestBox.setWidth("100%");
-                    requestBox.setHeight("200px");
-                    requestBox.setHTML(message.replaceAll(LIST_DELIMITER, "<BR>"));
-                    loadingResult.add(requestBox);
+                    showResult(message);
                 }
             }
         });
@@ -211,7 +221,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
                 ok.setEnabled(isOk);
                 switchControlsState(!isOk);
             }
-            return response.replaceAll(LIST_DELIMITER, "<BR>");
+            return response.replaceFirst(LIST_DELIMITER, "").replaceAll(LIST_DELIMITER, "<BR>");
         } catch (Exception e) {
             return e.getMessage();
         }
@@ -244,7 +254,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
         Button btn = new Button();
         btn.setText("Загрузка");
         btn.addStyleName("dlg-button");
-        btn.setWidth(LABEL_WIDTH);
+        btn.setWidth(BT_LOAD_WIDTH);
         btn.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
@@ -252,7 +262,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
                 try {
                     switchControlsState(false);
                     switchButtonState(false, false);
-                    loadingResult.clear();
+                    clearResult();
 
                     onClickUpload(event);
 
@@ -318,6 +328,6 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     public void afterShow() {
         switchControlsState(true);
         switchButtonState(false, false);
-        loadingResult.clear();
+        clearResult();
     }
 }

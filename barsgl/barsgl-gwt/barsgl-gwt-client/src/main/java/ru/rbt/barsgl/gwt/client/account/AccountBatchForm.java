@@ -61,7 +61,7 @@ public class AccountBatchForm extends GridForm {
         quickFilterAction.execute();
     }
 
-    public AccountBatchForm(boolean ownMessages) {
+    public AccountBatchForm(Boolean ownMessages) {
         super(FORM_NAME, false);
         _select = getSelectClause();
         _ownMessages = ownMessages;
@@ -169,7 +169,7 @@ public class AccountBatchForm extends GridForm {
     }
 
     protected String getOwnMessagesClause(Boolean ownMessages){
-        if (!ownMessages) return "";
+        if (null == ownMessages || !ownMessages) return "";
 
         AppUserWrapper wrapper = (AppUserWrapper) LocalDataStorage.getParam("current_user");
         if (wrapper == null) return "";
@@ -221,6 +221,8 @@ public class AccountBatchForm extends GridForm {
                     protected List<FilterItem> getInitialFilterCriteria(Object[] initialFilterParams) {
                         ArrayList<FilterItem> list = new ArrayList<>();
                         List<FilterItem> listPkg =  AccountBatchForm.this.grid.getFilterCriteria();
+                        if (listPkg == null)
+                            listPkg = new ArrayList<>();
                         for (FilterItem item : listPkg) {
                             if (item.getName().equals(_colProcDate.getName()))
                                 list.add(item);
