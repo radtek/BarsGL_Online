@@ -8,6 +8,7 @@ import ru.rbt.barsgl.ejb.entity.etl.AccountBatchRequest;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.enums.AccountBatchState;
 import ru.rbt.ejbcore.mapping.YesNo;
+import ru.rbt.ejbcore.util.StringUtils;
 
 import java.util.Date;
 import java.util.logging.Logger;
@@ -58,9 +59,9 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         final String branch = "001";
         final String ccy = "RUR";
         final String custno = "00151555";
-        final String acctype = "161020100";
-        final String cbcusttype = "18";
-        final String term = "04";
+        final String acctype = "356020202";
+        final String cbcusttype = "00";
+        final String term = "00";
         final String sealSrc = "IMEX";
         final String dealid = "511_A073C_18";
         final String subdealid = "00151555RURCL0P00171";
@@ -100,12 +101,22 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         final String branch = "001";
         final String ccy = "RUR";
         final String custno = "00151555";
-        final String acctype = "161020100";
-        final String cbcusttype = "18";
-        final String term = "04";
+        final String acctype = "356020202";
+        final String cbcusttype = "00";
+        final String term = "00";
         final String sealSrc = "IMEX";
         final String dealid = "511_A073C_18";
         final String subdealid = "00151555RURCL0P00171";
+
+        final String b1ranch = "001";
+        final String c1cy = "RUR";
+        final String c1ustno = "00151555";
+        final String a1cctype = "161020100";
+        //final String c1bcusttype = "18";
+        final String t1erm = "04";
+        final String s1ealSrc = "IMEX";
+        final String d1ealid = "511_A073C_18";
+        final String s1ubdealid = "00151555RURCL0P00171";
 
         // готовим счет
         log.info("deleted accounts: " + baseEntityRepository.executeNativeUpdate(
@@ -116,7 +127,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         AccountBatchPackage pkg = createPackage();
 
         AccountBatchRequest request1 = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc, term);
-        AccountBatchRequest request2 = createBatchRequest(pkg, 1L, branch, ccy, custno, "161020222", dealid, subdealid, sealSrc, term);
+        AccountBatchRequest request2 = createBatchRequest(pkg, 2L, b1ranch, c1cy, c1ustno, a1cctype, d1ealid, s1ubdealid, s1ealSrc, t1erm);
 
         // валидируем
         remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
@@ -137,6 +148,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
 
         request2 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request2.getId());
         Assert.assertEquals(AccountBatchState.ERRCHK, request2.getState());
+        Assert.assertTrue(!StringUtils.isEmpty(request2.getCalcPlcodeParm()));
     }
 
     @Test

@@ -144,8 +144,8 @@ public class AccountValidationSupportBean {
                     }
                 });
                 context.addValidator(() -> {
-                    if (null != request.getOpenDate()
-                            && request.getOpenDate().after(operdayController.getOperday().getCurrentDate())) {
+                    if (null != request.getInOpendate()
+                            && request.getInOpendate().after(operdayController.getOperday().getCurrentDate())) {
                         throw new ValidationError(ACC_BATCH_OPEN, format("Дата открытия '%s' больше даты текущего операционного дня  '%s'"
                                 , dateUtils.onlyDateString(request.getOpenDate()), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
                     }
@@ -251,6 +251,23 @@ public class AccountValidationSupportBean {
                     private void throwValidationError(String label) {
                         throw new ValidationError(ACC_BATCH_OPEN, format("Не найдена запись GL_ACTPARM по  acctype= '%s' and term = '%s' and custype = '%s' (место проверки '%s')"
                                 , request.getInAcctype(), ifEmpty(request.getInTerm(),"<empty>"), ifEmpty(request.getInCtype(),"<empty>"), label));
+                    }
+                });
+                context.addValidator(() -> {
+                    try {
+                        if (!isEmpty(request.getCalcPlcodeParm())) {
+                            DataRecord record = repository.selectFirst("select A8BICN from IMBCBBRP where A8BRCD=?", request.getInBranch());
+                            if (request.getCalcPlcodeParm().trim().equals(record.getString("A8BICN"))) {
+                                throw new ValidationError(ACC_BATCH_OPEN, format("Код клиента %s CUST_IN не соответствует коду отделения %s BRANCH_IN. Для счетов ОФР должен быть клиент этого отделения %s IMBCBBR.A8BICN."
+                                        , request.getInCtype(), request.getInBranch(), record.getString("A8BICN")));
+                            }
+                            if (!isEmpty(request.getInDealid()) || !isEmpty(request.getInSubdealid())) {
+                                throw new ValidationError(ACC_BATCH_OPEN, format("Входные параметры DEALID='%s' и SUBDEALID='%s' не могут заполняться для счетов доходов и расходов, PLCODE='%s'"
+                                        , ifEmpty(request.getInDealid(),"<empty>"), ifEmpty(request.getInSubdealid(), "<empty>"), request.getCalcPlcodeParm()));
+                            }
+                        }
+                    } catch (SQLException e) {
+                        throw new DefaultApplicationException(e.getMessage(), e);
                     }
                 });
                 context.validateAll();

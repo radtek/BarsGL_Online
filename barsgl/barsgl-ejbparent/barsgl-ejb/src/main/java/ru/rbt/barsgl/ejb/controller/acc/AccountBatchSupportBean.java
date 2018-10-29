@@ -126,7 +126,7 @@ public class AccountBatchSupportBean {
     private void updateRequestState(long requestId, AccountBatchState state, String errorMessage) {
         try {
             repository.executeInNewTransaction(persistence -> {
-                repository.executeUpdate("update AccountBatchRequest r set state = ?1, errorMessage = ?2 where r.id = ?3", state, errorMessage, requestId);
+                repository.executeUpdate("update AccountBatchRequest r set state = ?1, errorMessage = ?2, dtValidate = ?3 where r.id = ?4", state, errorMessage, operdayController.getSystemDateTime(), requestId);
                 return null;
             });
         } catch (Exception e) {
@@ -137,7 +137,7 @@ public class AccountBatchSupportBean {
     private void updatePackageState(long batchPackageId, long cntErrors) {
         try {
             repository.executeInNewTransaction(persistence -> {
-                repository.executeUpdate("update AccountBatchPackage p set p.cntErrors = ?1 where p.id = ?2", cntErrors, batchPackageId);
+                repository.executeUpdate("update AccountBatchPackage p set p.cntErrors = ?1, p.validateEndDate = ?2 where p.id = ?3", cntErrors, operdayController.getSystemDateTime(), batchPackageId);
                 return null;
             });
         } catch (Exception e) {
