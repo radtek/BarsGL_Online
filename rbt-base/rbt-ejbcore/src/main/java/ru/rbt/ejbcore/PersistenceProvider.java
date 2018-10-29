@@ -12,7 +12,7 @@ import javax.sql.DataSource;
  */
 public interface PersistenceProvider<T extends Enum> {
     EntityManager getPersistence(T repository) throws Exception;
-    DataSource getDataSource(T repository) throws Exception;
+    DataSource getDataSource(T repository);
     
     public DataSource getDefaultDataSource();
     public EntityManager getDefaultPersistence();

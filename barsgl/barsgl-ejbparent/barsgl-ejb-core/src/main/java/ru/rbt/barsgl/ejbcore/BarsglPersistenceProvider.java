@@ -56,7 +56,7 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
     }
 
     @Override
-    public DataSource getDataSource(Repository repository) throws Exception {
+    public DataSource getDataSource(Repository repository) {
         if(null == repository) {
             return getDefaultDataSource();
         }
@@ -68,7 +68,7 @@ public class BarsglPersistenceProvider implements PersistenceProvider<Repository
             case BARSREP:
                 return barsrepDataSource;
             default:
-                throw new Exception("Неизвестный репозиторий: " + repository.name());
+                throw new RuntimeException("Неизвестный репозиторий: " + repository.name());
         }
     }
 

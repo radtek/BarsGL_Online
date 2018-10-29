@@ -39,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.HOURS;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.barsgl.shared.enums.BalanceMode.*;
@@ -217,7 +218,7 @@ public class OperdaySynchronizationController {
 
     private void processAsyncGLPd(List<JpaAccessCallback<Long>> callbacks, int maxConcurrency) throws Exception {
         try {
-            asyncProcessor.asyncProcessPooled(callbacks, maxConcurrency, 24, TimeUnit.HOURS);
+            asyncProcessor.asyncProcessPooled(callbacks, maxConcurrency, 24, HOURS);
         } catch (Throwable e) {
             auditController.error(BufferModeSync
                     , format("Ошибка синхронизации полупроводок.", e), null, e);
@@ -374,8 +375,7 @@ public class OperdaySynchronizationController {
                             }
                         }
                     }
-                    executorService.shutdown();
-                    executorService.awaitTermination(2, TimeUnit.HOURS);
+                    asyncProcessor.awaitTermination(executorService, 2, HOURS, System.currentTimeMillis() + HOURS.toMillis(2));
                     long notProcessedCount = pdRepository.selectFirst(
                             "select count(1) cnt from gl_pd p, gl_baltur b where p.bsaacid = b.bsaacid " +
                             "   and p.pod = b.dat and b.moved = 'Y' and pod < ? and pd_id is null", operday).getLong(0);
@@ -524,7 +524,7 @@ public class OperdaySynchronizationController {
 
     private void processGLBalurAsync(List<JpaAccessCallback<Void>> balturCallbacks, int maxConcurrency, int currentCount) throws Exception {
         try {
-            asyncProcessor.asyncProcessPooled(balturCallbacks, maxConcurrency, 24, TimeUnit.HOURS);
+            asyncProcessor.asyncProcessPooled(balturCallbacks, maxConcurrency, 24, HOURS);
             if (currentCount % 50 == 0) {
                 log.info(format("Пересчитано остатков по датам: '%s'", currentCount));
             }

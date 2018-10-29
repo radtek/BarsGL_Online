@@ -24,6 +24,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , Operation
         , FanOperation
         , Account
+        , AccountRetrieve
         , Task
         , User
         , LoadRatesTask
