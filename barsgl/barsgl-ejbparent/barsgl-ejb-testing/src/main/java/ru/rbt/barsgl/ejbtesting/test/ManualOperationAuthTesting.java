@@ -27,19 +27,7 @@ import static ru.rbt.barsgl.shared.enums.AuthorizationInfoPath.USER_LOGIN_RESULT
 /**
  * Created by er18837 on 02.10.2018.
  */
-public class ManualOperationAuthTesting {
-
-    @Inject
-    private RequestContext context;
-
-    @Inject
-    private AppUserRepository userRepository;
-
-    @Inject
-    private AppHttpSessionRepository repository;
-
-    @Inject
-    private SessionSupportBean sessionSupportBean;
+public class ManualOperationAuthTesting extends ManualAuthTesting{
 
     @Inject
     private ManualPostingController postingController;
@@ -97,37 +85,5 @@ public class ManualOperationAuthTesting {
         }
     }
 
-    private void logon(long userId) throws Exception {
-        AppUser user = userRepository.selectFirst(AppUser.class, "from AppUser u where u.id = ?1", userId);
-        Assert.notNull(user, "Не найден пользователь ID =" + userId);
-        AppHttpSession session = sessionSupportBean.registerHttpSession(createSession(user.getUserName()));
-        final UserRequestHolder holder = new UserRequestHolder();
-        // проверяем передачу ссылки
-        context.setRequest(holder);
-        LoginParams params = new LoginParams();
-        params.setSessionId(session.getSessionId());
-        params.setUserName(session.getUserName());
-        holder.setUser(session.getUserName());
-        holder.setDynamicValue(USER_LOGIN_RESULT.getPath(), params);
-    }
-
-    private void logoff() {
-        context.setRequest(null);
-    }
-
-    private AppHttpSession getSession(String sessionId) {
-        AppHttpSession session = repository.selectFirst(AppHttpSession.class, "from AppHttpSession s where s.sessionId = ?1", sessionId);
-        Assert.notNull(session);
-        return session;
-    }
-
-    private HttpSessionWrapper createSession(String userName) {
-        HttpSessionWrapper httpSession = new HttpSessionWrapper();
-        httpSession.setSessionId(System.currentTimeMillis() + "");
-        httpSession.setUserName(userName);
-        httpSession.setCreateDate(new Date());
-        httpSession.setLastAccessDate(DateUtils.addSeconds(new Date(), -100));
-        return httpSession;
-    }
 
 }

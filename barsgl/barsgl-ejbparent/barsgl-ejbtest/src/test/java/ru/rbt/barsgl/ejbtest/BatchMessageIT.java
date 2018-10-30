@@ -289,7 +289,7 @@ public class BatchMessageIT extends AbstractTimerJobIT {
         PackageParam param = new PackageParam(null, 0, 0);
         if (matcher.groupCount() == 3) {
             param.setId(Long.parseLong(matcher.group(1)));
-            param.setPostingCount(Integer.parseInt(matcher.group(2)));
+            param.setRecordCount(Integer.parseInt(matcher.group(2)));
             param.setErrorCount(Integer.parseInt(matcher.group(3)));
         }
         return param;
@@ -297,12 +297,12 @@ public class BatchMessageIT extends AbstractTimerJobIT {
 
     public static class PackageParam {
         private Long id;
-        private int postingCount;
+        private int recordCount;
         private int errorCount;
 
         public PackageParam(Long id, int postingCount, int errorCount) {
             this.id = id;
-            this.postingCount = postingCount;
+            this.recordCount = postingCount;
             this.errorCount = errorCount;
         }
 
@@ -310,8 +310,8 @@ public class BatchMessageIT extends AbstractTimerJobIT {
             return id;
         }
 
-        public int getPostingCount() {
-            return postingCount;
+        public int getRecordCount() {
+            return recordCount;
         }
 
         public int getErrorCount() {
@@ -322,8 +322,8 @@ public class BatchMessageIT extends AbstractTimerJobIT {
             this.id = id;
         }
 
-        public void setPostingCount(int postingCount) {
-            this.postingCount = postingCount;
+        public void setRecordCount(int recordCount) {
+            this.recordCount = recordCount;
         }
 
         public void setErrorCount(int errorCount) {
@@ -332,7 +332,7 @@ public class BatchMessageIT extends AbstractTimerJobIT {
 
         @Override
         public String toString() {
-            return String.format("ID: %d Count: %d Errors: %d", id, postingCount, errorCount);
+            return String.format("ID: %d Count: %d Errors: %d", id, recordCount, errorCount);
         }
     }
 }
