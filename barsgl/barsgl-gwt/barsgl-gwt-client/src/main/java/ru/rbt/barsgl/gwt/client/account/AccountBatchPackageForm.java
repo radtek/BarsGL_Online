@@ -92,9 +92,9 @@ public class AccountBatchPackageForm extends GridForm {
         abw.addSecureAction(_loadPackage = createLoad(ImageConstants.INSTANCE.load()), AccPkgFileLoad);
         abw.addSecureAction(_openAccounts = createCommand(ImageConstants.INSTANCE.add_list(), OPEN, "Открыть счета пакета"), AccPkgFileLoad, AccPkgFileOpen);
         abw.addSecureAction(_delPackage = createCommand(ImageConstants.INSTANCE.del_list(), DELETE, "Удалить пакет"), AccPkgFileLoad, AccPkgFileDel);
-        abw.addAction(_viewError = createView(ImageConstants.INSTANCE.err_list(), V_ERROR, "Просмотр ошибок пакета"));
+        abw.addAction(_viewError = createView(ImageConstants.INSTANCE.err_list(), V_ERROR, "Ошибки пакета"));
         abw.addAction(_viewFull = createView(ImageConstants.INSTANCE.preview(), V_FULL, "Просмотр пакета"));
-        abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go(), "Переход на форму счетов по пакету"));
+        abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go(), "Переход на страницу счетов"));
 //        abw.addAction(new PackageStatisticsAction(grid));
 
     }
@@ -193,13 +193,13 @@ public class AccountBatchPackageForm extends GridForm {
 
     private GridAction createLoad(ImageResource img) {
 
-        return new GridAction(grid, null, LoadAccountDlg.TITLE, new Image(img), 10) {
+        return new GridAction(grid, null, "Загрузить пакет", new Image(img), 10) {  // LoadAccountDlg.TITLE
             LoadAccountDlg dlg = null;
 
             @Override
             public void execute() {
                 WaitingManager.show("Загрузка из файла...");
-                if (dlg == null) dlg = new LoadAccountDlg(); // LoadFileFactory.create(loadType);
+                if (dlg == null) dlg = new LoadAccountDlg();
 
                 dlg.setAfterCancelEvent(new IAfterCancelEvent() {
                     @Override

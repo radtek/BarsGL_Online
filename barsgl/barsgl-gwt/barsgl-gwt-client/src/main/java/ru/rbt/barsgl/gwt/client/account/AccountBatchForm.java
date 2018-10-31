@@ -74,7 +74,7 @@ public class AccountBatchForm extends GridForm {
         quickFilterAction = new AccountBatchQFAction(grid, _colProcDate, _colInvisible);
         abw.addAction(quickFilterAction);
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
-        abw.addAction(createGotoPackage(ImageConstants.INSTANCE.oper_go(), "Переход на форму пакетов"));
+        abw.addAction(createGotoPackage(ImageConstants.INSTANCE.oper_go(), "Переход на страницу пакетов"));
     }
 
     @Override

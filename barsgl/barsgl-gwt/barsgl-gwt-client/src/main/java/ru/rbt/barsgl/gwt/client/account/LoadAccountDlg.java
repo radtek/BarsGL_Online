@@ -29,12 +29,13 @@ import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAct
  * Created by er18837 on 17.10.2018.
  */
 public class LoadAccountDlg extends LoadFileAnyDlg {
-    public static final String TITLE = "Загрузка счетов из Excel файла";
+    public static final String TITLE = "Загрузка запросов на открытие счетов из Excel файла";
     private Long idPackage = null;
     private Long allCount = null;
 
     public LoadAccountDlg(){
         super();
+        setCaption(TITLE);
         ok.setText("Открыть счета");
     }
 

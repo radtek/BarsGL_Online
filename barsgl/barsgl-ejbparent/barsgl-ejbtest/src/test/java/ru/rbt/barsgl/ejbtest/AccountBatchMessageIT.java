@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 
 import static ru.rbt.barsgl.ejbtest.BackValueAuthIT.addUserRole;
 import static ru.rbt.barsgl.ejbtest.BackValueAuthIT.subUserRole;
+import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.IS_LOAD;
+import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.ON_VALID;
 
 /**
  * Created by er18837 on 30.10.2018.
@@ -52,6 +54,10 @@ public class AccountBatchMessageIT  extends AbstractTimerJobIT {
         System.out.println(param);
         AccountBatchPackage batchPackage = getPackage(param.getId());
         Assert.assertNotNull(batchPackage);
+        Assert.assertEquals(IS_LOAD, batchPackage.getState());
+        Assert.assertNotNull(batchPackage.getOperday());
+        Assert.assertNotNull(batchPackage.getLoadUser());
+        Assert.assertNotNull(batchPackage.getCntRequests());
     }
 
     @Test
@@ -89,7 +95,33 @@ public class AccountBatchMessageIT  extends AbstractTimerJobIT {
         wrapper.setPackageId(param.getId());
         wrapper.setAction(AccountBatchWrapper.AccountBatchAction.DELETE);
 
-        RpcRes_Base<AccountBatchWrapper> res = null;
+        wrapper.setUserId(USER_ID);
+        RpcRes_Base<AccountBatchWrapper> res = remoteAccess.invoke(AccountBatchTesting.class, "processAccountBatchRq", wrapper);
+        System.out.println(res.getMessage());
+        Assert.assertFalse(res.isError());
+
+        AccountBatchPackage batchPackage = getPackage(param.getId());
+        Assert.assertNotNull(batchPackage);
+        Assert.assertEquals("Y", batchPackage.getInvisible().name());
+        Assert.assertNull(batchPackage.getValidateStartDate());
+        Assert.assertNotNull(batchPackage.getProcUser());
+    }
+
+    @Test
+    public void testOnvalidPackage() {
+        BatchMessageIT.PackageParam param = loadPackage(USER_ID);
+        System.out.println(param);
+
+        // авторизовать
+        AccountBatchWrapper wrapper = new AccountBatchWrapper();
+        wrapper.setPackageId(param.getId());
+        wrapper.setAction(AccountBatchWrapper.AccountBatchAction.OPEN);
+
+        wrapper.setUserId(USER_ID3);
+        RpcRes_Base<AccountBatchWrapper> res = remoteAccess.invoke(AccountBatchTesting.class, "processAccountBatchRq", wrapper);
+        System.out.println(res.getMessage());
+        Assert.assertTrue(res.isError());
+
         wrapper.setUserId(USER_ID);
         res = remoteAccess.invoke(AccountBatchTesting.class, "processAccountBatchRq", wrapper);
         System.out.println(res.getMessage());
@@ -97,7 +129,9 @@ public class AccountBatchMessageIT  extends AbstractTimerJobIT {
 
         AccountBatchPackage batchPackage = getPackage(param.getId());
         Assert.assertNotNull(batchPackage);
-        Assert.assertEquals("Y", batchPackage.getInvisible().name());
+        Assert.assertEquals(ON_VALID, batchPackage.getState());
+        Assert.assertNotNull(batchPackage.getValidateStartDate());
+        Assert.assertNotNull(batchPackage.getProcUser());
     }
 
     private BatchMessageIT.PackageParam getPackageParam(String result) {
