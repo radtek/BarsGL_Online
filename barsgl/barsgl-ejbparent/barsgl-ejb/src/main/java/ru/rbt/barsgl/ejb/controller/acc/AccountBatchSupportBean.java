@@ -153,6 +153,17 @@ public class AccountBatchSupportBean {
                         "  from GL_ACBATREQ where ID_PKG = ?", batchPackage.getId());
     }
 
+    public DataRecord getPackageProcessedStatistics(AccountBatchPackage batchPackage) throws SQLException {
+        return repository.selectFirst(
+                "select sum(case when state = 'COMPLETED' then 1 else 0 end) suc\n" +
+                        "       , sum(case when state = 'ERRPROC' then 1 else 0 end) err \n" +
+                        "       , sum(case when state not in ('COMPLETED','ERRPROC') then 1 else 0 end) oth\n" +
+                        "       , count(1) tot\n" +
+                        "       , sum(case when newacc = 'N' then 1 else 0 end) fnd" +
+                        "  from GL_ACBATREQ r\n" +
+                        " where id_pkg = ?", batchPackage.getId());
+    }
+
     private boolean checkPackageRequestsState(AccountBatchPackage batchPackage) {
         try {
             DataRecord pkgStat = getPackageValidateStatistics(batchPackage);

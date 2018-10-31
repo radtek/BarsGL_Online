@@ -132,15 +132,9 @@ public class AccountValidationSupportBean {
                     }
                 });
                 context.addValidator(() -> {
-                    if (isEmpty(request.getInDealsrc())
-                            && !isEmpty(request.getInDealid())) {
-                        throw new ValidationError(ACC_BATCH_OPEN, "Поле DEALID_IN не может быть заполнено, если источник сделки не заполнен");
-                    }
-                });
-                context.addValidator(() -> {
-                    if (isEmpty(request.getInDealsrc())
+                    if (isEmpty(request.getInDealid())
                             && !isEmpty(request.getInSubdealid())) {
-                        throw new ValidationError(ACC_BATCH_OPEN, "Поле SUBDEALID_IN не может быть заполнено, если источник сделки не заполнен");
+                        throw new ValidationError(ACC_BATCH_OPEN, "Поле ИД субсделки не может быть заполнено, если источник ИД сделки не заполнен");
                     }
                 });
                 context.addValidator(() -> {
@@ -230,13 +224,18 @@ public class AccountValidationSupportBean {
                             if (null == record1) {
                                 throwValidationError("2");
                             } else {
+                                DataRecord finalRecord = record1;
+                                Assert.isTrue(!isEmpty(record1.getString("ACOD")) && !isEmpty(record1.getString("AC_SQ")),
+                                        () -> new ValidationError(ACC_BATCH_OPEN
+                                                , format("Найдена некорректная запись GL_ACTPARM: ACCTYPE='%s', CUSTYPE='%s', TERM='%s', ACC2='%s', PLCODE='%s', ACOD='%s', AC_SQ='%s', DTB='%s', DTE='%s' "
+                                                    , finalRecord.getString("ACCTYPE"), finalRecord.getString("CUSTYPE"), finalRecord.getString("TERM"), finalRecord.getString("ACC2"), finalRecord.getString("PLCODE"), finalRecord.getString("ACOD"), finalRecord.getString("AC_SQ"), finalRecord.getString("DTB"), finalRecord.getString("DTE"))));
                                 // все хорошо, но вдруг ...
                                 request.setCalcCtypeParm(record1.getString("CUSTYPE").trim());
                                 request.setCalcTermParm(record1.getString("TERM"));
                                 request.setCalcAcc2Parm(record1.getString("ACC2"));
                                 request.setCalcAcodParm(record1.getString("ACOD"));
                                 request.setCalcAcsqParm(record1.getString("AC_SQ"));
-                                request.setCalcPlcodeParm(record1.getString("AC_SQ"));
+                                request.setCalcPlcodeParm(record1.getString("PLCODE"));
                                 if (!isEmpty(request.getInAcc2()) && !request.getInAcc2().trim().equals(request.getCalcAcc2Parm().trim())) {
                                     throw new ValidationError(ACC_BATCH_OPEN
                                             , format("Балансовый счет 2 порядка ACC2_IN '%s' не соответствует значению ACC2_PARM '%s', соответствующему настройкам GL_ACTPARM"
