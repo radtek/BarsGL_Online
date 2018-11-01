@@ -210,13 +210,13 @@ public class AccountValidationSupportBean {
                         try {
                             final Integer ctypeInt = parseIntSafe(request.getCalcCtype());
                             final YesNo plAct = calcPlAct(request);
-                            String custype = leftPad(ifEmpty(request.getCalcCtypeAcc(), "0"),2, "0");
+                            String custype = calcCtypeAcc(request.getCalcCtypeAcc());
                             String term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
-                            DataRecord record1 = findActparm(request.getInAcctype(), custype, term);
+                            DataRecord record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term);
                             if (N == plAct && null == record1) {
                                 if (parseIntSafe(request.getInTerm()) >= 0) {
-                                    custype = leftPad(ifEmpty(request.getCalcCtypeAcc(), "0"),2, "0"); term = "00";
-                                    record1 = findActparm(request.getInAcctype(), custype, term);
+                                    custype = calcCtypeAcc(request.getCalcCtypeAcc()); term = "00";
+                                    record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term);
                                     if (null == record1) {
                                         if (parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
                                             if (parseIntSafe(request.getCalcCtypeAcc()) > 3 && ctypeInt >= 0 && ctypeInt <= 3) {
@@ -313,6 +313,10 @@ public class AccountValidationSupportBean {
 
     private Date addMonths(Date from, int months) {
         return org.apache.commons.lang3.time.DateUtils.addMonths(from, months);
+    }
+
+    private String calcCtypeAcc(String source) {
+        return "0".equals(source) || isEmpty(source) ? "00" : trim(source);
     }
 
 }
