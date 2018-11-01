@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBatch;
@@ -93,7 +94,7 @@ public class AccountBatchSupportBean {
                                         if (errors.isEmpty()) {
                                             updateRequestState(request, AccountBatchState.VALID, "");
                                         } else {
-                                            updateRequestState(request, AccountBatchState.ERRCHK, validationErrorsToString(errors));
+                                            updateRequestState(request, AccountBatchState.ERRCHK, getErrorsText(errors));
                                         }
                                         return null;
                                     });
@@ -178,6 +179,10 @@ public class AccountBatchSupportBean {
         } catch (SQLException e) {
             throw new DefaultApplicationException(e.getMessage(), e);
         }
+    }
+
+    private String getErrorsText(List<ValidationError> errors) {
+        return errors.stream().map(e -> ValidationError.getErrorText(e.getMessage())).collect(Collectors.joining("\n"));
     }
 
 
