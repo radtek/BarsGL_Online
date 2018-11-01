@@ -1,6 +1,5 @@
 package ru.rbt.barsgl.gwt.client.account;
 
-import com.google.gwt.user.client.Window;
 import ru.rbt.barsgl.gwt.core.actions.SimpleDlgAction;
 import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
@@ -30,7 +29,8 @@ public class AccountBatchErrorForm extends GridForm {
     protected Column _colState;
     protected Column _colRow;
     protected Column _colBsaacid;
-    protected Column _colError;
+    protected Column _colError1;
+    protected Column _colError2;
 
     public AccountBatchErrorForm(String title) {
         super(title);
@@ -41,7 +41,8 @@ public class AccountBatchErrorForm extends GridForm {
 
     public void setViewType(ViewType viewType){
         this._viewType = viewType;
-        _colError.setVisible(_viewType == V_ERROR);
+        _colError1.setVisible(_viewType == V_ERROR);
+        _colError2.setVisible(_viewType == V_FULL);
         _colBsaacid.setVisible(_viewType == V_FULL);
     };
 
@@ -59,14 +60,12 @@ public class AccountBatchErrorForm extends GridForm {
         result.addColumn(_colRow = new Column("RECNO", Column.Type.INTEGER, "Номер строки", 70));
 
         result.addColumn(_colState = new Column("STATE", Column.Type.STRING, "Статус запроса", 100));
-        _colState.setList(getEnumLabelsList(AccountBatchState.values()));
 
-        result.addColumn(_colError = new Column("ERROR_MSG", Column.Type.STRING, "Описание ошибки", 800));
+        result.addColumn(_colError1 = new Column("ERROR_MSG1", Column.Type.STRING, "Описание ошибки", 800));
 
-        result.addColumn(_colBsaacid = new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(col = new Column("WAS_ACC", Column.Type.STRING, "Открыт ранее", 60, false, false));
         col.setList(getYesNoList());
-
+        result.addColumn(_colBsaacid = new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(new Column("ACID", Column.Type.STRING, "Счет Midas", 160, false, false));
         result.addColumn(new Column("BRANCH_IN", Column.Type.STRING, "Отделение", 60));
         result.addColumn(new Column("CBCC_BR", Column.Type.STRING, "Филиал", 60, false, false));
@@ -74,21 +73,25 @@ public class AccountBatchErrorForm extends GridForm {
         result.addColumn(new Column("CUSTNO_IN", Column.Type.STRING, "Номер клиента", 80));
 
         result.addColumn(new Column("ACCTYPE_IN", Column.Type.STRING, "Accounting Type", 80));
-        result.addColumn(new Column("CTYPE_IN", Column.Type.STRING, "Тип собст-ти (in)", 60));
-        result.addColumn(new Column("CTYPE_PARM", Column.Type.STRING, "Тип собст-ти (actparm)", 60, false, false));
-        result.addColumn(new Column("CTYPE_ACC", Column.Type.STRING, "Тип собст-ти", 65, false, false));
-        result.addColumn(new Column("TERM_IN", Column.Type.STRING, "Код срока (in)", 60));
-        result.addColumn(new Column("TERM_PARM", Column.Type.STRING, "Код срока", 65, false, false));
-        result.addColumn(new Column("ACC2_IN", Column.Type.STRING, "Б/счет 2 (in)", 60));
-        result.addColumn(new Column("ACC2_PARM", Column.Type.STRING, "Б/счет 2", 65, false, false));
-        result.addColumn(new Column("PLCODE_PARM", Column.Type.STRING, "Символ ОФР", 65, false, false));
+        result.addColumn(new Column("CTYPE_IN", Column.Type.STRING, "Тип собств", 65));
+        result.addColumn(new Column("CTYPE_PARM", Column.Type.STRING, "Тип собств (actparm)", 65, false, false));
+        result.addColumn(new Column("CTYPE_ACC", Column.Type.STRING, "*Тип собств", 65, false, false));
+        result.addColumn(new Column("TERM_IN", Column.Type.STRING, "Код срока", 65));
+        result.addColumn(new Column("TERM_PARM", Column.Type.STRING, "*Код срока", 65, false, false));
+        result.addColumn(new Column("ACC2_IN", Column.Type.STRING, "Баланс. счет 2", 70));
+        result.addColumn(new Column("ACC2_PARM", Column.Type.STRING, "*Баланс. счет 2", 70, false, false));
+        result.addColumn(new Column("PLCODE_PARM", Column.Type.STRING, "Символ ОФР", 70, false, false));
+        result.addColumn(new Column("ACOD_PARM", Column.Type.STRING, "ACOD", 65, false, false));
+        result.addColumn(new Column("ACSQ_PARM", Column.Type.STRING, "SQ", 65, false, false));
 
         result.addColumn(new Column("DEALSRC_IN", Column.Type.STRING, "Источник сделки", 75));
         result.addColumn(new Column("DEALID_IN", Column.Type.STRING, "ИД сделки", 160));
         result.addColumn(new Column("SUBDEALID_IN", Column.Type.STRING, "ИД субсделки", 160));
 
-        result.addColumn(new Column("OPENDATE_IN", Column.Type.DATE, "Дата открытия счета (in)", 75, false, false));
-        result.addColumn(new Column("OPENDATE", Column.Type.DATE, "Дата открытия счета", 75));
+        result.addColumn(new Column("OPENDATE_IN", Column.Type.DATE, "Дата открытия счета", 75));
+        result.addColumn(new Column("OPENDATE", Column.Type.DATE, "*Дата открытия счета", 75, false, false));
+
+        result.addColumn(_colError2 = new Column("ERROR_MSG2", Column.Type.STRING, "Описание ошибки", 800));
 
         result.addColumn(col = new Column("TS_VALID", Column.Type.DATETIME, "Время вал-ции счета", 135, false, false));
         col.setFilterable(false);
@@ -105,10 +108,10 @@ public class AccountBatchErrorForm extends GridForm {
         if (isEmpty(where))
             where = " where 1=1";
         return " select ID_REQ, ID_PKG, OD_LOAD, RECNO, PKG_STATE, STATE, WAS_ACC, BSAACID, ACID,\n" +
-                " BRANCH_IN, CBCC_BR, CCY_IN, CUSTNO_IN, ACCTYPE_IN,\n" +
+                " BRANCH_IN, CBCC_BR, CCY_IN, CUSTNO_IN, ACCTYPE_IN, ACOD_PARM, ACSQ_PARM,\n" +
                 " CTYPE_IN, CTYPE_PARM, CTYPE_ACC, TERM_IN, TERM_PARM, ACC2_IN, ACC2_PARM, PLCODE_PARM,\n" +
                 " DEALSRC_IN, DEALID_IN, SUBDEALID_IN, OPENDATE_IN, OPENDATE, ACCNAME,\n" +
-                " ERROR_MSG, TS_VALID, TS_OPEN, TS_ENDP, USER_LOAD, USER_PROC, INVISIBLE\n" +
+                " ERROR_MSG ERROR_MSG1, ERROR_MSG ERROR_MSG2, TS_VALID, TS_OPEN, TS_ENDP, USER_LOAD, USER_PROC, INVISIBLE\n" +
                 " FROM V_GL_ACCBAT"
                 + where;
     }

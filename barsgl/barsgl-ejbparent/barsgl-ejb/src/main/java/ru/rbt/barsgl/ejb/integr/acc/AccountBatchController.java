@@ -10,6 +10,7 @@ import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.operation.AccountBatchWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
@@ -124,6 +125,11 @@ public class AccountBatchController {
         if (!(packageState == IS_LOAD || packageState == ERROR))
             throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов с ID = %s," +
                     " статус пакета '%s' (допустимые статусы '%s', '%s')", pkg.getId(),
+                    packageState.name(), IS_LOAD.name(), ERROR.name()));
+        YesNo invesible = pkg.getInvisible();
+        if (invesible == YesNo.Y)
+            throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов с ID = %s," +
+                            " пакет уже удален", pkg.getId(),
                     packageState.name(), IS_LOAD.name(), ERROR.name()));
 
         String userProc = getUserName();

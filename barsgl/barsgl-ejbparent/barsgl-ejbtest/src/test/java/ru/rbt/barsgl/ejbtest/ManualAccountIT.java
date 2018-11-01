@@ -242,6 +242,22 @@ public class ManualAccountIT extends AbstractRemoteIT {
     }
 
     /**
+     * Тест создания счета из ручного ввода с ошибкой ввода (неверная валюта)
+     * @throws SQLException
+     */
+    @Test
+    public void testCreateManualAccountErrorIS() throws SQLException {
+        ManualAccountWrapper wrapper = newAccountWrapper("257", "LOL", "00640994", 612010100, USER_ID);
+        wrapper.setCbCustomerType((short) 23);
+        RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
+        Assert.assertTrue(res.isError());
+        wrapper = res.getResult();
+        Assert.assertNull(wrapper.getId());
+        Assert.assertFalse(isEmpty(res.getMessage()));
+        System.out.println("Message: " + res.getMessage());
+    }
+
+    /**
      * Тест создания счета из ручного ввода с ошибкой ввода (задана субсделка, но не задана сделка)
      * @throws SQLException
      */

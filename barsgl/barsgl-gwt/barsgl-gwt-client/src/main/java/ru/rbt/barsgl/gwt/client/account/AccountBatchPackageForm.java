@@ -129,8 +129,9 @@ public class AccountBatchPackageForm extends GridForm {
 
         result.addColumn(new Column("FILIAL", Column.Type.STRING, "Филиал загрузившего пакет", 100));
         result.addColumn(new Column("USER_LOAD", Column.Type.STRING, "Логин загрузившего пакет", 110, false, false));
-        result.addColumn(new Column("USER_PROC", Column.Type.STRING, "Логин обработавшего пакет", 110));
-        result.addColumn(col = new Column("FIO", Column.Type.STRING, "ФИО обработавшего пакет", 250));
+        result.addColumn(col = new Column("FIO_LOAD", Column.Type.STRING, "ФИО загрузившего пакет", 250));
+        result.addColumn(new Column("USER_PROC", Column.Type.STRING, "Логин обработавшего пакет", 110, false, false));
+        result.addColumn(col = new Column("FIO_PROC", Column.Type.STRING, "ФИО обработавшего пакет", 250, false, false));
 
         result.addColumn(new Column("FILE_NAME", Column.Type.STRING, "Имя файла", 100, false, false));
         result.addColumn(_colInvisible = new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
@@ -151,7 +152,8 @@ public class AccountBatchPackageForm extends GridForm {
         return " SELECT ID_PKG, OD_LOAD, CNT_REQ, CNT_ERR, CNT_FOUND, CNT_REQ - CNT_ERR - CNT_FOUND CNT_OPEN,\n" +
                 " TS_LOAD, TS_STARTV, TS_ENDV, TS_STARTP, TS_ENDP, STATE, USER_LOAD, USER_PROC, FILE_NAME," +
                 " case when INVISIBLE = '" + InvisibleType.N.name() + "' then ' ' else INVISIBLE end as INVISIBLE, " +
-                " U1.FILIAL, TRIM(REPLACE(U2.SURNAME || ' '  || U2.FIRSTNAME || ' ' || U2.PATRONYMIC, '  ', ' ')) AS FIO\n" +
+                " U1.FILIAL, TRIM(REPLACE(U1.SURNAME || ' '  || U1.FIRSTNAME || ' ' || U1.PATRONYMIC, '  ', ' ')) AS FIO_LOAD,\n" +
+                " TRIM(REPLACE(U2.SURNAME || ' '  || U2.FIRSTNAME || ' ' || U2.PATRONYMIC, '  ', ' ')) AS FIO_PROC\n" +
                 " FROM GL_ACBATPKG PKG" +
                 " LEFT JOIN GL_USER U1 ON U1.USER_NAME = PKG.USER_LOAD" +
                 " LEFT JOIN GL_USER U2 ON U2.USER_NAME = PKG.USER_PROC"

@@ -54,25 +54,18 @@ public abstract class UploadProcessorBase {
         return true;
     }
 
-    protected String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
-        return getValue(rowParams, row, index, notNull, String.class, maxLength, exact, errorList);
-    }
-
-    protected String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, List<String> errorList) throws ParamsParserException {
-//        return StringUtils.removeCtrlChars(getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList));
-        return getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList);
-    }
-
-    protected String getNumberString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
-        String valueStr = getString(rowParams, row, index, notNull, maxLength, errorList);
-        try {
-            Long.parseLong(valueStr);
-            return valueStr;
-        } catch (NumberFormatException e) {
-            errorList.add(format("%s Неверный формат данных (надо число длиной %s%d символов): '%s'",
-                    getLocation(row, index), exact ? "" : " <= ", maxLength, valueStr));
+    protected Object getParam(List<Object> rowParams, int row, int index, boolean notNull, List<String> errorList) {
+        if (rowParams.size() <= index) {
             return null;
         }
+        Object param = rowParams.get(index);
+        if (null == param) {
+            if (notNull)
+                errorList.add(format("%s Не задано значение", getLocation(row, index)));
+            return null;
+        }
+        else
+            return param;
     }
 
     protected <T> T getValue(List<Object> rowParams, int row, int index, boolean notNull, Class<T> clazz, List<String> errorList) throws ParamsParserException {
@@ -80,6 +73,7 @@ public abstract class UploadProcessorBase {
     }
 
     protected <T> T getValue(List<Object> rowParams, int row, int index, boolean notNull, Class<T> clazz, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
+/*
         if (rowParams.size() <= index) {
             return null;
         }
@@ -90,6 +84,15 @@ public abstract class UploadProcessorBase {
                     errorList.add(format("%s Не задано значение", getLocation(row, index)));
                 return null;
             }
+*/
+        Object param = getParam(rowParams, row, index, notNull, errorList);
+        return getValue(param, row, index, notNull, clazz, maxLength, exact, errorList);
+    }
+
+    protected <T> T getValue(Object param, int row, int index, boolean notNull, Class<T> clazz, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
+        if (null == param)
+            return null;
+        try {
             String valueStr = param.toString().trim();
             if (isEmpty(valueStr)) {
                 if (notNull)
@@ -99,12 +102,12 @@ public abstract class UploadProcessorBase {
             if (clazz.equals(String.class)) {
                 if (exact && valueStr.length() != maxLength) {
                     errorList.add(format("%s Неверная длина строка (<>%d): '%s'",
-                            getLocation(row, index), maxLength, rowParams.get(index)));
+                            getLocation(row, index), maxLength, param));
                     return (T) valueStr;
                 }
                 else if (valueStr.length() > maxLength) {
                     errorList.add(format("%s Слишком длинная строка (>%d): '%s'",
-                            getLocation(row, index), maxLength, rowParams.get(index)));
+                            getLocation(row, index), maxLength, param));
                     return (T) valueStr.substring(0, maxLength);
                 }
                 else {  // (Double)param - (int)(double)(Double) param == 0
@@ -142,6 +145,74 @@ public abstract class UploadProcessorBase {
                     getLocation(row, index), e.getMessage());
             log.error(message, e);
             throw new ParamsParserException(message);
+        }
+    }
+
+    protected String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
+        return getValue(rowParams, row, index, notNull, String.class, maxLength, exact, errorList);
+    }
+
+    protected String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, List<String> errorList) throws ParamsParserException {
+//        return StringUtils.removeCtrlChars(getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList));
+        return getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList);
+    }
+
+/*
+    protected String get_NumberString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
+        String valueStr = getString(rowParams, row, index, notNull, maxLength, exact, errorList);
+        try {
+            Long.parseLong(valueStr);
+            return valueStr;
+        } catch (NumberFormatException e) {
+            errorList.add(format("%s Неверный формат данных (надо число длиной %s%d символов): '%s'",
+                    getLocation(row, index), exact ? "" : " <= ", maxLength, valueStr));
+            return null;
+        }
+    }
+*/
+
+    protected String getLongAsString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
+        Object param_ex = getParam(rowParams, row, index, notNull, errorList);
+        if (null == param_ex)
+            return null;
+        Class clazz = param_ex.getClass();
+        if (clazz.equals(String.class)) {
+            String param = (String) param_ex;
+            String valueStr = getValue(param, row, index, notNull, String.class, maxLength, exact, errorList);
+            if (null == valueStr)
+                return null;
+            try {
+                Long.parseLong(valueStr);
+                return valueStr;
+            } catch (NumberFormatException e) {
+                errorList.add(format("%s Неверный формат данных (надо число длиной %s%d символов): '%s'",
+                        getLocation(row, index), exact ? "" : " <= ", maxLength, valueStr));
+                return null;
+            }
+        } else {
+            Long param = null;
+            Double delta = 0.0;
+            if (Long.class.isAssignableFrom(clazz)) {
+                param = (Long) param_ex;
+//            } else if (clazz.equals(Long.class) || clazz.equals(Integer.class) || clazz.equals(Short.class)) {
+//                param = (Long) param_ex;
+            } else if (clazz.equals(Double.class)) {
+                param = ((Double) param_ex).longValue();
+                delta = (Double) param_ex - param;
+            } else if (clazz.equals(Float.class)) {
+                param = ((Float) param_ex).longValue();
+                delta = ((Float) param_ex).doubleValue() - param;
+            } else {
+                errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
+                        getLocation(row, index), getClassDescr(Long.class), param_ex));
+                return null;
+            }
+            if (delta != 0) {
+                errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
+                        getLocation(row, index), getClassDescr(Long.class), param_ex));
+                return null;
+            }
+            return getValue(param, row, index, notNull, String.class, maxLength, exact, errorList);
         }
     }
 

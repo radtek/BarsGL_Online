@@ -1,11 +1,9 @@
 package ru.rbt.barsgl.gwt.client.account;
 
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.*;
 import ru.rbt.barsgl.gwt.client.BarsGLEntryPoint;
-import ru.rbt.barsgl.gwt.client.dictionary.BatchPostingFormDlg;
 import ru.rbt.barsgl.gwt.client.gridForm.GridFormDlgBase;
 import ru.rbt.barsgl.gwt.client.loadFile.LoadFileAnyDlg;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
@@ -19,7 +17,6 @@ import ru.rbt.shared.user.AppUserWrapper;
 import java.util.HashMap;
 
 import static ru.rbt.barsgl.gwt.client.account.AccountBatchErrorForm.ViewType.V_LOAD;
-import static ru.rbt.barsgl.gwt.core.comp.Components.createLabel;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showConfirm;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 import static ru.rbt.barsgl.shared.operation.AccountBatchWrapper.AccountBatchAction.DELETE;
@@ -113,7 +110,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     @Override
     protected void onClickDelete(ClickEvent clickEvent) {
-        showConfirm("Вы уверены, что хотите удалить пакет?",
+        showConfirm("Подтверждение", "Подтвердите удаление пакета",
                 new IDlgEvents() {
                     @Override
                     public void onDlgOkClick(Object p) throws Exception {
@@ -134,7 +131,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 */
     @Override
     protected boolean onClickOK() {
-        showConfirm("Вы уверены, что хотите открыть счета?",
+        showConfirm("Подтверждение", "Подтвердите передачу пакета на обработку",
             new IDlgEvents() {
                 @Override
                 public void onDlgOkClick(Object p) throws Exception {
@@ -175,6 +172,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 
     }
 
+/*
     @Override
     public void afterShow() {
         switchControlsState(true);
@@ -184,5 +182,6 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
         ok.setEnabled(false);
         clearResult();
     }
+*/
 
 }

@@ -42,12 +42,13 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected Button showButton;
     protected Button uploadButton;
     protected Button deleteButton;
+
     protected Panel loadingResult;
 
     protected Panel hidden;
     protected Hidden fileName;
 
-    private RichAreaBox requestBox;
+    protected RichAreaBox requestBox;
 
     public LoadFileAnyDlg(){
         super();
@@ -220,8 +221,9 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
 
                 ok.setEnabled(isOk);
                 switchControlsState(!isOk);
+                response = response.replaceFirst(LIST_DELIMITER, "");
             }
-            return response.replaceFirst(LIST_DELIMITER, "").replaceAll(LIST_DELIMITER, "<BR>");
+            return response.replaceAll(LIST_DELIMITER, "<BR>");
         } catch (Exception e) {
             return e.getMessage();
         }
@@ -328,6 +330,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     public void afterShow() {
         switchControlsState(true);
         switchButtonState(false, false);
+        uploadButton.setEnabled(false);
         clearResult();
     }
 }

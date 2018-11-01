@@ -84,7 +84,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
     @Override
     protected long getMaxLines() {
-        return propertiesRepository.getNumberDef(PropertyName.BATPKG_MAXROWS.getName(), MAX_ROWS);  // TODO BATPKG_MAXROWS ??
+        return propertiesRepository.getNumberDef(PropertyName.ACCPKG_MAXROWS.getName(), MAX_ROWS);  // TODO BATPKG_MAXROWS ??
     }
 
     @Override
@@ -184,13 +184,13 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         // required
         request.setInBranch(getString(rowParams, row, I_Branch, true, 3, true, errorList));
         request.setInCcy(getString(rowParams, row, I_Ccy, true, 3, true, errorList));
-        request.setInCustno(getNumberString(rowParams, row, I_Custno, true, 8, true, errorList));
-        request.setInAcctype(getNumberString(rowParams, row, I_Acctype, true, 9, true, errorList));
+        request.setInCustno(getLongAsString(rowParams, row, I_Custno, true, 8, true, errorList));
+        request.setInAcctype(getLongAsString(rowParams, row, I_Acctype, true, 9, true, errorList));
 
         // optional
-        request.setInAcc2(getNumberString(rowParams, row, I_Acc2, false, 5, true, errorList));
-        request.setInCtype(getNumberString(rowParams, row, I_Ctype, false, 2, false, errorList));
-        request.setInTerm(getNumberString(rowParams, row, I_Term, false, 2, false, errorList));
+        request.setInAcc2(getLongAsString(rowParams, row, I_Acc2, false, 5, true, errorList));
+        request.setInCtype(getLongAsString(rowParams, row, I_Ctype, false, 2, false, errorList));
+        request.setInTerm(getLongAsString(rowParams, row, I_Term, false, 2, false, errorList));
         request.setInDealsrc(getString(rowParams, row, I_Dealsrc, true, 8, false, errorList));     // required
         request.setInDealid(getString(rowParams, row, I_Dealid, false, 20, false, errorList));
         request.setInSubdealid(getString(rowParams, row, I_Subdealid, false, 20, false, errorList));

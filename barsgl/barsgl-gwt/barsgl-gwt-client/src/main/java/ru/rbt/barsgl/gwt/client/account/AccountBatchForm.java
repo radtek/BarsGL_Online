@@ -92,11 +92,10 @@ public class AccountBatchForm extends GridForm {
         col.setList(getEnumLabelsList(AccountBatchPackageState.values()));
         result.addColumn(col = new Column("STATE", Column.Type.STRING, "Статус запроса", 100));
         col.setList(getEnumLabelsList(AccountBatchState.values()));
-
-        result.addColumn(new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(col = new Column("WAS_ACC", Column.Type.STRING, "Открыт ранее", 60));
         col.setList(getYesNoList());
 
+        result.addColumn(new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(new Column("ACID", Column.Type.STRING, "Счет Midas", 160));
         result.addColumn(new Column("BRANCH_IN", Column.Type.STRING, "Отделение", 60));
         result.addColumn(new Column("CBCC_BR", Column.Type.STRING, "Филиал", 60));
@@ -104,21 +103,23 @@ public class AccountBatchForm extends GridForm {
         result.addColumn(new Column("CUSTNO_IN", Column.Type.STRING, "Номер клиента", 80));
 
         result.addColumn(new Column("ACCTYPE_IN", Column.Type.STRING, "Accounting Type", 80));
-        result.addColumn(new Column("CTYPE_IN", Column.Type.STRING, "Тип собст-ти (in)", 60, false, false));
-        result.addColumn(new Column("CTYPE_PARM", Column.Type.STRING, "Тип собст-ти (actparm)", 60, false, false));
-        result.addColumn(new Column("CTYPE_ACC", Column.Type.STRING, "Тип собст-ти", 65));
-        result.addColumn(new Column("TERM_IN", Column.Type.STRING, "Код срока (in)", 60, false, false));
-        result.addColumn(new Column("TERM_PARM", Column.Type.STRING, "Код срока", 65));
-        result.addColumn(new Column("ACC2_IN", Column.Type.STRING, "Б/счет 2 (in)", 60, false, false));
-        result.addColumn(new Column("ACC2_PARM", Column.Type.STRING, "Б/счет 2", 65));
-        result.addColumn(new Column("PLCODE_PARM", Column.Type.STRING, "Символ ОФР", 65));
+        result.addColumn(new Column("CTYPE_IN", Column.Type.STRING, "Тип собств", 65, false, false));
+        result.addColumn(new Column("CTYPE_PARM", Column.Type.STRING, "Тип собств (actparm)", 65, false, false));
+        result.addColumn(new Column("CTYPE_ACC", Column.Type.STRING, "*Тип собств", 65));
+        result.addColumn(new Column("TERM_IN", Column.Type.STRING, "Код срока", 65, false, false));
+        result.addColumn(new Column("TERM_PARM", Column.Type.STRING, "*Код срока", 65));
+        result.addColumn(new Column("ACC2_IN", Column.Type.STRING, "Баланс. счет 2", 70, false, false));
+        result.addColumn(new Column("ACC2_PARM", Column.Type.STRING, "*Баланс. счет 2", 70));
+        result.addColumn(new Column("PLCODE_PARM", Column.Type.STRING, "Символ ОФР", 70));
+        result.addColumn(new Column("ACOD_PARM", Column.Type.STRING, "ACOD", 65, false, false));
+        result.addColumn(new Column("ACSQ_PARM", Column.Type.STRING, "SQ", 65, false, false));
 
         result.addColumn(new Column("DEALSRC_IN", Column.Type.STRING, "Источник сделки", 75));
         result.addColumn(new Column("DEALID_IN", Column.Type.STRING, "ИД сделки", 160));
         result.addColumn(new Column("SUBDEALID_IN", Column.Type.STRING, "ИД субсделки", 160));
 
-        result.addColumn(new Column("OPENDATE_IN", Column.Type.DATE, "Дата открытия счета (in)", 75, false, false));
-        result.addColumn(new Column("OPENDATE", Column.Type.DATE, "Дата открытия счета", 75));
+        result.addColumn(new Column("OPENDATE_IN", Column.Type.DATE, "Дата открытия счета", 75, false, false));
+        result.addColumn(new Column("OPENDATE", Column.Type.DATE, "*Дата открытия счета", 75));
         result.addColumn(new Column("ACCNAME", Column.Type.STRING, "Название счета", 260, false, false));
 
         result.addColumn(new Column("ERROR_MSG", Column.Type.STRING, "Описание ошибки", 800));
@@ -149,7 +150,7 @@ public class AccountBatchForm extends GridForm {
         if (isEmpty(where))
             where = " where 1=1";
         return " select ID_REQ, ID_PKG, OD_LOAD, RECNO, PKG_STATE, STATE, WAS_ACC, BSAACID, ACID,\n" +
-                " BRANCH_IN, CBCC_BR, CCY_IN, CUSTNO_IN, ACCTYPE_IN,\n" +
+                " BRANCH_IN, CBCC_BR, CCY_IN, CUSTNO_IN, ACCTYPE_IN, ACOD_PARM, ACSQ_PARM,\n" +
                 " CTYPE_IN, CTYPE_PARM, CTYPE_ACC, TERM_IN, TERM_PARM, ACC2_IN, ACC2_PARM, PLCODE_PARM,\n" +
                 " DEALSRC_IN, DEALID_IN, SUBDEALID_IN, OPENDATE_IN, OPENDATE, ACCNAME,\n" +
                 " ERROR_MSG, TS_VALID, TS_OPEN, TS_ENDP, USER_LOAD, USER_PROC, INVISIBLE\n" +
