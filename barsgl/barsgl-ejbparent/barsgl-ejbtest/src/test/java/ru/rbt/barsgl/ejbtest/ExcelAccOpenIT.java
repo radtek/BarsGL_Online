@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.*;
-import static ru.rbt.barsgl.shared.enums.AccountBatchState.COMPLETED;
+import static ru.rbt.barsgl.shared.enums.AccountBatchState.*;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
@@ -48,7 +48,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(package1);
         request.setLineNumber(1L);
-        request.setState(AccountBatchState.LOAD);
+        request.setState(LOAD);
         request.setInBranch("001");
         request.setInCcy("RUR");
         request.setInCustno("001");
@@ -126,8 +126,28 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
 
         List<AccountBatchRequest> requests = baseEntityRepository.select(AccountBatchRequest.class, "from AccountBatchRequest p where p.batchPackage = ?1", pkg);
         Assert.assertTrue(requests.stream().map(r -> r.getId() + ":" + r.getState() + ":" + r.getNewAccount()).collect(Collectors.joining(" ,"))
-                , requests.stream().anyMatch(r -> !isEmpty(r.getBsaAcid()) && COMPLETED == r.getState() && Y == r.getNewAccount()));
+                , requests.stream().allMatch(r -> !isEmpty(r.getBsaAcid()) && COMPLETED == r.getState()));
 
+        log.info("update: " + baseEntityRepository.executeNativeUpdate("update gl_acbatreq set glacid = null"));
+        log.info("deleted: " + baseEntityRepository.executeNativeUpdate("delete from gl_acc where bsaacid in (select bsaacid from GL_ACBATREQ r where r.id_pkg = ?)", pkg.getId()));
+
+        baseEntityRepository.executeNativeUpdate("update gl_acbatpkg set state = ?, TS_STARTV = null, TS_ENDV = null, TS_STARTP = null, TS_ENDP = null, CNT_ERR = null, CNT_FOUND = null where id_pkg = ?"
+            , ON_VALID.name(), pkg.getId());
+
+        baseEntityRepository.executeNativeUpdate("update gl_acbatreq set state = ?, bsaacid = null where id_pkg = ?", LOAD.name(), pkg.getId());
+
+        // повторная обработка
+        remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(IS_VALID, pkg.getState());
+        requests = baseEntityRepository.select(AccountBatchRequest.class, "from AccountBatchRequest p where p.batchPackage = ?1", pkg);
+        Assert.assertTrue(requests.stream().allMatch(r -> r.getState() == VALID));
+
+        remoteAccess.invoke(AccountBatchStateController.class, "startProcess", pkg);
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(PROCESSED, pkg.getState());
+        requests = baseEntityRepository.select(AccountBatchRequest.class, "from AccountBatchRequest p where p.batchPackage = ?1", pkg);
+        Assert.assertTrue(requests.stream().allMatch(r -> r.getState() == COMPLETED  && Y == r.getNewAccount()));
     }
 
     private AccountBatchRequest findRequest(long requestId) {
@@ -228,7 +248,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(pkg);
         request.setLineNumber(lineNumber);
-        request.setState(AccountBatchState.LOAD);
+        request.setState(LOAD);
         request.setInBranch(branch);
         request.setInCcy(ccy);
         request.setInCustno(custno);
