@@ -2,33 +2,28 @@ package ru.rbt.barsgl.ejb.controller.acc.act;
 
 import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
-import ru.rbt.barsgl.ejb.controller.acc.AccountBatchPackageEvent;
-import ru.rbt.barsgl.ejb.controller.acc.AccountBatchSupportBean;
+import ru.rbt.barsgl.ejb.controller.acc.*;
 import ru.rbt.barsgl.ejb.controller.sm.Transition;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
-import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchRequest;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
 import ru.rbt.barsgl.ejbcore.CoreRepository;
-import ru.rbt.barsgl.shared.ErrorList;
 import ru.rbt.barsgl.shared.enums.AccountBatchState;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
-import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.ejbcore.validation.ValidationError;
 import ru.rbt.shared.ExceptionUtils;
 
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 import static java.lang.String.format;
@@ -36,8 +31,8 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBatch;
 import static ru.rbt.ejbcore.mapping.YesNo.N;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
-import static ru.rbt.ejbcore.util.StringUtils.ifEmpty;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by Ivan Sevastyanov on 29.10.2018.
@@ -62,6 +57,12 @@ public class AccountBatchProcess extends AbstractAccountBatchAction {
     @EJB
     private AccountBatchSupportBean batchSupportBean;
 
+    @Inject
+    private SimpleAccountBatchCreator simpleAccountBatchCreator;
+
+    @Inject
+    private PLAccountBatchCreator plAccountBatchCreator;
+
     @Override
     public AccountBatchPackageEvent proceed(AccountBatchPackage batchPackage, Transition transition) {
         try {
@@ -76,7 +77,10 @@ public class AccountBatchProcess extends AbstractAccountBatchAction {
                             long requestId = resultSet.getLong("ID_REQ");
                             service.submit(() -> {
                                 try {
-                                    processOneRequest(requestId);
+                                    AccountBatchRequest request = (AccountBatchRequest) repository.findById(AccountBatchRequest.class, requestId);
+                                    if (checkOneRequest(request)){
+                                        processOneRequest(request);
+                                    }
                                 } catch (Throwable e) {
                                     auditController.error(AccountBatch, format("Необработаная ошибка при обработке запроса на открытие счета '%s'", requestId), null, e);
                                 }
@@ -98,47 +102,32 @@ public class AccountBatchProcess extends AbstractAccountBatchAction {
         }
     }
 
-    private void processOneRequest(long requestId) {
-        AccountBatchRequest request = (AccountBatchRequest) repository.findById(AccountBatchRequest.class, requestId);
+    private boolean checkOneRequest(AccountBatchRequest request) {
         if (request.getState() != AccountBatchState.VALID && !isEmpty(request.getBsaAcid())) {
             auditController.warning(AccountBatch, format("Запрос '%s' в недопустимом статусе '%s' будет пропущен", request.getId(), request.getState()));
-            return;
-        }
-        if (isEmpty(request.getCalcPlcodeParm())) {
-            AccountKeys keys = fromRequest(request);
-            final String[] errorMessage = {null};
-            GLAccount account = Optional.ofNullable(accountController.findGLAccountMnl(keys)).orElseGet(() -> {
-                try {
-                    return accountController.createGLAccountMnl(keys, Optional.ofNullable(request.getInOpendate())
-                            .orElseGet(() -> operdayController.getOperday().getCurrentDate()), new ErrorList(), GLAccount.OpenType.XLS);
-                } catch (Throwable e) {
-                    auditController.error(AccountBatch, format("Ошибка при создании счета по запросу '%s': ", request) + e.getMessage(), request, e);
-                    errorMessage[0] = ExceptionUtils.getErrorMessage(e, ValidationError.class, SQLException.class);
-                    return null;
-                }
-            });
-            if (null != account) {
-                updateRequestState(request, account, AccountBatchState.COMPLETED, null);
-            } else {
-                updateRequestState(request, null, AccountBatchState.ERRPROC, errorMessage[0]);
-            }
+            return false;
+        } else {
+            return true;
         }
     }
 
-    private AccountKeys fromRequest(AccountBatchRequest request) {
-        return AccountKeysBuilder.create()
-                .withBranch(request.getInBranch())
-                .withCurrency(request.getInCcy())
-                .withCustomerNumber(request.getInCustno())
-                .withAccountType(request.getInAcctype())
-                .withCustomerType(request.getCalcCtypeAcc())
-                .withTerm(ifEmpty(request.getInTerm(), "0"))
-                .withDealSource(request.getInDealsrc())
-                .withDealId(request.getInDealid())
-                .withSubDealId(request.getInSubdealid())
-                .withAcc2(request.getCalcAcc2Parm())
-                .withFilial(request.getCalcCbcc())
-                .build();
+    private void processOneRequest(AccountBatchRequest request) {
+        final AccountBatchCreator accountCreator = isEmpty(request.getCalcPlcodeParm()) ? simpleAccountBatchCreator : plAccountBatchCreator;
+        final String[] errorMessage = {null};
+        GLAccount account = accountCreator.find(request).orElseGet(() -> {
+            try {
+                return accountCreator.createAccount(request);
+            } catch (Throwable e) {
+                auditController.error(AccountBatch, format("Ошибка при создании счета по запросу '%s': ", request) + e.getMessage(), request, e);
+                errorMessage[0] = ExceptionUtils.getErrorMessage(e, ValidationError.class, SQLException.class);
+                return null;
+            }
+        });
+        if (null != account) {
+            updateRequestState(request, account, AccountBatchState.COMPLETED, null);
+        } else {
+            updateRequestState(request, null, AccountBatchState.ERRPROC, errorMessage[0]);
+        }
     }
 
     private void updateRequestState(AccountBatchRequest request, GLAccount account, AccountBatchState state, String error) {
@@ -150,7 +139,7 @@ public class AccountBatchProcess extends AbstractAccountBatchAction {
             String bsaacid = null != account ? account.getBsaAcid() : null;
             repository.executeInNewTransaction(persistence -> {
                 repository.executeUpdate("update AccountBatchRequest r set r.state = ?1, r.account.id = ?2, r.bsaAcid = ?3, r.newAccount =?4, r.openDate = ?5, dtOpen = ?6, r.errorMessage = ?7 where r.id = ?8"
-                    , state, accountId, bsaacid, newAcc, openDate, operdayController.getSystemDateTime(), StringUtils.substr(error, 4000), requestId);
+                    , state, accountId, bsaacid, newAcc, openDate, operdayController.getSystemDateTime(), substr(error, 4000), requestId);
                 return null;
             });
         } catch (Exception e) {

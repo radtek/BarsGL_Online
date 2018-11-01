@@ -26,6 +26,7 @@ public class AccountBatchStateController {
             .addStateTrigger(ERROR, AfterValidateTrigger.class)
             .addStateTrigger(PROC_ERR, AfterProcessTrigger.class)
             .addStateTrigger(PROCESSED, AfterProcessTrigger.class)
+            .addLeaveStateTrigger(ON_VALID, OnStartValidation.class)
             .build();
 
     public void sendToValidation(AccountBatchPackage batchPackage) throws Exception {
