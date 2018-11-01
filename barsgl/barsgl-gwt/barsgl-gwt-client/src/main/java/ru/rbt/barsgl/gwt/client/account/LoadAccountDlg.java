@@ -131,7 +131,7 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
 */
     @Override
     protected boolean onClickOK() {
-        showConfirm("Подтверждение", "Подтвердите передачу пакета на обработку",
+        showConfirm("Подтверждение", "Подтвердите открытие счетов пакета",
             new IDlgEvents() {
                 @Override
                 public void onDlgOkClick(Object p) throws Exception {

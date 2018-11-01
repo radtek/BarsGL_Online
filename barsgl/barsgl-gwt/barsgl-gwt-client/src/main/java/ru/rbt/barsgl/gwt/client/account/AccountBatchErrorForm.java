@@ -93,9 +93,9 @@ public class AccountBatchErrorForm extends GridForm {
 
         result.addColumn(_colError2 = new Column("ERROR_MSG2", Column.Type.STRING, "Описание ошибки", 800));
 
-        result.addColumn(col = new Column("TS_VALID", Column.Type.DATETIME, "Время вал-ции счета", 135, false, false));
+        result.addColumn(col = new Column("TS_VALID", Column.Type.DATETIME, "Валидирован", 135, false, false));
         col.setFilterable(false);
-        result.addColumn(col = new Column("TS_OPEN", Column.Type.DATETIME, "Время рег-ции счета", 135, false, false));
+        result.addColumn(col = new Column("TS_OPEN", Column.Type.DATETIME, "Зарегистрирован", 135, false, false));
         col.setFilterable(false);
 
         setViewType(getViewType());

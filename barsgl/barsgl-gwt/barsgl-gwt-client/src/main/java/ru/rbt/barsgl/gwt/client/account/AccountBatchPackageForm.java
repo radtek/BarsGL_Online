@@ -90,13 +90,12 @@ public class AccountBatchPackageForm extends GridForm {
         abw.addAction(quickFilterAction);
         abw.addAction(new SimpleDlgAction(grid, DlgMode.BROWSE, 10));
         abw.addSecureAction(_loadPackage = createLoad(ImageConstants.INSTANCE.load()), AccPkgFileLoad);
-        abw.addSecureAction(_openAccounts = createCommand(ImageConstants.INSTANCE.add_list(), OPEN, "Открыть счета пакета"), AccPkgFileLoad, AccPkgFileOpen);
-        abw.addSecureAction(_delPackage = createCommand(ImageConstants.INSTANCE.del_list(), DELETE, "Удалить пакет"), AccPkgFileLoad, AccPkgFileDel);
+        abw.addSecureAction(_openAccounts = createCommand(ImageConstants.INSTANCE.add_list(), OPEN, "Открыть счета пакета", "открытие счетов пакета"), AccPkgFileLoad, AccPkgFileOpen);
+        abw.addSecureAction(_delPackage = createCommand(ImageConstants.INSTANCE.del_list(), DELETE, "Удалить пакет", "удаление пакета"), AccPkgFileLoad, AccPkgFileDel);
         abw.addAction(_viewError = createView(ImageConstants.INSTANCE.err_list(), V_ERROR, "Ошибки пакета"));
         abw.addAction(_viewFull = createView(ImageConstants.INSTANCE.preview(), V_FULL, "Просмотр пакета"));
         abw.addAction(createGotoAccounts(ImageConstants.INSTANCE.oper_go(), "Переход на страницу счетов"));
 //        abw.addAction(new PackageStatisticsAction(grid));
-
     }
 
     @Override
@@ -118,13 +117,13 @@ public class AccountBatchPackageForm extends GridForm {
 
         result.addColumn(col = new Column("TS_LOAD", Column.Type.DATETIME, "Время загрузки", 135, false, false));
         col.setFilterable(false);
-        result.addColumn(col = new Column("TS_STARTV", Column.Type.DATETIME, "Время начала обработки", 135));
+        result.addColumn(col = new Column("TS_STARTV", Column.Type.DATETIME, "Начало обработки", 135));
         col.setFilterable(false);
-        result.addColumn(col = new Column("TS_ENDV", Column.Type.DATETIME, "Время завершения валидации", 135, false, false));
+        result.addColumn(col = new Column("TS_ENDV", Column.Type.DATETIME, "Конец валидации", 135, false, false));
         col.setFilterable(false);
 //        result.addColumn(col = new Column("TS_STARTP", Column.Type.DATETIME, "Начало открытия счетов", 135, false, false));
 //        col.setFilterable(false);
-        result.addColumn(col = new Column("TS_ENDP", Column.Type.DATETIME, "Время окончания обработки", 135));
+        result.addColumn(col = new Column("TS_ENDP", Column.Type.DATETIME, "Конец обработки", 135));
         col.setFilterable(false);
 
         result.addColumn(new Column("FILIAL", Column.Type.STRING, "Филиал загрузившего пакет", 100));
@@ -245,14 +244,14 @@ public class AccountBatchPackageForm extends GridForm {
         };
     }
 
-    private GridAction createCommand(ImageResource img, final AccountBatchWrapper.AccountBatchAction batchAction, final String hint) {
+    private GridAction createCommand(ImageResource img, final AccountBatchWrapper.AccountBatchAction batchAction, final String hint, final String confirm) {
         return new GridAction(grid, null, hint, new Image(img), 10, true) {
             @Override
             public void execute() {
                 final Long idPackage = getIdPackage();
                 if (idPackage == null)
                     return;
-                showConfirm("Вы уверены, что хотите " + hint.toLowerCase() + " ID = " + idPackage + "?",
+                showConfirm("Подтверждение", "Подтвердите " + confirm + " c ID = " + idPackage,
                         new IDlgEvents() {
                             @Override
                             public void onDlgOkClick(Object p) throws Exception {

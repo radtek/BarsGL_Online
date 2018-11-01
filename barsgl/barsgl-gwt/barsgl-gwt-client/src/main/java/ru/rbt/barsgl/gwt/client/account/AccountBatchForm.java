@@ -124,11 +124,11 @@ public class AccountBatchForm extends GridForm {
 
         result.addColumn(new Column("ERROR_MSG", Column.Type.STRING, "Описание ошибки", 800));
 
-        result.addColumn(col = new Column("TS_VALID", Column.Type.DATETIME, "Время вал-ции счета", 135, false, false));
+        result.addColumn(col = new Column("TS_VALID", Column.Type.DATETIME, "Валидирован", 135, false, false));
         col.setFilterable(false);
-        result.addColumn(col = new Column("TS_OPEN", Column.Type.DATETIME, "Время рег-ции счета", 135, false, false));
+        result.addColumn(col = new Column("TS_OPEN", Column.Type.DATETIME, "Зарегистрирован", 135, false, false));
         col.setFilterable(false);
-        result.addColumn(col = new Column("TS_ENDP", Column.Type.DATETIME, "Время обр-ки пакета", 135));
+        result.addColumn(col = new Column("TS_ENDP", Column.Type.DATETIME, "Пакет обработан", 135));
         col.setFilterable(false);
 
         result.addColumn(new Column("USER_LOAD", Column.Type.STRING, "Исполнитель загрузки", 110, false, false));
