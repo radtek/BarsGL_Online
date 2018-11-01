@@ -8,6 +8,7 @@ import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -132,20 +133,26 @@ public abstract class UploadProcessorBase {
                 Short value = Short.parseShort(valueStr);
                 return (T) value;
             } else {
-                errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
-                        getLocation(row, index), getClassDescr(clazz), param));
+                errorList.add(getErrorMessage(param, row, index, clazz));
                 return null;
             }
         } catch (NumberFormatException e){
-            errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
-                    getLocation(row, index), getClassDescr(clazz), param));
+            errorList.add(getErrorMessage(param, row, index, clazz));
+            return null;
+        } catch (ParseException e){
+            errorList.add(getErrorMessage(param, row, index, clazz));
             return null;
         } catch (Throwable e){
-            final String message = format("%s Ошибка при получении значения",
+            final String message = format("%s Ошибка при получении значения: " + e.getMessage(),
                     getLocation(row, index), e.getMessage());
             log.error(message, e);
             throw new ParamsParserException(message);
         }
+    }
+
+    protected String getErrorMessage(Object param, int row, int index, Class clazz) {
+        return format("%s Неверный формат данных (нужно '%s'): '%s'",
+                getLocation(row, index), getClassDescr(clazz), param);
     }
 
     protected String getString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
@@ -287,6 +294,9 @@ public abstract class UploadProcessorBase {
             case "Integer":
             case "Long":
                 classDescr = "целое число";
+                break;
+            case "Date":
+                classDescr = "дата";
                 break;
         }
         return classDescr;

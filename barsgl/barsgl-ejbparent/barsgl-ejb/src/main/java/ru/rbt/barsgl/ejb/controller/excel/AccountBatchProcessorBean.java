@@ -182,7 +182,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
         AccountBatchRequest request = new AccountBatchRequest();
         // required
-        request.setInBranch(getString(rowParams, row, I_Branch, true, 3, true, errorList));
+        request.setInBranch(getLongAsString(rowParams, row, I_Branch, true, 3, true, errorList));
         request.setInCcy(getString(rowParams, row, I_Ccy, true, 3, true, errorList));
         request.setInCustno(getLongAsString(rowParams, row, I_Custno, true, 8, true, errorList));
         request.setInAcctype(getLongAsString(rowParams, row, I_Acctype, true, 9, true, errorList));

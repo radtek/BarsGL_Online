@@ -330,7 +330,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     public void afterShow() {
         switchControlsState(true);
         switchButtonState(false, false);
-        uploadButton.setEnabled(false);
+//        uploadButton.setEnabled(false);
         clearResult();
     }
 }
