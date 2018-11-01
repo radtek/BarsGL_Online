@@ -3,8 +3,11 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.controller.acc.AccountBatchStateController;
+import ru.rbt.barsgl.ejb.controller.operday.task.AccountBatchOpenTask;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchPackage;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchRequest;
+import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.enums.AccountBatchState;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -225,6 +228,57 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
         Assert.assertEquals(ERROR, pkg.getState());
 
+    }
+
+    @Test public void testTask() throws Exception {
+
+//        AccountBatchOpenTask
+        final String acctype = "911020416";
+        final String custno = "00151555";
+        final String dealId = "511_A073C_20";
+
+        DataRecord acctypeRecord = baseEntityRepository.selectFirst(
+                "select * from gl_actparm p where p.acod is not null and plcode is null and acctype = ?", acctype);
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACBATREQ r where exists (select 1 from gl_acc a where a.id = r.glacid and dealid = ? and acctype = ? and custno = ?)"
+                , dealId, acctype, custno);
+        baseEntityRepository.executeNativeUpdate("delete from gl_acc where dealid = ? and acctype = ? and custno = ?", dealId, acctype, custno);
+
+        final String branch = "001";
+        final String ccy = "RUR";
+        final String cbcusttype = acctypeRecord.getString("custype");
+        final String term = acctypeRecord.getString("term");
+        final String sealSrc = "IMEX";
+        final String subdealid = "00151555RURCL0P00300";
+
+        // PL счет
+        final String b1ranch = "001";
+        final String c1cy = "RUR";
+        final String c1ustno = "00151555";
+        final String a1cctype = "712010100";
+        final String t1erm = "06";
+        final String s1ealSrc = "IMEX";
+
+        // формируем пакет
+        AccountBatchPackage pkg = createPackage();
+
+        createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealId, subdealid, sealSrc, term);
+        createBatchRequest(pkg, 2L, branch, ccy, custno, acctype, dealId, subdealid, sealSrc, "05");
+        createBatchRequest(pkg, 3L, b1ranch, c1cy, c1ustno, a1cctype, "", "", s1ealSrc, t1erm);
+
+        // валидируем
+        remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ON_VALID, pkg.getState());
+
+        SingleActionJob job = SingleActionJobBuilder.create().withClass(AccountBatchOpenTask.class).build();
+        jobService.executeJob(job);
+
+        // проверяем состояние
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(PROCESSED, pkg.getState());
+        List<AccountBatchRequest> requests = baseEntityRepository.select(AccountBatchRequest.class, "from AccountBatchRequest p where p.batchPackage = ?1", pkg);
+        Assert.assertTrue(requests.stream().map(r -> r.getId() + ":" + r.getState() + ":" + r.getNewAccount()).collect(Collectors.joining(" ,"))
+                , requests.stream().allMatch(r -> !isEmpty(r.getBsaAcid()) && COMPLETED == r.getState()));
     }
 
     private AccountBatchPackage createPackage() {
