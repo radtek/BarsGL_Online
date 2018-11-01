@@ -214,7 +214,7 @@ public class AccountValidationSupportBean {
                             String term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
                             DataRecord record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term);
                             if (N == plAct && null == record1) {
-                                if (parseIntSafe(request.getInTerm()) >= 0) {
+                                if (parseIntSafe(request.getInTerm(), 0) >= 0) {
                                     custype = calcCtypeAcc(request.getCalcCtypeAcc()); term = "00";
                                     record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term);
                                     if (null == record1) {
@@ -224,7 +224,7 @@ public class AccountValidationSupportBean {
                                             } else {
                                                 custype = "00"; term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
                                                 record1 = findActparm(request.getInAcctype(), custype, term);
-                                                if (parseIntSafe(request.getInTerm()) >= 0 && parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
+                                                if (parseIntSafe(request.getInTerm(), 0) >= 0 && parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
                                                     custype = "00"; term = "00";
                                                     record1 = findActparm(request.getInAcctype(), custype, term);
                                                 }
@@ -261,7 +261,7 @@ public class AccountValidationSupportBean {
 
                     private void throwValidationError(String label, String custype, String term) {
                         throw new ValidationError(ACC_BATCH_OPEN, format("Не найдена запись GL_ACTPARM по  acctype= '%s' and term = '%s' and custype = '%s' (место проверки '%s')"
-                                , request.getInAcctype(), custype, term, label));
+                                , request.getInAcctype(), term, custype, label));
                     }
                 });
                 context.addValidator(() -> {
@@ -291,11 +291,14 @@ public class AccountValidationSupportBean {
     }
 
     private Integer parseIntSafe(String integer) {
-        final Integer undefined = -100;
+        return parseIntSafe(integer, -100);
+    }
+
+    private Integer parseIntSafe(String integer, Integer ifNull) {
         try {
-            return StringUtils.isEmpty(integer) ? undefined: Integer.parseInt(integer.trim());
+            return StringUtils.isEmpty(integer) ? ifNull: Integer.parseInt(integer.trim());
         } catch (NumberFormatException e) {
-            return undefined;
+            return ifNull;
         }
     }
 
