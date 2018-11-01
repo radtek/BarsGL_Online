@@ -19,6 +19,7 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,12 +80,18 @@ public class AccountValidationSupportBean {
                 });
                 context.addValidator(() -> {
                     try {
-                        DataRecord record = repository.selectFirst("select FL_CTRL from GL_ACTNAME  where ACCTYPE = ?", request.getInAcctype());
+                        DataRecord record = repository.selectFirst("select * from GL_ACTNAME  where ACCTYPE = ?", request.getInAcctype());
                         Assert.isTrue(null != record
                                 , () -> new ValidationError(ACC_BATCH_OPEN, format("Код AccType '%s' не найден в таблице GL_ACTNAME", request.getInAcctype().trim())));
-                        Assert.isTrue(!"Y".equals(record.getString("FL_CTRL"))
-                                , () -> new ValidationError(ACC_BATCH_OPEN, format("Код AccType '%s' соответствует счетам, остаток по которым контролируются во внешней системе. Пакетное открытие таких счетов запрещено"
-                                        , request.getInAcctype())));
+                        if (null != record.getString("FL_CTRL")) {
+                            Assert.isTrue(!"Y".equals(record.getString("FL_CTRL"))
+                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Код AccType '%s' соответствует счетам, остаток по которым контролируются во внешней системе. Пакетное открытие таких счетов запрещено"
+                                            , request.getInAcctype())));
+                        }
+                        if (null != record.getString("TECH_ACT")) {
+                            Assert.isTrue(!"Y".equals(record.getString("TECH_ACT"))
+                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Код AccType '%s' соответствует техниническим счетам", request.getInAcctype())));
+                        }
                     } catch (SQLException e) {
                         throw new DefaultApplicationException(e.getMessage(), e);
                     }
@@ -138,10 +145,10 @@ public class AccountValidationSupportBean {
                     }
                 });
                 context.addValidator(() -> {
-                    if (null != request.getInOpendate()
-                            && request.getInOpendate().after(operdayController.getOperday().getCurrentDate())) {
-                        throw new ValidationError(ACC_BATCH_OPEN, format("Дата открытия '%s' больше даты текущего операционного дня  '%s'"
-                                , dateUtils.onlyDateString(request.getOpenDate()), dateUtils.onlyDateString(operdayController.getOperday().getCurrentDate())));
+                    Date maxDate = addMonths(operdayController.getOperday().getCurrentDate(), 1);
+                    if (null != request.getInOpendate() && request.getInOpendate().after(maxDate)) {
+                        throw new ValidationError(ACC_BATCH_OPEN, format("Дата открытия '%s' больше максимально допустимой '%s'"
+                                , dateUtils.onlyDateString(request.getInOpendate()), dateUtils.onlyDateString(maxDate)));
                     }
                 });
                 context.addValidator(() -> {
@@ -297,6 +304,10 @@ public class AccountValidationSupportBean {
     private DataRecord findActparm(String acctype, String custype, String term) throws SQLException {
         return repository.selectFirst("select * from gl_actparm where acctype = ? and custype = ? and term = ?"
                 , acctype, custype, term);
+    }
+
+    private Date addMonths(Date from, int months) {
+        return org.apache.commons.lang3.time.DateUtils.addMonths(from, months);
     }
 
 }
