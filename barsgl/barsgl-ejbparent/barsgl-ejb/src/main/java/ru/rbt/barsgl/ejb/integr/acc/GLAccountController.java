@@ -537,26 +537,25 @@ public class GLAccountController {
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLPLAccountMnl(final AccountKeys keys, GLAccount.RelationType rlnType, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
-        return synchronizer.callSynchronously(monitor, () ->{
-            GLAccount glAccount = findGLPLAccountMnlnoLock(keys, dateOpen);     // счет создается вручную
-            if (null != glAccount) {
-                return glAccount;
-            }
-            // TODO glPlAccountProcessor
-            List<ValidationError> errors = plAccountProcessor.validate(keys, new ValidationContext());
-            if (!errors.isEmpty()) {
-                throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(GLOperation.OperSide.N, errors, descriptors));
-            }
+        return synchronizer.callSynchronously(monitor, () -> Optional.ofNullable(findGLPLAccountMnlnoLock(keys, dateOpen)).orElseGet(() -> {
+            try {
+                // счет создается вручную
+                List<ValidationError> errors = plAccountProcessor.validate(keys, new ValidationContext());
+                if (!errors.isEmpty()) {
+                    throw new DefaultApplicationException(glAccountProcessor.validationErrorMessage(GLOperation.OperSide.N, errors, descriptors));
+                }
+                final String bsaacid = getPlAccountNumber(keys.getAccount2(), keys.getCurrencyDigital(), keys.getCompanyCode(), keys.getPlCode());
+                final GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, rlnType, openType);
+                Assert.notNull(rlnType, "Не задан RLNTYPE для создания счета доходов / расходов");
+                relationAccountingTypeRepository.createRelation(account.getAcid()
+                        , account.getBsaAcid(), Long.toString(account.getAccountType()));
 
-            final String bsaacid = getPlAccountNumber(keys.getAccount2(), keys.getCurrencyDigital(), keys.getCompanyCode(), keys.getPlCode());
-            final GLAccount account = createAccount(bsaacid, null, N, dateOpen, keys, rlnType, openType);
-            Assert.notNull(rlnType, "Не задан RLNTYPE для создания счета доходов / расходов");
-            relationAccountingTypeRepository.createRelation(account.getAcid()
-                    , account.getBsaAcid(), Long.toString(account.getAccountType()));
-//        auditController.info(Account
-//                , format("Создан счет ОФР '%s' по ручному вводу", account.getBsaAcid()));
-            return account;
-        });
+                isNewAccount.set(new GLAccountCreated(account, true));
+                return account;
+            } catch (Exception e) {
+                throw new DefaultApplicationException(e.getMessage(), e);
+            }
+        }));
     }
 
     private String getErrorMessage(Throwable throwable) {

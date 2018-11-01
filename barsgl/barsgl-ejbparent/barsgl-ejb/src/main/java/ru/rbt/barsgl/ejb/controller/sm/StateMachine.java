@@ -23,6 +23,7 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
 
     private List<Transition< State, Event>> transitions = new ArrayList<>();
     private Map<State, Class<? extends StateTrigger>> triggers = new HashMap<>();
+    private Map<State, Class<? extends StateTrigger>> leaveStatetTiggers = new HashMap<>();
 
     StateMachine() {
     }
@@ -35,6 +36,10 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
         triggers.putIfAbsent(state, trigger);
     }
 
+    void addLeaveStateTrigger(State state, Class<? extends StateTrigger> trigger) {
+        triggers.putIfAbsent(state, trigger);
+    }
+
     public void acceptEvent(Entity entity, Event event) throws Exception {
 
         StateMachineSupport supportBean = findStateMachineSupport();
@@ -44,13 +49,20 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
         List<Transition> filteredTransitions = transitions.stream()
                 .filter(t -> t.getEvent() == event && t.getFrom() == entity0.getState()).collect(Collectors.toList());
         if (1 == filteredTransitions.size()) {
+
             Transition transition = filteredTransitions.get(0);
+
+            Class<? extends StateTrigger> triggerClass = findLeaveStateTrigger((State) transition.getFrom());
+            if (null != triggerClass) {
+                supportBean.fireTrigger(entity, triggerClass);
+            }
+
             Event newEvent = supportBean.executeAction(entity, transition);
             if (null != newEvent) {
                 acceptEvent(entity0, newEvent);
             }
             if (checkCurrentState(supportBean, transition, entity)) {
-                Class<? extends StateTrigger> triggerClass = findStateTrigger((State) transition.getTo());
+                triggerClass = findStateTrigger((State) transition.getTo());
                 if (null != triggerClass) {
                     supportBean.fireTrigger(entity, triggerClass);
                 }
@@ -90,6 +102,10 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
 
     private Class<? extends StateTrigger> findStateTrigger(State state) {
         return triggers.get(state);
+    }
+
+    private Class<? extends StateTrigger> findLeaveStateTrigger(State state) {
+        return leaveStatetTiggers.get(state);
     }
 
 }

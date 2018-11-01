@@ -29,4 +29,9 @@ public class StateMachineBuilder<State extends Enum, Event extends Enum,  Entity
         return this;
     }
 
+    public StateMachineBuilder<State, Event,  Entity> addLeaveStateTrigger(State state, Class<? extends StateTrigger> triggerClass) {
+        sm.addLeaveStateTrigger(state, triggerClass);
+        return this;
+    }
+
 }

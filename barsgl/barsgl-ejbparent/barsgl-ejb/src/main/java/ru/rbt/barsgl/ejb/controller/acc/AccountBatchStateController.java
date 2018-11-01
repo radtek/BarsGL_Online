@@ -1,8 +1,6 @@
 package ru.rbt.barsgl.ejb.controller.acc;
 
-import ru.rbt.barsgl.ejb.controller.acc.act.AccountBatchSendToValidate;
-import ru.rbt.barsgl.ejb.controller.acc.act.AccountBatchValidate;
-import ru.rbt.barsgl.ejb.controller.acc.act.AfterValidateTrigger;
+import ru.rbt.barsgl.ejb.controller.acc.act.*;
 import ru.rbt.barsgl.ejb.controller.sm.StateMachine;
 import ru.rbt.barsgl.ejb.controller.sm.StateMachineBuilder;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchPackage;
@@ -22,10 +20,13 @@ public class AccountBatchStateController {
             .makeTransition(IS_LOAD, ON_VALID, SEND_TO_VALIDATE,  AccountBatchSendToValidate.class)
             .makeTransition(ON_VALID, IS_VALID, VALIDATE,  AccountBatchValidate.class)
             .makeTransition(ON_VALID, ERROR, VALIDATE_ERROR,  null)
-            .makeTransition(IS_VALID, PROCESSED, PROCESS, null)
+            .makeTransition(IS_VALID, PROCESSED, PROCESS, AccountBatchProcess.class)
             .makeTransition(IS_VALID, PROC_ERR, PROCESS_ERROR,null)
             .addStateTrigger(IS_VALID, AfterValidateTrigger.class)
             .addStateTrigger(ERROR, AfterValidateTrigger.class)
+            .addStateTrigger(PROC_ERR, AfterProcessTrigger.class)
+            .addStateTrigger(PROCESSED, AfterProcessTrigger.class)
+            .addLeaveStateTrigger(ON_VALID, OnStartValidation.class)
             .build();
 
     public void sendToValidation(AccountBatchPackage batchPackage) throws Exception {
@@ -34,6 +35,10 @@ public class AccountBatchStateController {
 
     public void startValidation(AccountBatchPackage batchPackage) throws Exception {
         sm.acceptEvent(batchPackage, VALIDATE);
+    }
+
+    public void startProcess(AccountBatchPackage batchPackage) throws Exception {
+        sm.acceptEvent(batchPackage, PROCESS);
     }
 
 }

@@ -18,7 +18,7 @@ import java.util.Date;
 @SequenceGenerator(name = "GLAccountIdSeq", sequenceName = "GL_SEQ_ACC", allocationSize = 1)
 public class GLAccount extends BaseEntity<Long> {
 
-    public enum OpenType {AENEW, AEMID, MNL, SRV, ERR, BARSGL, NOTIF};
+    public enum OpenType {AENEW, AEMID, MNL, SRV, ERR, BARSGL, NOTIF, XLS};
     public enum CloseType {
         Normal("0"), Cancel("1"), Change("2");
         private String flag;
