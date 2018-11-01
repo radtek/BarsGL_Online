@@ -141,7 +141,7 @@ public class AccountValidationSupportBean {
                 context.addValidator(() -> {
                     if (isEmpty(request.getInDealid())
                             && !isEmpty(request.getInSubdealid())) {
-                        throw new ValidationError(ACC_BATCH_OPEN, "Поле ИД субсделки не может быть заполнено, если источник ИД сделки не заполнен");
+                        throw new ValidationError(ACC_BATCH_OPEN, "Поле ИД субсделки не может быть заполнено, если ИД сделки не заполнен");
                     }
                 });
                 context.addValidator(() -> {
@@ -210,18 +210,23 @@ public class AccountValidationSupportBean {
                         try {
                             final Integer ctypeInt = parseIntSafe(request.getCalcCtype());
                             final YesNo plAct = calcPlAct(request);
-                            DataRecord record1 = findActparm(request.getInAcctype(), leftPad(ifEmpty(request.getCalcCtypeAcc(), "0"),2, "0"), leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0"));
+                            String custype = leftPad(ifEmpty(request.getCalcCtypeAcc(), "0"),2, "0");
+                            String term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
+                            DataRecord record1 = findActparm(request.getInAcctype(), custype, term);
                             if (N == plAct && null == record1) {
                                 if (parseIntSafe(request.getInTerm()) >= 0) {
-                                    record1 = findActparm(request.getInAcctype(), leftPad(ifEmpty(request.getCalcCtypeAcc(), "0"),2, "0"), "00");
+                                    custype = leftPad(ifEmpty(request.getCalcCtypeAcc(), "0"),2, "0"); term = "00";
+                                    record1 = findActparm(request.getInAcctype(), custype, term);
                                     if (null == record1) {
                                         if (parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
                                             if (parseIntSafe(request.getCalcCtypeAcc()) > 3 && ctypeInt >= 0 && ctypeInt <= 3) {
-                                                throwValidationError("1");
+                                                throwValidationError("1", custype, term);
                                             } else {
-                                                record1 = findActparm(request.getInAcctype(), "00", leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0"));
+                                                custype = "00"; term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
+                                                record1 = findActparm(request.getInAcctype(), custype, term);
                                                 if (parseIntSafe(request.getInTerm()) >= 0 && parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
-                                                    record1 = findActparm(request.getInAcctype(), "00", "00");
+                                                    custype = "00"; term = "00";
+                                                    record1 = findActparm(request.getInAcctype(), custype, term);
                                                 }
                                             }
                                         }
@@ -229,7 +234,7 @@ public class AccountValidationSupportBean {
                                 }
                             }
                             if (null == record1) {
-                                throwValidationError("2");
+                                throwValidationError("2", custype, term);
                             } else {
                                 DataRecord finalRecord = record1;
                                 Assert.isTrue(!isEmpty(record1.getString("ACOD")) && !isEmpty(record1.getString("AC_SQ")),
@@ -254,9 +259,9 @@ public class AccountValidationSupportBean {
                         }
                     }
 
-                    private void throwValidationError(String label) {
+                    private void throwValidationError(String label, String custype, String term) {
                         throw new ValidationError(ACC_BATCH_OPEN, format("Не найдена запись GL_ACTPARM по  acctype= '%s' and term = '%s' and custype = '%s' (место проверки '%s')"
-                                , request.getInAcctype(), ifEmpty(request.getInTerm(),"<empty>"), ifEmpty(request.getInCtype(),"<empty>"), label));
+                                , request.getInAcctype(), custype, term, label));
                     }
                 });
                 context.addValidator(() -> {
