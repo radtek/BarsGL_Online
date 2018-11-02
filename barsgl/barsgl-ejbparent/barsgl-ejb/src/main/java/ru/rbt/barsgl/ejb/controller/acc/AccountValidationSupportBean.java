@@ -183,7 +183,7 @@ public class AccountValidationSupportBean {
                 });
                 context.addValidator(()-> {
                     final Integer ctypeInt = parseIntSafe(request.getCalcCtype());
-                    if ("0".equals(ifEmpty(request.getInCtype(), "0"))) {
+                    if ("00".equals(leftPad(ifEmpty(request.getInCtype(), "0"),2,"0"))) { // null or 0 or 00
                         if (ctypeInt > 3) {
                             request.setCalcCtypeAcc(ctypeInt.toString());
                         } else if (ctypeInt >= 0 && ctypeInt <=3) {
