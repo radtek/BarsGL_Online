@@ -182,7 +182,7 @@ public class AccountBatchSupportBean {
     }
 
     private String getErrorsText(List<ValidationError> errors) {
-        return errors.stream().map(e -> ValidationError.getErrorText(e.getMessage())).collect(Collectors.joining("\n"));
+        return errors.stream().map(e -> ValidationError.getErrorText(e.getMessage())).collect(Collectors.joining("; \n"));
     }
 
 

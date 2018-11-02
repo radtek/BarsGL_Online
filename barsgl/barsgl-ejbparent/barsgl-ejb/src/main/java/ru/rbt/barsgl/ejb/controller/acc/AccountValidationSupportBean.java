@@ -122,7 +122,7 @@ public class AccountValidationSupportBean {
                     try {
                         if (!isEmpty(request.getInAcc2())) {
                             Assert.isTrue(null != repository.selectFirst("select 1 from BSS where ACC2 = ?", request.getInAcc2())
-                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Балансовый счет 2 порядка '%s' не найден в таблице BSS2", request.getInAcc2())));
+                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Балансовый счет 2 порядка '%s' не найден в таблице BSS", request.getInAcc2())));
                         }
                     } catch (SQLException e) {
                         throw new DefaultApplicationException(e.getMessage(), e);
@@ -173,8 +173,8 @@ public class AccountValidationSupportBean {
                             DataRecord imb = repository.selectFirst("Select A8BRCD from IMBCBBRP where A8BICN = ?", request.getInCustno());
                             if (null != imb) {
                                 Assert.isTrue(imb.getString("A8BRCD").equals(request.getInBranch())
-                                        , () -> new ValidationError(ACC_BATCH_OPEN, format("Отделение '%s' не соответствует клиенту '%s', который соответствует отдеделению IMBCBBRP.A8BRCD"
-                                                , request.getInBranch(), request.getInCustno())));
+                                        , () -> new ValidationError(ACC_BATCH_OPEN, format("Отделение '%s' не соответствует клиенту '%s'. Клиенту '%s' соответствует отделение '%s'"
+                                                , request.getInBranch(), request.getInCustno(),request.getInCustno(), imb.getString("A8BRCD"))));
                             }
                         }
                     } catch (SQLException e) {
