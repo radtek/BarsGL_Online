@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.ejbcore.mapping.YesNo.N;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
 import static ru.rbt.ejbcore.util.StringUtils.*;
@@ -279,6 +280,12 @@ public class AccountValidationSupportBean {
                         }
                     } catch (SQLException e) {
                         throw new DefaultApplicationException(e.getMessage(), e);
+                    }
+                });
+                context.addValidator(() -> {
+                    if (!isEmpty(request.getCalcPlcodeParm())
+                            && !RUB.getCurrencyCode().equals(request.getInCcy())) {
+                        throw new ValidationError(ACC_BATCH_OPEN, format("Некорректная валюта '%s' для счета ОФР. Валюта должна быть 'RUR'", request.getInCcy()));
                     }
                 });
                 context.validateAll();
