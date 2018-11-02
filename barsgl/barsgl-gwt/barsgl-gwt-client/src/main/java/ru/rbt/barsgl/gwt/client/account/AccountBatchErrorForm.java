@@ -5,14 +5,12 @@ import ru.rbt.barsgl.gwt.core.datafields.Column;
 import ru.rbt.barsgl.gwt.core.datafields.Table;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgMode;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
-import ru.rbt.barsgl.shared.enums.AccountBatchState;
 import ru.rbt.grid.gwt.client.gridForm.GridForm;
 
 import java.util.ArrayList;
 
 import static ru.rbt.barsgl.gwt.client.account.AccountBatchErrorForm.ViewType.V_ERROR;
 import static ru.rbt.barsgl.gwt.client.account.AccountBatchErrorForm.ViewType.V_FULL;
-import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getEnumLabelsList;
 import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.client.security.AuthWherePart.getSourceAndFilialPart;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.isEmpty;
@@ -24,10 +22,11 @@ public class AccountBatchErrorForm extends GridForm {
 
     public enum ViewType {V_FULL, V_LOAD, V_ERROR};
 
-    ViewType _viewType;
+    boolean _isError;
     protected Column _colIdPackage;
     protected Column _colState;
     protected Column _colRow;
+    protected Column _colWasAcc;
     protected Column _colBsaacid;
     protected Column _colError1;
     protected Column _colError2;
@@ -40,10 +39,11 @@ public class AccountBatchErrorForm extends GridForm {
     public ViewType getViewType(){return V_FULL;}
 
     public void setViewType(ViewType viewType){
-        this._viewType = viewType;
-        _colError1.setVisible(_viewType == V_ERROR);
-        _colError2.setVisible(_viewType == V_FULL);
-        _colBsaacid.setVisible(_viewType == V_FULL);
+        this._isError = (viewType == V_ERROR);
+        _colError1.setVisible(_isError);
+        _colError2.setVisible(!_isError);
+        _colBsaacid.setVisible(!_isError);
+        _colWasAcc.setVisible(!_isError);
     };
 
     private void reconfigure() {
@@ -63,8 +63,8 @@ public class AccountBatchErrorForm extends GridForm {
 
         result.addColumn(_colError1 = new Column("ERROR_MSG1", Column.Type.STRING, "Описание ошибки", 800));
 
-        result.addColumn(col = new Column("WAS_ACC", Column.Type.STRING, "Открыт ранее", 60, false, false));
-        col.setList(getYesNoList());
+        result.addColumn(_colWasAcc = new Column("WAS_ACC", Column.Type.STRING, "Открыт ранее", 60, false, false));
+        _colWasAcc.setList(getYesNoList());
         result.addColumn(_colBsaacid = new Column("BSAACID", Column.Type.STRING, "Счет ЦБ", 160));
         result.addColumn(new Column("ACID", Column.Type.STRING, "Счет Midas", 160, false, false));
         result.addColumn(new Column("BRANCH_IN", Column.Type.STRING, "Отделение", 60));

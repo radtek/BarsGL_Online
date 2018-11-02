@@ -9,6 +9,7 @@ import ru.rbt.barsgl.ejb.entity.etl.BatchPackage;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.AccountBatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.AccountBatchRequestRepository;
+import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
 import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.enums.AccountBatchState;
@@ -44,9 +45,9 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
     private static final int I_Ccy = 1;
     private static final int I_Custno = 2;
     private static final int I_Acctype = 3;
-    private static final int I_Acc2 = 4;
-    private static final int I_Ctype = 5;
-    private static final int I_Term = 6;
+    private static final int I_Ctype = 4;
+    private static final int I_Term = 5;
+    private static final int I_Acc2 = 6;
     private static final int I_Dealsrc = 7;
     private static final int I_Dealid = 8;
     private static final int I_Subdealid = 9;
@@ -71,6 +72,12 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
     @EJB
     private PropertiesRepository propertiesRepository;
+
+    @EJB
+    private BeanManagedProcessor beanManagedProcessor;
+
+    @Inject
+    private BlobUtils blobUtils;
 
     @Override
     protected long getColumnCount() {
@@ -100,7 +107,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         ) {
             Iterator<List<Object>> it = parser.parseSafe(0);
             batchPackage = packageRepository.executeInNewTransaction(persistence ->
-                    buildPackage(it, fileName, parser.getRowCount(), userId));
+                    buildPackage(it, fileName, parser.getRowCount(), userId, file));
         }
         if (null == batchPackage)
             return "Нет строк для загрузки!";
@@ -117,7 +124,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         return result;
     }
 
-    public AccountBatchPackage buildPackage(Iterator<List<Object>> it, String fileName, long maxRowNum, Long userId) throws Exception {
+    public AccountBatchPackage buildPackage(Iterator<List<Object>> it, String fileName, long maxRowNum, Long userId, File file) throws Exception {
         if (!it.hasNext() || 0 == maxRowNum) {
             return null;
         }
@@ -160,6 +167,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
             throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
         }
 
+/*
         AccountBatchPackage pkg = new AccountBatchPackage();
         pkg.setLoadUser(userName);
         pkg.setFileName(fileName);
@@ -167,7 +175,9 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         pkg.setCntRequests((long) requests.size());
         pkg.setState(AccountBatchPackageState.IS_LOAD);
         pkg = packageRepository.save(pkg);
+*/
 
+        AccountBatchPackage pkg = createPackage(userName, fileName, curdate, requests.size(), file );
         for (AccountBatchRequest request : requests) {
             request.setBatchPackage(pkg);
             requestRepository.save(request);
@@ -176,7 +186,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         return pkg;
     }
 
-    public AccountBatchRequest createRequest(List<Object> rowParams, int row, Date dateFrom, Date dateTo, List<String> errorList) throws ParamsParserException {
+    private AccountBatchRequest createRequest(List<Object> rowParams, int row, Date dateFrom, Date dateTo, List<String> errorList) throws ParamsParserException {
         if (null == rowParams || rowParams.isEmpty())
             return null;
 
@@ -201,5 +211,29 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         return request;
     }
 
+    private AccountBatchPackage createPackage(String userName, String fileName, Date curdate, long size, File file ) {
+        AccountBatchPackage pkg0 = new AccountBatchPackage();
+        pkg0.setLoadUser(userName);
+        pkg0.setFileName(fileName);
+        pkg0.setOperday(curdate);
+        pkg0.setCntRequests(size);
+        pkg0.setState(AccountBatchPackageState.IS_LOAD);
+
+        final AccountBatchPackage pkg = packageRepository.save(pkg0);
+        // TODO save file to blob
+
+        final Long id = pkg.getId();
+        try {
+//            beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
+            packageRepository.executeTransactionally(connection -> {
+                blobUtils.writeBlob(connection, "GL_ACBATPKG", "FILE_BODY", "ID_PKG", id, file);  // "table", "field", "pk",
+                return null;
+            });
+        } catch (Exception e) {
+            auditController.warning(AccountBatch, "Ошибка при записи файла Excel в БД", "GL_ACBATPKG", id.toString(), e);
+        }
+
+        return pkg;
+    }
 }
 

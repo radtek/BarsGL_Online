@@ -74,18 +74,6 @@ public abstract class UploadProcessorBase {
     }
 
     protected <T> T getValue(List<Object> rowParams, int row, int index, boolean notNull, Class<T> clazz, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
-/*
-        if (rowParams.size() <= index) {
-            return null;
-        }
-        Object param = rowParams.get(index);
-        try {
-            if (null == param) {
-                if (notNull)
-                    errorList.add(format("%s Не задано значение", getLocation(row, index)));
-                return null;
-            }
-*/
         Object param = getParam(rowParams, row, index, notNull, errorList);
         return getValue(param, row, index, notNull, clazz, maxLength, exact, errorList);
     }
@@ -164,20 +152,6 @@ public abstract class UploadProcessorBase {
         return getValue(rowParams, row, index, notNull, String.class, maxLength, false, errorList);
     }
 
-/*
-    protected String get_NumberString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
-        String valueStr = getString(rowParams, row, index, notNull, maxLength, exact, errorList);
-        try {
-            Long.parseLong(valueStr);
-            return valueStr;
-        } catch (NumberFormatException e) {
-            errorList.add(format("%s Неверный формат данных (надо число длиной %s%d символов): '%s'",
-                    getLocation(row, index), exact ? "" : " <= ", maxLength, valueStr));
-            return null;
-        }
-    }
-*/
-
     protected String getLongAsString(List<Object> rowParams, int row, int index, boolean notNull, int maxLength, boolean exact, List<String> errorList) throws ParamsParserException {
         Object param_ex = getParam(rowParams, row, index, notNull, errorList);
         if (null == param_ex)
@@ -201,8 +175,6 @@ public abstract class UploadProcessorBase {
             Double delta = 0.0;
             if (Long.class.isAssignableFrom(clazz)) {
                 param = (Long) param_ex;
-//            } else if (clazz.equals(Long.class) || clazz.equals(Integer.class) || clazz.equals(Short.class)) {
-//                param = (Long) param_ex;
             } else if (clazz.equals(Double.class)) {
                 param = ((Double) param_ex).longValue();
                 delta = (Double) param_ex - param;
