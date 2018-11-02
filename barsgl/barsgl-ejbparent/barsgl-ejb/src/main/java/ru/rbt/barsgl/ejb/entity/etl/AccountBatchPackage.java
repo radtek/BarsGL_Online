@@ -74,6 +74,9 @@ public class AccountBatchPackage extends StatefullObject<AccountBatchPackageStat
     @Enumerated(EnumType.STRING)
     private YesNo invisible;
 
+    @Column(name = "ERROR_MSG")
+    private String errorMessage;
+
     @Override
     public Long getId() {
         return id;

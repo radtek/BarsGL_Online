@@ -12,8 +12,11 @@ import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ru.rbt.ejbcore.util.StringUtils.substr;
 
 /**
  * Created by er18837 on 17.10.2018.
@@ -24,13 +27,30 @@ public class AccountBatchPackageRepository extends AbstractBaseEntityRepository<
 
     public AccountBatchPackage findById(Long primaryKey) {return refresh(super.findById(AccountBatchPackage.class, primaryKey)); }
 
+    public AccountBatchPackage createAccountPackage(String userName, String fileName, Date curdate, long size) {
+        AccountBatchPackage pkg = new AccountBatchPackage();
+        pkg.setLoadUser(userName);
+        pkg.setFileName(fileName);
+        pkg.setOperday(curdate);
+        pkg.setCntRequests(size);
+        pkg.setState(AccountBatchPackageState.IS_LOAD);
+
+        return save(pkg);
+    }
+
     public boolean checkAccountRequestState(Long packageId, AccountBatchState requestState) throws SQLException {
         DataRecord res = selectFirst("select 1 from GL_ACBATREQ where ID_PKG = ? and STATE <> ?", packageId, requestState.name());
         return null == res;
     }
 
-    public void updateAccountPackageState(AccountBatchPackage pkg, AccountBatchPackageState packageState, String userProc) {
-        executeNativeUpdate("update GL_ACBATPKG set STATE = ?, USER_PROC = ?, TS_STARTV = systimestamp where ID_PKG = ?", packageState.name(), userProc, pkg.getId());
+    public void updateAccountPackageError(AccountBatchPackage pkg, AccountBatchPackageState packageState, String errorMsg) {
+        executeNativeUpdate("update GL_ACBATPKG set STATE = ?, INVISIBLE = ?, ERROR_MSG = ? where ID_PKG = ?",
+                packageState.name(), YesNo.Y.name(), substr(errorMsg, 4000), pkg.getId());
+    }
+
+    public void updateAccountPackageValid(AccountBatchPackage pkg, AccountBatchPackageState packageState, String userProc) {
+        executeNativeUpdate("update GL_ACBATPKG set STATE = ?, USER_PROC = ?, TS_STARTV = systimestamp where ID_PKG = ?",
+                packageState.name(), userProc, pkg.getId());
     };
 
     public void deleteAccountPackageOther(AccountBatchPackage pkg, AccountBatchPackageState packageState, String userProc) {

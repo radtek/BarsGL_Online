@@ -59,7 +59,7 @@ public class ExcelParser implements Iterator<List<Object>>, Closeable {
         XSSFWorkbook book = new XSSFWorkbook(stream);
         XSSFSheet sheet = book.getSheetAt(0);
         columnCount = (null != sheet.getRow(0)) ? sheet.getRow(0).getLastCellNum() : 0; // TODO ???
-        rowCount = sheet.getLastRowNum();
+        rowCount = sheet.getLastRowNum() + 1;
         rowIterator = sheet.iterator();
         return this;
      }

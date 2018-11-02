@@ -13,6 +13,7 @@ public enum PropertyName {
     , BATPKG_MAXSIZE("batpkg.max.size")
     , BATPKG_MAXROWS("batpkg.max.count")
     , ACCPKG_MAXROWS("acbatpkg.max.count")
+    , ACCPKG_SAVE_BLOB("acbatpkg.save.blob")
     , MC_QUEUES_PARAM("mc.queues.param")
     , MC_TIMEOUT("mc.timeout.sec")
     , COB_STAT_INC("cob.stat.increase")

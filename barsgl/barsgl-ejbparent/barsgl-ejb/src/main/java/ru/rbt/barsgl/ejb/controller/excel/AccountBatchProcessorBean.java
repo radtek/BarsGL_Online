@@ -11,7 +11,6 @@ import ru.rbt.barsgl.ejb.repository.AccountBatchPackageRepository;
 import ru.rbt.barsgl.ejb.repository.AccountBatchRequestRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
 import ru.rbt.barsgl.ejbcore.util.ExcelParser;
-import ru.rbt.barsgl.shared.enums.AccountBatchPackageState;
 import ru.rbt.barsgl.shared.enums.AccountBatchState;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -28,6 +27,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBatch;
+import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.ERROR;
 
 /**
  * Created by er18837 on 17.10.2018.
@@ -137,15 +137,21 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         if (null == userId)
             userId = requestHolder.getUserWrapper().getId();
 
-        List<String> errorList = new ArrayList<>();
         List<String> allowedBranches = packageRepository.getAllowedBranches(userId);
         if (allowedBranches == null || allowedBranches.isEmpty()) {
             throw new ParamsParserException("У вас не заданы права на создание счетов в филиалах");
         }
-
         boolean allBranches = allowedBranches.get(0).equals("*");
-        List<AccountBatchRequest> requests = new ArrayList<>();
+
         Date curdate = operdayController.getOperday().getCurrentDate();
+        AccountBatchPackage pkg = packageRepository.executeInNewTransaction(persistence ->
+            {   AccountBatchPackage pkg1 = packageRepository.createAccountPackage(userName, fileName, curdate, maxRowNum);
+                savePackageFileAsBlob(pkg1.getId(), file);
+                return pkg1;
+            });
+
+        List<String> errorList = new ArrayList<>();
+        List<AccountBatchRequest> requests = new ArrayList<>();
         Date startDate = new SimpleDateFormat("yyyy-mm-dd").parse("2000-01-01");
         int row = START_ROW;
         if (it.hasNext()) {
@@ -164,20 +170,13 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         }
 
         if (errorList.size() > 0) {
+            packageRepository.executeInNewTransaction(persistence -> {
+                packageRepository.updateAccountPackageError(pkg, ERROR, StringUtils.listToString(errorList, "\n"));
+                return null;
+            });
             throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
         }
 
-/*
-        AccountBatchPackage pkg = new AccountBatchPackage();
-        pkg.setLoadUser(userName);
-        pkg.setFileName(fileName);
-        pkg.setOperday(curdate);
-        pkg.setCntRequests((long) requests.size());
-        pkg.setState(AccountBatchPackageState.IS_LOAD);
-        pkg = packageRepository.save(pkg);
-*/
-
-        AccountBatchPackage pkg = createPackage(userName, fileName, curdate, requests.size(), file );
         for (AccountBatchRequest request : requests) {
             request.setBatchPackage(pkg);
             requestRepository.save(request);
@@ -211,29 +210,18 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         return request;
     }
 
-    private AccountBatchPackage createPackage(String userName, String fileName, Date curdate, long size, File file ) {
-        AccountBatchPackage pkg0 = new AccountBatchPackage();
-        pkg0.setLoadUser(userName);
-        pkg0.setFileName(fileName);
-        pkg0.setOperday(curdate);
-        pkg0.setCntRequests(size);
-        pkg0.setState(AccountBatchPackageState.IS_LOAD);
-
-        final AccountBatchPackage pkg = packageRepository.save(pkg0);
-        // TODO save file to blob
-
-        final Long id = pkg.getId();
+    private boolean savePackageFileAsBlob(Long id, File file ) {
+        String saveBlob = propertiesRepository.getStringDef(PropertyName.ACCPKG_SAVE_BLOB.getName(), "Y");  // TODO BATPKG_MAXROWS ??
+        if (!"Y".equals(saveBlob))
+            return false;
         try {
-//            beanManagedProcessor.executeInNewTxWithTimeout((persistence, connection) -> {
-            packageRepository.executeTransactionally(connection -> {
-                blobUtils.writeBlob(connection, "GL_ACBATPKG", "FILE_BODY", "ID_PKG", id, file);  // "table", "field", "pk",
-                return null;
+            return packageRepository.executeTransactionally(connection -> {
+                return blobUtils.writeBlob(connection, "GL_ACBATPKG", "FILE_BODY", "ID_PKG", id, file);  // "table", "field", "pk",
             });
         } catch (Exception e) {
             auditController.warning(AccountBatch, "Ошибка при записи файла Excel в БД", "GL_ACBATPKG", id.toString(), e);
+            return false;
         }
-
-        return pkg;
     }
 }
 

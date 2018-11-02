@@ -106,7 +106,7 @@ public class AccountBatchController {
             checkUserPermission(pkg.getLoadUser(), wrapper);
 
         packageRepository.executeInNewTransaction(persistence -> {
-            packageRepository.updateAccountPackageState(pkg, ON_VALID, userProc);
+            packageRepository.updateAccountPackageValid(pkg, ON_VALID, userProc);
             return null;
         });
         wrapper.setPackageState(ON_VALID);

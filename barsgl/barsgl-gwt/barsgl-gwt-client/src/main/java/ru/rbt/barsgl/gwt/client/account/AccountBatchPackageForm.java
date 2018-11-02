@@ -136,6 +136,8 @@ public class AccountBatchPackageForm extends GridForm {
         result.addColumn(_colInvisible = new Column("INVISIBLE", Column.Type.STRING, "Удален", 60));
         _colInvisible.setList(getYesNoList());
 
+        result.addColumn(new Column("ERROR_MSG", Column.Type.STRING, "Описание ошибки", 800, false, false));
+
         return result;
     }
 
@@ -149,7 +151,7 @@ public class AccountBatchPackageForm extends GridForm {
         if (isEmpty(where))
             where = " where 1=1";
         return " SELECT ID_PKG, OD_LOAD, CNT_REQ, CNT_ERR, CNT_FOUND, CNT_REQ - CNT_ERR - CNT_FOUND CNT_OPEN,\n" +
-                " TS_LOAD, TS_STARTV, TS_ENDV, TS_STARTP, TS_ENDP, STATE, USER_LOAD, USER_PROC, FILE_NAME," +
+                " TS_LOAD, TS_STARTV, TS_ENDV, TS_STARTP, TS_ENDP, STATE, USER_LOAD, USER_PROC, FILE_NAME, ERROR_MSG, " +
                 " case when INVISIBLE = '" + InvisibleType.N.name() + "' then ' ' else INVISIBLE end as INVISIBLE, " +
                 " U1.FILIAL, TRIM(REPLACE(U1.SURNAME || ' '  || U1.FIRSTNAME || ' ' || U1.PATRONYMIC, '  ', ' ')) AS FIO_LOAD,\n" +
                 " TRIM(REPLACE(U2.SURNAME || ' '  || U2.FIRSTNAME || ' ' || U2.PATRONYMIC, '  ', ' ')) AS FIO_PROC\n" +
