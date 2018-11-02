@@ -173,8 +173,8 @@ public class AccountValidationSupportBean {
                             DataRecord imb = repository.selectFirst("Select A8BRCD from IMBCBBRP where A8BICN = ?", request.getInCustno());
                             if (null != imb) {
                                 Assert.isTrue(imb.getString("A8BRCD").equals(request.getInBranch())
-                                        , () -> new ValidationError(ACC_BATCH_OPEN, format("Отделение '%s' не соответствует клиенту '%s', который соответствует отдеделению IMBCBBRP.A8BRCD"
-                                                , request.getInBranch(), request.getInCustno())));
+                                        , () -> new ValidationError(ACC_BATCH_OPEN, format("Отделение '%s' не соответствует клиенту '%s', который соответствует отделению '%s'"
+                                                , request.getInBranch(), request.getInCustno(), imb.getString("A8BRCD"))));
                             }
                         }
                     } catch (SQLException e) {
