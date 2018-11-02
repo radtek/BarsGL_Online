@@ -122,7 +122,7 @@ public class AccountValidationSupportBean {
                     try {
                         if (!isEmpty(request.getInAcc2())) {
                             Assert.isTrue(null != repository.selectFirst("select 1 from BSS where ACC2 = ?", request.getInAcc2())
-                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Балансовый счет 2 порядка '%s' не найден в таблице BSS2", request.getInAcc2())));
+                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Балансовый счет 2 порядка '%s' не найден в таблице BSS", request.getInAcc2())));
                         }
                     } catch (SQLException e) {
                         throw new DefaultApplicationException(e.getMessage(), e);
