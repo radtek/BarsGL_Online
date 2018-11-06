@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -113,13 +114,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         if (null == batchPackage)
             return "Нет строк для загрузки!";
 
-        String result = new StringBuffer().append(LIST_DELIMITER)
-                .append("Пакет успешно загружен").append(LIST_DELIMITER)
-                .append("ID пакета: ").append(batchPackage.getId()).append(LIST_DELIMITER)
-                .append("Загружено строк всего: ").append(batchPackage.getCntRequests()).append(LIST_DELIMITER)
-                .append(LIST_DELIMITER).append("Проверьте содержимое пакета по кнопке \"Просмотр пакета\"").append(LIST_DELIMITER)
-                .append("После чего нажмите кнопку \"Открыть счета\"")
-                .toString();
+        String result = getOkMessage(batchPackage);
         // TODO подробней
         auditController.info(AccountBatch, "Загружен пакет счетов из файла.\n" + result, BatchPackage.class.getName(), batchPackage.getId().toString());
         return result;
@@ -133,25 +128,63 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         if (!checkRowHeader(it.next(), maxRowNum))
             return null;
 
-        final UserRequestHolder requestHolder = contextBean.getRequest().orElse(UserRequestHolder.empty());
-        String userName = requestHolder.getUser();
-        if (null == userId)
-            userId = requestHolder.getUserWrapper().getId();
+        UserRequestHolder requestHolder = contextBean.getRequest().orElse(UserRequestHolder.empty());
+        userId = (null != userId) ? userId : requestHolder.getUserWrapper().getId();
 
+        Date curdate = operdayController.getOperday().getCurrentDate();
+        AccountBatchPackage pkg = packageRepository.executeInNewTransaction(persistence -> {
+            AccountBatchPackage pkg1 = packageRepository.createAccountPackage(requestHolder.getUser(), fileName, curdate, 0);
+            savePackageFileAsBlob(pkg1.getId(), file);
+            return pkg1;
+        });
+
+        List<String> errorList = new ArrayList<>();
+        List<AccountBatchRequest> requests = createRequests(it, userId, errorList);
+
+        if (errorList.size() > 0) {
+            packageRepository.executeInNewTransaction(persistence -> {
+                packageRepository.updateAccountPackageError(pkg, ERROR, StringUtils.listToString(errorList, "\n"));
+                return null;
+            });
+            throw new ParamsParserException(getErrorMessage(pkg, errorList));
+        }
+
+        for (AccountBatchRequest request : requests) {
+            request.setBatchPackage(pkg);
+            requestRepository.save(request);
+        }
+        packageRepository.updateAccountPackageCount(pkg, IS_LOAD, requests.size());
+
+        return packageRepository.refresh(pkg, true);
+    }
+
+    private String getOkMessage(AccountBatchPackage pkg) {
+        return new StringBuffer().append(LIST_DELIMITER)
+                .append("Пакет успешно загружен").append(LIST_DELIMITER)
+                .append("ID пакета: ").append(pkg.getId()).append(LIST_DELIMITER)
+                .append("Загружено строк всего: ").append(pkg.getCntRequests()).append(LIST_DELIMITER)
+                .append(LIST_DELIMITER).append("Проверьте содержимое пакета по кнопке \"Просмотр пакета\"").append(LIST_DELIMITER)
+                .append("После чего нажмите кнопку \"Открыть счета\"")
+                .toString();
+    }
+
+    private String getErrorMessage(AccountBatchPackage pkg, List<String> errorList) {
+        return new StringBuffer().append(LIST_DELIMITER)
+                .append("Пакет загружен с ошибкой").append(LIST_DELIMITER)
+                .append("ID пакета: ").append(pkg.getId()).append(LIST_DELIMITER)
+                .append("Загружено строк всего: 0").append(LIST_DELIMITER)
+                .append(LIST_DELIMITER)
+                .append(StringUtils.listToString(errorList, LIST_DELIMITER))
+                .toString();
+    }
+
+    private List<AccountBatchRequest> createRequests(Iterator<List<Object>> it, Long userId, List<String> errorList) throws Exception {
         List<String> allowedBranches = packageRepository.getAllowedBranches(userId);
         if (allowedBranches == null || allowedBranches.isEmpty()) {
             throw new ParamsParserException("У вас не заданы права на создание счетов в филиалах");
         }
         boolean allBranches = allowedBranches.get(0).equals("*");
 
-        Date curdate = operdayController.getOperday().getCurrentDate();
-        AccountBatchPackage pkg = packageRepository.executeInNewTransaction(persistence ->
-            {   AccountBatchPackage pkg1 = packageRepository.createAccountPackage(userName, fileName, curdate, 0);
-                savePackageFileAsBlob(pkg1.getId(), file);
-                return pkg1;
-            });
-
-        List<String> errorList = new ArrayList<>();
         List<AccountBatchRequest> requests = new ArrayList<>();
         Date startDate = new SimpleDateFormat("yyyy-mm-dd").parse("2000-01-01");
         int row = START_ROW;
@@ -169,29 +202,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
                     break;
             }
         }
-
-        if (errorList.size() > 0) {
-            packageRepository.executeInNewTransaction(persistence -> {
-                packageRepository.updateAccountPackageError(pkg, ERROR, StringUtils.listToString(errorList, "\n"));
-                return null;
-            });
-            String result = new StringBuffer().append(LIST_DELIMITER)
-                    .append("Ошибка при загрузке пакета").append(LIST_DELIMITER)
-                    .append("ID пакета: ").append(pkg.getId()).append(LIST_DELIMITER)
-                    .append("Загружено строк всего: 0").append(LIST_DELIMITER)
-                    .append(LIST_DELIMITER)
-                    .append(StringUtils.listToString(errorList, LIST_DELIMITER))
-                    .toString();
-            throw new ParamsParserException(result);
-        }
-
-        for (AccountBatchRequest request : requests) {
-            request.setBatchPackage(pkg);
-            requestRepository.save(request);
-        }
-        packageRepository.updateAccountPackageCount(pkg, IS_LOAD, requests.size());
-
-        return packageRepository.refresh(pkg, true);
+        return requests;
     }
 
     private AccountBatchRequest createRequest(List<Object> rowParams, int row, Date dateFrom, Date dateTo, List<String> errorList) throws ParamsParserException {

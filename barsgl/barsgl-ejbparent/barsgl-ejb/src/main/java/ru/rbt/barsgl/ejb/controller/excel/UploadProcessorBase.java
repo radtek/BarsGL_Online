@@ -106,7 +106,7 @@ public abstract class UploadProcessorBase {
             } else if (clazz.isAssignableFrom(param.getClass())) {
                 return (T) param;
             } else if (clazz.equals(Date.class)) {
-                Date value = DateUtils.parseDate(valueStr, "dd.MM.yyyy", "dd.MM.yy");   //TODO сделать сравнение с исходной строкой!!!
+                Date value = DateUtils.parseDateStrictly(valueStr, "dd.MM.yy", "dd.MM.yyyy");
                 return (T) value;
             } else if (clazz.equals(Double.class)) {
                 Double value = Double.parseDouble(valueStr);
