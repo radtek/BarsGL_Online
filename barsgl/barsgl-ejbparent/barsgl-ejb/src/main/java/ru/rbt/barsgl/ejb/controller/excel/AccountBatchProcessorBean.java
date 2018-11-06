@@ -28,6 +28,7 @@ import java.util.*;
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.AccountBatch;
 import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.ERROR;
+import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.IS_LOAD;
 
 /**
  * Created by er18837 on 17.10.2018.
@@ -145,7 +146,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
 
         Date curdate = operdayController.getOperday().getCurrentDate();
         AccountBatchPackage pkg = packageRepository.executeInNewTransaction(persistence ->
-            {   AccountBatchPackage pkg1 = packageRepository.createAccountPackage(userName, fileName, curdate, maxRowNum);
+            {   AccountBatchPackage pkg1 = packageRepository.createAccountPackage(userName, fileName, curdate, 0);
                 savePackageFileAsBlob(pkg1.getId(), file);
                 return pkg1;
             });
@@ -174,15 +175,23 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
                 packageRepository.updateAccountPackageError(pkg, ERROR, StringUtils.listToString(errorList, "\n"));
                 return null;
             });
-            throw new ParamsParserException(StringUtils.listToString(errorList, LIST_DELIMITER));
+            String result = new StringBuffer().append(LIST_DELIMITER)
+                    .append("Ошибка при загрузке пакета").append(LIST_DELIMITER)
+                    .append("ID пакета: ").append(pkg.getId()).append(LIST_DELIMITER)
+                    .append("Загружено строк всего: 0").append(LIST_DELIMITER)
+                    .append(LIST_DELIMITER)
+                    .append(StringUtils.listToString(errorList, LIST_DELIMITER))
+                    .toString();
+            throw new ParamsParserException(result);
         }
 
         for (AccountBatchRequest request : requests) {
             request.setBatchPackage(pkg);
             requestRepository.save(request);
         }
+        packageRepository.updateAccountPackageCount(pkg, IS_LOAD, requests.size());
 
-        return pkg;
+        return packageRepository.refresh(pkg, true);
     }
 
     private AccountBatchRequest createRequest(List<Object> rowParams, int row, Date dateFrom, Date dateTo, List<String> errorList) throws ParamsParserException {

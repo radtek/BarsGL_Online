@@ -43,6 +43,11 @@ public class AccountBatchPackageRepository extends AbstractBaseEntityRepository<
         return null == res;
     }
 
+    public void updateAccountPackageCount(AccountBatchPackage pkg, AccountBatchPackageState packageState, Integer count) {
+        executeNativeUpdate("update GL_ACBATPKG set STATE = ?, CNT_REQ = ? where ID_PKG = ?",
+                packageState.name(), count, pkg.getId());
+    }
+
     public void updateAccountPackageError(AccountBatchPackage pkg, AccountBatchPackageState packageState, String errorMsg) {
         executeNativeUpdate("update GL_ACBATPKG set STATE = ?, INVISIBLE = ?, ERROR_MSG = ? where ID_PKG = ?",
                 packageState.name(), YesNo.Y.name(), substr(errorMsg, 4000), pkg.getId());

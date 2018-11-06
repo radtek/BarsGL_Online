@@ -126,11 +126,13 @@ public class AccountBatchController {
             throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов с ID = %s," +
                     " статус пакета '%s' (допустимые статусы '%s', '%s')", pkg.getId(),
                     packageState.name(), IS_LOAD.name(), ERROR.name()));
-        YesNo invesible = pkg.getInvisible();
+        YesNo invisible = pkg.getInvisible();
+/*
         if (invesible == YesNo.Y)
             throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов с ID = %s," +
                             " пакет уже удален", pkg.getId(),
                     packageState.name(), IS_LOAD.name(), ERROR.name()));
+*/
 
         String userProc = getUserName();
         if (userProc.equals(pkg.getLoadUser())) {
@@ -139,6 +141,11 @@ public class AccountBatchController {
                 return null;
             });
         } else {
+            if (invisible == YesNo.Y)
+                throw new ValidationError(ACCOUNT_BATCH_ERROR, String.format("Нельзя удалить пакет счетов с ID = %s," +
+                                " пакет уже удален", pkg.getId(),
+                        packageState.name(), IS_LOAD.name(), ERROR.name()));
+
             checkUserPermission(pkg.getLoadUser(), wrapper);
             packageRepository.executeInNewTransaction(persistence -> {
                 packageRepository.deleteAccountPackageOther(pkg, packageState, userProc);

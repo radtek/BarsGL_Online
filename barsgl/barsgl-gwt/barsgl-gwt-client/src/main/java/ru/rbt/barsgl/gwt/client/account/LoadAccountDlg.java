@@ -104,8 +104,11 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
     protected boolean acceptResponse(String[] list) {
         idPackage = parseLong(list[2], "пакет", ":");
         allCount = parseLong(list[3], "всего", ":");
-        switchButtonState(idPackage != null, false);
-        return idPackage != null;
+        boolean load = (idPackage != null);
+        boolean ok = load && (allCount != null) && (allCount > 0);
+        showButton.setEnabled(ok);
+        deleteButton.setEnabled(load);
+        return ok;
     }
 
     @Override
@@ -171,17 +174,5 @@ public class LoadAccountDlg extends LoadFileAnyDlg {
         });
 
     }
-
-/*
-    @Override
-    public void afterShow() {
-        switchControlsState(true);
-
-        showButton.setEnabled(false);
-        deleteButton.setEnabled(false);
-        ok.setEnabled(false);
-        clearResult();
-    }
-*/
 
 }

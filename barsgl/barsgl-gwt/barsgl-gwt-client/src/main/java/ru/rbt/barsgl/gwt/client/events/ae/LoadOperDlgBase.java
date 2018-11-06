@@ -126,10 +126,11 @@ abstract public class LoadOperDlgBase extends LoadFileAnyDlg {
         Long all = parseLong(list[2], "всего", ":");
         Long err = parseLong(list[3], "с ошибкой", ":");
         boolean isError = (null != err) && (err > 0);
+        boolean load = (idPackage != null);
         errorButton.setEnabled(isError);
-        showButton.setEnabled(idPackage != null);
-        deleteButton.setEnabled(idPackage != null);
-        boolean isOk = !(idPackage == null || isError);
+        showButton.setEnabled(load);
+        deleteButton.setEnabled(load);
+        boolean isOk = load && !isError;
         return isOk;
     }
 

@@ -70,6 +70,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
     protected abstract void onClickError(ClickEvent clickEvent);
 
     protected abstract boolean acceptResponse(String[] list);
+    protected void badResponse() {};
 
     @Override
     public Widget createContent(){
@@ -215,13 +216,15 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
                 SecurityEntryPoint.showLoginForm();
                 return null;
             }
-            if (response.startsWith(LIST_DELIMITER)) {
+            if (response.startsWith(LIST_DELIMITER)) {  // загрузился
                 String[] list = response.split(LIST_DELIMITER);
-                boolean isOk = acceptResponse(list);
-
-                ok.setEnabled(isOk);
-                switchControlsState(!isOk);
                 response = response.replaceFirst(LIST_DELIMITER, "");
+
+                boolean isOk = acceptResponse(list);
+                ok.setEnabled(isOk);
+            } else {        // ошибки формата
+                badResponse();
+                ok.setEnabled(false);
             }
             return response.replaceAll(LIST_DELIMITER, "<BR>");
         } catch (Exception e) {
@@ -272,7 +275,7 @@ public abstract class LoadFileAnyDlg extends DlgFrame implements IAfterShowEvent
 
                     fileName.setValue(check(filename, "Файл для загрузки", "нужен файл типа 'xlsx'", new CheckFileExtention("xlsx")));
 
-                    loadingResult.add(new Label("Ожидайте, идет загрузка проводок из файла ..."));
+                    loadingResult.add(new Label("Ожидайте, идет загрузка из файла ..."));
                     formPanel.submit();
 
                 } catch (IllegalArgumentException e) {
