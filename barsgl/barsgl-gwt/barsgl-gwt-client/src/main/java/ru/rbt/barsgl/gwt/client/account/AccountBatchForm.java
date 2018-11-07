@@ -154,7 +154,7 @@ public class AccountBatchForm extends GridForm {
                 " CTYPE_IN, CTYPE_PARM, CTYPE_ACC, TERM_IN, TERM_PARM, ACC2_IN, ACC2_PARM, PLCODE_PARM,\n" +
                 " DEALSRC_IN, DEALID_IN, SUBDEALID_IN, OPENDATE_IN, OPENDATE, ACCNAME,\n" +
                 " ERROR_MSG, TS_VALID, TS_OPEN, TS_ENDP, USER_LOAD, USER_PROC, INVISIBLE\n" +
-                " FROM V_GL_ACCBAT"
+                " FROM V_GL_ACBATREQ"
                 + where;
     }
 

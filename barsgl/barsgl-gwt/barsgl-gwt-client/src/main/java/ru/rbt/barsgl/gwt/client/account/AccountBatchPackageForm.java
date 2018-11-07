@@ -150,14 +150,11 @@ public class AccountBatchPackageForm extends GridForm {
         String where = getSourceAndFilialPart("where", "", "U1.FILIAL");
         if (isEmpty(where))
             where = " where 1=1";
-        return " SELECT ID_PKG, OD_LOAD, CNT_REQ, CNT_ERR, CNT_FOUND, CNT_REQ - CNT_ERR - CNT_FOUND CNT_OPEN,\n" +
-                " TS_LOAD, TS_STARTV, TS_ENDV, TS_STARTP, TS_ENDP, STATE, USER_LOAD, USER_PROC, FILE_NAME, ERROR_MSG, " +
-                " case when INVISIBLE = '" + InvisibleType.N.name() + "' then ' ' else INVISIBLE end as INVISIBLE, " +
-                " U1.FILIAL, TRIM(REPLACE(U1.SURNAME || ' '  || U1.FIRSTNAME || ' ' || U1.PATRONYMIC, '  ', ' ')) AS FIO_LOAD,\n" +
-                " TRIM(REPLACE(U2.SURNAME || ' '  || U2.FIRSTNAME || ' ' || U2.PATRONYMIC, '  ', ' ')) AS FIO_PROC\n" +
-                " FROM GL_ACBATPKG PKG" +
-                " LEFT JOIN GL_USER U1 ON U1.USER_NAME = PKG.USER_LOAD" +
-                " LEFT JOIN GL_USER U2 ON U2.USER_NAME = PKG.USER_PROC"
+        return " SELECT ID_PKG, OD_LOAD, CNT_REQ, CNT_ERR, CNT_FOUND, CNT_OPEN, " +
+                " TS_LOAD, TS_STARTV, TS_ENDV, TS_STARTP, TS_ENDP, " +
+                " STATE, USER_LOAD, USER_PROC, FILE_NAME, ERROR_MSG, INVISIBLE, " +
+                " FILIAL, FIO_LOAD, FIO_PROC " +
+                " FROM V_GL_ACBATPKG "
                 + where;
     }
 
