@@ -21,12 +21,15 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
+import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.BalanceMode;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejb.conf.map.NumberProperty;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.tasks.ejb.repository.JobHistoryRepository;
@@ -314,11 +317,16 @@ public class BufferModeIT extends AbstractRemoteIT {
 
         baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
 
+        NumberProperty maxCountProperty = (NumberProperty) baseEntityRepository.findById(NumberProperty.class, ConfigProperty.SyncIcrementMaxGLPdCount.getValue());
+        Assert.assertNotNull(maxCountProperty);
+        maxCountProperty.setValue(100L);
+        baseEntityRepository.update(maxCountProperty);
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
+
         final String stepName = "WT_1";
         checkCreateStep(stepName, getOperday().getLastWorkingDay(), WorkprocRepository.WorkprocState.W.getValue());
 
         final String jobName = "IncSync1";
-
         execSyncStamtBackvalue(stepName, jobName);
 
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
