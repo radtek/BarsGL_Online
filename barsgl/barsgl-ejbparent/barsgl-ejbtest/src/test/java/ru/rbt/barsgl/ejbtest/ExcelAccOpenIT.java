@@ -188,6 +188,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         final String dealid = "511_A073C_18";
         final String subdealid = "00151555RURCL0P00171";
 
+        // PL account
         final String b1ranch = "001";
         final String c1cy = "RUR";
         final String c1ustno = "00151555";
@@ -205,6 +206,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
 
         AccountBatchRequest request1 = createBatchRequest(pkg, 1L, branch, ccy, custno, acctype, dealid, subdealid, sealSrc, term);
         AccountBatchRequest request2 = createBatchRequest(pkg, 2L, b1ranch, c1cy, c1ustno, a1cctype, "", "", s1ealSrc, t1erm);
+        AccountBatchRequest request3 = createBatchRequest(pkg, 3L, b1ranch, c1cy, c1ustno, a1cctype, "", "", s1ealSrc, t1erm.replaceAll("0",""));
 
         // валидируем
         remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
@@ -219,7 +221,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         remoteAccess.invoke(AccountBatchStateController.class, "startValidation", pkg);
         pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
         Assert.assertEquals(ERROR, pkg.getState());
-        Assert.assertTrue(pkg.getCntErrors() + "", 1 == pkg.getCntErrors());
+        Assert.assertTrue(pkg.getCntErrors() + "", 2 == pkg.getCntErrors());
 
         request1 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request1.getId());
         Assert.assertEquals(AccountBatchState.ERRCHK, request1.getState());
@@ -227,6 +229,10 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         request2 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request2.getId());
         Assert.assertEquals(AccountBatchState.VALID, request2.getState());
         Assert.assertTrue(!isEmpty(request2.getCalcPlcodeParm()));
+
+        request3 = (AccountBatchRequest) baseEntityRepository.findById(AccountBatchRequest.class, request3.getId());
+        Assert.assertEquals(AccountBatchState.ERRCHK, request3.getState());
+        Assert.assertTrue(request3.getErrorMessage().contains("GL_DICTERM"));
     }
 
     @Test

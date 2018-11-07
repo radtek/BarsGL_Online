@@ -113,7 +113,7 @@ public class AccountValidationSupportBean {
                         if (!isEmpty(request.getInTerm())
                                 && !"00".equals(leftPad(request.getInTerm(),2,"0"))) {
                             Assert.isTrue(null != repository.selectFirst("select 1 from GL_DICTERM where TERM = ?", request.getInTerm().trim())
-                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Код срока '%s' не найден в таблице GL_DICTERM’", request.getInTerm())));
+                                    , () -> new ValidationError(ACC_BATCH_OPEN, format("Код срока '%s' не найден в таблице GL_DICTERM", request.getInTerm())));
                         }
                     } catch (SQLException e) {
                         throw new DefaultApplicationException(e.getMessage(), e);
