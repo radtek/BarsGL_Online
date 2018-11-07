@@ -37,7 +37,7 @@ public class StateMachine<State extends Enum, Event extends Enum, Entity extends
     }
 
     void addLeaveStateTrigger(State state, Class<? extends StateTrigger> trigger) {
-        triggers.putIfAbsent(state, trigger);
+        leaveStatetTiggers.putIfAbsent(state, trigger);
     }
 
     public void acceptEvent(Entity entity, Event event) throws Exception {

@@ -534,7 +534,7 @@ public class GLAccountController {
         });
     }
 
-    @Lock(LockType.WRITE)
+    @Lock(LockType.READ)
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public GLAccount createGLPLAccountMnl(final AccountKeys keys, GLAccount.RelationType rlnType, Date dateOpen, ErrorList descriptors, GLAccount.OpenType openType) throws Exception {
         return synchronizer.callSynchronously(monitor, () -> Optional.ofNullable(findGLPLAccountMnlnoLock(keys, dateOpen)).orElseGet(() -> {

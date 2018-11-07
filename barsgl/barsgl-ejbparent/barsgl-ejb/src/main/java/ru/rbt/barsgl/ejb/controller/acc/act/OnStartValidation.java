@@ -20,7 +20,7 @@ public class OnStartValidation implements StateTrigger<AccountBatchPackage> {
     private OperdayController operdayController;
 
     @Override
-    public void onStateEnter(AccountBatchPackage batchPackage) {
+    public void execute(AccountBatchPackage batchPackage) {
         try {
             repository.executeInNewTransaction(persistence -> {
                 repository.executeUpdate("update AccountBatchPackage p set p.validateStartDate = ?1 where p = ?2", operdayController.getSystemDateTime(), batchPackage);

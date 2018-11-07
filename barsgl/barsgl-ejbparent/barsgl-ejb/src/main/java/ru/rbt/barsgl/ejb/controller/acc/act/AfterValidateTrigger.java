@@ -18,7 +18,7 @@ public class AfterValidateTrigger implements StateTrigger<AccountBatchPackage> {
     private AccountBatchSupportBean batchSupport;
 
     @Override
-    public void onStateEnter(AccountBatchPackage batchPackage) {
+    public void execute(AccountBatchPackage batchPackage) {
         try {
             DataRecord stat = batchSupport.getPackageValidateStatistics(batchPackage);
             batchSupport.updatePackageState(batchPackage.getId(), stat.getLong("ERCHK"));

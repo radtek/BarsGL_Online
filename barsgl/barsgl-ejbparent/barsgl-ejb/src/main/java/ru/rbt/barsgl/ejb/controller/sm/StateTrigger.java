@@ -5,5 +5,5 @@ package ru.rbt.barsgl.ejb.controller.sm;
  */
 public interface StateTrigger<Entity extends StatefullObject> {
 
-    void onStateEnter(Entity statefullObject);
+    void execute(Entity statefullObject);
 }

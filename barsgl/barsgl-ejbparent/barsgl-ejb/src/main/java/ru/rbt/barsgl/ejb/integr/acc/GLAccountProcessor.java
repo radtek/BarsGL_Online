@@ -4,7 +4,8 @@ import ru.rbt.audit.controller.AuditController;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
-import ru.rbt.barsgl.ejb.entity.acc.*;
+import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
@@ -207,16 +208,21 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
     // Дата открытия счета
     private void checkDateOpen(Date dateOpen, String bsaAcid, String fieldName) {
         Date currentDate = operdayController.getOperday().getCurrentDate();     // текущий опердень
-        if ( null == dateOpen ) {
-            throw new ValidationError(DATE_AFTER_OPERDAY, fieldName,
-                    "не задана",
-                    dateUtils.onlyDateString(currentDate));
-        } else if (dateOpen.after(currentDate)){
+        if (checkDateNotEmpty(dateOpen, fieldName) && dateOpen.after(currentDate)) {
             throw new ValidationError(DATE_AFTER_OPERDAY, fieldName,
                     dateUtils.onlyDateString(dateOpen),
                     dateUtils.onlyDateString(currentDate));
         }
         // TODO проверка на выходные
+    }
+
+    private boolean checkDateNotEmpty(Date dateOpen, String fieldName) {
+        Date currentDate = operdayController.getOperday().getCurrentDate();     // текущий опердень
+        if ( null == dateOpen ) {
+            throw new ValidationError(DATE_AFTER_OPERDAY, fieldName
+                    , "не задана", dateUtils.onlyDateString(currentDate));
+        }
+        return true;
     }
 
     // Дата открытия счета
@@ -370,7 +376,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
         glAccount.setOperSide(side);
 
         // даты
-        checkDateOpen(dateOpen, bsaAcid, "Дата открытия");
+        checkDateNotEmpty(dateOpen, "Дата открытия");
         if (null == operation)  // только для ручных
             checkDateOpen707(dateOpen, bsaAcid, "Дата открытия");
         glAccount.setDateOpen(dateOpen);

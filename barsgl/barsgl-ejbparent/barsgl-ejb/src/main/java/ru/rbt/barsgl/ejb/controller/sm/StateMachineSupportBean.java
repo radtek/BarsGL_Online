@@ -67,7 +67,7 @@ public class StateMachineSupportBean implements StateMachineSupport {
     public <Entity extends StatefullObject, T extends StateTrigger<?>> void fireTrigger(Entity entity
             , Class<T> triggerClass) throws StateMachineException {
         StateTrigger trigger = ServerUtils.findAssignable(triggerClass, stateTriggers);
-        trigger.onStateEnter(entity);
+        trigger.execute(entity);
     }
 
     @Override

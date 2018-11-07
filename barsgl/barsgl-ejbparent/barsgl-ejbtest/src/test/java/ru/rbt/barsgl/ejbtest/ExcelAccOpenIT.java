@@ -2,6 +2,8 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.junit.Assert;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.acc.AccountBatchStateController;
 import ru.rbt.barsgl.ejb.controller.operday.task.AccountBatchOpenTask;
 import ru.rbt.barsgl.ejb.entity.etl.AccountBatchPackage;
@@ -16,12 +18,16 @@ import ru.rbt.ejbcore.mapping.YesNo;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.AccountBatchState.*;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
+import static ru.rbt.ejbcore.util.DateUtils.addDays;
+import static ru.rbt.ejbcore.util.DateUtils.onlyDate;
 import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 
 /**
@@ -102,6 +108,16 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         AccountBatchRequest request2 = createBatchRequest(pkg, 2L, branch, ccy, custno, acctype, dealId, subdealid, sealSrc, "05");
         AccountBatchRequest request3 = createBatchRequest(pkg, 3L, b1ranch, c1cy, c1ustno, a1cctype, "", "", s1ealSrc, t1erm);
 
+        // проверяем дату в будущем
+        final Date afterDate = addDays(getOperday().getCurrentDate(), 5);
+        final Date inOpendate = Optional.ofNullable((BankCalendarDay)remoteAccess
+                .invoke(BankCalendarDayRepository.class, "getWorkdayAfter", afterDate))
+                .map(b -> b.getId().getCalendarDate())
+                .orElseThrow(() -> new RuntimeException(format("Error on calc open date after '%s'", onlyDate(afterDate))));
+
+        baseEntityRepository.executeUpdate("update AccountBatchRequest r set r.inOpendate = ?1 where r in (from AccountBatchRequest r2 where r2.batchPackage = ?2)"
+            , inOpendate, pkg);
+
         // валидируем
         remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
 
@@ -151,6 +167,10 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         Assert.assertEquals(PROCESSED, pkg.getState());
         requests = baseEntityRepository.select(AccountBatchRequest.class, "from AccountBatchRequest p where p.batchPackage = ?1", pkg);
         Assert.assertTrue(requests.stream().allMatch(r -> r.getState() == COMPLETED  && Y == r.getNewAccount()));
+
+        List<DataRecord> accounts = baseEntityRepository.select("select * from gl_acc where bsaacid in (select bsaacid from GL_ACBATREQ r where r.id_pkg = ?)", pkg.getId());
+        Assert.assertEquals(3, accounts.size());
+        Assert.assertTrue(accounts.stream().allMatch(r -> r.getDate("dto").equals(inOpendate)));
     }
 
     private AccountBatchRequest findRequest(long requestId) {
