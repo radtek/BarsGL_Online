@@ -22,7 +22,6 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -219,7 +218,7 @@ public class AccountBatchProcessorBean extends UploadProcessorBase implements Ba
         // optional
         request.setInAcc2(getLongAsString(rowParams, row, I_Acc2, false, 5, true, errorList));
         request.setInCtype(getLongAsString(rowParams, row, I_Ctype, false, 2, false, errorList));
-        request.setInTerm(getLongAsString(rowParams, row, I_Term, false, 2, false, errorList));
+        request.setInTerm(getLongAsString(rowParams, row, I_Term, false, 2, true, errorList));
         request.setInDealsrc(getString(rowParams, row, I_Dealsrc, true, 8, false, errorList));     // required
         request.setInDealid(getString(rowParams, row, I_Dealid, false, 20, false, errorList));
         request.setInSubdealid(getString(rowParams, row, I_Subdealid, false, 20, false, errorList));

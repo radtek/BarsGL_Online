@@ -90,12 +90,12 @@ public abstract class UploadProcessorBase {
             }
             if (clazz.equals(String.class)) {
                 if (exact && valueStr.length() != maxLength) {
-                    errorList.add(format("%s Неверная длина строка (<>%d): '%s'",
+                    errorList.add(format("%s Неверная длина строка (< > %d): '%s'",
                             getLocation(row, index), maxLength, param));
                     return (T) valueStr;
                 }
                 else if (valueStr.length() > maxLength) {
-                    errorList.add(format("%s Слишком длинная строка (>%d): '%s'",
+                    errorList.add(format("%s Слишком длинная строка (> %d): '%s'",
                             getLocation(row, index), maxLength, param));
                     return (T) valueStr.substring(0, maxLength);
                 }
@@ -139,7 +139,7 @@ public abstract class UploadProcessorBase {
     }
 
     protected String getErrorMessage(Object param, int row, int index, Class clazz) {
-        return format("%s Неверный формат данных (нужно '%s'): '%s'",
+        return format("%s Неверный формат данных (надо '%s'): '%s'",
                 getLocation(row, index), getClassDescr(clazz), param);
     }
 
@@ -182,13 +182,11 @@ public abstract class UploadProcessorBase {
                 param = ((Float) param_ex).longValue();
                 delta = ((Float) param_ex).doubleValue() - param;
             } else {
-                errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
-                        getLocation(row, index), getClassDescr(Long.class), param_ex));
+                errorList.add(getErrorMessage(param_ex, row, index, clazz));
                 return null;
             }
             if (delta != 0) {
-                errorList.add(format("%s Неверный формат данных (надо '%s'): '%s'",
-                        getLocation(row, index), getClassDescr(Long.class), param_ex));
+                errorList.add(getErrorMessage(param_ex, row, index, clazz));
                 return null;
             }
             return getValue(param, row, index, notNull, String.class, maxLength, exact, errorList);
