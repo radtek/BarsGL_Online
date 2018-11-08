@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.LoadCurratesTask;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -11,7 +12,11 @@ import ru.rbt.barsgl.ejb.entity.dict.CurrencyRate;
 import ru.rbt.barsgl.ejb.entity.dict.CurrencyRateId;
 import ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRate;
 import ru.rbt.barsgl.ejb.entity.etl.EtlCurrencyRateId;
+import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
+import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.ejbcore.util.StringUtils;
+import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -62,7 +67,13 @@ public class EtlRateIT extends AbstractTimerJobIT {
      * Проверка загрузка курсов валют
      * @fsd 9.1
      */
-    @Test public void test() {
+    @Test public void test() throws Exception {
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+
+        final String jobName = LoadCurratesTask.class.getSimpleName() + StringUtils.rsubstr(System.currentTimeMillis() + "", 5);
+        SingleActionJob rateJob = SingleActionJobBuilder.create().withClass(LoadCurratesTask.class)
+                .withName(jobName).build();
 
         logger.info("deleted 1: " + baseEntityRepository.executeNativeUpdate(
                 "delete from currates where dat = ?", BGN_RATE_ID.getRateDt()));
@@ -85,7 +96,10 @@ public class EtlRateIT extends AbstractTimerJobIT {
         etlRate.setRate(newRate);
         etlRate = (EtlCurrencyRate) baseEntityRepository.save(etlRate);
 
-        remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
+//        remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
+        jobService.executeJob(rateJob);
+        JobHistory history1 = getLastHistRecordObject(jobName);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history1.getResult());
 
         rate = findRate(BGN, BGN_RATE_ID.getRateDt());
         Assert.assertNotNull(rate);
@@ -95,7 +109,12 @@ public class EtlRateIT extends AbstractTimerJobIT {
         baseEntityRepository.executeUpdate("update EtlCurrencyRate r set r.rate = ?1 where r.id = ?2"
                 , new BigDecimal("15.0001"), BGN_RATE_ID);
 
-        remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
+//        remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
+        jobService.executeJob(rateJob);
+
+        JobHistory history2 = getLastHistRecordObject(jobName);
+        Assert.assertEquals(history1, history2);
+
         rate = findRate(BGN, BGN_RATE_ID.getRateDt());
         Assert.assertEquals(newRate, rate.getRate().setScale(4, ROUND_HALF_UP));
     }

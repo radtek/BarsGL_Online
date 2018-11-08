@@ -127,7 +127,7 @@ public class AuthIT extends AbstractRemoteIT{
 
         // залогиница
         LoginResult result = remoteAccess.invoke(AuthorizationServiceGwtSupport.class, "login", user.getUserName(), "123");
-        Assert.assertEquals(result.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
+        Assert.assertEquals("Message: " + result.getMessage(), result.getLoginResultStatus(), LoginResult.LoginResultStatus.SUCCEEDED);
 
         Assert.assertEquals(1, result.getAvailableActions().size());
         Assert.assertEquals(SecurityActionCode.RoleInp, result.getAvailableActions().get(0));
