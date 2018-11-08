@@ -10,18 +10,23 @@ import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
+import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal;
+import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.repository.AqRepository;
+import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.AbstractRemoteIT;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.BalanceMode;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejbcore.datarec.DBParam;
 import ru.rbt.ejbcore.datarec.DBParams;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
@@ -31,7 +36,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.COB;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.NEW;
 import static ru.rbt.barsgl.ejb.entity.gl.BackvalueJournal.BackvalueJournalState.SELECTED;
 import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
@@ -387,7 +394,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         final String jobName = ExecutePreCOBTaskNew.class.getSimpleName();
 
         // DIRECT MODE
-        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(Operday.OperdayPhase.ONLINE, OPEN);
 
         setGibridBalanceMode();
 
@@ -418,6 +425,25 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
         operday = getOperday();
         Assert.assertEquals(COB, operday.getPhase());
         Assert.assertEquals(ONLINE, operday.getBalanceMode());
+    }
+
+    /**
+     * в гибридном режиме пересчета остатков регистрация в журнале бэквалуе должна
+     * происходить в при обработке оборотов из очереди
+     */
+    @Test public void testRegisterBvjrnl_gibrid() throws SQLException {
+        setGibridBalanceMode();
+        purgeQueueTable();
+        updateOperday(Operday.OperdayPhase.ONLINE, OPEN, DIRECT);
+
+        baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl");
+        GLOperation operation = createOperation(getOperday().getLastWorkingDay());
+        int msgCount = baseEntityRepository.selectFirst("select count(1) cnt from AQ$BAL_QUEUE_TAB").getInteger("cnt");
+        dequeueProcess(msgCount);
+        List<DataRecord> bvRecords = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid in (?,?)"
+                , operation.getAccountDebit(), operation.getAccountCredit());
+
+        Assert.assertEquals(2, bvRecords.size());
     }
 
     private void insertBaltur(String bsaacid, String acid, Date dat, Date datto) {
@@ -461,6 +487,48 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private void dequeueProcessExceptionQueue() {
         baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_EXCEPTION_QUEUE_NAME); end;");
+    }
+
+    private GLOperation createOperation(Date vdate) throws SQLException {
+        Long stamp = System.currentTimeMillis();
+        EtlPackage pkg = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
+        pkg.setDateLoad(getSystemDateTime());
+        pkg.setPackageState(EtlPackage.PackageState.INPROGRESS);
+        pkg.setAccountCnt(0);
+        pkg.setPostingCnt(4);
+        pkg = (EtlPackage) baseEntityRepository.save(pkg);
+
+        List<DataRecord> bsaacids = baseEntityRepository.select("select * from gl_acc " +
+                "where bsaacid like '40817810__001%' and trim(acid) is not null " +
+                "and ? between dto and nvl(dtc, to_date('2029-01-01','yyyy-mm-dd')) and rownum <= 2", getOperday().getCurrentDate());
+        Assert.assertEquals(2, bsaacids.size());
+        final String accCredit = bsaacids.get(0).getString("bsaacid");
+        final String accDebit = bsaacids.get(1).getString("bsaacid");
+
+        EtlPosting pst1 = createSimple(stamp, pkg, accCredit, accDebit, vdate);
+        GLOperation operation = (GLOperation) postingController.processMessage(pst1);
+        Assert.assertNotNull(operation);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+        return operation;
+    }
+
+    private EtlPosting createSimple(long stamp, EtlPackage pkg, String accCredit, String accDebit, Date vdate) throws SQLException {
+        EtlPosting pst = newPosting(stamp + 1, pkg);
+        pst.setAccountCredit(accCredit);
+        pst.setAccountDebit(accDebit);
+        pst.setAmountCredit(new BigDecimal("12.0056"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", getCurrencyCodeByDigital(accCredit.substring(5, 8))));
+        pst.setCurrencyDebit(remoteAccess.invoke(BankCurrencyRepository.class, "getCurrency", getCurrencyCodeByDigital(accDebit.substring(5, 8))));
+        pst.setValueDate(vdate);
+        pst.setSourcePosting("K+TP");
+        return (EtlPosting) baseEntityRepository.save(pst);
+    }
+
+    private String getCurrencyCodeByDigital(String cbccy) throws SQLException {
+        return baseEntityRepository.selectOne("select glccy from currency where cbccy = ?", cbccy).getString("glccy");
     }
 
 }

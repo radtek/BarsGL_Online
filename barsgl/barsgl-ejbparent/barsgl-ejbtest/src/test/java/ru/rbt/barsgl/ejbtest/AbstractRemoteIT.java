@@ -898,6 +898,12 @@ public abstract class AbstractRemoteIT  {
         baseEntityRepository.executeNativeUpdate("begin GLAQ_PKG.DEQUEUE_PROCESS_ONE(GLAQ_PKG_CONST.C_NORMAL_QUEUE_NAME); end;");
     }
 
+    protected void dequeueProcess(int count) {
+        for (int i = 0; i<count; i++) {
+            dequeueProcessOne();
+        }
+    }
+
     protected void purgeQueueTable() {
         baseEntityRepository.executeNativeUpdate(
                 "DECLARE\n" +

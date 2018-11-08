@@ -36,6 +36,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.Operation;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
+import static ru.rbt.barsgl.shared.enums.BalanceMode.GIBRID;
 import static ru.rbt.ejbcore.util.StringUtils.*;
 
 /**
@@ -344,7 +345,10 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
                         for (GLPosting pst : pstList) {
                             glPostingRepository.save(pst);
                         }
-                        registerBackvalueJournal(pstList); // todo удалить потом
+                        // в режиме GIBRID пересчета остатков обновление журнала бэквалуе происходит в процедуре обработки входящих из очереди оборотов
+                        if (GIBRID != operdayController.getOperday().getBalanceMode()) {
+                            registerBackvalueJournal(pstList);
+                        }
                         memorderRepository.createMemorders(pstList);
 
                         if (null != targetState) {
