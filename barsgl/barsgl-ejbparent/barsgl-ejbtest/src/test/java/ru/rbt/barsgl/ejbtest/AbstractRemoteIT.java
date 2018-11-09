@@ -904,6 +904,13 @@ public abstract class AbstractRemoteIT  {
         }
     }
 
+    protected void dequeueProcessAll() throws SQLException {
+        int count = baseEntityRepository.selectFirst("select count(1) cnt from AQ$BAL_QUEUE_TAB").getInteger("cnt");
+        for (int i = 0; i<count; i++) {
+            dequeueProcessOne();
+        }
+    }
+
     protected void purgeQueueTable() {
         baseEntityRepository.executeNativeUpdate(
                 "DECLARE\n" +

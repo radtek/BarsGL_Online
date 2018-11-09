@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.junit.*;
 import ru.rbt.barsgl.shared.Builder;
+import ru.rbt.barsgl.shared.enums.AccessMode;
 import ru.rbt.ejbcore.mapping.BaseEntity;
 import ru.rbt.ejbcore.util.ServerUtils;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -42,6 +43,7 @@ public class AuthIT extends AbstractRemoteIT{
         user = (AppUser) baseEntityRepository.save(GLUserBuilder.create()
                 .withName("test" + StringUtils.rsubstr(System.currentTimeMillis()+"", 5)).build());
         objects.add(user);
+        baseEntityRepository.executeNativeUpdate("update gl_od set ACSMODE = ?", AccessMode.FULL.name());
     }
 
     @AfterClass

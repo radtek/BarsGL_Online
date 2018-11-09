@@ -438,9 +438,12 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl");
         GLOperation operation = createOperation(getOperday().getLastWorkingDay());
-        int msgCount = baseEntityRepository.selectFirst("select count(1) cnt from AQ$BAL_QUEUE_TAB").getInteger("cnt");
-        dequeueProcess(msgCount);
         List<DataRecord> bvRecords = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid in (?,?)"
+                , operation.getAccountDebit(), operation.getAccountCredit());
+        Assert.assertTrue(bvRecords.isEmpty());
+
+        dequeueProcessAll();
+        bvRecords = baseEntityRepository.select("select * from gl_bvjrnl where bsaacid in (?,?)"
                 , operation.getAccountDebit(), operation.getAccountCredit());
 
         Assert.assertEquals(2, bvRecords.size());

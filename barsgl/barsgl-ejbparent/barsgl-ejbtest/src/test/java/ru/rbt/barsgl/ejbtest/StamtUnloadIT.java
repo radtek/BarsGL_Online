@@ -911,9 +911,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         DataRecord recbalAfter = getLastUnloadHeader(SESS_BALANCE_DELTA);
         Assert.assertEquals(recbal.getLong("id"), recbalAfter.getLong("id"));
 
-        // обновляем заголовки - выгрузка новой проводки все равно не пройдет потому
-        // что есть необработанные обороты в очереди хотя новый заголовок появится
+        // обновляем заголовки
         setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        // для регистрации в журнале бэквалуе
+        dequeueProcessAll();
         jobService.executeJob(job);
 
         recbalAfter = getLastUnloadHeader(SESS_BALANCE_DELTA);
@@ -925,18 +926,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         log.info("pcid2 = " + pds.get(0).getPcId());
         List<Pd> finalPds2 = pds;
         unloads = baseEntityRepository.select("select * from gl_etlstmd");
-        Assert.assertFalse(unloads.stream().anyMatch(r -> Objects.equals(r.getLong("pcid"), finalPds2.get(0).getPcId())));
 
-        // обновляем заголовки
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
-        jobService.executeJob(job);
-
-        dequeueProcessOne();
-        dequeueProcessOne();
-
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
-        jobService.executeJob(job);
-        unloads = baseEntityRepository.select("select * from gl_etlstmd");
         Assert.assertTrue(unloads.stream().anyMatch(r -> Objects.equals(r.getLong("pcid"), finalPds2.get(0).getPcId())));
     }
 
