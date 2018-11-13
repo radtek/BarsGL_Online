@@ -102,6 +102,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , BufferModeSyncAuto
         , Exclude47422
         , AccountBatch
+        , StamtUnloadForce
     }
 
     public enum LogLevel {

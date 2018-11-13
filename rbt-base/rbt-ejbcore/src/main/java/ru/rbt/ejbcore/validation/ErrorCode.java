@@ -175,6 +175,7 @@ public enum ErrorCode {
 
     , OPERDAY_NOT_ONLINE(3020, "%s. Операционный день в статусе: '%s'")
     , OPERDAY_IN_SYNCHRO(3021, "%s. Выполняется синхронизация проводок,\n повторите попытку через несколько минут")
+    , STAMT_UNLOAD_FORCE(3022, "%s")
 
     , QUEUE_ERROR(3030, "%s")
     , ACCCLOSE_ERROR(3031, "%s")

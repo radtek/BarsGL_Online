@@ -14,10 +14,7 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.StamtUnloadParam;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
-import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
-import ru.rbt.barsgl.ejb.entity.gl.GLPd;
-import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
-import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejb.entity.gl.*;
 import ru.rbt.barsgl.ejb.repository.BackvalueJournalRepository;
 import ru.rbt.barsgl.ejb.repository.BankCurrencyRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
@@ -44,10 +41,13 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.CONSUMED;
+import static ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus.SUCCEDED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.CLOSED;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
@@ -106,7 +106,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         DataRecord rec = baseEntityRepository.selectFirst("select max(ID) from GL_ETLSTMS where PARNAME = ?", FULL_POSTING.getParamName());
         long id1 = (null == rec || null == rec.getLong(0)) ? 0 : rec.getLong(0);
         Assert.assertTrue(id0 < id1);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+        Assert.assertEquals(SUCCEDED.getFlag()
                 , baseEntityRepository.selectOne("select parvalue from GL_ETLSTMS where id = ?", id1).getString("parvalue"));
 
         remoteAccess.invoke(StamtUnloadFullTask.class, "run", "", properties);
@@ -227,7 +227,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         rec = baseEntityRepository.selectFirst("select max(ID) from GL_ETLSTMS where PARNAME = ?", UNLOAD_STAMTD_PARAM_NAME);
         long id1 = (null == rec || null == rec.getLong(0)) ? 0 : rec.getLong(0);
         Assert.assertTrue(id0 < id1);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+        Assert.assertEquals(SUCCEDED.getFlag()
                 , baseEntityRepository.selectOne("select parvalue from GL_ETLSTMS where id = ?", id1).getString("parvalue"));
         Assert.assertTrue(1 <= baseEntityRepository.selectOne("select count(1) cnt from GL_ETLSTMD").getInteger("cnt"));
 
@@ -322,7 +322,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // проверяем хедер
         Assert.assertNotNull("не найдено в gl_etlstms", getLastUnloadHeader(BALANCE_DELTA_INCR));
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+        Assert.assertEquals(SUCCEDED.getFlag()
                 , getLastUnloadHeader(BALANCE_DELTA_INCR).getString("parvalue"));
 
         // одна проводка в текущем дне
@@ -345,7 +345,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         unloadBackvalueIncrement();
 
         // проверяем хедер
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+        Assert.assertEquals(SUCCEDED.getFlag()
                 , getLastUnloadHeader(BALANCE_DELTA_INCR).getString("parvalue"));
 
         // должна быть выгружена только вторая проводка
@@ -368,7 +368,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         unloadBackvalueIncrement();
 
         // проверяем хедер
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+        Assert.assertEquals(SUCCEDED.getFlag()
                 , getLastUnloadHeader(BALANCE_DELTA_INCR).getString("parvalue"));
 
         // должна быть выгружена только вторая проводка
@@ -396,7 +396,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         jobService.executeJob(SingleActionJobBuilder.create().withClass(StamtUnloadDeltaTask.class).build());
 
         // проверяем хедер
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag()
+        Assert.assertEquals(SUCCEDED.getFlag()
                 , getLastUnloadHeader(UnloadStamtParams.DELTA_POSTING).getString("parvalue"));
 
         // должна быть выгружена только одна посл проводка
@@ -437,7 +437,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         checkCreateStep("P14", operdate, "O");
         unloadStamtBalanceDelta(operdate);
         DataRecord record = getLastUnloadHeader(UnloadStamtParams.BALANCE_DELTA);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), record.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), record.getString("parvalue"));
         Assert.assertTrue(baseEntityRepository.select("select * from GL_BALSTMD").stream()
                 .anyMatch(p -> ((DataRecord)p).getString("cbaccount").equals(operationCurdate.getAccountDebit())));
         // повторная выгрузка не производился
@@ -484,7 +484,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         header = getLastUnloadHeader(UnloadStamtParams.BALANCE_DELTA_FLEX);
         Assert.assertNotNull(header);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header.getString("parvalue"));
 
 //        Assert.assertTrue(0 < baseEntityRepository.selectFirst("select count(1) cnt from GL_BALSTMD").getInteger(0));
 
@@ -569,11 +569,11 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         jobService.executeJob(job);
         DataRecord header = getLastUnloadHeader(UnloadStamtParams.BALANCE_TECHOVER);
         Assert.assertNotNull(header);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header.getString("parvalue"));
 
         header = getLastUnloadHeader(UnloadStamtParams.POSTING_TECHOVER);
         Assert.assertNotNull(header);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header.getString("parvalue"));
 
         List<DataRecord> records = baseEntityRepository.select("select * from gl_etlstmd order by pcid");
         Assert.assertEquals(2, records.size());
@@ -679,7 +679,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // проверка заголовков
         DataRecord header1 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertNotNull(header1);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header1.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header1.getString("parvalue"));
 
         List<DataRecord> unloads = baseEntityRepository.select("select * from GL_STMDEL");
         Assert.assertEquals(4, unloads.size());
@@ -699,11 +699,11 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // удаляем одну выгруженную
         Assert.assertTrue(1 == baseEntityRepository.executeNativeUpdate("delete from GL_STMDEL where pcid = ?", pcid1));
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        setHeadersStatus(CONSUMED);
         jobService.executeJob(job);
         DataRecord header3 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertFalse(Objects.equals(header1.getLong("id"), header3.getLong("id")));
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header3.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header3.getString("parvalue"));
 
         // инкрементальная последующая выгрузка
         Long pcidNew = createPostingUpdate(operday, rlnId1, rlnId2);
@@ -712,7 +712,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // нет выгрузки потому что необработана предыдущая
         DataRecord header4 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertTrue(Objects.equals(header3.getLong("id"), header4.getLong("id")));
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        setHeadersStatus(CONSUMED);
 
 //        cleanHeader();
 //        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
@@ -722,7 +722,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         header4 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertFalse(Objects.equals(header3.getLong("id"), header4.getLong("id")));
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header4.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header4.getString("parvalue"));
 
         unloads = baseEntityRepository.select("select * from GL_STMDEL");
         log.info("pcids: " + pcid1 + ":" + pcid1_1 + ":" + pcid2 + ":" + pcid2_1 + ":" + pcidNew);
@@ -735,7 +735,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         // при выгрузке в следующем дне в первый раз проводки ранее выгруженные должны быть удалены
         setOperday(DateUtils.addDays(getOperday().getCurrentDate(), 1), DateUtils.addDays(getOperday().getLastWorkingDay(), 1), ONLINE, OPEN);
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        setHeadersStatus(CONSUMED);
         // должна быть первая выгрузка в текущем ОД
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h where operday = ?", getOperday().getCurrentDate());
         // удаляем одну выгруженную
@@ -749,7 +749,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         DataRecord header5 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertFalse(Objects.equals(header4.getLong("id"), header5.getLong("id")));
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), header5.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), header5.getString("parvalue"));
 
         unloads = baseEntityRepository.select("select * from GL_STMDEL");
         // осталась одна в прошлой дате
@@ -763,10 +763,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // заголовок по остаткам
         DataRecord balheader2 = getLastUnloadHeader(BALANCE_DELTA2);
         Assert.assertFalse(Objects.equals(balheader1.getLong("id"), balheader2.getLong("id")));
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), balheader2.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), balheader2.getString("parvalue"));
 
         // повторную выгрузку не производим, если нет невыгруженных удаленных проводок
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        setHeadersStatus(CONSUMED);
         jobService.executeJob(job);
         DataRecord header6 = getLastUnloadHeader(POSTING_DELETE);
         Assert.assertTrue(Objects.equals(header5.getLong("id"), header6.getLong("id")));
@@ -820,7 +820,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         DataRecord accheader1 = getLastUnloadHeader(NEW_ACCOUNTS);
         Assert.assertNotNull(accheader1);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), accheader1.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), accheader1.getString("parvalue"));
 
         DataRecord accRecord = baseEntityRepository.selectFirst("select * from GL_ACCSTM");
         Assert.assertNotNull(accRecord);
@@ -885,7 +885,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
 
         JobHistory history = getLastHistory(StamtLocalizationSessionTask.class.getSimpleName());
         Assert.assertNotNull(history);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history.getResult());
+        Assert.assertEquals(SUCCEDED, history.getResult());
 
         List<DataRecord> unloads = baseEntityRepository.select("select * from gl_etlstmd");
         Assert.assertTrue("cnt = " + unloads.size(), 1 <= unloads.size());
@@ -898,10 +898,10 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertTrue(balances.stream().anyMatch(b -> Objects.equals(b.getString("cbaccount"), finalPds.get(1).getBsaAcid())));
 
         DataRecord recpost = getLastUnloadHeader(SESS_DELTA_POSTING);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), recpost.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), recpost.getString("parvalue"));
 
         DataRecord recbal = getLastUnloadHeader(SESS_BALANCE_DELTA);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), recbal.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), recbal.getString("parvalue"));
 
         // еще операция
         GLOperation operation2 = createOperation(lwday);
@@ -912,13 +912,13 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(recbal.getLong("id"), recbalAfter.getLong("id"));
 
         // обновляем заголовки
-        setHeadersStatus(DwhUnloadStatus.CONSUMED);
+        setHeadersStatus(CONSUMED);
         // для регистрации в журнале бэквалуе
         dequeueProcessAll();
         jobService.executeJob(job);
 
         recbalAfter = getLastUnloadHeader(SESS_BALANCE_DELTA);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), recbalAfter.getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), recbalAfter.getString("parvalue"));
         Assert.assertNotEquals(recbal.getLong("id"), recbalAfter.getLong("id"));
 
         pds = getPds(baseEntityRepository, operation2);
@@ -959,7 +959,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         jobService.executeJob(incrJob);
 
         JobHistory history1 = getLastHistRecordObject(jobName);
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history1.getResult());
+        Assert.assertEquals(SUCCEDED, history1.getResult());
 
         GLPosting postings = getPostingByOper(operation);
 
@@ -980,6 +980,43 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         // новой выгрузки нет
         Assert.assertEquals(history1, history2);
     }
+
+    @Test public void testStamtUnloadForce() throws Exception {
+        updateOperday(ONLINE, OPEN, DIRECT);
+        setOnlineBalanceMode();
+        baseEntityRepository.executeNativeUpdate("delete from gl_stmparm");
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+        GLOperation operation = createOper(getOperday().getLastWorkingDay());
+        List<Pd> pds = (List<Pd>)baseEntityRepository.select(Pd.class, "select d from Pd d, GLPosting p where p.operation.id = ?1 and p.id = d.pcId", operation.getId());
+        pds.forEach(p -> registerForStamtUnload(p.getBsaAcid()));
+
+        List<Long> pcids = pds.stream().map(AbstractPd::getPcId).distinct().collect(Collectors.toList());
+        pcids.forEach(pcid -> baseEntityRepository.executeNativeUpdate("insert into GL_STMPCID (pcid) values (?)", pcid));
+
+        setHeadersStatus(CONSUMED);
+        final String jobName = StamtUnloadPostingForceTask.class.getSimpleName();
+        SingleActionJob forceJob = SingleActionJobBuilder.create().withClass(StamtUnloadPostingForceTask.class)
+                .withName(jobName).build();
+        jobService.executeJob(forceJob);
+
+        DataRecord balanceHeader = getLastUnloadHeader(FORCE_BALANCE_DELTA);
+        Assert.assertNotNull(balanceHeader);
+        Assert.assertEquals(SUCCEDED.getFlag(), balanceHeader.getString("parvalue"));
+        DataRecord postHeader = getLastUnloadHeader(FORCE_DELTA_POSTING);
+        Assert.assertEquals(SUCCEDED.getFlag(), postHeader.getString("parvalue"));
+
+        List<DataRecord> unloadedPst = baseEntityRepository.select("select * from gl_etlstmd");
+        Assert.assertTrue(pcids.size() > 0 && pcids.size() == unloadedPst.size());
+        pcids.forEach(p -> Assert.assertTrue(unloadedPst.stream().anyMatch(s -> Objects.equals(s.getLong("pcid"), p))));
+
+        List<DataRecord> unloadedBalance = baseEntityRepository.select("select * from gl_balstmd");
+        Assert.assertTrue(unloadedBalance.size() > 0);
+        unloadedBalance.forEach(u -> Assert.assertTrue(pds.stream().anyMatch(p -> p.getBsaAcid().equals(u.getString("cbaccount")))));
+
+    }
+
 
     private void registerForStamtUnload(String bsaacid) {
         try {
@@ -1017,7 +1054,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
     }
 
     private void checkAllBalanceSucceded() throws SQLException {
-        Assert.assertEquals(DwhUnloadStatus.SUCCEDED.getFlag(), getLastUnloadHeader(UnloadStamtParams.BALANCE_FULL).getString("parvalue"));
+        Assert.assertEquals(SUCCEDED.getFlag(), getLastUnloadHeader(UnloadStamtParams.BALANCE_FULL).getString("parvalue"));
     }
 
     protected static DataRecord getLastUnloadHeader(UnloadStamtParams params) throws SQLException {
