@@ -38,9 +38,9 @@ public class Reg47422JournalRepository extends AbstractBaseEntityRepository<Reg4
      * @return
      * @throws IOException
      */
-    public int markChangedPst() throws IOException {
+    public int markChangedPst(Date fromDate) throws IOException {
         return executeNativeUpdate(resourceController.getContent("ru/rbt/barsgl/ejb/controller/operday/task/exclude47422/mark_changed_pst.sql")
-        );
+                , fromDate);
     }
 
     /**

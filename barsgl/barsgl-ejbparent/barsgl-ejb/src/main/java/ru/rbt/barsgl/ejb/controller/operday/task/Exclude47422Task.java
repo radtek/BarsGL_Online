@@ -213,7 +213,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         try {
             int[] res = journalRepository.executeInNewTransaction(persistence -> {
                 // найти проводки с отличием, проапдейтить VALID = 'U'
-                int changed = journalRepository.markChangedPst();
+                int changed = journalRepository.markChangedPst(dateFrom);
                 // вставить измененные записи (STATE = 'CHANGE') и новын записи (STATE = 'LOAD')
                 int inserted = journalRepository.insertNewAndChangedPst(dateFrom);
                 if (changed > 0) {
