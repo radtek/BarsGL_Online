@@ -144,6 +144,7 @@ public class StamtUnloadController {
      * Проверяем закончена ли обработка данных по выгрузкам проводок в TDS
      * @throws Exception
      */
+    @SuppressWarnings("All")
     public boolean checkConsumed(ErrorCode errorCode) throws Exception {
         List<DataRecord> unloads = repository.select(
                 "select *\n" +
@@ -157,5 +158,18 @@ public class StamtUnloadController {
         return true;
     }
 
+    public Long[] createHeaders(Date operday, UnloadStamtParams ... params) throws Exception {
+        List<Long> headerIds = new ArrayList<>();
+        for (UnloadStamtParams param : params) {
+            headerIds.add(createHeader(operday, param));
+        }
+        return headerIds.toArray(new Long[headerIds.size()]);
+    }
+
+    public void updateHeaders(Long[] headearIds, DwhUnloadStatus status) throws Exception {
+        for (long headerId : headearIds) {
+            setHeaderStatus(headerId, status);
+        }
+    }
 
 }
