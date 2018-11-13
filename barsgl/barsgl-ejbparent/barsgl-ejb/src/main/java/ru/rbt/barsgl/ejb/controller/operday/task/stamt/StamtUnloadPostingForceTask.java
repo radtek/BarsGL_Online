@@ -27,7 +27,7 @@ public class StamtUnloadPostingForceTask extends AbstractJobHistoryAwareTask {
     @Inject
     private StamtUnloadController unloadController;
 
-    private enum ForceState {
+    public enum ForceState {
         Y,N,S
     }
 

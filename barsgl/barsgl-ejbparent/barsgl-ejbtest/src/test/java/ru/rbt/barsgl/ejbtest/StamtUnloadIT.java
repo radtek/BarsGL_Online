@@ -49,6 +49,8 @@ import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.*;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController.STAMT_UNLOAD_FULL_DATE_KEY;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadPostingForceTask.ForceState.S;
+import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadPostingForceTask.ForceState.Y;
 import static ru.rbt.barsgl.ejb.controller.operday.task.stamt.UnloadStamtParams.*;
 import static ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder.create;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
@@ -1015,8 +1017,41 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertTrue(unloadedBalance.size() > 0);
         unloadedBalance.forEach(u -> Assert.assertTrue(pds.stream().anyMatch(p -> p.getBsaAcid().equals(u.getString("cbaccount")))));
 
+        List<DataRecord> regPcids = baseEntityRepository.select("select * from GL_STMPCID");
+        Assert.assertTrue(regPcids.stream().anyMatch(r -> r.getString("processed").equals(Y.name())));
     }
 
+    @Test public void testStamtUnloadForce_skipped() throws Exception {
+        updateOperday(ONLINE, OPEN, DIRECT);
+        setOnlineBalanceMode();
+        baseEntityRepository.executeNativeUpdate("delete from gl_stmparm");
+        baseEntityRepository.executeNativeUpdate("delete from gl_etlstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+        baseEntityRepository.executeNativeUpdate("delete from GL_STMPCID");
+        GLOperation operation = createOper(getOperday().getLastWorkingDay());
+        List<Pd> pds = (List<Pd>)baseEntityRepository.select(Pd.class, "select d from Pd d, GLPosting p where p.operation.id = ?1 and p.id = d.pcId", operation.getId());
+        //pds.forEach(p -> registerForStamtUnload(p.getBsaAcid()));
+
+        List<Long> pcids = pds.stream().map(AbstractPd::getPcId).distinct().collect(Collectors.toList());
+        pcids.forEach(pcid -> baseEntityRepository.executeNativeUpdate("insert into GL_STMPCID (pcid) values (?)", pcid));
+
+        setHeadersStatus(CONSUMED);
+        final String jobName = StamtUnloadPostingForceTask.class.getSimpleName();
+        SingleActionJob forceJob = SingleActionJobBuilder.create().withClass(StamtUnloadPostingForceTask.class)
+                .withName(jobName).build();
+        jobService.executeJob(forceJob);
+
+        DataRecord balanceHeader = getLastUnloadHeader(FORCE_BALANCE_DELTA);
+        Assert.assertNotNull(balanceHeader);
+        Assert.assertEquals(SUCCEDED.getFlag(), balanceHeader.getString("parvalue"));
+        DataRecord postHeader = getLastUnloadHeader(FORCE_DELTA_POSTING);
+        Assert.assertEquals(SUCCEDED.getFlag(), postHeader.getString("parvalue"));
+
+        List<DataRecord> regPcids = baseEntityRepository.select("select * from GL_STMPCID");
+        Assert.assertTrue(regPcids.stream().allMatch(r -> r.getString("processed").equals(S.name())));
+
+    }
 
     private void registerForStamtUnload(String bsaacid) {
         try {
