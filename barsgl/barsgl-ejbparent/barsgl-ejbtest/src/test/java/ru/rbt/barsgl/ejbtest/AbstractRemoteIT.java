@@ -377,7 +377,7 @@ public abstract class AbstractRemoteIT  {
         pst.setPaymentRefernce("PMT" + stamp);
 //        pst.setDealId(String.valueOf(stamp).substring(0, 10));
         pst.setDeptId("NGT");
-        pst.setEventId("evtid_" + st);
+        pst.setEventId(StringUtils.substring("evtid_" + st, 0, 20));
         pst.setEventType("eventType");
         pst.setNarrative(StringUtils.leftPad("nrt_" + stamp + "_", 100, "0"));
         pst.setOperationTimestamp(new Date());
