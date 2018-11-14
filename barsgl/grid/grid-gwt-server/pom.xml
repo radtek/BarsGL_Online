@@ -4,7 +4,7 @@
     <parent>
         <groupId>ru.rbt</groupId>
         <artifactId>grid</artifactId>
-        <version>4.0.22-SNAPSHOT</version>
+        <version>4.0.22</version>
     </parent>
     <artifactId>grid-gwt-server</artifactId>
     <name>${project.artifactId}:${project.packaging}:${project.version}</name>
