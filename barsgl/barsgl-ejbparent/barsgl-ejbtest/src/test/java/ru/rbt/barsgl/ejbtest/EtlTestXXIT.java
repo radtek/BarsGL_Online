@@ -31,7 +31,7 @@ public class EtlTestXXIT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId(UUID.randomUUID().toString());
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr(UUID.randomUUID().toString(), 20));
         pst1.setEventId("ECqbn0715855");
         pst1.setDealId("RCqbn0782986");
         pst1.setValueDate(getOperday().getCurrentDate());
