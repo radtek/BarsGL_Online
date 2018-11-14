@@ -11,6 +11,7 @@ import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Created by ER22317 on 09.03.2017.
@@ -30,7 +31,7 @@ public class EtlTestXXIT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("134433218");
+        pst1.setAePostingId(UUID.randomUUID().toString());
         pst1.setEventId("ECqbn0715855");
         pst1.setDealId("RCqbn0782986");
         pst1.setValueDate(getOperday().getCurrentDate());

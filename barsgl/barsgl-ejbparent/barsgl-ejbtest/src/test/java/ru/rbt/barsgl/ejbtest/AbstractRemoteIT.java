@@ -369,15 +369,15 @@ public abstract class AbstractRemoteIT  {
 
     public static EtlPosting newPosting(long stamp, EtlPackage pkg, String src) {
         EtlPosting pst = new EtlPosting();
-        String st = ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6);
-        pst.setAePostingId("id_" + st);
+        String st = UUID.randomUUID().toString();
+        pst.setAePostingId(st);
 
         // незначимые параметры
         pst.setChnlName("CHN_TEST");
         pst.setPaymentRefernce("PMT" + stamp);
 //        pst.setDealId(String.valueOf(stamp).substring(0, 10));
         pst.setDeptId("NGT");
-        pst.setEventId("evtid" + st);
+        pst.setEventId("evtid_" + st);
         pst.setEventType("eventType");
         pst.setNarrative(StringUtils.leftPad("nrt_" + stamp + "_", 100, "0"));
         pst.setOperationTimestamp(new Date());
