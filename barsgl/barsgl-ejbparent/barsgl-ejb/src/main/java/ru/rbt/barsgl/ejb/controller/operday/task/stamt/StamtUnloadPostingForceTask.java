@@ -41,12 +41,13 @@ public class StamtUnloadPostingForceTask extends AbstractJobHistoryAwareTask {
                 jobHistoryRepository.executeNativeUpdate("begin PKG_STMT_FORCE.UNLOAD_ALL_SERIAL; end;");
                 return null;
             });
-            auditController.info(StamtUnloadForce, format("Начало принудительной выгрузки проводок в STAMT. Записей к обработке '%s'", selectCountForProcess()));
+            auditController.info(StamtUnloadForce, "Успешное окончание принудительной выгрузки в STAMT");
             unloadController.updateHeaders(headers, SUCCEDED);
 
             return true;
         } catch (Exception e) {
             unloadController.updateHeaders(headers, ERROR);
+            auditController.error(StamtUnloadForce, "Ошибка при принудит. выгрузке в STAMT", null, e);
             return false;
         }
     }

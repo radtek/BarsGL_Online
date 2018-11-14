@@ -1049,6 +1049,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(SUCCEDED.getFlag(), postHeader.getString("parvalue"));
 
         List<DataRecord> regPcids = baseEntityRepository.select("select * from GL_STMPCID");
+        Assert.assertTrue(!regPcids.isEmpty());
         Assert.assertTrue(regPcids.stream().allMatch(r -> r.getString("processed").equals(S.name())));
 
     }

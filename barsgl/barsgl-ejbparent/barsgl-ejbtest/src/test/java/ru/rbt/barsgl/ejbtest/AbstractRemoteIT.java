@@ -423,7 +423,7 @@ public abstract class AbstractRemoteIT  {
         pst.setAmountDebit(amtDt);
         pst.setCurrencyCredit(curCt);
         pst.setCurrencyDebit(curDt);
-        pst.setAePostingId("id_" + ("" + System.currentTimeMillis()).substring(3));
+        pst.setAePostingId("id_" + ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 5));
 
         return (EtlPosting) baseEntityRepository.save(pst);
     }

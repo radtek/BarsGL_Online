@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -104,7 +103,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -160,7 +159,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -217,7 +216,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -272,7 +271,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -329,7 +328,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -382,7 +381,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -436,7 +435,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -490,7 +489,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -550,7 +549,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -610,7 +609,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -670,7 +669,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -724,7 +723,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -775,7 +774,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -828,7 +827,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -892,7 +891,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -962,7 +961,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1041,7 +1040,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1114,7 +1113,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1190,7 +1189,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1265,7 +1264,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1333,7 +1332,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1406,7 +1405,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1476,7 +1475,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1552,7 +1551,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1605,7 +1604,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1656,7 +1655,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         EtlPosting pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
@@ -1692,7 +1691,7 @@ public class EtlMessXX2IT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.update(pkg);
 
         pst1 = newPosting(stamp, pkg);
-        pst1.setAePostingId("21084014");
+        pst1.setAePostingId(ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6));
         pst1.setEventId("ГК07248804_000000001");
         pst1.setValueDate(getOperday().getCurrentDate());
         pst1.setOperationTimestamp(new Date());
