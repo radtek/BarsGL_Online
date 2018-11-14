@@ -369,7 +369,7 @@ public abstract class AbstractRemoteIT  {
 
     public static EtlPosting newPosting(long stamp, EtlPackage pkg, String src) {
         EtlPosting pst = new EtlPosting();
-        String st = ("" + System.currentTimeMillis()).substring(3);
+        String st = ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 6);
         pst.setAePostingId("id_" + st);
 
         // незначимые параметры
