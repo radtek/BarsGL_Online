@@ -165,8 +165,8 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
             Assert.isTrue(null != dmartRecord, ()-> new ValidationError(ErrorCode.TASK_ERROR, "Невозможно проверить статус витрины DWH. Статусная таблица пуста."));
             Assert.isTrue(Objects.equals(dmartRecord.getString("st"), "1")
                     , ()-> new ValidationError(ErrorCode.TASK_ERROR, "Невозможно выгрузить закрытые сделки из DWH. Дата готовности меньше LWDATE"));
-            Assert.isTrue(!Objects.equals(dmartRecord.getString("ok_state"), getOkStatus())
-                    , ()-> new ValidationError(ErrorCode.TASK_ERROR, format("Выгрузка по потоку %s в дате %s уже была проведена успешно", dmartRecord.getString("stream"), dateUtils.onlyDateString(dmartRecord.getDate("as_of_date")))));
+//            Assert.isTrue(!Objects.equals(dmartRecord.getString("ok_state"), getOkStatus())
+//                    , ()-> new ValidationError(ErrorCode.TASK_ERROR, format("Выгрузка по потоку %s в дате %s уже была проведена успешно", dmartRecord.getString("stream"), dateUtils.onlyDateString(dmartRecord.getDate("as_of_date")))));
             return true;
         } catch (Throwable e) {
             auditController.error(AccDealCloseTask, "Не прошла проверка готовности витрины DWH", null, e);
