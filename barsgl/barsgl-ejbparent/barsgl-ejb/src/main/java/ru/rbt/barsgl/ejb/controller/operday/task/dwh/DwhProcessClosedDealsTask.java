@@ -155,10 +155,12 @@ public class DwhProcessClosedDealsTask extends AbstractJobHistoryAwareTask {
         try {
             DataRecord dmartRecord = jobHistoryRepository
                     .selectFirst(jobHistoryRepository.getDataSource(Repository.BARSGLNOXA)
-                            , format("select case when o.lwdate <= t.as_of_date then '1' else '0' end st, as_of_date, stream, nvl(l.STATUS,'NONE') ok_state\n" +
-                                    "  from gl_od o, %s t, GL_LOADSTAT l\n" +
+                            , format("with\n" +
+                                    " a as (select /*+ materialize */ * from %s)\n" +
+                                    "select case when o.lwdate <= t.as_of_date then '1' else '0' end st, as_of_date, stream, nvl(l.STATUS,'NONE') ok_state\n" +
+                                    "  from gl_od o, a t, GL_LOADSTAT l\n" +
                                     " where t.STREAM = l.STREAM_ID(+)\n" +
-                                    "   and t.STREAM = ? \n" +
+                                    "   and t.STREAM = ?\n" +
                                     "   and t.as_of_date = l.DTL(+)", dwhStatusTableName), streamId);
             Assert.isTrue(null != dmartRecord, ()-> new ValidationError(ErrorCode.TASK_ERROR, "Невозможно проверить статус витрины DWH. Статусная таблица пуста."));
             Assert.isTrue(Objects.equals(dmartRecord.getString("st"), "1")
