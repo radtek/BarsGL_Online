@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
@@ -469,6 +470,26 @@ public class ManualAccountIT extends AbstractRemoteIT {
         Assert.assertFalse(isEmpty(res.getMessage()));
         System.out.println("Message: " + res.getMessage());
 
+    }
+
+    @Test
+    public void testCheckBalanceBefore() throws SQLException {
+        Date od = getOperday().getCurrentDate();
+        Date from = DateUtils.addDays(od, -10);
+        int cnt = 100;
+        int hasBal = 0;
+        Long maxId = baseEntityRepository.selectFirst("select max(id) from gl_acc").getLong(0);
+        Long shift =  System.currentTimeMillis() % 100;
+        List<GLAccount> accounts = baseEntityRepository.select(GLAccount.class,
+                "from GLAccount a where a.id < ?1 and a.dateOpen < ?2 and a.dateOpen > '2017-01-01' and a.dateClose is null" +
+                        " and a.bsaAcid like '40817%' and rownum <= " + cnt
+                , maxId - shift, od);
+        for (GLAccount account : accounts) {
+            DataRecord data = baseEntityRepository.selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE_FROM(?, ?, ?, ?) from dual"
+                , account.getBsaAcid(), account.getAcid(), od, from);
+            hasBal += data.getInteger(0);
+        }
+        System.out.println(String.format("all = %d, hasBal = %d", accounts.size(), hasBal));
     }
 
     public static ManualAccountWrapper createManualAccount(String branch, String currency, String customerNumber,

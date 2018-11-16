@@ -183,26 +183,28 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     public void checkDateOpenMnl(GLAccount glAccount, Date dateOpen) {
         // проверка даты открытия
-        checkDateOpen(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
-        // проверка даты открытия для 707 счетов
-        checkDateOpen707(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
-        // проверка необарботанных операций
+        checkDateNotEmpty(dateOpen, "Дата открытия");
+        if (dateOpen.after(glAccount.getDateOpen())) {
+            // проверка даты открытия для 707 счетов
+            checkDateOpen707(dateOpen, glAccount.getBsaAcid(), "Дата открытия");
+            // проверка необарботанных операций
 //        checkOperationsBefore(glAccount, dateOpen, "Операции");
-        // проверка движений после
-        checkBalanceBefore(glAccount, dateOpen, "Баланс");
+            // проверка движений до
+            checkBalanceBefore(glAccount, dateOpen, "Баланс");
+        }
     }
 
     public void checkDateCloseMnl(GLAccount glAccount, Date dateOpen, Date dateClose) {
-        if (null != dateClose) {
-            // проверка даты закрытия
-            checkDateClose(dateOpen, dateClose, "Дата закрытия");
-            // проверка баланса
-            checkBalance(glAccount, dateClose, glAccount.getDateLast(), "Баланс");
-            // проверка необарботанных операций
+        if (null == dateClose)
+            return;
+        // проверка даты закрытия
+        checkDateClose(dateOpen, dateClose, "Дата закрытия");
+        // проверка баланса
+        checkBalance(glAccount, dateClose, glAccount.getDateLast(), "Баланс");
+        // проверка необарботанных операций
 //            checkOperationsAfter(glAccount, dateClose, "Операции");
-            // проверка движений после
-            checkBalanceAfter(glAccount, dateClose, "Баланс");
-        }
+        // проверка движений после
+        checkBalanceAfter(glAccount, dateClose, "Баланс");
     }
 
     // Дата открытия счета
@@ -270,7 +272,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     // Баланс счета при изменении даты закрвтия / открытия
     private void checkBalanceBefore(GLAccount account, Date toDate, String fieldName) {
-        if (glAccountRepository.hasAccountBalanceBefore(account.getBsaAcid(), account.getAcid(), toDate)) {
+        if (glAccountRepository.hasAccountBalanceBetween(account.getBsaAcid(), account.getAcid(), account.getDateOpen(), toDate)) {
             throw new ValidationError(ACCOUNT_IN_USE_BEFORE, account.getBsaAcid(),
                     "", dateUtils.onlyDateString(toDate));
         }
