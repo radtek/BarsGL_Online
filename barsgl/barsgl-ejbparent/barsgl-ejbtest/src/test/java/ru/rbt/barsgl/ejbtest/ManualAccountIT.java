@@ -327,6 +327,65 @@ public class ManualAccountIT extends AbstractRemoteIT {
     }
 
     /**
+     * Тест закрытия счета из ручного ввода с ошибкой баланса
+     * @throws SQLException
+     */
+    @Test
+    public void testEditManualAccountDateOpen() throws SQLException {
+        ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00600609", 181010101, getOperday().getCurrentDate());
+        GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
+        bsaList.add(account.getBsaAcid());
+
+        long stamp = System.currentTimeMillis();
+
+        EtlPackage pkg = newPackage(stamp, "AccountBalance");
+        Assert.assertTrue(pkg.getId() > 0);
+
+        EtlPosting pst = newPosting(stamp, pkg);
+        pst.setValueDate(getOperday().getCurrentDate());
+
+        pst.setAccountCredit(account.getBsaAcid());
+        pst.setAccountDebit("40702810400010002676");
+        pst.setAmountCredit(new BigDecimal("698.35"));
+        pst.setAmountDebit(pst.getAmountCredit());
+        pst.setCurrencyCredit(BankCurrency.RUB);
+        pst.setCurrencyDebit(pst.getCurrencyCredit());
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        Assert.assertTrue(0 < operation.getId());
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        // change DateOpen
+        Date dateOpen0 = account.getDateOpen();
+
+        Date dateOpen = DateUtils.addDays(dateOpen0, -5);
+        wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(dateOpen));
+        RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "updateManualAccount", wrapper);
+        Assert.assertFalse(res.isError());
+        ManualAccountWrapper wrapper1 = res.getResult();
+        Assert.assertEquals(account.getId(), wrapper1.getId());
+        checkUpdateAccount(wrapper.getBsaAcid(), wrapper, dateOpen, null);
+
+        wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(dateOpen0));
+        res = remoteAccess.invoke(GLAccountService.class, "updateManualAccount", wrapper);
+        Assert.assertFalse(res.isError());
+        wrapper1 = res.getResult();
+        Assert.assertEquals(account.getId(), wrapper1.getId());
+        checkUpdateAccount(wrapper.getBsaAcid(), wrapper, dateOpen0, null);
+
+        wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(DateUtils.addDays(dateOpen0, 1)));
+        res = remoteAccess.invoke(GLAccountService.class, "updateManualAccount", wrapper);
+        Assert.assertTrue(res.isError());
+        wrapper1 = res.getResult();
+        Assert.assertEquals(account.getId(), wrapper1.getId());
+        Assert.assertFalse(isEmpty(res.getMessage()));
+        System.out.println("Message: " + res.getMessage());
+    }
+
+    /**
      * Тест закрытия счета из ручного ввода
      * @throws SQLException
      */
@@ -476,20 +535,42 @@ public class ManualAccountIT extends AbstractRemoteIT {
     public void testCheckBalanceBefore() throws SQLException {
         Date od = getOperday().getCurrentDate();
         Date from = DateUtils.addDays(od, -10);
-        int cnt = 100;
+        int cnt = 1000;
         int hasBal = 0;
         Long maxId = baseEntityRepository.selectFirst("select max(id) from gl_acc").getLong(0);
-        Long shift =  System.currentTimeMillis() % 100;
+        Long time0 =  System.currentTimeMillis();
+        Long shift = time0 % 100;
+        List<GLAccount> accounts = baseEntityRepository.select(GLAccount.class,
+                "from GLAccount a where a.id < ?1 and a.dateOpen < ?2 and a.dateOpen > '2017-01-01' and a.dateClose is null" +
+                        " and a.bsaAcid like '40817%' and rownum <= " + cnt
+                , maxId - shift, od);
+        for (GLAccount account : accounts) {
+            DataRecord data = baseEntityRepository.selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE(?, ?, ?) from dual"
+                , account.getBsaAcid(), account.getAcid(), od);
+            hasBal += data.getInteger(0);
+        }
+        System.out.println(String.format("all = %d, hasBal = %d time = %d ms", accounts.size(), hasBal, System.currentTimeMillis() - time0));
+    }
+
+    @Test
+    public void testCheckBalanceBeforeFrom() throws SQLException {
+        Date od = getOperday().getCurrentDate();
+        Date from = DateUtils.addDays(od, -10);
+        int cnt = 1000;
+        int hasBal = 0;
+        Long maxId = baseEntityRepository.selectFirst("select max(id) from gl_acc").getLong(0);
+        Long time0 =  System.currentTimeMillis();
+        Long shift = time0 % 100;
         List<GLAccount> accounts = baseEntityRepository.select(GLAccount.class,
                 "from GLAccount a where a.id < ?1 and a.dateOpen < ?2 and a.dateOpen > '2017-01-01' and a.dateClose is null" +
                         " and a.bsaAcid like '40817%' and rownum <= " + cnt
                 , maxId - shift, od);
         for (GLAccount account : accounts) {
             DataRecord data = baseEntityRepository.selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE_FROM(?, ?, ?, ?) from dual"
-                , account.getBsaAcid(), account.getAcid(), od, from);
+                    , account.getBsaAcid(), account.getAcid(), od, from);
             hasBal += data.getInteger(0);
         }
-        System.out.println(String.format("all = %d, hasBal = %d", accounts.size(), hasBal));
+        System.out.println(String.format("all = %d, hasBal = %d time = %d ms", accounts.size(), hasBal, System.currentTimeMillis() - time0));
     }
 
     public static ManualAccountWrapper createManualAccount(String branch, String currency, String customerNumber,

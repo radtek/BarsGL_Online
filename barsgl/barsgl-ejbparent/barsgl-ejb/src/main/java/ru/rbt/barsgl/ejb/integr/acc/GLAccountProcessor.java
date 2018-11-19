@@ -272,7 +272,7 @@ public class GLAccountProcessor extends ValidationAwareHandler<AccountKeys> {
 
     // Баланс счета при изменении даты закрвтия / открытия
     private void checkBalanceBefore(GLAccount account, Date toDate, String fieldName) {
-        if (glAccountRepository.hasAccountBalanceBetween(account.getBsaAcid(), account.getAcid(), account.getDateOpen(), toDate)) {
+        if (glAccountRepository.hasAccountBalanceBeforeFrom(account.getBsaAcid(), account.getAcid(), account.getDateOpen(), toDate)) {
             throw new ValidationError(ACCOUNT_IN_USE_BEFORE, account.getBsaAcid(),
                     "", dateUtils.onlyDateString(toDate));
         }

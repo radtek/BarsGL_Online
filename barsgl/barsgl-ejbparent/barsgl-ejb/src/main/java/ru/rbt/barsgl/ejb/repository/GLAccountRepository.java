@@ -833,7 +833,7 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         }
     }
 
-    public Boolean hasAccountBalanceBetween(String bsaAcid, String acid, Date datFrom, Date datTo) {
+    public Boolean hasAccountBalanceBeforeFrom(String bsaAcid, String acid, Date datFrom, Date datTo) {
         try {
             DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE_FROM(?, ?, ?, ?) from dual"
                     , bsaAcid, acid, datFrom, datTo);
