@@ -823,16 +823,6 @@ public class GLAccountRepository extends AbstractBaseEntityRepository<GLAccount,
         return BigDecimal.ZERO.equals(bal);
     }
 
-    public Boolean hasAccountBalanceBefore(String bsaAcid, String acid, Date dat) {
-        try {
-            DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE(?, ?, ?) from dual"
-                    , bsaAcid, acid, dat);
-            return (null != data && data.getInteger(0) == 1);
-        } catch (SQLException e) {
-            throw new DefaultApplicationException(e.getMessage(), e);
-        }
-    }
-
     public Boolean hasAccountBalanceBeforeFrom(String bsaAcid, String acid, Date datFrom, Date datTo) {
         try {
             DataRecord data = selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE_FROM(?, ?, ?, ?) from dual"

@@ -532,27 +532,6 @@ public class ManualAccountIT extends AbstractRemoteIT {
     }
 
     @Test
-    public void testCheckBalanceBefore() throws SQLException {
-        Date od = getOperday().getCurrentDate();
-        Date from = DateUtils.addDays(od, -10);
-        int cnt = 1000;
-        int hasBal = 0;
-        Long maxId = baseEntityRepository.selectFirst("select max(id) from gl_acc").getLong(0);
-        Long time0 =  System.currentTimeMillis();
-        Long shift = time0 % 100;
-        List<GLAccount> accounts = baseEntityRepository.select(GLAccount.class,
-                "from GLAccount a where a.id < ?1 and a.dateOpen < ?2 and a.dateOpen > '2017-01-01' and a.dateClose is null" +
-                        " and a.bsaAcid like '40817%' and rownum <= " + cnt
-                , maxId - shift, od);
-        for (GLAccount account : accounts) {
-            DataRecord data = baseEntityRepository.selectFirst("select PKG_CHK_ACC.HAS_BALANCE_BEFORE(?, ?, ?) from dual"
-                , account.getBsaAcid(), account.getAcid(), od);
-            hasBal += data.getInteger(0);
-        }
-        System.out.println(String.format("all = %d, hasBal = %d time = %d ms", accounts.size(), hasBal, System.currentTimeMillis() - time0));
-    }
-
-    @Test
     public void testCheckBalanceBeforeFrom() throws SQLException {
         Date od = getOperday().getCurrentDate();
         Date from = DateUtils.addDays(od, -10);
