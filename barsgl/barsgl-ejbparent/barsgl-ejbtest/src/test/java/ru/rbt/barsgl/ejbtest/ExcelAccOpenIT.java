@@ -171,6 +171,9 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         List<DataRecord> accounts = baseEntityRepository.select("select * from gl_acc where bsaacid in (select bsaacid from GL_ACBATREQ r where r.id_pkg = ?)", pkg.getId());
         Assert.assertEquals(3, accounts.size());
         Assert.assertTrue(accounts.stream().allMatch(r -> r.getDate("dto").equals(inOpendate)));
+
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertTrue(pkg.getCntFound()+"", 0 == pkg.getCntFound());
     }
 
     private AccountBatchRequest findRequest(long requestId) {
