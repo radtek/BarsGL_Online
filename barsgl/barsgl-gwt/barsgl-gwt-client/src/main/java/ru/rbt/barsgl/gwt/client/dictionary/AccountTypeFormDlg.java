@@ -106,7 +106,7 @@ public abstract class AccountTypeFormDlg extends GridFormDlgBase {
 
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
             list.add(new FilterItem(colDateBegin, FilterCriteria.LE, currentDate, true, true));
-            list.add(new FilterItem(colDateEnd, FilterCriteria.GE, currentDate, true, true));
+            list.add(new FilterItem(colDateEnd, FilterCriteria.IS_NULL, null, true, true));
             list.add(new FilterItem(colCtrl, FilterCriteria.NE, "Y", true, true));
             list.add(new FilterItem(colCustNo, FilterCriteria.EQ, custNo, true, true));
 

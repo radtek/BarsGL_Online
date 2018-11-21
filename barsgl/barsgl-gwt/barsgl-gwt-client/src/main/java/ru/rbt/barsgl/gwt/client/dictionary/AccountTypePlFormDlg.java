@@ -112,7 +112,7 @@ public abstract class AccountTypePlFormDlg extends GridFormDlgBase {
 
             ArrayList<FilterItem> list = new ArrayList<FilterItem>();
             list.add(new FilterItem(colDateBegin, FilterCriteria.LE, currentDate, true));
-            list.add(new FilterItem(colDateEnd, FilterCriteria.GE, currentDate, true));
+            list.add(new FilterItem(colDateEnd, FilterCriteria.IS_NULL, null, true));
             list.add(new FilterItem(colCtrl, FilterCriteria.NE, "Y", true));
             if (!isEmpty(ctype)) list.add(new FilterItem(colCtype, FilterCriteria.EQ, ctype, true));
             if (!isEmpty(term)) list.add(new FilterItem(colTerm, FilterCriteria.EQ, term, true));
