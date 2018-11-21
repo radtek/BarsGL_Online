@@ -326,15 +326,29 @@ public class ManualAccountIT extends AbstractRemoteIT {
         System.out.println("Message: " + res.getMessage());
     }
 
+    @Test
+    public void testEditDateOpenDirect() throws SQLException {
+        updateOperday(ONLINE, OPEN, Operday.PdMode.DIRECT);
+        testEditManualAccountDateOpen();
+    }
+
+    @Test
+    public void testEditDateOpenBuffer() throws SQLException {
+        updateOperday(ONLINE, OPEN, Operday.PdMode.BUFFER);
+        testEditManualAccountDateOpen();
+    }
+
     /**
      * Тест закрытия счета из ручного ввода с ошибкой баланса
      * @throws SQLException
      */
-    @Test
     public void testEditManualAccountDateOpen() throws SQLException {
         ManualAccountWrapper wrapper = createManualAccount("001", "RUR", "00600609", 181010101, getOperday().getCurrentDate());
         GLAccount account = (GLAccount) baseEntityRepository.findById(GLAccount.class, wrapper.getId());
         bsaList.add(account.getBsaAcid());
+
+        baseEntityRepository.executeNativeUpdate("delete from BALTUR where BSAACID = ?", account.getBsaAcid());
+        baseEntityRepository.executeNativeUpdate("delete from GL_BALTUR where BSAACID = ?", account.getBsaAcid());
 
         long stamp = System.currentTimeMillis();
 
@@ -346,7 +360,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
 
         pst.setAccountCredit(account.getBsaAcid());
         pst.setAccountDebit("40702810400010002676");
-        pst.setAmountCredit(new BigDecimal("698.35"));
+        pst.setAmountCredit(new BigDecimal("100.35"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.RUB);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
