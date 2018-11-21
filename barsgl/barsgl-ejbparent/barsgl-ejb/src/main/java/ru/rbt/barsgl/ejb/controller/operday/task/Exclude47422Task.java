@@ -188,7 +188,7 @@ public class Exclude47422Task extends AbstractJobHistoryAwareTask {
         }
         Date dateFrom = calendarDayRepository.getWorkDateBefore(curdate, depth, false);
         boolean withClosedPeriod = Boolean.valueOf(properties.getProperty(REG47422_CRPRD_KEY));
-        if (!withClosedPeriod) {
+        if (!withClosedPeriod && null != closedPeriodRepository.getPeriod()) {
             Date ldate = closedPeriodRepository.getPeriod().getLastDate();
             dateFrom = dateFrom.after(ldate) ? dateFrom : calendarDayRepository.getWorkDateAfter(ldate, false);
         }

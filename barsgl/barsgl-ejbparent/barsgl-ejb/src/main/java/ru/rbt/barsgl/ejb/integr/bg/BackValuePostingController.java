@@ -468,6 +468,9 @@ public class BackValuePostingController {
 
     public void checkClosedPeriod(Long userId, Date postDateNew) {
         ClosedReportPeriodView period = closedPeriodRepository.getPeriod();
+        if (null == period)
+            return;
+
         if(!postDateNew.after(period.getLastDate()) &&                // разрешено только для суперпользователя
                 !actionRepository.getAvailableActions(userId).contains(SecurityActionCode.OperHand3Super)) {
             throw new ValidationError(BV_MANUAL_ERROR, String.format("Действие запрещено.\n" +
