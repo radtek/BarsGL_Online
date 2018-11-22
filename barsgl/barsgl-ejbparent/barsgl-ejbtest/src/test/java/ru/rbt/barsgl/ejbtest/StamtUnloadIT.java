@@ -990,12 +990,17 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("delete from gl_etlstmd");
         baseEntityRepository.executeNativeUpdate("delete from gl_balstmd");
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
-        GLOperation operation = createOper(getOperday().getLastWorkingDay());
-        List<Pd> pds = (List<Pd>)baseEntityRepository.select(Pd.class, "select d from Pd d, GLPosting p where p.operation.id = ?1 and p.id = d.pcId", operation.getId());
+        GLOperation operation1 = createOper(getOperday().getLastWorkingDay());
+        List<Pd> pds = (List<Pd>)baseEntityRepository.select(Pd.class, "select d from Pd d, GLPosting p where p.operation.id = ?1 and p.id = d.pcId", operation1.getId());
         pds.forEach(p -> registerForStamtUnload(p.getBsaAcid()));
+        GLOperation operation2 = createOper(getOperday().getCurrentDate());
+        List<Pd> pds2 = (List<Pd>)baseEntityRepository.select(Pd.class, "select d from Pd d, GLPosting p where p.operation.id = ?1 and p.id = d.pcId", operation2.getId());
+        pds2.forEach(p -> registerForStamtUnload(p.getBsaAcid()));
 
-        List<Long> pcids = pds.stream().map(AbstractPd::getPcId).distinct().collect(Collectors.toList());
-        pcids.forEach(pcid -> baseEntityRepository.executeNativeUpdate("insert into GL_STMPCID (pcid) values (?)", pcid));
+        List<Long> pcids1 = pds.stream().map(AbstractPd::getPcId).distinct().collect(Collectors.toList());
+        pcids1.forEach(pcid -> baseEntityRepository.executeNativeUpdate("insert into GL_STMPCID (pcid) values (?)", pcid));
+        List<Long> pcids2 = pds2.stream().map(AbstractPd::getPcId).distinct().collect(Collectors.toList());
+        pcids2.forEach(pcid -> baseEntityRepository.executeNativeUpdate("insert into GL_STMPCID (pcid) values (?)", pcid));
 
         setHeadersStatus(CONSUMED);
         final String jobName = StamtUnloadPostingForceTask.class.getSimpleName();
@@ -1010,8 +1015,9 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         Assert.assertEquals(SUCCEDED.getFlag(), postHeader.getString("parvalue"));
 
         List<DataRecord> unloadedPst = baseEntityRepository.select("select * from gl_etlstmd");
-        Assert.assertTrue(pcids.size() > 0 && pcids.size() == unloadedPst.size());
-        pcids.forEach(p -> Assert.assertTrue(unloadedPst.stream().anyMatch(s -> Objects.equals(s.getLong("pcid"), p))));
+        Assert.assertTrue(unloadedPst.size()+"", pcids1.size() > 0 && pcids2.size() > 0 && pcids1.size() + pcids2.size() == unloadedPst.size());
+        pcids1.forEach(p -> Assert.assertTrue(unloadedPst.stream().anyMatch(s -> Objects.equals(s.getLong("pcid"), p))));
+        pcids2.forEach(p -> Assert.assertTrue(unloadedPst.stream().anyMatch(s -> Objects.equals(s.getLong("pcid"), p))));
 
         List<DataRecord> unloadedBalance = baseEntityRepository.select("select * from gl_balstmd");
         Assert.assertTrue(unloadedBalance.size() > 0);
