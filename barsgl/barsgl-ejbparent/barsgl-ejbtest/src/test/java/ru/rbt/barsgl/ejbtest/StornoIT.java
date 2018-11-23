@@ -46,6 +46,7 @@ public class StornoIT extends AbstractTimerJobIT {
     public static void beforeClass() throws ParseException {
         testOperday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
         setOperday(testOperday, DateUtils.addDays(testOperday, -1), ONLINE, OPEN);
+        baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
     }
 
     @AfterClass
