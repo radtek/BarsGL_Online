@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.commons.beanutils.BeanUtils;
+import ru.rbt.audit.controller.AuditController;
+import ru.rbt.audit.entity.AuditRecord.LogCode;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.dict.AccountingType;
@@ -8,24 +10,21 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide;
-import ru.rbt.audit.entity.AuditRecord.LogCode;
 import ru.rbt.barsgl.ejb.integr.acc.GLAccountService;
 import ru.rbt.barsgl.ejb.repository.EtlPostingRepository;
 import ru.rbt.barsgl.ejb.repository.GLAccountRepository;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
-import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejbcore.AsyncProcessor;
+import ru.rbt.barsgl.shared.enums.OperState;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.JpaAccessCallback;
 import ru.rbt.ejbcore.datarec.DataRecord;
-import ru.rbt.ejb.repository.properties.PropertiesRepository;
-import ru.rbt.barsgl.shared.enums.OperState;
 
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -74,7 +73,8 @@ public class EtlTechnicalPostingController implements EtlMessageController<EtlPo
             EtlPosting etlLocal = etlPostingRepository.findById(EtlPosting.class, posting.getId());
             final OperSide clientSide = getStamtActuality(etlLocal);
             if (clientSide != OperSide.N) {
-                GLOperation techOperation = etlPostingController.processMessage(createTechnicalPosting(etlLocal, clientSide));
+                GLOperation techOperation = Optional.ofNullable(etlPostingController.processMessage(createTechnicalPosting(etlLocal, clientSide)))
+                        .orElseThrow(() -> new DefaultApplicationException(format("Операция по событию АЕ ID_PST %s не создана", etlLocal.getAePostingId())));
                 techOperation = operationRepository.refresh(techOperation, true);
                 if (techOperation.getState() == OperState.POST) {
                     updateClientAccount(etlLocal, clientSide
