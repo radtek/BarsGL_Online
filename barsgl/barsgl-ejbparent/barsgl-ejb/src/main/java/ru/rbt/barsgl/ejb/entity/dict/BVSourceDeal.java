@@ -1,6 +1,7 @@
 package ru.rbt.barsgl.ejb.entity.dict;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -19,10 +20,14 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
     private Date endDate;
 
     @Column(name = "BV_SHIFT")
-    Integer shift;
+    private Integer shift;
 
     @Column(name = "USER_NAME")
-    String user;
+    private String user;
+
+    @Column(name = "BVSTRN_INVISIBLE")
+    @Enumerated(EnumType.STRING)
+    private YesNo bvStornoInvisible;
 
     @Column(name = "OTS")
     @Temporal(TemporalType.TIMESTAMP)
@@ -31,10 +36,11 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
     public BVSourceDeal() {
     }
 
-    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, String user, Date createTimestamp) {
+    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, YesNo bvStornoInvisible, String user, Date createTimestamp) {
         this.id = id;
         this.endDate = endDate;
         this.shift = shift;
+        this.bvStornoInvisible = bvStornoInvisible;
         this.user = user;
         this.createTimestamp = createTimestamp;
     }
@@ -77,5 +83,17 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
 
     public void setCreateTimestamp(Date createTimestamp) {
         this.createTimestamp = createTimestamp;
+    }
+
+    public YesNo getBvStornoInvisible() {
+        return bvStornoInvisible;
+    }
+
+    public void setBvStornoInvisible(YesNo bvStornoInvisible) {
+        this.bvStornoInvisible = bvStornoInvisible;
+    }
+
+    public boolean isBvStornoInvisible() {
+        return bvStornoInvisible == YesNo.Y;
     }
 }

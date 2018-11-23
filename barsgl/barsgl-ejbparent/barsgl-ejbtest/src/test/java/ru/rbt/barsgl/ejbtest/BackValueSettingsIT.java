@@ -93,6 +93,7 @@ public class BackValueSettingsIT extends AbstractTimerJobIT
         SimpleDateFormat dateFormat = new SimpleDateFormat(wrapper.getDateFormat());
         wrapper.setSourceDeal(src);
         wrapper.setDepth(3);
+        wrapper.setBvStornoInvisible(false);
         wrapper.setStartDateStr(dateFormat.format(start1));
         RpcRes_Base<ClosedReportPeriodWrapper> res = remoteAccess.invoke(ManualDictionaryService.class, "saveBVSourceDeal", wrapper, FormAction.CREATE);
         System.out.println(res.getMessage());

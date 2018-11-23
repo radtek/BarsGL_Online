@@ -38,6 +38,15 @@ public class BVSouceCachedRepository extends AbstractCachedRepository<BVSourceDe
         }
     }
 
+    public Boolean isBvStornoInvisible(final String src) {
+        BVSourceDealView sourcesDeal = findCached(src);
+        if (null != sourcesDeal) {
+            return sourcesDeal.isBvStornoInvisible();
+        } else {
+            return null;
+        }
+    }
+
     @PostConstruct
     @Override
     public void init() {

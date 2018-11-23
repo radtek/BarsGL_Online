@@ -1,11 +1,9 @@
 package ru.rbt.barsgl.ejb.entity.dict;
 
 import ru.rbt.ejbcore.mapping.BaseEntity;
+import ru.rbt.ejbcore.mapping.YesNo;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Created by er18837 on 28.06.2017.
@@ -21,6 +19,10 @@ public class BVSourceDealView extends BaseEntity<String> {
     @Column(name = "BV_SHIFT", insertable = false, updatable = false)
     Integer shift;
 
+    @Column(name = "BVSTRN_INVISIBLE", insertable = false, updatable = false)
+    @Enumerated(EnumType.STRING)
+    private YesNo bvStornoInvisible;
+
     @Override
     public String getId() {
         return sourceDeal;
@@ -32,5 +34,17 @@ public class BVSourceDealView extends BaseEntity<String> {
 
     public Integer getShift() {
         return shift;
+    }
+
+    public YesNo getBvStornoInvisible() {
+        return bvStornoInvisible;
+    }
+
+    public void setBvStornoInvisible(YesNo bvStornoInvisible) {
+        this.bvStornoInvisible = bvStornoInvisible;
+    }
+
+    public boolean isBvStornoInvisible() {
+        return bvStornoInvisible == YesNo.Y;
     }
 }

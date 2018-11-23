@@ -10,12 +10,12 @@ import ru.rbt.barsgl.ejb.security.UserContext;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.dict.BVSourceDealWrapper;
 import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -80,6 +80,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                 () -> new BVSourceDeal(id
                         , finalEndDate
                         , wrapper.getDepth()
+                        , wrapper.isBvStornoInvisible() ? YesNo.Y : YesNo.N
                         , userContext.getUserName()
                         , operdayController.getSystemDateTime()));
     }
@@ -113,6 +114,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                     else if (!wrapper.getDepth().equals(param.getShift()))
                         // TODO возможно, здесь нужна особая обработка
                         throw new DefaultApplicationException("Нельзя изменить глубину BackValue для текущей настройки");
+                    param.setBvStornoInvisible(wrapper.isBvStornoInvisible() ? YesNo.Y : YesNo.N);
                     param.setEndDate(wrapper.getEndDate());
                     param.setUser(userContext.getUserName());
                     param.setCreateTimestamp(operdayController.getSystemDateTime());

@@ -4,21 +4,18 @@ import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.ValueBox;
 import ru.rbt.barsgl.gwt.core.LocalDataStorage;
 import ru.rbt.barsgl.gwt.core.comp.Components;
 import ru.rbt.barsgl.gwt.core.datafields.Columns;
 import ru.rbt.barsgl.gwt.core.datafields.ColumnsBuilder;
-import ru.rbt.barsgl.gwt.core.ui.BtnDecBox;
-import ru.rbt.barsgl.gwt.core.ui.BtnTxtBox;
-import ru.rbt.barsgl.gwt.core.ui.DecBox;
-import ru.rbt.barsgl.gwt.core.ui.TxtBox;
+import ru.rbt.barsgl.gwt.core.ui.*;
 import ru.rbt.barsgl.gwt.core.widgets.SortItem;
 import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.Utils;
 import ru.rbt.barsgl.shared.enums.PostingType;
 import ru.rbt.shared.enums.PrmValueEnum;
 import ru.rbt.shared.user.AppUserWrapper;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -367,6 +364,16 @@ public class GLComponents {
 
     public static HashMap<Serializable, String> getYesNoList() {
         return getArrayValuesList(new String[]{" ", "N", "Y"});
+    }
+
+    public static ValuesBox createYesNoValuseBox(boolean withBlank) {
+        ValuesBox box = new ValuesBox();
+        if (withBlank)
+            box.addItem(null, "");
+        box.addItem(false, "N");
+        box.addItem(true, "Y");
+
+        return box;
     }
 
     private static DataListBox getCachedListBox(String name, String selectedValue){
