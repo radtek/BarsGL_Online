@@ -30,6 +30,10 @@ public class ActParmWrapper implements Serializable,IsSerializable {
     }
 
     public String getCusType() {
+        return cusType;
+    }
+
+    public String getCusTypeRightPad() {
         return rightPad(cusType, 3, " ");
     }
 

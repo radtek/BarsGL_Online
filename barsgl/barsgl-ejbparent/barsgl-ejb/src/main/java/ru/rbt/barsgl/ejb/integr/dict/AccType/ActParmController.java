@@ -160,8 +160,10 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
 
         try {
             if (!actParmRepository.isParmDateClosedForUpdate(wrapper)) {
-                return new RpcRes_Base<>(wrapper, true, format("Найден такой же действующий на '%s' набор параметров по AccType '%s' ! \n"  +
-                        "Измените дату окончания действия существующего или вводимого набора параметров\n", wrapper.getDtb(), wrapper.getAccType()));
+//                return new RpcRes_Base<>(wrapper, true, format("Найден такой же действующий на '%s' набор параметров по AccType '%s' ! \n"  +
+//                "Измените дату окончания действия существующего или редактируемого набора параметров\n", wrapper.getDtb(), wrapper.getAccType()));
+                return new RpcRes_Base<>(wrapper, true, format("Существует набор параметров по AccType '%s', период действия которого пересекается с редактируемым ! \n"  +
+                        "Измените дату окончания действия существующего или редактируемого набора параметров\n", wrapper.getAccType()));
             }
         } catch (Exception e) {
             return new RpcRes_Base<>(wrapper, true, format("Ошибка изменения параметров счета."));

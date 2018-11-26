@@ -36,7 +36,7 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
 
     public boolean isActParmExists(ActParmWrapper wrapper) throws ParseException {
         return  null != selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.id.cusType =?2 and " +
-        "T.id.term =?3 and T.id.acc2 =?4 and T.id.dtb =?5", wrapper.getAccType(), wrapper.getCusType(),
+        "T.id.term =?3 and T.id.acc2 =?4 and T.id.dtb =?5", wrapper.getAccType(), wrapper.getCusTypeRightPad(),
                 wrapper.getTerm(), wrapper.getAcc2(), dateUtils.onlyDateParse(wrapper.getDtb()));
     }
 
@@ -57,7 +57,7 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
 
     public boolean isParmDateClosed(ActParmWrapper wrapper) throws ParseException, SQLException{
         return 0 == select("select 1 from gl_ActParm where accType =? and cusType =? and term = ? and (dte is null or (? between dtb and dte))",
-                wrapper.getAccType(), wrapper.getCusType(), wrapper.getTerm(), dateUtils.onlyDateParse(wrapper.getDtb())).size();
+                wrapper.getAccType(), wrapper.getCusTypeRightPad(), wrapper.getTerm(), dateUtils.onlyDateParse(wrapper.getDtb())).size();
 //        return  null == selectFirst(ActParm.class, "from ActParm T where T.id.accType =?1 and T.cusType =?2 and " +
 //                        "T.term =?3 and T.acc2 =?4 and (T.dte is null or T.dte >= ?5) order by T.dtb desc", wrapper.getAccType(), wrapper.getCusType(),
 //                wrapper.getTerm(), wrapper.getAcc2(), dateUtils.onlyDateParse(wrapper.getDtb()));
@@ -66,7 +66,7 @@ public class ActParmRepository extends AbstractBaseEntityRepository<ActParm, Act
     public boolean isParmDateClosedForUpdate(ActParmWrapper wrapper) throws ParseException, SQLException{
         return 0 == select("select 1 from gl_ActParm where accType =? and cusType =? and term = ? and "+
                 "(dtb < ? and ? <= nvl(dte,to_date('01.01.2029','dd.mm.yyyy')) or (dtb < = ? and ? < dtb))",
-                wrapper.getAccType(), wrapper.getCusType(), wrapper.getTerm(),
+                wrapper.getAccType(), wrapper.getCusTypeRightPad(), wrapper.getTerm(),
                 dateUtils.onlyDateParse(wrapper.getDtb()),
                 dateUtils.onlyDateParse(wrapper.getDtb()),
                 dateUtils.DateParse2029(wrapper.getDte()),
