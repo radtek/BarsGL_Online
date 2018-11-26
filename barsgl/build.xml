@@ -135,4 +135,89 @@
             <arg line="/A /C build-gwt-war.bat"/>
         </exec>
     </target>
+
+    <!--<property name="src" value="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\target\classes\ru\rbt\barsgl\gwt\"/>-->
+    <property name="src" value="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\src\main\java\"/>
+    <!--<property name="build" value=""/>-->
+    <!--<javac srcdir="${src}" destdir="${build}" classpath="" source="1.8"/>-->
+
+    <!--<target name="javac"></target> depends="javac"
+       <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-client\src\main\java\ru\rbt\security\gwt\client/*"/>
+
+    -->
+
+    <target name="codeserver" description="Run Code Server mode">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.codeserver.CodeServer">
+        <classpath>
+            <!--<pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\*"/>-->
+            <path id="project.class.path"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\rbt-base\rbt-shared\target\rbt-shared-1.0.0.ora.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\rbt-base\rbt-shared\target\rbt-shared-1.0.0.ora-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-shared\target\barsgl-shared-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-shared\target\barsgl-shared-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-client\target\security-gwt-client-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-client\target\security-gwt-client-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-server\target\security-gwt-server-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-server\target\security-gwt-server-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\target\barsgl-gwt-client-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\target\barsgl-gwt-client-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-server\target\barsgl-gwt-server-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-server\target\barsgl-gwt-server-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-core\target\barsgl-gwt-core-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-core\target\barsgl-gwt-core-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\grid\grid-gwt-server\target\grid-gwt-server-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\grid\grid-gwt-server\target\grid-gwt-server-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\grid\grid-gwt-client\target\grid-gwt-client-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\grid\grid-gwt-client\target\grid-gwt-client-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\tasks\tasks-gwt-server\target\tasks-gwt-server-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\tasks\tasks-gwt-server\target\tasks-gwt-server-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\tasks\tasks-gwt-client\target\tasks-gwt-client-4.0.23-SNAPSHOT.jar"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\tasks\tasks-gwt-client\target\tasks-gwt-client-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\tasks\tasks-gwt-client\target\tasks-gwt-client-4.0.23-SNAPSHOT-sources.jar"/>
+
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\src\"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-core\src\"/>
+            <pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-client\src\"/>
+
+            <!--<pathelement location="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\target\classes\"/>-->
+
+            <pathelement location="d:/java/gwt-2.8.2/*" />
+            <pathelement location="d:/java/gwt-2.8.2/gwt-codeserver.jar" />
+            <pathelement location="d:/java/gwt-2.8.2/validation-api-1.0.0.GA.jar" />
+            <pathelement location="d:/java/gwt-2.8.2/validation-api-1.0.0.GA-sources.jar" />
+        </classpath>
+        <jvmarg value="-Xmx1024M"/>
+            <!--<arg value="-bindAddress"/>-->
+            <!--<arg value="0.0.0.0"/>-->
+            <!--<arg line="-port"/>-->
+            <!--<arg value="9876"/>-->
+            <!--<arg value="-workDir"/>-->
+            <!--<arg value="workDir"/>-->
+            <arg line="-logLevel"/>
+            <arg value="DEBUG"/>
+
+            <!--<arg line="-src"/>-->
+            <!--<arg value="c:\IdeaProjects\BarsGL_Online\barsgl\security\security-gwt-client\src"/>-->
+
+            <arg line="-src"/>
+            <!--<arg value="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\target\classes\"/>-->
+            <arg value="c:\IdeaProjects\BarsGL_Online\barsgl\barsgl-gwt\barsgl-gwt-client\src\main\resources\"/>
+            <!--<arg value="c:\IdeaProjects\BarsGL_Online\rbt-base\rbt-shared\target\classes\"/>-->
+            <arg value="ru.rbt.barsgl.gwt.BarsGLClient"/>
+        <!--           
+        <arg value="com.google.gwt.sample.hello.Hello"/>
+        -->
+    </java>
+    </target>
 </project>

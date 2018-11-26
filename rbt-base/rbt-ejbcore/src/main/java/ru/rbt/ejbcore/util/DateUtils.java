@@ -78,6 +78,9 @@ public class DateUtils {
     public Date onlyDateParse(String dateStr) throws ParseException {
         return null == dateStr ? null : onlyDate.parse(dateStr);
     }
+    public Date DateParse2029(String dateStr) throws ParseException {
+        return null == dateStr ? databaseDate.parse(finalDateStr) : onlyDate.parse(dateStr);
+    }
     public static Date dbDateParse(String dateStr) throws ParseException {
         return null == dateStr ? null : databaseDate.parse(dateStr);
     }

@@ -5,6 +5,8 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 import java.io.Serializable;
 import java.util.Date;
 
+import static ru.rbt.barsgl.shared.Utils.rightPad;
+
 /**
  * Created by akichigi on 24.08.16.
  */
@@ -28,7 +30,7 @@ public class ActParmWrapper implements Serializable,IsSerializable {
     }
 
     public String getCusType() {
-        return cusType;
+        return rightPad(cusType, 3, " ");
     }
 
     public void setCusType(String cusType) {
