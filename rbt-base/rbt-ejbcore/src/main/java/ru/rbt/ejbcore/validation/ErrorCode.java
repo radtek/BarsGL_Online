@@ -216,9 +216,10 @@ public enum ErrorCode {
 
     , OCP_UNLOAD_ERR(5200, "%s")
 
+    , DISMOD_ERR(5300, "%s")
+
     , ACC_BATCH_OPEN(6000, "%s")
 
-//    , VALIDATION_ERROR(10000, "%s %s %s")
     ;
 
     private final int errorCode;
