@@ -27,7 +27,7 @@ public class SimpleAccountBatchCreator implements AccountBatchCreator {
     @Override
     public Optional<GLAccount> find(AccountBatchRequest request) {
         AccountKeys keys = fromRequest(request);
-        return Optional.ofNullable(accountController.findGLAccountMnl(keys));
+        return Optional.ofNullable(accountController.findGLAccountMnl(keys, request.getDtOpen()));
     }
 
     @Override

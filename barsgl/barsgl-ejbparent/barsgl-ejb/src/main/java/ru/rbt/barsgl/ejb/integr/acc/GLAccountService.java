@@ -322,7 +322,7 @@ public class GLAccountService {
             AccountKeys keys = glAccountController.createWrapperAccountKeys(accountWrapper, dateOpen);
             // Такой счет уже есть
             GLAccount glAccount = null;
-            if (null != (glAccount = glAccountController.findGLAccountMnl(keys))) {
+            if (null != (glAccount = glAccountController.findGLAccountMnl(keys, dateOpen))) {
                 throw new ValidationError(ACCOUNTGL_ALREADY_EXISTS, glAccount.getBsaAcid(), glAccount.getAcid());
             }
             String accType = accountWrapper.getAccountType().toString();

@@ -485,6 +485,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
             public void onChange(ChangeEvent changeEvent) {
                 mAccountType.clear();
                 mAccountDesc.clear();
+                mAccountDesc.setEnabled(false);
             }
         });
     }
