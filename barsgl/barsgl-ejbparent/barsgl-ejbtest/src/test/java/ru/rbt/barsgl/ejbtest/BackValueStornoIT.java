@@ -34,9 +34,7 @@ import static ru.rbt.barsgl.ejbtest.BackValueOperationIT.createEtlPosting;
 import static ru.rbt.barsgl.ejbtest.BackValueOperationIT.createEtlPostingNotSaved;
 import static ru.rbt.barsgl.shared.enums.DealSource.ARMPRO;
 import static ru.rbt.barsgl.shared.enums.DealSource.SECMOD;
-import static ru.rbt.barsgl.shared.enums.OperState.CANC;
-import static ru.rbt.barsgl.shared.enums.OperState.POST;
-import static ru.rbt.barsgl.shared.enums.OperState.SOCANC;
+import static ru.rbt.barsgl.shared.enums.OperState.*;
 
 /**
  * Created by er18837 on 26.11.2018.
@@ -69,10 +67,21 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
     }
 
     @Test
+    public void testStrotnoInvisNDirect() throws SQLException {
+        updateOperday(ONLINE, OPEN, DIRECT);
+        testStrotnoInvisN();
+    }
+
+    @Test
+    public void testStrotnoInvisNBuffer() throws SQLException {
+        updateOperday(ONLINE, OPEN, BUFFER);
+        testStrotnoInvisN();
+    }
+
     public void testStrotnoInvisN() throws SQLException {
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%1");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%2");
-        BigDecimal amt = new BigDecimal("123.45");
+        BigDecimal amt = new BigDecimal("1223.45");
         BankCurrency currency = RUB;
         Date od = getOperday().getCurrentDate();
         Date vdate = getWorkDateBefore(od, 2);
@@ -95,10 +104,12 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testStrotnoInvisY() throws SQLException {
-        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%1");
-        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%2");
-        BigDecimal amt = new BigDecimal("123.45");
+    public void testStrotnoInvisYDirect() throws SQLException {
+        updateOperday(ONLINE, OPEN, DIRECT);
+
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%3");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%4");
+        BigDecimal amt = new BigDecimal("1233.45");
         BankCurrency currency = RUB;
         Date od = getOperday().getCurrentDate();
         Date vdate = getWorkDateBefore(od, 2);
@@ -112,7 +123,6 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
         EtlPosting pstS = createStornoPosting(sdate, pst);
         GLOperation operationS = (GLOperation) postingController.processMessage(pstS);
         operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
-        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
 
         Assert.assertTrue(operationS.isStorno());
         Assert.assertEquals(SOCANC, operationS.getState());
@@ -137,7 +147,33 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
                         pd.getAcid(), pd.getBsaAcid(), pd.getPod()));
             }
         }
+    }
 
+    @Test
+    public void testStrotnoInvisYBuffer() throws SQLException {
+        updateOperday(ONLINE, OPEN, BUFFER);
+
+        String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%5");
+        String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%6");
+        BigDecimal amt = new BigDecimal("1123.45");
+        BankCurrency currency = RUB;
+        Date od = getOperday().getCurrentDate();
+        Date vdate = getWorkDateBefore(od, 2);
+        Date sdate = vdate;
+
+        // ARMPRO прямая
+        EtlPosting pst = createEtlPosting(vdate, ARMPRO.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+
+        // сторно
+        EtlPosting pstS = createStornoPosting(sdate, pst);
+        GLOperation operationS = (GLOperation) postingController.processMessage(pstS);
+        operationS = (GLOperation) baseEntityRepository.findById(operationS.getClass(), operationS.getId());
+        Assert.assertTrue(operationS.isStorno());
+        Assert.assertEquals(STRN_WAIT, operationS.getState());
+
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(POST, operation.getState());
     }
 
     public EtlPosting createEtlPosting(Date valueDate, String src,
