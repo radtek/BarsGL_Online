@@ -374,7 +374,7 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
 
                         @Override
                         protected Object[] getInitialFilterParams() {
-                            return new Object[] {operday, mAccountType.getValue(), mTerm.getValue(), custNo};
+                            return new Object[] {mDateOpen.getValue(), mAccountType.getValue(), mTerm.getValue(), custNo};
                         }
 
                         @Override
@@ -477,6 +477,14 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
             @Override
             public void onChange(ChangeEvent changeEvent) {
                 clearAccountType();
+            }
+        });
+
+        mDateOpen.addChangeHandler(new ChangeHandler(){
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                mAccountType.clear();
+                mAccountDesc.clear();
             }
         });
     }

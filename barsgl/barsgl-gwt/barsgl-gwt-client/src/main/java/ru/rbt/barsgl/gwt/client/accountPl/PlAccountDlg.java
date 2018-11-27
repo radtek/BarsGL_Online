@@ -336,7 +336,7 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
                         		acc2 = replaceAcc2(acc2, "6");
                         	}
 
-                            return new Object[] {operday, mAccountType.getValue(), mTerm.getValue(),
+                            return new Object[] {mDateOpen.getValue(), mAccountType.getValue(), mTerm.getValue(),
                                     mCustomerType.getValue(), acc2, mPlcode.getValue()};
                         }
 
@@ -418,6 +418,14 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
             @Override
             public void onChange(ChangeEvent changeEvent) {
                 plcodeChange();
+            }
+        });
+
+        mDateOpen.addChangeHandler(new ChangeHandler(){
+            @Override
+            public void onChange(ChangeEvent changeEvent) {
+                mAccountType.clear();
+                mAccountDesc.clear();
             }
         });
     }
