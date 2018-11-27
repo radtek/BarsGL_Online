@@ -25,6 +25,14 @@ public class BackValueParameters implements Serializable{
         this.depthCutDate = depthCutDate;
     }
 
+    public boolean isStornoInvisible() {
+        return isStornoInvisible;
+    }
+
+    public void setStornoInvisible(boolean stornoInvisible) {
+        isStornoInvisible = stornoInvisible;
+    }
+
     public Date getCloseCutDate() {
         return closeCutDate;
     }
@@ -43,6 +51,7 @@ public class BackValueParameters implements Serializable{
 
     private String reason;
     private Date depthCutDate;
+    private boolean isStornoInvisible;
     private Date closeCutDate;
     private Date closeLastDate;
 }

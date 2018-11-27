@@ -27,7 +27,7 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
 
     @Column(name = "BVSTRN_INVISIBLE")
     @Enumerated(EnumType.STRING)
-    private YesNo bvStornoInvisible;
+    private YesNo stornoInvisible;
 
     @Column(name = "OTS")
     @Temporal(TemporalType.TIMESTAMP)
@@ -36,11 +36,11 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
     public BVSourceDeal() {
     }
 
-    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, YesNo bvStornoInvisible, String user, Date createTimestamp) {
+    public BVSourceDeal(BVSourceDealId id, Date endDate, Integer shift, YesNo stornoInvisible, String user, Date createTimestamp) {
         this.id = id;
         this.endDate = endDate;
         this.shift = shift;
-        this.bvStornoInvisible = bvStornoInvisible;
+        this.stornoInvisible = stornoInvisible;
         this.user = user;
         this.createTimestamp = createTimestamp;
     }
@@ -85,15 +85,15 @@ public class BVSourceDeal extends BaseEntity<BVSourceDealId> {
         this.createTimestamp = createTimestamp;
     }
 
-    public YesNo getBvStornoInvisible() {
-        return bvStornoInvisible;
+    public YesNo getStornoInvisible() {
+        return stornoInvisible;
     }
 
-    public void setBvStornoInvisible(YesNo bvStornoInvisible) {
-        this.bvStornoInvisible = bvStornoInvisible;
+    public void setStornoInvisible(YesNo stornoInvisible) {
+        this.stornoInvisible = stornoInvisible;
     }
 
-    public boolean isBvStornoInvisible() {
-        return bvStornoInvisible == YesNo.Y;
+    public boolean isStornoInvisible() {
+        return stornoInvisible == YesNo.Y;
     }
 }

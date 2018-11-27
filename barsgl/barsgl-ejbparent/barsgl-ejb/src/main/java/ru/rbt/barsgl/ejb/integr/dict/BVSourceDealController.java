@@ -114,7 +114,7 @@ public class BVSourceDealController extends BaseDictionaryController<BVSourceDea
                     else if (!wrapper.getDepth().equals(param.getShift()))
                         // TODO возможно, здесь нужна особая обработка
                         throw new DefaultApplicationException("Нельзя изменить глубину BackValue для текущей настройки");
-                    param.setBvStornoInvisible(wrapper.isBvStornoInvisible() ? YesNo.Y : YesNo.N);
+                    param.setStornoInvisible(wrapper.isBvStornoInvisible() ? YesNo.Y : YesNo.N);
                     param.setEndDate(wrapper.getEndDate());
                     param.setUser(userContext.getUserName());
                     param.setCreateTimestamp(operdayController.getSystemDateTime());

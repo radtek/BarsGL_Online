@@ -292,7 +292,16 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
 
     public final boolean isStornoBackvalue(GLOperation operation) {
         return (operation.isStorno())                                                           // сторно
-                && !operation.stornoOneday(operdayController.getOperday().getCurrentDate());    // хотя бы одна операция в другой день
+                && !operation.stornoOneday(operdayController.getOperday().getCurrentDate())    // хотя бы одна операция в другой день
+                && !operation.stornoBVCanc()
+                ;
+    }
+
+    public final boolean isStornoBVCanc(GLOperation operation) {
+        return (operation.isStorno())                                                           // сторно
+                && !operation.stornoOneday(operdayController.getOperday().getCurrentDate())    // хотя бы одна операция в другой день
+                && operation.stornoBVCanc()
+                ;
     }
 
     public final List<Pd> getPostingPd(GLPosting posting) {

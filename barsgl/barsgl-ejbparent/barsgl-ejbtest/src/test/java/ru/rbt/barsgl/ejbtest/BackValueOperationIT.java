@@ -88,7 +88,13 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         clearMfoNotExists();
     }
 
-/*
+    @AfterClass
+    public static  void  restoreTables() {
+        baseEntityRepository.executeNativeUpdate("delete from GL_BVPARM");
+        baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
+    }
+
+    /*
     @AfterClass
     public static  void  restoreTables() {
         restoreTable("GL_BVPARM");

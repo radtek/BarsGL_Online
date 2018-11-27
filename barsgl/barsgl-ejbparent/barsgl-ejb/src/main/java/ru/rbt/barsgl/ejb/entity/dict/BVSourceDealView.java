@@ -21,7 +21,7 @@ public class BVSourceDealView extends BaseEntity<String> {
 
     @Column(name = "BVSTRN_INVISIBLE", insertable = false, updatable = false)
     @Enumerated(EnumType.STRING)
-    private YesNo bvStornoInvisible;
+    private YesNo stornoInvisible;
 
     @Override
     public String getId() {
@@ -36,15 +36,15 @@ public class BVSourceDealView extends BaseEntity<String> {
         return shift;
     }
 
-    public YesNo getBvStornoInvisible() {
-        return bvStornoInvisible;
+    public YesNo getStornoInvisible() {
+        return stornoInvisible;
     }
 
-    public void setBvStornoInvisible(YesNo bvStornoInvisible) {
-        this.bvStornoInvisible = bvStornoInvisible;
+    public void setStornoInvisible(YesNo stornoInvisible) {
+        this.stornoInvisible = stornoInvisible;
     }
 
-    public boolean isBvStornoInvisible() {
-        return bvStornoInvisible == YesNo.Y;
+    public boolean isStornoInvisible() {
+        return stornoInvisible == YesNo.Y;
     }
 }

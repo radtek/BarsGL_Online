@@ -4,6 +4,7 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
+import ru.rbt.barsgl.ejb.entity.dict.BVSourceDealView;
 import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.dict.ClosedReportPeriodView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
@@ -733,8 +734,12 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             return AUTOMATIC;
         }
 
-        Integer depth = sourceRepository.getDepth(posting.getSourcePosting());
-        Date depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
+        BVSourceDealView sourceDeal = sourceRepository.findCached(posting.getSourcePosting());
+        Date depthCutDate = null;
+        if (null != sourceDeal) {
+            Integer depth = sourceDeal.getShift();
+            depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
+        }
 
         boolean withTech = withTechWorkDay(posting.getSourcePosting());
         Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
@@ -765,6 +770,11 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             bvParameters.setCloseCutDate(closedCutDate);
             bvParameters.setCloseLastDate(closedLastDate);
             posting.setBackValue(true);
+            posting.setBackValueParameters(bvParameters);
+        } else if (null != sourceDeal) {
+            BackValueParameters bvParameters = new BackValueParameters();
+            bvParameters.setReason(null);
+            bvParameters.setStornoInvisible(sourceDeal.isStornoInvisible());
             posting.setBackValueParameters(bvParameters);
         }
 
