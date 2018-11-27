@@ -12,13 +12,17 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLBackValueOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
+import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -111,9 +115,29 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
 
         Assert.assertTrue(operationS.isStorno());
-        Assert.assertEquals(CANC, operation.getState());
         Assert.assertEquals(SOCANC, operationS.getState());
-        Assert.assertEquals(operation.getId(), operationS.getStornoOperation().getId());
+        Assert.assertEquals(GLOperation.OperType.ST, operationS.getPstScheme());
+        Assert.assertEquals(GLOperation.StornoType.C, operationS.getStornoRegistration());
+        Assert.assertEquals(operation.getId(), operationS.getStornoOperation().getId());        // ссылка на сторно операцию
+        List<GLPosting> postList = getPostings(operationS);
+        Assert.assertTrue(postList.isEmpty());                    // нет своих проводки
+
+        operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
+        Assert.assertEquals(OperState.CANC, operation.getState());
+        postList = getPostings(operation);
+
+        Assert.assertNotNull(postList);
+        Assert.assertFalse(postList.isEmpty());         // 2 проводки
+
+        for (GLPosting posting: postList) {
+            List<Pd> pdList = getPostingPd( posting );
+            for (Pd pd: pdList) {
+                Assert.assertEquals(pd.getInvisible(), "1");
+                Assert.assertNotNull(baseEntityRepository.selectFirst("select * from GL_BVJRNL where acid = ? and bsaacid = ? and pod = ?",
+                        pd.getAcid(), pd.getBsaAcid(), pd.getPod()));
+            }
+        }
+
     }
 
     public EtlPosting createEtlPosting(Date valueDate, String src,
