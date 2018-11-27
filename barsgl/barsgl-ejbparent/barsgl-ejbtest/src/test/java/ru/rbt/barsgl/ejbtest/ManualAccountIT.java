@@ -1,10 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
@@ -34,8 +31,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.getOperday;
@@ -545,6 +540,7 @@ public class ManualAccountIT extends AbstractRemoteIT {
 
     }
 
+    @Ignore
     @Test
     public void testCheckBalanceBeforeFrom() throws SQLException {
         Date od = getOperday().getCurrentDate();
