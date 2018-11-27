@@ -41,7 +41,16 @@ public class DismodAccRestTask extends AbstractJobHistoryAwareTask {
 
     @Override
     protected boolean execWork(JobHistory jobHistory, Properties properties) throws Exception {
-        return true;
+
+        try {
+            auditController.info(DismodAccRest, "Начало формирования витрины для DISMOD");
+            executeNOXA("begin PKG_MD_ACCOUNT.PROCESS_ACC_REST(); end;");
+            auditController.info(DismodAccRest, "Окончание формирования витрины для DISMOD");
+            return true;
+        } catch (Exception e) {
+            auditController.error(DismodAccRest, "Ошибка при формировании витрины для DISMOD", null, e);
+            return false;
+        }
     }
 
     @Override
@@ -63,6 +72,10 @@ public class DismodAccRestTask extends AbstractJobHistoryAwareTask {
 
     private DataRecord selectFirstNOXA(String sql, Object ... params) throws SQLException {
         return jobHistoryRepository.selectFirst(jobHistoryRepository.getDataSource(Repository.BARSGLNOXA), sql, params);
+    }
+
+    private int executeNOXA(String sql, Object ... params) throws SQLException {
+        return jobHistoryRepository.executeNativeUpdate(jobHistoryRepository.getDataSource(Repository.BARSGLNOXA), sql, params);
     }
 
     private String getOutLogTableName () throws SQLException {

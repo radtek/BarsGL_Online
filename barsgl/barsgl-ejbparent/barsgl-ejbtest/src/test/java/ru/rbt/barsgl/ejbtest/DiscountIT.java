@@ -4,8 +4,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
 import ru.rbt.barsgl.ejb.controller.operday.task.md.DismodAccRestTask;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.sql.SQLException;
@@ -36,19 +38,31 @@ public class DiscountIT extends AbstractRemoteIT {
         createOutAccountTab();
         createOutLogTab();
 
+        setOnlineBalanceMode();
+
         baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_LOG_TAB));
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
 
         baseEntityRepository.executeNativeUpdate(format("insert into %s values (?,?,?,?,sysdate,sysdate)", OUT_LOG_TAB)
             , 1, DismodAccRestTask.OUT_PROCESS_NAME, getOperday().getLastWorkingDay(), S.name());
+
+        GLAccount account = createAccRecord();
 
         final String jobName = "Name1";
         SingleActionJob job = SingleActionJobBuilder.create().withClass(DismodAccRestTask.class).withName(jobName).build();
         jobService.executeJob(job);
 
+        DataRecord mdAccount = baseEntityRepository.selectFirst("select * from GL_MD_ACC where bsaacid = ?", account.getBsaAcid());
+        Assert.assertNotNull(mdAccount);
+
         JobHistory lastHist = getLastHistRecordObject(jobName);
         Assert.assertNotNull(lastHist);
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED, lastHist.getResult());
+
+        jobService.executeJob(job);
+        JobHistory lastHist2 = getLastHistRecordObject(jobName);
+        Assert.assertEquals(lastHist, lastHist2);
     }
 
     private void createOutAccountTab() {
@@ -88,5 +102,12 @@ public class DiscountIT extends AbstractRemoteIT {
                 "exception\n" +
                 "    when l_already then null;\n" +
                 "end;", sql));
+    }
+
+    private GLAccount createAccRecord() throws SQLException {
+        GLAccount account = findAccount("408%");
+        baseEntityRepository.executeNativeUpdate(format("insert into %s (BSAACID,ACCTYPE,CCY,DEAL_ID,PSAV,FL_TURN,EXCLUDE) values (?, ?, ?, ?, ?, 'N', null)", OUT_ACCOUNT_BASKET_TAB)
+            , account.getBsaAcid(), account.getAccountType(), account.getCurrency().getCurrencyCode(), account.getId(), "А".equals(account.getPassiveActive()) ? "A" : "L");
+        return account;
     }
 }
