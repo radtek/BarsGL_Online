@@ -424,7 +424,9 @@ public class PlAccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDateOpen.addChangeHandler(new ChangeHandler(){
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                clearAccountType();
+                if (action == FormAction.CREATE && mDateOpen.getValue() != null && mDateOpen.getValue().after(operday)) {
+                    clearAccountType();
+                }
             }
         });
     }

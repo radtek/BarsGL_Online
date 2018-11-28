@@ -483,9 +483,11 @@ public class AccountDlg extends EditableDialog<ManualAccountWrapper> {
         mDateOpen.addChangeHandler(new ChangeHandler(){
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                mAccountType.clear();
-                mAccountDesc.clear();
-                mAccountDesc.setEnabled(false);
+                if (action == FormAction.CREATE && mDateOpen.getValue() != null && mDateOpen.getValue().after(operday)) {
+                    mAccountType.clear();
+                    mAccountDesc.clear();
+                    mAccountDesc.setEnabled(false);
+                }
             }
         });
     }
