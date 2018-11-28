@@ -56,6 +56,10 @@ public class DBParam implements Serializable {
         this(type.getParamType(), direction);
     }
 
+    public DBParam(DbParamType type, Object value) {
+        this(type.getParamType(), value);
+    }
+
     public int getParamType() {
         return paramType;
     }

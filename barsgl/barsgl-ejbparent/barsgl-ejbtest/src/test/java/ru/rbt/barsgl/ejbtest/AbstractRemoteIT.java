@@ -40,6 +40,7 @@ import ru.rbt.barsgl.ejbtest.service.ServiceAccessSupport;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.job.service.TestingJobRegistration;
 import ru.rbt.barsgl.ejbtesting.test.GLPLAccountTesting;
+import ru.rbt.barsgl.shared.HasLabel;
 import ru.rbt.barsgl.shared.criteria.Criteria;
 import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
 import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
@@ -95,6 +96,21 @@ public abstract class AbstractRemoteIT  {
     protected static AcDNJournalRepository journalRepository;
     protected static ILoadManagementController loadManagementController;
     protected static ITextResourceController textResourceController;
+
+    public enum PostDirection implements HasLabel {
+        D("Дебет"), C("Кредит");
+
+        private String label;
+
+        PostDirection(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+    }
 
     @BeforeClass
     public static void beforeClassRoot() {
@@ -772,9 +788,14 @@ public abstract class AbstractRemoteIT  {
     }
 
     public static long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
+        return createPd(pod, acid, bsaacid, glccy, pbr, 0, PostDirection.C);
+    }
+
+    public static long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr, long pcid, PostDirection direction) throws SQLException {
         long id = baseEntityRepository.selectFirst("select PD_SEQ.nextval id_seq from dual").getLong(0);
-        baseEntityRepository.executeNativeUpdate("insert into pst (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar,invisible) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234", "0");
+        long sum = direction == PostDirection.D ? -100 : 100;
+        baseEntityRepository.executeNativeUpdate("insert into pst (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar,invisible, pcid) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, sum,sum, pbr, "1234", "0", pcid);
         return id;
     }
 
