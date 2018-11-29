@@ -14,6 +14,7 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -23,6 +24,7 @@ import java.sql.SQLException;
 import java.util.function.Predicate;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodAccRestTask.OUT_PROCESS_NAME;
 import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodOutState.S;
 import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodParam.LOADRESRPOST;
 import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodParam.LOADREST;
@@ -57,9 +59,9 @@ public class DiscountIT extends AbstractRemoteIT {
 
         setOnlineBalanceMode();
 
-        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_LOG_TAB));
+        cleanOutLog();
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
-        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
+        executeNativeUpdateNOXA(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
         baseEntityRepository.executeNativeUpdate("delete from GL_MD_LOG");
 
         createSuccessDismodOutLog();
@@ -115,11 +117,14 @@ public class DiscountIT extends AbstractRemoteIT {
 
     @Test public void testBackValue() throws Exception {
 
+        createOutAccountTab();
+        createOutLogTab();
+
         setOnlineBalanceMode();
 
-        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_LOG_TAB));
+        cleanOutLog();
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
-        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
+        executeNativeUpdateNOXA(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
         baseEntityRepository.executeNativeUpdate("delete from GL_MD_LOG");
         baseEntityRepository.executeNativeUpdate(format("delete from %s", GL_MD_ACC_TAB));
         baseEntityRepository.executeNativeUpdate(format("delete from %s", GL_MD_REST_PST_TAB));
@@ -220,7 +225,7 @@ public class DiscountIT extends AbstractRemoteIT {
     }
 
     private GLAccount createAccRecord(GLAccount account, String exc, String tableName) throws SQLException {
-        baseEntityRepository.executeNativeUpdate(format("insert into %s (BSAACID,ACCTYPE,CCY,DEAL_ID,PSAV,FL_TURN,EXCLUDE) values (?, ?, ?, ?, ?, 'Y', ?)", tableName)
+        executeNativeUpdateNOXA(format("insert into %s (BSAACID,ACCTYPE,CCY,DEAL_ID,PSAV,FL_TURN,EXCLUDE) values (?, ?, ?, ?, ?, 'Y', ?)", tableName)
             , account.getBsaAcid(), account.getAccountType(), account.getCurrency().getCurrencyCode(), account.getId(), "А".equals(account.getPassiveActive()) ? "A" : "L", exc);
         return account;
     }
@@ -232,9 +237,16 @@ public class DiscountIT extends AbstractRemoteIT {
     }
 
     private void createSuccessDismodOutLog () {
-        baseEntityRepository.executeNativeUpdate(format("insert into %s values (?,?,?,?,sysdate,sysdate)", OUT_LOG_TAB)
-                , 1, DismodAccRestTask.OUT_PROCESS_NAME, getOperday().getLastWorkingDay(), S.name());
+        executeNativeUpdateNOXA(format("insert into %s (ID_PK, PROCESS_NM, OPERDAY, STATUS, START_DATE, END_DATE) values (?,?,?,?,sysdate,sysdate)", OUT_LOG_TAB)
+                , 1, OUT_PROCESS_NAME, getOperday().getLastWorkingDay(), S.name());
     }
 
+    private void executeNativeUpdateNOXA(String sql, Object ... params) {
+        remoteAccess.invoke(ServerTestingFacade.class, "executeUpdateNonXa", sql, params);
+    }
+
+    private void cleanOutLog() {
+        executeNativeUpdateNOXA(format("delete from %s where PROCESS_NM = ?", OUT_LOG_TAB), OUT_PROCESS_NAME);
+    }
 
 }
