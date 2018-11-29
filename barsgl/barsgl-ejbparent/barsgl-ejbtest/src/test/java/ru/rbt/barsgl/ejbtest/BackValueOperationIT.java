@@ -24,6 +24,7 @@ import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
+import ru.rbt.barsgl.ejbcore.CacheController;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
@@ -138,6 +139,8 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("insert into GL_CRPRD (PRD_LDATE, PRD_CUTDATE) values ('2014-12-31', '2015-01-15')");
         baseEntityRepository.executeNativeUpdate("insert into GL_CRPRD (PRD_LDATE, PRD_CUTDATE) values ('2015-01-31', '2015-02-03')");
         baseEntityRepository.executeNativeUpdate("insert into GL_CRPRD (PRD_LDATE, PRD_CUTDATE) values ('2015-02-28', '2015-03-04')");
+
+        remoteAccess.invoke(CacheController.class, "flushAllCaches");
     }
 
     public static void clearMfoNotExists() {

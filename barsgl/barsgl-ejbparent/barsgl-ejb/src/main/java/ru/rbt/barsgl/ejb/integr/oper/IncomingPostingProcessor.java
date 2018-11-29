@@ -16,6 +16,7 @@ import ru.rbt.barsgl.ejb.repository.dict.BVSouceCachedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.ClosedPeriodCashedRepository;
 import ru.rbt.barsgl.ejb.repository.dict.FwPostSourceCachedRepository;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
+import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.barsgl.shared.enums.InputMethod;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
@@ -727,21 +728,25 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
     }
 
     public final GLOperation.OperClass calculateOperationClass(EtlPosting posting) throws SQLException {
-        Date valueDate = posting.getValueDate();
         Operday operday = operdayController.getOperday();
-        if (operday.getCurrentDate().equals(valueDate) || posting.isNonStandard()) {
+        Date valueDate = posting.getValueDate();
+        String source = posting.getSourcePosting();
+        if (posting.isNonStandard()) {
+            posting.setBackValue(false);
+            return AUTOMATIC;
+        }
+        if (operday.getCurrentDate().equals(valueDate)) {
+            if (posting.isStorno() && sourceRepository.isStornoInvisible(source)) {
+                posting.setBackValueParameters(new BackValueParameters(true));
+            }
             posting.setBackValue(false);
             return AUTOMATIC;
         }
 
-        BVSourceDealView sourceDeal = sourceRepository.findCached(posting.getSourcePosting());
-        Date depthCutDate = null;
-        if (null != sourceDeal) {
-            Integer depth = sourceDeal.getShift();
-            depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
-        }
+        Integer depth = sourceRepository.getDepth(source);
+        Date depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
 
-        boolean withTech = withTechWorkDay(posting.getSourcePosting());
+        boolean withTech = withTechWorkDay(source);
         Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
                             ? valueDate
                             : calendarRepository.getWorkDateAfter(valueDate, withTech);
@@ -769,13 +774,11 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             bvParameters.setDepthCutDate(depthCutDate);
             bvParameters.setCloseCutDate(closedCutDate);
             bvParameters.setCloseLastDate(closedLastDate);
+            bvParameters.setStornoInvisible(false);
             posting.setBackValue(true);
             posting.setBackValueParameters(bvParameters);
-        } else if (null != sourceDeal) {
-            BackValueParameters bvParameters = new BackValueParameters();
-            bvParameters.setReason(null);
-            bvParameters.setStornoInvisible(sourceDeal.isStornoInvisible());
-            posting.setBackValueParameters(bvParameters);
+        } else if (posting.isStorno() && sourceRepository.isStornoInvisible(source)) {
+            posting.setBackValueParameters(new BackValueParameters(true));
         }
 
         return operClass;

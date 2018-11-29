@@ -10,7 +10,8 @@ public enum LongRunningPatternStepEnum {
     , SYNC_MOVE_GLPDARCH(4, LongRunningPatternEnum.PdSyncTask)
     , SYNC_SWITCH_PDMODE(5, LongRunningPatternEnum.PdSyncTask)
     , SYNC_RECALC(6, LongRunningPatternEnum.PdSyncTask)
-    , SYNC_ALLOW_PROCESSING(7, LongRunningPatternEnum.PdSyncTask);
+    , SYNC_STRN_BV(7, LongRunningPatternEnum.PdSyncTask)
+    , SYNC_ALLOW_PROCESSING(8, LongRunningPatternEnum.PdSyncTask);
 
     private long idStep;
     private LongRunningPatternEnum pattern;

@@ -29,7 +29,7 @@ public class StornoBufferBVCancOperationProcessor extends GLOperationProcessor {
 
     @Override
     public void setSpecificParameters(GLOperation operation) throws Exception {
-
+        operation.setStornoRegistration(GLOperation.StornoType.C);
     }
 
     @Override

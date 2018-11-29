@@ -9,6 +9,13 @@ import java.util.Date;
 public class BackValueParameters implements Serializable{
     //================= параметры отсечения BACK VALUE ===================
 
+    public BackValueParameters() {
+    }
+
+    public BackValueParameters(boolean isStornoInvisible) {
+        this.isStornoInvisible = isStornoInvisible;
+    }
+
     public String getReason() {
         return reason;
     }
