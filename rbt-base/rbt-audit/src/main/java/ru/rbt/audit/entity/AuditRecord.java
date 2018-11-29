@@ -104,6 +104,7 @@ public class AuditRecord extends BaseEntity<Long> {
         , AccountBatch
         , StamtUnloadForce
         , DismodAccRest
+        , DismodAccRestPst
     }
 
     public enum LogLevel {

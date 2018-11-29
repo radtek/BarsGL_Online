@@ -3,18 +3,29 @@ package ru.rbt.barsgl.ejbtest;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.controller.operday.task.DwhUnloadStatus;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.controller.operday.task.md.DismodAccRestPstTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.md.DismodAccRestTask;
-import ru.rbt.barsgl.ejb.controller.operday.task.md.DismodAccRestTask.DismodOutState;
+import ru.rbt.barsgl.ejb.controller.operday.task.md.DismodOutState;
+import ru.rbt.barsgl.ejb.controller.operday.task.md.DismodRepository;
 import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
+import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
+import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
+import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
+import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.function.Predicate;
 
 import static java.lang.String.format;
-import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodAccRestTask.DismodOutState.S;
+import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodOutState.S;
+import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodParam.LOADRESRPOST;
+import static ru.rbt.barsgl.ejb.controller.operday.task.md.DismodParam.LOADREST;
 import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.PostDirection.C;
 import static ru.rbt.barsgl.ejbtest.AbstractRemoteIT.PostDirection.D;
 import static ru.rbt.ejbcore.util.StringUtils.substr;
@@ -25,6 +36,7 @@ import static ru.rbt.ejbcore.util.StringUtils.substr;
 public class DiscountIT extends AbstractRemoteIT {
 
     public static String OUT_ACCOUNT_BASKET_TAB;
+    public static String GL_MD_ACC_TAB = "GL_MD_ACC";
     public static String OUT_LOG_TAB;
 
     static {
@@ -49,15 +61,16 @@ public class DiscountIT extends AbstractRemoteIT {
         baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
         baseEntityRepository.executeNativeUpdate("delete from GL_MD_LOG");
 
-        baseEntityRepository.executeNativeUpdate(format("insert into %s values (?,?,?,?,sysdate,sysdate)", OUT_LOG_TAB)
-            , 1, DismodAccRestTask.OUT_PROCESS_NAME, getOperday().getLastWorkingDay(), S.name());
+        createSuccessDismodOutLog();
 
         GLAccount account1 = findAccount("408%");
-        createAccRecord(account1, substr(account1.getBsaAcid(), 5));
+        createAccRecord(account1, substr(account1.getBsaAcid(), 5), OUT_ACCOUNT_BASKET_TAB);
         GLAccount account2 = findAccount("47408810%");
-        createAccRecord(account2, substr(account2.getBsaAcid(), 5));
+        createAccRecord(account2, substr(account2.getBsaAcid(), 5), OUT_ACCOUNT_BASKET_TAB);
         GLAccount account3 = findAccountLikeAndNotEquals("408%", account2.getBsaAcid());
-        createAccRecord(account3, substr(account3.getBsaAcid(), 5));
+        createAccRecord(account3, substr(account3.getBsaAcid(), 5), OUT_ACCOUNT_BASKET_TAB);
+
+        baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account3.getBsaAcid());
 
 
         long pcid1 = baseEntityRepository.nextId("PD_SEQ");
@@ -80,21 +93,82 @@ public class DiscountIT extends AbstractRemoteIT {
         Assert.assertNotNull(lastHist);
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED, lastHist.getResult());
 
-        DataRecord mdAccount = baseEntityRepository.selectFirst("select * from GL_MD_ACC where bsaacid = ?", account1.getBsaAcid());
-        Assert.assertNotNull(mdAccount);
+        Assert.assertTrue(baseEntityRepository.select("select * from GL_MD_ACC").stream().allMatch(
+                ((Predicate<DataRecord>) o -> o.getString("bsaacid").equals(account1.getBsaAcid()))
+                                    .or(p ->  p.getString("bsaacid").equals(account2.getBsaAcid()))
+                                    .or(p ->  p.getString("bsaacid").equals(account3.getBsaAcid()))));
 
-        DataRecord mdAccount2 = baseEntityRepository.selectFirst("select * from GL_MD_ACC where bsaacid = ?", account2.getBsaAcid());
-        Assert.assertNotNull(mdAccount2);
+        Assert.assertEquals(S, DismodOutState.valueOf(baseEntityRepository
+                .selectFirst("select * from GL_MD_LOG where parname = ?", LOADREST.name()).getString("status")));
 
-        DataRecord mdAccount3 = baseEntityRepository.selectFirst("select * from GL_MD_ACC where bsaacid = ?", account3.getBsaAcid());
-        Assert.assertNotNull(mdAccount3);
-
-        DataRecord record = baseEntityRepository.selectFirst("select * from GL_MD_LOG");
-        Assert.assertEquals(DismodOutState.S, DismodOutState.valueOf(record.getString("status")));
+        Assert.assertTrue(baseEntityRepository.select("select * from GL_MD_REST").stream().allMatch(
+                ((Predicate<DataRecord>) o -> o.getString("bsaacid").equals(account1.getBsaAcid()))
+                                    .or(p ->  p.getString("bsaacid").equals(account2.getBsaAcid()))
+                                    .or(p ->  p.getString("bsaacid").equals(account3.getBsaAcid()) && p.getBigDecimal("out_bal").equals(BigDecimal.ZERO))));
 
         jobService.executeJob(job);
         JobHistory lastHist2 = getLastHistRecordObject(jobName);
         Assert.assertEquals(lastHist, lastHist2);
+    }
+
+
+    @Test public void testBackValue() throws Exception {
+
+        setOnlineBalanceMode();
+
+        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_LOG_TAB));
+        baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+        baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
+        baseEntityRepository.executeNativeUpdate("delete from GL_MD_LOG");
+        baseEntityRepository.executeNativeUpdate(format("delete from %s", GL_MD_ACC_TAB));
+
+        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+
+        GLAccount account1 = findAccount("408__810%");
+        createAccRecord(account1, substr(account1.getBsaAcid(), 5), GL_MD_ACC_TAB);
+        GLAccount account2 = findAccount("47408810%");
+        createAccRecord(account2, substr(account2.getBsaAcid(), 5), GL_MD_ACC_TAB);
+
+        EtlPackage pkg = newPackageNotSaved(System.currentTimeMillis(), "Тестовый пакет " + 1);
+        pkg.setDateLoad(getSystemDateTime());
+        pkg.setPackageState(EtlPackage.PackageState.LOADED);
+        pkg.setAccountCnt(0);
+        pkg.setPostingCnt(4);
+        pkg = (EtlPackage) baseEntityRepository.save(pkg);
+
+        EtlPosting pst =  newPosting(System.currentTimeMillis(), pkg);
+        pst.setValueDate(getOperday().getLastWorkingDay());
+        pst.setAccountCredit(account1.getBsaAcid());
+        pst.setCurrencyCredit(account1.getCurrency());
+        pst.setAmountDebit(new BigDecimal("100"));
+
+        pst.setAccountDebit(account2.getBsaAcid());
+        pst.setCurrencyDebit(account2.getCurrency());
+        pst.setAmountCredit(new BigDecimal("100"));
+
+        pst = (EtlPosting) baseEntityRepository.save(pst);
+
+        GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, operation.getId());
+        Assert.assertNotNull(operation);
+        Assert.assertEquals(OperState.POST, operation.getState());
+
+        long idheader = remoteAccess.invoke(DismodRepository.class, "createDismodHeader", LOADREST, getOperday().getLastWorkingDay());
+        remoteAccess.invoke(DismodRepository.class, "updateDismodHeader", idheader, DismodOutState.S);
+
+        createSuccessDismodOutLog();
+
+        final String jobName = "DismodPst";
+        SingleActionJob pstJob = SingleActionJobBuilder.create().withClass(DismodAccRestPstTask.class).withName(jobName).build();
+        jobService.executeJob(pstJob);
+
+        JobHistory lastHist = getLastHistRecordObject(jobName);
+        Assert.assertNotNull(lastHist);
+        Assert.assertEquals(DwhUnloadStatus.SUCCEDED, lastHist.getResult());
+
+        Assert.assertEquals(S, DismodOutState.valueOf(baseEntityRepository
+                .selectFirst("select * from GL_MD_LOG where parname = ?", LOADRESRPOST.name()).getString("status")));
+
     }
 
     private void createOutAccountTab() {
@@ -136,15 +210,22 @@ public class DiscountIT extends AbstractRemoteIT {
                 "end;", sql));
     }
 
-    private GLAccount createAccRecord(GLAccount account, String exc) throws SQLException {
-        baseEntityRepository.executeNativeUpdate(format("insert into %s (BSAACID,ACCTYPE,CCY,DEAL_ID,PSAV,FL_TURN,EXCLUDE) values (?, ?, ?, ?, ?, 'Y', ?)", OUT_ACCOUNT_BASKET_TAB)
+    private GLAccount createAccRecord(GLAccount account, String exc, String tableName) throws SQLException {
+        baseEntityRepository.executeNativeUpdate(format("insert into %s (BSAACID,ACCTYPE,CCY,DEAL_ID,PSAV,FL_TURN,EXCLUDE) values (?, ?, ?, ?, ?, 'Y', ?)", tableName)
             , account.getBsaAcid(), account.getAccountType(), account.getCurrency().getCurrencyCode(), account.getId(), "А".equals(account.getPassiveActive()) ? "A" : "L", exc);
         return account;
     }
 
-    private GLAccount createAccRecord(String like) throws SQLException {
+    private GLAccount createAccRecord(String like, String tableName) throws SQLException {
         GLAccount account = findAccount(like);
-        createAccRecord(account, null);
+        createAccRecord(account, null, tableName);
         return account;
     }
+
+    private void createSuccessDismodOutLog () {
+        baseEntityRepository.executeNativeUpdate(format("insert into %s values (?,?,?,?,sysdate,sysdate)", OUT_LOG_TAB)
+                , 1, DismodAccRestTask.OUT_PROCESS_NAME, getOperday().getLastWorkingDay(), S.name());
+    }
+
+
 }
