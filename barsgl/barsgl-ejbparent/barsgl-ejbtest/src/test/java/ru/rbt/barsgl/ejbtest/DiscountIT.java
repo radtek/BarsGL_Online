@@ -37,6 +37,7 @@ public class DiscountIT extends AbstractRemoteIT {
 
     public static String OUT_ACCOUNT_BASKET_TAB;
     public static String GL_MD_ACC_TAB = "GL_MD_ACC";
+    public static String GL_MD_REST_PST_TAB = "GL_MD_REST_PST";
     public static String OUT_LOG_TAB;
 
     static {
@@ -121,12 +122,13 @@ public class DiscountIT extends AbstractRemoteIT {
         baseEntityRepository.executeNativeUpdate(format("delete from %s", OUT_ACCOUNT_BASKET_TAB));
         baseEntityRepository.executeNativeUpdate("delete from GL_MD_LOG");
         baseEntityRepository.executeNativeUpdate(format("delete from %s", GL_MD_ACC_TAB));
+        baseEntityRepository.executeNativeUpdate(format("delete from %s", GL_MD_REST_PST_TAB));
 
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 
-        GLAccount account1 = findAccount("408__810%");
+        GLAccount account1 = findAccount("47408810%");
         createAccRecord(account1, substr(account1.getBsaAcid(), 5), GL_MD_ACC_TAB);
-        GLAccount account2 = findAccount("47408810%");
+        GLAccount account2 = findAccountLikeAndNotEquals("47408810%", account1.getBsaAcid());
         createAccRecord(account2, substr(account2.getBsaAcid(), 5), GL_MD_ACC_TAB);
 
         EtlPackage pkg = newPackageNotSaved(System.currentTimeMillis(), "Тестовый пакет " + 1);
@@ -169,6 +171,13 @@ public class DiscountIT extends AbstractRemoteIT {
         Assert.assertEquals(S, DismodOutState.valueOf(baseEntityRepository
                 .selectFirst("select * from GL_MD_LOG where parname = ?", LOADRESRPOST.name()).getString("status")));
 
+        Assert.assertTrue(baseEntityRepository.select("select * from GL_MD_ACC").stream().allMatch(
+                ((Predicate<DataRecord>) o -> o.getString("bsaacid").equals(account1.getBsaAcid()))
+                        .or(p ->  p.getString("bsaacid").equals(account2.getBsaAcid()))));
+        Assert.assertTrue(baseEntityRepository.select("select * from gl_md_rest_pst").stream()
+                .allMatch(((Predicate<DataRecord>)
+                             p-> p.getString("bsaacid").equals(account1.getBsaAcid()))
+                        .or(p -> p.getString("bsaacid").equals(account2.getBsaAcid()))));
     }
 
     private void createOutAccountTab() {
