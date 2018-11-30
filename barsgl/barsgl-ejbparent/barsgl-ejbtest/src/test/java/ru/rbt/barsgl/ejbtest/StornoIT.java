@@ -12,16 +12,20 @@ import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
+import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejbtest.utl.Utl4Tests.deleteGlAccountWithLinks;
 import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
@@ -36,22 +40,28 @@ import static ru.rbt.ejbcore.mapping.YesNo.Y;
 public class StornoIT extends AbstractTimerJobIT {
 
     private static final Logger logger = Logger.getLogger(StornoIT.class.getName());
+    private static Date testOperday;
 
     @BeforeClass
     public static void beforeClass() throws ParseException {
-        Date operday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
-        setOperday(operday, DateUtils.addDays(operday, -1), Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        testOperday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
+        setOperday(testOperday, DateUtils.addDays(testOperday, -1), ONLINE, OPEN);
+        baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        restoreOperday();
     }
 
     @Before
     public void before() {
-        updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
+        updateOperday(ONLINE, OPEN);
     }
 
     @After
-    public void after() {
-        restoreOperday();
-    }
+    public void after() { setOperday(testOperday, DateUtils.addDays(testOperday, -1), ONLINE, OPEN); }
+
 
     /**
      * Обработки операции сторно при отсутствии сторнируемой операции (ошибка операции)
@@ -204,7 +214,7 @@ public class StornoIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.1
      * @throws ParseException
      */
-    @Test public void testStornoSimple() throws ParseException {
+    @Test public void testStornoSimple() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -215,8 +225,10 @@ public class StornoIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String acCr = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036_0001%");
+        String acDr = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "40817036_5001%");
+        pst.setAccountCredit(acCr);
+        pst.setAccountDebit(acDr);
         pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -233,7 +245,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertEquals(postList.size(), 1);
 
         // Сторно операция - сдвигем день вперед на 1
-        setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, Operday.LastWorkdayStatus.CLOSED);
         checkCreateBankCurrency(getOperday().getCurrentDate(), BankCurrency.AUD, new BigDecimal("63.313"));
 
         stamp = System.currentTimeMillis();
@@ -307,7 +319,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertEquals(postList.size(), 2);
 
         // Сторно операция - сдвигем день вперед на 1
-        setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, Operday.LastWorkdayStatus.CLOSED);
         stamp = System.currentTimeMillis();
         pkg = newPackage(stamp, "MfoStornoBack");
         Assert.assertTrue(pkg.getId() > 0);
@@ -386,7 +398,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertEquals(postList.size(), 2);
 
         // Сторно операция - сдвигем день вперед на 1
-        setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, Operday.LastWorkdayStatus.CLOSED);
         stamp = System.currentTimeMillis();
         pkg = newPackage(stamp, "ExchStornoBack");
         Assert.assertTrue(pkg.getId() > 0);
@@ -479,7 +491,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertEquals(postList.size(), 3);
 
         // Сторно операция - сдвигем день вперед на 1
-        setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, Operday.LastWorkdayStatus.CLOSED);
         stamp = System.currentTimeMillis();
         pkg = newPackage(stamp, "ExchStornoBack");
         Assert.assertTrue(pkg.getId() > 0);
@@ -667,7 +679,7 @@ public class StornoIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_OPER set STATE = 'WTAC' where GLOID = ?", operation.getId());
 
         // Сторно операция - сдвигем день вперед на 1
-        setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, Operday.LastWorkdayStatus.CLOSED);
         stamp = System.currentTimeMillis();
         pkg = newPackage(stamp, "SimpleStornoBack");
         Assert.assertTrue(pkg.getId() > 0);
@@ -729,7 +741,7 @@ public class StornoIT extends AbstractTimerJobIT {
         Assert.assertEquals(postList.size(), 1);
 
         // Сторно операция - сдвигем день вперед на 1
-        setOperday(DateUtils.addDays(operday, 1), operday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.CLOSED);
+        setOperday(DateUtils.addDays(operday, 1), operday, ONLINE, Operday.LastWorkdayStatus.CLOSED);
         stamp = System.currentTimeMillis();
         pkg = newPackage(stamp, "SimpleStornoBack");
         Assert.assertTrue(pkg.getId() > 0);

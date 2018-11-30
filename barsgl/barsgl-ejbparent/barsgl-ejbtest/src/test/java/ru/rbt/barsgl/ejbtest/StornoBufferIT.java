@@ -2,6 +2,7 @@ package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.*;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.task.PdSyncTaskOld;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeys;
 import ru.rbt.barsgl.ejb.entity.acc.AccountKeysBuilder;
@@ -44,11 +45,18 @@ import static ru.rbt.ejbcore.mapping.YesNo.Y;
 public class StornoBufferIT extends AbstractTimerJobIT {
 
     private static final Logger logger = Logger.getLogger(StornoIT.class.getName());
+    private static Date testOperday;
 
     @BeforeClass
     public static void beforeClass() throws ParseException {
-        Date operday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
-        setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN, BUFFER);
+        testOperday = DateUtils.parseDate("2015-02-26", "yyyy-MM-dd");
+        setOperday(testOperday, DateUtils.addDays(testOperday, -1), ONLINE, OPEN, BUFFER);
+        baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        restoreOperday();
     }
 
     @Before
@@ -57,9 +65,8 @@ public class StornoBufferIT extends AbstractTimerJobIT {
     }
 
     @After
-    public void after() {
-        restoreOperday();
-    }
+    public void after() { setOperday(testOperday, DateUtils.addDays(testOperday, -1), ONLINE, OPEN, BUFFER); }
+
 
     /**
      * Обработки операции сторно при отсутствии сторнируемой операции (ошибка операции)
