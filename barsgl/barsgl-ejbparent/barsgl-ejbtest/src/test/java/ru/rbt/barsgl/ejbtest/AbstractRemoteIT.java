@@ -29,6 +29,7 @@ import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
+import ru.rbt.barsgl.ejbcore.CacheController;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.ejbcore.page.SQL;
@@ -107,6 +108,13 @@ public abstract class AbstractRemoteIT  {
         checkCreateBankCurrency(operday.getLastWorkingDay(), USD, new BigDecimal("61.222"));
 
 //        baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1", N);
+        clearBVSettings();
+    }
+
+    public static  void  clearBVSettings() {
+        baseEntityRepository.executeNativeUpdate("delete from GL_BVPARM");
+        baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
+        remoteAccess.invoke(CacheController.class, "flushAllCaches");
     }
 
     static {

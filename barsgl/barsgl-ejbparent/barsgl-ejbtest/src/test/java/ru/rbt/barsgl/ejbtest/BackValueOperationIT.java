@@ -90,9 +90,10 @@ public class BackValueOperationIT extends AbstractTimerJobIT {
     }
 
     @AfterClass
-    public static  void  restoreTables() {
+    public static  void  clearBVSettings() {
         baseEntityRepository.executeNativeUpdate("delete from GL_BVPARM");
         baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
+        remoteAccess.invoke(CacheController.class, "flushAllCaches");
     }
 
     /*
