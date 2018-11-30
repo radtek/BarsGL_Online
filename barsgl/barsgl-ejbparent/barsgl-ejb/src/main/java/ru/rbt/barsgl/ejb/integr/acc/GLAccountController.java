@@ -136,16 +136,26 @@ public class GLAccountController {
     }
 
     @Lock(LockType.READ)
+    public GLAccount findGLAccountMnl(AccountKeys keys, Date dateOpen) {
+        Date dtOpen = (null != dateOpen) ? dateOpen : operdayController.getOperday().getCurrentDate();
+        return findGLAccountMnlnoLock(keys, dtOpen);
+    }
+
+    @Lock(LockType.READ)
     public GLAccount findGLAccountMnl(AccountKeys keys) {
         return findGLAccountMnlnoLock(keys);
     }
 
     private GLAccount findGLAccountMnlnoLock(AccountKeys keys) {
+        return findGLAccountMnlnoLock(keys, operdayController.getOperday().getCurrentDate());
+    }
+
+    private GLAccount findGLAccountMnlnoLock(AccountKeys keys, Date dateOpen) {
         return glAccountRepository.findGLAccountMnl(
                 keys.getBranch(), keys.getCurrency(), keys.getCustomerNumber(),
                 keys.getAccountType(), keys.getCustomerType(), keys.getTerm(),
                 keys.getDealSource(), keys.getDealId(), keys.getSubDealId(),
-                operdayController.getOperday().getCurrentDate());
+                dateOpen);
     }
 
     @Lock(LockType.READ)
@@ -391,7 +401,7 @@ public class GLAccountController {
 
     private GLAccount internalCreateGLAccountMnl(AccountKeys keys, GLAccount.RelationType rlnType, ErrorList descriptors, Date dateOpen, GLAccount.OpenType openType) throws Exception {
         SyncKey key = SyncKey.builder().fromAccountKeys(keys).build();
-        return synchronizer.callSynchronously(key, 15 * 60, () -> Optional.ofNullable(findGLAccountMnlnoLock(keys)).orElseGet(() -> {
+        return synchronizer.callSynchronously(key, 15 * 60, () -> Optional.ofNullable(findGLAccountMnlnoLock(keys, dateOpen)).orElseGet(() -> {
                     try {
                         return pdRepository.executeInNewTransaction(persistence -> {
                             List<ValidationError> errors = glAccountProcessor.validate(keys, new ValidationContext());
