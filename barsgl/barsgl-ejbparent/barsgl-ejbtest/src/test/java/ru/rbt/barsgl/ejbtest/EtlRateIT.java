@@ -19,6 +19,7 @@ import ru.rbt.ejbcore.util.StringUtils;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -98,6 +99,8 @@ public class EtlRateIT extends AbstractTimerJobIT {
 
 //        remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
         jobService.executeJob(rateJob);
+
+        printAuditLog(10);
         JobHistory history1 = getLastHistRecordObject(jobName);
         Assert.assertEquals(DwhUnloadStatus.SUCCEDED, history1.getResult());
 
@@ -124,7 +127,7 @@ public class EtlRateIT extends AbstractTimerJobIT {
      * если там нет курсов для 5-ти основных валют: USD, EUR, GBP, CHF, JPY
      */
     @Test
-    public void testAlreadyPartialyLoaded() {
+    public void testAlreadyPartialyLoaded() throws SQLException {
 
         logger.info("deleted 1: " + baseEntityRepository.executeNativeUpdate(
                 "delete from currates where dat = ?", BGN_RATE_ID.getRateDt()));
@@ -144,6 +147,7 @@ public class EtlRateIT extends AbstractTimerJobIT {
 
         remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
 
+        printAuditLog(10);
         rate = findRate(BGN, BGN_RATE_ID.getRateDt());
         Assert.assertNotNull(rate);
         Assert.assertEquals(newRate.getRate(), rate.getRate().setScale(4, ROUND_HALF_UP));
@@ -177,7 +181,7 @@ public class EtlRateIT extends AbstractTimerJobIT {
     /**
      * Проверка загрузки при не нашей валюте
      */
-    @Test public void testErr() {
+    @Test public void testErr() throws SQLException {
 
         logger.info("deleted 1: " + baseEntityRepository.executeNativeUpdate(
                 "delete from currates where dat = ?", BGN_RATE_ID.getRateDt()));
@@ -212,6 +216,8 @@ public class EtlRateIT extends AbstractTimerJobIT {
         badRate = (EtlCurrencyRate) baseEntityRepository.save(badRate);
 
         remoteAccess.invoke(LoadCurratesTask.class, "run", LoadCurratesTask.class.getSimpleName(), new Properties());
+
+        printAuditLog(10);
 
         rate = findRate(BDT, BDT_RATE_ID.getRateDt());
         Assert.assertNotNull(rate);

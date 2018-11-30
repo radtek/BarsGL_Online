@@ -52,6 +52,7 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.controller.etc.ITextResourceController;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.IBaseEntityMultiRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -933,4 +934,11 @@ public abstract class AbstractRemoteIT  {
                         "END;");
     }
 
+    protected void printAuditLog(int cntRecords) throws SQLException {
+        List<DataRecord> records = baseEntityRepository.selectMaxRows("select * from gl_audit order by 2 desc", cntRecords, null);
+        System.out.println("Last " + cntRecords + " audit records for diagnostic:");
+        records.forEach(r -> {
+            System.out.println("[[" + DataRecordUtils.toString(r) + "]]");
+        });
+    }
 }

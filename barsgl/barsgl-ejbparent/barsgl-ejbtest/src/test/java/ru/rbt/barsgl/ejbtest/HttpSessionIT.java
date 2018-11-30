@@ -18,19 +18,19 @@ import java.util.Date;
 public class HttpSessionIT extends AbstractRemoteIT {
 
     @Test public void testRegister() {
-        HttpSessionWrapper httpSession = createSession();
-        AppHttpSession dbsess = remoteAccess.invoke(SessionSupportBean.class, "registerHttpSession", httpSession);
+        HttpSessionWrapper httpSessionWrapper = createSession();
+        AppHttpSession dbsess = remoteAccess.invoke(SessionSupportBean.class, "registerHttpSession", httpSessionWrapper);
         Assert.assertNotNull(dbsess);
 
-        remoteAccess.invoke(SessionSupportBean.class, "unregisterHttpSession", httpSession);
-        Assert.assertNull(baseEntityRepository.selectFirst(AppHttpSession.class, "from AppHttpSession s where sessionId = ?1", httpSession.getSessionId()));
+        remoteAccess.invoke(SessionSupportBean.class, "unregisterHttpSession", httpSessionWrapper);
+        Assert.assertNull(baseEntityRepository.selectFirst(AppHttpSession.class, "from AppHttpSession s where sessionId = ?1", httpSessionWrapper.getSessionId()));
 
-        httpSession = createSession();
-        remoteAccess.invoke(SessionSupportBean.class, "registerHttpSession", httpSession);
-        remoteAccess.invoke(SessionSupportBean.class, "invalidateSession", httpSession.getSessionId());
-        Assert.assertEquals(YesNo.Y
-                , ((AppHttpSession)baseEntityRepository.selectFirst(AppHttpSession.class
-                        , "from AppHttpSession s where sessionId = ?1", httpSession.getSessionId())).getInvalidated());
+        httpSessionWrapper = createSession();
+        remoteAccess.invoke(SessionSupportBean.class, "registerHttpSession", httpSessionWrapper);
+        remoteAccess.invoke(SessionSupportBean.class, "invalidateSession", httpSessionWrapper.getSessionId());
+        AppHttpSession appHttpSession = (AppHttpSession)baseEntityRepository.selectFirst(AppHttpSession.class
+                , "from AppHttpSession s where sessionId = ?1", httpSessionWrapper.getSessionId());
+        Assert.assertTrue(null == appHttpSession || YesNo.Y == appHttpSession.getInvalidated());
     }
 
     @Test public void testInvalidateByName() throws SQLException {
