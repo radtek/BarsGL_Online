@@ -18,8 +18,11 @@ import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
+import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecordUtils;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -33,6 +36,7 @@ import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.PROCESSED;
  * Обработка пакетов входных сообщений из АЕ
  * @fsd 4
  */
+@SuppressWarnings("ALL")
 public class EtlStructureMonitorIT extends AbstractTimerJobIT {
 
     private static final Logger log = Logger.getLogger(EtlStructureMonitorIT.class.getName());
@@ -438,7 +442,17 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
         remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.ALLOWED);
         jobService.executeJob(etlProcess);
         pkg = (EtlPackage) baseEntityRepository.findById(EtlPackage.class, pkg.getId());
+        printAuditLog();
         Assert.assertEquals(PROCESSED, pkg.getPackageState());
         Assert.assertEquals(ProcessingStatus.STARTED, getOperday().getProcessingStatus());
     }
+
+    private void printAuditLog() throws SQLException {
+        List<DataRecord> records = baseEntityRepository.selectMaxRows("select * from gl_audit order by 2 desc", 100, null);
+        System.out.println("Last " + 100 + " audit records for diagnostic:");
+        records.forEach(r -> {
+            System.out.println("[[" + DataRecordUtils.toString(r) + "]]");
+        });
+    }
+
 }

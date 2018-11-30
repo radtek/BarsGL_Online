@@ -25,7 +25,7 @@ public final class DataRecord implements Serializable {
     /**
      * Колонки в данной записи
      */
-    private final List _cols = new ArrayList();
+    private final List<DataColumn> _cols = new ArrayList<>();
 
     /**
      * Конструктор по умолчанию (необходимо для сериализации)
@@ -463,7 +463,7 @@ public final class DataRecord implements Serializable {
         return this;
     }
 
-    public List getColumns() {
+    public List<DataColumn> getColumns() {
         return Collections.unmodifiableList(_cols);
     }
 

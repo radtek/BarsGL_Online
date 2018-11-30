@@ -140,4 +140,12 @@ public class DataRecordUtils {
             }
         }
     }
+
+    public static String toString(DataRecord record) {
+        StringBuilder sb = new StringBuilder();
+        for (DataRecord.DataColumn col : record.getColumns()) {
+            sb.append(col.getName()).append("='").append(col.getData()).append("';");
+        }
+        return sb.toString();
+    }
 }
