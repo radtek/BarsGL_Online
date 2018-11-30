@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
@@ -440,4 +441,10 @@ public class PdRepository extends AbstractBaseEntityRepository<Pd, Long> {
 
     }
 
+    public List<Pd> getPdListByPostings(List<GLPosting> postList) {
+        String pcidList = postList.stream().map(p -> String.valueOf(p.getId())).collect(Collectors.joining(","));
+        List<Pd> res = select(Pd.class, "from Pd p where p.pcId in (" + pcidList + ")");
+        return res;
+
+    }
 }

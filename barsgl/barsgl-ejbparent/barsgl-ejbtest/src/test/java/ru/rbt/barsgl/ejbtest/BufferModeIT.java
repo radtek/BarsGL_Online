@@ -19,6 +19,7 @@ import ru.rbt.barsgl.ejb.entity.dict.BankCurrency;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.*;
+import ru.rbt.barsgl.ejb.entity.lg.LongRunningPatternStepEnum;
 import ru.rbt.barsgl.ejb.entity.lg.LongRunningTaskStep;
 import ru.rbt.barsgl.ejb.repository.WorkprocRepository;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
@@ -522,7 +523,7 @@ public class BufferModeIT extends AbstractRemoteIT {
 
         List<LongRunningTaskStep> steps = baseEntityRepository
                 .select(LongRunningTaskStep.class, "from LongRunningTaskStep s where s.id.idHistory = ?1", history.getId());
-        Assert.assertEquals(7, steps.size());
+        Assert.assertEquals(LongRunningPatternStepEnum.values().length, steps.size());
         Assert.assertTrue(steps.stream().allMatch(s -> s.getEndDate() != null && s.isSuccess()));
 
         history = (JobHistory) baseEntityRepository.selectFirst(JobHistory.class, "from JobHistory h where h.id = ?1", history.getId());

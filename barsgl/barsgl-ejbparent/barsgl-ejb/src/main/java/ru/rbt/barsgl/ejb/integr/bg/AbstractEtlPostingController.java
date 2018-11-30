@@ -383,7 +383,7 @@ abstract public class AbstractEtlPostingController implements EtlMessageControll
      * @param operation
      * @throws Exception
      */
-    protected void finalOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
+    public void finalOperation(GLOperationProcessor operationProcessor, GLOperation operation) throws Exception {
         beanManagedProcessor.executeInNewTxWithDefaultTimeout((connection,persistence) -> {
 
             if (operationProcessor instanceof TechOperationProcessor) {

@@ -34,6 +34,7 @@ import ru.rbt.shared.enums.SecurityActionCode;
 import java.util.ArrayList;
 import java.util.Date;
 
+import static ru.rbt.barsgl.gwt.client.comp.GLComponents.getYesNoList;
 import static ru.rbt.barsgl.gwt.core.datafields.Column.Type.*;
 import static ru.rbt.barsgl.gwt.core.resources.ClientUtils.TEXT_CONSTANTS;
 import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
@@ -140,7 +141,7 @@ public class BVDepthForm extends GridForm{
                 dlg.setAction(FormAction.UPDATE);
                 dlg.setCaption(this.getHint());
                 dlg.setDlgEvents(this);
-                Object[] val = new Object[] { grid.getFieldValue("ID_SRC"), grid.getFieldValue("BV_SHIFT"),
+                Object[] val = new Object[] { grid.getFieldValue("ID_SRC"), grid.getFieldValue("BV_SHIFT"), grid.getFieldValue("BVSTRN_INVISIBLE"),
                                               grid.getFieldValue("DTB"), grid.getFieldValue("DTE")};
                 dlg.show(val);
             }
@@ -163,7 +164,7 @@ public class BVDepthForm extends GridForm{
                 dlg.setAction(FormAction.DELETE);
                 dlg.setCaption(this.getHint());
                 dlg.setDlgEvents(this);
-                Object[] val = new Object[] { grid.getFieldValue("ID_SRC"), grid.getFieldValue("BV_SHIFT"),
+                Object[] val = new Object[] { grid.getFieldValue("ID_SRC"), grid.getFieldValue("BV_SHIFT"), grid.getFieldValue("BVSTRN_INVISIBLE"),
                                               grid.getFieldValue("DTB"), grid.getFieldValue("DTE")};
                 dlg.show(val);
             }
@@ -205,8 +206,9 @@ public class BVDepthForm extends GridForm{
         BVSourceDealWrapper wrapper = new BVSourceDealWrapper();
         wrapper.setSourceDeal((String)objs[0]);
         wrapper.setDepth((Integer)objs[1]);
-        wrapper.setStartDateStr(ClientDateUtils.Date2String((Date)objs[2]));
-        wrapper.setEndDateStr(ClientDateUtils.Date2String((Date)objs[3]));
+        wrapper.setBvStornoInvisible((Boolean)objs[2]);
+        wrapper.setStartDateStr(ClientDateUtils.Date2String((Date)objs[3]));
+        wrapper.setEndDateStr(ClientDateUtils.Date2String((Date)objs[4]));
         return wrapper;
     }
 
@@ -216,6 +218,9 @@ public class BVDepthForm extends GridForm{
         Column col;
         table.addColumn(new Column("ID_SRC", STRING, "Система источник", 150));
         table.addColumn(new Column("BV_SHIFT", INTEGER, "Глубина backvalue", 80));
+        table.addColumn(col = new Column("BVSTRN_INVISIBLE", STRING, "Подавлять сторно", 80));
+        col.setList(getYesNoList());
+
         table.addColumn(col = new Column("DTB", DATE, "Дата начала", 80));
         col.setFormat("dd.MM.yyyy");
         table.addColumn(col = new Column("DTE", DATE, "Дата окончания", 80));

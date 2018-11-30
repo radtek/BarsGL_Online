@@ -13,6 +13,7 @@ public class BVSourceDealWrapper implements Serializable, IsSerializable {
 
     private String sourceDeal;
     private Integer depth;
+    private Boolean isBvStornoInvisible;
 
     private String startDateStr;
     private String endDateStr;
@@ -76,5 +77,11 @@ public class BVSourceDealWrapper implements Serializable, IsSerializable {
         return depth + (depth > 3 ? " дней" : " дня");
     }
 
+    public Boolean isBvStornoInvisible() {
+        return isBvStornoInvisible;
+    }
 
+    public void setBvStornoInvisible(Boolean bvStornoInvisible) {
+        isBvStornoInvisible = bvStornoInvisible;
+    }
 }

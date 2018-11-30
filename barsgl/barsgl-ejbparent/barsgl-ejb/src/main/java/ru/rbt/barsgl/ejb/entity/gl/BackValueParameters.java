@@ -9,6 +9,13 @@ import java.util.Date;
 public class BackValueParameters implements Serializable{
     //================= параметры отсечения BACK VALUE ===================
 
+    public BackValueParameters() {
+    }
+
+    public BackValueParameters(boolean isStornoInvisible) {
+        this.isStornoInvisible = isStornoInvisible;
+    }
+
     public String getReason() {
         return reason;
     }
@@ -23,6 +30,14 @@ public class BackValueParameters implements Serializable{
 
     public void setDepthCutDate(Date depthCutDate) {
         this.depthCutDate = depthCutDate;
+    }
+
+    public boolean isStornoInvisible() {
+        return isStornoInvisible;
+    }
+
+    public void setStornoInvisible(boolean stornoInvisible) {
+        isStornoInvisible = stornoInvisible;
     }
 
     public Date getCloseCutDate() {
@@ -43,6 +58,7 @@ public class BackValueParameters implements Serializable{
 
     private String reason;
     private Date depthCutDate;
+    private boolean isStornoInvisible;
     private Date closeCutDate;
     private Date closeLastDate;
 }

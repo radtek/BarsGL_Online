@@ -6,7 +6,9 @@ import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdaySupportBean;
 import ru.rbt.barsgl.ejb.controller.operday.task.stamt.StamtUnloadController;
 import ru.rbt.barsgl.ejb.entity.gl.*;
+import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.pst.MemorderController;
+import ru.rbt.barsgl.ejb.integr.pst.StornoBVCancOperationProcessor;
 import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.*;
 import ru.rbt.barsgl.ejb.repository.props.ConfigProperty;
@@ -43,6 +45,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.*;
 import static ru.rbt.barsgl.ejb.props.PropertyName.PD_CONCURENCY;
 import static ru.rbt.barsgl.shared.enums.BalanceMode.*;
+import static ru.rbt.barsgl.shared.enums.OperState.STRN_WAIT;
 
 /**
  * Created by Ivan Sevastyanov on 12.02.2016.
@@ -105,6 +108,12 @@ public class OperdaySynchronizationController {
 
     @EJB
     private OperdaySupportBean operdaySupport;
+
+    @EJB
+    private EtlPostingController postingController;
+
+    @Inject
+    private StornoBVCancOperationProcessor operationProcessor;
 
     /**
      * синхронизация проводок и оборотов с буфером
@@ -792,6 +801,26 @@ public class OperdaySynchronizationController {
         else if (NOCHANGE == targetMode) {
             restorePreviousTriggersState();
         }
+    }
+
+    public String supressStornoBackvalue(Date procdate) throws Exception {
+        String msg = "";
+        List<GLOperation> operations = glOperationRepository.select(GLOperation.class, "from GLOperation o where o.state = ?1 and o.procDate = ?2",
+                STRN_WAIT, procdate);
+        if (null == operations || operations.isEmpty()) {
+            msg = "Нет операций сторно backvalue в текущем операционном дне";
+        } else {
+            for (GLOperation operation: operations) {
+                try {
+                    postingController.finalOperation(operationProcessor, operation);
+                } catch (Throwable e) {
+                    auditController.error(BufferModeSync, msg, null, e);
+                }
+            }
+        }
+
+        auditController.info(BufferModeSync, msg);
+        return msg;
     }
 
 }

@@ -19,6 +19,7 @@ import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.List;
 
 import static ru.rbt.barsgl.ejb.entity.gl.GLOperation.OperSide.C;
@@ -290,9 +291,18 @@ public abstract class GLOperationProcessor extends ValidationAwareHandler<GLOper
                 && operation.stornoOneday(operdayController.getOperday().getCurrentDate());     // обе операции в опердень
     }
 
-    public final boolean isStornoBackvalue(GLOperation operation) {
+    public final boolean isStornoBVCanc(GLOperation operation) {
         return (operation.isStorno())                                                           // сторно
-                && !operation.stornoOneday(operdayController.getOperday().getCurrentDate());    // хотя бы одна операция в другой день
+                && operation.stornoBVCanc(operdayController.getOperday().getCurrentDate())
+                ;
+    }
+
+    public final boolean isStornoBackvalue(GLOperation operation) {
+        Date curdate = operdayController.getOperday().getCurrentDate();
+        return (operation.isStorno())                                                           // сторно
+                && !operation.stornoOneday(curdate)    // хотя бы одна операция в другой день
+                && !operation.stornoBVCanc(curdate)
+                ;
     }
 
     public final List<Pd> getPostingPd(GLPosting posting) {
