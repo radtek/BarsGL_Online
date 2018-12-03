@@ -8,12 +8,12 @@ import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.cob.CobStatService;
 import ru.rbt.barsgl.ejb.controller.operday.task.ExecutePreCOBTaskNew;
 import ru.rbt.barsgl.ejb.controller.operday.task.PreCobBatchPostingTask;
+import ru.rbt.barsgl.ejb.entity.acc.GLAccount;
 import ru.rbt.barsgl.ejb.entity.etl.BatchPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLManualOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.integr.bg.BatchPackageController;
 import ru.rbt.barsgl.ejb.integr.bg.ManualOperationController;
-import ru.rbt.barsgl.ejb.integr.bg.ManualPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.BatchPostingProcessor;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.shared.RpcRes_Base;
@@ -21,6 +21,7 @@ import ru.rbt.barsgl.shared.cob.CobWrapper;
 import ru.rbt.barsgl.shared.enums.*;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.util.DateUtils;
 import ru.rbt.ejbcore.util.StringUtils;
@@ -32,6 +33,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.exampleBatchDateStr;
@@ -41,6 +44,7 @@ import static ru.rbt.barsgl.ejbtest.OperdayIT.shutdownJob;
 /**
  * Created by ER18837 on 04.07.16.
  */
+@SuppressWarnings("ALL")
 public class ManualOperationPreCobIT extends AbstractTimerJobIT {
 
     private final Long USER_ID = 1L;
@@ -253,6 +257,53 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
                 Assert.assertEquals(data0.getObject(i), data1.getObject(i));
             }
         }
+    };
+
+    @Test
+    public void testBalturRecalcSuppress2() throws SQLException, ParseException {
+
+        setOndemanBalanceMode();
+
+        GLAccount account = findAccount("40702%");
+
+        baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
+        baseEntityRepository.executeNativeUpdate("delete from pst where bsaacid = ?", account.getBsaAcid());
+        baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where BSAACID = ?", account.getBsaAcid());
+
+        createPd(getOperday().getLastWorkingDay(), account.getAcid(), account.getBsaAcid(), account.getCurrency().getCurrencyCode(), "@@GL1");
+        baseEntityRepository.executeNativeUpdate("insert into GL_BSARC (ACID, BSAACID, DAT, RECTED) values (?, ?, ?, '0')"
+                , account.getAcid(), account.getBsaAcid(), getOperday().getLastWorkingDay());
+
+        Assert.assertNull(account.getBsaAcid() + " is exists", baseEntityRepository.selectFirst("select * from baltur where bsaacid = ?", account.getBsaAcid()));
+        Assert.assertTrue(1 == (int)remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur"));
+        List<DataRecord> balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertTrue(1 == balturs.size());
+        Assert.assertTrue(DataRecordUtils.toString(balturs.get(0)), balturs.stream().anyMatch(((Predicate<DataRecord>)
+                     r -> r.getLong("OBAC") == 0)
+                .and(r -> r.getLong("OBBC") == 0)
+                .and(r -> r.getLong("DTAC") == 0)
+                .and(r -> r.getLong("DTBC") == 0)
+                .and(r -> r.getLong("CTAC") == 100)
+                .and(r -> r.getLong("CTBC") == 100)));
+
+        DataRecord rected = Optional.ofNullable(baseEntityRepository.selectFirst("select * from GL_BSARC where bsaacid = ? ", account.getBsaAcid())).orElseThrow(() -> new RuntimeException("GL_BSARC record is absent"));
+        Assert.assertTrue("1".equals(rected.getString("RECTED")));
+
+        baseEntityRepository.executeNativeUpdate("update BALTUR set DTAC=0, DTBC=0, CTAC=0, CTBC=0 where bsaacid = ?", account.getBsaAcid());
+        baseEntityRepository.executeNativeUpdate("update GL_BSARC set RECTED = '0' where bsaacid = ?", account.getBsaAcid());
+
+        int cnt2 = (int)remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur");
+        Assert.assertTrue(""+ cnt2, 1 == cnt2);
+
+        balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
+        Assert.assertTrue(1 == balturs.size());
+        Assert.assertTrue(DataRecordUtils.toString(balturs.get(0)), balturs.stream().anyMatch(((Predicate<DataRecord>)
+                r -> r.getLong("OBAC") == 0)
+                .and(r -> r.getLong("OBBC") == 0)
+                .and(r -> r.getLong("DTAC") == 0)
+                .and(r -> r.getLong("DTBC") == 0)
+                .and(r -> r.getLong("CTAC") == 100)
+                .and(r -> r.getLong("CTBC") == 100)));
     };
 
     /*

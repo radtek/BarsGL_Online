@@ -15,11 +15,9 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -52,10 +50,10 @@ public class EtlMfoIT extends AbstractTimerJobIT{
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
 
-        final String accountCredit = "40802810500012433881";
+        final String accountCredit = "40802810%1";
         GLAccount accCredit = findAccount(accountCredit);
         Assert.assertNotNull(accCredit);
-        final String accountDebit = "40802810700164226099";
+        final String accountDebit = "40802810%9";
         GLAccount accDebit = findAccount(accountDebit);
         Assert.assertNotNull(accDebit);
 

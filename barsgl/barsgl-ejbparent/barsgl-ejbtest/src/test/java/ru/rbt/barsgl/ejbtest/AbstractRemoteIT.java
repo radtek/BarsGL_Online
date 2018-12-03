@@ -432,7 +432,7 @@ public abstract class AbstractRemoteIT  {
         pst.setAmountDebit(amtDt);
         pst.setCurrencyCredit(curCt);
         pst.setCurrencyDebit(curDt);
-        pst.setAePostingId("id_" + ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 5));
+        pst.setAePostingId(baseEntityRepository.nextId("GL_SEQ_PST") +"");
 
         return (EtlPosting) baseEntityRepository.save(pst);
     }
@@ -851,7 +851,7 @@ public abstract class AbstractRemoteIT  {
     protected static GLAccount findAccount(String bsaacidLike) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ? and dtc is null", bsaacidLike)).map(
                 r -> (GLAccount) baseEntityRepository.findById(GLAccount.class, r.getLong("id")))
-                .orElseThrow(() -> new RuntimeException(format("Account like '%s' is not found")));
+                .orElseThrow(() -> new RuntimeException(format("Account like '%s' is not found", bsaacidLike)));
     }
 
     protected static GLAccount findAccountLikeAndNotEquals(String bsaacidLike, String not) throws SQLException {
