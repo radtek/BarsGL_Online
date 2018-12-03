@@ -227,39 +227,6 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
     }
 
     @Test
-    public void testBalturRecalcSuppress() throws SQLException, ParseException {
-        Date dateFrom = new SimpleDateFormat("yyyy-MM-dd").parse("2015-02-01");
-        DataRecord rec = getAccountInBaltur("40702", dateFrom); //30223
-        Assert.assertNotNull("Не найден счет для тестирования", rec);
-        String acid = rec.getString("ACID");
-        String bsaacid = rec.getString("BSAACID");
-        String sqlSelect = "select ACID, BSAACID, DAT, OBAC, OBBC, DTAC, DTBC, CTAC, CTBC from BALTUR";
-        String sqlWhere = " where acid = ? and bsaacid = ? and dat >= ?";
-        List<DataRecord> list0 = baseEntityRepository.select(sqlSelect + sqlWhere + " order by dat desc", acid, bsaacid, dateFrom);
-        Assert.assertNotEquals(0, list0.size());
-        baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where ACID = ? and BSAACID = ? and DAT = ?"
-                , acid, bsaacid, dateFrom);
-        int cnt0 = baseEntityRepository.executeNativeUpdate("insert into GL_BSARC (ACID, BSAACID, DAT, RECTED) values (?, ?, ?, '0')"
-                , acid, bsaacid, dateFrom);
-        Assert.assertEquals(1, cnt0);
-
-        int cnt = baseEntityRepository.executeNativeUpdate("update BALTUR set DTAC=0, DTBC=0, CTAC=0, CTBC=0" + sqlWhere, acid, bsaacid, dateFrom);
-        Assert.assertEquals(cnt, list0.size());
-
-        int res = remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur");
-        System.out.println("res = " + res);
-        List<DataRecord> list1 = baseEntityRepository.select(sqlSelect + sqlWhere + " order by dat desc", acid, bsaacid, dateFrom);
-        Assert.assertEquals(list0.size(), list1.size());
-        for (int r=0; r < list0.size(); r++) {
-            DataRecord data0 = list0.get(r);
-            DataRecord data1 = list1.get(r);
-            for (int i=0; i< data0.getColumnCount(); i++) {
-                Assert.assertEquals(data0.getObject(i), data1.getObject(i));
-            }
-        }
-    };
-
-    @Test
     public void testBalturRecalcSuppress2() throws SQLException, ParseException {
 
         setOndemanBalanceMode();
@@ -275,7 +242,8 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
                 , account.getAcid(), account.getBsaAcid(), getOperday().getLastWorkingDay());
 
         Assert.assertNull(account.getBsaAcid() + " is exists", baseEntityRepository.selectFirst("select * from baltur where bsaacid = ?", account.getBsaAcid()));
-        Assert.assertTrue(1 == (int)remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur"));
+        int cnt1 = (int)remoteAccess.invoke(BalturRecalculator.class, "recalculateBaltur");
+        Assert.assertTrue(cnt1 + "", 1 == cnt1);
         List<DataRecord> balturs = baseEntityRepository.select("select * from baltur where bsaacid = ?", account.getBsaAcid());
         Assert.assertTrue(1 == balturs.size());
         Assert.assertTrue(DataRecordUtils.toString(balturs.get(0)), balturs.stream().anyMatch(((Predicate<DataRecord>)
