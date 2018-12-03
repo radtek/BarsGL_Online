@@ -18,6 +18,7 @@ import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
@@ -25,6 +26,7 @@ import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
@@ -377,7 +379,7 @@ public class OperdayIT extends AbstractTimerJobIT {
 
     }
 
-    @Test public void testCheckRunOpenday() throws IOException {
+    @Test public void testCheckRunOpenday() throws IOException, SQLException {
 
         Operday operday = getOperday();
         BankCalendarDay nexday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkdayAfter", operday.getCurrentDate());
@@ -418,6 +420,45 @@ public class OperdayIT extends AbstractTimerJobIT {
         properties.put(OpenOperdayContextKey.CURRENT_OD, operday);
         properties.put(OpenOperdayContextKey.TARGET_PD_MODE, Operday.PdMode.BUFFER);
         Assert.assertTrue(remoteAccess.invoke(OpenOperdayTask.class, "checkRun", "Open1", properties));
+
+    }
+
+    @Test public void testQueue() throws SQLException {
+        // проверка на содержание очереди
+        setGibridBalanceMode();
+        purgeQueueTable();
+        updateOperday(ONLINE, OPEN);
+
+        setNumberProperty(PropertyName.COB_BAL_QUEUE_MAXSIZE, 0);
+
+        baseEntityRepository.executeNativeUpdate(
+                "declare" +
+                "   pragma autonomous_transaction;" +
+                "begin\n" +
+                "    DBMS_AQADM.ALTER_QUEUE(queue_name => 'BAL_QUEUE', max_retries => 1);\n" +
+                "    commit;\n" +
+                "end;\n");
+
+        GLAccount account = findAccount("40817810%");
+        createPd(getOperday().getCurrentDate(), account.getAcid(), account.getBsaAcid(), BankCurrency.RUB.getCurrencyCode(), "@@GL-");
+        final String queueTableName = baseEntityRepository.selectFirst("select GLAQ_PKG_CONST.GET_QUEUE_TAB_NAME() queue_name from dual").getString("queue_name");
+        Assert.assertTrue(1 == baseEntityRepository.selectFirst("select count(1) cnt from " + queueTableName).getInteger("cnt"));
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkBalanceQueue"));
+
+        setNumberProperty(PropertyName.COB_BAL_QUEUE_MAXSIZE, 1000);
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkBalanceQueue"));
+
+        // в очередь ошибок попадет одно сообщений
+        baseEntityRepository.executeNativeUpdate(
+                "begin\n" +
+                        "    for i in 0..2 loop\n" +
+                        "        GLAQ_PKG.DEQUEUE_PROCESS_ONE('BAL_QUEUE');\n" +
+                        "        rollback;\n" +
+                        "    end loop;\n" +
+                        "end;");
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkBalanceQueue"));
+
+
     }
 
     /**
@@ -805,18 +846,14 @@ public class OperdayIT extends AbstractTimerJobIT {
         refreshOperdayState();
     }
 
-/*
-    private long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
-        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
-        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234");
-        return id;
-    }
-*/
-
     private List<DataRecord> getBalturList(GLAccount acc) throws SQLException {
         return baseEntityRepository.select("select * from baltur where bsaacid = ? and acid = ? order by dat"
                 , acc.getBsaAcid(), acc.getAcid());
+    }
+
+    private void setNumberProperty(PropertyName name, long value) {
+        baseEntityRepository.executeUpdate("update NumberProperty p set p.value = ?1 where p.id = ?2", value, name.getName());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
 
 }

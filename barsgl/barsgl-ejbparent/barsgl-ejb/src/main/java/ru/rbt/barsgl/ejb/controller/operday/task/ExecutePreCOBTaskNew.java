@@ -18,8 +18,10 @@ import ru.rbt.barsgl.ejb.controller.od.DatLCorrector;
 import ru.rbt.barsgl.ejb.controller.od.OperdaySynchronizationController;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
 import ru.rbt.barsgl.ejb.controller.operday.task.cmn.AbstractJobHistoryAwareTask;
+import ru.rbt.barsgl.ejb.controller.operday.task.gibrid.PdSyncAutoTask;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.AccDealCloseProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.SuppressStornoTboController;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.BatchPostingRepository;
 import ru.rbt.barsgl.ejb.repository.EtlPackageRepository;
 import ru.rbt.barsgl.ejbcore.BeanManagedProcessor;
@@ -28,6 +30,7 @@ import ru.rbt.barsgl.ejbcore.job.TimerJobRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.util.DateUtils;
@@ -98,10 +101,10 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
     private CloseLwdBalanceCutTask closeLastWorkdayBalanceTask;
 
     @Inject
-    AccDealCloseProcessor accDealCloseProcessor;
+    private AccDealCloseProcessor accDealCloseProcessor;
 
     @Inject
-    CloseAccountsForClosedDealsTask closedDealsTask;
+    private CloseAccountsForClosedDealsTask closedDealsTask;
 
     @Inject
     private EtlStructureMonitorTask monitorTask;
@@ -135,6 +138,9 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
 
     @Inject
     private PdSyncTask syncTask;
+
+    @EJB
+    private PropertiesRepository propertiesRepository;
 
     /**
      * проверка нужно ли запускать задачу взависимости от того запускалась ли она в ОД  AbstractJobHistoryAwareTask#getOperday(java.util.Properties)
@@ -558,7 +564,9 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         Date curdate = operdayController.getOperday().getCurrentDate();
         return !(!checkChronology(curdate, operdayController.getSystemDateTime(), properties, errList)
                 || !checkPackagesToloadExists(properties, errList)
-                || !closeLastWorkdayBalanceTask.checkNotRunOther(curdate, this.getClass(), PdSyncTask.class, CloseLwdBalanceCutTask.class).getResult());
+                || !closeLastWorkdayBalanceTask.checkNotRunOther(curdate, this.getClass()
+                    , PdSyncTask.class, PdSyncAutoTask.class, CloseLwdBalanceCutTask.class).getResult()
+                || !checkBalanceQueue());
 
     }
 
@@ -637,4 +645,25 @@ public class ExecutePreCOBTaskNew extends AbstractJobHistoryAwareTask {
         auditController.error(PreCob, message, null, null, e);
         return new CobStepResult(result, message, getErrorMessage(e));
     };
+
+    public boolean checkBalanceQueue() {
+        try {
+            final String queueTableName = repository.selectFirst("select GLAQ_PKG_CONST.GET_QUEUE_TAB_NAME() queue_name from dual").getString("queue_name");
+            final String queueName = repository.selectFirst("select GLAQ_PKG_CONST.GET_BALANCE_QUEUE_NAME() queue_name from dual").getString("queue_name");
+            final String excQueueName = repository.selectFirst("select GLAQ_PKG_CONST.GET_BALANCE_EXC_QUEUE_NAME() queue_name from dual").getString("queue_name");
+            long maxSize = propertiesRepository.getNumber(PropertyName.COB_BAL_QUEUE_MAXSIZE.getName());
+
+            long cntNormal = repository.selectFirst(format("select count(1) cnt from %s where q_name = '%s'", queueTableName, queueName)).getLong("cnt");
+            Assert.isTrue(cntNormal <= maxSize, () -> new ValidationError(CLOSE_OPERDAY_ERROR
+                    , format("Колич. сообщений в очереди %s равно %s больше максимально допустимого %s", queueName, cntNormal, maxSize)));
+
+            long cntExc = repository.selectFirst(format("select count(1) cnt from %s where q_name = '%s'", queueTableName, excQueueName)).getLong("cnt");
+            Assert.isTrue(0 == cntExc, () -> new ValidationError(CLOSE_OPERDAY_ERROR
+                    , format("В очереди ошибок '%s' не должно быть сообщений. Текущее значение %s", excQueueName, cntExc)));
+            return true;
+        } catch (Throwable e) {
+            auditController.error(PreCob, "Не прошла проверка состояния очередей перед COB: " + e.getMessage(), null, e);
+            return false;
+        }
+    }
 }
