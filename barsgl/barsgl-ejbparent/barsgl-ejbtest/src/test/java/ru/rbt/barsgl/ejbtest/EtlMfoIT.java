@@ -50,11 +50,9 @@ public class EtlMfoIT extends AbstractTimerJobIT{
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
 
-        final String accountCredit = "40802810%1";
-        GLAccount accCredit = findAccount(accountCredit);
+        GLAccount accCredit = findAccount("40802810___01%");
         Assert.assertNotNull(accCredit);
-        final String accountDebit = "40802810%9";
-        GLAccount accDebit = findAccount(accountDebit);
+        GLAccount accDebit = findAccount("40802810___02%");
         Assert.assertNotNull(accDebit);
 
         // в разных бранчах
@@ -62,8 +60,8 @@ public class EtlMfoIT extends AbstractTimerJobIT{
 
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
-        pst.setAccountCredit(accountCredit);
-        pst.setAccountDebit(accountDebit);
+        pst.setAccountCredit(accCredit.getBsaAcid());
+        pst.setAccountDebit(accDebit.getBsaAcid());
         pst.setAmountCredit(new BigDecimal("1200"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.RUB);
