@@ -74,6 +74,9 @@ public class EtlMfoIT extends AbstractTimerJobIT{
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        if (null == operation) {
+            printAuditLog(10);
+        }
         Assert.assertNotNull(operation);
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
