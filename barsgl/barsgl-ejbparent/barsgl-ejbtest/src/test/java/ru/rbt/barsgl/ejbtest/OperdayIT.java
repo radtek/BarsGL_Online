@@ -81,6 +81,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         initCorrectOperday();
         baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = 'PROCESSED' where p.state not in ('PROCESSED', 'ERROR') ");
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+        purgeQueueTable();
     }
     /**
      * Выполнение задачи открытия нового операционного дня
@@ -162,10 +163,10 @@ public class OperdayIT extends AbstractTimerJobIT {
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, CLOSED);
 
-        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+        setProcessingFlag(ProcessingStatus.STOPPED);
 
-        // задача мониторинга ETL
-        checkCreateEtlStructureMonitor();
+        baseEntityRepository.executeNativeUpdate("update gl_oper o set o.state = ? where o.state = ? and o.CURDATE = ?"
+            , OperState.INVISIBLE.name(), OperState.ERCHK.name(), getOperday().getCurrentDate());
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -218,8 +219,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, CLOSED, BUFFER);
 
-        // задача мониторинга ETL
-        checkCreateEtlStructureMonitor();
+        setProcessingFlag(ProcessingStatus.STOPPED);
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -266,8 +266,7 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
-        // задача мониторинга ETL
-        startupEtlStructureMonitor();
+        setProcessingFlag(ProcessingStatus.STOPPED);
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -284,17 +283,10 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = ? where p.DT_LOAD <= ? and p.state not in ('PROCESSED', 'ERROR')"
                 , EtlPackage.PackageState.PROCESSED.name(), loadDateCalendar.getTime());
 
-        CalendarJob calendarJob = new CalendarJob();
-        calendarJob.setDelay(0L);
-        calendarJob.setDescription("test calendar job");
-        calendarJob.setRunnableClass(ExecutePreCOBTaskNew.class.getName());
-        calendarJob.setStartupType(MANUAL);
-        calendarJob.setState(STOPPED);
-        calendarJob.setName(System.currentTimeMillis() + "");
-        calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
-        calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
-
-        //baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
+        SingleActionJob calendarJob = SingleActionJobBuilder.create()
+                .withClass(ExecutePreCOBTaskNew.class)
+                .withName(System.currentTimeMillis() + "")
+                .withProps(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
 
         jobService.executeJob(calendarJob);
         printAuditLog(10);
