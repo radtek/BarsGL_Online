@@ -839,7 +839,7 @@ public class GLOperation extends BaseEntity<Long> {
                 && null == backValueParameters.getReason()
                 && backValueParameters.isStornoInvisible()
                 && stornoOperation.getValueDate().before(operday)
-                && stornoOperation.getOperClass() != OperClass.BV_MANUAL
+                && !backValueParameters.isCancelForbidden(stornoOperation.getPostDate())
                 ;
     }
 

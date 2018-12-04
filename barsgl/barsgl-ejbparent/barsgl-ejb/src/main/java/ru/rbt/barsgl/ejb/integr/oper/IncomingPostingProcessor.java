@@ -735,21 +735,21 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             posting.setBackValue(false);
             return AUTOMATIC;
         }
-        if (operday.getCurrentDate().equals(valueDate)) {
-            if (posting.isStorno() && sourceRepository.isStornoInvisible(source)) {
-                posting.setBackValueParameters(new BackValueParameters(true));
-            }
+        boolean stornoInvisible = posting.isStorno() && sourceRepository.isStornoInvisible(source);
+        if (operday.getCurrentDate().equals(valueDate) && !stornoInvisible) {
             posting.setBackValue(false);
             return AUTOMATIC;
         }
 
         Integer depth = sourceRepository.getDepth(source);
-        Date depthCutDate = (null != depth) ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false) : operday.getLastWorkingDay();
+        Date depthCutDate = (null != depth)
+                ? calendarRepository.getWorkDateBefore(operday.getCurrentDate(), depth, false)
+                : operday.getLastWorkingDay();
 
         boolean withTech = withTechWorkDay(source);
         Date vdateCut = calendarRepository.isWorkday(valueDate, withTech)
-                            ? valueDate
-                            : calendarRepository.getWorkDateAfter(valueDate, withTech);
+                ? valueDate
+                : calendarRepository.getWorkDateAfter(valueDate, withTech);
 
         String reason = null;
         Date closedCutDate = null;
@@ -765,23 +765,20 @@ public abstract class IncomingPostingProcessor extends ValidationAwareHandler<Et
             reason = OverDepth.getValue();
         }
 
-        GLOperation.OperClass operClass = null != reason ? BV_MANUAL : AUTOMATIC;
-
-        // TODO хорошо бы сохранить вычисленные значения reason, depthCutDate, prdLastDate, prdCutDate в EtlPosting
-        if (null != reason) {
+        boolean isBackValue = null != reason;
+        // сохранить вычисленные значения в EtlPosting для использования в GLOperation
+        if (isBackValue || stornoInvisible) {
             BackValueParameters bvParameters = new BackValueParameters();
             bvParameters.setReason(reason);
             bvParameters.setDepthCutDate(depthCutDate);
             bvParameters.setCloseCutDate(closedCutDate);
             bvParameters.setCloseLastDate(closedLastDate);
-            bvParameters.setStornoInvisible(false);
-            posting.setBackValue(true);
+            bvParameters.setStornoInvisible(stornoInvisible);
+            posting.setBackValue(isBackValue);
             posting.setBackValueParameters(bvParameters);
-        } else if (posting.isStorno() && sourceRepository.isStornoInvisible(source)) {
-            posting.setBackValueParameters(new BackValueParameters(true));
         }
 
-        return operClass;
+        return isBackValue ? BV_MANUAL : AUTOMATIC;
     }
 
     public Date calculatePostingDate(GLOperation operation) throws SQLException {

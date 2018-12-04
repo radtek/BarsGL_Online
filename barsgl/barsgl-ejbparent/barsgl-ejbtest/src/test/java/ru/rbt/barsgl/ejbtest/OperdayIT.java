@@ -467,6 +467,7 @@ public class OperdayIT extends AbstractTimerJobIT {
      * выравнивание даты последней операции
      * @throws Exception
      */
+    @Ignore
     @Test public void correctBalturDATL() throws Exception {
 
         updateOperday(ONLINE, OPEN);
@@ -809,7 +810,7 @@ public class OperdayIT extends AbstractTimerJobIT {
     }
 
 
-    private void processOnePosting() {
+    private void processOnePosting() throws SQLException {
         long stamp = System.currentTimeMillis();
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -817,8 +818,11 @@ public class OperdayIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String acdt = Optional.ofNullable(findBsaAccount("40817036_0001%7")).orElseThrow(() -> new RuntimeException("account is not found"));
+        String acct = Optional.ofNullable(findBsaAccount("40817036_5001%")).orElseThrow(() -> new RuntimeException("account is not found"));
+
+        pst.setAccountCredit(acct); //("40817036200012959997");
+        pst.setAccountDebit(acdt); //("40817036250010000018");
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);

@@ -135,21 +135,26 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
 
     @Test
     public void testStrotnoInvisYDirect22() throws SQLException {
-        testStrotnoInvisYDirect(2, 2);
+        testStrotnoInvisYDirect(2, 2, true);
     }
 
     @Test
     public void testStrotnoInvisYDirect21() throws SQLException {
-        testStrotnoInvisYDirect(2, 1);
+        testStrotnoInvisYDirect(2, 1, true);
     }
 
     @Test
     public void testStrotnoInvisYDirect20() throws SQLException {
-        testStrotnoInvisYDirect(2, 0);
+        testStrotnoInvisYDirect(2, 0, true);
     }
 
-    public void testStrotnoInvisYDirect(int vdepth, int sdepth) throws SQLException {
-        updateOperday(ONLINE, OPEN, DIRECT);
+    @Test
+    public void testStrotnoInvisYDirect52() throws SQLException {
+        testStrotnoInvisYDirect(5, 2, false);
+    }
+
+    public void testStrotnoInvisYDirect(int vdepth, int sdepth, boolean cans) throws SQLException {
+        Operday odWas = getOperday();
 
         String bsaDt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%3");
         String bsaCt = Utl4Tests.findBsaacid(baseEntityRepository, getOperday(), "20209810_0001%4");
@@ -160,15 +165,22 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
         Date sdate = getWorkDateBefore(od, sdepth);
 
         // ARMPRO прямая
+        setOperday(vdate, DateUtils.addDays(vdate, -1), ONLINE, OPEN, DIRECT);
         EtlPosting pst = createEtlPosting(vdate, ARMPRO.getLabel(), bsaDt, currency, amt, bsaCt, currency, amt);
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
 
         // сторно
+//        setOperday(sdate, DateUtils.addDays(sdate, -1), ONLINE, OPEN, DIRECT);
+        setOperday(odWas.getCurrentDate(), odWas.getLastWorkingDay(), ONLINE, OPEN, DIRECT);
         EtlPosting pstS = createStornoPosting(sdate, pst);
         GLOperation operationS = (GLOperation) postingController.processMessage(pstS);
 
-        checkSocancOperation(operationS.getId(), operation.getId());
-        checkCancOperation(operation.getId());
+        if(cans) {
+            checkSocancOperation(operationS.getId(), operation.getId());
+            checkCancOperation(operation.getId());
+        } else {
+            checkPostOperations(operationS.getId(), operation.getId());
+        }
     }
 
     @Test
@@ -232,7 +244,7 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
 
     private GLBackValueOperation processBVOperation(GLOperation operation) {
         baseEntityRepository.executeUpdate("update GLOperation o set o.postDate = ?1, o.equivalentDebit = ?2, o.equivalentCredit = ?3 where o.id = ?4",
-                getOperday().getLastWorkingDay(), null, null, operation.getId());
+                operation.getValueDate(), null, null, operation.getId());
 
         remoteAccess.invoke(BackValueOperationController.class, "processBackValueOperation", operation);
         GLBackValueOperation bvOperation = (GLBackValueOperation) baseEntityRepository.findById(GLBackValueOperation.class, operation.getId());
@@ -317,6 +329,8 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
 
     }
 
+    // TODO test Direct -> POST -> Buffer -> STRN_WAIT -> PdSyncTask -> Suppress
+
     public EtlPosting createEtlPosting(Date valueDate, String src,
                                               String accountDebit, BankCurrency currencyDebit, BigDecimal amountDebit,
                                               String accountCredit, BankCurrency currencyCredit, BigDecimal amountCredit) {
@@ -360,19 +374,19 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
         return (EtlPosting) baseEntityRepository.save(pstS);
     }
 
-    private void checkSocancOperation(Long gloid, Long parentId) throws SQLException {
-        GLOperation operationS = (GLOperation) baseEntityRepository.findById(GLOperation.class, gloid);
+    private void checkSocancOperation(Long gloStorno, Long gloParent) throws SQLException {
+        GLOperation operationS = (GLOperation) baseEntityRepository.findById(GLOperation.class, gloStorno);
         Assert.assertTrue(operationS.isStorno());
         Assert.assertEquals(SOCANC, operationS.getState());
         Assert.assertEquals(GLOperation.OperType.ST, operationS.getPstScheme());
         Assert.assertEquals(GLOperation.StornoType.C, operationS.getStornoRegistration());
-        Assert.assertEquals(parentId, operationS.getStornoOperation().getId());        // ссылка на сторно операцию
+        Assert.assertEquals(gloParent, operationS.getStornoOperation().getId());        // ссылка на сторно операцию
         List<GLPosting> postList = getPostings(operationS);
         Assert.assertTrue(postList.isEmpty());                    // нет своих проводки
     }
 
-    private void checkCancOperation(Long gloid) throws SQLException {
-        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, gloid);
+    private void checkCancOperation(Long gloCanc) throws SQLException {
+        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, gloCanc);
         Assert.assertEquals(OperState.CANC, operation.getState());
         List<GLPosting> postList = getPostings(operation);
 
@@ -387,6 +401,15 @@ public class BackValueStornoIT extends AbstractTimerJobIT {
                         pd.getAcid(), pd.getBsaAcid(), pd.getPod()));
             }
         }
+    }
+
+    private void checkPostOperations(Long gloStorno, Long gloParent) throws SQLException {
+        GLOperation operation = (GLOperation) baseEntityRepository.findById(GLOperation.class, gloParent);
+        Assert.assertEquals(POST, operation.getState());
+        GLOperation operationS = (GLOperation) baseEntityRepository.findById(GLOperation.class, gloStorno);
+        Assert.assertTrue(operationS.isStorno());
+        Assert.assertEquals(POST, operationS.getState());
+        Assert.assertEquals(operation.getId(), operationS.getStornoOperation().getId());
     }
 
     public static Date getWorkDateBefore(Date dateTo, int days, boolean withTech) {

@@ -127,7 +127,7 @@ public class EtlPosting extends BaseEntity <Long> {
     private String errorMessage;
 
     @Transient
-    private boolean isBackValue;
+    private boolean isBackValue = false;
 
     @Transient
     private BackValueParameters backValueParameters;    // параметры отсечения BACK VALUE
