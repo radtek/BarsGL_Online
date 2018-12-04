@@ -63,6 +63,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
     public static void beforeClass() throws SQLException {
         defineTech();
         addBvParm();
+        clearReg47422();
     }
 
     public static void addBvParm() throws SQLException {
@@ -88,6 +89,11 @@ public class Exclude47422IT extends AbstractRemoteIT {
             filMap.put(Currency.valueOf(rec.getString(1)), rec.getString(2));
         }
     }
+
+    public static void clearReg47422() {
+        baseEntityRepository.executeNativeUpdate("update GL_REG47422 set valid = 'N' where state = 'WT47416'");
+    }
+
 
     private String getAccTech(Filial fil, Currency ccy) {
         return accTechMap.get(fil).get(ccy);
