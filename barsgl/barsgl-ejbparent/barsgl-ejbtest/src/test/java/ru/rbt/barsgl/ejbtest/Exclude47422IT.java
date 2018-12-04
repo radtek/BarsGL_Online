@@ -151,13 +151,14 @@ public class Exclude47422IT extends AbstractRemoteIT {
     }
 
     @Test
-    public void testPbr() throws SQLException {
+    public void testPbr() throws SQLException, InterruptedException {
         Long[] glo1 = makeSimpleOneday(MOS, USD, new BigDecimal("777"), new String[] {"47422840720010000106", "47422840720010000106"}, new DealSource[] {Manual, Manual} );
 //        Long[] glo1 = makeSimpleOneday(MOS, RUB, new BigDecimal("999"), new String[] {"30102", "47427"}, new DealSource[] {Manual, Manual} );
         Long[] glo2 = makeFanOnedayCDD(MOS, EUR, new BigDecimal("444"), new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, PaymentHub});
 
         Properties props = new Properties();
         remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
+        Thread.sleep(2000L);
 
         DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
         Assert.assertEquals(glo1.length, (int)rec1.getInteger(0));
