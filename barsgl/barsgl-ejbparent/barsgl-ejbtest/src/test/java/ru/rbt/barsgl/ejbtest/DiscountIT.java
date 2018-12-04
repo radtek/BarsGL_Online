@@ -70,7 +70,7 @@ public class DiscountIT extends AbstractRemoteIT {
         createAccRecord(account1, substr(account1.getBsaAcid(), 5), OUT_ACCOUNT_BASKET_TAB);
         GLAccount account2 = findAccount("47408810%");
         createAccRecord(account2, substr(account2.getBsaAcid(), 5), OUT_ACCOUNT_BASKET_TAB);
-        GLAccount account3 = findAccountLikeAndNotEquals("408%", account2.getBsaAcid());
+        GLAccount account3 = findAccountLikeAndNotEquals("408%", account1.getBsaAcid());
         createAccRecord(account3, substr(account3.getBsaAcid(), 5), OUT_ACCOUNT_BASKET_TAB);
 
         baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account3.getBsaAcid());
