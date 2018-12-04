@@ -467,7 +467,6 @@ public class OperdayIT extends AbstractTimerJobIT {
      * выравнивание даты последней операции
      * @throws Exception
      */
-    @Ignore
     @Test public void correctBalturDATL() throws Exception {
 
         updateOperday(ONLINE, OPEN);
