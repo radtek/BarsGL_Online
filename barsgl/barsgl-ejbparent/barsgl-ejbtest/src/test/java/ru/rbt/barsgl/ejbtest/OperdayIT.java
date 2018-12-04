@@ -191,6 +191,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
         jobService.executeJob(job);
+        printAuditLog(10);
         List<JobHistory> histories = baseEntityRepository.select(JobHistory.class, "from JobHistory h where h.jobName = ?1", job.getName());
         Assert.assertEquals(1, histories.size());
         JobHistory prehist = histories.get(0);
@@ -245,6 +246,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
         jobService.executeJob(calendarJob);
+        printAuditLog(10);
 
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);
@@ -295,7 +297,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         //baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
 
         jobService.executeJob(calendarJob);
-
+        printAuditLog(10);
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);
         Assert.assertEquals(Operday.LastWorkdayStatus.CLOSED, newOperday.getLastWorkdayStatus());
@@ -543,6 +545,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
 
         jobService.executeJob(job);
+        printAuditLog(10);
 
         balturs = getBalturList(account);
         Assert.assertNull(balturs.get(0).getDate("DATL"));
