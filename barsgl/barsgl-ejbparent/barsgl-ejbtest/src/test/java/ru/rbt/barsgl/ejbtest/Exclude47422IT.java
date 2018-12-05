@@ -108,10 +108,12 @@ public class Exclude47422IT extends AbstractRemoteIT {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
 
+/*
     @After
     public void after() {
         restoreOperday();
     }
+*/
 
     @Test
     @Ignore
