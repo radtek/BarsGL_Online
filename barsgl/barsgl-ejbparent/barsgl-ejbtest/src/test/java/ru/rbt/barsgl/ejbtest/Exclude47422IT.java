@@ -167,10 +167,10 @@ public class Exclude47422IT extends AbstractRemoteIT {
         Thread.sleep(2000L);
 
         DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
-        Assert.assertEquals(glo1.length, (int)rec1.getInteger(0));
+        Assert.assertEquals(getArrayStr("glo1: ", glo1), glo1.length, (int)rec1.getInteger(0));
 
         DataRecord rec2 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo2, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
-        Assert.assertEquals(glo2.length, (int)rec2.getInteger(0));
+        Assert.assertEquals(getArrayStr("glo2: ", glo2), glo2.length, (int)rec2.getInteger(0));
     }
 
     @Test
@@ -268,6 +268,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
 
     private void checkProcDat(Long[] gloids, List<Reg47422Journal> regProc ) {
         Reg47422Journal regMain = regProc.stream().filter(r -> r.getPcIdNew().equals(r.getPcId())).findFirst().orElse(null);
+        Assert.assertNotNull("", regMain);
         List<Pd> pdList = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId = ?1 and p.invisible = '0' and not p.stornoRef is null", regMain.getPcId());
         Assert.assertEquals(gloids.length, pdList.size());
         Assert.assertNull(regProc.stream().filter(r -> !r.getParentId().equals(regMain.getId())).findFirst().orElse(null));
@@ -311,14 +312,23 @@ public class Exclude47422IT extends AbstractRemoteIT {
     private List<Reg47422Journal> getJournalListByPcid(List<Long> pcids, Reg47422Journal.Reg47422Valid valid, Reg47422State state) {
         List<Reg47422Journal> regList = baseEntityRepository.select(Reg47422Journal.class,
                 "from Reg47422Journal r where r.pcId in (" + StringUtils.listToString(pcids, ",", "") + ") and r.valid = ?1 and r.state = ?2", valid, state);
+        Assert.assertEquals(getListStr("pcids: ", pcids), pcids.size(), regList.size() * 2);
         return regList;
     }
 
     private List<Reg47422Journal> getJournalListByGloid(Long[] gloids, Reg47422Journal.Reg47422Valid valid, Reg47422State state) {
         List<Reg47422Journal> regList = baseEntityRepository.select(Reg47422Journal.class,
                 "from Reg47422Journal r where r.glOperationId in (" + StringUtils.arrayToString(gloids, ",", "") + ") and r.valid = ?1 and r.state = ?2", valid, state);
-        Assert.assertEquals(gloids.length, regList.size());
+        Assert.assertEquals(getArrayStr("gloids: ", gloids), gloids.length, regList.size());
         return regList;
+    }
+
+    private String getArrayStr(String pref, Object[] arr) {
+        return pref + StringUtils.arrayToString(arr, ",", "");
+    }
+
+    private String getListStr(String pref, List<?> lst) {
+        return pref + StringUtils.listToString(lst, ",", "");
     }
 
     private List<Long> getPcidListByGloid(Long[] gloids) throws SQLException {
