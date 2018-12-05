@@ -11,7 +11,7 @@
     <parent>
         <artifactId>barsgl-ejbparent</artifactId>
         <groupId>ru.rbt</groupId>
-        <version>4.0.24-SNAPSHOT</version>
+        <version>4.0.24</version>
     </parent>
 
     <dependencies>
