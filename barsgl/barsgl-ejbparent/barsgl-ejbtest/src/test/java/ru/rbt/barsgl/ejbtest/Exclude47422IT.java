@@ -37,7 +37,7 @@ import static ru.rbt.barsgl.shared.enums.Reg47422State.SKIP_SRC;
 /**
  * Created by er18837 on 06.09.2018.
  */
-public class Exclude47422IT extends AbstractRemoteIT {
+public class Exclude47422IT extends AbstractTimerJobIT {
 
     enum Filial {
         MOS("01"), SPB("02"), EKB("40"), CHL("16");
@@ -108,12 +108,10 @@ public class Exclude47422IT extends AbstractRemoteIT {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
     }
 
-/*
     @After
     public void after() {
         restoreOperday();
     }
-*/
 
     @Test
     @Ignore
@@ -166,7 +164,6 @@ public class Exclude47422IT extends AbstractRemoteIT {
 
         Properties props = new Properties();
         remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
-        Thread.sleep(2000L);
 
         DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
         Assert.assertEquals(getArrayStr("glo1: ", glo1), glo1.length, (int)rec1.getInteger(0));
