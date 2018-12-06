@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -19,10 +20,15 @@ import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.EUR;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
@@ -60,7 +66,8 @@ public class Exclude47422IT extends AbstractTimerJobIT {
     private static HashMap<Filial, HashMap<Currency, String>> accTechMap;
 
     @BeforeClass
-    public static void beforeClass() throws SQLException {
+    public static void beforeClass() throws SQLException, ParseException {
+        setOperday(DateUtils.parseDate("02.07.2017", "dd.MM.yyyy"), DateUtils.parseDate("01.07.2017", "dd.MM.yyyy"), ONLINE, OPEN, DIRECT);
         defineTech();
         addBvParm();
         clearReg47422();
@@ -103,6 +110,7 @@ public class Exclude47422IT extends AbstractTimerJobIT {
         return acc2 + ccy.cod + "___" + filial.cod + "%";  // 30102810__040%
     }
 
+/*
     @Before
     public void before() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
@@ -112,6 +120,7 @@ public class Exclude47422IT extends AbstractTimerJobIT {
     public void after() {
         restoreOperday();
     }
+*/
 
     @Test
     @Ignore
@@ -451,6 +460,7 @@ public class Exclude47422IT extends AbstractTimerJobIT {
         pst.setCurrencyDebit(ccy);
         pst.setAmountCredit(sum);
         pst.setAmountDebit(sum);
+        pst.setNarrative(pkg.getDescription());
 
         pst.setRusNarrativeLong(rnar);
         return (EtlPosting) baseEntityRepository.save(pst);
