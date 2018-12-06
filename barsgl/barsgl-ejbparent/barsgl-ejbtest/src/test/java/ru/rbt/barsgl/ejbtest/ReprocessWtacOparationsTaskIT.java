@@ -94,7 +94,8 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
 
         EtlPosting pst1 = newPosting(stamp, pkg);
         pst1.setAccountCredit("00000036000000000000");
-        pst1.setAccountDebit("40817036250010000018");
+        String acdt = findBsaAccount("40817036___01%8", od.getCurrentDate());
+        pst1.setAccountDebit(acdt); //"40817036250010000018");
         pst1.setAmountCredit(new BigDecimal("12.0056"));
         pst1.setAmountDebit(pst1.getAmountCredit());
         pst1.setCurrencyCredit(BankCurrency.AUD);
@@ -112,7 +113,8 @@ public class ReprocessWtacOparationsTaskIT extends AbstractTimerJobIT {
         GLErrorRecord err = getOperationErrorRecord(oper1);
         Assert.assertEquals("4", err.getErrorCode());
 
-        oper1.setAccountCredit("40817036200012959997");
+        String acct = findBsaAccount("40817036___01%7", od.getCurrentDate());
+        oper1.setAccountCredit(acct); //"40817036200012959997");
         oper1.setValueDate(od.getLastWorkingDay());
         oper1.setCurrentDate(od.getLastWorkingDay());
         baseEntityRepository.update(oper1);
