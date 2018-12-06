@@ -17,6 +17,7 @@ import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class SuppressTboStornoDuplicatesIT extends AbstractRemoteIT {
      * выполняется в PRE_COB в самом конце
      */
     @Test
-    public void testSuppress() {
+    public void testSuppress() throws SQLException {
 
         Date firstOperday = getOperday().getCurrentDate();
 //        baseEntityRepository.executeNativeUpdate("update gl_oper set vdate = vdate - 10, procdate = procdate - 10");
@@ -79,6 +80,7 @@ public class SuppressTboStornoDuplicatesIT extends AbstractRemoteIT {
         // создаем проводку аналогичную прямой - не сторно
         EtlPosting grandPosting = pst;
         grandPosting.setId(baseEntityRepository.nextId("GL_SEQ_PST"));
+        grandPosting.setAePostingId(grandPosting.getAePostingId() + "_w");
         grandPosting = (EtlPosting) baseEntityRepository.save(grandPosting);
 
         GLOperation grandOper = (GLOperation) postingController.processMessage(grandPosting);
@@ -97,13 +99,15 @@ public class SuppressTboStornoDuplicatesIT extends AbstractRemoteIT {
 
     }
 
-    private EtlPosting createPosting(long stamp, EtlPackage pkg) {
+    private EtlPosting createPosting(long stamp, EtlPackage pkg) throws SQLException {
         EtlPosting pst = newPosting(stamp, pkg);
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String acdt = findBsaAccount("40817036_5001%8", operday);
+        String acct = findBsaAccount("40817036_0001%7", operday);
+        pst.setAccountCredit(acct);
+        pst.setAccountDebit(acdt);
         pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
