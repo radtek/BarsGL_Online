@@ -1,5 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import com.ibm.jms.JMSBytesMessage;
 import com.ibm.jms.JMSMessage;
@@ -8,7 +10,11 @@ import com.ibm.mq.jms.*;
 import com.ibm.msg.client.wmq.WMQConstants;
 import java.io.ByteArrayInputStream;
 import org.apache.commons.io.FileUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
+import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
 import ru.rbt.barsgl.ejb.controller.operday.task.srvacc.MovementCreateTask;
 import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
@@ -30,8 +36,11 @@ import javax.xml.validation.Validator;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static ru.rbt.barsgl.ejbtest.ManualOperationAuthIT.setMcDebug;
+
 import ru.rbt.barsgl.ejb.integr.oper.MovementCreateProcessor;
 import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
+import ru.rbt.ejbcore.util.DateUtils;
 
 /**
  * Created by ER22228
@@ -39,6 +48,18 @@ import ru.rbt.barsgl.ejb.integr.struct.MovementCreateData;
 public class MovementCreateIT extends AbstractTimerJobIT {
 
     public static final Logger logger = Logger.getLogger(MovementCreateIT.class.getName());
+
+    private static boolean mcDebug = false;
+
+    @BeforeClass
+    public static void beforeClass() {
+        mcDebug = setMcDebug(true);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        setMcDebug(mcDebug);
+    }
 
     /*
 update GL_PRPRP set STRING_VALUE = 
