@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import static ru.rbt.barsgl.ejb.bt.BalturRecalculator.BalturRecalcState.NEW;
+import static ru.rbt.barsgl.ejb.bt.BalturRecalculator.BalturRecalcState.PROCESSED;
 import static ru.rbt.barsgl.ejb.common.CommonConstants.ETL_MONITOR_TASK;
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.exampleBatchDateStr;
 import static ru.rbt.barsgl.ejbtest.BatchMessageIT.loadPackage;
@@ -233,6 +235,7 @@ public class ManualOperationPreCobIT extends AbstractTimerJobIT {
 
         GLAccount account = findAccount("40702%");
 
+        baseEntityRepository.executeNativeUpdate("update GL_BSARC set RECTED = ? where RECTED = ?", PROCESSED.getValue(), NEW.getValue());
         baseEntityRepository.executeNativeUpdate("delete from baltur where bsaacid = ?", account.getBsaAcid());
         baseEntityRepository.executeNativeUpdate("delete from pst where bsaacid = ?", account.getBsaAcid());
         baseEntityRepository.executeNativeUpdate("delete from GL_BSARC where BSAACID = ?", account.getBsaAcid());

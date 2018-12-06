@@ -113,10 +113,11 @@ public class BulkOpeningAccountsIT extends AbstractRemoteIT {
                 + "(GL_OPENACC_SEQ.NEXTVAL, '001','00000018','RUR','3213','01','3213','01','90702',"+accountType+",'Бланки собственных векселей Банка','2015-02-26')");
         try {
             String acId = createAcId("00000018", "RUR", "3213", "01", "001");
+            baseEntityRepository.executeNativeUpdate("update gl_acc set dtc = ? where acid = ?", getOperday().getLastWorkingDay(), acId);
             remoteAccess.invoke(BulkOpeningAccountsTask.class, "run", new Object[]{"BulkOpeningAccountsTask", null});
             GLAccount account = (GLAccount) baseEntityRepository.selectFirst(GLAccount.class,
                     "from GLAccount a where a.acid=?1 and a.dateClose is null and accountType=?2", acId, accountType);
-            org.junit.Assert.assertNull("не найден " + acId, account);
+            Assert.assertNull("найден " + acId, account);
         } finally {
             baseEntityRepository.executeNativeUpdate("delete from GL_OPENACC "
                     + "where BRANCH = '001' and CNUM = '00000018' and CCY = 'RUR' and ACOD = '3213' and SQ = '01' and ACCTYPE = "+accountType);
