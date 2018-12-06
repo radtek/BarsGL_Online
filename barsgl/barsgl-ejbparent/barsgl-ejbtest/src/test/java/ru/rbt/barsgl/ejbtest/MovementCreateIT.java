@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -73,7 +74,8 @@ mq.user=er22228
 mq.password=Vugluskr4' where ID_PRP = 'mc.queues.param';
 commit;
     */
-    
+
+    @Ignore("Надо переделать!!")
     @Test
     public void testFull() throws Exception {
         // SYSTEM.DEF.SVRCONN/TCP/vs338(1414)
