@@ -236,7 +236,10 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Cancel);
 
-        updateDateClose(mainAccount, null);
+        for (GLAccount account : accounts) {
+            updateDateClose(account, null);
+        }
+//        updateDateClose(mainAccount, null);
         boolean changeBal = balanceNonZero(mainAccount, curDate);
         try {
             Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
@@ -251,7 +254,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
             checkWaitClose(mainAccount);
             for (int i = 1; i < accounts.size(); i++) {
                 GLAccount account = (GLAccount) baseEntityRepository.refresh(accounts.get(i), true);
-                Assert.assertEquals(curDate, account.getDateClose());
+                Assert.assertEquals("bsaacid = " + account.getBsaAcid(), curDate, account.getDateClose());
             }
 
             Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));
