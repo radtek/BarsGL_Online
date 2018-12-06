@@ -67,7 +67,8 @@ public class Exclude47422IT extends AbstractTimerJobIT {
 
     @BeforeClass
     public static void beforeClass() throws SQLException, ParseException {
-        setOperday(DateUtils.parseDate("02.07.2017", "dd.MM.yyyy"), DateUtils.parseDate("01.07.2017", "dd.MM.yyyy"), ONLINE, OPEN, DIRECT);
+        Date operday = DateUtils.parseDate("02.07.2017", "dd.MM.yyyy");
+        setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN, DIRECT);
         defineTech();
         addBvParm();
         clearReg47422();

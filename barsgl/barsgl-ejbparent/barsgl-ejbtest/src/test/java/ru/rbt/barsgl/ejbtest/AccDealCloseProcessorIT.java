@@ -1,10 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.w3c.dom.Document;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -74,12 +71,12 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     private static final boolean writeOut = true;
     private static final boolean remoteQueueOut = true;
 
-    private DocumentBuilder docBuilder;
-    private XPath xPath;
+    private static DocumentBuilder docBuilder;
+    private static XPath xPath;
 
     private enum OpenClose {toOpen, toClose};
-    @Before
-    public void before() throws ParserConfigurationException {
+    @BeforeClass
+    public static void before() throws ParserConfigurationException {
         docBuilder = XmlUtilityLocator.getInstance().newDocumentBuilder();
         xPath = XmlUtilityLocator.getInstance().newXPath();
     }
