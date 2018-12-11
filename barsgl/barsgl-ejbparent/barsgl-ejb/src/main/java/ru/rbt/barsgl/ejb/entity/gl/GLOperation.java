@@ -832,6 +832,17 @@ public class GLOperation extends BaseEntity<Long> {
                 && stornoOperation.getValueDate().equals(operday);
     }
 
+    // операция backvaue с подавлением проводки
+    public boolean stornoBVCanc(Date operday) {
+        return null != stornoOperation
+                && null != backValueParameters
+                && null == backValueParameters.getReason()
+                && backValueParameters.isStornoInvisible()
+                && stornoOperation.getValueDate().before(operday)
+                && !backValueParameters.isCancelForbidden(stornoOperation.getPostDate())
+                ;
+    }
+
     public boolean isFilialDebit() {
         return (null != filialDebit) && !filialDebit.isEmpty() ;
     }

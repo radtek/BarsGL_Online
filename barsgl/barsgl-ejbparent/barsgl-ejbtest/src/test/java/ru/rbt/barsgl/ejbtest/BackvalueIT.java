@@ -394,7 +394,7 @@ public class BackvalueIT extends AbstractTimerJobIT {
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setCurrencyDebit(pst.getCurrencyCredit());
-        pst.setAePostingId("PSTID_" + StringUtils.rsubstr(System.currentTimeMillis() + "", 5));
+        pst.setAePostingId(baseEntityRepository.nextId("GL_SEQ_PST") +"");
 
         pst = (EtlPosting) baseEntityRepository.save(pst);
         GLOperation operation = (GLOperation) postingController.processMessage(pst);

@@ -29,6 +29,7 @@ import ru.rbt.barsgl.ejb.repository.AcDNJournalRepository;
 import ru.rbt.barsgl.ejb.repository.PdRepository;
 import ru.rbt.barsgl.ejb.repository.RateRepository;
 import ru.rbt.barsgl.ejb.repository.WorkdayRepository;
+import ru.rbt.barsgl.ejbcore.CacheController;
 import ru.rbt.barsgl.ejbcore.ClientSupportRepository;
 import ru.rbt.barsgl.ejbcore.job.BackgroundJobService;
 import ru.rbt.barsgl.ejbcore.page.SQL;
@@ -52,6 +53,7 @@ import ru.rbt.ejbcore.DefaultApplicationException;
 import ru.rbt.ejbcore.controller.etc.ITextResourceController;
 import ru.rbt.ejbcore.controller.etc.TextResourceController;
 import ru.rbt.ejbcore.datarec.DataRecord;
+import ru.rbt.ejbcore.datarec.DataRecordUtils;
 import ru.rbt.ejbcore.mapping.YesNo;
 import ru.rbt.ejbcore.repository.IBaseEntityMultiRepository;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
@@ -123,6 +125,13 @@ public abstract class AbstractRemoteIT  {
         checkCreateBankCurrency(operday.getLastWorkingDay(), USD, new BigDecimal("61.222"));
 
 //        baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1", N);
+        clearBVSettings();
+    }
+
+    public static  void  clearBVSettings() {
+        baseEntityRepository.executeNativeUpdate("delete from GL_BVPARM");
+        baseEntityRepository.executeNativeUpdate("delete from GL_CRPRD");
+        remoteAccess.invoke(CacheController.class, "flushAllCaches");
     }
 
     static {
@@ -439,7 +448,7 @@ public abstract class AbstractRemoteIT  {
         pst.setAmountDebit(amtDt);
         pst.setCurrencyCredit(curCt);
         pst.setCurrencyDebit(curDt);
-        pst.setAePostingId("id_" + ru.rbt.ejbcore.util.StringUtils.rsubstr("" + System.currentTimeMillis(), 5));
+        pst.setAePostingId(baseEntityRepository.nextId("GL_SEQ_PST") +"");
 
         return (EtlPosting) baseEntityRepository.save(pst);
     }
@@ -863,7 +872,7 @@ public abstract class AbstractRemoteIT  {
     protected static GLAccount findAccount(String bsaacidLike) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst("select id from gl_acc where bsaacid like ? and dtc is null", bsaacidLike)).map(
                 r -> (GLAccount) baseEntityRepository.findById(GLAccount.class, r.getLong("id")))
-                .orElseThrow(() -> new RuntimeException(format("Account like '%s' is not found")));
+                .orElseThrow(() -> new RuntimeException(format("Account like '%s' is not found", bsaacidLike)));
     }
 
     protected static GLAccount findAccountLikeAndNotEquals(String bsaacidLike, String not) throws SQLException {
@@ -946,4 +955,11 @@ public abstract class AbstractRemoteIT  {
                         "END;");
     }
 
+    protected void printAuditLog(int cntRecords) throws SQLException {
+        List<DataRecord> records = baseEntityRepository.selectMaxRows("select * from gl_audit order by 2 desc", cntRecords, null);
+        System.out.println("Last " + cntRecords + " audit records for diagnostic:");
+        records.forEach(r -> {
+            System.out.println("[[" + DataRecordUtils.toString(r) + "]]");
+        });
+    }
 }

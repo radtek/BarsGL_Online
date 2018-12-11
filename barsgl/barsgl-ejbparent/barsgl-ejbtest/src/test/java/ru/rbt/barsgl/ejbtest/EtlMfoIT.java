@@ -15,11 +15,9 @@ import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.shared.enums.OperState;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
 import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
@@ -36,6 +34,10 @@ public class EtlMfoIT extends AbstractTimerJobIT{
     static final String mf1 = "30301810800010000016";
     static final String mf2 = "30302810800160000001";//
 
+    /*
+    select * from ibcb where ibacou = '30301810900020000002'; -- or IBACIN = '30301810900020000002';
+    select * from ibcb where IBACIN = '30302810500010000001'; -- ibacou = '30302810500010000001' or
+    */
     @BeforeClass
     public static void beforeClass() throws ParseException {
         Date operday = DateUtils.parseDate("2017-11-01", "yyyy-MM-dd");
@@ -52,11 +54,9 @@ public class EtlMfoIT extends AbstractTimerJobIT{
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
 
-        final String accountCredit = "40802810500012433881";
-        GLAccount accCredit = findAccount(accountCredit);
+        GLAccount accCredit = findAccount("40802810___01%");
         Assert.assertNotNull(accCredit);
-        final String accountDebit = "40802810700164226099";
-        GLAccount accDebit = findAccount(accountDebit);
+        GLAccount accDebit = findAccount("40802810___16%");
         Assert.assertNotNull(accDebit);
 
         // в разных бранчах
@@ -64,8 +64,8 @@ public class EtlMfoIT extends AbstractTimerJobIT{
 
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
-        pst.setAccountCredit(accountCredit);
-        pst.setAccountDebit(accountDebit);
+        pst.setAccountCredit(accCredit.getBsaAcid());
+        pst.setAccountDebit(accDebit.getBsaAcid());
         pst.setAmountCredit(new BigDecimal("1200"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.RUB);
@@ -76,6 +76,9 @@ public class EtlMfoIT extends AbstractTimerJobIT{
         pst = (EtlPosting) baseEntityRepository.save(pst);
 
         GLOperation operation = (GLOperation) postingController.processMessage(pst);
+        if (null == operation) {
+            printAuditLog(10);
+        }
         Assert.assertNotNull(operation);
         operation = (GLOperation) baseEntityRepository.findById(operation.getClass(), operation.getId());
         Assert.assertEquals(OperState.POST, operation.getState());
@@ -87,7 +90,7 @@ public class EtlMfoIT extends AbstractTimerJobIT{
 
         List<Pd> pdList = getPostingPd(postList.get(0));
         pdList.addAll(getPostingPd(postList.get(1)));
-        pdList.stream().forEach(item-> System.out.println("psd.id = " + item.getId() + " bsaacid = " +item.getBsaAcid() ));
+        pdList.stream().forEach(item-> System.out.println("pst.id = " + item.getId() + " bsaacid = " +item.getBsaAcid() ));
         Assert.assertEquals( pdList.stream().filter(item -> item.getBsaAcid().equals(mfoOut)||item.getBsaAcid().equals(mfoIn)).count(), 2);
 
         int cnt = baseEntityRepository.selectFirst("select count(1) from ibcb where IBACOU = ?", mfoOut).getInteger(0);

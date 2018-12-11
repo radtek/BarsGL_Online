@@ -22,6 +22,7 @@ import ru.rbt.shared.ctx.UserRequestHolder;
 import ru.rbt.shared.security.RequestContext;
 
 import javax.inject.Inject;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -115,7 +116,7 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
                             "Установите сначала дату окончания действия существующего набора или \n" +
                             "измените дату начала действия вводимых параметров", wrapper.getDtb(), wrapper.getAccType()));
                 }
-            } catch (ParseException e) {
+            } catch (Exception e) {
                 return new RpcRes_Base<>(wrapper, true, format("Ошибка при создании параметров счета. Ошибка преобразования формата даты начала '%s'", wrapper.getDtb()));
             }
 
@@ -157,6 +158,16 @@ public class ActParmController extends BaseDictionaryController<ActParmWrapper, 
             return new RpcRes_Base<>(wrapper, true, format("Ошибка изменения параметров счета. Ошибка преобразования формата даты конца '%s'", wrapper.getDte()));
         }
 
+        try {
+            if (!actParmRepository.isParmDateClosedForUpdate(wrapper)) {
+//                return new RpcRes_Base<>(wrapper, true, format("Найден такой же действующий на '%s' набор параметров по AccType '%s' ! \n"  +
+//                "Измените дату окончания действия существующего или редактируемого набора параметров\n", wrapper.getDtb(), wrapper.getAccType()));
+                return new RpcRes_Base<>(wrapper, true, format("Существует набор параметров по AccType '%s', период действия которого пересекается с редактируемым ! \n"  +
+                        "Измените дату окончания действия существующего или редактируемого набора параметров\n", wrapper.getAccType()));
+            }
+        } catch (Exception e) {
+            return new RpcRes_Base<>(wrapper, true, format("Ошибка изменения параметров счета."));
+        }
         ActParmId primaryKey = new ActParmId(wrapper.getAccType(), wrapper.getCusType(), wrapper.getTerm(),
                 wrapper.getAcc2(), data_begin);
 

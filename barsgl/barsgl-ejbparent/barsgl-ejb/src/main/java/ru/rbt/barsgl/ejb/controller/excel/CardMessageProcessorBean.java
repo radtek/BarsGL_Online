@@ -169,8 +169,12 @@ public class CardMessageProcessorBean implements BatchMessageProcessor {
     }
 
     private String col2String(Object col){
-        if (col instanceof Double || col instanceof Integer) return String.valueOf(col);
-        return col.toString();
+        if (col instanceof Integer)
+            return String.valueOf(col);
+        else if (col instanceof Double && ((Double)col - (int)(double)(Double) col == 0))
+            return String.format("%.0f", (Double) col);
+        else
+            return col.toString();
     }
 
     private boolean hasNull(List<Object> r, List<Object> h, StringBuilder err){
@@ -221,9 +225,9 @@ public class CardMessageProcessorBean implements BatchMessageProcessor {
         return card.getCnum() + card.getMdacc();
     }
 
-    public List<DataRecord> getBsaacidByAcid(CardXls card) throws SQLException {
+    public List<DataRecord> getBsaacidByAcid(CardXls card, Date curdate) throws SQLException {
         String vAcid = getAcid(card);
-        List<DataRecord> bsaacids = cardXlsRepository.select("select bsaacid from gl_acc where acid=? and (drlnc=to_date('2029-01-01', 'yyyy-mm-dd') or drlnc is null) and rlntype<>'1'", new Object[]{vAcid});
+        List<DataRecord> bsaacids = cardXlsRepository.select("select bsaacid from gl_acc where acid=? and (dtc is null or dtc <=?) and rlntype<>'1'", new Object[]{vAcid, curdate});
         return bsaacids;
     }
 
@@ -283,7 +287,8 @@ public class CardMessageProcessorBean implements BatchMessageProcessor {
     }
 
     public String getBsaacid(CardXls card, String currency, String dealSource) throws Exception {
-        List<DataRecord> bsaacids = getBsaacidByAcid(card);
+        Date curdate = operdayController.getOperday().getCurrentDate();
+        List<DataRecord> bsaacids = getBsaacidByAcid(card, curdate);
         if (bsaacids.isEmpty()) {
             String vDealId = getDealId(card);
             String vCum = card.getCnum();
@@ -298,7 +303,7 @@ public class CardMessageProcessorBean implements BatchMessageProcessor {
             wrapper.setAccountCode(Short.parseShort(card.getMdacc().substring(3,7)));
             wrapper.setAccountSequence(Short.parseShort(card.getMdacc().substring(7,9)));
             wrapper.setDealSource(dealSource);
-            wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(operdayController.getOperday().getCurrentDate()));
+            wrapper.setDateOpenStr(new SimpleDateFormat(wrapper.dateFormat).format(curdate));
 //            RpcRes_Base<ManualAccountWrapper> res = remoteAccess.invoke(GLAccountService.class, "createManualAccount", wrapper);
             return glAccountService.createBsaacidAccount(wrapper);
         } else if (bsaacids.size() > 1) {

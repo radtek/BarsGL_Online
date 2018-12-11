@@ -23,10 +23,7 @@ import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 import static java.lang.String.format;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.BufferModeSync;
@@ -140,6 +137,9 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
             }
             return true;
         }));
+        // TODO suppress storno backvalue
+        works.add(new LongRunningStepWork(LongRunningPatternStepEnum.SYNC_STRN_BV, () -> processStornoBackvalue(operday.getCurrentDate(), properties)));
+
         works.add(new LongRunningStepWork(LongRunningPatternStepEnum.SYNC_ALLOW_PROCESSING, () -> {
             if (isWasProcessingAllowed) {
                 try {
@@ -252,4 +252,17 @@ public class PdSyncTask extends AbstractJobHistoryAwareTask {
         final JobHistory history = getPreinstlledJobHistory(properties);
         return jobHistoryRepository.getAlreadyRunningLike(history.getId(), PdSyncTask.class.getSimpleName());
     }
+
+    public boolean processStornoBackvalue(Date procdate, Properties properties) {
+        try {
+            return (boolean) coreRepository.executeInNewTransaction(persistence -> {
+                synchronizationController.supressStornoBackvalue(procdate);
+                return true;
+            });
+        } catch (Throwable e) {
+            auditController.error(BufferModeSyncTask, "Ошибка синхронизации проводок", null, e);
+            return false;
+        }
+    }
+
 }

@@ -17,6 +17,7 @@ public enum PropertyName {
     , MC_QUEUES_PARAM("mc.queues.param")
     , MC_TIMEOUT("mc.timeout.sec")
     , COB_STAT_INC("cob.stat.increase")
+    , COB_BAL_QUEUE_MAXSIZE("cob.bal_queue.maxsize")
     , STOP_PROC_TIMEOUT("process.stop.timeout.minute")
     , MQ_TIMEOUT("mq.process.timeout")
     , MQ_TIME_UNIT("mq.process.timeout.unit")

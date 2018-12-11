@@ -1,10 +1,7 @@
 package ru.rbt.barsgl.ejbtest;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.w3c.dom.Document;
 import ru.rbt.audit.entity.AuditRecord;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -74,12 +71,12 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
     private static final boolean writeOut = true;
     private static final boolean remoteQueueOut = true;
 
-    private DocumentBuilder docBuilder;
-    private XPath xPath;
+    private static DocumentBuilder docBuilder;
+    private static XPath xPath;
 
     private enum OpenClose {toOpen, toClose};
-    @Before
-    public void before() throws ParserConfigurationException {
+    @BeforeClass
+    public static void before() throws ParserConfigurationException {
         docBuilder = XmlUtilityLocator.getInstance().newDocumentBuilder();
         xPath = XmlUtilityLocator.getInstance().newXPath();
     }
@@ -239,7 +236,10 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
 
         String message = createRequestXml("AccountCloseRequest.xml", mainAccount, GLAccount.CloseType.Cancel);
 
-        updateDateClose(mainAccount, null);
+        for (GLAccount account : accounts) {
+            updateDateClose(account, null);
+        }
+//        updateDateClose(mainAccount, null);
         boolean changeBal = balanceNonZero(mainAccount, curDate);
         try {
             Long jId = remoteAccess.invoke(AccDealCloseQueueController.class, "createJournalEntry", qType, message);
@@ -254,7 +254,7 @@ public class AccDealCloseProcessorIT extends AbstractQueueIT {
             checkWaitClose(mainAccount);
             for (int i = 1; i < accounts.size(); i++) {
                 GLAccount account = (GLAccount) baseEntityRepository.refresh(accounts.get(i), true);
-                Assert.assertEquals(curDate, account.getDateClose());
+                Assert.assertEquals("bsaacid = " + account.getBsaAcid(), curDate, account.getDateClose());
             }
 
             Assert.assertNull("Есть запись об ошибке в аудит", getAuditError(idAudit));

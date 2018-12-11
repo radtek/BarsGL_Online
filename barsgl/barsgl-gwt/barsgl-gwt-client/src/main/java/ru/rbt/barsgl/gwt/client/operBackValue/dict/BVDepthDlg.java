@@ -1,16 +1,19 @@
 package ru.rbt.barsgl.gwt.client.operBackValue.dict;
 
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import ru.rbt.barsgl.gwt.client.comp.DataListBox;
+import ru.rbt.barsgl.gwt.client.comp.GLComponents;
 import ru.rbt.barsgl.gwt.core.dialogs.DlgFrame;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEvent;
 import ru.rbt.barsgl.gwt.core.events.DataListBoxEventHandler;
 import ru.rbt.barsgl.gwt.core.events.LocalEventBus;
 import ru.rbt.barsgl.gwt.core.ui.DatePickerBox;
 import ru.rbt.barsgl.gwt.core.ui.IntBox;
+import ru.rbt.barsgl.gwt.core.ui.ValuesBox;
 import ru.rbt.barsgl.shared.dict.FormAction;
 import ru.rbt.barsgl.shared.enums.DealSource;
 import ru.rbt.security.gwt.client.CommonEntryPoint;
@@ -26,6 +29,7 @@ import static ru.rbt.barsgl.gwt.core.utils.DialogUtils.showInfo;
 public class BVDepthDlg extends DlgFrame {
     private DataListBox dealSource;
     private IntBox depth;
+    private ValuesBox bvStornoInvisible;
     private DatePickerBox beginDate;
     private DatePickerBox endDate;
 
@@ -61,7 +65,7 @@ public class BVDepthDlg extends DlgFrame {
 
     @Override
     public Widget createContent(){
-        Grid grid = new Grid(4, 2);
+        Grid grid = new Grid(5, 2);
 
         grid.setText(0, 0, "Система источник");
         grid.setWidget(0, 1, dealSource = createDealSourceListBox("", "100px"));
@@ -70,12 +74,16 @@ public class BVDepthDlg extends DlgFrame {
         grid.setWidget(1, 1, depth = new IntBox());
         depth.setWidth("100px");
 
-        grid.setText(2, 0, "Дата начала");
-        grid.setWidget(2, 1, beginDate = new DatePickerBox());
+        grid.setText(2, 0, "Подавлять сторно");
+        grid.setWidget(2, 1, bvStornoInvisible = GLComponents.createYesNoValuseBox(false));
+        bvStornoInvisible.setWidth("100px");
+
+        grid.setText(3, 0, "Дата начала");
+        grid.setWidget(3, 1, beginDate = new DatePickerBox());
         beginDate.setWidth("100px");
 
-        grid.setText(3, 0, "Дата окончания");
-        grid.setWidget(3, 1, endDate = new DatePickerBox());
+        grid.setText(4, 0, "Дата окончания");
+        grid.setWidget(4, 1, endDate = new DatePickerBox());
         endDate.setWidth("100px");
 
         return grid;
@@ -113,6 +121,7 @@ public class BVDepthDlg extends DlgFrame {
     private void clearContent(){
         dealSource.setValue(null);
         depth.clear();
+        bvStornoInvisible.setValue(false);
         beginDate.clear();
         endDate.clear();
     }
@@ -127,13 +136,15 @@ public class BVDepthDlg extends DlgFrame {
         Object[] objs = (Object[]) params;
         dealSource.setValue((String)objs[0]);
         depth.setValue((Integer) objs[1]);
-        beginDate.setValue((Date) objs[2]);
-        endDate.setValue((Date) objs[3]);
+        bvStornoInvisible.setText((String) objs[2]);
+        beginDate.setValue((Date) objs[3]);
+        endDate.setValue((Date) objs[4]);
     }
 
     private void setEnableState(){
         dealSource.setEnabled(action == FormAction.CREATE);
         depth.setEnabled(action != FormAction.DELETE && !(action == FormAction.UPDATE && beginDate.getValue().compareTo(CommonEntryPoint.CURRENT_OPER_DAY) == -1));
+        bvStornoInvisible.setEnabled(depth.isEnabled());
         beginDate.setEnabled(action == FormAction.CREATE);
         endDate.setEnabled(action != FormAction.DELETE);
     }
@@ -142,7 +153,7 @@ public class BVDepthDlg extends DlgFrame {
         if (dealSource.getValue() == null) throw new Exception("Не заполено поле 'Система источник'");
         if (!depth.hasValue() || depth.getValue() < 2) throw new Exception("Значение поля 'Глубина backvalue' должно быть больше 1");
         if (!beginDate.hasValue()) throw new Exception("Не заполено поле 'Дата начала'");
-        if (beginDate.getValue().compareTo(CommonEntryPoint.CURRENT_OPER_DAY) == -1) throw new Exception("Дата начала не должна быть меньше текущего ОД");
+        if (beginDate.isEnabled() && beginDate.getValue().compareTo(CommonEntryPoint.CURRENT_OPER_DAY) == -1) throw new Exception("Дата начала не должна быть меньше текущего ОД");
         if (endDate.hasValue() && endDate.getValue().compareTo(beginDate.getValue()) == -1) throw new Exception("Дата окончания должна быть больше даты начала");
     }
 
@@ -150,7 +161,7 @@ public class BVDepthDlg extends DlgFrame {
     protected boolean onClickOK() throws Exception {
         try {
             checkUp();
-            params = new Object[]{dealSource.getValue(), depth.getValue(), beginDate.getValue(), endDate.getValue() };
+            params = new Object[]{dealSource.getValue(), depth.getValue(), bvStornoInvisible.getValue(), beginDate.getValue(), endDate.getValue() };
         } catch (Exception e) {
             showInfo("Ошибка", e.getMessage());
             return false;

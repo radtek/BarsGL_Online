@@ -19,3 +19,4 @@ rollback.bat
 /release-srv.bat
 .directory
 /build-srv.bat
+*.xlsx

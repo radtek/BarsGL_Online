@@ -33,6 +33,7 @@ import static ru.rbt.barsgl.ejb.entity.etl.EtlPackage.PackageState.PROCESSED;
  * Обработка пакетов входных сообщений из АЕ
  * @fsd 4
  */
+@SuppressWarnings("ALL")
 public class EtlStructureMonitorIT extends AbstractTimerJobIT {
 
     private static final Logger log = Logger.getLogger(EtlStructureMonitorIT.class.getName());
@@ -419,6 +420,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
     @Test
     public void testIsProcessingAllowed() throws Exception {
         Long stamp = System.currentTimeMillis();
+        baseEntityRepository.executeNativeUpdate("update gl_etlpkg set state = 'ERROR' where STATE = 'LOADED'");
         EtlPackage pkg = newPackageNotSaved(stamp, "Тестовый пакет " + stamp);
         pkg.setDateLoad(getSystemDateTime());
         pkg.setPackageState(EtlPackage.PackageState.LOADED);
@@ -438,7 +440,10 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
         remoteAccess.invoke(OperdayController.class, "setProcessingStatus", ProcessingStatus.ALLOWED);
         jobService.executeJob(etlProcess);
         pkg = (EtlPackage) baseEntityRepository.findById(EtlPackage.class, pkg.getId());
+        printAuditLog(20);
         Assert.assertEquals(PROCESSED, pkg.getPackageState());
         Assert.assertEquals(ProcessingStatus.STARTED, getOperday().getProcessingStatus());
     }
+
+
 }

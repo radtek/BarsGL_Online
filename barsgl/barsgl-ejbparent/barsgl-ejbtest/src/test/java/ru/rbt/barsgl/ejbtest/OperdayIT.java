@@ -18,6 +18,7 @@ import ru.rbt.barsgl.ejb.entity.dict.LwdBalanceCutView;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPackage;
 import ru.rbt.barsgl.ejb.entity.etl.EtlPosting;
 import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
+import ru.rbt.barsgl.ejb.props.PropertyName;
 import ru.rbt.barsgl.ejb.repository.cob.CobStatRepository;
 import ru.rbt.barsgl.ejb.repository.dict.LwdCutCachedRepository;
 import ru.rbt.barsgl.ejbcore.mapping.job.CalendarJob;
@@ -25,6 +26,7 @@ import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbcore.mapping.job.TimerJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.*;
+import ru.rbt.ejb.repository.properties.PropertiesRepository;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.tasks.ejb.entity.task.JobHistory;
 import ru.rbt.tasks.ejb.job.BackgroundJobsController;
@@ -79,6 +81,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         initCorrectOperday();
         baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = 'PROCESSED' where p.state not in ('PROCESSED', 'ERROR') ");
         baseEntityRepository.executeNativeUpdate("delete from gl_sched_h");
+        purgeQueueTable();
     }
     /**
      * Выполнение задачи открытия нового операционного дня
@@ -160,10 +163,10 @@ public class OperdayIT extends AbstractTimerJobIT {
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, CLOSED);
 
-        baseEntityRepository.executeNativeUpdate("update gl_od set prc = ?", ProcessingStatus.STOPPED.name());
+        setProcessingFlag(ProcessingStatus.STOPPED);
 
-        // задача мониторинга ETL
-        checkCreateEtlStructureMonitor();
+        baseEntityRepository.executeNativeUpdate("update gl_oper o set o.state = ? where o.state = ? and o.CURDATE = ?"
+            , OperState.INVISIBLE.name(), OperState.ERCHK.name(), getOperday().getCurrentDate());
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -189,6 +192,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
         jobService.executeJob(job);
+        printAuditLog(10);
         List<JobHistory> histories = baseEntityRepository.select(JobHistory.class, "from JobHistory h where h.jobName = ?1", job.getName());
         Assert.assertEquals(1, histories.size());
         JobHistory prehist = histories.get(0);
@@ -215,8 +219,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         Operday previosOperday = getOperday();
         updateOperday(ONLINE, CLOSED, BUFFER);
 
-        // задача мониторинга ETL
-        checkCreateEtlStructureMonitor();
+        setProcessingFlag(ProcessingStatus.STOPPED);
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -243,6 +246,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
         jobService.executeJob(calendarJob);
+        printAuditLog(10);
 
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);
@@ -262,8 +266,7 @@ public class OperdayIT extends AbstractTimerJobIT {
 
         baseEntityRepository.executeNativeUpdate("update GL_COB_STAT set  status = ? where status <> ?", CobStepStatus.Success.name(), CobStepStatus.Success.name());
 
-        // задача мониторинга ETL
-        startupEtlStructureMonitor();
+        setProcessingFlag(ProcessingStatus.STOPPED);
 
         Date systemDate = getSystemDateTime();
         Calendar systemCalendar = Calendar.getInstance();
@@ -280,20 +283,13 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeNativeUpdate("update gl_etlpkg p set p.state = ? where p.DT_LOAD <= ? and p.state not in ('PROCESSED', 'ERROR')"
                 , EtlPackage.PackageState.PROCESSED.name(), loadDateCalendar.getTime());
 
-        CalendarJob calendarJob = new CalendarJob();
-        calendarJob.setDelay(0L);
-        calendarJob.setDescription("test calendar job");
-        calendarJob.setRunnableClass(ExecutePreCOBTaskNew.class.getName());
-        calendarJob.setStartupType(MANUAL);
-        calendarJob.setState(STOPPED);
-        calendarJob.setName(System.currentTimeMillis() + "");
-        calendarJob.setScheduleExpression("month=*;second=0;minute=0;hour=11");
-        calendarJob.setProperties(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00");
-
-        //baseEntityRepository.executeUpdate("update Operday o set o.processingStatus = ?1", ProcessingStatus.STOPPED);
+        SingleActionJob calendarJob = SingleActionJobBuilder.create()
+                .withClass(ExecutePreCOBTaskNew.class)
+                .withName(System.currentTimeMillis() + "")
+                .withProps(ExecutePreCOBTaskNew.TIME_LOAD_BEFORE_KEY + "=" + twiceChar(hours) + ":00").build();
 
         jobService.executeJob(calendarJob);
-
+        printAuditLog(10);
         Operday newOperday = getOperday();
         Assert.assertEquals(newOperday, previosOperday);
         Assert.assertEquals(Operday.LastWorkdayStatus.CLOSED, newOperday.getLastWorkdayStatus());
@@ -377,7 +373,7 @@ public class OperdayIT extends AbstractTimerJobIT {
 
     }
 
-    @Test public void testCheckRunOpenday() throws IOException {
+    @Test public void testCheckRunOpenday() throws IOException, SQLException {
 
         Operday operday = getOperday();
         BankCalendarDay nexday = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkdayAfter", operday.getCurrentDate());
@@ -418,6 +414,45 @@ public class OperdayIT extends AbstractTimerJobIT {
         properties.put(OpenOperdayContextKey.CURRENT_OD, operday);
         properties.put(OpenOperdayContextKey.TARGET_PD_MODE, Operday.PdMode.BUFFER);
         Assert.assertTrue(remoteAccess.invoke(OpenOperdayTask.class, "checkRun", "Open1", properties));
+
+    }
+
+    @Test public void testQueue() throws SQLException {
+        // проверка на содержание очереди
+        setGibridBalanceMode();
+        purgeQueueTable();
+        updateOperday(ONLINE, OPEN);
+
+        setNumberProperty(PropertyName.COB_BAL_QUEUE_MAXSIZE, 0);
+
+        baseEntityRepository.executeNativeUpdate(
+                "declare" +
+                "   pragma autonomous_transaction;" +
+                "begin\n" +
+                "    DBMS_AQADM.ALTER_QUEUE(queue_name => 'BAL_QUEUE', max_retries => 1);\n" +
+                "    commit;\n" +
+                "end;\n");
+
+        GLAccount account = findAccount("40817810%");
+        createPd(getOperday().getCurrentDate(), account.getAcid(), account.getBsaAcid(), BankCurrency.RUB.getCurrencyCode(), "@@GL-");
+        final String queueTableName = baseEntityRepository.selectFirst("select GLAQ_PKG_CONST.GET_QUEUE_TAB_NAME() queue_name from dual").getString("queue_name");
+        Assert.assertTrue(1 == baseEntityRepository.selectFirst("select count(1) cnt from " + queueTableName).getInteger("cnt"));
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkBalanceQueue"));
+
+        setNumberProperty(PropertyName.COB_BAL_QUEUE_MAXSIZE, 1000);
+        Assert.assertTrue(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkBalanceQueue"));
+
+        // в очередь ошибок попадет одно сообщений
+        baseEntityRepository.executeNativeUpdate(
+                "begin\n" +
+                        "    for i in 0..2 loop\n" +
+                        "        GLAQ_PKG.DEQUEUE_PROCESS_ONE('BAL_QUEUE');\n" +
+                        "        rollback;\n" +
+                        "    end loop;\n" +
+                        "end;");
+        Assert.assertFalse(remoteAccess.invoke(ExecutePreCOBTaskNew.class, "checkBalanceQueue"));
+
+
     }
 
     /**
@@ -502,6 +537,7 @@ public class OperdayIT extends AbstractTimerJobIT {
         baseEntityRepository.executeUpdate("delete from JobHistory h where h.jobName = ?1", job.getName());
 
         jobService.executeJob(job);
+        printAuditLog(10);
 
         balturs = getBalturList(account);
         Assert.assertNull(balturs.get(0).getDate("DATL"));
@@ -765,7 +801,7 @@ public class OperdayIT extends AbstractTimerJobIT {
     }
 
 
-    private void processOnePosting() {
+    private void processOnePosting() throws SQLException {
         long stamp = System.currentTimeMillis();
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -773,8 +809,11 @@ public class OperdayIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        String acdt = Optional.ofNullable(findBsaAccount("40817036_0001%7")).orElseThrow(() -> new RuntimeException("account is not found"));
+        String acct = Optional.ofNullable(findBsaAccount("40817036_5001%")).orElseThrow(() -> new RuntimeException("account is not found"));
+
+        pst.setAccountCredit(acct); //("40817036200012959997");
+        pst.setAccountDebit(acdt); //("40817036250010000018");
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -805,18 +844,14 @@ public class OperdayIT extends AbstractTimerJobIT {
         refreshOperdayState();
     }
 
-/*
-    private long createPd(Date pod, String acid, String bsaacid, String glccy, String pbr) throws SQLException {
-        long id = baseEntityRepository.selectFirst("select next value for PD_SEQ id from sysibm.sysdummy1").getLong(0);
-        baseEntityRepository.executeNativeUpdate("insert into pd (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, pod, pod, acid, bsaacid, glccy, 100,100, pbr, "1234");
-        return id;
-    }
-*/
-
     private List<DataRecord> getBalturList(GLAccount acc) throws SQLException {
         return baseEntityRepository.select("select * from baltur where bsaacid = ? and acid = ? order by dat"
                 , acc.getBsaAcid(), acc.getAcid());
+    }
+
+    private void setNumberProperty(PropertyName name, long value) {
+        baseEntityRepository.executeUpdate("update NumberProperty p set p.value = ?1 where p.id = ?2", value, name.getName());
+        remoteAccess.invoke(PropertiesRepository.class, "flushCache");
     }
 
 }

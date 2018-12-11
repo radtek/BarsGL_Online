@@ -1,5 +1,6 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.*;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -19,10 +20,15 @@ import ru.rbt.ejbcore.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.BUFFER;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.PdMode.DIRECT;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.EUR;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.RUB;
 import static ru.rbt.barsgl.ejb.entity.dict.BankCurrency.USD;
@@ -37,7 +43,7 @@ import static ru.rbt.barsgl.shared.enums.Reg47422State.SKIP_SRC;
 /**
  * Created by er18837 on 06.09.2018.
  */
-public class Exclude47422IT extends AbstractRemoteIT {
+public class Exclude47422IT extends AbstractTimerJobIT {
 
     enum Filial {
         MOS("01"), SPB("02"), EKB("40"), CHL("16");
@@ -60,9 +66,12 @@ public class Exclude47422IT extends AbstractRemoteIT {
     private static HashMap<Filial, HashMap<Currency, String>> accTechMap;
 
     @BeforeClass
-    public static void beforeClass() throws SQLException {
+    public static void beforeClass() throws SQLException, ParseException {
+        Date operday = DateUtils.parseDate("02.07.2017", "dd.MM.yyyy");
+        setOperday(operday, DateUtils.addDays(operday, -1), ONLINE, OPEN, DIRECT);
         defineTech();
         addBvParm();
+        clearReg47422();
     }
 
     public static void addBvParm() throws SQLException {
@@ -89,6 +98,11 @@ public class Exclude47422IT extends AbstractRemoteIT {
         }
     }
 
+    public static void clearReg47422() {
+        baseEntityRepository.executeNativeUpdate("update GL_REG47422 set valid = 'N' where state = 'WT47416'");
+    }
+
+
     private String getAccTech(Filial fil, Currency ccy) {
         return accTechMap.get(fil).get(ccy);
     }
@@ -97,6 +111,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
         return acc2 + ccy.cod + "___" + filial.cod + "%";  // 30102810__040%
     }
 
+/*
     @Before
     public void before() {
         updateOperday(Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
@@ -106,6 +121,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
     public void after() {
         restoreOperday();
     }
+*/
 
     @Test
     @Ignore
@@ -151,7 +167,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
     }
 
     @Test
-    public void testPbr() throws SQLException {
+    public void testPbr() throws SQLException, InterruptedException {
         Long[] glo1 = makeSimpleOneday(MOS, USD, new BigDecimal("777"), new String[] {"47422840720010000106", "47422840720010000106"}, new DealSource[] {Manual, Manual} );
 //        Long[] glo1 = makeSimpleOneday(MOS, RUB, new BigDecimal("999"), new String[] {"30102", "47427"}, new DealSource[] {Manual, Manual} );
         Long[] glo2 = makeFanOnedayCDD(MOS, EUR, new BigDecimal("444"), new String[] {"30114","47427", "45605"}, new DealSource[] {PaymentHub, Flex12, PaymentHub});
@@ -160,10 +176,10 @@ public class Exclude47422IT extends AbstractRemoteIT {
         remoteAccess.invoke(Exclude47422Task.class, "testExec", null, props);
 
         DataRecord rec1 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo1, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
-        Assert.assertEquals(glo1.length, (int)rec1.getInteger(0));
+        Assert.assertEquals(getArrayStr("glo1: ", glo1), glo1.length, (int)rec1.getInteger(0));
 
         DataRecord rec2 = baseEntityRepository.selectFirst("select count(1) from GL_REG47422 where GLO_REF in (" + StringUtils.arrayToString(glo2, ",", "") + ") and STATE = ? and VALID = 'Y'", SKIP_SRC.name());
-        Assert.assertEquals(glo2.length, (int)rec2.getInteger(0));
+        Assert.assertEquals(getArrayStr("glo2: ", glo2), glo2.length, (int)rec2.getInteger(0));
     }
 
     @Test
@@ -261,6 +277,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
 
     private void checkProcDat(Long[] gloids, List<Reg47422Journal> regProc ) {
         Reg47422Journal regMain = regProc.stream().filter(r -> r.getPcIdNew().equals(r.getPcId())).findFirst().orElse(null);
+        Assert.assertNotNull("", regMain);
         List<Pd> pdList = baseEntityRepository.select(Pd.class, "from Pd p where p.pcId = ?1 and p.invisible = '0' and not p.stornoRef is null", regMain.getPcId());
         Assert.assertEquals(gloids.length, pdList.size());
         Assert.assertNull(regProc.stream().filter(r -> !r.getParentId().equals(regMain.getId())).findFirst().orElse(null));
@@ -304,14 +321,23 @@ public class Exclude47422IT extends AbstractRemoteIT {
     private List<Reg47422Journal> getJournalListByPcid(List<Long> pcids, Reg47422Journal.Reg47422Valid valid, Reg47422State state) {
         List<Reg47422Journal> regList = baseEntityRepository.select(Reg47422Journal.class,
                 "from Reg47422Journal r where r.pcId in (" + StringUtils.listToString(pcids, ",", "") + ") and r.valid = ?1 and r.state = ?2", valid, state);
+        Assert.assertEquals(getListStr("pcids: ", pcids), pcids.size(), regList.size() * 2);
         return regList;
     }
 
     private List<Reg47422Journal> getJournalListByGloid(Long[] gloids, Reg47422Journal.Reg47422Valid valid, Reg47422State state) {
         List<Reg47422Journal> regList = baseEntityRepository.select(Reg47422Journal.class,
                 "from Reg47422Journal r where r.glOperationId in (" + StringUtils.arrayToString(gloids, ",", "") + ") and r.valid = ?1 and r.state = ?2", valid, state);
-        Assert.assertEquals(gloids.length, regList.size());
+        Assert.assertEquals(getArrayStr("gloids: ", gloids), gloids.length, regList.size());
         return regList;
+    }
+
+    private String getArrayStr(String pref, Object[] arr) {
+        return pref + StringUtils.arrayToString(arr, ",", "");
+    }
+
+    private String getListStr(String pref, List<?> lst) {
+        return pref + StringUtils.listToString(lst, ",", "");
     }
 
     private List<Long> getPcidListByGloid(Long[] gloids) throws SQLException {
@@ -435,6 +461,7 @@ public class Exclude47422IT extends AbstractRemoteIT {
         pst.setCurrencyDebit(ccy);
         pst.setAmountCredit(sum);
         pst.setAmountDebit(sum);
+        pst.setNarrative(pkg.getDescription());
 
         pst.setRusNarrativeLong(rnar);
         return (EtlPosting) baseEntityRepository.save(pst);
