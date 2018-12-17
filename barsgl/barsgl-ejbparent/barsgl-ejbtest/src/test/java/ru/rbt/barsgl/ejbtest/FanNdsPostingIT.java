@@ -3,6 +3,8 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
@@ -18,6 +20,7 @@ import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.mapping.YesNo;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +33,14 @@ import java.util.stream.Collectors;
 public class FanNdsPostingIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(FanNdsPostingIT.class.getName());
+
+    private static BigDecimal rateNds;
+    private static final BigDecimal comission = new BigDecimal(100);
+
+    @BeforeClass
+    public static void beforeClass() {
+        rateNds = new BigDecimal(20);
+    }
 
     @Test
     public void test() throws Exception {
@@ -66,6 +77,11 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
             List<EtlPosting> psts = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.eventId like ?1", pd.getId()+"%");
             Assert.assertEquals(2, psts.size());
 
+            // проверяем размер НДС
+            int indNds = (psts.get(0).getEventId().equals(psts.get(0).getPaymentRefernce())) ? 0 : 1;
+            Assert.assertEquals("Неверно рассчитана сумма НДС", rateNds, psts.get(indNds).getAmountCredit());
+            Assert.assertEquals("Неверно рассчитана сумма комиссии без НДС", comission, psts.get(indNds ^ 1).getAmountCredit());
+
             jobService.executeJob(SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build());
 
             psts = baseEntityRepository.select(EtlPosting.class, "from EtlPosting p where p.eventId like ?1", pd.getId()+"%");
@@ -101,8 +117,9 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
 
     private Pd createPd(Date operday, String transBsaacid, String transAcid) throws SQLException {
         long id = baseEntityRepository.selectFirst("select PD_SEQ.nextval id from DUAL").getLong(0);
+        BigDecimal amount = comission.add(rateNds).movePointRight(2);   // сумма комиссии с НДС в копейках
         baseEntityRepository.executeNativeUpdate("insert into pst (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar, rnarlng,docn, pref) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", 100,100, "@@IF123", "1234", "12345", "", id+"ref");
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", amount, amount, "@@IF123", "1234", "12345", "", id+"ref");
 
 //        baseEntityRepository.executeNativeUpdate("insert into pdext2 (id, rnarlng, docn) values (?, ?, ?)", id, "12345", "");
 //                "values (?, ?, ?)", id, "12345", ru.rbt.ejbcore.util.StringUtils.rsubstr(System.currentTimeMillis()+"", 5));

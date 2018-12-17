@@ -122,6 +122,7 @@ public class FanNdsPostingController {
     private int createDrafts(Date workday) {
         try {
             return ndsPostingRepository.executeInNewTransaction(persistence -> {
+                BigDecimal rateNds = new BigDecimal(20);
                 final String query = textResourceController
                         .getContent("ru/rbt/barsgl/ejb/integr/bg/select_nds_opers.sql");
                 return ndsPostingRepository.executeTransactionally(connection -> {
@@ -146,8 +147,8 @@ public class FanNdsPostingController {
                             fanNdsComission.setAccountDebit(rs.getString("TR_ACC"));
                             fanNdsComission.setCurrencyDebit(bankCurrencyRepository.refreshCurrency(BankCurrency.RUB));
                             BigDecimal nds = new BigDecimal(rs.getLong("AMOUNT"))
-                                    .movePointLeft(2).multiply(new BigDecimal(18))
-                                    .divide(new BigDecimal(118), BigDecimal.ROUND_HALF_UP)
+                                    .movePointLeft(2).multiply(rateNds)
+                                    .divide(rateNds.add(new BigDecimal(100)), BigDecimal.ROUND_HALF_UP)
                                     .setScale(3, BigDecimal.ROUND_HALF_UP);
 
                             fanNdsComission.setAmountDebit(new BigDecimal(rs.getLong("AMOUNT")).movePointLeft(2).subtract(nds));
