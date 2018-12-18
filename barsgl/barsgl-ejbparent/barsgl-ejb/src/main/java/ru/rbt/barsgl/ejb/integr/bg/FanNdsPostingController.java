@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 import static ru.rbt.audit.entity.AuditRecord.LogCode.FlexNdsFan;
@@ -122,7 +123,8 @@ public class FanNdsPostingController {
     private int createDrafts(Date workday) {
         try {
             return ndsPostingRepository.executeInNewTransaction(persistence -> {
-                BigDecimal rateNds = new BigDecimal(20);
+                BigDecimal rateNds = getRateNds(workday);
+                auditController.info(FlexNdsFan, String.format("На %s cтавка НДС = %s%%", dateUtils.onlyDateString(workday), rateNds.toString()));
                 final String query = textResourceController
                         .getContent("ru/rbt/barsgl/ejb/integr/bg/select_nds_opers.sql");
                 return ndsPostingRepository.executeTransactionally(connection -> {
@@ -244,6 +246,15 @@ public class FanNdsPostingController {
         } catch (Exception e) {
             auditController.error(FlexNdsFan, "Ошибка при формировании AE постингов (GL_ETLPST)", null, e);
             throw new DefaultApplicationException(e);
+        }
+    }
+
+    private BigDecimal getRateNds(Date dat) {
+        try {
+            DataRecord data = fanNdsPostingRepository.selectOne("select TAX from GL_NDS where ? between DTB and coalesce(DTE, to_date('2100-01-01', 'YYYY-MM-DD'))", dat);
+            return data.getBigDecimal(0);
+        } catch (Exception e) {
+            throw new DefaultApplicationException(String.format("Ошибка при определении ставки НДС на дату '%s' (таблица GL_NDS)", dateUtils.onlyDateString(dat)), e);
         }
     }
 }

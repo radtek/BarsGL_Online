@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
@@ -34,19 +33,66 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(FanNdsPostingIT.class.getName());
 
-    private static BigDecimal rateNds;
-    private static final BigDecimal comission = new BigDecimal(100);
+    private static final BigDecimal oneHundred = new BigDecimal(100);
 
-    @BeforeClass
-    public static void beforeClass() {
-        rateNds = new BigDecimal(20);
+    @Test
+    public void testOk() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from GL_NDS");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (1, 18, to_date('2001-01-01' , 'YYYY-MM-DD'), to_date('2018-12-31' , 'YYYY-MM-DD'))");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (2, 20, to_date('2019-01-01' , 'YYYY-MM-DD'), null)");
+        Date workday = DateUtils.parseDate("25.02.2017", "dd.MM.yyyy");
+        Date operday = DateUtils.parseDate("26.02.2017", "dd.MM.yyyy");
+        testOneDay(operday, workday, new BigDecimal(18));
+        workday = DateUtils.parseDate("25.02.2019", "dd.MM.yyyy");
+        operday = DateUtils.parseDate("26.02.2019", "dd.MM.yyyy");
+        testOneDay(operday, workday, new BigDecimal(20));
     }
 
     @Test
-    public void test() throws Exception {
+    public void testNewYear() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from GL_NDS");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (1, 18, to_date('2001-01-01' , 'YYYY-MM-DD'), to_date('2018-12-31' , 'YYYY-MM-DD'))");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (2, 20, to_date('2019-01-01' , 'YYYY-MM-DD'), null)");
+        Date workday = DateUtils.parseDate("31.12.2018", "dd.MM.yyyy");
+        Date operday = DateUtils.parseDate("01.01.2019", "dd.MM.yyyy");
+        testOneDay(operday, workday, new BigDecimal(18));
+        workday = DateUtils.parseDate("01.01.2019", "dd.MM.yyyy");
+        operday = DateUtils.parseDate("02.01.2019", "dd.MM.yyyy");
+        testOneDay(operday, workday, new BigDecimal(20));
+    }
 
+    @Test
+    public void testNoNds() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from GL_NDS");
         Date workday = DateUtils.parseDate("25.02.2017", "dd.MM.yyyy");
         Date operday = DateUtils.parseDate("26.02.2017", "dd.MM.yyyy");
+        try {
+            testOneDay(operday, workday, new BigDecimal(18));
+            Assert.assertFalse(true);
+        } catch (Throwable e) {
+            System.out.println(e.getMessage());
+            Assert.assertTrue(true);
+        }
+    }
+
+    @Test
+    public void testTwoNds() throws Exception {
+        baseEntityRepository.executeNativeUpdate("delete from GL_NDS");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (1, 18, to_date('2001-01-01' , 'YYYY-MM-DD'), null)");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (2, 20, to_date('2019-01-01' , 'YYYY-MM-DD'), null)");
+        Date workday = DateUtils.parseDate("25.02.2019", "dd.MM.yyyy");
+        Date operday = DateUtils.parseDate("26.02.2019", "dd.MM.yyyy");
+        try {
+            testOneDay(operday, workday, new BigDecimal(18));
+            Assert.assertFalse(true);
+        } catch (Throwable e) {
+            System.out.println(e.getMessage());
+            Assert.assertTrue(true);
+        }
+    }
+
+    private void testOneDay(Date operday, Date workday, BigDecimal rateNds) throws Exception {
+
         setOperday(operday, workday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
 
         try{
@@ -62,7 +108,7 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
                     , reference.getTransitAccount()).getString(0);
             Assert.assertTrue(!StringUtils.isEmpty(transAcid));
 
-            Pd pd = createPd(workday, reference.getTransitAccount(), transAcid);
+            Pd pd = createPd(workday, reference.getTransitAccount(), transAcid, rateNds);
             Assert.assertNotNull(pd);
 
             jobService.executeJob(SingleActionJobBuilder.create().withClass(ProcessFlexFanTask.class).build());
@@ -80,7 +126,7 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
             // проверяем размер НДС
             int indNds = (psts.get(0).getEventId().equals(psts.get(0).getPaymentRefernce())) ? 0 : 1;
             Assert.assertEquals("Неверно рассчитана сумма НДС", rateNds, psts.get(indNds).getAmountCredit());
-            Assert.assertEquals("Неверно рассчитана сумма комиссии без НДС", comission, psts.get(indNds ^ 1).getAmountCredit());
+            Assert.assertEquals("Неверно рассчитана сумма комиссии без НДС", oneHundred, psts.get(indNds ^ 1).getAmountCredit());
 
             jobService.executeJob(SingleActionJobBuilder.create().withClass(EtlStructureMonitorTask.class).build());
 
@@ -115,9 +161,9 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
         return ref;
     }
 
-    private Pd createPd(Date operday, String transBsaacid, String transAcid) throws SQLException {
+    private Pd createPd(Date operday, String transBsaacid, String transAcid, BigDecimal rateNds) throws SQLException {
         long id = baseEntityRepository.selectFirst("select PD_SEQ.nextval id from DUAL").getLong(0);
-        BigDecimal amount = comission.add(rateNds).movePointRight(2);   // сумма комиссии с НДС в копейках
+        BigDecimal amount = oneHundred.add(rateNds).movePointRight(2);   // сумма комиссии с НДС в копейках
         baseEntityRepository.executeNativeUpdate("insert into pst (id,pod,vald,acid,bsaacid,ccy,amnt,amntbc,pbr,pnar, rnarlng,docn, pref) " +
                 "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, operday, operday, transAcid, transBsaacid,"RUR", amount, amount, "@@IF123", "1234", "12345", "", id+"ref");
 
