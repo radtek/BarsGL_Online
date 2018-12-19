@@ -124,7 +124,7 @@ public class FanNdsPostingController {
         try {
             return ndsPostingRepository.executeInNewTransaction(persistence -> {
                 BigDecimal rateNds = getRateNds(workday);
-                auditController.info(FlexNdsFan, String.format("На %s cтавка НДС = %s%%", dateUtils.onlyDateString(workday), rateNds.toString()));
+                auditController.info(FlexNdsFan, String.format("На дату '%s' cтавка НДС = %s%%", dateUtils.onlyDateString(workday), rateNds.toString()));
                 final String query = textResourceController
                         .getContent("ru/rbt/barsgl/ejb/integr/bg/select_nds_opers.sql");
                 return ndsPostingRepository.executeTransactionally(connection -> {
