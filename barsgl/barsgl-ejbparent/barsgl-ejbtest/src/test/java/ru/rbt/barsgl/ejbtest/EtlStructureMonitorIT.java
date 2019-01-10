@@ -133,7 +133,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
 
         EtlPosting pst1 = newPosting(stamp, pkg);
         pst1.setAccountCredit("40817036200012959997");
-        pst1.setAccountDebit("40817036250010000018");
+        pst1.setAccountDebit(findBsaAccount("40817036%"));
         pst1.setAmountCredit(new BigDecimal("12.0056"));
         pst1.setAmountDebit(pst1.getAmountCredit());
         pst1.setCurrencyCredit(BankCurrency.AUD);
@@ -143,7 +143,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
 
         EtlPosting pst2 = newPosting(stamp + 1, pkg);
         pst2.setAccountCredit("40817036200012959997");
-        pst2.setAccountDebit("40817036250010000018");
+        pst2.setAccountDebit(findBsaAccount("40817036%"));
         pst2.setAmountCredit(new BigDecimal("12.0056"));
         pst2.setAmountDebit(pst2.getAmountCredit());
         pst2.setCurrencyCredit(BankCurrency.AUD);
@@ -195,7 +195,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.save(pkg);
 
         final String accCredit = "40817036200012959997";
-        final String accDebit = "40817036250010000018";
+        final String accDebit = findBsaAccount("40817036%");
 
         int cnt = baseEntityRepository.executeNativeUpdate("delete from GL_BSACCLK where BSAACID = ?", accCredit);
         log.info("cnt deleted cr: " + cnt);
@@ -289,7 +289,8 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
         pkg = (EtlPackage) baseEntityRepository.save(pkg);
 
         final String accCredit = "40817036200012959997";
-        final String accDebit = "40817036250010000018";
+//        final String accDebit = "40817036250010000018";
+        final String accDebit = findBsaAccount("40817036%");
 
         int cnt = baseEntityRepository.executeNativeUpdate("delete from GL_BSACCLK where BSAACID = ?", accCredit);
         log.info("cnt deleted cr: " + cnt);
@@ -348,7 +349,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
 
         EtlPosting pst1 = newPosting(stamp, pkg);
         pst1.setAccountCredit("00000036000000000000");
-        pst1.setAccountDebit("40817036250010000018");
+        pst1.setAccountDebit(findBsaAccount("40817036%"));
         pst1.setAmountCredit(new BigDecimal("12.0056"));
         pst1.setAmountDebit(pst1.getAmountCredit());
         pst1.setCurrencyCredit(BankCurrency.AUD);
@@ -358,7 +359,7 @@ public class EtlStructureMonitorIT extends AbstractTimerJobIT {
 
         EtlPosting pst2 = newPosting(stamp + 1, pkg);
         pst2.setAccountCredit("40817036200012959997");
-        pst2.setAccountDebit("40817036250010000018");
+        pst2.setAccountDebit(findBsaAccount("40817036%"));
         pst2.setAmountCredit(new BigDecimal("12.0056"));
         pst2.setAmountDebit(pst2.getAmountCredit());
         pst2.setCurrencyCredit(BankCurrency.AUD);
