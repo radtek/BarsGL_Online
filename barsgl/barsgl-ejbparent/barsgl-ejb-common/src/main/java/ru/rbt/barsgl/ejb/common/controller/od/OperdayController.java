@@ -194,6 +194,7 @@ public class OperdayController {
             operday.setAccessMode(orig.getAccessMode());
             operday.setBalanceMode(getBalanceCalculationMode());
         } catch (Throwable e) {
+            log.error("Error on initializing operday: " + e.getMessage(), e);
             operday = null;
         }
     }
