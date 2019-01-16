@@ -1,8 +1,7 @@
 package ru.rbt.barsgl.ejb.integr.bg;
 
 import org.apache.log4j.Logger;
-import ru.rbt.audit.entity.AuditRecord;
-import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.audit.controller.AuditController;
 import ru.rbt.barsgl.ejb.common.controller.od.OperdayController;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.BackvalueJournalController;
@@ -13,17 +12,17 @@ import ru.rbt.barsgl.ejb.integr.oper.EditPostingGLPdProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.EditPostingPdProcessor;
 import ru.rbt.barsgl.ejb.integr.oper.EditPostingProcessor;
 import ru.rbt.barsgl.ejb.repository.GLOperationRepository;
-import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
-import ru.rbt.audit.controller.AuditController;
-import ru.rbt.ejbcore.DefaultApplicationException;
-import ru.rbt.ejbcore.util.DateUtils;
-import ru.rbt.ejbcore.validation.ErrorCode;
 import ru.rbt.barsgl.ejbcore.validation.ValidationContext;
-import ru.rbt.ejbcore.validation.ValidationError;
-import ru.rbt.shared.Assert;
 import ru.rbt.barsgl.shared.RpcRes_Base;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.operation.ManualOperationWrapper;
+import ru.rbt.ejbcore.DefaultApplicationException;
+import ru.rbt.ejbcore.util.DateUtils;
+import ru.rbt.ejbcore.validation.ErrorCode;
+import ru.rbt.ejbcore.validation.ValidationError;
+import ru.rbt.gwt.security.ejb.repository.access.AccessServiceSupport;
+import ru.rbt.security.ejb.repository.access.SecurityActionRepository;
+import ru.rbt.shared.Assert;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -32,13 +31,12 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
-import static ru.rbt.audit.entity.AuditRecord.LogLevel.Warning;
-import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.audit.entity.AuditRecord.LogCode.ManualOperation;
-import static ru.rbt.ejbcore.util.StringUtils.listToString;
-import static ru.rbt.ejbcore.validation.ValidationError.initSource;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ALL;
 import static ru.rbt.barsgl.shared.enums.PostingChoice.PST_ONE_OF;
+import static ru.rbt.ejbcore.util.StringUtils.listToString;
+import static ru.rbt.ejbcore.validation.ValidationError.initSource;
 
 /**
  * Created by ER18837 on 11.04.16.
@@ -237,7 +235,7 @@ public class EditPostingController {
     }
 
     public RpcRes_Base<ManualOperationWrapper> suppressPostingsWrapper(ManualOperationWrapper operationWrapper) {
-        String msg = "Ошибка при подавлении прододки";
+        String msg = "Ошибка при подавлении проводки";
         try {
             try {
                 accessServiceSupport.checkUserAccessToBackValueDate(dateUtils.onlyDateParse(operationWrapper.getPostDateStr()), operationWrapper.getUserId());
