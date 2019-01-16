@@ -3,7 +3,6 @@ package ru.rbt.barsgl.ejbtest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.Operday;
 import ru.rbt.barsgl.ejb.controller.operday.PreCobStepController;
@@ -78,7 +77,7 @@ public class FanNdsPostingIT extends AbstractRemoteIT {
     @Test
     public void testTwoNds() throws Exception {
         baseEntityRepository.executeNativeUpdate("delete from GL_NDS");
-        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (1, 18, to_date('2001-01-01' , 'YYYY-MM-DD'), null)");
+        baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (1, 18, to_date('2001-01-01' , 'YYYY-MM-DD'), to_date('2019-01-01' , 'YYYY-MM-DD') - 1)");
         baseEntityRepository.executeNativeUpdate("insert into GL_NDS (ID, TAX, DTB, DTE) values (2, 20, to_date('2019-01-01' , 'YYYY-MM-DD'), null)");
         Date workday = DateUtils.parseDate("25.02.2019", "dd.MM.yyyy");
         Date operday = DateUtils.parseDate("26.02.2019", "dd.MM.yyyy");
