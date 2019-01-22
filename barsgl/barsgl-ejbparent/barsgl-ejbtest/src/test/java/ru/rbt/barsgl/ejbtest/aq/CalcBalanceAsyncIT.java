@@ -471,6 +471,8 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private void stopListeningQueue() {
         baseEntityRepository.executeNativeUpdate(
+                "declare \n" +
+                        "   pragma autonomous_transaction;\n" +
                 "begin\n" +
                 "    for nn in (select * from user_scheduler_running_jobs where job_name like '%'||GLAQ_PKG_CONST.GET_BALANCE_QUEUE_LISTNR_PRFX||'%') loop\n" +
                 "        dbms_scheduler.stop_job(nn.job_name, true);\n" +
