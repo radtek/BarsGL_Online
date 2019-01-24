@@ -25,8 +25,8 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.ParseException;
-import java.util.Calendar;
 import java.time.Instant;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -315,8 +315,8 @@ public class TechAccountIT extends AbstractRemoteIT {
         pst.setValueDate(getOperday().getCurrentDate());
         //pst.setValueDate(DateUtils.parseDate("2017-02-17","yyyy-MM-dd"));
 
-        //pst.setAccountCredit("40817036200012959997");
-        //pst.setAccountDebit("40817036250010000018");
+        //pst.setAccountCredit(findBsaAccount("40817036%"));
+        //pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAccountKeyDebit(";USD;;057010103;;;TH01096378;0001;;;;;K+TP;;");
         pst.setAccountKeyCredit(";RUR;;007010201;;;TH01096366;0001;;;;;K+TP;;");
         pst.setAmountCredit(new BigDecimal("60000.000"));

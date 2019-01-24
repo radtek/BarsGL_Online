@@ -23,6 +23,8 @@ import ru.rbt.barsgl.ejbcore.mapping.job.SingleActionJob;
 import ru.rbt.barsgl.ejbtest.utl.SingleActionJobBuilder;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
 import ru.rbt.barsgl.ejbtesting.ServerTestingFacade;
+import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
+import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.barsgl.shared.enums.ProcessingStatus;
 import ru.rbt.ejb.repository.properties.PropertiesRepository;
@@ -1366,7 +1368,7 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         }
     }
 
-    private GLOperation createOper(Date vdate) {
+    private GLOperation createOper(Date vdate) throws SQLException {
         final long stamp = System.currentTimeMillis();
         EtlPackage pkg = newPackage(stamp, "SIMPLE");
         Assert.assertTrue(pkg.getId() > 0);
@@ -1374,8 +1376,8 @@ public class StamtUnloadIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(vdate);
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);

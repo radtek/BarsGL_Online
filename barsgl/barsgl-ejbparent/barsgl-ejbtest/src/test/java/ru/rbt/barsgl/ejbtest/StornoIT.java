@@ -13,6 +13,8 @@ import ru.rbt.barsgl.ejb.entity.gl.GLOperation;
 import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.gl.Pd;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
+import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
+import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.mapping.YesNo;
 
@@ -37,6 +39,7 @@ import static ru.rbt.ejbcore.mapping.YesNo.Y;
  * Обработка операций СТОРНО в формате простой проводки
  * @fsd 7.2.3
  */
+@SuppressWarnings("All")
 public class StornoIT extends AbstractTimerJobIT {
 
     private static final Logger logger = Logger.getLogger(StornoIT.class.getName());
@@ -67,7 +70,7 @@ public class StornoIT extends AbstractTimerJobIT {
      * Обработки операции сторно при отсутствии сторнируемой операции (ошибка операции)
      * @fsd 7.2.3
      */
-    @Test public void testStornoNoRef() {
+    @Test public void testStornoNoRef() throws SQLException {
         final long st = System.currentTimeMillis();
         EtlPackage etlPackage = newPackage(st, "Checking storno");
         EtlPosting pst = newPosting(st, etlPackage);
@@ -76,8 +79,8 @@ public class StornoIT extends AbstractTimerJobIT {
         pst.setValueDate(getOperday().getCurrentDate());
         pst.setStorno(Y);
         pst.setStornoReference("storno_" + st);
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst = (EtlPosting) baseEntityRepository.save(pst);
@@ -651,7 +654,7 @@ public class StornoIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.1
      * @throws ParseException
      */
-    @Test public void testStornoWtacOperation() throws ParseException {
+    @Test public void testStornoWtacOperation() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -662,8 +665,8 @@ public class StornoIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -701,7 +704,7 @@ public class StornoIT extends AbstractTimerJobIT {
      * @fsd 7.7.3, 7.5.2.1
      * @throws ParseException
      */
-    @Test public void testStornoTwoOperation() throws ParseException {
+    @Test public void testStornoTwoOperation() throws ParseException, SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -712,8 +715,8 @@ public class StornoIT extends AbstractTimerJobIT {
         Date operday = getOperday().getCurrentDate();
         pst.setValueDate(operday);
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.006"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);

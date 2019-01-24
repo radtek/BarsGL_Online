@@ -13,9 +13,9 @@ import ru.rbt.barsgl.ejb.entity.gl.GLPosting;
 import ru.rbt.barsgl.ejb.entity.sec.GLErrorRecord;
 import ru.rbt.barsgl.ejb.integr.bg.EtlPostingController;
 import ru.rbt.barsgl.ejb.integr.oper.IncomingPostingProcessor;
-import ru.rbt.barsgl.ejb.repository.GLErrorRepository;
 import ru.rbt.barsgl.ejbtest.utl.Utl4Tests;
-import ru.rbt.barsgl.shared.enums.DealSource;
+import ru.rbt.barsgl.shared.criteria.CriteriaBuilder;
+import ru.rbt.barsgl.shared.criteria.CriteriaLogic;
 import ru.rbt.barsgl.shared.enums.OperState;
 import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
@@ -38,6 +38,7 @@ import static ru.rbt.barsgl.shared.enums.OperState.ERCHK;
  * Обработка операций с ошибками во входных данных
  * @fsd 7.4
  */
+@SuppressWarnings("All")
 public class ValidationIT extends AbstractTimerJobIT {
 
     private static final Logger log = Logger.getLogger(ValidationIT.class);
@@ -62,7 +63,7 @@ public class ValidationIT extends AbstractTimerJobIT {
      * @fsd 7.4.1
      */
     @Test
-    public void testEtlFieldLength() {
+    public void testEtlFieldLength() throws SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -91,8 +92,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         pst.setRusNarrativeLong("  ");                                              // пустая строка
         pst.setRusNarrativeShort(null);                                             // совсем пустая строка
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("315.44"));
         pst.setAmountDebit(new BigDecimal("315.43"));
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -125,7 +126,7 @@ public class ValidationIT extends AbstractTimerJobIT {
      * @fsd 7.4.1
      */
     @Test
-    public void testBadFieldLength() {
+    public void testBadFieldLength() throws SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -138,8 +139,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         // системные идентификаторы
         pst.setAePostingId(pst.getAePostingId() + "012345678901234567890123456789");
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("315.44"));
         pst.setAmountDebit(new BigDecimal("315.43"));
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -205,8 +206,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.EUR);
@@ -231,7 +232,7 @@ public class ValidationIT extends AbstractTimerJobIT {
      * Проверка неверного кода валюты, отсутствия ИД проводки - ИД платежа или ИД сделки (ошибка проводки из АЕ)
      * @fsd 7.4.1
      */
-    @Test public void testDealIdKplus() {
+    @Test public void testDealIdKplus() throws SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -241,8 +242,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg, KondorPlus.getLabel());
         pst.setValueDate(getOperday().getCurrentDate());
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -374,8 +375,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         Date operDate = getOperday().getCurrentDate();
         pst.setValueDate(DateUtils.addDays(operDate, 1));  // неверная дата (> опердень)
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -420,8 +421,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         Date operDate = getOperday().getCurrentDate();
         pst.setValueDate(operDate);  // неверная дата (> опердень)
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setAmountDebitRu(pst.getAmountCredit());
@@ -454,7 +455,7 @@ public class ValidationIT extends AbstractTimerJobIT {
         Date operDate = getOperday().getCurrentDate();
         pst.setValueDate(operDate);  // неверная дата (> опердень)
 
-        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setAmountCredit(new BigDecimal("3500.00"));
 
@@ -571,8 +572,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         Date valDate = getOperday().getCurrentDate();
         pst.setValueDate(valDate);  // неверная дата (> опердень)
 
-        pst.setAccountCredit("40817036200012959997");
-        pst.setAccountDebit("40817036250010000018");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
+        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -690,8 +691,8 @@ public class ValidationIT extends AbstractTimerJobIT {
         EtlPosting pst = newPosting(stamp, pkg);
         pst.setValueDate(getOperday().getCurrentDate());
 
-//        pst.setAccountCredit("40817036200012959997");
-//        pst.setAccountDebit("40817036250010000018");
+//        pst.setAccountCredit(findBsaAccount("40817036%"));
+//        pst.setAccountDebit(findBsaAccount("40817036%", getOperday().getCurrentDate(), CriteriaBuilder.create(CriteriaLogic.AND).appendNOT("bsaacid", pst.getAccountCredit()).build()));
         pst.setAmountCredit(new BigDecimal("12.0056"));
         pst.setAmountDebit(pst.getAmountCredit());
         pst.setCurrencyCredit(BankCurrency.AUD);
@@ -718,7 +719,7 @@ public class ValidationIT extends AbstractTimerJobIT {
      * @fsd 7.4.1
      */
     @Test
-    public void testEtlValidationAmount() {
+    public void testEtlValidationAmount() throws SQLException {
 
         long stamp = System.currentTimeMillis();
 
@@ -733,7 +734,7 @@ public class ValidationIT extends AbstractTimerJobIT {
         pst.setAmountDebit(new BigDecimal("0.00"));
 //        pst.setAmountDebitRu(new BigDecimal("-6000.00"));
 
-        pst.setAccountCredit("40817036200012959997");
+        pst.setAccountCredit(findBsaAccount("40817036%"));
         pst.setCurrencyCredit(BankCurrency.AUD);
         pst.setAmountCredit(new BigDecimal("200"));
         pst.setAmountCreditRu(new BigDecimal("6000.00"));
