@@ -376,6 +376,7 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
             , correctDatto29, account.getBsaAcid(), dat2);
 
         // обрабатываем сообщение из ошибок
+        startErrorQueue();
         dequeueProcessExceptionQueue();
         errorMessages = baseEntityRepository.select("select Q_NAME from " + queueTableName +" t where t.user_data.id = ?", id);
         Assert.assertEquals(0, errorMessages.size());
@@ -488,6 +489,14 @@ public class CalcBalanceAsyncIT extends AbstractRemoteIT {
 
     private void cleanBvjrnlRecord(GLAccount account) {
         baseEntityRepository.executeNativeUpdate("delete from gl_bvjrnl where bsaacid = ?", account.getBsaAcid());
+    }
+
+    private void startErrorQueue() {
+        baseEntityRepository.executeNativeUpdate(
+            "DECLARE PRAGMA AUTONOMOUS_TRANSACTION;" +
+            "BEGIN" +
+            "   DBMS_AQADM.START_QUEUE(GLAQ_PKG_CONST.C_EXCEPTION_QUEUE_NAME, false, true);" +
+            "END;");
     }
 
     private void dequeueProcessExceptionQueue() {

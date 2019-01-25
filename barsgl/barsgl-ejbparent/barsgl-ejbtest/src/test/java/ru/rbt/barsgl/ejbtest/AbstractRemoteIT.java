@@ -3,6 +3,7 @@ package ru.rbt.barsgl.ejbtest;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.w3c.dom.Document;
@@ -126,6 +127,7 @@ public abstract class AbstractRemoteIT  {
 
 //        baseEntityRepository.executeUpdate("update AccountingType a set a.barsAllowed = ?1", N);
         clearBVSettings();
+        initCorrectOperday();
     }
 
     public static  void  clearBVSettings() {
@@ -645,6 +647,7 @@ public abstract class AbstractRemoteIT  {
     }
 
     protected static void initCorrectOperday() {
+        baseEntityRepository.executeNativeUpdate("update workday set workday = ?", getWorkdayBefore(DateUtils.addDays(DateUtils.truncate(new Date(), Calendar.DATE), -10)));
         Date workday = remoteAccess.invoke(WorkdayRepository.class, "getWorkday");
         BankCalendarDay current = remoteAccess.invoke(BankCalendarDayRepository.class, "getWorkdayAfter", workday);
         setOperday(current.getId().getCalendarDate(), workday, Operday.OperdayPhase.ONLINE, Operday.LastWorkdayStatus.OPEN);
