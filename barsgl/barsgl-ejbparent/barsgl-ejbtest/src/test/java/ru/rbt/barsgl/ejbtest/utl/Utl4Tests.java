@@ -137,7 +137,7 @@ public class Utl4Tests {
 
     public static GLAccParam findAccountParam(BaseEntityRepository baseEntityRepository, Date todate, final String like) throws SQLException {
         return Optional.ofNullable(baseEntityRepository.selectFirst(
-                "select BSAACID, ACID from GL_ACC " +
+                "select /*+ first_rows (1) */ BSAACID, ACID from GL_ACC " +
                         "where BSAACID like ? and DTO <= ? and (DTC is null or DTC >= ?)", like, todate, todate))
                 .map(r -> new GLAccParam(r.getString("acid"), r.getString("bsaacid"))).orElseThrow(() -> new RuntimeException("not found by " + like));
     }
