@@ -819,7 +819,7 @@ public abstract class AbstractRemoteIT  {
             resultParamsList.addAll(Arrays.asList(and.getParams()));
         }
         return Optional.ofNullable(baseEntityRepository.selectFirst(
-                "SELECT BSAACID FROM GL_ACC WHERE BSAACID LIKE ? AND NVL(DTC, TO_DATE('2029-01-01', 'YYYY-MM-DD')) > ? "
+                "SELECT /*+ first_rows (1) */ BSAACID FROM GL_ACC WHERE BSAACID LIKE ? AND NVL(DTC, TO_DATE('2029-01-01', 'YYYY-MM-DD')) > ? "
                         + (null != criteria ? " AND " + and.getQuery() : "")
                 , resultParamsList.toArray()))
                 .map(r -> r.getString(0)).orElseThrow(() -> new DefaultApplicationException("Not found " + bsaacidLike + " " + dateClose));
