@@ -46,6 +46,9 @@ public class AccountValidationSupportBean {
     @EJB
     private OperdayController operdayController;
 
+    @Inject
+    private PLAccountBatchCreator plAccountBatchCreator;
+
     @SuppressWarnings("All")
     public List<ValidationError> validateUpdateOneRequest(AccountBatchPackage batchPackage, AccountBatchRequest request) {
         try {
@@ -209,25 +212,26 @@ public class AccountValidationSupportBean {
                     @Override
                     public void validate() throws ValidationError {
                         try {
+                            Date dateOpen = plAccountBatchCreator.calcOpenDate(request);
                             final Integer ctypeInt = parseIntSafe(request.getCalcCtype());
-                            final YesNo plAct = calcPlAct(request);
+                            final YesNo plAct = calcPlAct(request, dateOpen);
                             String custype = calcCtypeAcc(request.getCalcCtypeAcc());
                             String term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
-                            DataRecord record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term);
+                            DataRecord record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term, dateOpen);
                             if (N == plAct && null == record1) {
                                 if (parseIntSafe(request.getInTerm(), 0) >= 0) {
                                     custype = calcCtypeAcc(request.getCalcCtypeAcc()); term = "00";
-                                    record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term);
+                                    record1 = findActparm(request.getInAcctype(), rightPad(custype, 2, " "), term, dateOpen);
                                     if (null == record1) {
                                         if (parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
                                             if (parseIntSafe(request.getCalcCtypeAcc()) > 3 && ctypeInt >= 0 && ctypeInt <= 3) {
                                                 throwValidationError("1", custype, term);
                                             } else {
                                                 custype = "00"; term = leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0");
-                                                record1 = findActparm(request.getInAcctype(), custype, term);
+                                                record1 = findActparm(request.getInAcctype(), custype, term, dateOpen);
                                                 if (parseIntSafe(request.getInTerm(), 0) >= 0 && parseIntSafe(request.getCalcCtypeAcc()) >= 0) {
                                                     custype = "00"; term = "00";
-                                                    record1 = findActparm(request.getInAcctype(), custype, term);
+                                                    record1 = findActparm(request.getInAcctype(), custype, term, dateOpen);
                                                 }
                                             }
                                         }
@@ -309,16 +313,18 @@ public class AccountValidationSupportBean {
         }
     }
 
-    private YesNo calcPlAct (AccountBatchRequest request) throws SQLException {
+    private YesNo calcPlAct (AccountBatchRequest request, Date dateOpen) throws SQLException {
         return Optional.ofNullable(repository.selectFirst(
-                "select * from gl_actparm where acctype = ? and custype = ? and term = ? and trim(plcode) is not null"
-                , request.getInAcctype(), leftPad(ifEmpty(request.getCalcCtypeAcc(),"0"),2, "0"), leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0")))
+                "select * from gl_actparm where acctype = ? and custype = ? and term = ? and trim(plcode) is not null" +
+                        " and DTB <= ? and (DTE is null or DTE >= ?)"
+                , request.getInAcctype(), leftPad(ifEmpty(request.getCalcCtypeAcc(),"0"),2, "0"), leftPad(ifEmpty(request.getInTerm(),"0"), 2, "0"), dateOpen, dateOpen))
                 .map(r -> Y).orElse(N);
     }
 
-    private DataRecord findActparm(String acctype, String custype, String term) throws SQLException {
-        return repository.selectFirst("select * from gl_actparm where acctype = ? and custype = ? and term = ?"
-                , acctype, custype, term);
+    private DataRecord findActparm(String acctype, String custype, String term, Date dateOpen) throws SQLException {
+        return repository.selectFirst("select * from gl_actparm where acctype = ? and custype = ? and term = ?" +
+                        " and DTB <= ? and (DTE is null or DTE >= ?)"
+                , acctype, custype, term, dateOpen, dateOpen);
     }
 
     private Date addMonths(Date from, int months) {

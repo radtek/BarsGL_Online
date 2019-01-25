@@ -1,6 +1,8 @@
 package ru.rbt.barsgl.ejbtest;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.rbt.barsgl.ejb.common.mapping.od.BankCalendarDay;
 import ru.rbt.barsgl.ejb.common.repository.od.BankCalendarDayRepository;
@@ -16,6 +18,8 @@ import ru.rbt.ejbcore.datarec.DataRecord;
 import ru.rbt.ejbcore.mapping.YesNo;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +27,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.LastWorkdayStatus.OPEN;
+import static ru.rbt.barsgl.ejb.common.mapping.od.Operday.OperdayPhase.ONLINE;
 import static ru.rbt.barsgl.shared.enums.AccountBatchPackageState.*;
 import static ru.rbt.barsgl.shared.enums.AccountBatchState.*;
 import static ru.rbt.ejbcore.mapping.YesNo.Y;
@@ -36,6 +42,17 @@ import static ru.rbt.ejbcore.util.StringUtils.isEmpty;
 public class ExcelAccOpenIT extends AbstractRemoteIT {
 
     private static final Logger log = Logger.getLogger(ExcelAccOpenIT.class.getName());
+
+    @BeforeClass
+    public static void beforeClass() {
+        try {
+            Date curr = DateUtils.parseDate("15.01.2019", "dd.MM.yyyy");
+            Date prev = DateUtils.parseDate("14.01.2019", "dd.MM.yyyy");
+            setOperday(curr, prev, ONLINE, OPEN);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test public void test() {
 
@@ -183,7 +200,7 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
     @Test public void testValidationErrorMulti() {
         final String branch = "001";
         final String ccy = "RUR";
-        final String custno = "00151555";
+        final String custno = "151555";
         final String acctype = "356020202";
         final String cbcusttype = "00";
         final String term = "00";
@@ -310,6 +327,68 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
                 , requests.stream().allMatch(r -> !isEmpty(r.getBsaAcid()) && COMPLETED == r.getState()));
     }
 
+    @Test
+    public void testActparmDate() throws Exception {
+        DataRecord data = baseEntityRepository.selectFirst("select a1.acctype, a1.custype, a1.term, a1.acc2 acc2_new, a2.acc2 acc2_old " +
+                "from gl_actparm a1 join gl_actparm a2 on a2.acctype = a1.acctype and a1.custype = a2.custype and a1.term = a2.term and not a2.dte is null " +
+                "where a1.custype = '00' and a1.term = '00' and a1.dtb = '2019-01-01' and (a1.acc2 <> a2.acc2 )");
+        final String acctype = data.getString("acctype");
+        final String cbcusttype = data.getString("custype");
+        final String term = data.getString("term");
+        final String acc2[] = new String[3];
+        acc2[0] = data.getString("acc2_old");
+        acc2[2] = acc2[1] = data.getString("acc2_new");
+
+        final String branch = "001";
+        final String ccy = "RUR";
+        final String custno = "00151555";
+        final String dealSrc = "IMEX";
+        final String dealid = "dealid";
+        final String subdealid = "subdealid";
+
+        // удаляем старые счета
+        String sqlAcc = "from gl_acc a where a.BRANCH = ? and a.CCY = ? and a.CUSTNO = ? and a.ACCTYPE = ? and a.TERM = ? and a.DEALID like ? and a.SUBDEALID like ?";
+        baseEntityRepository.executeNativeUpdate("delete from GL_ACBATREQ r where exists (select 1 " + sqlAcc + ")", branch, ccy, custno, acctype, term, dealid+"%", subdealid+"%");
+        log.info("deleted accounts: " + baseEntityRepository.executeNativeUpdate("delete " + sqlAcc, branch, ccy, custno, acctype, term, dealid+"%", subdealid+"%"));
+
+        // формируем пакет
+        AccountBatchPackage pkg = createPackage();
+
+        Date openDates[] = new Date[3];
+        openDates[0] = DateUtils.parseDate("20.12.2018", "dd.MM.yyyy");
+        openDates[1] = DateUtils.parseDate("10.01.2019", "dd.MM.yyyy");
+        openDates[2] = null;
+
+        for (int i=0; i<3; i++) {
+            createBatchRequest(pkg, (long)i, branch, ccy, custno, acctype, dealid + i, subdealid + i, dealSrc, term, openDates[i]);
+        }
+
+        // на валидацию
+        remoteAccess.invoke(AccountBatchStateController.class, "sendToValidation", pkg);
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(ON_VALID, pkg.getState());
+
+        SingleActionJob job = SingleActionJobBuilder.create().withClass(AccountBatchOpenTask.class).build();
+        jobService.executeJob(job);
+
+        // проверяем состояние
+        pkg = (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, pkg.getId());
+        Assert.assertEquals(PROCESSED, pkg.getState());
+        List<AccountBatchRequest> requests = baseEntityRepository.select(AccountBatchRequest.class, "from AccountBatchRequest p where p.batchPackage = ?1 order by p.id", pkg);
+        Assert.assertTrue(requests.stream().map(r -> r.getId() + ":" + r.getState() + ":" + r.getNewAccount()).collect(Collectors.joining(" ,"))
+                , requests.stream().allMatch(r -> !isEmpty(r.getBsaAcid()) && COMPLETED == r.getState()));
+
+        List<DataRecord> accList = baseEntityRepository.select("select recno, r.bsaacid, a.acc2, a.dto from gl_acbatreq r join gl_acc a on r.bsaacid = a.bsaacid" +
+                " where r.id_pkg = ? order by recno", pkg.getId());
+        Assert.assertEquals(3, accList.size());
+
+        openDates[2] = getOperday().getCurrentDate();
+        for (int i=0; i<3; i++) {
+            Assert.assertEquals(String.format("Неверный счет второго порядка для счета %d", i), acc2[i], accList.get(i).getString("acc2"));
+            Assert.assertEquals(String.format("Неверная дата открытия для счета %d", i), openDates[i], accList.get(i).getDate("dto"));
+        }
+    }
+
     private AccountBatchPackage createPackage() {
 
         AccountBatchPackage package1 = new AccountBatchPackage();
@@ -326,8 +405,8 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         return  (AccountBatchPackage) baseEntityRepository.findById(AccountBatchPackage.class, package1.getId());
     }
 
-    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy
-            , String custno, String acctype, String dealId, String subdealId, String dealSrc, String term) {
+    private AccountBatchRequest createBatchRequestNotSaved(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy
+            , String custno, String acctype, String dealId, String subdealId, String dealSrc, String term, Date openDate) {
         AccountBatchRequest request = new AccountBatchRequest();
         request.setBatchPackage(pkg);
         request.setLineNumber(lineNumber);
@@ -340,6 +419,35 @@ public class ExcelAccOpenIT extends AbstractRemoteIT {
         request.setInDealid(dealId);
         request.setInSubdealid(subdealId);
         request.setInTerm(term);
+        request.setInOpendate(openDate);
+        return request;
+    }
+
+    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy
+            , String custno, String acctype, String dealId, String subdealId, String dealSrc, String term, Date openDate) {
+        AccountBatchRequest request = createBatchRequestNotSaved(pkg, lineNumber, branch, ccy
+                , custno, acctype, dealId, subdealId, dealSrc, term, openDate);
+        return  (AccountBatchRequest) baseEntityRepository.save(request);
+    }
+
+    private AccountBatchRequest createBatchRequest(AccountBatchPackage pkg, Long lineNumber, String branch, String ccy
+            , String custno, String acctype, String dealId, String subdealId, String dealSrc, String term) {
+/*
+        AccountBatchRequest request = new AccountBatchRequest();
+        request.setBatchPackage(pkg);
+        request.setLineNumber(lineNumber);
+        request.setState(LOAD);
+        request.setInBranch(branch);
+        request.setInCcy(ccy);
+        request.setInCustno(custno);
+        request.setInAcctype(acctype);
+        request.setInDealsrc(dealSrc);
+        request.setInDealid(dealId);
+        request.setInSubdealid(subdealId);
+        request.setInTerm(term);
+*/
+        AccountBatchRequest request = createBatchRequestNotSaved(pkg, lineNumber, branch, ccy
+                , custno, acctype, dealId, subdealId, dealSrc, term, null);
         return  (AccountBatchRequest) baseEntityRepository.save(request);
     }
 

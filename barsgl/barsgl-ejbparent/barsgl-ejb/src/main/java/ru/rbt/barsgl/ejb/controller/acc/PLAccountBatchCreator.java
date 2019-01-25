@@ -100,7 +100,7 @@ public class PLAccountBatchCreator implements AccountBatchCreator {
         }
     }
 
-    private Date calcOpenDate(AccountBatchRequest request) {
+    public Date calcOpenDate(AccountBatchRequest request) {
         return null != request.getInOpendate() ? request.getInOpendate() : operdayController.getOperday().getCurrentDate();
     }
 

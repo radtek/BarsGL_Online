@@ -147,7 +147,7 @@ public class AccountBatchPackageForm extends GridForm {
     }
 
     protected String getSelectClause() {
-        String where = getSourceAndFilialPart("where", "", "U1.FILIAL");
+        String where = getSourceAndFilialPart("where", "", "FILIAL");
         if (isEmpty(where))
             where = " where 1=1";
         return " SELECT ID_PKG, OD_LOAD, CNT_REQ, CNT_ERR, CNT_FOUND, CNT_OPEN, " +
